@@ -1,0 +1,25 @@
+{
+  "name": "db_schema",
+  "version": "1.0.0",
+  "description": "Farm Estates Grow Room Dashboard schema",
+  "keywords": [
+    "Acquaye",
+    "Abecca",
+    "Philip",
+    "CTO",
+    "of",
+    "Farm",
+    "Estates",
+    "LTD"
+  ],
+  "license": "ISC",
+  "author": "Acquaye Abecca Philip",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm start"
+  },
+  "dependencies": {
+    "node-appwrite": "^17.0.0"
+  }
+}
