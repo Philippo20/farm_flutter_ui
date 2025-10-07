@@ -44,7 +44,7 @@ lib/
 ## ▶️ Getting Started
 1. Clone the repo:
    ```bash
-   git clone https://github.com/<your-username>/farmestates_ai_dashbaord.git
+   git clone https://github.com/<your-username>/farm_flutter_ui.git
    cd farmestates_ai_dashbaord
 2. Install dependencies:
      ```bash
