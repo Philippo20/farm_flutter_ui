@@ -58,4 +58,15 @@ lib/
 4. Run the app:
      ```bash
      flutter run
+## BLOCK DIAGRAM
+<img width="1668" height="1030" alt="image" src="https://github.com/user-attachments/assets/1dd53e7e-baae-4293-96d6-07e563b4cae0" />
+<img width="1668" height="1057" alt="image" src="https://github.com/user-attachments/assets/59526c73-d280-4110-8026-cde4e7585642" />
+<img width="1668" height="1053" alt="image" src="https://github.com/user-attachments/assets/6a7472c9-3f30-47a4-b404-e4176845e85e" />
+<img width="1668" height="1021" alt="image" src="https://github.com/user-attachments/assets/9e49fbab-5c5e-4f2f-8956-aa4d2b1315ea" />
+<img width="1668" height="967" alt="image" src="https://github.com/user-attachments/assets/f397a5bd-d219-454b-81be-20501e1caf15" />
+
+
+
+
+     
 
