@@ -40,7 +40,9 @@ lib/
 
 
 ---
-
+## Get started with Flutter
+visit : https://docs.flutter.dev/get-started
+installing on windows for vscode: https://www.youtube.com/watch?v=0q802e7MC7A&list=PL555aeDWfjt2usljjjuMgOBgXNOZo1Cus
 ## ▶️ Getting Started
 1. Clone the repo:
    ```bash
