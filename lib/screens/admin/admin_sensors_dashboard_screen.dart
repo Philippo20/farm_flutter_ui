@@ -322,7 +322,7 @@ class _SensorsScreenState extends State<SensorsScreen> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Search sensors...',
+                  hintText: 'Search Farms...',
                   border: InputBorder.none,
                   hintStyle: GoogleFonts.inter(
                     color: secondaryTextColor,

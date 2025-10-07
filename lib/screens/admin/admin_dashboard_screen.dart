@@ -27,7 +27,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
   String _segmentValue = "All Segment";
-  final List<String> _segmentOptions = ["All Segment", "Greenhouse", "Field", "Hydroponic"];
+  final List<String> _segmentOptions = ["All Segment", "Energy Consumption", "Energy Distribution", "Farms Performance", "Activities and Logs"];
   double _temperature = 0.0;
   String _weatherState = "Sunny";
   

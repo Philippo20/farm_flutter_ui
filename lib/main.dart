@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
       title: 'Grow Room Dashboard',
       debugShowCheckedModeBanner: false,
       //home: AdminDashboardScreen(),
-      initialRoute: '/caretaker_dashboard',
+      initialRoute: '/login',
       routes: {
         //Admin
         '/dashboard': (context) => AdminDashboardScreen(),

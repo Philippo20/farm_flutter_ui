@@ -2,12 +2,12 @@ const sdk = require('node-appwrite');
 
 // Configure
 const client = new sdk.Client()
-    .setEndpoint('http://134.209.212.84/v1') //Appwrite endpoint
-    .setProject('68323d9a001ee58070b5')          // Project ID
+    .setEndpoint('http://137.184.127.121/v1') //Appwrite endpoint
+    .setProject('68dd35d5000df5252818')          // Project ID
     .setKey('standard_9a7f6948aaa2946856f5a14d62f62594e6e8ac1f29e5a9cae4916394d1af29e21f8134ec82f5fadeb090842d22a6009013dc8a5bbfbf387951af6b221e763392a6c9659d42a1b07e85a354f827c5d583208433ce91bb7dd6ed32f872579dcae277d4cf844f3456065175b769aa38b0878bb277894e5f9797110818e3c3980837');// API Key with Database permissions
 
 const databases = new sdk.Databases(client);
-const databaseId = '683245610000d2dd24f8'; // Database ID
+const databaseId = '68dd365d002c20b09502'; // Database ID
 
 // Helper to create a collection
 async function createCollection(id, name, permissions = []) {
