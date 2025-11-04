@@ -94,3 +94,22 @@ lib/generated_plugin_registrant.dart
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 
 # End of https://www.toptal.com/developers/gitignore/api/flutter,dart
+
+# Custom - Farm Estates Security
+# Protect all environment files except example
+.env
+.env.*
+!.env.example
+
+# Protect API keys and credentials
+**/config/secrets.dart
+**/config/api_keys.dart
+
+# Database schema with credentials
+db_schema/index.js
+db_schema/update.js
+
+# Protect any files with 'secret' or 'key' in name
+*secret*
+*key*.json
+!pubspec.lock

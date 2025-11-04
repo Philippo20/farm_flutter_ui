@@ -5,12 +5,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
-import '../../widgets/sidebars/admin_sidebar.dart';
-import '../../widgets/headers/admin_header.dart';
+import '../../core/widgets/modern_scaffold.dart';
+import '../../core/widgets/adaptive_navigation.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 //import 'package:syncfusion_flutter_datepicker/datepicker.dart';
-import '../../utils/date_utils.dart';
 
 class Farm {
   final String id;
@@ -40,8 +39,9 @@ class FarmsScreen extends StatefulWidget {
 }
 
 class _FarmsScreenState extends State<FarmsScreen> {
-  int selectedIndex = 2;
-  bool isDark = false;
+  int _selectedNavIndex = 2;
+  bool _isDark = false;
+  bool get isDark => _isDark;
   final TextEditingController _searchController = TextEditingController();
 
   List<Farm> farms = [
@@ -84,15 +84,6 @@ class _FarmsScreenState extends State<FarmsScreen> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args = ModalRoute.of(context)?.settings.arguments as Map?;
-      setState(() => isDark = args?['isDark'] ?? false);
-    });
-  }
-
-  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -102,75 +93,100 @@ class _FarmsScreenState extends State<FarmsScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final textColor = isDark ? AppColors.darkText : AppColors.text;
-    final cardColor = isDark ? AppColors.darkCard : AppColors.card;
+    final theme = Theme.of(context);
+    _isDark = theme.brightness == Brightness.dark;
+    final textColor = _isDark ? AppColors.darkText : AppColors.text;
+    final cardColor = _isDark ? AppColors.darkCard : AppColors.card;
     final secondaryTextColor =
-        isDark ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.6);
+        _isDark ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.6);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: isDark
-              ? AppBackgroundGradient.getDarkGradient()
-              : AppBackgroundGradient.getLightGradient(),
-        ),
-        child: Column(
-          children: [
-            AdminHeader(
-              isDark: isDark,
-              onToggleDarkMode: () => setState(() => isDark = !isDark),
-              onMenuPressed: null,
-            ),
-            Expanded(
-              child: Row(
-                children: [
-                  if (!isMobile)
-                    AdminSidebar(
-                      selectedIndex: selectedIndex,
-                      onItemSelected: (idx) =>
-                          setState(() => selectedIndex = idx),
-                      isDark: isDark,
-                      isMobile: false,
-                    ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isMobile ? 16 : 32,
-                          vertical: 20,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildHeaderSection(isMobile, textColor),
-                            const SizedBox(height: 24),
-                            _buildStatsSection(isMobile),
-                            const SizedBox(height: 28),
-                            _buildSearchAndFilter(
-                                cardColor, secondaryTextColor),
-                            const SizedBox(height: 22),
-                            _buildFarmsGrid(isMobile, cardColor, textColor,
-                                secondaryTextColor),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+    final navigationItems = [
+      NavigationItem(
+        label: 'Dashboard',
+        icon: Icons.dashboard_outlined,
+        selectedIcon: Icons.dashboard,
+        onTap: () {
+          if (_selectedNavIndex != 0) {
+            setState(() => _selectedNavIndex = 0);
+            Navigator.pushReplacementNamed(context, '/dashboard');
+          }
+        },
+      ),
+      NavigationItem(
+        label: 'Users',
+        icon: Icons.people_outline,
+        selectedIcon: Icons.people,
+        onTap: () {
+          if (_selectedNavIndex != 1) {
+            setState(() => _selectedNavIndex = 1);
+            Navigator.pushReplacementNamed(context, '/users');
+          }
+        },
+      ),
+      NavigationItem(
+        label: 'Farms',
+        icon: Icons.agriculture_outlined,
+        selectedIcon: Icons.agriculture,
+        onTap: () {
+          if (_selectedNavIndex != 2) {
+            setState(() => _selectedNavIndex = 2);
+            Navigator.pushReplacementNamed(context, '/farms');
+          }
+        },
+      ),
+      NavigationItem(
+        label: 'Sensors',
+        icon: Icons.sensors_outlined,
+        selectedIcon: Icons.sensors,
+        onTap: () {
+          if (_selectedNavIndex != 3) {
+            setState(() => _selectedNavIndex = 3);
+            Navigator.pushReplacementNamed(context, '/sensors');
+          }
+        },
+      ),
+      NavigationItem(
+        label: 'Settings',
+        icon: Icons.settings_outlined,
+        selectedIcon: Icons.settings,
+        onTap: () {
+          if (_selectedNavIndex != 4) {
+            setState(() => _selectedNavIndex = 4);
+            Navigator.pushReplacementNamed(context, '/settings');
+          }
+        },
+      ),
+    ];
+
+    return ModernScaffold(
+      title: 'Farm Management',
+      navigationItems: navigationItems,
+      selectedNavigationIndex: _selectedNavIndex,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16 : 32,
+            vertical: 20,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeaderSection(isMobile, textColor),
+              const SizedBox(height: 24),
+              _buildStatsSection(isMobile),
+              const SizedBox(height: 28),
+              _buildSearchAndFilter(cardColor, secondaryTextColor),
+              const SizedBox(height: 22),
+              _buildFarmsGrid(
+                isMobile,
+                cardColor,
+                textColor,
+                secondaryTextColor,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      bottomNavigationBar: isMobile
-          ? AdminSidebar(
-              selectedIndex: selectedIndex,
-              onItemSelected: (idx) => setState(() => selectedIndex = idx),
-              isDark: isDark,
-              isMobile: true,
-            )
-          : null,
     );
   }
 
@@ -1813,31 +1829,3 @@ void _showEditFarmDialog(Farm farm) {
 }
 }
 
-class AppBackgroundGradient {
-  static LinearGradient getDarkGradient() {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Colors.grey.shade900.withOpacity(0.9),
-        Colors.grey.shade800.withOpacity(0.95),
-        Colors.grey.shade700.withOpacity(0.97),
-      ],
-      stops: const [0.1, 0.5, 1.0],
-      transform: const GradientRotation(0.1),
-    );
-  }
-
-  static LinearGradient getLightGradient() {
-    return LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        Colors.blueGrey.shade50.withOpacity(0.98),
-        Colors.blueGrey.shade100.withOpacity(0.95),
-        Colors.blueGrey.shade200.withOpacity(0.93),
-      ],
-      stops: const [0.0, 0.6, 1.0],
-    );
-  }
-}

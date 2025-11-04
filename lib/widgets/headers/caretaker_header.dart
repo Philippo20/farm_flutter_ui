@@ -718,10 +718,9 @@ class _HeaderDropdown extends StatelessWidget {
   final VoidCallback? onToggleDarkMode;
 
   const _HeaderDropdown({
-    Key? key,
     required this.isDark,
     this.onToggleDarkMode,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
