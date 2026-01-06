@@ -300,7 +300,6 @@ class _HeaderDropdown extends StatelessWidget {
   final VoidCallback? onToggleDarkMode;
 
   const _HeaderDropdown({
-    super.key,
     required this.isDark,
     this.onToggleDarkMode,
   });

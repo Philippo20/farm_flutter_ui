@@ -160,7 +160,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
         children: [
           Expanded(
             child: DropdownButtonFormField<String>(
-              value: selectedFarm,
+              initialValue: selectedFarm,
               dropdownColor: cardColor, // Background color of the dropdown menu
               style: GoogleFonts.inter(color: textColor), // Text color of dropdown items
               // Use the dynamic availableFarms list
@@ -422,7 +422,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                           Switch(
                             value: entry.value,
                             onChanged: (val) => setState(() => _automationSettings[entry.key] = val),
-                            activeColor: activeColor,
+                            activeThumbColor: activeColor,
                             inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
                             inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[500],
                             // Thumb color when active
@@ -600,7 +600,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         value: entry.value,
                         onChanged: (val) =>
                             setState(() => _alertSettings[entry.key] = val),
-                        activeColor: activeColor,
+                        activeThumbColor: activeColor,
                         inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
                         inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[500],
                         activeTrackColor: activeColor.withOpacity(0.5),
@@ -643,7 +643,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         value: entry.value,
                         onChanged: (val) =>
                             setState(() => _notificationChannels[entry.key] = val),
-                        activeColor: activeColor,
+                        activeThumbColor: activeColor,
                         inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
                         inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[500],
                         activeTrackColor: activeColor.withOpacity(0.5),

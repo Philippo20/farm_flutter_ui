@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:math' as math; // For math.pi in CustomPainter
-import 'dart:math';
+import 'dart:math' as math;
 import '../../constants/colors.dart';
-import '../../widgets/sidebars/admin_sidebar.dart';
-import '../../widgets/headers/admin_header.dart';
 import '../../widgets/cards/admin_user_stat_card.dart';
+import '../../core/widgets/modern_scaffold.dart';
+import '../../core/widgets/adaptive_navigation.dart';
 
 // Extended User Model
 class User {
@@ -69,9 +68,11 @@ class UsersScreen extends StatefulWidget {
 
 class _UsersScreenState extends State<UsersScreen>
     with TickerProviderStateMixin {
-  int selectedIndex = 1;
-  bool isDark = false;
+  int _selectedNavIndex = 1;
+  bool _isDark = false;
+  bool get isDark => _isDark;
   final TextEditingController _searchController = TextEditingController();
+
   late TabController
       _insightsTabController; // Controller for the new insights tabs
   late TabController
@@ -251,10 +252,6 @@ class _UsersScreenState extends State<UsersScreen>
         length: 2, vsync: this); // Initialize insights tab controller
     _editUserTabController = TabController(
         length: 2, vsync: this); // Initialize edit user tab controller
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args = ModalRoute.of(context)?.settings.arguments as Map?;
-      setState(() => isDark = args?['isDark'] ?? false);
-    });
   }
 
   @override
@@ -283,115 +280,127 @@ class _UsersScreenState extends State<UsersScreen>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final textColor = isDark ? AppColors.darkText : AppColors.text;
-    final cardColor = isDark ? AppColors.darkCard : AppColors.card;
+    final theme = Theme.of(context);
+    _isDark = theme.brightness == Brightness.dark;
+    final textColor = _isDark ? AppColors.darkText : AppColors.text;
+    final cardColor = _isDark ? AppColors.darkCard : AppColors.card;
     final secondaryTextColor =
-        isDark ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.6);
+        _isDark ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.6);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: isDark
-              ? AppBackgroundGradient.getDarkGradient()
-              : AppBackgroundGradient.getLightGradient(),
-        ),
-        child: Column(
-          children: [
-            AdminHeader(
-              isDark: isDark,
-              onToggleDarkMode: () => setState(() => isDark = !isDark),
-              onMenuPressed: null,
-            ),
-            Expanded(
-              child: Row(
-                children: [
-                  if (!isMobile)
-                    AdminSidebar(
-                      selectedIndex: selectedIndex,
-                      onItemSelected: (idx) =>
-                          setState(() => selectedIndex = idx),
-                      isDark: isDark,
-                      isMobile: false,
-                    ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isMobile ? 16 : 32,
-                          vertical: 20,
+    final navigationItems = [
+      NavigationItem(
+        label: 'Dashboard',
+        icon: Icons.dashboard_outlined,
+        selectedIcon: Icons.dashboard,
+        onTap: () {
+          if (_selectedNavIndex != 0) {
+            setState(() => _selectedNavIndex = 0);
+            Navigator.pushNamed(context, '/dashboard');
+          }
+        },
+      ),
+      NavigationItem(
+        label: 'Users',
+        icon: Icons.people_outline,
+        selectedIcon: Icons.people,
+        onTap: () {
+          if (_selectedNavIndex != 1) {
+            setState(() => _selectedNavIndex = 1);
+            Navigator.pushNamed(context, '/users');
+          }
+        },
+      ),
+      NavigationItem(
+        label: 'Farms',
+        icon: Icons.agriculture_outlined,
+        selectedIcon: Icons.agriculture,
+        onTap: () {
+          if (_selectedNavIndex != 2) {
+            setState(() => _selectedNavIndex = 2);
+            Navigator.pushNamed(context, '/farms');
+          }
+        },
+      ),
+      NavigationItem(
+        label: 'Sensors',
+        icon: Icons.sensors_outlined,
+        selectedIcon: Icons.sensors,
+        onTap: () {
+          if (_selectedNavIndex != 3) {
+            setState(() => _selectedNavIndex = 3);
+            Navigator.pushNamed(context, '/sensors');
+          }
+        },
+      ),
+      NavigationItem(
+        label: 'Settings',
+        icon: Icons.settings_outlined,
+        selectedIcon: Icons.settings,
+        onTap: () {
+          if (_selectedNavIndex != 4) {
+            setState(() => _selectedNavIndex = 4);
+            Navigator.pushNamed(context, '/settings');
+          }
+        },
+      ),
+    ];
+
+    return ModernScaffold(
+      title: 'User Management',
+      navigationItems: navigationItems,
+      selectedNavigationIndex: _selectedNavIndex,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16 : 32,
+            vertical: 20,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeaderSection(isMobile, textColor),
+              const SizedBox(height: 24),
+              _buildStatsSection(isMobile),
+              const SizedBox(height: 28),
+              isMobile
+                  ? Column(
+                      children: [
+                        _buildSearchAndFilter(
+                            cardColor, secondaryTextColor, textColor),
+                        const SizedBox(height: 22),
+                        _buildUsersTable(
+                            isMobile, cardColor, textColor, secondaryTextColor),
+                        const SizedBox(height: 28),
+                        _buildUserLogsCard(
+                            cardColor, textColor, secondaryTextColor),
+                      ],
+                    )
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            children: [
+                              _buildSearchAndFilter(cardColor,
+                                  secondaryTextColor, textColor),
+                              const SizedBox(height: 22),
+                              _buildUsersTable(
+                                  isMobile, cardColor, textColor, secondaryTextColor),
+                            ],
+                          ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildHeaderSection(isMobile, textColor),
-                            const SizedBox(height: 24),
-                            _buildStatsSection(isMobile),
-                            const SizedBox(height: 28),
-                            // New layout for table and logs
-                            isMobile
-                                ? Column(
-                                    children: [
-                                      _buildSearchAndFilter(cardColor,
-                                          secondaryTextColor, textColor),
-                                      const SizedBox(height: 22),
-                                      _buildUsersTable(isMobile, cardColor,
-                                          textColor, secondaryTextColor),
-                                      const SizedBox(
-                                          height:
-                                              28), // Spacing before logs on mobile
-                                      _buildUserLogsCard(cardColor, textColor,
-                                          secondaryTextColor),
-                                    ],
-                                  )
-                                : Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        flex: 3, // Table takes more space
-                                        child: Column(
-                                          children: [
-                                            _buildSearchAndFilter(cardColor,
-                                                secondaryTextColor, textColor),
-                                            const SizedBox(height: 22),
-                                            _buildUsersTable(
-                                                isMobile,
-                                                cardColor,
-                                                textColor,
-                                                secondaryTextColor),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                          width:
-                                              28), // Spacing between table and logs
-                                      Expanded(
-                                        flex: 1, // Logs take less space
-                                        child: _buildUserLogsCard(cardColor,
-                                            textColor, secondaryTextColor),
-                                      ),
-                                    ],
-                                  ),
-                          ],
+                        const SizedBox(width: 28),
+                        Expanded(
+                          child: _buildUserLogsCard(
+                              cardColor, textColor, secondaryTextColor),
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      bottomNavigationBar: isMobile
-          ? AdminSidebar(
-              selectedIndex: selectedIndex,
-              onItemSelected: (idx) => setState(() => selectedIndex = idx),
-              isDark: isDark,
-              isMobile: true,
-            )
-          : null,
     );
   }
 
@@ -451,7 +460,7 @@ class _UsersScreenState extends State<UsersScreen>
                 isPositive: true,
                 icon: Icons.people_alt_rounded,
                 iconColor: Colors.green[600]!,
-                isDark: isDark,
+                isDark: _isDark,
               ),
               const SizedBox(height: 12),
               AdminUserStatCard(
@@ -461,7 +470,7 @@ class _UsersScreenState extends State<UsersScreen>
                 isPositive: true,
                 icon: Icons.check_circle_rounded,
                 iconColor: Colors.deepPurple,
-                isDark: isDark,
+                isDark: _isDark,
               ),
               const SizedBox(height: 12),
               AdminUserStatCard(
@@ -471,7 +480,7 @@ class _UsersScreenState extends State<UsersScreen>
                 isPositive: false,
                 icon: Icons.remove_circle_outline,
                 iconColor: Colors.orange,
-                isDark: isDark,
+                isDark: _isDark,
               ),
             ],
           )
@@ -485,7 +494,7 @@ class _UsersScreenState extends State<UsersScreen>
                   isPositive: true,
                   icon: Icons.people_alt_rounded,
                   iconColor: Colors.green[600]!,
-                  isDark: isDark,
+                  isDark: _isDark,
                 ),
               ),
               const SizedBox(width: 16),
@@ -497,7 +506,7 @@ class _UsersScreenState extends State<UsersScreen>
                   isPositive: true,
                   icon: Icons.check_circle_rounded,
                   iconColor: Colors.deepPurple,
-                  isDark: isDark,
+                  isDark: _isDark,
                 ),
               ),
               const SizedBox(width: 16),
@@ -509,114 +518,11 @@ class _UsersScreenState extends State<UsersScreen>
                   isPositive: false,
                   icon: Icons.remove_circle_outline,
                   iconColor: Colors.orange,
-                  isDark: isDark,
+                  isDark: _isDark,
                 ),
               ),
             ],
           );
-  }
-
-  // New Widget: Bar Chart for Activity Trend
-  Widget _buildActivityTrendChart(
-      bool isMobile, Color textColor, Color secondaryTextColor) {
-    // Mock data - replace with your actual data
-    final activityData = {
-      'Mon': 12,
-      'Tue': 18,
-      'Wed': 15,
-      'Thu': 22,
-      'Fri': 20,
-      'Sat': 8,
-      'Sun': 5
-    };
-    final maxValue = activityData.values.reduce(math.max).toDouble();
-
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Weekly Activity',
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: textColor,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'User logins and interactions',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: secondaryTextColor,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final barWidth =
-                    (constraints.maxWidth - 60) / activityData.length;
-
-                return Column(
-                  children: [
-                    Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: activityData.entries.map((entry) {
-                          final height = (entry.value / maxValue) *
-                              (constraints.maxHeight - 40);
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Container(
-                                  width: barWidth,
-                                  height: height,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        AppColors.primary.withOpacity(0.8),
-                                        AppColors.primary.withOpacity(0.4),
-                                      ],
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                    ),
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(4),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  entry.key,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: secondaryTextColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    Container(
-                      height: 1,
-                      color: isDark ? Colors.grey[700] : Colors.grey[200],
-                      margin: const EdgeInsets.only(top: 16),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   // Widget for User Logs Card (now separate from insights section)
@@ -680,6 +586,7 @@ class _UsersScreenState extends State<UsersScreen>
   // Helper widget for a single log entry
   Widget _buildLogEntry(
       String action, String timestamp, Color secondaryTextColor) {
+    final isDark = _isDark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
@@ -984,6 +891,7 @@ class _UsersScreenState extends State<UsersScreen>
 
   Widget _buildUserRow(
       User user, bool isMobile, Color textColor, Color secondaryTextColor) {
+    final isDark = _isDark;
     final statusColor =
         user.status == 'Active' ? Colors.green : Colors.grey[600];
 
@@ -1949,7 +1857,6 @@ class _UsersScreenState extends State<UsersScreen>
     builder: (dialogContext) {
       final primaryColor = AppColors.primary;
       final cardColor = isDark ? AppColors.darkCard : AppColors.card;
-      final backgroundColor = isDark ? AppColors.darkBackground : AppColors.background;
       final textColor = isDark ? AppColors.darkText : AppColors.text;
       final secondaryTextColor = isDark 
           ? AppColors.darkText.withOpacity(0.7) 
@@ -2311,48 +2218,6 @@ class _UsersScreenState extends State<UsersScreen>
 
 // Modern UI Components
 
-Widget _buildAvatarInputSection(
-  TextEditingController controller,
-  bool isDark,
-  Color primaryColor,
-  Color cardColor,
-  Color textColor,
-) {
-  return Column(
-    children: [
-      Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          CircleAvatar(
-            radius: 40,
-            backgroundColor: isDark ? AppColors.darkCard : Colors.white,
-            backgroundImage: controller.text.isNotEmpty
-                ? NetworkImage(controller.text)
-                : null,
-            child: controller.text.isEmpty
-                ? Icon(Icons.person, size: 40, color: textColor.withOpacity(0.5))
-                : null,
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: primaryColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: cardColor, width: 2),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.edit, size: 16),
-              color: isDark ? AppColors.text : Colors.white,
-              onPressed: () {
-                // Implement avatar editing logic
-              },
-            ),
-          ),
-        ],
-      ),
-    ],
-  );
-}
-
 
   Widget _buildAvatarEditSection(
   TextEditingController controller,
@@ -2461,7 +2326,7 @@ Widget _buildAvatarInputSection(
       : Colors.black.withOpacity(0.1);
 
   return DropdownButtonFormField<String>(
-    value: value,
+    initialValue: value,
     items: items.map((String value) {
       return DropdownMenuItem<String>(
         value: value,
@@ -2695,35 +2560,6 @@ Widget _buildPermissionChip({
   );
 }
 
-class AppBackgroundGradient {
-  static LinearGradient getDarkGradient() {
-    return LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Colors.grey.shade900.withOpacity(0.9),
-        Colors.grey.shade800.withOpacity(0.95),
-        Colors.grey.shade700.withOpacity(0.97),
-      ],
-      stops: const [0.1, 0.5, 1.0],
-      transform: const GradientRotation(0.1),
-    );
-  }
-
-  static LinearGradient getLightGradient() {
-    return LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
-      colors: [
-        Colors.blueGrey.shade50.withOpacity(0.98),
-        Colors.blueGrey.shade100.withOpacity(0.95),
-        Colors.blueGrey.shade200.withOpacity(0.93),
-      ],
-      stops: const [0.0, 0.6, 1.0],
-    );
-  }
-}
-
 // Helper Classes
 
 class DialogColors {
@@ -2746,6 +2582,6 @@ class DialogColors {
 
 String _generateTempPassword({int length = 8}) {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  final rand = Random();
+  final rand = math.Random();
   return List.generate(length, (index) => chars[rand.nextInt(chars.length)]).join();
 }

@@ -1,7 +1,6 @@
 import 'package:farmestates_ai_dashbaord/constants/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 
 class SensorTabsContainer extends StatefulWidget {
   final bool isDark;
@@ -1119,7 +1118,7 @@ Widget _buildCompactRelayCard({
                   value: isActive,
                   onChanged: onToggle,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  activeColor: activeColor,
+                  activeThumbColor: activeColor,
                   activeTrackColor: activeColor.withOpacity(0.3),
                 ),
               ),

@@ -56,11 +56,11 @@ class _FarmPerformanceCardState extends State<FarmPerformanceCard> {
       );    
 
     final farms = [
-      FarmData('Greenhouse A', 'John Smith', 'Nairobi, Kenya', 85, 72, 18, 3, 92),
-      FarmData('Field B', 'Sarah Johnson', 'Kampala, Uganda', 78, 65, 22, 5, 87),
-      FarmData('Hydroponic C', 'David Kimani', 'Arusha, Tanzania', 92, 88, 15, 1, 95),
-      FarmData('Greenhouse D', 'Grace Omondi', 'Mombasa, Kenya', 81, 75, 19, 2, 89),
-      FarmData('Field E', 'Robert Mugabe', 'Harare, Zimbabwe', 76, 68, 24, 6, 84),
+      FarmData('Farm A', 'John Smith', 'Nairobi, Kenya', 85, 72, 18, 3, 92),
+      FarmData('Farm B', 'Sarah Johnson', 'Kampala, Uganda', 78, 65, 22, 5, 87),
+      FarmData('Farm C', 'David Kimani', 'Arusha, Tanzania', 92, 88, 15, 1, 95),
+      FarmData('Farm D', 'Grace Omondi', 'Mombasa, Kenya', 81, 75, 19, 2, 89),
+      FarmData('Farm E', 'Robert Mugabe', 'Harare, Zimbabwe', 76, 68, 24, 6, 84),
     ];
 
     Widget table = Column(
@@ -356,31 +356,6 @@ class _FarmPerformanceCardState extends State<FarmPerformanceCard> {
             )
           else
             table,
-          // View All Button
-          SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
-                  ),
-                ),
-              ),
-              child: Text(
-                "VIEW COMPLETE FARM ANALYSIS",
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
