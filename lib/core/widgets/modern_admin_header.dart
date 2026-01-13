@@ -67,22 +67,7 @@ class ModernAdminHeader extends ConsumerWidget {
         vertical: AppSpacing.lg,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark
-                ? Colors.white.withOpacity(0.08)
-                : Colors.black.withOpacity(0.08),
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: isDark ? AppColors.surfaceDark : AppColors.neutral100,
       ),
       child: isMobile ? _buildMobileLayout(isDark, ref) : _buildDesktopLayout(isDark, ref),
     );
@@ -97,21 +82,55 @@ class ModernAdminHeader extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '${_getGreeting()}, $userName 👋',
-                style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                ),
+              Row(
+                children: [
+                  Text(
+                    _getGreeting(),
+                    style: AppTypography.h4.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 28,
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    ', $userName',
+                    style: AppTypography.h4.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 28,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.9)
+                          : AppColors.textPrimary.withOpacity(0.8),
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    ' 👋',
+                    style: TextStyle(fontSize: 28),
+                  ),
+                ],
               ),
               const SizedBox(height: AppSpacing.xs),
-              Text(
-                _getFormattedDate(),
-                style: AppTypography.bodyMedium.copyWith(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.6)
-                      : AppColors.textSecondary,
-                ),
+              Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today_outlined,
+                    size: 16,
+                    color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    _getFormattedDate(),
+                    style: AppTypography.bodyLarge.copyWith(
+                      fontSize: 14,
+                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -171,59 +190,314 @@ class ModernAdminHeader extends ConsumerWidget {
       children: [
         // Top Row: Greeting and Actions
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: Text(
-                '${_getGreeting()}, $userName',
-                style: AppTypography.h6.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Greeting
+                  Row(
+                    children: [
+                      Text(
+                        _getGreeting(),
+                        style: AppTypography.h5.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '👋',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  // User Name
+                  Text(
+                    userName,
+                    style: AppTypography.bodyLarge.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.85)
+                          : AppColors.textPrimary.withOpacity(0.75),
+                      letterSpacing: 0.1,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-            ),
-            _buildActionButton(
-              icon: isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-              tooltip: isDark ? 'Light Mode' : 'Dark Mode',
-              isDark: isDark,
-              onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
             ),
             const SizedBox(width: AppSpacing.xs),
-            _buildActionButton(
-              icon: Icons.notifications_outlined,
-              tooltip: 'Notifications',
-              isDark: isDark,
-              onPressed: onNotificationTap,
-              badge: 3,
+            // Action Buttons
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildMobileActionButton(
+                  icon: isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                  tooltip: isDark ? 'Light Mode' : 'Dark Mode',
+                  isDark: isDark,
+                  onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                _buildMobileActionButton(
+                  icon: Icons.notifications_outlined,
+                  tooltip: 'Notifications',
+                  isDark: isDark,
+                  onPressed: onNotificationTap,
+                  badge: 3,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                _buildMobileProfileButton(isDark),
+              ],
             ),
           ],
         ),
 
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.md),
 
         // Bottom Row: Date and Weather
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                _getFormattedDate(),
-                style: AppTypography.bodySmall.copyWith(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.6)
-                      : AppColors.textSecondary,
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            border: Border.all(
+              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.04),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 14,
+                color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  _getFormattedDate(),
+                  style: AppTypography.bodyMedium.copyWith(
+                    fontSize: 12,
+                    color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (weatherInfo != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                WeatherInfoChip(
+                  condition: weatherInfo!.condition,
+                  temperature: weatherInfo!.temperature,
+                  isDark: isDark,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileActionButton({
+    required IconData icon,
+    required String tooltip,
+    required bool isDark,
+    VoidCallback? onPressed,
+    int? badge,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Material(
+            color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            elevation: 0,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withOpacity(0.12) : Colors.black.withOpacity(0.08),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: isDark ? Colors.white.withOpacity(0.95) : AppColors.textPrimary,
                 ),
               ),
             ),
-            if (weatherInfo != null)
-              WeatherInfoChip(
-                condition: weatherInfo!.condition,
-                temperature: weatherInfo!.temperature,
-                isDark: isDark,
+          ),
+          if (badge != null && badge > 0)
+            Positioned(
+              top: -2,
+              right: -2,
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  color: AppColors.error,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 16,
+                  minHeight: 16,
+                ),
+                child: Text(
+                  badge > 9 ? '9+' : badge.toString(),
+                  style: AppTypography.caption.copyWith(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileProfileButton(bool isDark) {
+    return Consumer(
+      builder: (context, ref, child) {
+        return PopupMenuButton<String>(
+          offset: const Offset(0, 50),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          ),
+          itemBuilder: (menuContext) => [
+            PopupMenuItem(
+              value: 'profile',
+              child: Row(
+                children: const [
+                  Icon(Icons.person_outline, size: 18),
+                  SizedBox(width: AppSpacing.sm),
+                  Text('Profile'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'settings',
+              child: Row(
+                children: const [
+                  Icon(Icons.settings_outlined, size: 18),
+                  SizedBox(width: AppSpacing.sm),
+                  Text('Settings'),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            PopupMenuItem(
+              value: 'logout',
+              child: Row(
+                children: const [
+                  Icon(Icons.logout, size: 18, color: AppColors.error),
+                  SizedBox(width: AppSpacing.sm),
+                  Text('Logout', style: TextStyle(color: AppColors.error)),
+                ],
+              ),
+            ),
           ],
-        ),
-      ],
+          onSelected: (value) async {
+            if (value == 'logout') {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: const Text('Logout'),
+                  content: const Text('Are you sure you want to logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(dialogContext, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                      ),
+                      child: const Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true && context.mounted) {
+                await ref.read(authProvider.notifier).logout();
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                }
+              }
+            } else if (value == 'settings') {
+              Navigator.of(context).pushNamed('/settings');
+            } else if (value == 'profile') {
+              if (onProfileTap != null) onProfileTap!();
+            }
+          },
+          child: Material(
+            color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            elevation: 0,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary,
+                    AppColors.primaryDark,
+                  ],
+                ),
+                border: Border.all(
+                  color: isDark ? Colors.white.withOpacity(0.12) : Colors.black.withOpacity(0.08),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -234,55 +508,62 @@ class ModernAdminHeader extends ConsumerWidget {
     VoidCallback? onPressed,
     int? badge,
   }) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Material(
-          color: isDark
-              ? Colors.white.withOpacity(0.08)
-              : AppColors.neutral100,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          child: InkWell(
-            onTap: onPressed,
+    return Tooltip(
+      message: tooltip,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Material(
+            color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              child: Icon(
-                icon,
-                size: 20,
-                color: isDark
-                    ? Colors.white.withOpacity(0.9)
-                    : AppColors.textPrimary,
-              ),
-            ),
-          ),
-        ),
-        if (badge != null && badge > 0)
-          Positioned(
-            top: -4,
-            right: -4,
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: AppColors.error,
-                shape: BoxShape.circle,
-              ),
-              constraints: const BoxConstraints(
-                minWidth: 18,
-                minHeight: 18,
-              ),
-              child: Text(
-                badge > 9 ? '9+' : badge.toString(),
-                style: AppTypography.caption.copyWith(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+            elevation: 0,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.06),
+                    width: 1,
+                  ),
                 ),
-                textAlign: TextAlign.center,
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: isDark ? Colors.white.withOpacity(0.95) : AppColors.textPrimary,
+                ),
               ),
             ),
           ),
-      ],
+          if (badge != null && badge > 0)
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: AppColors.error,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 18,
+                  minHeight: 18,
+                ),
+                child: Text(
+                  badge > 9 ? '9+' : badge.toString(),
+                  style: AppTypography.caption.copyWith(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -350,7 +631,7 @@ class ModernAdminHeader extends ConsumerWidget {
                   ],
                 ),
               );
-              
+
               if (confirmed == true && context.mounted) {
                 // Perform logout
                 await ref.read(authProvider.notifier).logout();
@@ -366,38 +647,75 @@ class ModernAdminHeader extends ConsumerWidget {
             }
           },
           child: Material(
-            color: isDark
-                ? Colors.white.withOpacity(0.08)
-                : AppColors.neutral100,
+            color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
             borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: AppColors.primary.withOpacity(0.2),
-                    child: Text(
-                      userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
+            elevation: 0,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.06),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primaryDark,
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: 18,
-                    color: isDark
-                        ? Colors.white.withOpacity(0.7)
-                        : AppColors.textSecondary,
-                  ),
-                ],
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      userName.split(' ').first,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 20,
+                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -413,24 +731,34 @@ class ModernAdminHeader extends ConsumerWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withOpacity(0.08)
-            : AppColors.neutral100,
+        color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isDark
-              ? Colors.white.withOpacity(0.12)
-              : Colors.black.withOpacity(0.08),
-          width: 1,
+          color: isDark ? Colors.white.withOpacity(0.15) : AppColors.primary.withOpacity(0.2),
+          width: 1.5,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark ? Colors.black.withOpacity(0.2) : AppColors.primary.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.agriculture_outlined,
-            size: 18,
-            color: AppColors.primary,
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: Icon(
+              Icons.agriculture_outlined,
+              size: 18,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           DropdownButton<String>(
@@ -442,7 +770,8 @@ class ModernAdminHeader extends ConsumerWidget {
                   farm,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
                   ),
                 ),
               );
@@ -451,10 +780,8 @@ class ModernAdminHeader extends ConsumerWidget {
             underline: const SizedBox(),
             icon: Icon(
               Icons.keyboard_arrow_down_rounded,
-              size: 18,
-              color: isDark
-                  ? Colors.white.withOpacity(0.7)
-                  : AppColors.textSecondary,
+              size: 20,
+              color: AppColors.primary,
             ),
             dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),

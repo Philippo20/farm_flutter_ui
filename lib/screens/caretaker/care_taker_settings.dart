@@ -516,7 +516,7 @@ Widget _buildPasswordField({
                         value: pushNotifications,
                         onChanged: (value) =>
                             setState(() => pushNotifications = value),
-                        activeThumbColor: isDark ? Colors.greenAccent : Colors.green,
+                        activeColor: isDark ? Colors.greenAccent : Colors.green,
                       ),
                     ),
                     ListTile(
@@ -535,7 +535,7 @@ Widget _buildPasswordField({
                         value: emailNotifications,
                         onChanged: (value) =>
                             setState(() => emailNotifications = value),
-                        activeThumbColor: isDark ? Colors.greenAccent : Colors.green,
+                        activeColor: isDark ? Colors.greenAccent : Colors.green,
                       ),
                     ),
                     ListTile(
@@ -554,7 +554,7 @@ Widget _buildPasswordField({
                         value: smsNotifications,
                         onChanged: (value) =>
                             setState(() => smsNotifications = value),
-                        activeThumbColor: isDark ? Colors.greenAccent : Colors.green,
+                        activeColor: isDark ? Colors.greenAccent : Colors.green,
                       ),
                     ),
                   ],
@@ -806,7 +806,7 @@ Widget _buildPasswordField({
       trailing: Switch(
         value: value,
         onChanged: onChanged,
-        activeThumbColor: isDark ? Colors.greenAccent : Colors.green,
+        activeColor: isDark ? Colors.greenAccent : Colors.green,
       ),
     );
   }

@@ -30,23 +30,31 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
     
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: Row(
-        children: [
-          ModernAdminSidebar(selectedIndex: 3, onItemSelected: (_) {}),
-          Expanded(
-            child: Column(
-              children: [
-                ModernAdminHeader(userName: 'Admin', onNotificationTap: () {}, onProfileTap: () {}),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title
+      body: isMobile ? _buildMobileLayout(isDark) : _buildDesktopLayout(isDark),
+      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+    );
+  }
+
+  Widget _buildDesktopLayout(bool isDark) {
+    return Row(
+      children: [
+        ModernAdminSidebar(selectedIndex: 3, onItemSelected: (_) {}),
+        Expanded(
+          child: Column(
+            children: [
+              ModernAdminHeader(userName: 'Admin', onNotificationTap: () {}, onProfileTap: () {}),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -136,6 +144,225 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
             ),
           ),
         ],
+      );
+  }
+
+  Widget _buildMobileLayout(bool isDark) {
+    return Column(
+      children: [
+        ModernAdminHeader(userName: 'Admin', onNotificationTap: () {}, onProfileTap: () {}),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Sensors Dashboard', style: AppTypography.h5.copyWith(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.textPrimary)),
+                const SizedBox(height: AppSpacing.lg),
+                // Filters (mobile optimized)
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.surfaceDark : Colors.white,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(child: _buildDropdown('Farm', _selectedFarm, ['All Farms', 'Northern Estate', 'Southern Estate'], (v) => setState(() => _selectedFarm = v!), isDark)),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: _buildDropdown('Status', _selectedStatus, ['All', 'Normal', 'Warning', 'Alert'], (v) => setState(() => _selectedStatus = v!), isDark)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                // Sensors List (mobile optimized)
+                ..._sensors.where((sensor) {
+                  if (_selectedStatus != 'All' && sensor['status'] != _selectedStatus) return false;
+                  if (_selectedFarm != 'All Farms' && !sensor['location'].contains(_selectedFarm)) return false;
+                  return true;
+                }).map((sensor) => _buildMobileSensorCard(sensor, isDark)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileSensorCard(Map<String, dynamic> sensor, bool isDark) {
+    Color statusColor = sensor['status'] == 'Normal' ? AppColors.success : sensor['status'] == 'Warning' ? AppColors.warning : AppColors.error;
+    Color batteryColor = sensor['battery'] > 50 ? AppColors.success : sensor['battery'] > 20 ? AppColors.warning : AppColors.error;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: (sensor['color'] as Color).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Icon(sensor['icon'] as IconData, color: sensor['color'] as Color, size: 20),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(sensor['name'], style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: isDark ? Colors.white : AppColors.textPrimary)),
+                    Text(sensor['type'], style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textSecondary)),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                ),
+                child: Text(sensor['status'], style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Value', style: TextStyle(fontSize: 10, color: isDark ? Colors.white60 : AppColors.textSecondary)),
+                    Text(sensor['value'], style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: sensor['color'] as Color)),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Battery', style: TextStyle(fontSize: 10, color: isDark ? Colors.white60 : AppColors.textSecondary)),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: LinearProgressIndicator(
+                            value: sensor['battery'] / 100,
+                            backgroundColor: Colors.grey.withOpacity(0.2),
+                            valueColor: AlwaysStoppedAnimation(batteryColor),
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text('${sensor['battery']}%', style: TextStyle(fontSize: 11, color: batteryColor)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(sensor['location'], style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textSecondary)),
+          Text('Last update: ${sensor['lastUpdate']}', style: TextStyle(fontSize: 10, color: isDark ? Colors.white60 : AppColors.textSecondary)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigation(bool isDark) {
+    final navItems = [
+      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/dashboard'},
+      {'icon': Icons.people_outline, 'label': 'Users', 'index': 1, 'route': '/users'},
+      {'icon': Icons.agriculture_outlined, 'label': 'Farms', 'index': 2, 'route': '/farms'},
+      {'icon': Icons.sensors_outlined, 'label': 'Sensors', 'index': 3, 'route': '/sensors'},
+      {'icon': Icons.analytics_outlined, 'label': 'Analytics', 'index': 4, 'route': '/analytics'},
+      {'icon': Icons.settings_outlined, 'label': 'Settings', 'index': 5, 'route': '/settings'},
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+        border: Border(
+          top: BorderSide(
+            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            width: 1,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 70,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: navItems.take(5).map((item) {
+              final index = item['index'] as int;
+              final route = item['route'] as String;
+              final isSelected = index == 3; // Sensors screen is index 3
+
+              return Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      if (index != 3) {
+                        try {
+                          Navigator.pushReplacementNamed(context, route);
+                        } catch (e) {
+                          try {
+                            Navigator.pushNamed(context, route);
+                          } catch (e2) {
+                            debugPrint('Navigation error: $e2');
+                          }
+                        }
+                      }
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          item['icon'] as IconData,
+                          size: 24,
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item['label'] as String,
+                          style: AppTypography.caption.copyWith(
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
       ),
     );
   }

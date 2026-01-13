@@ -16,7 +16,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
   late TabController _tabController;
   int selectedIndex = 4;
   bool isDark = false;
-  
+
   // Dynamic list of available farms
   List<String> availableFarms = ['All Farms', 'Greenhouse A', 'Field B', 'Hydroponic C'];
   late String selectedFarm; // Initialize later in initState
@@ -102,8 +102,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         _buildFarmSelector(isMobile, textColor, cardColor, activeColor),
                         _buildTabBar(activeColor, textColor),
                         Expanded(
-                          child: _buildTabViews(
-                              cardColor, textColor, activeColor, subtitleColor),
+                          child: _buildTabViews(cardColor, textColor, activeColor, subtitleColor),
                         ),
                       ],
                     ),
@@ -160,7 +159,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
         children: [
           Expanded(
             child: DropdownButtonFormField<String>(
-              initialValue: selectedFarm,
+              value: selectedFarm,
               dropdownColor: cardColor, // Background color of the dropdown menu
               style: GoogleFonts.inter(color: textColor), // Text color of dropdown items
               // Use the dynamic availableFarms list
@@ -207,7 +206,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                 'New Farm',
                 style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16),
               ),
-              onPressed: () => _addNewFarm(context, textColor, cardColor, activeColor), // Call the new method
+              onPressed: () =>
+                  _addNewFarm(context, textColor, cardColor, activeColor), // Call the new method
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 shape: RoundedRectangleBorder(
@@ -301,7 +301,6 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
     );
   }
 
-
   // Builds the tab bar for navigation between settings categories
   Widget _buildTabBar(Color activeColor, Color textColor) {
     return Padding(
@@ -329,9 +328,15 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
           labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15),
           unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
           tabs: const [
-            Tab(icon: Icon(Icons.settings_remote, size: 20), text: 'Automation', iconMargin: EdgeInsets.zero),
+            Tab(
+                icon: Icon(Icons.settings_remote, size: 20),
+                text: 'Automation',
+                iconMargin: EdgeInsets.zero),
             Tab(icon: Icon(Icons.sensors, size: 20), text: 'Sensors', iconMargin: EdgeInsets.zero),
-            Tab(icon: Icon(Icons.notifications, size: 20), text: 'Alerts', iconMargin: EdgeInsets.zero),
+            Tab(
+                icon: Icon(Icons.notifications, size: 20),
+                text: 'Alerts',
+                iconMargin: EdgeInsets.zero),
             Tab(icon: Icon(Icons.analytics, size: 20), text: 'Data', iconMargin: EdgeInsets.zero),
           ],
         ),
@@ -421,11 +426,11 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                           ),
                           Switch(
                             value: entry.value,
-                            onChanged: (val) => setState(() => _automationSettings[entry.key] = val),
-                            activeThumbColor: activeColor,
+                            onChanged: (val) =>
+                                setState(() => _automationSettings[entry.key] = val),
                             inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
                             inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[500],
-                            // Thumb color when active
+                            activeColor: activeColor, // Use the correct parameter for active color
                             activeTrackColor: activeColor.withOpacity(0.5),
                           ),
                         ],
@@ -442,7 +447,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
   }
 
   // Content for the Sensors tab
-  Widget _buildSensorsTab(Color cardColor, Color textColor, Color activeColor, Color subtitleColor) {
+  Widget _buildSensorsTab(
+      Color cardColor, Color textColor, Color activeColor, Color subtitleColor) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -486,7 +492,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                             children: [
                               Icon(_getSensorIcon(entry.key), color: activeColor, size: 30),
                               const SizedBox(width: 15),
-                              Expanded( // Use Expanded to prevent overflow
+                              Expanded(
+                                // Use Expanded to prevent overflow
                                 child: Text(
                                   entry.key,
                                   style: GoogleFonts.inter(
@@ -509,7 +516,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                             ],
                           ),
                           const SizedBox(height: 15),
-                          Expanded( // Allow slider to take available height
+                          Expanded(
+                            // Allow slider to take available height
                             child: SliderTheme(
                               data: SliderTheme.of(context).copyWith(
                                 trackHeight: 8.0,
@@ -529,7 +537,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                                 divisions: _getSensorDivisions(entry.key),
                                 activeColor: activeColor,
                                 inactiveColor: activeColor.withOpacity(0.3),
-                                label: '${entry.value.toStringAsFixed(entry.key == 'Nutrient EC' || entry.key == 'Water pH' ? 1 : 0)}${_getSensorUnit(entry.key)}',
+                                label:
+                                    '${entry.value.toStringAsFixed(entry.key == 'Nutrient EC' || entry.key == 'Water pH' ? 1 : 0)}${_getSensorUnit(entry.key)}',
                                 onChanged: (val) =>
                                     setState(() => _sensorThresholds[entry.key] = val),
                               ),
@@ -598,9 +607,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         ),
                         secondary: Icon(_getAlertIcon(entry.key), color: activeColor, size: 28),
                         value: entry.value,
-                        onChanged: (val) =>
-                            setState(() => _alertSettings[entry.key] = val),
-                        activeThumbColor: activeColor,
+                        onChanged: (val) => setState(() => _alertSettings[entry.key] = val),
+                        activeColor: activeColor,
                         inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
                         inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[500],
                         activeTrackColor: activeColor.withOpacity(0.5),
@@ -641,9 +649,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         ),
                         secondary: Icon(_getChannelIcon(entry.key), color: activeColor, size: 28),
                         value: entry.value,
-                        onChanged: (val) =>
-                            setState(() => _notificationChannels[entry.key] = val),
-                        activeThumbColor: activeColor,
+                        onChanged: (val) => setState(() => _notificationChannels[entry.key] = val),
+                        activeColor: activeColor,
                         inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
                         inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[500],
                         activeTrackColor: activeColor.withOpacity(0.5),
@@ -714,7 +721,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         ),
                         Text(
                           'Connect to data sources for live insights.',
-                          style: GoogleFonts.inter(color: subtitleColor.withOpacity(0.7), fontSize: 13),
+                          style: GoogleFonts.inter(
+                              color: subtitleColor.withOpacity(0.7), fontSize: 13),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -731,13 +739,14 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                   ),
                   const Divider(height: 25, thickness: 1),
                   ListTile(
-                    leading: Icon(Icons.download_for_offline, color: Theme.of(context).primaryColor, size: 30),
+                    leading: Icon(Icons.download_for_offline,
+                        color: Theme.of(context).primaryColor, size: 30),
                     title: Text(
                       'Export Sensor Data (CSV)',
                       style: GoogleFonts.inter(color: textColor, fontSize: 16),
                     ),
-                    trailing: Icon(Icons.arrow_forward_ios,
-                        color: textColor.withOpacity(0.7), size: 18),
+                    trailing:
+                        Icon(Icons.arrow_forward_ios, color: textColor.withOpacity(0.7), size: 18),
                     onTap: () {
                       // TODO: Implement CSV export logic
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -746,13 +755,14 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                     },
                   ),
                   ListTile(
-                    leading: Icon(Icons.picture_as_pdf, color: Theme.of(context).primaryColor, size: 30),
+                    leading:
+                        Icon(Icons.picture_as_pdf, color: Theme.of(context).primaryColor, size: 30),
                     title: Text(
                       'Generate Performance Report (PDF)',
                       style: GoogleFonts.inter(color: textColor, fontSize: 16),
                     ),
-                    trailing: Icon(Icons.arrow_forward_ios,
-                        color: textColor.withOpacity(0.7), size: 18),
+                    trailing:
+                        Icon(Icons.arrow_forward_ios, color: textColor.withOpacity(0.7), size: 18),
                     onTap: () {
                       // TODO: Implement PDF report generation logic
                       ScaffoldMessenger.of(context).showSnackBar(

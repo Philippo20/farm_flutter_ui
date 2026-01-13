@@ -156,7 +156,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                   SizedBox(
                     width: 200,
                     child: DropdownButtonFormField<String>(
-                      initialValue: _statusFilter,
+                      value: _statusFilter,
                       items: [
                         "All",
                         "Germinating",

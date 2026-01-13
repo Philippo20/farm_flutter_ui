@@ -28,29 +28,37 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final themeMode = ref.watch(themeProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
     
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: Row(
-        children: [
-          ModernAdminSidebar(selectedIndex: 5, onItemSelected: (_) {}),
-          Expanded(
-            child: Column(
-              children: [
-                ModernAdminHeader(userName: 'Admin', onNotificationTap: () {}, onProfileTap: () {}),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title
-                        Text('Settings', style: AppTypography.h4.copyWith(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.textPrimary)),
-                        Text('Manage your preferences and system configuration', style: AppTypography.bodyMedium.copyWith(color: isDark ? Colors.white70 : AppColors.textSecondary)),
-                        
-                        const SizedBox(height: AppSpacing.xl),
-                        
-                        // Settings Sections
+      body: isMobile ? _buildMobileLayout(isDark, themeMode) : _buildDesktopLayout(isDark, themeMode),
+      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+    );
+  }
+
+  Widget _buildDesktopLayout(bool isDark, ThemeMode themeMode) {
+    return Row(
+      children: [
+        ModernAdminSidebar(selectedIndex: 5, onItemSelected: (_) {}),
+        Expanded(
+          child: Column(
+            children: [
+              ModernAdminHeader(userName: 'Admin', onNotificationTap: () {}, onProfileTap: () {}),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      Text('Settings', style: AppTypography.h4.copyWith(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.textPrimary)),
+                      Text('Manage your preferences and system configuration', style: AppTypography.bodyMedium.copyWith(color: isDark ? Colors.white70 : AppColors.textSecondary)),
+                      
+                      const SizedBox(height: AppSpacing.xl),
+                      
+                      // Settings Sections
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -87,6 +95,125 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
             ),
           ),
         ],
+      );
+  }
+
+  Widget _buildMobileLayout(bool isDark, ThemeMode themeMode) {
+    return Column(
+      children: [
+        ModernAdminHeader(userName: 'Admin', onNotificationTap: () {}, onProfileTap: () {}),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Settings', style: AppTypography.h5.copyWith(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.textPrimary)),
+                const SizedBox(height: AppSpacing.lg),
+                _buildAppearanceSection(isDark, themeMode),
+                const SizedBox(height: AppSpacing.md),
+                _buildNotificationsSection(isDark),
+                const SizedBox(height: AppSpacing.md),
+                _buildSecuritySection(isDark),
+                const SizedBox(height: AppSpacing.md),
+                _buildGeneralSection(isDark),
+                const SizedBox(height: AppSpacing.md),
+                _buildDataSection(isDark),
+                const SizedBox(height: AppSpacing.md),
+                _buildAboutSection(isDark),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomNavigation(bool isDark) {
+    final navItems = [
+      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/dashboard'},
+      {'icon': Icons.people_outline, 'label': 'Users', 'index': 1, 'route': '/users'},
+      {'icon': Icons.agriculture_outlined, 'label': 'Farms', 'index': 2, 'route': '/farms'},
+      {'icon': Icons.sensors_outlined, 'label': 'Sensors', 'index': 3, 'route': '/sensors'},
+      {'icon': Icons.analytics_outlined, 'label': 'Analytics', 'index': 4, 'route': '/analytics'},
+      {'icon': Icons.settings_outlined, 'label': 'Settings', 'index': 5, 'route': '/settings'},
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+        border: Border(
+          top: BorderSide(
+            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            width: 1,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 70,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: navItems.take(5).map((item) {
+              final index = item['index'] as int;
+              final route = item['route'] as String;
+              final isSelected = index == 5; // Settings screen is index 5
+
+              return Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      if (index != 5) {
+                        try {
+                          Navigator.pushReplacementNamed(context, route);
+                        } catch (e) {
+                          try {
+                            Navigator.pushNamed(context, route);
+                          } catch (e2) {
+                            debugPrint('Navigation error: $e2');
+                          }
+                        }
+                      }
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          item['icon'] as IconData,
+                          size: 24,
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item['label'] as String,
+                          style: AppTypography.caption.copyWith(
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
       ),
     );
   }

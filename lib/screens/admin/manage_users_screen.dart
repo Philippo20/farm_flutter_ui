@@ -66,17 +66,14 @@ class UsersScreen extends StatefulWidget {
   State<UsersScreen> createState() => _UsersScreenState();
 }
 
-class _UsersScreenState extends State<UsersScreen>
-    with TickerProviderStateMixin {
+class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin {
   int _selectedNavIndex = 1;
   bool _isDark = false;
   bool get isDark => _isDark;
   final TextEditingController _searchController = TextEditingController();
 
-  late TabController
-      _insightsTabController; // Controller for the new insights tabs
-  late TabController
-      _editUserTabController; // Controller for the edit user dialog tabs
+  late TabController _insightsTabController; // Controller for the new insights tabs
+  late TabController _editUserTabController; // Controller for the edit user dialog tabs
 
   int currentPage = 1;
   int itemsPerPage = 10;
@@ -240,7 +237,6 @@ class _UsersScreenState extends State<UsersScreen>
     'Edit Settings',
     'Access Logs',
     'Configure Alerts',
-   
   ];
 
   @override
@@ -248,10 +244,10 @@ class _UsersScreenState extends State<UsersScreen>
     super.initState();
     filteredUsers = users;
     _searchController.addListener(_filterUsers);
-    _insightsTabController = TabController(
-        length: 2, vsync: this); // Initialize insights tab controller
-    _editUserTabController = TabController(
-        length: 2, vsync: this); // Initialize edit user tab controller
+    _insightsTabController =
+        TabController(length: 2, vsync: this); // Initialize insights tab controller
+    _editUserTabController =
+        TabController(length: 2, vsync: this); // Initialize edit user tab controller
   }
 
   @override
@@ -269,8 +265,7 @@ class _UsersScreenState extends State<UsersScreen>
         final matchesSearch = user.name.toLowerCase().contains(query) ||
             user.email.toLowerCase().contains(query) ||
             user.role.toLowerCase().contains(query);
-        final matchesRole = _selectedRoleFilter == 'All Users' ||
-            user.role == _selectedRoleFilter;
+        final matchesRole = _selectedRoleFilter == 'All Users' || user.role == _selectedRoleFilter;
         return matchesSearch && matchesRole;
       }).toList();
     });
@@ -365,14 +360,11 @@ class _UsersScreenState extends State<UsersScreen>
               isMobile
                   ? Column(
                       children: [
-                        _buildSearchAndFilter(
-                            cardColor, secondaryTextColor, textColor),
+                        _buildSearchAndFilter(cardColor, secondaryTextColor, textColor),
                         const SizedBox(height: 22),
-                        _buildUsersTable(
-                            isMobile, cardColor, textColor, secondaryTextColor),
+                        _buildUsersTable(isMobile, cardColor, textColor, secondaryTextColor),
                         const SizedBox(height: 28),
-                        _buildUserLogsCard(
-                            cardColor, textColor, secondaryTextColor),
+                        _buildUserLogsCard(cardColor, textColor, secondaryTextColor),
                       ],
                     )
                   : Row(
@@ -382,18 +374,15 @@ class _UsersScreenState extends State<UsersScreen>
                           flex: 3,
                           child: Column(
                             children: [
-                              _buildSearchAndFilter(cardColor,
-                                  secondaryTextColor, textColor),
+                              _buildSearchAndFilter(cardColor, secondaryTextColor, textColor),
                               const SizedBox(height: 22),
-                              _buildUsersTable(
-                                  isMobile, cardColor, textColor, secondaryTextColor),
+                              _buildUsersTable(isMobile, cardColor, textColor, secondaryTextColor),
                             ],
                           ),
                         ),
                         const SizedBox(width: 28),
                         Expanded(
-                          child: _buildUserLogsCard(
-                              cardColor, textColor, secondaryTextColor),
+                          child: _buildUserLogsCard(cardColor, textColor, secondaryTextColor),
                         ),
                       ],
                     ),
@@ -447,8 +436,7 @@ class _UsersScreenState extends State<UsersScreen>
   Widget _buildStatsSection(bool isMobile) {
     final totalUsers = users.length;
     final activeUsers = users.where((user) => user.status == 'Active').length;
-    final inactiveUsers =
-        users.where((user) => user.status == 'Inactive').length;
+    final inactiveUsers = users.where((user) => user.status == 'Inactive').length;
 
     return isMobile
         ? Column(
@@ -526,8 +514,7 @@ class _UsersScreenState extends State<UsersScreen>
   }
 
   // Widget for User Logs Card (now separate from insights section)
-  Widget _buildUserLogsCard(
-      Color cardColor, Color textColor, Color secondaryTextColor) {
+  Widget _buildUserLogsCard(Color cardColor, Color textColor, Color secondaryTextColor) {
     return Card(
       color: cardColor,
       elevation: 5,
@@ -550,14 +537,14 @@ class _UsersScreenState extends State<UsersScreen>
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildLogEntry('Admin John Smith logged in', '2024-06-21 14:30',
+                _buildLogEntry(
+                    'Admin John Smith logged in', '2024-06-21 14:30', secondaryTextColor),
+                _buildLogEntry('Manager Sarah Johnson updated settings', '2024-06-21 13:15',
                     secondaryTextColor),
-                _buildLogEntry('Manager Sarah Johnson updated settings',
-                    '2024-06-21 13:15', secondaryTextColor),
-                _buildLogEntry('Technician David Kimani accessed device X',
-                    '2024-06-20 10:00', secondaryTextColor),
-                _buildLogEntry('Viewer Grace Omondi viewed reports',
-                    '2024-06-20 09:45', secondaryTextColor),
+                _buildLogEntry('Technician David Kimani accessed device X', '2024-06-20 10:00',
+                    secondaryTextColor),
+                _buildLogEntry(
+                    'Viewer Grace Omondi viewed reports', '2024-06-20 09:45', secondaryTextColor),
               ],
             ),
             const SizedBox(height: 10),
@@ -584,16 +571,14 @@ class _UsersScreenState extends State<UsersScreen>
   }
 
   // Helper widget for a single log entry
-  Widget _buildLogEntry(
-      String action, String timestamp, Color secondaryTextColor) {
+  Widget _buildLogEntry(String action, String timestamp, Color secondaryTextColor) {
     final isDark = _isDark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.history,
-              size: 18, color: AppColors.primary.withOpacity(0.7)),
+          Icon(Icons.history, size: 18, color: AppColors.primary.withOpacity(0.7)),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -621,8 +606,7 @@ class _UsersScreenState extends State<UsersScreen>
     );
   }
 
-  Widget _buildSearchAndFilter(
-      Color cardColor, Color secondaryTextColor, Color textColor) {
+  Widget _buildSearchAndFilter(Color cardColor, Color secondaryTextColor, Color textColor) {
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
@@ -652,8 +636,7 @@ class _UsersScreenState extends State<UsersScreen>
                     color: secondaryTextColor,
                   ),
                 ),
-                style: GoogleFonts.inter(
-                    color: isDark ? Colors.white : Colors.black),
+                style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
               ),
             ),
             Container(
@@ -684,9 +667,8 @@ class _UsersScreenState extends State<UsersScreen>
                     choice,
                     style: GoogleFonts.inter(
                       color: textColor,
-                      fontWeight: _selectedRoleFilter == choice
-                          ? FontWeight.bold
-                          : FontWeight.normal,
+                      fontWeight:
+                          _selectedRoleFilter == choice ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                 );
@@ -698,19 +680,16 @@ class _UsersScreenState extends State<UsersScreen>
     );
   }
 
-  Widget _buildUsersTable(bool isMobile, Color cardColor, Color textColor,
-      Color secondaryTextColor) {
-    final dividerColor = isDark
-        ? Colors.white.withOpacity(0.09)
-        : Colors.black.withOpacity(0.06);
+  Widget _buildUsersTable(
+      bool isMobile, Color cardColor, Color textColor, Color secondaryTextColor) {
+    final dividerColor = isDark ? Colors.white.withOpacity(0.09) : Colors.black.withOpacity(0.06);
 
     // Calculate paginated data
     final totalItems = filteredUsers.length;
     final totalPages = (totalItems / itemsPerPage).ceil();
     final startIndex = (currentPage - 1) * itemsPerPage;
-    final endIndex = startIndex + itemsPerPage > totalItems
-        ? totalItems
-        : startIndex + itemsPerPage;
+    final endIndex =
+        startIndex + itemsPerPage > totalItems ? totalItems : startIndex + itemsPerPage;
     final paginatedUsers = filteredUsers.sublist(startIndex, endIndex);
 
     return Container(
@@ -783,8 +762,8 @@ class _UsersScreenState extends State<UsersScreen>
           Divider(height: 1, color: dividerColor, thickness: 1),
 
           // User Rows
-          ...paginatedUsers.map((user) =>
-              _buildUserRow(user, isMobile, textColor, secondaryTextColor)),
+          ...paginatedUsers
+              .map((user) => _buildUserRow(user, isMobile, textColor, secondaryTextColor)),
 
           if (filteredUsers.isEmpty)
             Padding(
@@ -799,8 +778,7 @@ class _UsersScreenState extends State<UsersScreen>
           if (filteredUsers.length > itemsPerPage) ...[
             Divider(height: 1, color: dividerColor, thickness: 1),
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -858,13 +836,9 @@ class _UsersScreenState extends State<UsersScreen>
                         icon: Icon(
                           Icons.chevron_left,
                           size: 20,
-                          color: currentPage > 1
-                              ? textColor
-                              : secondaryTextColor.withOpacity(0.5),
+                          color: currentPage > 1 ? textColor : secondaryTextColor.withOpacity(0.5),
                         ),
-                        onPressed: currentPage > 1
-                            ? () => setState(() => currentPage--)
-                            : null,
+                        onPressed: currentPage > 1 ? () => setState(() => currentPage--) : null,
                       ),
                       IconButton(
                         icon: Icon(
@@ -874,9 +848,8 @@ class _UsersScreenState extends State<UsersScreen>
                               ? textColor
                               : secondaryTextColor.withOpacity(0.5),
                         ),
-                        onPressed: currentPage < totalPages
-                            ? () => setState(() => currentPage++)
-                            : null,
+                        onPressed:
+                            currentPage < totalPages ? () => setState(() => currentPage++) : null,
                       ),
                     ],
                   ),
@@ -889,18 +862,15 @@ class _UsersScreenState extends State<UsersScreen>
     );
   }
 
-  Widget _buildUserRow(
-      User user, bool isMobile, Color textColor, Color secondaryTextColor) {
+  Widget _buildUserRow(User user, bool isMobile, Color textColor, Color secondaryTextColor) {
     final isDark = _isDark;
-    final statusColor =
-        user.status == 'Active' ? Colors.green : Colors.grey[600];
+    final statusColor = user.status == 'Active' ? Colors.green : Colors.grey[600];
 
     return InkWell(
       onTap: () => _showUserDetailsDialog(user),
       child: Container(
         decoration: BoxDecoration(
-          border: Border(
-              bottom: BorderSide(color: secondaryTextColor.withOpacity(0.1))),
+          border: Border(bottom: BorderSide(color: secondaryTextColor.withOpacity(0.1))),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -913,10 +883,9 @@ class _UsersScreenState extends State<UsersScreen>
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: AppColors.primary.withOpacity(0.09),
-                      backgroundImage:
-                          user.avatar != null && user.avatar!.isNotEmpty
-                              ? NetworkImage(user.avatar!)
-                              : null,
+                      backgroundImage: user.avatar != null && user.avatar!.isNotEmpty
+                          ? NetworkImage(user.avatar!)
+                          : null,
                       child: user.avatar == null || user.avatar!.isEmpty
                           ? Text(
                               user.name[0].toUpperCase(),
@@ -956,8 +925,7 @@ class _UsersScreenState extends State<UsersScreen>
                 ),
                 Expanded(
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: statusColor!.withOpacity(0.09),
                       borderRadius: BorderRadius.circular(20),
@@ -998,24 +966,20 @@ class _UsersScreenState extends State<UsersScreen>
                 itemBuilder: (context) => [
                   PopupMenuItem<String>(
                     value: 'Edit User',
-                    child: Text('Edit User',
-                        style: GoogleFonts.inter(color: textColor)),
+                    child: Text('Edit User', style: GoogleFonts.inter(color: textColor)),
                   ),
                   PopupMenuItem<String>(
                     value: 'Reset Password',
-                    child: Text('Reset Password',
-                        style: GoogleFonts.inter(color: textColor)),
+                    child: Text('Reset Password', style: GoogleFonts.inter(color: textColor)),
                   ),
                   PopupMenuItem<String>(
                     value: user.status == 'Active' ? 'Deactivate' : 'Activate',
-                    child: Text(
-                        user.status == 'Active' ? 'Deactivate' : 'Activate',
+                    child: Text(user.status == 'Active' ? 'Deactivate' : 'Activate',
                         style: GoogleFonts.inter(color: textColor)),
                   ),
                   PopupMenuItem<String>(
                     value: 'Delete',
-                    child: Text('Delete',
-                        style: GoogleFonts.inter(color: Colors.red)),
+                    child: Text('Delete', style: GoogleFonts.inter(color: Colors.red)),
                   ),
                 ].toList(),
                 onSelected: (value) => _handleUserAction(value, user),
@@ -1027,264 +991,287 @@ class _UsersScreenState extends State<UsersScreen>
     );
   }
 
- void _showAddUserDialog() {
-  final formKey = GlobalKey<FormState>();
-  final nameController = TextEditingController();
-  final emailController = TextEditingController();
-  final contactController = TextEditingController();
-  final avatarController = TextEditingController();
+  void _showAddUserDialog() {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+    final emailController = TextEditingController();
+    final contactController = TextEditingController();
+    final avatarController = TextEditingController();
 
-  String? selectedRole;
-  String? selectedStatus;
-  String? selectedDepartment;
-  Set<String> selectedPermissions = {};
-  int currentStep = 0;
-  String tempPassword = '';
+    String? selectedRole;
+    String? selectedStatus;
+    String? selectedDepartment;
+    Set<String> selectedPermissions = {};
+    int currentStep = 0;
+    String tempPassword = '';
 
-  showDialog(
-    context: context,
-    builder: (dialogContext) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(20),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 600),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkCard : AppColors.card,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.all(20),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 600),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCard : AppColors.card,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.primaryGradient,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Add New User',
+                            style: GoogleFonts.poppins(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white),
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                          ),
+                        ],
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Add New User',
-                          style: GoogleFonts.poppins(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Stepper(
-                      currentStep: currentStep,
-                      controlsBuilder: (context, ControlsDetails details) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            if (currentStep > 0)
-                              OutlinedButton(
-                                onPressed: details.onStepCancel,
-                                child: const Text('Back'),
-                              ),
-                            const SizedBox(width: 8),
-                       
-                            ElevatedButton(
-                              onPressed: details.onStepContinue,
-                              child: Text(currentStep == 2 ? 'Finish' : 'Next'),
-                            ),
-                          ],
-                        );
-                      },
-                      onStepContinue: () {
-                        if (currentStep == 0) {
-                          if (!formKey.currentState!.validate() ||
-                              selectedRole == null ||
-                              selectedStatus == null ||
-                              selectedDepartment == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please fill all required fields')),
-                            );
-                            return;
-                          }
-                        }
-
-                        if (currentStep < 2) {
-                          setState(() => currentStep++);
-                        } else {
-                          final newUser = User(
-                            id: (users.length + 1).toString(),
-                            name: nameController.text,
-                            email: emailController.text,
-                            role: selectedRole!,
-                            status: selectedStatus!,
-                            lastActive: 'Just now',
-                            avatar: avatarController.text.isNotEmpty ? avatarController.text : null,
-                            contactNumber: contactController.text,
-                            department: selectedDepartment!,
-                            permissions: selectedPermissions.toList(),
-                          );
-
-                          setState(() {
-                            users.add(newUser);
-                            _filterUsers();
-                            tempPassword = _generateTempPassword();
-                          });
-                        }
-                      },
-                      onStepCancel: () {
-                        if (currentStep > 0) {
-                          setState(() => currentStep--);
-                        } else {
-                          Navigator.of(dialogContext).pop();
-                        }
-                      },
-                      steps: [
-                        Step(
-                          title:  Text('User Info', style: TextStyle(fontWeight: FontWeight.w600, color: isDark ? AppColors.card : AppColors.darkCard,)),
-                          isActive: currentStep >= 0,
-                          content: Form(
-                            key: formKey,
-                            child: Column(
-                              
-                      children: [
-                        _buildModernTextField(
-                          controller: nameController,
-                          label: 'Full Name',
-                          icon: Icons.person_outline,
-                          isRequired: true,
-                          isDark: isDark,
-                          cardColor: isDark ? AppColors.card : AppColors.darkCard,
-                          textColor: isDark ? AppColors.card : AppColors.darkCard,
-                          secondaryTextColor: AppColors.text.withOpacity(0.7),
-                          primaryColor: AppColors.primary,
-                          dividerColor: Colors.grey,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildModernTextField(
-                          controller: emailController,
-                          label: 'Email Address',
-                          icon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                          isRequired: true,
-                          isDark: isDark,
-                          cardColor: isDark ? AppColors.card : AppColors.darkCard,
-                          textColor: isDark ? AppColors.card : AppColors.darkCard,
-                          secondaryTextColor: AppColors.text.withOpacity(0.7),
-                          primaryColor: AppColors.primary,
-                          dividerColor: Colors.grey,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildModernTextField(
-                          controller: contactController,
-                          label: 'Phone Number',
-                          icon: Icons.phone_outlined,
-                          keyboardType: TextInputType.phone,
-                          isDark: isDark,
-                          cardColor: isDark ? AppColors.card : AppColors.darkCard,
-                          textColor: isDark ? AppColors.card : AppColors.darkCard,
-                          secondaryTextColor: AppColors.text.withOpacity(0.7),
-                          primaryColor: AppColors.primary,
-                          dividerColor: Colors.grey,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildModernDropdown(
-                          label: 'User Role',
-                          value: selectedRole,
-                          items: const ['Admin','Farm Owner', 'Farm Manager', 'Technician', 'Field Worker'],
-                          onChanged: (value) => setState(() => selectedRole = value),
-                          icon: Icons.badge_outlined,
-                          isDark: isDark,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildModernDropdown(
-                          label: 'Status',
-                          value: selectedStatus,
-                          items: const ['Active', 'Inactive', 'Suspended', 'Onboarding', 'Terminated'],
-                          onChanged: (value) => setState(() => selectedStatus = value),
-                          icon: Icons.circle_outlined,
-                          isDark: isDark,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildModernDropdown(
-                          label: 'Department',
-                          value: selectedDepartment,
-                          items: const ['Admin', 'IT', 'Operations', 'Field'],
-                          onChanged: (value) => setState(() => selectedDepartment = value),
-                          icon: Icons.business_center_outlined,
-                          isDark: isDark,
-                        ),
-                      ],
-                    ),
-                            ),
-                          ),
-                        
-                        Step(
-                          title: Text('Permissions', style: TextStyle(fontWeight: FontWeight.w600, color: isDark ? AppColors.card : AppColors.darkCard,)),
-                          isActive: currentStep >= 1,
-                          content: Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: _availablePermissions.map((permission) {
-                              return _buildPermissionChip(
-                                permission: permission,
-                                isSelected: selectedPermissions.contains(permission),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedPermissions.add(permission);
-                                    } else {
-                                      selectedPermissions.remove(permission);
-                                    }
-                                  });
-                                },
-                                isDark: isDark,
-                                primaryColor: AppColors.primary,
-                                textColor: AppColors.text,
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                        Step(
-                          title: Text('Congratulations', style: TextStyle(fontWeight: FontWeight.w600, color: isDark ? AppColors.card : AppColors.darkCard,)),
-                          isActive: currentStep >= 2,
-                          content: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Stepper(
+                        currentStep: currentStep,
+                        controlsBuilder: (context, ControlsDetails details) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              Text(
-                                '🎉 ${nameController.text} has been successfully added!',
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              if (currentStep > 0)
+                                OutlinedButton(
+                                  onPressed: details.onStepCancel,
+                                  child: const Text('Back'),
+                                ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: details.onStepContinue,
+                                child: Text(currentStep == 2 ? 'Finish' : 'Next'),
                               ),
-                              const SizedBox(height: 10),
-                              Text(
-                                'A temporary password has been sent to their email.',
-                                style: TextStyle(color: AppColors.text.withOpacity(0.7)),
+                            ],
+                          );
+                        },
+                        onStepContinue: () {
+                          if (currentStep == 0) {
+                            if (!formKey.currentState!.validate() ||
+                                selectedRole == null ||
+                                selectedStatus == null ||
+                                selectedDepartment == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please fill all required fields')),
+                              );
+                              return;
+                            }
+                          }
+
+                          if (currentStep < 2) {
+                            setState(() => currentStep++);
+                          } else {
+                            final newUser = User(
+                              id: (users.length + 1).toString(),
+                              name: nameController.text,
+                              email: emailController.text,
+                              role: selectedRole!,
+                              status: selectedStatus!,
+                              lastActive: 'Just now',
+                              avatar:
+                                  avatarController.text.isNotEmpty ? avatarController.text : null,
+                              contactNumber: contactController.text,
+                              department: selectedDepartment!,
+                              permissions: selectedPermissions.toList(),
+                            );
+
+                            setState(() {
+                              users.add(newUser);
+                              _filterUsers();
+                              tempPassword = _generateTempPassword();
+                            });
+                          }
+                        },
+                        onStepCancel: () {
+                          if (currentStep > 0) {
+                            setState(() => currentStep--);
+                          } else {
+                            Navigator.of(dialogContext).pop();
+                          }
+                        },
+                        steps: [
+                          Step(
+                            title: Text('User Info',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.card : AppColors.darkCard,
+                                )),
+                            isActive: currentStep >= 0,
+                            content: Form(
+                              key: formKey,
+                              child: Column(
+                                children: [
+                                  _buildModernTextField(
+                                    controller: nameController,
+                                    label: 'Full Name',
+                                    icon: Icons.person_outline,
+                                    isRequired: true,
+                                    isDark: isDark,
+                                    cardColor: isDark ? AppColors.card : AppColors.darkCard,
+                                    textColor: isDark ? AppColors.card : AppColors.darkCard,
+                                    secondaryTextColor: AppColors.text.withOpacity(0.7),
+                                    primaryColor: AppColors.primary,
+                                    dividerColor: Colors.grey,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildModernTextField(
+                                    controller: emailController,
+                                    label: 'Email Address',
+                                    icon: Icons.email_outlined,
+                                    keyboardType: TextInputType.emailAddress,
+                                    isRequired: true,
+                                    isDark: isDark,
+                                    cardColor: isDark ? AppColors.card : AppColors.darkCard,
+                                    textColor: isDark ? AppColors.card : AppColors.darkCard,
+                                    secondaryTextColor: AppColors.text.withOpacity(0.7),
+                                    primaryColor: AppColors.primary,
+                                    dividerColor: Colors.grey,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildModernTextField(
+                                    controller: contactController,
+                                    label: 'Phone Number',
+                                    icon: Icons.phone_outlined,
+                                    keyboardType: TextInputType.phone,
+                                    isDark: isDark,
+                                    cardColor: isDark ? AppColors.card : AppColors.darkCard,
+                                    textColor: isDark ? AppColors.card : AppColors.darkCard,
+                                    secondaryTextColor: AppColors.text.withOpacity(0.7),
+                                    primaryColor: AppColors.primary,
+                                    dividerColor: Colors.grey,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildModernDropdown(
+                                    label: 'User Role',
+                                    value: selectedRole,
+                                    items: const [
+                                      'Admin',
+                                      'Farm Owner',
+                                      'Farm Manager',
+                                      'Technician',
+                                      'Field Worker'
+                                    ],
+                                    onChanged: (value) => setState(() => selectedRole = value),
+                                    icon: Icons.badge_outlined,
+                                    isDark: isDark,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildModernDropdown(
+                                    label: 'Status',
+                                    value: selectedStatus,
+                                    items: const [
+                                      'Active',
+                                      'Inactive',
+                                      'Suspended',
+                                      'Onboarding',
+                                      'Terminated'
+                                    ],
+                                    onChanged: (value) => setState(() => selectedStatus = value),
+                                    icon: Icons.circle_outlined,
+                                    isDark: isDark,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildModernDropdown(
+                                    label: 'Department',
+                                    value: selectedDepartment,
+                                    items: const ['Admin', 'IT', 'Operations', 'Field'],
+                                    onChanged: (value) =>
+                                        setState(() => selectedDepartment = value),
+                                    icon: Icons.business_center_outlined,
+                                    isDark: isDark,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 10),
-                              SelectableText(
-                                'Temporary Password: $tempPassword',
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                              const SizedBox(height: 20),
-                              /*
+                            ),
+                          ),
+                          Step(
+                            title: Text('Permissions',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.card : AppColors.darkCard,
+                                )),
+                            isActive: currentStep >= 1,
+                            content: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: _availablePermissions.map((permission) {
+                                return _buildPermissionChip(
+                                  permission: permission,
+                                  isSelected: selectedPermissions.contains(permission),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedPermissions.add(permission);
+                                      } else {
+                                        selectedPermissions.remove(permission);
+                                      }
+                                    });
+                                  },
+                                  isDark: isDark,
+                                  primaryColor: AppColors.primary,
+                                  textColor: AppColors.text,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          Step(
+                            title: Text('Congratulations',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.card : AppColors.darkCard,
+                                )),
+                            isActive: currentStep >= 2,
+                            content: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '🎉 ${nameController.text} has been successfully added!',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'A temporary password has been sent to their email.',
+                                  style: TextStyle(color: AppColors.text.withOpacity(0.7)),
+                                ),
+                                const SizedBox(height: 10),
+                                SelectableText(
+                                  'Temporary Password: $tempPassword',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                const SizedBox(height: 20),
+                                /*
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: ElevatedButton(
@@ -1293,22 +1280,21 @@ class _UsersScreenState extends State<UsersScreen>
                                 ),
                               ),
                               */
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        },
-      );
-    },
-  );
-}
-
+            );
+          },
+        );
+      },
+    );
+  }
 
   void _showUserDetailsDialog(User user) {
     final isSmallScreen = MediaQuery.of(context).size.width < 800;
@@ -1394,9 +1380,8 @@ class _UsersScreenState extends State<UsersScreen>
             ),
             child: TabBar(
               labelColor: AppColors.primary,
-              unselectedLabelColor: isDark
-                  ? AppColors.darkText.withOpacity(0.6)
-                  : AppColors.text.withOpacity(0.6),
+              unselectedLabelColor:
+                  isDark ? AppColors.darkText.withOpacity(0.6) : AppColors.text.withOpacity(0.6),
               indicatorColor: AppColors.primary,
               indicatorSize: TabBarIndicatorSize.tab,
               labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600),
@@ -1453,8 +1438,7 @@ class _UsersScreenState extends State<UsersScreen>
                 child: CircleAvatar(
                   radius: 30,
                   backgroundColor: isDark ? AppColors.darkCard : Colors.white,
-                  backgroundImage:
-                      user.avatar != null ? NetworkImage(user.avatar!) : null,
+                  backgroundImage: user.avatar != null ? NetworkImage(user.avatar!) : null,
                   child: user.avatar == null
                       ? Icon(Icons.person, size: 30, color: AppColors.primary)
                       : null,
@@ -1501,9 +1485,7 @@ class _UsersScreenState extends State<UsersScreen>
         _buildDetailItem(
           icon: Icons.phone_outlined,
           label: 'Contact',
-          value: user.contactNumber.isNotEmpty
-              ? user.contactNumber
-              : 'Not provided',
+          value: user.contactNumber.isNotEmpty ? user.contactNumber : 'Not provided',
           isDark: isDark,
         ),
         _buildDetailItem(
@@ -1516,8 +1498,7 @@ class _UsersScreenState extends State<UsersScreen>
           icon: Icons.circle_outlined,
           label: 'Status',
           value: user.status,
-          valueColor:
-              user.status == 'Active' ? AppColors.primary : AppColors.warning,
+          valueColor: user.status == 'Active' ? AppColors.primary : AppColors.warning,
           isDark: isDark,
         ),
         _buildDetailItem(
@@ -1540,9 +1521,7 @@ class _UsersScreenState extends State<UsersScreen>
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: isDark
-                ? AppColors.darkText.withOpacity(0.8)
-                : AppColors.text.withOpacity(0.8),
+            color: isDark ? AppColors.darkText.withOpacity(0.8) : AppColors.text.withOpacity(0.8),
           ),
         ),
         const SizedBox(height: 8),
@@ -1559,8 +1538,7 @@ class _UsersScreenState extends State<UsersScreen>
             children: user.permissions.map((permission) {
               return Chip(
                 label: Text(permission),
-                backgroundColor:
-                    AppColors.primary.withOpacity(isDark ? 0.2 : 0.1),
+                backgroundColor: AppColors.primary.withOpacity(isDark ? 0.2 : 0.1),
                 labelStyle: GoogleFonts.inter(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w500,
@@ -1575,9 +1553,7 @@ class _UsersScreenState extends State<UsersScreen>
           Text(
             'No specific permissions assigned',
             style: GoogleFonts.inter(
-              color: isDark
-                  ? AppColors.darkText.withOpacity(0.5)
-                  : AppColors.text.withOpacity(0.5),
+              color: isDark ? AppColors.darkText.withOpacity(0.5) : AppColors.text.withOpacity(0.5),
             ),
           ),
       ],
@@ -1639,18 +1615,15 @@ class _UsersScreenState extends State<UsersScreen>
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkCard : Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-                color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-                width: 1),
+            border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!, width: 1),
           ),
           padding: const EdgeInsets.all(12),
           child: Center(
             child: Text(
               'Performance Trend Chart',
               style: GoogleFonts.inter(
-                color: isDark
-                    ? AppColors.darkText.withOpacity(0.6)
-                    : AppColors.text.withOpacity(0.6),
+                color:
+                    isDark ? AppColors.darkText.withOpacity(0.6) : AppColors.text.withOpacity(0.6),
               ),
             ),
           ),
@@ -1686,9 +1659,8 @@ class _UsersScreenState extends State<UsersScreen>
             onPressed: () => Navigator.pop(context),
             style: OutlinedButton.styleFrom(
               side: BorderSide(
-                color: isDark
-                    ? AppColors.darkText.withOpacity(0.3)
-                    : AppColors.text.withOpacity(0.3),
+                color:
+                    isDark ? AppColors.darkText.withOpacity(0.3) : AppColors.text.withOpacity(0.3),
               ),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
@@ -1723,9 +1695,7 @@ class _UsersScreenState extends State<UsersScreen>
           Icon(
             icon,
             size: 20,
-            color: isDark
-                ? AppColors.darkText.withOpacity(0.6)
-                : AppColors.text.withOpacity(0.6),
+            color: isDark ? AppColors.darkText.withOpacity(0.6) : AppColors.text.withOpacity(0.6),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1747,8 +1717,7 @@ class _UsersScreenState extends State<UsersScreen>
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: valueColor ??
-                        (isDark ? AppColors.darkText : AppColors.text),
+                    color: valueColor ?? (isDark ? AppColors.darkText : AppColors.text),
                   ),
                 ),
               ],
@@ -1811,8 +1780,7 @@ class _UsersScreenState extends State<UsersScreen>
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: isPositive
                             ? AppColors.primary.withOpacity(0.1)
@@ -1824,8 +1792,7 @@ class _UsersScreenState extends State<UsersScreen>
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color:
-                              isPositive ? AppColors.primary : AppColors.danger,
+                          color: isPositive ? AppColors.primary : AppColors.danger,
                         ),
                       ),
                     ),
@@ -1852,19 +1819,16 @@ class _UsersScreenState extends State<UsersScreen>
     String selectedDepartment = user.department;
     Set<String> selectedPermissions = Set.from(user.permissions);
 
-      showDialog(
-    context: context,
-    builder: (dialogContext) {
-      final primaryColor = AppColors.primary;
-      final cardColor = isDark ? AppColors.darkCard : AppColors.card;
-      final textColor = isDark ? AppColors.darkText : AppColors.text;
-      final secondaryTextColor = isDark 
-          ? AppColors.darkText.withOpacity(0.7) 
-          : AppColors.text.withOpacity(0.7);
-      final dividerColor = isDark 
-          ? Colors.white.withOpacity(0.1) 
-          : Colors.black.withOpacity(0.1);
-      final buttonTextColor = isDark ? Colors.black : Colors.white;
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        final primaryColor = AppColors.primary;
+        final cardColor = isDark ? AppColors.darkCard : AppColors.card;
+        final textColor = isDark ? AppColors.darkText : AppColors.text;
+        final secondaryTextColor =
+            isDark ? AppColors.darkText.withOpacity(0.7) : AppColors.text.withOpacity(0.7);
+        final dividerColor = isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1);
+        final buttonTextColor = isDark ? Colors.black : Colors.white;
 
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -1920,8 +1884,7 @@ class _UsersScreenState extends State<UsersScreen>
                   Container(
                     decoration: BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(
-                            color: dividerColor),
+                        bottom: BorderSide(color: dividerColor),
                       ),
                     ),
                     child: TabBar(
@@ -1960,28 +1923,28 @@ class _UsersScreenState extends State<UsersScreen>
                           child: Column(
                             children: [
                               // Avatar Section
-                             _buildAvatarEditSection(
-                              avatarController, 
-                              isDark,
-                              primaryColor,
-                              cardColor,
-                              textColor,
-                            ),
+                              _buildAvatarEditSection(
+                                avatarController,
+                                isDark,
+                                primaryColor,
+                                cardColor,
+                                textColor,
+                              ),
                               const SizedBox(height: 24),
 
                               // Form Fields
                               _buildModernTextField(
-                              controller: nameController,
-                              label: 'Full Name',
-                              icon: Icons.person_outline,
-                              isRequired: true,
-                              isDark: isDark,
-                              cardColor: cardColor,
-                              textColor: textColor,
-                              secondaryTextColor: secondaryTextColor,
-                              primaryColor: primaryColor,
-                              dividerColor: dividerColor,
-                            ),
+                                controller: nameController,
+                                label: 'Full Name',
+                                icon: Icons.person_outline,
+                                isRequired: true,
+                                isDark: isDark,
+                                cardColor: cardColor,
+                                textColor: textColor,
+                                secondaryTextColor: secondaryTextColor,
+                                primaryColor: primaryColor,
+                                dividerColor: dividerColor,
+                              ),
                               const SizedBox(height: 16),
 
                               _buildModernTextField(
@@ -2030,15 +1993,10 @@ class _UsersScreenState extends State<UsersScreen>
                               _buildModernDropdown(
                                 label: 'User Role',
                                 value: selectedRole,
-                                items: const [
-                                  'Admin',
-                                  'Manager',
-                                  'Technician',
-                                  'Viewer'
-                                ],
+                                items: const ['Admin', 'Manager', 'Technician', 'Viewer'],
                                 onChanged: (value) => selectedRole = value!,
                                 icon: Icons.badge_outlined,
-                               isDark: isDark,
+                                isDark: isDark,
                               ),
                               const SizedBox(height: 16),
 
@@ -2053,21 +2011,19 @@ class _UsersScreenState extends State<UsersScreen>
                               const SizedBox(height: 16),
 
                               _buildModernDropdown(
-                                label: 'Department',
-                                value: selectedDepartment,
-                                items: const [
-                                  'IT',
-                                  'Operations',
-                                  'Field',
-                                  'Support',
-                                  'HR',
-                                  'Finance'
-                                ],
-                                onChanged: (value) =>
-                                    selectedDepartment = value!,
-                                icon: Icons.business_center_outlined,
-                                isDark: isDark
-                              ),
+                                  label: 'Department',
+                                  value: selectedDepartment,
+                                  items: const [
+                                    'IT',
+                                    'Operations',
+                                    'Field',
+                                    'Support',
+                                    'HR',
+                                    'Finance'
+                                  ],
+                                  onChanged: (value) => selectedDepartment = value!,
+                                  icon: Icons.business_center_outlined,
+                                  isDark: isDark),
                             ],
                           ),
                         ),
@@ -2104,22 +2060,19 @@ class _UsersScreenState extends State<UsersScreen>
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
                                 childAspectRatio: 3,
-                                children:
-                                    _availablePermissions.map((permission) {
+                                children: _availablePermissions.map((permission) {
                                   return _buildPermissionCard(
                                     permission: permission,
-                                    isSelected: selectedPermissions
-                                        .contains(permission),
+                                    isSelected: selectedPermissions.contains(permission),
                                     onChanged: (selected) {
                                       if (selected) {
                                         selectedPermissions.add(permission);
                                       } else {
                                         selectedPermissions.remove(permission);
                                       }
-                                      (dialogContext as Element)
-                                          .markNeedsBuild();
+                                      (dialogContext as Element).markNeedsBuild();
                                     },
-                                      isDark: isDark,
+                                    isDark: isDark,
                                     primaryColor: primaryColor,
                                     cardColor: cardColor,
                                     textColor: textColor,
@@ -2140,8 +2093,7 @@ class _UsersScreenState extends State<UsersScreen>
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       border: Border(
-                        top: BorderSide(
-                            color: dividerColor.withOpacity(0.1)),
+                        top: BorderSide(color: dividerColor.withOpacity(0.1)),
                       ),
                     ),
                     child: Row(
@@ -2151,8 +2103,7 @@ class _UsersScreenState extends State<UsersScreen>
                           onPressed: () => Navigator.of(dialogContext).pop(),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: secondaryTextColor,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                             side: BorderSide(color: dividerColor),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -2171,18 +2122,15 @@ class _UsersScreenState extends State<UsersScreen>
                                 user.role = selectedRole;
                                 user.status = selectedStatus;
                                 user.department = selectedDepartment;
-                                user.permissions =
-                                    selectedPermissions.toList();
-                                user.avatar = avatarController.text.isNotEmpty
-                                    ? avatarController.text
-                                    : null;
+                                user.permissions = selectedPermissions.toList();
+                                user.avatar =
+                                    avatarController.text.isNotEmpty ? avatarController.text : null;
                                 _filterUsers();
                               });
                               Navigator.of(dialogContext).pop();
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
                                 SnackBar(
-                                  content:
-                                      Text('${user.name} updated successfully'),
+                                  content: Text('${user.name} updated successfully'),
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -2194,8 +2142,7 @@ class _UsersScreenState extends State<UsersScreen>
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryColor,
                             foregroundColor: buttonTextColor,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -2218,229 +2165,211 @@ class _UsersScreenState extends State<UsersScreen>
 
 // Modern UI Components
 
-
   Widget _buildAvatarEditSection(
-  TextEditingController controller,
-  bool isDark,
-  Color primaryColor,
-  Color cardColor,
-  Color textColor,
-) {
-  return Column(
-    children: [
-      Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          CircleAvatar(
-            radius: 40,
-            backgroundColor: isDark ? AppColors.darkCard : Colors.white,
-            backgroundImage: controller.text.isNotEmpty
-                ? NetworkImage(controller.text)
-                : null,
-            child: controller.text.isEmpty
-                ? Icon(Icons.person, size: 40, color: textColor.withOpacity(0.5))
-                : null,
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: primaryColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: cardColor, width: 2),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.edit, size: 16),
-              color: isDark ? AppColors.text : Colors.white,
-              onPressed: () {
-                // Implement avatar editing logic
-              },
-            ),
-          ),
-        ],
-      ),
-    ],
-  );
-}
-
-  Widget _buildModernTextField({
-  required TextEditingController controller,
-  required String label,
-  required IconData icon,
-  bool isRequired = false,
-  TextInputType? keyboardType,
-  required bool isDark,
-  required Color cardColor,
-  required Color textColor,
-  required Color secondaryTextColor,
-  required Color primaryColor,
-  required Color dividerColor,
-}) {
-  return TextFormField(
-    controller: controller,
-    keyboardType: keyboardType,
-    validator: (value) => isRequired && value!.isEmpty ? 'Required field' : null,
-    style: GoogleFonts.inter(
-      color: textColor,
-      fontSize: 14,
-    ),
-    decoration: InputDecoration(
-      labelText: label,
-     
-      prefixIcon: Icon(icon, color: isDark ? AppColors.darkText.withOpacity(0.7): Colors.black54),
-      filled: true,
-      fillColor: isDark ? AppColors.darkCard : Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: dividerColor),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: dividerColor),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: primaryColor, width: 1.5),
-      ),
-      labelStyle: GoogleFonts.inter(
-        color: isDark ? AppColors.darkText.withOpacity(0.7) : Colors.black54,
-      ),
-    ),
-  );
-}
-
-  Widget _buildModernDropdown({
-  required String label,
-  required String? value,
-  required List<String> items,
-  required ValueChanged<String?> onChanged,
-  required IconData icon,
-  required bool isDark,
-}) {
-  final primaryColor = AppColors.primary;
-  final cardColor = isDark ? AppColors.darkCard : AppColors.card;
-  final textColor = isDark ? AppColors.darkText : AppColors.text;
-  final secondaryTextColor = isDark 
-      ? AppColors.darkText.withOpacity(0.7) 
-      : AppColors.text.withOpacity(0.7);
-  final dividerColor = isDark 
-      ? Colors.white.withOpacity(0.1) 
-      : Colors.black.withOpacity(0.1);
-
-  return DropdownButtonFormField<String>(
-    initialValue: value,
-    items: items.map((String value) {
-      return DropdownMenuItem<String>(
-        value: value,
-        child: Text(
-          value,
-          style: GoogleFonts.inter(
-            color: textColor,
-            fontSize: 14,
-          ),
-        ),
-      );
-    }).toList(),
-    onChanged: onChanged,
-    decoration: InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, color: secondaryTextColor),
-      filled: true,
-      fillColor: cardColor,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: dividerColor),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: dividerColor),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide(color: primaryColor, width: 1.5),
-      ),
-      labelStyle: GoogleFonts.inter(
-        color: secondaryTextColor,
-      ),
-    ),
-    dropdownColor: cardColor,
-    icon: Icon(Icons.arrow_drop_down, color: secondaryTextColor),
-    style: GoogleFonts.inter(
-      color: textColor,
-      fontSize: 14,
-    ),
-    borderRadius: BorderRadius.circular(8),
-  );
-}
-
-  Widget _buildPermissionCard({
-  required String permission,
-  required bool isSelected,
-  required ValueChanged<bool> onChanged,
-  required bool isDark,
-  required Color primaryColor,
-  required Color cardColor,
-  required Color textColor,
-  required Color dividerColor,
-  required Color buttonTextColor,
-}) {
-  return Card(
-    elevation: 0,
-    color: isSelected
-        ? primaryColor.withOpacity(isDark ? 0.2 : 0.1)
-        : cardColor,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-      side: BorderSide(
-        color: isSelected
-            ? primaryColor
-            : dividerColor,
-        width: 1,
-      ),
-    ),
-    child: InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: () => onChanged(!isSelected),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
+    TextEditingController controller,
+    bool isDark,
+    Color primaryColor,
+    Color cardColor,
+    Color textColor,
+  ) {
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.bottomRight,
           children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? primaryColor
-                    : cardColor,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: isSelected
-                      ? primaryColor
-                      : textColor.withOpacity(0.4),
-                ),
-              ),
-              child: isSelected
-                  ? Icon(Icons.check, size: 16, color: buttonTextColor)
+            CircleAvatar(
+              radius: 40,
+              backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+              backgroundImage: controller.text.isNotEmpty ? NetworkImage(controller.text) : null,
+              child: controller.text.isEmpty
+                  ? Icon(Icons.person, size: 40, color: textColor.withOpacity(0.5))
                   : null,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                permission,
-                style: GoogleFonts.inter(
-                  color: textColor,
-                  fontSize: 14,
-                ),
+            Container(
+              decoration: BoxDecoration(
+                color: primaryColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: cardColor, width: 2),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.edit, size: 16),
+                color: isDark ? AppColors.text : Colors.white,
+                onPressed: () {
+                  // Implement avatar editing logic
+                },
               ),
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool isRequired = false,
+    TextInputType? keyboardType,
+    required bool isDark,
+    required Color cardColor,
+    required Color textColor,
+    required Color secondaryTextColor,
+    required Color primaryColor,
+    required Color dividerColor,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      validator: (value) => isRequired && value!.isEmpty ? 'Required field' : null,
+      style: GoogleFonts.inter(
+        color: textColor,
+        fontSize: 14,
       ),
-    ),
-  );
-}
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon:
+            Icon(icon, color: isDark ? AppColors.darkText.withOpacity(0.7) : Colors.black54),
+        filled: true,
+        fillColor: isDark ? AppColors.darkCard : Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: dividerColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: dividerColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: primaryColor, width: 1.5),
+        ),
+        labelStyle: GoogleFonts.inter(
+          color: isDark ? AppColors.darkText.withOpacity(0.7) : Colors.black54,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernDropdown({
+    required String label,
+    required String? value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+    required IconData icon,
+    required bool isDark,
+  }) {
+    final primaryColor = AppColors.primary;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.card;
+    final textColor = isDark ? AppColors.darkText : AppColors.text;
+    final secondaryTextColor =
+        isDark ? AppColors.darkText.withOpacity(0.7) : AppColors.text.withOpacity(0.7);
+    final dividerColor = isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1);
+
+    return DropdownButtonFormField<String>(
+      value: value,
+      items: items.map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(
+            value,
+            style: GoogleFonts.inter(
+              color: textColor,
+              fontSize: 14,
+            ),
+          ),
+        );
+      }).toList(),
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: secondaryTextColor),
+        filled: true,
+        fillColor: cardColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: dividerColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: dividerColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: primaryColor, width: 1.5),
+        ),
+        labelStyle: GoogleFonts.inter(
+          color: secondaryTextColor,
+        ),
+      ),
+      dropdownColor: cardColor,
+      icon: Icon(Icons.arrow_drop_down, color: secondaryTextColor),
+      style: GoogleFonts.inter(
+        color: textColor,
+        fontSize: 14,
+      ),
+      borderRadius: BorderRadius.circular(8),
+    );
+  }
+
+  Widget _buildPermissionCard({
+    required String permission,
+    required bool isSelected,
+    required ValueChanged<bool> onChanged,
+    required bool isDark,
+    required Color primaryColor,
+    required Color cardColor,
+    required Color textColor,
+    required Color dividerColor,
+    required Color buttonTextColor,
+  }) {
+    return Card(
+      elevation: 0,
+      color: isSelected ? primaryColor.withOpacity(isDark ? 0.2 : 0.1) : cardColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: isSelected ? primaryColor : dividerColor,
+          width: 1,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => onChanged(!isSelected),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: isSelected ? primaryColor : cardColor,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isSelected ? primaryColor : textColor.withOpacity(0.4),
+                  ),
+                ),
+                child: isSelected ? Icon(Icons.check, size: 16, color: buttonTextColor) : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  permission,
+                  style: GoogleFonts.inter(
+                    color: textColor,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 // Component Widgets
 
-  
-  
   void _handleUserAction(String action, User user) {
     switch (action) {
       case 'Edit User':
@@ -2499,8 +2428,7 @@ class _UsersScreenState extends State<UsersScreen>
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel',
-                  style: GoogleFonts.inter(color: dialogActiveColor)),
+              child: Text('Cancel', style: GoogleFonts.inter(color: dialogActiveColor)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -2538,16 +2466,12 @@ Widget _buildPermissionChip({
     label: Text(
       permission,
       style: GoogleFonts.inter(
-        color: isSelected 
-            ? (isDark ? Colors.black : Colors.white)
-            : textColor,
+        color: isSelected ? (isDark ? Colors.black : Colors.white) : textColor,
       ),
     ),
     selected: isSelected,
     onSelected: onSelected,
-    backgroundColor: isSelected 
-        ? primaryColor 
-        : (isDark ? Colors.grey[800] : Colors.grey[200]),
+    backgroundColor: isSelected ? primaryColor : (isDark ? Colors.grey[800] : Colors.grey[200]),
     selectedColor: primaryColor,
     checkmarkColor: isDark ? Colors.black : Colors.white,
     shape: RoundedRectangleBorder(

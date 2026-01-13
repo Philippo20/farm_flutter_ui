@@ -18,17 +18,21 @@ class RedesignedAdminDashboard extends ConsumerStatefulWidget {
   const RedesignedAdminDashboard({super.key});
 
   @override
-  ConsumerState<RedesignedAdminDashboard> createState() =>
-      _RedesignedAdminDashboardState();
+  ConsumerState<RedesignedAdminDashboard> createState() => _RedesignedAdminDashboardState();
 }
 
-class _RedesignedAdminDashboardState
-    extends ConsumerState<RedesignedAdminDashboard> {
+class _RedesignedAdminDashboardState extends ConsumerState<RedesignedAdminDashboard> {
   int _selectedNavIndex = 0;
   String _selectedPeriod = 'Today';
   final String _adminName = 'Acquaye';
   WeatherInfo? _weatherInfo;
-  final List<String> _farms = ['All Farms', 'Northern Estate', 'Southern Estate', 'Eastern Farm', 'Western Farm'];
+  final List<String> _farms = [
+    'All Farms',
+    'Northern Estate',
+    'Southern Estate',
+    'Eastern Farm',
+    'Western Farm'
+  ];
   String _selectedFarm = 'All Farms';
 
   @override
@@ -237,10 +241,10 @@ class _RedesignedAdminDashboardState
     final sensorData = MockFarmData.getSensorData();
     final powerData = MockFarmData.getPowerData();
     final systemControls = MockFarmData.getSystemControls();
-    
+
     // Calculate average temperature from all sensors
     final avgTemp = 17.5; // Average of 15-20°C range
-    
+
     // Calculate active systems count
     int activeSystems = 0;
     systemControls['pumps'].forEach((key, value) {
@@ -252,50 +256,76 @@ class _RedesignedAdminDashboardState
     if (systemControls['climate']['airCondition']['state'] == 'ON') activeSystems++;
     if (systemControls['phControl']['phUp']['state'] == 'ON') activeSystems++;
     if (systemControls['phControl']['phDown']['state'] == 'ON') activeSystems++;
-    
+
     final totalSystems = 9; // 3 pumps + 3 lights + 1 AC + 2 pH relays
-    
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 4,
-      mainAxisSpacing: AppSpacing.sm,
-      crossAxisSpacing: AppSpacing.sm,
-      childAspectRatio: 3.5,
-      children: [
-        _buildStatCard(
-          title: 'Avg Temperature',
-          value: '${avgTemp.toStringAsFixed(1)}°C',
-          change: '+0.5°C',
-          isPositive: true,
-          icon: Icons.thermostat_rounded,
-          color: AppColors.warning,
-        ),
-        _buildStatCard(
-          title: 'Humidity',
-          value: '${sensorData['humidity']['value']}%',
-          change: '+${sensorData['humidity']['change']}%',
-          isPositive: sensorData['humidity']['trend'] == 'up',
-          icon: Icons.water_drop_rounded,
-          color: AppColors.info,
-        ),
-        _buildStatCard(
-          title: 'Power',
-          value: '${(powerData['grid']['power'] / 1000).toStringAsFixed(1)}kW',
-          change: '+15%',
-          isPositive: false, // Higher power is not always good
-          icon: Icons.bolt_rounded,
-          color: AppColors.error,
-        ),
-        _buildStatCard(
-          title: 'Active Systems',
-          value: '$activeSystems/$totalSystems',
-          change: '+2',
-          isPositive: true,
-          icon: Icons.settings_rounded,
-          color: AppColors.success,
-        ),
-      ],
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        int crossAxisCount;
+        double childAspectRatio;
+
+        if (screenWidth < 600) {
+          // Mobile: 2 columns
+          crossAxisCount = 2;
+          childAspectRatio = 2.2;
+        } else if (screenWidth < 900) {
+          // Tablet: 2 columns
+          crossAxisCount = 2;
+          childAspectRatio = 3.0;
+        } else if (screenWidth < 1200) {
+          // Small desktop: 4 columns
+          crossAxisCount = 4;
+          childAspectRatio = 3.5;
+        } else {
+          // Large desktop: 4 columns
+          crossAxisCount = 4;
+          childAspectRatio = 3.5;
+        }
+
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          mainAxisSpacing: AppSpacing.sm,
+          crossAxisSpacing: AppSpacing.sm,
+          childAspectRatio: childAspectRatio,
+          children: [
+            _buildStatCard(
+              title: 'Avg Temperature',
+              value: '${avgTemp.toStringAsFixed(1)}°C',
+              change: '+0.5°C',
+              isPositive: true,
+              icon: Icons.thermostat_rounded,
+              color: AppColors.warning,
+            ),
+            _buildStatCard(
+              title: 'Humidity',
+              value: '${sensorData['humidity']['value']}%',
+              change: '+${sensorData['humidity']['change']}%',
+              isPositive: sensorData['humidity']['trend'] == 'up',
+              icon: Icons.water_drop_rounded,
+              color: AppColors.info,
+            ),
+            _buildStatCard(
+              title: 'Power',
+              value: '${(powerData['grid']['power'] / 1000).toStringAsFixed(1)}kW',
+              change: '+15%',
+              isPositive: false, // Higher power is not always good
+              icon: Icons.bolt_rounded,
+              color: AppColors.error,
+            ),
+            _buildStatCard(
+              title: 'Active Systems',
+              value: '$activeSystems/$totalSystems',
+              change: '+2',
+              isPositive: true,
+              icon: Icons.settings_rounded,
+              color: AppColors.success,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -308,6 +338,8 @@ class _RedesignedAdminDashboardState
     required Color color,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return Card(
       elevation: 0,
@@ -325,9 +357,9 @@ class _RedesignedAdminDashboardState
         },
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.sm,
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? AppSpacing.xs : AppSpacing.sm,
+            vertical: isMobile ? AppSpacing.xs : AppSpacing.sm,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -335,7 +367,7 @@ class _RedesignedAdminDashboardState
             children: [
               // Icon with colored background
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: EdgeInsets.all(isMobile ? 4 : 6),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(isDark ? 0.15 : 0.9),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
@@ -343,12 +375,12 @@ class _RedesignedAdminDashboardState
                 child: Icon(
                   icon,
                   color: color,
-                  size: 18,
+                  size: isMobile ? 16 : 18,
                 ),
               ),
-              
-              const SizedBox(width: AppSpacing.sm),
-              
+
+              SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
+
               // Title and Value
               Expanded(
                 child: Column(
@@ -362,7 +394,7 @@ class _RedesignedAdminDashboardState
                         style: AppTypography.bodySmall.copyWith(
                           color: color.withOpacity(0.8),
                           fontWeight: FontWeight.w600,
-                          fontSize: 10,
+                          fontSize: isMobile ? 9 : 10,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -379,7 +411,7 @@ class _RedesignedAdminDashboardState
                             fontWeight: FontWeight.bold,
                             color: color,
                             letterSpacing: -0.5,
-                            fontSize: 18,
+                            fontSize: isMobile ? 14 : 18,
                           ),
                         ),
                       ),
@@ -387,39 +419,43 @@ class _RedesignedAdminDashboardState
                   ],
                 ),
               ),
-              
-              const SizedBox(width: AppSpacing.xs),
-              
+
+              SizedBox(width: isMobile ? 2 : AppSpacing.xs),
+
               // Trend Badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 5,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(isDark ? 0.15 : 0.9),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isPositive
-                          ? Icons.arrow_upward_rounded
-                          : Icons.arrow_downward_rounded,
-                      size: 9,
-                      color: isPositive ? AppColors.success : AppColors.error,
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      change,
-                      style: AppTypography.caption.copyWith(
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 3 : 5,
+                    vertical: isMobile ? 2 : 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(isDark ? 0.15 : 0.9),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isPositive ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                        size: isMobile ? 8 : 9,
                         color: isPositive ? AppColors.success : AppColors.error,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 9,
                       ),
-                    ),
-                  ],
+                      SizedBox(width: isMobile ? 1 : 2),
+                      Flexible(
+                        child: Text(
+                          change,
+                          style: AppTypography.caption.copyWith(
+                            color: isPositive ? AppColors.success : AppColors.error,
+                            fontWeight: FontWeight.w700,
+                            fontSize: isMobile ? 8 : 9,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -432,7 +468,9 @@ class _RedesignedAdminDashboardState
   Widget _buildChartsSection(bool isDark) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 800;
+        final screenWidth = constraints.maxWidth;
+        final isWide = screenWidth > 900;
+        final isMobile = screenWidth < 600;
 
         if (isWide) {
           return Row(
@@ -440,20 +478,20 @@ class _RedesignedAdminDashboardState
             children: [
               Expanded(
                 flex: 2,
-                child: _buildRevenueChart(isDark),
+                child: _buildRevenueChart(isDark, isMobile),
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: isMobile ? AppSpacing.sm : AppSpacing.md),
               Expanded(
-                child: _buildFarmDistributionChart(isDark),
+                child: _buildFarmDistributionChart(isDark, isMobile),
               ),
             ],
           );
         } else {
           return Column(
             children: [
-              _buildRevenueChart(isDark),
-              const SizedBox(height: AppSpacing.md),
-              _buildFarmDistributionChart(isDark),
+              _buildRevenueChart(isDark, isMobile),
+              SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
+              _buildFarmDistributionChart(isDark, isMobile),
             ],
           );
         }
@@ -461,21 +499,19 @@ class _RedesignedAdminDashboardState
     );
   }
 
-  Widget _buildRevenueChart(bool isDark) {
+  Widget _buildRevenueChart(bool isDark, bool isMobile) {
     return Card(
       elevation: 0,
       color: isDark ? AppColors.surfaceDark : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         side: BorderSide(
-          color: isDark
-              ? Colors.white.withOpacity(0.08)
-              : Colors.black.withOpacity(0.08),
+          color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
           width: 1,
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -484,11 +520,12 @@ class _RedesignedAdminDashboardState
               style: AppTypography.h6.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : AppColors.textPrimary,
+                fontSize: isMobile ? 14 : 18,
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
             SizedBox(
-              height: 250,
+              height: isMobile ? 200 : 250,
               child: LineChart(
                 LineChartData(
                   gridData: FlGridData(
@@ -508,14 +545,14 @@ class _RedesignedAdminDashboardState
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 40,
+                        reservedSize: isMobile ? 30 : 40,
                         getTitlesWidget: (value, meta) {
                           return Text(
                             '\$${value.toInt()}K',
                             style: AppTypography.caption.copyWith(
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.5)
-                                  : AppColors.textSecondary,
+                              color:
+                                  isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
+                              fontSize: isMobile ? 9 : 11,
                             ),
                           );
                         },
@@ -579,21 +616,19 @@ class _RedesignedAdminDashboardState
     );
   }
 
-  Widget _buildFarmDistributionChart(bool isDark) {
+  Widget _buildFarmDistributionChart(bool isDark, bool isMobile) {
     return Card(
       elevation: 0,
       color: isDark ? AppColors.surfaceDark : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         side: BorderSide(
-          color: isDark
-              ? Colors.white.withOpacity(0.08)
-              : Colors.black.withOpacity(0.08),
+          color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
           width: 1,
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -602,69 +637,74 @@ class _RedesignedAdminDashboardState
               style: AppTypography.h6.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : AppColors.textPrimary,
+                fontSize: isMobile ? 14 : 18,
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
             SizedBox(
-              height: 250,
+              height: isMobile ? 200 : 250,
               child: PieChart(
                 PieChartData(
                   sectionsSpace: 2,
-                  centerSpaceRadius: 60,
+                  centerSpaceRadius: isMobile ? 40 : 60,
                   sections: [
                     PieChartSectionData(
                       value: 40,
                       title: '40%',
                       color: AppColors.chartBlue,
-                      radius: 50,
+                      radius: isMobile ? 40 : 50,
                       titleStyle: AppTypography.bodySmall.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 10 : 12,
                       ),
                     ),
                     PieChartSectionData(
                       value: 30,
                       title: '30%',
                       color: AppColors.chartGreen,
-                      radius: 50,
+                      radius: isMobile ? 40 : 50,
                       titleStyle: AppTypography.bodySmall.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 10 : 12,
                       ),
                     ),
                     PieChartSectionData(
                       value: 20,
                       title: '20%',
                       color: AppColors.chartOrange,
-                      radius: 50,
+                      radius: isMobile ? 40 : 50,
                       titleStyle: AppTypography.bodySmall.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 10 : 12,
                       ),
                     ),
                     PieChartSectionData(
                       value: 10,
                       title: '10%',
                       color: AppColors.chartPurple,
-                      radius: 50,
+                      radius: isMobile ? 40 : 50,
                       titleStyle: AppTypography.bodySmall.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 10 : 12,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
-            _buildLegend(isDark),
+            SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
+            _buildLegend(isDark, isMobile),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLegend(bool isDark) {
+  Widget _buildLegend(bool isDark, bool isMobile) {
     final items = [
       ('Vegetables', AppColors.chartBlue),
       ('Fruits', AppColors.chartGreen),
@@ -673,25 +713,26 @@ class _RedesignedAdminDashboardState
     ];
 
     return Wrap(
-      spacing: AppSpacing.md,
-      runSpacing: AppSpacing.sm,
+      spacing: isMobile ? AppSpacing.sm : AppSpacing.md,
+      runSpacing: isMobile ? AppSpacing.xs : AppSpacing.sm,
       children: items.map((item) {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 12,
-              height: 12,
+              width: isMobile ? 10 : 12,
+              height: isMobile ? 10 : 12,
               decoration: BoxDecoration(
                 color: item.$2,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(width: AppSpacing.xs),
+            SizedBox(width: isMobile ? 4 : AppSpacing.xs),
             Text(
               item.$1,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
+                fontSize: isMobile ? 10 : 12,
               ),
             ),
           ],
@@ -738,9 +779,7 @@ class _RedesignedAdminDashboardState
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         side: BorderSide(
-          color: isDark
-              ? Colors.white.withOpacity(0.08)
-              : Colors.black.withOpacity(0.08),
+          color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
           width: 1,
         ),
       ),
@@ -798,9 +837,8 @@ class _RedesignedAdminDashboardState
                           Text(
                             activity['subtitle'] as String,
                             style: AppTypography.bodySmall.copyWith(
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.6)
-                                  : AppColors.textSecondary,
+                              color:
+                                  isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -809,9 +847,7 @@ class _RedesignedAdminDashboardState
                     Text(
                       activity['time'] as String,
                       style: AppTypography.caption.copyWith(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.5)
-                            : AppColors.textSecondary,
+                        color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -826,11 +862,12 @@ class _RedesignedAdminDashboardState
 
   Widget _buildBottomNavigation(bool isDark) {
     final navItems = [
-      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0},
-      {'icon': Icons.people_outline, 'label': 'Users', 'index': 1},
-      {'icon': Icons.agriculture_outlined, 'label': 'Farms', 'index': 2},
-      {'icon': Icons.sensors_outlined, 'label': 'Sensors', 'index': 3},
-      {'icon': Icons.settings_outlined, 'label': 'Settings', 'index': 4},
+      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/dashboard'},
+      {'icon': Icons.people_outline, 'label': 'Users', 'index': 1, 'route': '/users'},
+      {'icon': Icons.agriculture_outlined, 'label': 'Farms', 'index': 2, 'route': '/farms'},
+      {'icon': Icons.sensors_outlined, 'label': 'Sensors', 'index': 3, 'route': '/sensors'},
+      {'icon': Icons.analytics_outlined, 'label': 'Analytics', 'index': 4, 'route': '/analytics'},
+      {'icon': Icons.settings_outlined, 'label': 'Settings', 'index': 5, 'route': '/settings'},
     ];
 
     return Container(
@@ -845,9 +882,7 @@ class _RedesignedAdminDashboardState
         ],
         border: Border(
           top: BorderSide(
-            color: isDark
-                ? Colors.white.withOpacity(0.08)
-                : Colors.black.withOpacity(0.08),
+            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
             width: 1,
           ),
         ),
@@ -857,8 +892,9 @@ class _RedesignedAdminDashboardState
           height: 70,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: navItems.map((item) {
+            children: navItems.take(5).map((item) {
               final index = item['index'] as int;
+              final route = item['route'] as String;
               final isSelected = index == _selectedNavIndex;
 
               return Expanded(
@@ -866,7 +902,20 @@ class _RedesignedAdminDashboardState
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                      setState(() => _selectedNavIndex = index);
+                      if (_selectedNavIndex != index) {
+                        setState(() => _selectedNavIndex = index);
+                        // Navigate to the route
+                        try {
+                          Navigator.pushReplacementNamed(context, route);
+                        } catch (e) {
+                          // If route doesn't exist, try pushNamed as fallback
+                          try {
+                            Navigator.pushNamed(context, route);
+                          } catch (e2) {
+                            debugPrint('Navigation error: $e2');
+                          }
+                        }
+                      }
                     },
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -876,9 +925,7 @@ class _RedesignedAdminDashboardState
                           size: 24,
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark
-                                  ? Colors.white.withOpacity(0.5)
-                                  : AppColors.textSecondary),
+                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -889,9 +936,11 @@ class _RedesignedAdminDashboardState
                                 : (isDark
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
-                            fontWeight:
-                                isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontSize: 11,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),

@@ -3,54 +3,93 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/packaging_supervisor_sidebar.dart';
+import '../../core/widgets/packaging_supervisor_header.dart';
 import '../../core/widgets/modern_dashboard_scaffold.dart';
 import '../../core/widgets/weather_time_widget.dart';
+import '../../core/widgets/weather_info_chip.dart';
+import '../../providers/auth_provider.dart';
 
 /// Packaging Supervisor Dashboard - Redesigned
 /// Package recording and waste tracking
-class PackagingSupervisorDashboardRedesigned extends ConsumerWidget {
+class PackagingSupervisorDashboardRedesigned extends ConsumerStatefulWidget {
   const PackagingSupervisorDashboardRedesigned({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ModernDashboardScaffold(
-      title: 'Packaging Supervisor',
-      menuItems: [
-        DashboardMenuItem(
-          title: 'Dashboard',
-          icon: Icons.dashboard,
-          isSelected: true,
-        ),
-        DashboardMenuItem(
-          title: 'Package Recording',
-          icon: Icons.inventory,
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Waste Tracking',
-          icon: Icons.delete_outline,
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Progress',
-          icon: Icons.trending_up,
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Settings',
-          icon: Icons.settings,
-          onTap: () {},
-        ),
-      ],
-      children: [
-        const WeatherTimeWidget(),
-        const SizedBox(height: AppSpacing.lg),
-        _buildStatsSection(context),
-        const SizedBox(height: AppSpacing.xl),
-        Text('Packaging Operations', style: AppTypography.h5.copyWith(fontWeight: FontWeight.bold)),
-        const SizedBox(height: AppSpacing.md),
-        _buildFeaturesGrid(context),
-      ],
+  ConsumerState<PackagingSupervisorDashboardRedesigned> createState() =>
+      _PackagingSupervisorDashboardRedesignedState();
+}
+
+class _PackagingSupervisorDashboardRedesignedState
+    extends ConsumerState<PackagingSupervisorDashboardRedesigned> {
+  int _selectedNavIndex = 0;
+  WeatherInfo? _weatherInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final authState = ref.watch(authProvider);
+    final userName = authState.user?.name ?? 'Packaging Supervisor';
+    final userEmail = authState.user?.email ?? 'packaging@farmestates.com';
+    final userRole = 'Packaging Supervisor';
+
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      body: Row(
+        children: [
+          // Sidebar
+          PackagingSupervisorSidebar(
+            selectedIndex: _selectedNavIndex,
+            onItemSelected: (index) {
+              setState(() {
+                _selectedNavIndex = index;
+              });
+            },
+            userName: userName,
+            userEmail: userEmail,
+            userRole: userRole,
+          ),
+
+          // Main Content
+          Expanded(
+            child: Column(
+              children: [
+                // Header
+                PackagingSupervisorHeader(
+                  userName: userName,
+                  weatherInfo: _weatherInfo,
+                  onNotificationTap: () {},
+                ),
+
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const WeatherTimeWidget(),
+                        const SizedBox(height: AppSpacing.lg),
+                        _buildStatsSection(context),
+                        const SizedBox(height: AppSpacing.xl),
+                        Text('Packaging Operations', style: AppTypography.h5.copyWith(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: AppSpacing.md),
+                        _buildFeaturesGrid(context),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
         backgroundColor: AppColors.primary,

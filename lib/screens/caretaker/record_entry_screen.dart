@@ -7,6 +7,9 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/models/records/farm_record_model.dart';
 import '../../core/providers/records_provider.dart';
+import '../../core/widgets/caretaker_sidebar.dart';
+import '../../core/widgets/caretaker_header.dart';
+import '../../providers/auth_provider.dart';
 
 /// Record Entry Screen
 /// Create and submit farm records for daily monitoring and activities
@@ -19,6 +22,7 @@ class RecordEntryScreen extends ConsumerStatefulWidget {
 
 class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   final _formKey = GlobalKey<FormState>();
+  int _selectedNavIndex = 1;
   
   // Form fields
   String? _selectedFarm;
@@ -69,101 +73,293 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final authState = ref.watch(authProvider);
+    final userName = authState.user?.name ?? 'Caretaker';
+    final userEmail = authState.user?.email ?? 'caretaker@farmestates.com';
+    final userRole = 'Caretaker';
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      appBar: AppBar(
-        title: Text(
-          'Create Farm Record',
-          style: AppTypography.h5.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+      body: isMobile
+          ? _buildMobileLayout(isDark, userName)
+          : _buildDesktopLayout(isDark, userName, userEmail, userRole),
+      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+    );
+  }
+
+  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail, String userRole) {
+    return Row(
+      children: [
+        CaretakerSidebar(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (index) {
+            setState(() => _selectedNavIndex = index);
+          },
+          userName: userName,
+          userEmail: userEmail,
+          userRole: userRole,
+        ),
+        Expanded(
+          child: Column(
+            children: [
+              CaretakerHeader(
+                userName: userName,
+                onNotificationTap: () {},
+              ),
+              Expanded(
+                child: Form(
+                  key: _formKey,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: _buildFormContent(isDark),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(bool isDark, String userName) {
+    return Column(
+      children: [
+        CaretakerHeader(
+          userName: userName,
+          onNotificationTap: () {},
+        ),
+        Expanded(
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: _buildFormContent(isDark),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormContent(bool isDark) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    return Column(
+      children: [
+        // Header
+        _buildHeader(isDark),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
+
+        // Basic Information
+        _buildSection('Basic Information', isDark, [
+          _buildFarmSelector(isDark),
+          const SizedBox(height: AppSpacing.md),
+          _buildBatchSelector(isDark),
+          const SizedBox(height: AppSpacing.md),
+          _buildRecordTypeSelector(isDark),
+          const SizedBox(height: AppSpacing.md),
+          _buildDatePicker(isDark),
+        ]),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
+
+        // Environmental Readings
+        _buildSection('Environmental Readings', isDark, [
+          isMobile
+              ? Column(
+                  children: [
+                    _buildNumberField('Temperature (°C)', _temperatureController, Icons.thermostat, isDark),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildNumberField('Humidity (%)', _humidityController, Icons.water_drop, isDark),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildNumberField('pH Level', _phController, Icons.science, isDark),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildNumberField('EC (mS/cm)', _ecController, Icons.electric_bolt, isDark),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildNumberField('Light Intensity (lux)', _lightController, Icons.light_mode, isDark),
+                  ],
+                )
+              : Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: _buildNumberField('Temperature (°C)', _temperatureController, Icons.thermostat, isDark)),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(child: _buildNumberField('Humidity (%)', _humidityController, Icons.water_drop, isDark)),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(child: _buildNumberField('pH Level', _phController, Icons.science, isDark)),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(child: _buildNumberField('EC (mS/cm)', _ecController, Icons.electric_bolt, isDark)),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildNumberField('Light Intensity (lux)', _lightController, Icons.light_mode, isDark),
+                  ],
+                ),
+        ]),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
+
+        // Plant Observations
+        _buildSection('Plant Observations', isDark, [
+          _buildTextField('Plant Health', _plantHealthController, 'e.g., Healthy, Yellowing, etc.', isDark),
+          const SizedBox(height: AppSpacing.md),
+          _buildTextField('Growth Stage', _growthStageController, 'e.g., Vegetative, Flowering', isDark),
+          const SizedBox(height: AppSpacing.md),
+          _buildNumberField('Plant Count', _plantCountController, Icons.format_list_numbered, isDark),
+          const SizedBox(height: AppSpacing.md),
+          _buildTextField('Observations', _observationsController, 'Any notable observations...', isDark, maxLines: 3),
+        ]),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
+
+        // Activities Performed
+        _buildSection('Activities Performed', isDark, [
+          _buildActivitiesSelector(isDark),
+        ]),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
+
+        // Issues & Concerns
+        _buildSection('Issues & Concerns', isDark, [
+          _buildIssuesToggle(isDark),
+          if (_hasIssues) ...[
+            const SizedBox(height: AppSpacing.md),
+            _buildSeveritySelector(isDark),
+            const SizedBox(height: AppSpacing.md),
+            _buildTextField('Issue Description', _issueDescriptionController, 'Describe the issue...', isDark, maxLines: 3),
+          ],
+        ]),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
+
+        // Additional Notes
+        _buildSection('Additional Notes', isDark, [
+          _buildTextField('Notes', _notesController, 'Any additional notes...', isDark, maxLines: 4),
+        ]),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
+
+        // Submit Button
+        _buildSubmitButton(isDark),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
+      ],
+    );
+  }
+
+  Widget _buildBottomNavigation(bool isDark) {
+    final navItems = [
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Dashboard',
+        'index': 0,
+        'route': '/caretaker_dashboard'
+      },
+      {
+        'icon': Icons.edit_note_outlined,
+        'label': 'Record',
+        'index': 1,
+        'route': '/record-entry'
+      },
+      {
+        'icon': Icons.check_circle_outline,
+        'label': 'Confirm',
+        'index': 2,
+        'route': '/input-confirmation'
+      },
+      {
+        'icon': Icons.chat_bubble_outline,
+        'label': 'Chat',
+        'index': 3,
+        'route': '/chat'
+      },
+      {
+        'icon': Icons.calendar_today_outlined,
+        'label': 'Calendar',
+        'index': 4,
+        'route': '/calendar'
+      },
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+        border: Border(
+          top: BorderSide(
+            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            width: 1,
           ),
         ),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          children: [
-            // Header
-            _buildHeader(isDark),
-            const SizedBox(height: AppSpacing.xl),
+      child: SafeArea(
+        child: SizedBox(
+          height: 70,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: navItems.map((item) {
+              final index = item['index'] as int;
+              final route = item['route'] as String;
+              final isSelected = index == _selectedNavIndex;
 
-            // Basic Information
-            _buildSection('Basic Information', isDark, [
-              _buildFarmSelector(isDark),
-              const SizedBox(height: AppSpacing.md),
-              _buildBatchSelector(isDark),
-              const SizedBox(height: AppSpacing.md),
-              _buildRecordTypeSelector(isDark),
-              const SizedBox(height: AppSpacing.md),
-              _buildDatePicker(isDark),
-            ]),
-            const SizedBox(height: AppSpacing.xl),
-
-            // Environmental Readings
-            _buildSection('Environmental Readings', isDark, [
-              Row(
-                children: [
-                  Expanded(child: _buildNumberField('Temperature (°C)', _temperatureController, Icons.thermostat, isDark)),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(child: _buildNumberField('Humidity (%)', _humidityController, Icons.water_drop, isDark)),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  Expanded(child: _buildNumberField('pH Level', _phController, Icons.science, isDark)),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(child: _buildNumberField('EC (mS/cm)', _ecController, Icons.electric_bolt, isDark)),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _buildNumberField('Light Intensity (lux)', _lightController, Icons.light_mode, isDark),
-            ]),
-            const SizedBox(height: AppSpacing.xl),
-
-            // Plant Observations
-            _buildSection('Plant Observations', isDark, [
-              _buildTextField('Plant Health', _plantHealthController, 'e.g., Healthy, Yellowing, etc.', isDark),
-              const SizedBox(height: AppSpacing.md),
-              _buildTextField('Growth Stage', _growthStageController, 'e.g., Vegetative, Flowering', isDark),
-              const SizedBox(height: AppSpacing.md),
-              _buildNumberField('Plant Count', _plantCountController, Icons.format_list_numbered, isDark),
-              const SizedBox(height: AppSpacing.md),
-              _buildTextField('Observations', _observationsController, 'Any notable observations...', isDark, maxLines: 3),
-            ]),
-            const SizedBox(height: AppSpacing.xl),
-
-            // Activities Performed
-            _buildSection('Activities Performed', isDark, [
-              _buildActivitiesSelector(isDark),
-            ]),
-            const SizedBox(height: AppSpacing.xl),
-
-            // Issues & Concerns
-            _buildSection('Issues & Concerns', isDark, [
-              _buildIssuesToggle(isDark),
-              if (_hasIssues) ...[
-                const SizedBox(height: AppSpacing.md),
-                _buildSeveritySelector(isDark),
-                const SizedBox(height: AppSpacing.md),
-                _buildTextField('Issue Description', _issueDescriptionController, 'Describe the issue...', isDark, maxLines: 3),
-              ],
-            ]),
-            const SizedBox(height: AppSpacing.xl),
-
-            // Additional Notes
-            _buildSection('Additional Notes', isDark, [
-              _buildTextField('Notes', _notesController, 'Any additional notes...', isDark, maxLines: 4),
-            ]),
-            const SizedBox(height: AppSpacing.xl),
-
-            // Submit Button
-            _buildSubmitButton(isDark),
-            const SizedBox(height: AppSpacing.xl),
-          ],
+              return Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      if (_selectedNavIndex != index) {
+                        setState(() => _selectedNavIndex = index);
+                        try {
+                          Navigator.pushReplacementNamed(context, route);
+                        } catch (e) {
+                          try {
+                            Navigator.pushNamed(context, route);
+                          } catch (e2) {
+                            debugPrint('Navigation error: $e2');
+                          }
+                        }
+                      }
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          item['icon'] as IconData,
+                          size: 24,
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item['label'] as String,
+                          style: AppTypography.caption.copyWith(
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark
+                                    ? Colors.white.withOpacity(0.5)
+                                    : AppColors.textSecondary),
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );

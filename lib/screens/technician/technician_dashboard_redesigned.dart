@@ -3,101 +3,135 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/technician_sidebar.dart';
+import '../../core/widgets/technician_header.dart';
 import '../../core/widgets/modern_dashboard_scaffold.dart';
 import '../../core/widgets/weather_time_widget.dart';
+import '../../core/widgets/weather_info_chip.dart';
 import '../../widgets/alert_summary_card.dart';
+import '../../providers/auth_provider.dart';
 import 'sensor_management_screen.dart';
 
 /// Technician Dashboard - Redesigned
 /// Maintenance and technical support
-class TechnicianDashboardRedesigned extends ConsumerWidget {
+class TechnicianDashboardRedesigned extends ConsumerStatefulWidget {
   const TechnicianDashboardRedesigned({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ModernDashboardScaffold(
-      title: 'Technician',
-      menuItems: [
-        DashboardMenuItem(
-          title: 'Dashboard',
-          icon: Icons.dashboard,
-          isSelected: true,
-        ),
-        DashboardMenuItem(
-          title: 'Open Issues',
-          icon: Icons.warning_amber,
-          badge: '5',
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Maintenance',
-          icon: Icons.build,
-          badge: '3',
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Request Items',
-          icon: Icons.shopping_cart,
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Asset Check',
-          icon: Icons.inventory,
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Settings',
-          icon: Icons.settings,
-          onTap: () {},
-        ),
-      ],
-      children: [
-        // Weather & Time Widget
-        const WeatherTimeWidget(),
-        
-        const SizedBox(height: AppSpacing.lg),
-        
-        // Compact Stats Section
-        _buildStatsSection(context),
-        
-        const SizedBox(height: AppSpacing.xl),
-        
-        // Alert Summary
-        const AlertSummaryCard(
-          showRecentAlerts: true,
-          maxRecentAlerts: 2,
-        ),
-        
-        const SizedBox(height: AppSpacing.xl),
-        
-        // Section Title
-        Text(
-          'Farm Asset Monitoring',
-          style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+  ConsumerState<TechnicianDashboardRedesigned> createState() =>
+      _TechnicianDashboardRedesignedState();
+}
+
+class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashboardRedesigned> {
+  int _selectedNavIndex = 0;
+  WeatherInfo? _weatherInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load weather info if needed
+    _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final authState = ref.watch(authProvider);
+    final userName = authState.user?.name ?? 'Technician';
+    final userEmail = authState.user?.email ?? 'technician@farmestates.com';
+    final userRole = 'Technician';
+
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      body: Row(
+        children: [
+          // Sidebar
+          TechnicianSidebar(
+            selectedIndex: _selectedNavIndex,
+            onItemSelected: (index) {
+              setState(() {
+                _selectedNavIndex = index;
+              });
+            },
+            userName: userName,
+            userEmail: userEmail,
+            userRole: userRole,
           ),
-        ),
-        
-        const SizedBox(height: AppSpacing.md),
-        
-        // Asset Monitoring Grid
-        _buildAssetMonitoringGrid(context),
-        
-        const SizedBox(height: AppSpacing.xl),
-        
-        // Section Title
-        Text(
-          'Maintenance Tasks',
-          style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+
+          // Main Content
+          Expanded(
+            child: Column(
+              children: [
+                // Header
+                TechnicianHeader(
+                  userName: userName,
+                  weatherInfo: _weatherInfo,
+                  onNotificationTap: () {
+                    // Handle notifications
+                  },
+                ),
+
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Weather & Time Widget
+                        const WeatherTimeWidget(),
+
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // Compact Stats Section
+                        _buildStatsSection(context),
+
+                        const SizedBox(height: AppSpacing.xl),
+
+                        // Alert Summary
+                        const AlertSummaryCard(
+                          showRecentAlerts: true,
+                          maxRecentAlerts: 2,
+                        ),
+
+                        const SizedBox(height: AppSpacing.xl),
+
+                        // Section Title
+                        Text(
+                          'Farm Asset Monitoring',
+                          style: AppTypography.h5.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(height: AppSpacing.md),
+
+                        // Asset Monitoring Grid
+                        _buildAssetMonitoringGrid(context),
+
+                        const SizedBox(height: AppSpacing.xl),
+
+                        // Section Title
+                        Text(
+                          'Maintenance Tasks',
+                          style: AppTypography.h5.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(height: AppSpacing.md),
+
+                        // Features Grid
+                        _buildFeaturesGrid(context),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        
-        const SizedBox(height: AppSpacing.md),
-        
-        // Features Grid
-        _buildFeaturesGrid(context),
-      ],
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
         backgroundColor: AppColors.error,
@@ -111,7 +145,7 @@ class TechnicianDashboardRedesigned extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
-        
+
         return GridView.count(
           crossAxisCount: crossAxisCount,
           childAspectRatio: 3.2,
@@ -158,11 +192,11 @@ class TechnicianDashboardRedesigned extends ConsumerWidget {
 
   Widget _buildAssetMonitoringGrid(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
-        
+
         return GridView.count(
           crossAxisCount: crossAxisCount,
           childAspectRatio: 1.2,
@@ -171,16 +205,18 @@ class TechnicianDashboardRedesigned extends ConsumerWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: [
-            _buildAssetCard(context, isDark, 'Pumps', Icons.water_drop, AppColors.info, '8 Active', '2 Need service', () {}),
-            _buildAssetCard(context, isDark, 'Fans', Icons.air, AppColors.primary, '12 Active', 'All operational', () {}),
+            _buildAssetCard(context, isDark, 'Pumps', Icons.water_drop, AppColors.info, '8 Active',
+                '2 Need service', () {}),
+            _buildAssetCard(context, isDark, 'Fans', Icons.air, AppColors.primary, '12 Active',
+                'All operational', () {}),
             _buildAssetCard(
-              context, 
-              isDark, 
-              'Sensors', 
-              Icons.sensors, 
-              AppColors.success, 
-              '10 Active', 
-              'Manage all sensors', 
+              context,
+              isDark,
+              'Sensors',
+              Icons.sensors,
+              AppColors.success,
+              '10 Active',
+              'Manage all sensors',
               () {
                 Navigator.push(
                   context,
@@ -190,17 +226,19 @@ class TechnicianDashboardRedesigned extends ConsumerWidget {
                 );
               },
             ),
-            _buildAssetCard(context, isDark, 'Air Condition', Icons.ac_unit, AppColors.warning, '6 Active', '1 Maintenance', () {}),
+            _buildAssetCard(context, isDark, 'Air Condition', Icons.ac_unit, AppColors.warning,
+                '6 Active', '1 Maintenance', () {}),
           ],
         );
       },
     );
   }
 
-  Widget _buildAssetCard(BuildContext context, bool isDark, String title, IconData icon, Color color, String status, String subtitle, VoidCallback onTap) {
+  Widget _buildAssetCard(BuildContext context, bool isDark, String title, IconData icon,
+      Color color, String status, String subtitle, VoidCallback onTap) {
     // Check if this card has an action (not empty callback)
     final hasAction = title == 'Sensors'; // Only Sensors card has navigation
-    
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -210,9 +248,7 @@ class TechnicianDashboardRedesigned extends ConsumerWidget {
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
-            color: hasAction 
-              ? color.withOpacity(0.3) 
-              : (isDark ? Colors.white10 : Colors.black12),
+            color: hasAction ? color.withOpacity(0.3) : (isDark ? Colors.white10 : Colors.black12),
             width: hasAction ? 2 : 1,
           ),
         ),
@@ -246,22 +282,33 @@ class TechnicianDashboardRedesigned extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.sm),
-            Text(title, textAlign: TextAlign.center, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : AppColors.textPrimary),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
             const SizedBox(height: 4),
-            Text(status, textAlign: TextAlign.center, style: AppTypography.bodySmall.copyWith(color: color, fontSize: 12, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(status,
+                textAlign: TextAlign.center,
+                style: AppTypography.bodySmall
+                    .copyWith(color: color, fontSize: 12, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
             const SizedBox(height: 2),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Flexible(
                   child: Text(
-                    subtitle, 
-                    textAlign: TextAlign.center, 
+                    subtitle,
+                    textAlign: TextAlign.center,
                     style: AppTypography.bodySmall.copyWith(
-                      color: isDark ? Colors.white60 : AppColors.textSecondary, 
+                      color: isDark ? Colors.white60 : AppColors.textSecondary,
                       fontSize: 10,
-                    ), 
-                    maxLines: 1, 
+                    ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -283,11 +330,11 @@ class TechnicianDashboardRedesigned extends ConsumerWidget {
 
   Widget _buildFeaturesGrid(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
-        
+
         return GridView.count(
           crossAxisCount: crossAxisCount,
           childAspectRatio: 1.2,

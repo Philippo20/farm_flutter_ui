@@ -3,75 +3,111 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/fulfillment_manager_sidebar.dart';
+import '../../core/widgets/fulfillment_manager_header.dart';
 import '../../core/widgets/modern_dashboard_scaffold.dart';
 import '../../core/widgets/weather_time_widget.dart';
+import '../../core/widgets/weather_info_chip.dart';
+import '../../providers/auth_provider.dart';
 
 /// Fulfillment Manager Dashboard - Redesigned
 /// Harvest coordination and packaging management
-class FulfillmentManagerDashboardRedesigned extends ConsumerWidget {
+class FulfillmentManagerDashboardRedesigned extends ConsumerStatefulWidget {
   const FulfillmentManagerDashboardRedesigned({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ModernDashboardScaffold(
-      title: 'Fulfillment Manager',
-      menuItems: [
-        DashboardMenuItem(
-          title: 'Dashboard',
-          icon: Icons.dashboard,
-          isSelected: true,
-        ),
-        DashboardMenuItem(
-          title: 'Confirm Harvest',
-          icon: Icons.check_box,
-          badge: '7',
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Packaging',
-          icon: Icons.inventory_2,
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Yield Loss',
-          icon: Icons.trending_down,
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Materials',
-          icon: Icons.category,
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Settings',
-          icon: Icons.settings,
-          onTap: () {},
-        ),
-      ],
-      children: [
-        // Weather & Time Widget
-        const WeatherTimeWidget(),
-        
-        const SizedBox(height: AppSpacing.lg),
-        
-        // Compact Stats Section
-        _buildStatsSection(context),
-        
-        const SizedBox(height: AppSpacing.xl),
-        
-        // Section Title
-        Text(
-          'Fulfillment Operations',
-          style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+  ConsumerState<FulfillmentManagerDashboardRedesigned> createState() =>
+      _FulfillmentManagerDashboardRedesignedState();
+}
+
+class _FulfillmentManagerDashboardRedesignedState
+    extends ConsumerState<FulfillmentManagerDashboardRedesigned> {
+  int _selectedNavIndex = 0;
+  WeatherInfo? _weatherInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load weather info if needed
+    _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final authState = ref.watch(authProvider);
+    final userName = authState.user?.name ?? 'Fulfillment Manager';
+    final userEmail = authState.user?.email ?? 'fulfillment@farmestates.com';
+    final userRole = 'Fulfillment Manager';
+
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      body: Row(
+        children: [
+          // Sidebar
+          FulfillmentManagerSidebar(
+            selectedIndex: _selectedNavIndex,
+            onItemSelected: (index) {
+              setState(() {
+                _selectedNavIndex = index;
+              });
+            },
+            userName: userName,
+            userEmail: userEmail,
+            userRole: userRole,
           ),
-        ),
-        
-        const SizedBox(height: AppSpacing.md),
-        
-        // Features Grid
-        _buildFeaturesGrid(context),
-      ],
+
+          // Main Content
+          Expanded(
+            child: Column(
+              children: [
+                // Header
+                FulfillmentManagerHeader(
+                  userName: userName,
+                  weatherInfo: _weatherInfo,
+                  onNotificationTap: () {
+                    // Handle notifications
+                  },
+                ),
+
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Weather & Time Widget
+                        const WeatherTimeWidget(),
+
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // Compact Stats Section
+                        _buildStatsSection(context),
+
+                        const SizedBox(height: AppSpacing.xl),
+
+                        // Section Title
+                        Text(
+                          'Fulfillment Operations',
+                          style: AppTypography.h5.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(height: AppSpacing.md),
+
+                        // Features Grid
+                        _buildFeaturesGrid(context),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
         backgroundColor: AppColors.primary,
@@ -85,7 +121,7 @@ class FulfillmentManagerDashboardRedesigned extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
-        
+
         return GridView.count(
           crossAxisCount: crossAxisCount,
           childAspectRatio: 3.2,
@@ -131,11 +167,11 @@ class FulfillmentManagerDashboardRedesigned extends ConsumerWidget {
 
   Widget _buildFeaturesGrid(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 3 : 2;
-        
+
         return GridView.count(
           crossAxisCount: crossAxisCount,
           childAspectRatio: 1.2,

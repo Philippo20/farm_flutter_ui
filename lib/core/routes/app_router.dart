@@ -9,19 +9,26 @@ import '../providers/enhanced_auth_provider.dart';
 // Auth Screens
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/signup_screen.dart';
-import '../../screens/auth/enhanced_login_screen.dart';
 
 // Dashboard Screens
 import '../../screens/superadmin/superadmin_dashboard.dart';
-import '../../screens/admin/admin_dashboard.dart';
-import '../../screens/farm_manager/farm_manager_dashboard.dart';
-import '../../screens/farm_owner/farm_owner_dashboard.dart';
+import '../../screens/farm_manager/farm_manager_dashboard_redesigned.dart';
+import '../../screens/farm_owner/farm_owner_dashboard_redesigned.dart';
 import '../../screens/caretaker/caretaker_dashboard.dart';
 import '../../screens/technician/technician_dashboard.dart';
 
 // Farm Manager Screens
 import '../../screens/farm_manager/batch_generation_screen.dart';
 import '../../screens/farm_manager/inventory_management_screen.dart';
+import '../../screens/farm_manager/fund_request_screen.dart';
+import '../../screens/farm_manager/reports_screen.dart' as farm_manager;
+
+// Farm Owner Screens
+import '../../screens/farm_owner/digital_wallet_screen.dart';
+import '../../screens/farm_owner/analytics_screen.dart';
+import '../../screens/farm_owner/withdraw_funds_screen.dart';
+import '../../screens/farm_owner/reports_screen.dart' as farm_owner;
+import '../../screens/farm_owner/settings_screen.dart';
 
 // Caretaker Screens
 import '../../screens/caretaker/record_entry_screen.dart';
@@ -37,9 +44,9 @@ import '../../screens/alerts/alert_management_screen.dart';
 import '../../screens/controls/system_control_panel.dart';
 
 // Admin Screens
+import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/manage_users_screen.dart';
 import '../../screens/admin/settings_screen.dart';
-import '../../screens/admin/system_logs_screen.dart';
 
 // Super Admin Screens
 import '../../screens/superadmin/user_management_screen.dart';
@@ -60,12 +67,12 @@ import '../../screens/search/global_search_screen.dart';
 /// Router Provider
 /// Provides the GoRouter instance with all route configurations
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
+  final authState = ref.watch(enhancedAuthProvider);
 
   return GoRouter(
     initialLocation: AppRoutes.login,
     redirect: (context, state) {
-      final isLoggedIn = authState.valueOrNull != null;
+      final isLoggedIn = authState.isAuthenticated;
       final isLoggingIn = state.matchedLocation == AppRoutes.login;
 
       // Redirect to login if not authenticated
@@ -75,7 +82,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Redirect to dashboard if already logged in and trying to access login
       if (isLoggedIn && isLoggingIn) {
-        final user = authState.value;
+        final user = authState.user;
         if (user != null) {
           return AppRoutes.getDashboardByRole(user.role.name);
         }
@@ -107,13 +114,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.adminDashboard,
         name: 'admin-dashboard',
-        builder: (context, state) => const AdminDashboard(),
+        builder: (context, state) => const ModernAdminDashboardScreen(),
       ),
 
       GoRoute(
         path: AppRoutes.farmManagerDashboard,
         name: 'farm-manager-dashboard',
-        builder: (context, state) => const FarmManagerDashboard(),
+        builder: (context, state) => const FarmManagerDashboardRedesigned(),
         routes: [
           GoRoute(
             path: 'batch-generation',
@@ -125,13 +132,50 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'inventory-management',
             builder: (context, state) => const InventoryManagementScreen(),
           ),
+          GoRoute(
+            path: 'fund-request',
+            name: 'fund-request',
+            builder: (context, state) => const FundRequestScreen(),
+          ),
+          GoRoute(
+            path: 'reports',
+            name: 'reports',
+            builder: (context, state) => const farm_manager.ReportsScreen(),
+          ),
         ],
       ),
 
       GoRoute(
         path: AppRoutes.farmOwnerDashboard,
         name: 'farm-owner-dashboard',
-        builder: (context, state) => const FarmOwnerDashboard(),
+        builder: (context, state) => const FarmOwnerDashboardRedesigned(),
+        routes: [
+          GoRoute(
+            path: 'digital-wallet',
+            name: 'digital-wallet',
+            builder: (context, state) => const DigitalWalletScreen(),
+          ),
+          GoRoute(
+            path: 'analytics',
+            name: 'analytics',
+            builder: (context, state) => const AnalyticsScreen(),
+          ),
+          GoRoute(
+            path: 'withdraw-funds',
+            name: 'withdraw-funds',
+            builder: (context, state) => const WithdrawFundsScreen(),
+          ),
+          GoRoute(
+            path: 'reports',
+            name: 'reports',
+            builder: (context, state) => const farm_owner.ReportsScreen(),
+          ),
+          GoRoute(
+            path: 'settings',
+            name: 'settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+        ],
       ),
 
       GoRoute(

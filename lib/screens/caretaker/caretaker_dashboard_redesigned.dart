@@ -3,109 +3,340 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/caretaker_sidebar.dart';
+import '../../core/widgets/caretaker_header.dart';
 import '../../core/widgets/modern_dashboard_scaffold.dart';
 import '../../core/widgets/weather_time_widget.dart';
+import '../../core/widgets/weather_info_chip.dart';
 import '../../data/mock_farm_data.dart';
 import '../../widgets/alert_summary_card.dart';
+import '../../providers/auth_provider.dart';
 import 'widgets/water_quality_card.dart';
 import 'widgets/environment_monitoring_card.dart';
 import 'widgets/nutrient_system_card.dart';
 
 /// Caretaker Dashboard - Redesigned
 /// Daily operations and record keeping
-class CaretakerDashboardRedesigned extends ConsumerWidget {
+class CaretakerDashboardRedesigned extends ConsumerStatefulWidget {
   const CaretakerDashboardRedesigned({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ModernDashboardScaffold(
-      title: 'Caretaker',
-      menuItems: [
-        DashboardMenuItem(
-          title: 'Dashboard',
-          icon: Icons.dashboard,
-          isSelected: true,
-        ),
-        DashboardMenuItem(
-          title: 'Record Entry',
-          icon: Icons.edit_note,
-          badge: '8',
-          onTap: () => Navigator.pushNamed(context, '/record-entry'),
-        ),
-        DashboardMenuItem(
-          title: 'Input Confirmation',
-          icon: Icons.check_circle_outline,
-          badge: '3',
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Chat',
-          icon: Icons.chat_bubble_outline,
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Calendar',
-          icon: Icons.calendar_today,
-          onTap: () {},
-        ),
-        DashboardMenuItem(
-          title: 'Settings',
-          icon: Icons.settings,
-          onTap: () {},
-        ),
-      ],
+  ConsumerState<CaretakerDashboardRedesigned> createState() => _CaretakerDashboardRedesignedState();
+}
+
+class _CaretakerDashboardRedesignedState extends ConsumerState<CaretakerDashboardRedesigned> {
+  int _selectedNavIndex = 0;
+  WeatherInfo? _weatherInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load weather info if needed
+    _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final authState = ref.watch(authProvider);
+    final userName = authState.user?.name ?? 'Caretaker';
+    final userEmail = authState.user?.email ?? 'caretaker@farmestates.com';
+    final userRole = 'Caretaker';
+
+    return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      body: isMobile
+          ? _buildMobileLayout(isDark, userName)
+          : _buildDesktopLayout(isDark, userName, userEmail, userRole),
+      floatingActionButton: !isMobile
+          ? FloatingActionButton.extended(
+              onPressed: () => Navigator.pushNamed(context, '/record-entry'),
+              backgroundColor: AppColors.primary,
+              icon: const Icon(Icons.add),
+              label: const Text('New Record'),
+            )
+          : null,
+      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+    );
+  }
+
+  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail, String userRole) {
+    return Row(
       children: [
-        // Weather & Time Widget
-        const WeatherTimeWidget(),
-        
-        const SizedBox(height: AppSpacing.lg),
-        
-        // Compact Stats Section
-        _buildStatsSection(context),
-        
-        const SizedBox(height: AppSpacing.xl),
-        
-        // Alert Summary
-        const AlertSummaryCard(
-          showRecentAlerts: true,
-          maxRecentAlerts: 2,
+        // Sidebar
+        CaretakerSidebar(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (index) {
+            setState(() {
+              _selectedNavIndex = index;
+            });
+          },
+          userName: userName,
+          userEmail: userEmail,
+          userRole: userRole,
         ),
-        
-        const SizedBox(height: AppSpacing.xl),
-        
-        // Section Title - Monitoring
-        Text(
-          'Crop Health Monitoring',
-          style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+
+        // Main Content
+        Expanded(
+          child: Column(
+            children: [
+              // Header
+              CaretakerHeader(
+                userName: userName,
+                weatherInfo: _weatherInfo,
+                onNotificationTap: () {
+                  // Handle notifications
+                },
+              ),
+
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Weather & Time Widget
+                      const WeatherTimeWidget(),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Compact Stats Section
+                      _buildStatsSection(context),
+
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // Alert Summary
+                      const AlertSummaryCard(
+                        showRecentAlerts: true,
+                        maxRecentAlerts: 2,
+                      ),
+
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // Section Title - Monitoring
+                      Text(
+                        'Crop Health Monitoring',
+                        style: AppTypography.h5.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.md),
+
+                      // Monitoring Cards
+                      _buildMonitoringCards(context),
+
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // Section Title - Tasks
+                      Text(
+                        'Daily Tasks',
+                        style: AppTypography.h5.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.md),
+
+                      // Features Grid
+                      _buildFeaturesGrid(context),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        
-        const SizedBox(height: AppSpacing.md),
-        
-        // Monitoring Cards
-        _buildMonitoringCards(context),
-        
-        const SizedBox(height: AppSpacing.xl),
-        
-        // Section Title - Tasks
-        Text(
-          'Daily Tasks',
-          style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        
-        const SizedBox(height: AppSpacing.md),
-        
-        // Features Grid
-        _buildFeaturesGrid(context),
       ],
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, '/record-entry'),
-        backgroundColor: AppColors.primary,
-        icon: const Icon(Icons.add),
-        label: const Text('New Record'),
+    );
+  }
+
+  Widget _buildMobileLayout(bool isDark, String userName) {
+    return Column(
+      children: [
+        CaretakerHeader(
+          userName: userName,
+          weatherInfo: _weatherInfo,
+          onNotificationTap: () {
+            // Handle notifications
+          },
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Weather & Time Widget
+                const WeatherTimeWidget(),
+
+                const SizedBox(height: AppSpacing.md),
+
+                // Compact Stats Section
+                _buildStatsSection(context),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // Alert Summary
+                const AlertSummaryCard(
+                  showRecentAlerts: true,
+                  maxRecentAlerts: 2,
+                ),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // Section Title - Monitoring
+                Text(
+                  'Crop Health Monitoring',
+                  style: AppTypography.h5.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
+                // Monitoring Cards
+                _buildMonitoringCards(context),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // Section Title - Tasks
+                Text(
+                  'Daily Tasks',
+                  style: AppTypography.h5.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
+                // Features Grid
+                _buildFeaturesGrid(context),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomNavigation(bool isDark) {
+    final navItems = [
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Dashboard',
+        'index': 0,
+        'route': '/caretaker_dashboard'
+      },
+      {
+        'icon': Icons.edit_note_outlined,
+        'label': 'Record',
+        'index': 1,
+        'route': '/record-entry'
+      },
+      {
+        'icon': Icons.check_circle_outline,
+        'label': 'Confirm',
+        'index': 2,
+        'route': '/input-confirmation'
+      },
+      {
+        'icon': Icons.chat_bubble_outline,
+        'label': 'Chat',
+        'index': 3,
+        'route': '/chat'
+      },
+      {
+        'icon': Icons.calendar_today_outlined,
+        'label': 'Calendar',
+        'index': 4,
+        'route': '/calendar'
+      },
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+        border: Border(
+          top: BorderSide(
+            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            width: 1,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 70,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: navItems.map((item) {
+              final index = item['index'] as int;
+              final route = item['route'] as String;
+              final isSelected = index == _selectedNavIndex;
+
+              return Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      if (_selectedNavIndex != index) {
+                        setState(() => _selectedNavIndex = index);
+                        try {
+                          Navigator.pushReplacementNamed(context, route);
+                        } catch (e) {
+                          try {
+                            Navigator.pushNamed(context, route);
+                          } catch (e2) {
+                            debugPrint('Navigation error: $e2');
+                          }
+                        }
+                      }
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          item['icon'] as IconData,
+                          size: 24,
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item['label'] as String,
+                          style: AppTypography.caption.copyWith(
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark
+                                    ? Colors.white.withOpacity(0.5)
+                                    : AppColors.textSecondary),
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
       ),
     );
   }
@@ -114,7 +345,7 @@ class CaretakerDashboardRedesigned extends ConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
-        
+
         return GridView.count(
           crossAxisCount: crossAxisCount,
           childAspectRatio: 3.2,
@@ -174,9 +405,9 @@ class CaretakerDashboardRedesigned extends ConsumerWidget {
             // Navigate to detailed water quality screen
           },
         ),
-        
+
         const SizedBox(height: AppSpacing.md),
-        
+
         // Environment Monitoring Card
         EnvironmentMonitoringCard(
           temperature: sensorData['temperature']['value'].toDouble(),
@@ -189,9 +420,9 @@ class CaretakerDashboardRedesigned extends ConsumerWidget {
             // Navigate to detailed environment screen
           },
         ),
-        
+
         const SizedBox(height: AppSpacing.md),
-        
+
         // Nutrient System Card
         NutrientSystemCard(
           nutrientPumpState: systemControls['pumps']['nutrientPump']['state'],
@@ -208,11 +439,11 @@ class CaretakerDashboardRedesigned extends ConsumerWidget {
 
   Widget _buildFeaturesGrid(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 3 : 2;
-        
+
         return GridView.count(
           crossAxisCount: crossAxisCount,
           childAspectRatio: 1.2,

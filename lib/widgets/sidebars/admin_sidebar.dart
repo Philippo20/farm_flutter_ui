@@ -63,11 +63,28 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final navItems = [
-      _NavItem(icon: Icons.dashboard_outlined, label: 'Home', activeIcon: Icons.dashboard, route: '/dashboard'),
-      _NavItem(icon: Icons.people_outline, label: 'Users', activeIcon: Icons.people, route: '/users'),
-      _NavItem(icon: Icons.agriculture_outlined, label: 'Farms', activeIcon: Icons.agriculture, route: '/farms'),
-      _NavItem(icon: Icons.sensors_outlined, label: 'Sensors', activeIcon: Icons.sensors, route: '/sensors'),
-      _NavItem(icon: Icons.settings_outlined, label: 'Settings', activeIcon: Icons.settings, route: '/settings'),
+      _NavItem(
+          icon: Icons.dashboard_outlined,
+          label: 'Home',
+          activeIcon: Icons.dashboard,
+          route: '/dashboard'),
+      _NavItem(
+          icon: Icons.people_outline, label: 'Users', activeIcon: Icons.people, route: '/users'),
+      _NavItem(
+          icon: Icons.agriculture_outlined,
+          label: 'Farms',
+          activeIcon: Icons.agriculture,
+          route: '/farms'),
+      _NavItem(
+          icon: Icons.sensors_outlined,
+          label: 'Sensors',
+          activeIcon: Icons.sensors,
+          route: '/sensors'),
+      _NavItem(
+          icon: Icons.settings_outlined,
+          label: 'Settings',
+          activeIcon: Icons.settings,
+          route: '/settings'),
     ];
 
     if (widget.isMobile) {
@@ -109,7 +126,8 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 child: Row(
-                  mainAxisAlignment: _isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment:
+                      _isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
                   children: [
                     if (!_isCollapsed)
                       Text(
@@ -141,7 +159,7 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
               ),
               const Divider(height: 1),
               const SizedBox(height: 16),
-              
+
               // Navigation items
               Expanded(
                 child: ListView.separated(
@@ -158,7 +176,8 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
                       child: InkWell(
                         onTap: () {
                           widget.onItemSelected(idx);
-                          Navigator.of(context).pushReplacementNamed(item.route, arguments: {'isDark': widget.isDark});
+                          Navigator.of(context).pushReplacementNamed(item.route,
+                              arguments: {'isDark': widget.isDark});
                         },
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
@@ -200,7 +219,7 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
                   },
                 ),
               ),
-              
+
               // Logout button
               const Divider(height: 1),
               Container(
@@ -280,8 +299,8 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
             children: navItems.map((item) {
               final index = navItems.indexOf(item);
               final selected = index == widget.selectedIndex;
-              final color = selected 
-                  ? AppColors.primary 
+              final color = selected
+                  ? AppColors.primary
                   : (widget.isDark ? Colors.grey[400] : Colors.grey[600]);
 
               return Expanded(
@@ -290,7 +309,8 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
                   child: InkWell(
                     onTap: () {
                       widget.onItemSelected(index);
-                      Navigator.of(context).pushReplacementNamed(item.route, arguments: {'isDark': widget.isDark});
+                      Navigator.of(context)
+                          .pushReplacementNamed(item.route, arguments: {'isDark': widget.isDark});
                     },
                     splashColor: AppColors.primary.withOpacity(0.2),
                     child: Column(
