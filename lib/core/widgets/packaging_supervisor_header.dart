@@ -67,7 +67,7 @@ class PackagingSupervisorHeader extends ConsumerWidget {
         vertical: AppSpacing.lg,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.neutral100,
+        color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
       ),
       child: isMobile ? _buildMobileLayout(isDark, ref) : _buildDesktopLayout(isDark, ref),
     );
@@ -188,73 +188,368 @@ class PackagingSupervisorHeader extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Top Row: Greeting and Actions
+        // Top Row: Greeting/User and Actions
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Left Section: Greeting and User Name
             Expanded(
-              child: Text(
-                '${_getGreeting()}, $userName',
-                style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 22,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                  letterSpacing: -0.3,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            _buildActionButton(
-              icon: isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-              tooltip: isDark ? 'Light Mode' : 'Dark Mode',
-              isDark: isDark,
-              onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            _buildActionButton(
-              icon: Icons.notifications_outlined,
-              tooltip: 'Notifications',
-              isDark: isDark,
-              onPressed: onNotificationTap,
-              badge: 3,
-            ),
-          ],
-        ),
-
-        const SizedBox(height: AppSpacing.sm),
-
-        // Bottom Row: Date and Weather
-        Row(
-          children: [
-            Expanded(
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 14,
-                    color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
+                  // Greeting
+                  Row(
+                    children: [
+                      Text(
+                        _getGreeting(),
+                        style: AppTypography.h5.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '👋',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.xs),
+                  const SizedBox(height: 2),
+                  // User Name
                   Text(
-                    _getFormattedDate(),
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontSize: 13,
-                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                    userName,
+                    style: AppTypography.bodyLarge.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.85)
+                          : AppColors.textPrimary.withOpacity(0.75),
+                      letterSpacing: 0.1,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  // Role with icon
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.inventory_2_outlined,
+                        size: 12,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.6)
+                            : AppColors.textSecondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Packaging Supervisor',
+                        style: AppTypography.bodySmall.copyWith(
+                          fontSize: 11,
+                          color: isDark
+                              ? Colors.white.withOpacity(0.6)
+                              : AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            if (weatherInfo != null)
-              WeatherInfoChip(
-                condition: weatherInfo!.condition,
-                temperature: weatherInfo!.temperature,
-                isDark: isDark,
-              ),
+            const SizedBox(width: AppSpacing.xs),
+            // Action Buttons
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildMobileActionButton(
+                  icon: isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                  tooltip: isDark ? 'Light Mode' : 'Dark Mode',
+                  isDark: isDark,
+                  onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                _buildMobileActionButton(
+                  icon: Icons.notifications_outlined,
+                  tooltip: 'Notifications',
+                  isDark: isDark,
+                  onPressed: onNotificationTap,
+                  badge: 3,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                _buildMobileProfileButton(isDark, ref),
+              ],
+            ),
           ],
         ),
+
+        const SizedBox(height: AppSpacing.md),
+
+        // Bottom Row: Date and Weather
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            border: Border.all(
+              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.04),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 14,
+                color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  _getFormattedDate(),
+                  style: AppTypography.bodyMedium.copyWith(
+                    fontSize: 12,
+                    color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (weatherInfo != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                WeatherInfoChip(
+                  condition: weatherInfo!.condition,
+                  temperature: weatherInfo!.temperature,
+                  isDark: isDark,
+                ),
+              ],
+            ],
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildMobileActionButton({
+    required IconData icon,
+    required String tooltip,
+    required bool isDark,
+    VoidCallback? onPressed,
+    int? badge,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Material(
+            color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            elevation: 0,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withOpacity(0.12) : Colors.black.withOpacity(0.08),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  icon,
+                  size: 20,
+                  color: isDark ? Colors.white.withOpacity(0.95) : AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ),
+          if (badge != null && badge > 0)
+            Positioned(
+              top: -4,
+              right: -4,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: AppColors.error,
+                  shape: BoxShape.circle,
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 18,
+                  minHeight: 18,
+                ),
+                child: Text(
+                  badge > 9 ? '9+' : badge.toString(),
+                  style: AppTypography.caption.copyWith(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileProfileButton(bool isDark, WidgetRef ref) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final authState = ref.watch(authProvider);
+        final user = authState.user;
+        final initials = user?.name
+                .split(' ')
+                .map((n) => n.isNotEmpty ? n[0] : '')
+                .take(2)
+                .join()
+                .toUpperCase() ??
+            'PS';
+
+        return PopupMenuButton<String>(
+          offset: const Offset(0, 50),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          ),
+          child: Material(
+            color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            elevation: 0,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary,
+                    AppColors.primaryDark,
+                  ],
+                ),
+                border: Border.all(
+                  color: isDark ? Colors.white.withOpacity(0.12) : Colors.black.withOpacity(0.08),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  initials,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          itemBuilder: (menuContext) => [
+            PopupMenuItem(
+              value: 'profile',
+              child: Row(
+                children: const [
+                  Icon(Icons.person_outline, size: 18),
+                  SizedBox(width: AppSpacing.sm),
+                  Text('Profile'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'settings',
+              child: Row(
+                children: const [
+                  Icon(Icons.settings_outlined, size: 18),
+                  SizedBox(width: AppSpacing.sm),
+                  Text('Settings'),
+                ],
+              ),
+            ),
+            const PopupMenuDivider(),
+            PopupMenuItem(
+              value: 'logout',
+              child: Row(
+                children: const [
+                  Icon(Icons.logout, size: 18, color: AppColors.error),
+                  SizedBox(width: AppSpacing.sm),
+                  Text('Logout', style: TextStyle(color: AppColors.error)),
+                ],
+              ),
+            ),
+          ],
+          onSelected: (value) async {
+            if (value == 'logout') {
+              final dialogIsDark = Theme.of(context).brightness == Brightness.dark;
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  backgroundColor: dialogIsDark ? AppColors.surfaceDark : Colors.white,
+                  title: Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: dialogIsDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                  content: Text(
+                    'Are you sure you want to logout?',
+                    style: TextStyle(
+                      color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(dialogContext, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                      ),
+                      child: const Text('Logout'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true && context.mounted) {
+                await ref.read(authProvider.notifier).logout();
+                if (context.mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                }
+              }
+            } else if (value == 'settings') {
+              Navigator.of(context).pushNamed('/settings');
+            } else if (value == 'profile') {
+              if (onProfileTap != null) onProfileTap!();
+            }
+          },
+        );
+      },
     );
   }
 
@@ -368,15 +663,32 @@ class PackagingSupervisorHeader extends ConsumerWidget {
           onSelected: (value) async {
             if (value == 'logout') {
               // Show confirmation dialog
+              final dialogIsDark = Theme.of(context).brightness == Brightness.dark;
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (dialogContext) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
+                  backgroundColor: dialogIsDark ? AppColors.surfaceDark : Colors.white,
+                  title: Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: dialogIsDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                  content: Text(
+                    'Are you sure you want to logout?',
+                    style: TextStyle(
+                      color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                    ),
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(dialogContext, false),
-                      child: const Text('Cancel'),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                        ),
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(dialogContext, true),

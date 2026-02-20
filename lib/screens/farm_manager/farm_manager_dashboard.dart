@@ -140,7 +140,7 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
       {'title': 'Ready to Harvest', 'value': '4', 'change': '', 'icon': Icons.eco, 'color': AppColors.warning},
       {'title': 'Low Stock Items', 'value': '7', 'change': '-2', 'icon': Icons.warning_amber, 'color': AppColors.error},
       {'title': 'Pending Approvals', 'value': '3', 'change': '', 'icon': Icons.pending_actions, 'color': AppColors.info},
-      {'title': 'Budget Available', 'value': '\$15K', 'change': '+5%', 'icon': Icons.account_balance_wallet, 'color': AppColors.success},
+      {'title': 'Budget Available', 'value': 'GH₵15K', 'change': '+5%', 'icon': Icons.account_balance_wallet, 'color': AppColors.success},
     ];
 
     return GridView.builder(

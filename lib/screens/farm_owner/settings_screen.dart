@@ -5,6 +5,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/farm_owner_sidebar.dart';
 import '../../core/widgets/farm_owner_header.dart';
+import '../../core/widgets/farm_owner_mobile_drawer.dart';
 import '../../providers/auth_provider.dart';
 
 /// Settings Screen for Farm Owner
@@ -18,6 +19,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   int _selectedNavIndex = 5;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _notificationsEnabled = true;
   bool _emailNotifications = true;
   bool _pushNotifications = false;
@@ -34,7 +36,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final userRole = 'Farm Owner';
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      drawer: isMobile
+          ? FarmOwnerMobileDrawer(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (i) => setState(() => _selectedNavIndex = i),
+              userName: userName,
+            )
+          : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
@@ -70,6 +80,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         'Settings',
                         style: AppTypography.h4.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xl),
@@ -97,6 +108,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         FarmOwnerHeader(
           userName: userName,
           onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -163,6 +175,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             'Profile Information',
             style: AppTypography.h5.copyWith(
               fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -196,6 +209,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       userName,
                       style: AppTypography.h6.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -238,6 +252,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             'Notifications',
             style: AppTypography.h5.copyWith(
               fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -281,6 +296,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             'Security',
             style: AppTypography.h5.copyWith(
               fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -324,6 +340,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             'Preferences',
             style: AppTypography.h5.copyWith(
               fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -358,6 +375,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title,
         style: AppTypography.bodyMedium.copyWith(
           fontWeight: FontWeight.w500,
+          color: isDark ? Colors.white : AppColors.textPrimary,
         ),
       ),
       trailing: Switch(
@@ -381,6 +399,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title,
         style: AppTypography.bodyMedium.copyWith(
           fontWeight: FontWeight.w500,
+          color: isDark ? Colors.white : AppColors.textPrimary,
         ),
       ),
       trailing: trailing ?? const Icon(Icons.chevron_right),

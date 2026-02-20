@@ -5,6 +5,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/farm_owner_sidebar.dart';
 import '../../core/widgets/farm_owner_header.dart';
+import '../../core/widgets/farm_owner_mobile_drawer.dart';
 import '../../providers/auth_provider.dart';
 
 /// Reports Screen for Farm Owner
@@ -20,6 +21,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   int _selectedNavIndex = 4;
   String _selectedReportType = 'All';
   String _selectedPeriod = 'Last 30 Days';
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<Map<String, dynamic>> _reports = [
     {
@@ -75,7 +77,15 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final userRole = 'Farm Owner';
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      drawer: isMobile
+          ? FarmOwnerMobileDrawer(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (i) => setState(() => _selectedNavIndex = i),
+              userName: userName,
+            )
+          : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
@@ -130,6 +140,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         FarmOwnerHeader(
           userName: userName,
           onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -163,6 +174,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             style: AppTypography.h4.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: 20,
+              color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -189,6 +201,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                           period,
                           style: AppTypography.bodySmall.copyWith(
                             fontSize: 12,
+                            color: isDark ? Colors.white : AppColors.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -229,21 +242,48 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           'Reports',
           style: AppTypography.h4.copyWith(
             fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
         Row(
           children: [
-            DropdownButton<String>(
-              value: _selectedPeriod,
-              items: ['Last 7 Days', 'Last 30 Days', 'Last 3 Months', 'Last Year'].map((period) {
-                return DropdownMenuItem(
-                  value: period,
-                  child: Text(period),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() => _selectedPeriod = value!);
-              },
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white10 : AppColors.neutral100,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(
+                  color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
+                ),
+              ),
+              child: DropdownButton<String>(
+                value: _selectedPeriod,
+                items: ['Last 7 Days', 'Last 30 Days', 'Last 3 Months', 'Last Year'].map((period) {
+                  return DropdownMenuItem(
+                    value: period,
+                    child: Text(
+                      period,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() => _selectedPeriod = value!);
+                },
+                underline: const SizedBox(),
+                icon: Icon(
+                  Icons.arrow_drop_down,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+                dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+                style: TextStyle(
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                  fontSize: 13,
+                ),
+              ),
             ),
             const SizedBox(width: AppSpacing.sm),
             ElevatedButton.icon(
@@ -318,6 +358,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           style: AppTypography.h5.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: isMobile ? 16 : 18,
+            color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -452,22 +493,22 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         'route': '/farm-owner'
       },
       {
+        'icon': Icons.agriculture_outlined,
+        'label': 'Farm',
+        'index': 1,
+        'route': '/farm-owner/farm'
+      },
+      {
         'icon': Icons.account_balance_wallet_outlined,
         'label': 'Wallet',
-        'index': 1,
+        'index': 2,
         'route': '/farm-owner/digital-wallet'
       },
       {
         'icon': Icons.analytics_outlined,
         'label': 'Analytics',
-        'index': 2,
-        'route': '/farm-owner/analytics'
-      },
-      {
-        'icon': Icons.money_outlined,
-        'label': 'Withdraw',
         'index': 3,
-        'route': '/farm-owner/withdraw-funds'
+        'route': '/farm-owner/analytics'
       },
       {
         'icon': Icons.assessment_outlined,

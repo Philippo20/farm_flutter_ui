@@ -74,7 +74,7 @@ class _PackagingSupervisorSidebarState extends State<PackagingSupervisorSidebar>
       builder: (context, child) {
         return Container(
           width: _widthAnimation.value,
-          decoration: BoxDecoration(color: isDark ? AppColors.surfaceDark : AppColors.neutral100),
+          decoration: BoxDecoration(color: isDark ? AppColors.backgroundDark : AppColors.neutral100),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

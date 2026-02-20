@@ -23,35 +23,35 @@ class RecordEntryScreen extends ConsumerStatefulWidget {
 class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   final _formKey = GlobalKey<FormState>();
   int _selectedNavIndex = 1;
-  
+
   // Form fields
   String? _selectedFarm;
   String? _selectedBatch;
   String _selectedRecordType = 'daily_monitoring';
   DateTime _recordDate = DateTime.now();
-  
+
   // Environmental readings
   final _temperatureController = TextEditingController();
   final _humidityController = TextEditingController();
   final _phController = TextEditingController();
   final _ecController = TextEditingController();
   final _lightController = TextEditingController();
-  
+
   // Plant observations
   final _plantHealthController = TextEditingController();
   final _growthStageController = TextEditingController();
   final _plantCountController = TextEditingController();
   final _observationsController = TextEditingController();
-  
+
   // Activities and issues
   List<String> _selectedActivities = [];
   bool _hasIssues = false;
   String _issueSeverity = 'low';
   final _issueDescriptionController = TextEditingController();
-  
+
   // Notes
   final _notesController = TextEditingController();
-  
+
   bool _isSubmitting = false;
 
   @override
@@ -81,7 +81,8 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     final userRole = 'Caretaker';
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
@@ -89,7 +90,8 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     );
   }
 
-  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail, String userRole) {
+  Widget _buildDesktopLayout(
+      bool isDark, String userName, String userEmail, String userRole) {
     return Row(
       children: [
         CaretakerSidebar(
@@ -148,104 +150,178 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    return Column(
-      children: [
-        // Header
-        _buildHeader(isDark),
-        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
-
-        // Basic Information
-        _buildSection('Basic Information', isDark, [
-          _buildFarmSelector(isDark),
-          const SizedBox(height: AppSpacing.md),
-          _buildBatchSelector(isDark),
-          const SizedBox(height: AppSpacing.md),
-          _buildRecordTypeSelector(isDark),
-          const SizedBox(height: AppSpacing.md),
-          _buildDatePicker(isDark),
-        ]),
-        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
-
-        // Environmental Readings
-        _buildSection('Environmental Readings', isDark, [
-          isMobile
-              ? Column(
-                  children: [
-                    _buildNumberField('Temperature (°C)', _temperatureController, Icons.thermostat, isDark),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildNumberField('Humidity (%)', _humidityController, Icons.water_drop, isDark),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildNumberField('pH Level', _phController, Icons.science, isDark),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildNumberField('EC (mS/cm)', _ecController, Icons.electric_bolt, isDark),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildNumberField('Light Intensity (lux)', _lightController, Icons.light_mode, isDark),
-                  ],
-                )
-              : Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(child: _buildNumberField('Temperature (°C)', _temperatureController, Icons.thermostat, isDark)),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(child: _buildNumberField('Humidity (%)', _humidityController, Icons.water_drop, isDark)),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: [
-                        Expanded(child: _buildNumberField('pH Level', _phController, Icons.science, isDark)),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(child: _buildNumberField('EC (mS/cm)', _ecController, Icons.electric_bolt, isDark)),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildNumberField('Light Intensity (lux)', _lightController, Icons.light_mode, isDark),
-                  ],
-                ),
-        ]),
-        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
-
-        // Plant Observations
-        _buildSection('Plant Observations', isDark, [
-          _buildTextField('Plant Health', _plantHealthController, 'e.g., Healthy, Yellowing, etc.', isDark),
-          const SizedBox(height: AppSpacing.md),
-          _buildTextField('Growth Stage', _growthStageController, 'e.g., Vegetative, Flowering', isDark),
-          const SizedBox(height: AppSpacing.md),
-          _buildNumberField('Plant Count', _plantCountController, Icons.format_list_numbered, isDark),
-          const SizedBox(height: AppSpacing.md),
-          _buildTextField('Observations', _observationsController, 'Any notable observations...', isDark, maxLines: 3),
-        ]),
-        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
-
-        // Activities Performed
-        _buildSection('Activities Performed', isDark, [
-          _buildActivitiesSelector(isDark),
-        ]),
-        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
-
-        // Issues & Concerns
-        _buildSection('Issues & Concerns', isDark, [
-          _buildIssuesToggle(isDark),
-          if (_hasIssues) ...[
-            const SizedBox(height: AppSpacing.md),
-            _buildSeveritySelector(isDark),
-            const SizedBox(height: AppSpacing.md),
-            _buildTextField('Issue Description', _issueDescriptionController, 'Describe the issue...', isDark, maxLines: 3),
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: isMobile ? screenWidth : 1060),
+        child: Column(
+          children: [
+            _buildHeader(isDark),
+            SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
+            _buildSection(
+              title: 'Basic Information',
+              subtitle: 'Select farm, batch, and record type details',
+              icon: Icons.info_outline_rounded,
+              isDark: isDark,
+              children: [
+                _buildFarmSelector(isDark),
+                const SizedBox(height: AppSpacing.md),
+                _buildBatchSelector(isDark),
+                const SizedBox(height: AppSpacing.md),
+                _buildRecordTypeSelector(isDark),
+                const SizedBox(height: AppSpacing.md),
+                _buildDatePicker(isDark),
+              ],
+            ),
+            SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+            _buildSection(
+              title: 'Environmental Readings',
+              subtitle: 'Capture latest climate and nutrient values',
+              icon: Icons.sensors_rounded,
+              isDark: isDark,
+              children: [
+                isMobile
+                    ? Column(
+                        children: [
+                          _buildNumberField(
+                              'Temperature (C)',
+                              _temperatureController,
+                              Icons.thermostat_rounded,
+                              isDark),
+                          const SizedBox(height: AppSpacing.md),
+                          _buildNumberField('Humidity (%)', _humidityController,
+                              Icons.water_drop_rounded, isDark),
+                          const SizedBox(height: AppSpacing.md),
+                          _buildNumberField('pH Level', _phController,
+                              Icons.science_rounded, isDark),
+                          const SizedBox(height: AppSpacing.md),
+                          _buildNumberField('EC (mS/cm)', _ecController,
+                              Icons.bolt_rounded, isDark),
+                          const SizedBox(height: AppSpacing.md),
+                          _buildNumberField(
+                              'Light Intensity (lux)',
+                              _lightController,
+                              Icons.light_mode_rounded,
+                              isDark),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: _buildNumberField(
+                                      'Temperature (C)',
+                                      _temperatureController,
+                                      Icons.thermostat_rounded,
+                                      isDark)),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                  child: _buildNumberField(
+                                      'Humidity (%)',
+                                      _humidityController,
+                                      Icons.water_drop_rounded,
+                                      isDark)),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: _buildNumberField(
+                                      'pH Level',
+                                      _phController,
+                                      Icons.science_rounded,
+                                      isDark)),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                  child: _buildNumberField(
+                                      'EC (mS/cm)',
+                                      _ecController,
+                                      Icons.bolt_rounded,
+                                      isDark)),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          _buildNumberField(
+                              'Light Intensity (lux)',
+                              _lightController,
+                              Icons.light_mode_rounded,
+                              isDark),
+                        ],
+                      ),
+              ],
+            ),
+            SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+            _buildSection(
+              title: 'Plant Observations',
+              subtitle: 'Track crop condition, growth, and notable changes',
+              icon: Icons.spa_rounded,
+              isDark: isDark,
+              children: [
+                _buildTextField('Plant Health', _plantHealthController,
+                    'e.g., Healthy, Yellowing, etc.', isDark),
+                const SizedBox(height: AppSpacing.md),
+                _buildTextField('Growth Stage', _growthStageController,
+                    'e.g., Vegetative, Flowering', isDark),
+                const SizedBox(height: AppSpacing.md),
+                _buildNumberField('Plant Count', _plantCountController,
+                    Icons.format_list_numbered_rounded, isDark),
+                const SizedBox(height: AppSpacing.md),
+                _buildTextField('Observations', _observationsController,
+                    'Any notable observations...', isDark,
+                    maxLines: 3),
+              ],
+            ),
+            SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+            _buildSection(
+              title: 'Activities Performed',
+              subtitle: 'Select all tasks completed during this shift',
+              icon: Icons.checklist_rounded,
+              isDark: isDark,
+              children: [
+                _buildActivitiesSelector(isDark),
+              ],
+            ),
+            SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+            _buildSection(
+              title: 'Issues and Concerns',
+              subtitle: 'Report incidents requiring follow-up',
+              icon: Icons.report_problem_outlined,
+              isDark: isDark,
+              children: [
+                _buildIssuesToggle(isDark),
+                if (_hasIssues) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  _buildSeveritySelector(isDark),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildTextField(
+                      'Issue Description',
+                      _issueDescriptionController,
+                      'Describe the issue...',
+                      isDark,
+                      maxLines: 3),
+                ],
+              ],
+            ),
+            SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+            _buildSection(
+              title: 'Additional Notes',
+              subtitle: 'Any extra information for handover',
+              icon: Icons.sticky_note_2_outlined,
+              isDark: isDark,
+              children: [
+                _buildTextField('Notes', _notesController,
+                    'Any additional notes...', isDark,
+                    maxLines: 4),
+              ],
+            ),
+            SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+            _buildSubmitButton(isDark),
+            SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
           ],
-        ]),
-        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
-
-        // Additional Notes
-        _buildSection('Additional Notes', isDark, [
-          _buildTextField('Notes', _notesController, 'Any additional notes...', isDark, maxLines: 4),
-        ]),
-        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
-
-        // Submit Button
-        _buildSubmitButton(isDark),
-        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
-      ],
+        ),
+      ),
     );
   }
 
@@ -295,7 +371,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         ],
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
             width: 1,
           ),
         ),
@@ -336,7 +414,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                           size: 24,
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.5)
+                                  : AppColors.textSecondary),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -347,7 +427,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                                 : (isDark
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                             fontSize: 11,
                           ),
                           maxLines: 1,
@@ -365,49 +447,191 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     );
   }
 
+  void _handleBackNavigation() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+      return;
+    }
+    context.go('/caretaker_dashboard');
+  }
+
+  InputDecoration _inputDecoration({
+    required String label,
+    required bool isDark,
+    String? hint,
+    IconData? icon,
+  }) {
+    final fill = isDark ? const Color(0xFF222222) : Colors.white;
+    final borderColor =
+        isDark ? Colors.white.withOpacity(0.12) : AppColors.neutral300;
+    final focusedColor = AppColors.primary.withOpacity(0.75);
+
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: icon != null ? Icon(icon, size: 20) : null,
+      filled: true,
+      fillColor: fill,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      labelStyle: AppTypography.bodySmall.copyWith(
+        color: isDark ? Colors.white70 : AppColors.textSecondary,
+      ),
+      hintStyle: AppTypography.bodySmall.copyWith(
+        color: isDark ? Colors.white38 : AppColors.neutral500,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: borderColor),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: borderColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: focusedColor, width: 1.4),
+      ),
+    );
+  }
+
   Widget _buildHeader(bool isDark) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final headerBg = isDark ? const Color(0xFF1F2720) : const Color(0xFFF2FAF3);
+
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.success.withOpacity(0.1),
-            AppColors.success.withOpacity(0.05),
+            headerBg,
+            (isDark ? const Color(0xFF1B1B1B) : Colors.white),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.success.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(
+            color: AppColors.success.withOpacity(isDark ? 0.35 : 0.28)),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: AppColors.success.withOpacity(0.08),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+        ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.2),
-              shape: BoxShape.circle,
+          InkWell(
+            onTap: _handleBackNavigation,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withOpacity(0.08) : Colors.white,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.16)
+                      : AppColors.neutral200,
+                ),
+              ),
+              child: Icon(
+                Icons.arrow_back_rounded,
+                size: 20,
+                color: isDark ? Colors.white : AppColors.textPrimary,
+              ),
             ),
-            child: const Icon(Icons.edit_note, size: 28, color: AppColors.success),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(9),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withOpacity(0.14),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.edit_note_rounded,
+                          size: 20, color: AppColors.success),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Farm Record Entry',
+                        style: AppTypography.titleSmall.copyWith(
+                          fontSize: isMobile ? 16 : 18,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withOpacity(0.12),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusFull),
+                        border: Border.all(
+                            color: AppColors.success.withOpacity(0.35)),
+                      ),
+                      child: Text(
+                        'Draft',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 Text(
-                  'Farm Record Entry',
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  DateFormat('EEEE, MMM d, yyyy').format(_recordDate),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white70 : AppColors.textSecondary,
                   ),
                 ),
-                Text(
-                  DateFormat('EEEE, MMMM d, yyyy').format(_recordDate),
-                  style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 12,
-                    color: isDark ? Colors.white70 : AppColors.textSecondary,
+                const SizedBox(height: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.05)
+                        : Colors.white.withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : AppColors.neutral200,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline_rounded,
+                          size: 16, color: AppColors.info),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Complete all required fields before submitting.',
+                          style: AppTypography.caption.copyWith(
+                            color: isDark
+                                ? Colors.white70
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -418,60 +642,124 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     );
   }
 
-  Widget _buildSection(String title, bool isDark, List<Widget> children) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.textPrimary,
-          ),
+  Widget _buildSection({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isDark,
+    required List<Widget> children,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
         ),
-        const SizedBox(height: AppSpacing.md),
-        ...children,
-      ],
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, size: 18, color: AppColors.primary),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: AppTypography.caption.copyWith(
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ...children,
+        ],
+      ),
     );
   }
 
   Widget _buildFarmSelector(bool isDark) {
-    final farms = ['Green Valley Farm', 'Sunny Acres', 'Fresh Farms', 'Urban Greens', 'Eco Gardens'];
-    
+    final farms = [
+      'Green Valley Farm',
+      'Sunny Acres',
+      'Fresh Farms',
+      'Urban Greens',
+      'Eco Gardens'
+    ];
+
     return DropdownButtonFormField<String>(
       value: _selectedFarm,
-      decoration: InputDecoration(
-        labelText: 'Select Farm',
-        prefixIcon: const Icon(Icons.agriculture),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        ),
-        filled: true,
-        fillColor: isDark ? AppColors.surfaceDark : Colors.white,
+      style: AppTypography.bodySmall.copyWith(
+        color: isDark ? Colors.white : AppColors.textPrimary,
       ),
-      items: farms.map((farm) => DropdownMenuItem(value: farm, child: Text(farm))).toList(),
+      dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+      decoration: _inputDecoration(
+        label: 'Select Farm',
+        icon: Icons.agriculture_rounded,
+        isDark: isDark,
+      ),
+      items: farms
+          .map((farm) => DropdownMenuItem(value: farm, child: Text(farm)))
+          .toList(),
       onChanged: (value) => setState(() => _selectedFarm = value),
       validator: (value) => value == null ? 'Please select a farm' : null,
     );
   }
 
   Widget _buildBatchSelector(bool isDark) {
-    final batches = ['LE-20241101-20241201', 'TO-20241015-20241115', 'BA-20241110-20241208'];
-    
+    final batches = [
+      'LE-20241101-20241201',
+      'TO-20241015-20241115',
+      'BA-20241110-20241208'
+    ];
+
     return DropdownButtonFormField<String>(
       value: _selectedBatch,
-      decoration: InputDecoration(
-        labelText: 'Select Batch',
-        prefixIcon: const Icon(Icons.inventory_2),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        ),
-        filled: true,
-        fillColor: isDark ? AppColors.surfaceDark : Colors.white,
+      style: AppTypography.bodySmall.copyWith(
+        color: isDark ? Colors.white : AppColors.textPrimary,
       ),
-      items: batches.map((batch) => DropdownMenuItem(value: batch, child: Text(batch))).toList(),
+      dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+      decoration: _inputDecoration(
+        label: 'Select Batch',
+        icon: Icons.inventory_2_rounded,
+        isDark: isDark,
+      ),
+      items: batches
+          .map((batch) => DropdownMenuItem(value: batch, child: Text(batch)))
+          .toList(),
       onChanged: (value) => setState(() => _selectedBatch = value),
       validator: (value) => value == null ? 'Please select a batch' : null,
     );
@@ -489,28 +777,31 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       'pest_control': 'Pest Control',
       'other': 'Other',
     };
-    
+
     return DropdownButtonFormField<String>(
       value: _selectedRecordType,
-      decoration: InputDecoration(
-        labelText: 'Record Type',
-        prefixIcon: const Icon(Icons.category),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        ),
-        filled: true,
-        fillColor: isDark ? AppColors.surfaceDark : Colors.white,
+      style: AppTypography.bodySmall.copyWith(
+        color: isDark ? Colors.white : AppColors.textPrimary,
       ),
-      items: types.entries.map((entry) => DropdownMenuItem(
-        value: entry.key,
-        child: Text(entry.value),
-      )).toList(),
+      dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+      decoration: _inputDecoration(
+        label: 'Record Type',
+        icon: Icons.category_rounded,
+        isDark: isDark,
+      ),
+      items: types.entries
+          .map((entry) => DropdownMenuItem(
+                value: entry.key,
+                child: Text(entry.value),
+              ))
+          .toList(),
       onChanged: (value) => setState(() => _selectedRecordType = value!),
     );
   }
 
   Widget _buildDatePicker(bool isDark) {
     return InkWell(
+      borderRadius: BorderRadius.circular(12),
       onTap: () async {
         final date = await showDatePicker(
           context: context,
@@ -523,48 +814,50 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         }
       },
       child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: 'Record Date',
-          prefixIcon: const Icon(Icons.calendar_today),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          ),
-          filled: true,
-          fillColor: isDark ? AppColors.surfaceDark : Colors.white,
+        decoration: _inputDecoration(
+          label: 'Record Date',
+          icon: Icons.calendar_today_rounded,
+          isDark: isDark,
         ),
-        child: Text(DateFormat('yyyy-MM-dd').format(_recordDate)),
+        child: Text(
+          DateFormat('yyyy-MM-dd').format(_recordDate),
+          style: AppTypography.bodySmall.copyWith(
+            color: isDark ? Colors.white : AppColors.textPrimary,
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildNumberField(String label, TextEditingController controller, IconData icon, bool isDark) {
+  Widget _buildNumberField(String label, TextEditingController controller,
+      IconData icon, bool isDark) {
     return TextFormField(
       controller: controller,
       keyboardType: TextInputType.number,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        ),
-        filled: true,
-        fillColor: isDark ? AppColors.surfaceDark : Colors.white,
+      style: AppTypography.bodySmall.copyWith(
+        color: isDark ? Colors.white : AppColors.textPrimary,
+      ),
+      decoration: _inputDecoration(
+        label: label,
+        icon: icon,
+        isDark: isDark,
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String hint, bool isDark, {int maxLines = 1}) {
+  Widget _buildTextField(
+      String label, TextEditingController controller, String hint, bool isDark,
+      {int maxLines = 1}) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        ),
-        filled: true,
-        fillColor: isDark ? AppColors.surfaceDark : Colors.white,
+      style: AppTypography.bodySmall.copyWith(
+        color: isDark ? Colors.white : AppColors.textPrimary,
+      ),
+      decoration: _inputDecoration(
+        label: label,
+        hint: hint,
+        isDark: isDark,
       ),
     );
   }
@@ -589,7 +882,15 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       children: activities.map((activity) {
         final isSelected = _selectedActivities.contains(activity);
         return FilterChip(
-          label: Text(activity),
+          label: Text(
+            activity,
+            style: AppTypography.caption.copyWith(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected
+                  ? AppColors.success
+                  : (isDark ? Colors.white70 : AppColors.textPrimary),
+            ),
+          ),
           selected: isSelected,
           onSelected: (selected) {
             setState(() {
@@ -600,7 +901,18 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
               }
             });
           },
-          selectedColor: AppColors.success.withOpacity(0.2),
+          backgroundColor:
+              isDark ? Colors.white.withOpacity(0.06) : AppColors.neutral100,
+          selectedColor: AppColors.success.withOpacity(0.12),
+          side: BorderSide(
+            color: isSelected
+                ? AppColors.success.withOpacity(0.4)
+                : (isDark ? Colors.white12 : AppColors.neutral300),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          showCheckmark: true,
           checkmarkColor: AppColors.success,
         );
       }).toList(),
@@ -608,26 +920,72 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   }
 
   Widget _buildIssuesToggle(bool isDark) {
-    return SwitchListTile(
-      title: const Text('Report Issues or Concerns'),
-      value: _hasIssues,
-      onChanged: (value) => setState(() => _hasIssues = value),
-      activeColor: AppColors.error,
-      contentPadding: EdgeInsets.zero,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: _hasIssues
+            ? AppColors.error.withOpacity(isDark ? 0.16 : 0.08)
+            : (isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: _hasIssues
+              ? AppColors.error.withOpacity(0.45)
+              : (isDark ? Colors.white12 : AppColors.neutral300),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _hasIssues
+                ? Icons.report_problem_rounded
+                : Icons.verified_user_outlined,
+            size: 20,
+            color: _hasIssues ? AppColors.error : AppColors.success,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Report issues or concerns',
+                  style: AppTypography.bodySmall.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  _hasIssues
+                      ? 'Issue details are required'
+                      : 'No active issues reported',
+                  style: AppTypography.caption.copyWith(
+                    color: isDark ? Colors.white60 : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: _hasIssues,
+            onChanged: (value) => setState(() => _hasIssues = value),
+            activeColor: AppColors.error,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildSeveritySelector(bool isDark) {
     return DropdownButtonFormField<String>(
       value: _issueSeverity,
-      decoration: InputDecoration(
-        labelText: 'Issue Severity',
-        prefixIcon: const Icon(Icons.priority_high),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        ),
-        filled: true,
-        fillColor: isDark ? AppColors.surfaceDark : Colors.white,
+      style: AppTypography.bodySmall.copyWith(
+        color: isDark ? Colors.white : AppColors.textPrimary,
+      ),
+      dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+      decoration: _inputDecoration(
+        label: 'Issue Severity',
+        icon: Icons.priority_high_rounded,
+        isDark: isDark,
       ),
       items: const [
         DropdownMenuItem(value: 'low', child: Text('Low')),
@@ -640,29 +998,36 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   }
 
   Widget _buildSubmitButton(bool isDark) {
-    return ElevatedButton(
-      onPressed: _isSubmitting ? null : _submitRecord,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.success,
-        minimumSize: const Size(double.infinity, 50),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _isSubmitting ? null : _submitRecord,
+        icon: _isSubmitting
+            ? const SizedBox(
+                height: 16,
+                width: 16,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 2),
+              )
+            : const Icon(Icons.cloud_upload_rounded, size: 20),
+        label: Text(
+          _isSubmitting ? 'Submitting...' : 'Submit Record',
+          style: AppTypography.bodySmall.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.success,
+          foregroundColor: Colors.white,
+          elevation: 1,
+          minimumSize: const Size(double.infinity, 54),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
-      child: _isSubmitting
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-            )
-          : const Text(
-              'Submit Record',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
     );
   }
 
@@ -685,19 +1050,38 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       recordDate: _recordDate,
       createdBy: 'current_user',
       createdByName: 'Current Caretaker',
-      temperature: _temperatureController.text.isNotEmpty ? double.tryParse(_temperatureController.text) : null,
-      humidity: _humidityController.text.isNotEmpty ? double.tryParse(_humidityController.text) : null,
-      ph: _phController.text.isNotEmpty ? double.tryParse(_phController.text) : null,
-      ec: _ecController.text.isNotEmpty ? double.tryParse(_ecController.text) : null,
-      lightIntensity: _lightController.text.isNotEmpty ? double.tryParse(_lightController.text) : null,
-      plantHealth: _plantHealthController.text.isNotEmpty ? _plantHealthController.text : null,
-      growthStage: _growthStageController.text.isNotEmpty ? _growthStageController.text : null,
-      plantCount: _plantCountController.text.isNotEmpty ? int.tryParse(_plantCountController.text) : null,
-      observations: _observationsController.text.isNotEmpty ? _observationsController.text : null,
+      temperature: _temperatureController.text.isNotEmpty
+          ? double.tryParse(_temperatureController.text)
+          : null,
+      humidity: _humidityController.text.isNotEmpty
+          ? double.tryParse(_humidityController.text)
+          : null,
+      ph: _phController.text.isNotEmpty
+          ? double.tryParse(_phController.text)
+          : null,
+      ec: _ecController.text.isNotEmpty
+          ? double.tryParse(_ecController.text)
+          : null,
+      lightIntensity: _lightController.text.isNotEmpty
+          ? double.tryParse(_lightController.text)
+          : null,
+      plantHealth: _plantHealthController.text.isNotEmpty
+          ? _plantHealthController.text
+          : null,
+      growthStage: _growthStageController.text.isNotEmpty
+          ? _growthStageController.text
+          : null,
+      plantCount: _plantCountController.text.isNotEmpty
+          ? int.tryParse(_plantCountController.text)
+          : null,
+      observations: _observationsController.text.isNotEmpty
+          ? _observationsController.text
+          : null,
       activitiesPerformed: _selectedActivities,
       hasIssues: _hasIssues,
       issueDescription: _hasIssues ? _issueDescriptionController.text : null,
-      issueSeverity: _hasIssues ? IssueSeverity.fromString(_issueSeverity) : null,
+      issueSeverity:
+          _hasIssues ? IssueSeverity.fromString(_issueSeverity) : null,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       createdAt: DateTime.now(),
     );
@@ -716,7 +1100,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         backgroundColor: AppColors.success,
       ),
     );
-    
+
     context.pop(); // Go back to dashboard
   }
 }

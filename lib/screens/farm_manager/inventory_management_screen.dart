@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -7,6 +8,7 @@ import '../../core/widgets/permission_gate.dart';
 import '../../core/models/user/user_permissions.dart';
 import '../../core/widgets/farm_manager_sidebar.dart';
 import '../../core/widgets/farm_manager_header.dart';
+import '../../core/widgets/farm_manager_mobile_drawer.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/widgets/app_search_bar.dart';
 import '../../core/widgets/app_filter_chip.dart';
@@ -24,8 +26,9 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
   String _selectedCategory = 'All';
   String _searchQuery = '';
   bool _showLowStockOnly = false;
-  int _selectedNavIndex = 1;
+  int _selectedNavIndex = 2;
   final _scrollController = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void dispose() {
@@ -45,7 +48,15 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
     final userRole = 'Farm Manager';
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      drawer: isMobile
+          ? FarmManagerMobileDrawer(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (i) => setState(() => _selectedNavIndex = i),
+              userName: userName,
+            )
+          : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole, isTablet),
@@ -129,6 +140,7 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
         FarmManagerHeader(
           userName: userName,
           onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
 
         // Content
@@ -225,7 +237,7 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
       },
       {
         'title': 'Total Value',
-        'value': '\$12,458',
+        'value': 'GH₵12,458',
         'icon': Icons.attach_money,
         'color': AppColors.success,
         'change': '+12.5%',
@@ -281,115 +293,51 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
   }
 
   Widget _buildStatCard(Map<String, dynamic> stat, bool isDark, [bool isMobile = false]) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral100,
-          width: 1,
+    final color = stat['color'] as Color;
+    return LayoutBuilder(builder: (context, box) {
+      final compact = box.maxWidth < 160;
+      return Container(
+        padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14, vertical: compact ? 8 : 10),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(isDark ? 0.15 : 0.12)),
+          boxShadow: isDark ? null : [BoxShadow(color: color.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 3))],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.1 : 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
+        child: Row(children: [
+          Container(
+            padding: EdgeInsets.all(compact ? 6 : 8),
+            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+            child: Icon(stat['icon'] as IconData, size: compact ? 16 : 20, color: color),
           ),
-        ],
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
-        child: Row(
-          children: [
+          SizedBox(width: compact ? 8 : 10),
+          Expanded(child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(stat['value'] as String,
+                  style: GoogleFonts.inter(fontSize: compact ? 16 : 20, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textPrimary, height: 1.1),
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 2),
+              Text(stat['title'] as String,
+                  style: GoogleFonts.inter(fontSize: compact ? 10 : 11, color: isDark ? Colors.white38 : AppColors.textSecondary),
+                  maxLines: 1, overflow: TextOverflow.ellipsis),
+            ],
+          )),
+          if (!compact && stat['change'] != null)
             Container(
-              width: isMobile ? 40 : 48,
-              height: isMobile ? 40 : 48,
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
-                color: (stat['color'] as Color).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                color: ((stat['isPositive'] as bool) ? AppColors.success : AppColors.error).withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                stat['icon'] as IconData,
-                color: stat['color'] as Color,
-                size: isMobile ? 20 : 24,
-              ),
+              child: Text(stat['change'] as String,
+                  style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w600,
+                      color: (stat['isPositive'] as bool) ? AppColors.success : AppColors.error)),
             ),
-            SizedBox(width: isMobile ? AppSpacing.sm : AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    stat['value'] as String,
-                    style: AppTypography.h4.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontSize: isMobile ? 20 : 24,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    stat['title'] as String,
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
-                      fontSize: isMobile ? 11 : 13,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            if (!isMobile)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: (stat['isPositive'] as bool)
-                          ? AppColors.success.withOpacity(0.1)
-                          : AppColors.error.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          (stat['isPositive'] as bool) ? Icons.trending_up : Icons.trending_down,
-                          size: 12,
-                          color: (stat['isPositive'] as bool) ? AppColors.success : AppColors.error,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          stat['change'] as String,
-                          style: AppTypography.caption.copyWith(
-                            color:
-                                (stat['isPositive'] as bool) ? AppColors.success : AppColors.error,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'this month',
-                    style: AppTypography.caption.copyWith(
-                      color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
+        ]),
+      );
+    });
   }
 
   Widget _buildMobileStats(bool isDark) {
@@ -409,7 +357,7 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
           _buildMobileStatCard('48', 'Total Items', AppColors.primary, isDark),
           _buildMobileStatCard('7', 'Low Stock', AppColors.warning, isDark),
           _buildMobileStatCard('2', 'Out of Stock', AppColors.error, isDark),
-          _buildMobileStatCard('\$12.5K', 'Total Value', AppColors.success, isDark),
+          _buildMobileStatCard('GH₵12.5K', 'Total Value', AppColors.success, isDark),
         ],
       ),
     );
@@ -417,38 +365,34 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
 
   Widget _buildMobileStatCard(String value, String title, Color color, bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: isDark ? Colors.white10 : AppColors.neutral100),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(isDark ? 0.15 : 0.12)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            value,
-            style: AppTypography.h5.copyWith(
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              fontSize: 20,
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(8)),
+            child: Icon(
+              title == 'Total Items' ? Icons.inventory_2_rounded :
+              title == 'Low Stock' ? Icons.warning_rounded :
+              title == 'Out of Stock' ? Icons.error_rounded : Icons.attach_money_rounded,
+              size: 16, color: color,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: AppTypography.caption.copyWith(
-              color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
-              fontSize: 10,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+          const SizedBox(height: 6),
+          Text(value,
+              style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textPrimary),
+              maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
+          const SizedBox(height: 2),
+          Text(title,
+              style: GoogleFonts.inter(fontSize: 10, color: isDark ? Colors.white38 : AppColors.textSecondary),
+              textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
         ],
       ),
     );
@@ -637,13 +581,18 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
 
   SliverGrid _buildInventoryGrid(bool isDark, bool isTablet) {
     final filteredItems = _getFilteredItems();
+    // Use responsive crossAxisCount
+    final screenWidth = MediaQuery.of(context).size.width;
+    final contentWidth = screenWidth - (isTablet ? 0 : 250); // account for sidebar
+    final cols = contentWidth > 1000 ? 3 : (contentWidth > 600 ? 2 : 2);
+    final ratio = contentWidth > 1000 ? 1.2 : (contentWidth > 600 ? 1.15 : 1.1);
 
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isTablet ? 2 : 3,
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: isTablet ? 1.15 : 1.2,
+        crossAxisCount: cols,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: ratio,
       ),
       delegate: SliverChildBuilderDelegate(
         (context, index) {
@@ -980,7 +929,7 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '\$${item['unitCost']}',
+                                  'GH₵${item['unitCost']}',
                                   style: AppTypography.bodySmall.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: isDark ? Colors.white : AppColors.textPrimary,
@@ -1029,7 +978,7 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '\$${totalValue.toStringAsFixed(2)}',
+                                  'GH₵${totalValue.toStringAsFixed(2)}',
                                   style: AppTypography.bodySmall.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.success,
@@ -1170,30 +1119,10 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
 
   Widget _buildBottomNavigation(bool isDark) {
     final navItems = [
-      {
-        'icon': Icons.dashboard_outlined,
-        'label': 'Dashboard',
-        'index': 0,
-        'route': '/farm-manager'
-      },
-      {
-        'icon': Icons.inventory_2_outlined,
-        'label': 'Inventory',
-        'index': 1,
-        'route': '/farm-manager/inventory'
-      },
-      {
-        'icon': Icons.grid_view_outlined,
-        'label': 'Batches',
-        'index': 2,
-        'route': '/farm-manager/batch-generation'
-      },
-      {
-        'icon': Icons.request_quote_outlined,
-        'label': 'Funds',
-        'index': 3,
-        'route': '/farm-manager/fund-request'
-      },
+      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/farm-manager'},
+      {'icon': Icons.agriculture_outlined, 'label': 'Farms', 'index': 1, 'route': '/farm-manager/farms'},
+      {'icon': Icons.inventory_2_outlined, 'label': 'Inventory', 'index': 2, 'route': '/farm-manager/inventory'},
+      {'icon': Icons.local_shipping_outlined, 'label': 'Deliveries', 'index': 3, 'route': '/farm-manager/deliveries'},
       {'icon': Icons.assessment_outlined, 'label': 'Reports', 'index': 4, 'route': '/farm-manager/reports'},
     ];
 
@@ -1517,7 +1446,7 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
           children: [
             Text('Category: ${item['category']}'),
             Text('Quantity: ${item['quantity']} ${item['unit']}'),
-            Text('Unit Cost: \$${item['unitCost']}'),
+            Text('Unit Cost: GH₵${item['unitCost']}'),
             Text('Status: ${item['status']}'),
             if (item['expiryDate'] != null) Text('Expiry: ${item['expiryDate']}'),
           ],

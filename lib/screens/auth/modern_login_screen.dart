@@ -51,6 +51,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final padding = isMobile ? AppSpacing.md : AppSpacing.xl;
 
     return Scaffold(
       body: Container(
@@ -66,24 +69,26 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.xl),
+              padding: EdgeInsets.all(padding),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 450),
+                constraints: BoxConstraints(
+                  maxWidth: isMobile ? double.infinity : 450,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Logo and Title
-                    _buildHeader(isDark),
+                    _buildHeader(isDark, isMobile),
                     
-                    const SizedBox(height: AppSpacing.xxl),
+                    SizedBox(height: isMobile ? AppSpacing.lg : AppSpacing.xxl),
                     
                     // Login Form Card
-                    _buildLoginCard(isDark),
+                    _buildLoginCard(isDark, isMobile),
                     
-                    const SizedBox(height: AppSpacing.xl),
+                    SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
                     
                     // Demo Accounts - One-Click Login
-                    _buildDemoAccountsGrid(isDark),
+                    _buildDemoAccountsGrid(isDark, isMobile),
                   ],
                 ),
               ),
@@ -94,28 +99,29 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
     );
   }
 
-  Widget _buildHeader(bool isDark) {
+  Widget _buildHeader(bool isDark, bool isMobile) {
     return Column(
       children: [
         Container(
-          width: 80,
-          height: 80,
+          width: isMobile ? 60 : 80,
+          height: isMobile ? 60 : 80,
           decoration: BoxDecoration(
             color: AppColors.primary.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
             Icons.agriculture,
-            size: 40,
+            size: isMobile ? 30 : 40,
             color: AppColors.primary,
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
         Text(
           'Farm Estates',
           style: AppTypography.h3.copyWith(
             fontWeight: FontWeight.bold,
             color: isDark ? Colors.white : AppColors.textPrimary,
+            fontSize: isMobile ? 24 : 28,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -123,15 +129,17 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
           'Management Platform',
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
+            fontSize: isMobile ? 13 : 14,
           ),
+          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
-  Widget _buildLoginCard(bool isDark) {
+  Widget _buildLoginCard(bool isDark, bool isMobile) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.xl),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -344,52 +352,61 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
     );
   }
 
-  Widget _buildDemoAccountsGrid(bool isDark) {
+  Widget _buildDemoAccountsGrid(bool isDark, bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          padding: EdgeInsets.symmetric(horizontal: isMobile ? AppSpacing.xs : AppSpacing.sm),
           child: Row(
             children: [
-              Icon(Icons.touch_app, color: AppColors.primary, size: 20),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'Quick Login - Click Any Account',
-                style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
+              Icon(
+                Icons.touch_app,
+                color: AppColors.primary,
+                size: isMobile ? 18 : 20,
+              ),
+              SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
+              Flexible(
+                child: Text(
+                  'Quick Login - Click Any Account',
+                  style: AppTypography.bodyLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontSize: isMobile ? 14 : 16,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 2.5,
-            crossAxisSpacing: AppSpacing.sm,
-            mainAxisSpacing: AppSpacing.sm,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: isMobile ? 1 : 2,
+            childAspectRatio: isMobile ? 3.5 : 2.5,
+            crossAxisSpacing: isMobile ? 0 : AppSpacing.sm,
+            mainAxisSpacing: isMobile ? AppSpacing.xs : AppSpacing.sm,
           ),
           itemCount: DemoAccounts.all.length,
           itemBuilder: (context, index) {
             final account = DemoAccounts.all[index];
-            return _buildDemoAccountCard(account, isDark);
+            return _buildDemoAccountCard(account, isDark, isMobile);
           },
         ),
       ],
     );
   }
 
-  Widget _buildDemoAccountCard(DemoAccount account, bool isDark) {
+  Widget _buildDemoAccountCard(DemoAccount account, bool isDark, bool isMobile) {
     return InkWell(
       onTap: () => _loginWithDemoAccount(account),
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.sm),
+        padding: EdgeInsets.all(isMobile ? AppSpacing.xs : AppSpacing.sm),
         decoration: BoxDecoration(
           color: isDark 
               ? AppColors.surfaceDark.withOpacity(0.5)
@@ -400,28 +417,51 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
             width: 1.5,
           ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              account.displayName,
-              style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.bold,
+            Container(
+              padding: EdgeInsets.all(isMobile ? 6 : 8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              ),
+              child: Icon(
+                Icons.person,
+                size: isMobile ? 16 : 18,
                 color: AppColors.primary,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
-            Text(
-              account.description,
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontSize: 10,
+            SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    account.displayName,
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                      fontSize: isMobile ? 13 : 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    account.description,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white60 : AppColors.textSecondary,
+                      fontSize: isMobile ? 10 : 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

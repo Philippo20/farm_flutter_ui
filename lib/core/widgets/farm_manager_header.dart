@@ -13,6 +13,7 @@ class FarmManagerHeader extends ConsumerWidget {
   final WeatherInfo? weatherInfo;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onMenuTap;
   final List<String>? farms;
   final String? selectedFarm;
   final ValueChanged<String?>? onFarmChanged;
@@ -23,6 +24,7 @@ class FarmManagerHeader extends ConsumerWidget {
     this.weatherInfo,
     this.onNotificationTap,
     this.onProfileTap,
+    this.onMenuTap,
     this.farms,
     this.selectedFarm,
     this.onFarmChanged,
@@ -67,7 +69,7 @@ class FarmManagerHeader extends ConsumerWidget {
         vertical: AppSpacing.lg,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.neutral100,
+        color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
       ),
       child: isMobile ? _buildMobileLayout(isDark, ref) : _buildDesktopLayout(isDark, ref),
     );
@@ -192,6 +194,16 @@ class FarmManagerHeader extends ConsumerWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Menu Button (if onMenuTap is provided)
+            if (onMenuTap != null) ...[
+              _buildMobileActionButton(
+                icon: Icons.menu,
+                tooltip: 'Menu',
+                isDark: isDark,
+                onPressed: onMenuTap,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+            ],
             // Left Section: Greeting and User Name
             Expanded(
               child: Column(
@@ -201,13 +213,17 @@ class FarmManagerHeader extends ConsumerWidget {
                   // Greeting
                   Row(
                     children: [
-                      Text(
-                        _getGreeting(),
-                        style: AppTypography.h5.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 20,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                          letterSpacing: -0.3,
+                      Flexible(
+                        child: Text(
+                          _getGreeting(),
+                          style: AppTypography.h5.copyWith(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 20,
+                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            letterSpacing: -0.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -500,23 +516,42 @@ class FarmManagerHeader extends ConsumerWidget {
             if (value == 'logout') {
               final confirmed = await showDialog<bool>(
                 context: context,
-                builder: (dialogContext) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext, false),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogContext, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
+                builder: (dialogContext) {
+                  final isDarkDialog = Theme.of(context).brightness == Brightness.dark;
+                  return AlertDialog(
+                    backgroundColor: isDarkDialog ? AppColors.surfaceDark : Colors.white,
+                    title: Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: isDarkDialog ? Colors.white : AppColors.textPrimary,
                       ),
-                      child: const Text('Logout'),
                     ),
-                  ],
-                ),
+                    content: Text(
+                      'Are you sure you want to logout?',
+                      style: TextStyle(
+                        color: isDarkDialog ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: isDarkDialog ? Colors.white70 : AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                        ),
+                        child: const Text('Logout'),
+                      ),
+                    ],
+                  );
+                },
               );
 
               if (confirmed == true && context.mounted) {
@@ -648,23 +683,42 @@ class FarmManagerHeader extends ConsumerWidget {
               // Show confirmation dialog
               final confirmed = await showDialog<bool>(
                 context: context,
-                builder: (dialogContext) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext, false),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogContext, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
+                builder: (dialogContext) {
+                  final isDarkDialog = Theme.of(context).brightness == Brightness.dark;
+                  return AlertDialog(
+                    backgroundColor: isDarkDialog ? AppColors.surfaceDark : Colors.white,
+                    title: Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: isDarkDialog ? Colors.white : AppColors.textPrimary,
                       ),
-                      child: const Text('Logout'),
                     ),
-                  ],
-                ),
+                    content: Text(
+                      'Are you sure you want to logout?',
+                      style: TextStyle(
+                        color: isDarkDialog ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: isDarkDialog ? Colors.white70 : AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                        ),
+                        child: const Text('Logout'),
+                      ),
+                    ],
+                  );
+                },
               );
 
               if (confirmed == true && context.mounted) {

@@ -22,11 +22,12 @@ import '../../screens/farm_manager/batch_generation_screen.dart';
 import '../../screens/farm_manager/inventory_management_screen.dart';
 import '../../screens/farm_manager/fund_request_screen.dart';
 import '../../screens/farm_manager/reports_screen.dart' as farm_manager;
+import '../../screens/farm_manager/team_management_screen.dart';
 
 // Farm Owner Screens
 import '../../screens/farm_owner/digital_wallet_screen.dart';
+import '../../screens/farm_owner/wallet_actions_screen.dart';
 import '../../screens/farm_owner/analytics_screen.dart';
-import '../../screens/farm_owner/withdraw_funds_screen.dart';
 import '../../screens/farm_owner/reports_screen.dart' as farm_owner;
 import '../../screens/farm_owner/settings_screen.dart';
 
@@ -142,6 +143,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             name: 'reports',
             builder: (context, state) => const farm_manager.ReportsScreen(),
           ),
+          GoRoute(
+            path: 'team',
+            name: 'team',
+            builder: (context, state) => const TeamManagementScreen(),
+          ),
         ],
       ),
 
@@ -156,14 +162,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const DigitalWalletScreen(),
           ),
           GoRoute(
+            path: 'wallet-actions',
+            name: 'wallet-actions',
+            builder: (context, state) => const WalletActionsScreen(),
+          ),
+          GoRoute(
             path: 'analytics',
             name: 'analytics',
             builder: (context, state) => const AnalyticsScreen(),
-          ),
-          GoRoute(
-            path: 'withdraw-funds',
-            name: 'withdraw-funds',
-            builder: (context, state) => const WithdrawFundsScreen(),
           ),
           GoRoute(
             path: 'reports',

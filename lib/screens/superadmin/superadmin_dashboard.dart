@@ -16,147 +16,285 @@ class SuperAdminDashboard extends ConsumerStatefulWidget {
 }
 
 class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
+  int _selectedNavIndex = 0;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = ref.watch(currentUserProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth < 1200 && screenWidth >= 600;
+    final userName = user?.name ?? 'Super Admin';
+    final userEmail = user?.email ?? '';
+    final firstName = (user?.name ?? 'Admin').split(' ').first;
     
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: Row(
-        children: [
-          SuperAdminSidebar(
-            selectedIndex: 0,
-            onItemSelected: (index) {},
-            userName: user?.name ?? 'Super Admin',
-            userEmail: user?.email ?? '',
-            userRole: 'Super Administrator',
-          ),
-          
-          Expanded(
-            child: Column(
-              children: [
-                ModernAdminHeader(
-                  userName: user?.name.split(' ').first ?? 'Admin',
-                  onNotificationTap: () {},
-                  onProfileTap: () {},
-                ),
-                
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Welcome Section
-                        _buildWelcomeSection(isDark),
-                        
-                        const SizedBox(height: AppSpacing.xl),
-                        
-                        // System Overview Stats
-                        _buildSystemStats(isDark),
-                        
-                        const SizedBox(height: AppSpacing.xl),
-                        
-                        // Quick Actions
-                        _buildQuickActions(isDark),
-                        
-                        const SizedBox(height: AppSpacing.xl),
-                        
-                        // Pending Approvals
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: _buildPendingUsers(isDark)),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(child: _buildPendingFarms(isDark)),
-                          ],
-                        ),
-                        
-                        const SizedBox(height: AppSpacing.xl),
-                        
-                        // Recent Activity
-                        _buildRecentActivity(isDark),
-                      ],
-                    ),
+      drawer: isMobile
+          ? SuperAdminDrawer(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) {
+                setState(() => _selectedNavIndex = index);
+              },
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Super Administrator',
+            )
+          : null,
+      body: isMobile
+          ? _buildMobileLayout(
+              isDark: isDark,
+              firstName: firstName,
+            )
+          : _buildDesktopLayout(
+              isDark: isDark,
+              userName: userName,
+              userEmail: userEmail,
+              firstName: firstName,
+              isTablet: isTablet,
+            ),
+    );
+  }
+
+  Widget _buildDesktopLayout({
+    required bool isDark,
+    required String userName,
+    required String userEmail,
+    required String firstName,
+    required bool isTablet,
+  }) {
+    return Row(
+      children: [
+        SuperAdminSidebar(
+          selectedIndex: 0,
+          onItemSelected: (index) {},
+          userName: userName,
+          userEmail: userEmail,
+          userRole: 'Super Administrator',
+        ),
+        Expanded(
+          child: Column(
+            children: [
+              ModernAdminHeader(
+                userName: firstName,
+                onNotificationTap: () {},
+                onProfileTap: () {},
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: _buildDashboardContent(
+                    isDark: isDark,
+                    isMobile: false,
+                    isTablet: isTablet,
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout({
+    required bool isDark,
+    required String firstName,
+  }) {
+    return Column(
+      children: [
+        ModernAdminHeader(
+          userName: firstName,
+          onNotificationTap: () {},
+          onProfileTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: _buildDashboardContent(
+              isDark: isDark,
+              isMobile: true,
+              isTablet: false,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDashboardContent({
+    required bool isDark,
+    required bool isMobile,
+    required bool isTablet,
+  }) {
+    final sectionSpacing = isMobile ? AppSpacing.md : AppSpacing.xl;
+    final statsColumns = isMobile ? 2 : 3;
+    final statsRatio = isMobile ? 1.6 : (isTablet ? 2.0 : 2.5);
+    final actionsColumns = isMobile ? 2 : (isTablet ? 2 : 3);
+    final actionsRatio = isMobile ? 1.8 : (isTablet ? 2.8 : 3.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildWelcomeSection(isDark, isMobile),
+        SizedBox(height: sectionSpacing),
+        _buildSystemStats(
+          isDark,
+          crossAxisCount: statsColumns,
+          childAspectRatio: statsRatio,
+        ),
+        SizedBox(height: sectionSpacing),
+        _buildQuickActions(
+          isDark,
+          crossAxisCount: actionsColumns,
+          childAspectRatio: actionsRatio,
+        ),
+        SizedBox(height: sectionSpacing),
+        _buildPendingApprovals(isDark),
+        SizedBox(height: sectionSpacing),
+        _buildRecentActivity(isDark),
+      ],
     );
   }
   
-  Widget _buildWelcomeSection(bool isDark) {
+  Widget _buildWelcomeSection(bool isDark, bool isMobile) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.xl),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.primary.withOpacity(0.05),
+            AppColors.primary.withOpacity(isDark ? 0.15 : 0.1),
+            AppColors.primary.withOpacity(isDark ? 0.08 : 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(color: AppColors.primary.withOpacity(0.3)),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.admin_panel_settings, size: 40, color: AppColors.primary),
-          ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            child: Column(
+      child: isMobile
+          ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Super Admin Control Center',
-                  style: AppTypography.h4.copyWith(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.admin_panel_settings, size: 24, color: AppColors.primary),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Super Admin Control',
+                            style: AppTypography.h6.copyWith(
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppColors.textPrimary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Full system access',
+                            style: AppTypography.bodySmall.copyWith(
+                              fontFamily: 'Roboto',
+                              color: isDark ? Colors.white70 : AppColors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                        border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.verified_user, size: 12, color: AppColors.success),
+                          SizedBox(width: 2),
+                          Text('All Access', style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.admin_panel_settings, size: 40, color: AppColors.primary),
+                ),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Super Admin Control Center',
+                        style: AppTypography.h4.copyWith(
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Full system access and configuration',
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontFamily: 'Roboto',
+                          color: isDark ? Colors.white70 : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'Full system access and configuration',
-                  style: AppTypography.bodyMedium.copyWith(
-                    fontFamily: 'Roboto',
-                    color: isDark ? Colors.white70 : AppColors.textSecondary,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                    border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.verified_user, size: 16, color: AppColors.success),
+                      SizedBox(width: 4),
+                      Text('All Access', style: TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              border: Border.all(color: AppColors.success.withOpacity(0.3)),
-            ),
-            child: Row(
-              children: const [
-                Icon(Icons.verified_user, size: 16, color: AppColors.success),
-                SizedBox(width: 4),
-                Text('All Access', style: TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
   
-  Widget _buildSystemStats(bool isDark) {
+  Widget _buildSystemStats(
+    bool isDark, {
+    required int crossAxisCount,
+    required double childAspectRatio,
+  }) {
     final stats = [
       {'title': 'Total Users', 'value': '248', 'change': '+12', 'icon': Icons.people, 'color': AppColors.primary},
       {'title': 'Active Farms', 'value': '24', 'change': '+3', 'icon': Icons.agriculture, 'color': AppColors.success},
@@ -169,33 +307,41 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 2.5,
+        childAspectRatio: childAspectRatio,
       ),
       itemCount: stats.length,
       itemBuilder: (context, index) {
         final stat = stats[index];
+        final statColor = stat['color'] as Color;
         return Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             color: isDark ? AppColors.surfaceDark : Colors.white,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+            boxShadow: isDark ? null : [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: (stat['color'] as Color).withOpacity(0.1),
+                  color: statColor.withOpacity(isDark ? 0.2 : 0.1),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                child: Icon(stat['icon'] as IconData, color: stat['color'] as Color, size: 24),
+                child: Icon(stat['icon'] as IconData, color: statColor, size: 22),
               ),
-              const SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,32 +352,48 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                       style: TextStyle(
                         fontFamily: 'Roboto',
                         fontSize: 11,
-                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        color: isDark ? Colors.white70 : AppColors.textSecondary,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    Row(
-                      children: [
-                        Text(
-                          stat['value'] as String,
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : AppColors.textPrimary,
-                          ),
-                        ),
-                        if ((stat['change'] as String).isNotEmpty) ...[
-                          const SizedBox(width: 8),
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        children: [
                           Text(
-                            stat['change'] as String,
+                            stat['value'] as String,
                             style: TextStyle(
-                              fontSize: 11,
-                              color: (stat['change'] as String).startsWith('+') ? AppColors.success : AppColors.error,
-                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Poppins',
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : AppColors.textPrimary,
                             ),
                           ),
+                          if ((stat['change'] as String).isNotEmpty) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: (stat['change'] as String).startsWith('+') 
+                                    ? AppColors.success.withOpacity(0.1) 
+                                    : AppColors.error.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                stat['change'] as String,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: (stat['change'] as String).startsWith('+') ? AppColors.success : AppColors.error,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ],
                 ),
@@ -243,7 +405,11 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     );
   }
   
-  Widget _buildQuickActions(bool isDark) {
+  Widget _buildQuickActions(
+    bool isDark, {
+    required int crossAxisCount,
+    required double childAspectRatio,
+  }) {
     final actions = [
       {'title': 'Manage Users', 'subtitle': 'Add, edit, approve users', 'icon': Icons.person_add, 'color': AppColors.primary, 'route': '/superadmin/users'},
       {'title': 'Plant Types', 'subtitle': 'Create plant varieties', 'icon': Icons.eco, 'color': AppColors.success, 'route': '/superadmin/plants'},
@@ -268,64 +434,106 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: AppSpacing.md,
-            mainAxisSpacing: AppSpacing.md,
-            childAspectRatio: 3,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: AppSpacing.sm,
+            mainAxisSpacing: AppSpacing.sm,
+            childAspectRatio: childAspectRatio,
           ),
           itemCount: actions.length,
           itemBuilder: (context, index) {
             final action = actions[index];
-            return InkWell(
-              onTap: () {
-                Navigator.pushNamed(context, action['route'] as String);
-              },
+            final actionColor = action['color'] as Color;
+            return Material(
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: (action['color'] as Color).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: (action['color'] as Color).withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(action['icon'] as IconData, color: action['color'] as Color, size: 28),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            action['title'] as String,
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: isDark ? Colors.white : AppColors.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            action['subtitle'] as String,
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 11,
-                              color: isDark ? Colors.white60 : AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+              child: InkWell(
+                onTap: () {
+                  Navigator.pushNamed(context, action['route'] as String);
+                },
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: actionColor.withOpacity(isDark ? 0.15 : 0.1),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(color: actionColor.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: actionColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(action['icon'] as IconData, color: actionColor, size: 22),
                       ),
-                    ),
-                    Icon(Icons.arrow_forward_ios, size: 14, color: action['color'] as Color),
-                  ],
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              action['title'] as String,
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color: isDark ? Colors.white : AppColors.textPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              action['subtitle'] as String,
+                              style: TextStyle(
+                                fontFamily: 'Roboto',
+                                fontSize: 10,
+                                color: isDark ? Colors.white70 : AppColors.textSecondary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, size: 18, color: actionColor),
+                    ],
+                  ),
                 ),
               ),
             );
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildPendingApprovals(bool isDark) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useColumn = constraints.maxWidth < 900;
+        if (useColumn) {
+          return Column(
+            children: [
+              _buildPendingUsers(isDark),
+              const SizedBox(height: AppSpacing.lg),
+              _buildPendingFarms(isDark),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _buildPendingUsers(isDark)),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(child: _buildPendingFarms(isDark)),
+          ],
+        );
+      },
     );
   }
   
@@ -337,11 +545,18 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     ];
     
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+        boxShadow: isDark ? null : [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,12 +564,17 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Pending User Approvals',
-                style: AppTypography.h6.copyWith(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'Pending User Approvals',
+                  style: AppTypography.h6.copyWith(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Container(
@@ -374,7 +594,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           ...pendingUsers.map((user) => Container(
             margin: const EdgeInsets.only(bottom: AppSpacing.sm),
             padding: const EdgeInsets.all(AppSpacing.sm),
@@ -389,7 +609,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                   backgroundColor: AppColors.primary.withOpacity(0.1),
                   child: Text(
                     user['name']!.substring(0, 1),
-                    style: const TextStyle(color: AppColors.primary, fontSize: 12),
+                    style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
@@ -405,34 +625,57 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                           fontSize: 12,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         '${user['role']} • ${user['date']}',
                         style: TextStyle(
                           fontFamily: 'Roboto',
                           fontSize: 10,
-                          color: isDark ? Colors.white60 : AppColors.textSecondary,
+                          color: isDark ? Colors.white70 : AppColors.textSecondary,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.check_circle, color: AppColors.success, size: 20),
-                  onPressed: () {},
-                  tooltip: 'Approve',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.cancel, color: AppColors.error, size: 20),
-                  onPressed: () {},
-                  tooltip: 'Reject',
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                        onPressed: () {},
+                        tooltip: 'Approve',
+                      ),
+                    ),
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.cancel, color: AppColors.error, size: 20),
+                        onPressed: () {},
+                        tooltip: 'Reject',
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           )),
           TextButton(
             onPressed: () => Navigator.pushNamed(context, '/superadmin/users'),
-            child: const Text('View All Pending Users →'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            ),
+            child: const Text('View All Pending Users →', style: TextStyle(fontSize: 12)),
           ),
         ],
       ),
@@ -446,11 +689,18 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     ];
     
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+        boxShadow: isDark ? null : [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,12 +708,17 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Pending Farm Approvals',
-                style: AppTypography.h6.copyWith(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'Pending Farm Approvals',
+                  style: AppTypography.h6.copyWith(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Container(
@@ -483,7 +738,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           ...pendingFarms.map((farm) => Container(
             margin: const EdgeInsets.only(bottom: AppSpacing.sm),
             padding: const EdgeInsets.all(AppSpacing.sm),
@@ -514,34 +769,57 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                           fontSize: 12,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         '${farm['owner']} • ${farm['date']}',
                         style: TextStyle(
                           fontFamily: 'Roboto',
                           fontSize: 10,
-                          color: isDark ? Colors.white60 : AppColors.textSecondary,
+                          color: isDark ? Colors.white70 : AppColors.textSecondary,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.check_circle, color: AppColors.success, size: 20),
-                  onPressed: () {},
-                  tooltip: 'Approve',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.cancel, color: AppColors.error, size: 20),
-                  onPressed: () {},
-                  tooltip: 'Reject',
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                        onPressed: () {},
+                        tooltip: 'Approve',
+                      ),
+                    ),
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.cancel, color: AppColors.error, size: 20),
+                        onPressed: () {},
+                        tooltip: 'Reject',
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           )),
           TextButton(
             onPressed: () => Navigator.pushNamed(context, '/superadmin/farms'),
-            child: const Text('View All Pending Farms →'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            ),
+            child: const Text('View All Pending Farms →', style: TextStyle(fontSize: 12)),
           ),
         ],
       ),
@@ -557,11 +835,18 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     ];
     
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+        boxShadow: isDark ? null : [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -569,32 +854,41 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Recent Activity',
-                style: AppTypography.h6.copyWith(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
+              Expanded(
+                child: Text(
+                  'Recent Activity',
+                  style: AppTypography.h6.copyWith(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
                 ),
               ),
               TextButton(
                 onPressed: () => Navigator.pushNamed(context, '/superadmin/audit'),
-                child: const Text('View All →'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                ),
+                child: const Text('View All →', style: TextStyle(fontSize: 12)),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
           ...activities.map((activity) => Container(
             margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+            padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: (activity['color'] as Color).withOpacity(0.1),
+                    color: (activity['color'] as Color).withOpacity(isDark ? 0.2 : 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(activity['icon'] as IconData, color: activity['color'] as Color, size: 16),
+                  child: Icon(activity['icon'] as IconData, color: activity['color'] as Color, size: 14),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
@@ -605,17 +899,22 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                         activity['action'] as String,
                         style: TextStyle(
                           fontFamily: 'Roboto',
-                          fontSize: 13,
+                          fontSize: 12,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                      const SizedBox(height: 2),
                       Text(
                         '${activity['user']} • ${activity['time']}',
                         style: TextStyle(
                           fontFamily: 'Roboto',
-                          fontSize: 11,
-                          color: isDark ? Colors.white60 : AppColors.textSecondary,
+                          fontSize: 10,
+                          color: isDark ? Colors.white70 : AppColors.textSecondary,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -627,4 +926,5 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
       ),
     );
   }
+
 }

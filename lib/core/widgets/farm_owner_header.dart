@@ -13,6 +13,7 @@ class FarmOwnerHeader extends ConsumerWidget {
   final WeatherInfo? weatherInfo;
   final VoidCallback? onNotificationTap;
   final VoidCallback? onProfileTap;
+  final VoidCallback? onMenuTap;
   final List<String>? farms;
   final String? selectedFarm;
   final ValueChanged<String?>? onFarmChanged;
@@ -23,6 +24,7 @@ class FarmOwnerHeader extends ConsumerWidget {
     this.weatherInfo,
     this.onNotificationTap,
     this.onProfileTap,
+    this.onMenuTap,
     this.farms,
     this.selectedFarm,
     this.onFarmChanged,
@@ -67,7 +69,7 @@ class FarmOwnerHeader extends ConsumerWidget {
         vertical: AppSpacing.lg,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.neutral100,
+        color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
       ),
       child: isMobile ? _buildMobileLayout(isDark, ref) : _buildDesktopLayout(isDark, ref),
     );
@@ -264,6 +266,15 @@ class FarmOwnerHeader extends ConsumerWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (onMenuTap != null) ...[
+                  _buildMobileActionButton(
+                    icon: Icons.menu_rounded,
+                    tooltip: 'Menu',
+                    isDark: isDark,
+                    onPressed: onMenuTap,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                ],
                 _buildMobileActionButton(
                   icon: isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
                   tooltip: isDark ? 'Light Mode' : 'Dark Mode',
@@ -500,23 +511,42 @@ class FarmOwnerHeader extends ConsumerWidget {
             if (value == 'logout') {
               final confirmed = await showDialog<bool>(
                 context: context,
-                builder: (dialogContext) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext, false),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogContext, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
+                builder: (dialogContext) {
+                  final isDarkDialog = Theme.of(context).brightness == Brightness.dark;
+                  return AlertDialog(
+                    backgroundColor: isDarkDialog ? AppColors.surfaceDark : Colors.white,
+                    title: Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: isDarkDialog ? Colors.white : AppColors.textPrimary,
                       ),
-                      child: const Text('Logout'),
                     ),
-                  ],
-                ),
+                    content: Text(
+                      'Are you sure you want to logout?',
+                      style: TextStyle(
+                        color: isDarkDialog ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: isDarkDialog ? Colors.white70 : AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                        ),
+                        child: const Text('Logout'),
+                      ),
+                    ],
+                  );
+                },
               );
 
               if (confirmed == true && context.mounted) {
@@ -648,23 +678,42 @@ class FarmOwnerHeader extends ConsumerWidget {
               // Show confirmation dialog
               final confirmed = await showDialog<bool>(
                 context: context,
-                builder: (dialogContext) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext, false),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogContext, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
+                builder: (dialogContext) {
+                  final isDarkDialog = Theme.of(context).brightness == Brightness.dark;
+                  return AlertDialog(
+                    backgroundColor: isDarkDialog ? AppColors.surfaceDark : Colors.white,
+                    title: Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: isDarkDialog ? Colors.white : AppColors.textPrimary,
                       ),
-                      child: const Text('Logout'),
                     ),
-                  ],
-                ),
+                    content: Text(
+                      'Are you sure you want to logout?',
+                      style: TextStyle(
+                        color: isDarkDialog ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: isDarkDialog ? Colors.white70 : AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                        ),
+                        child: const Text('Logout'),
+                      ),
+                    ],
+                  );
+                },
               );
 
               if (confirmed == true && context.mounted) {

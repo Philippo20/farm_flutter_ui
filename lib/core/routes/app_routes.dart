@@ -19,6 +19,10 @@ class AppRoutes {
   // Farm Manager Routes
   static const String batchGeneration = '/farm-manager/batch-generation';
   static const String inventoryManagement = '/farm-manager/inventory';
+  static const String deliveryManagement = '/farm-manager/deliveries';
+  static const String farmsManagement = '/farm-manager/farms';
+  static const String teamManagement = '/farm-manager/team';
+  static const String farmManagerSettings = '/farm-manager/settings';
   static const String batchList = '/farm-manager/batches';
   static const String batchDetails = '/farm-manager/batches/:id';
   
@@ -26,7 +30,7 @@ class AppRoutes {
   static const String wallet = '/farm-owner/wallet';
   static const String transactions = '/farm-owner/transactions';
   static const String farmPerformance = '/farm-owner/performance';
-  static const String withdrawFunds = '/farm-owner/withdraw';
+  static const String walletActions = '/farm-owner/wallet-actions';
   
   // Caretaker Routes
   static const String recordEntry = '/caretaker/record-entry';
@@ -69,6 +73,7 @@ class AppRoutes {
     farmOwnerDashboard: 'Farm Owner Dashboard',
     caretakerDashboard: 'Caretaker Dashboard',
     technicianDashboard: 'Technician Dashboard',
+    teamManagement: 'Team Management',
     batchGeneration: 'Batch Generation',
     inventoryManagement: 'Inventory Management',
     recordEntry: 'Record Entry',

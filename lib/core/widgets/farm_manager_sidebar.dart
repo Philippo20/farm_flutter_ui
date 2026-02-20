@@ -41,6 +41,12 @@ class _FarmManagerSidebarState extends State<FarmManagerSidebar>
       route: '/farm-manager',
     ),
     _NavItem(
+      icon: Icons.agriculture_outlined,
+      activeIcon: Icons.agriculture_rounded,
+      label: 'My Farms',
+      route: '/farm-manager/farms',
+    ),
+    _NavItem(
       icon: Icons.inventory_2_outlined,
       activeIcon: Icons.inventory_2_rounded,
       label: 'Inventory',
@@ -59,16 +65,28 @@ class _FarmManagerSidebarState extends State<FarmManagerSidebar>
       route: '/farm-manager/fund-request',
     ),
     _NavItem(
+      icon: Icons.local_shipping_outlined,
+      activeIcon: Icons.local_shipping_rounded,
+      label: 'Deliveries',
+      route: '/farm-manager/deliveries',
+    ),
+    _NavItem(
       icon: Icons.assessment_outlined,
       activeIcon: Icons.assessment_rounded,
       label: 'Reports',
       route: '/farm-manager/reports',
     ),
     _NavItem(
+      icon: Icons.groups_outlined,
+      activeIcon: Icons.groups_rounded,
+      label: 'Team',
+      route: '/farm-manager/team',
+    ),
+    _NavItem(
       icon: Icons.settings_outlined,
       activeIcon: Icons.settings_rounded,
       label: 'Settings',
-      route: '/settings',
+      route: '/farm-manager/settings',
     ),
   ];
 
@@ -117,7 +135,7 @@ class _FarmManagerSidebarState extends State<FarmManagerSidebar>
         return Container(
           width: _widthAnimation.value,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : AppColors.neutral100,
+            color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

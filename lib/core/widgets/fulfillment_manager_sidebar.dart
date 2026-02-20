@@ -117,7 +117,7 @@ class _FulfillmentManagerSidebarState extends State<FulfillmentManagerSidebar>
         return Container(
           width: _widthAnimation.value,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : AppColors.neutral100,
+            color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

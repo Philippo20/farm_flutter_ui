@@ -67,7 +67,7 @@ class CaretakerHeader extends ConsumerWidget {
         vertical: AppSpacing.lg,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.neutral100,
+        color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
       ),
       child: isMobile ? _buildMobileLayout(isDark, ref) : _buildDesktopLayout(isDark, ref),
     );
@@ -498,15 +498,32 @@ class CaretakerHeader extends ConsumerWidget {
           ],
           onSelected: (value) async {
             if (value == 'logout') {
+              final dialogIsDark = Theme.of(context).brightness == Brightness.dark;
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (dialogContext) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
+                  backgroundColor: dialogIsDark ? AppColors.surfaceDark : Colors.white,
+                  title: Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: dialogIsDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                  content: Text(
+                    'Are you sure you want to logout?',
+                    style: TextStyle(
+                      color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                    ),
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(dialogContext, false),
-                      child: const Text('Cancel'),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                        ),
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(dialogContext, true),

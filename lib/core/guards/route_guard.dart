@@ -14,6 +14,8 @@ class RouteGuard {
     '/superadmin/audit': ['super_admin'],
     '/superadmin/config': ['super_admin'],
     '/superadmin/backup': ['super_admin'],
+    '/superadmin/inventory': ['super_admin'],
+    '/superadmin/deliveries': ['super_admin'],
     
     // Admin routes
     '/dashboard': ['admin'],
@@ -22,6 +24,8 @@ class RouteGuard {
     '/sensors': ['admin'],
     '/analytics': ['admin'],
     '/settings': ['admin'],
+    '/inventory-admin': ['admin'],
+    '/deliveries-admin': ['admin'],
     
     // Farm Manager routes
     '/farm-manager': ['farm_manager'],

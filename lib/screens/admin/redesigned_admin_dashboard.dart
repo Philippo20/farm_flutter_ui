@@ -202,6 +202,7 @@ class _RedesignedAdminDashboardState extends ConsumerState<RedesignedAdminDashbo
 
   Widget _buildPeriodFilter() {
     final periods = ['Today', 'Week', 'Month', 'Year'];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -216,7 +217,7 @@ class _RedesignedAdminDashboardState extends ConsumerState<RedesignedAdminDashbo
                 style: TextStyle(
                   color: isSelected
                       ? AppColors.primary
-                      : Theme.of(context).textTheme.bodyMedium?.color,
+                      : (isDark ? Colors.white : AppColors.textPrimary),
                 ),
               ),
               selected: isSelected,
@@ -228,6 +229,9 @@ class _RedesignedAdminDashboardState extends ConsumerState<RedesignedAdminDashbo
               checkmarkColor: AppColors.primary,
               labelStyle: AppTypography.bodyMedium.copyWith(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected
+                    ? AppColors.primary
+                    : (isDark ? Colors.white : AppColors.textPrimary),
               ),
             ),
           );

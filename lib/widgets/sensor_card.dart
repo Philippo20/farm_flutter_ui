@@ -120,11 +120,15 @@ class SensorCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
                 children: [
-                  Text(
-                    sensor.value.toStringAsFixed(1),
-                    style: AppTypography.sensorValueLarge.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
+                  Flexible(
+                    child: Text(
+                      sensor.value.toStringAsFixed(1),
+                      style: AppTypography.sensorValueLarge.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   SizedBox(width: AppSpacing.xs),
@@ -147,10 +151,14 @@ class SensorCard extends StatelessWidget {
                       color: AppColors.textSecondary,
                     ),
                     SizedBox(width: 4),
-                    Text(
-                      sensor.timeAgo,
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.textSecondary,
+                    Expanded(
+                      child: Text(
+                        sensor.timeAgo,
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

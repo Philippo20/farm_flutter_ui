@@ -41,6 +41,12 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
       route: '/farm-owner',
     ),
     _NavItem(
+      icon: Icons.agriculture_outlined,
+      activeIcon: Icons.agriculture_rounded,
+      label: 'Farm',
+      route: '/farm-owner/farm',
+    ),
+    _NavItem(
       icon: Icons.account_balance_wallet_outlined,
       activeIcon: Icons.account_balance_wallet_rounded,
       label: 'Digital Wallet',
@@ -51,12 +57,6 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
       activeIcon: Icons.analytics_rounded,
       label: 'Analytics',
       route: '/farm-owner/analytics',
-    ),
-    _NavItem(
-      icon: Icons.money_outlined,
-      activeIcon: Icons.money_rounded,
-      label: 'Withdraw Funds',
-      route: '/farm-owner/withdraw-funds',
     ),
     _NavItem(
       icon: Icons.assessment_outlined,
@@ -117,7 +117,7 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
         return Container(
           width: _widthAnimation.value,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : AppColors.neutral100,
+            color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

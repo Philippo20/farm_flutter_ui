@@ -22,6 +22,9 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth < 1200 && screenWidth >= 600;
     final sensors = MockFarmData.getAllSensors();
 
     // Filter sensors
@@ -38,7 +41,14 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
-        title: Text('Sensor Management', style: AppTypography.h5.copyWith(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Sensor Management',
+          style: AppTypography.h5.copyWith(
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            fontSize: isMobile ? 18 : 20,
+          ),
+        ),
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         elevation: 0,
         actions: [
@@ -60,7 +70,7 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
         children: [
           // Filters
           Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
             decoration: BoxDecoration(
               color: isDark ? AppColors.surfaceDark : Colors.white,
               border: Border(
@@ -74,63 +84,109 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
                 // Search bar
                 TextField(
                   onChanged: (value) => setState(() => _searchQuery = value),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontSize: isMobile ? 13 : 14,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Search sensors...',
-                    prefixIcon: const Icon(Icons.search),
+                    hintStyle: TextStyle(
+                      color: isDark ? Colors.white60 : AppColors.textSecondary,
+                      fontSize: isMobile ? 13 : 14,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: isDark ? Colors.white60 : AppColors.textSecondary,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     ),
                     filled: true,
                     fillColor: isDark ? Colors.white10 : AppColors.neutral100,
+                    contentPadding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
+                SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
                 // Filter chips
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildFilterDropdown(
-                        'Type',
-                        _selectedType,
-                        ['All', 'temperature', 'humidity', 'ph', 'ec', 'tds', 'co2', 'distance'],
-                        (value) => setState(() => _selectedType = value!),
-                        isDark,
+                isMobile
+                    ? Column(
+                        children: [
+                          _buildFilterDropdown(
+                            'Type',
+                            _selectedType,
+                            ['All', 'temperature', 'humidity', 'ph', 'ec', 'tds', 'co2', 'distance'],
+                            (value) => setState(() => _selectedType = value!),
+                            isDark,
+                            isMobile: true,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildFilterDropdown(
+                            'Status',
+                            _selectedStatus,
+                            ['All', 'normal', 'warning', 'alert', 'offline'],
+                            (value) => setState(() => _selectedStatus = value!),
+                            isDark,
+                            isMobile: true,
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: _buildFilterDropdown(
+                              'Type',
+                              _selectedType,
+                              ['All', 'temperature', 'humidity', 'ph', 'ec', 'tds', 'co2', 'distance'],
+                              (value) => setState(() => _selectedType = value!),
+                              isDark,
+                              isMobile: false,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: _buildFilterDropdown(
+                              'Status',
+                              _selectedStatus,
+                              ['All', 'normal', 'warning', 'alert', 'offline'],
+                              (value) => setState(() => _selectedStatus = value!),
+                              isDark,
+                              isMobile: false,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: _buildFilterDropdown(
-                        'Status',
-                        _selectedStatus,
-                        ['All', 'normal', 'warning', 'alert', 'offline'],
-                        (value) => setState(() => _selectedStatus = value!),
-                        isDark,
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
 
           // Sensor count
           Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '${filteredSensors.length} Sensors',
-                  style: AppTypography.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
+                Flexible(
+                  child: Text(
+                    '${filteredSensors.length} Sensors',
+                    style: AppTypography.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      fontSize: isMobile ? 15 : 16,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Text(
-                  '${sensors.where((s) => s['status'] == 'normal').length} Active',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.success,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    '${sensors.where((s) => s['status'] == 'normal').length} Active',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w600,
+                      fontSize: isMobile ? 13 : 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -140,16 +196,16 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
           // Sensor grid
           Expanded(
             child: GridView.builder(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: MediaQuery.of(context).size.width > 1200 ? 3 : 2,
-                childAspectRatio: 1.4,
-                crossAxisSpacing: AppSpacing.md,
-                mainAxisSpacing: AppSpacing.md,
+                crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
+                childAspectRatio: isMobile ? 1.6 : (isTablet ? 1.5 : 1.4),
+                crossAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
+                mainAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
               ),
               itemCount: filteredSensors.length,
               itemBuilder: (context, index) {
-                return _buildSensorCard(filteredSensors[index], isDark);
+                return _buildSensorCard(filteredSensors[index], isDark, isMobile: isMobile, isTablet: isTablet);
               },
             ),
           ),
@@ -158,7 +214,7 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
     );
   }
 
-  Widget _buildSensorCard(Map<String, dynamic> sensor, bool isDark) {
+  Widget _buildSensorCard(Map<String, dynamic> sensor, bool isDark, {bool isMobile = false, bool isTablet = false}) {
     final color = sensor['color'] as Color;
     final batteryLevel = sensor['batteryLevel'] as int;
     final signalStrength = sensor['signalStrength'] as int;
@@ -178,15 +234,16 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
         onTap: () => _showSensorDetails(sensor, isDark),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: EdgeInsets.all(isMobile ? AppSpacing.sm : (isTablet ? AppSpacing.sm : AppSpacing.md)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Header with icon and status
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    padding: EdgeInsets.all(isMobile ? 6 : (isTablet ? 7 : AppSpacing.sm)),
                     decoration: BoxDecoration(
                       color: color.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -194,19 +251,21 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
                     child: Icon(
                       sensor['icon'] as IconData,
                       color: color,
-                      size: 24,
+                      size: isMobile ? 20 : (isTablet ? 22 : 24),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           sensor['name'],
                           style: AppTypography.bodyMedium.copyWith(
                             fontWeight: FontWeight.bold,
                             color: isDark ? Colors.white : AppColors.textPrimary,
+                            fontSize: isMobile ? 13 : (isTablet ? 14 : 15),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -215,26 +274,35 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
                           sensor['id'],
                           style: AppTypography.bodySmall.copyWith(
                             color: isDark ? Colors.white60 : AppColors.textSecondary,
+                            fontSize: isMobile ? 10 : 11,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
-                  _buildStatusBadge(sensor['status'], isDark),
+                  _buildStatusBadge(sensor['status'], isDark, isMobile: isMobile, isTablet: isTablet),
                 ],
               ),
 
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
 
               // Current value
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '${sensor['value']}',
-                    style: AppTypography.h4.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: color,
+                  Flexible(
+                    child: Text(
+                      '${sensor['value']}',
+                      style: AppTypography.h4.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                        fontSize: isMobile ? 24 : (isTablet ? 26 : 28),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -244,20 +312,23 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
                       sensor['unit'],
                       style: AppTypography.bodyMedium.copyWith(
                         color: color.withOpacity(0.8),
+                        fontSize: isMobile ? 12 : (isTablet ? 13 : 14),
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: AppSpacing.xs),
+              SizedBox(height: isMobile ? AppSpacing.xs : AppSpacing.xs),
 
               // Location
               Row(
                 children: [
                   Icon(
                     Icons.location_on_outlined,
-                    size: 14,
+                    size: isMobile ? 12 : 14,
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
                   ),
                   const SizedBox(width: 4),
@@ -266,6 +337,7 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
                       sensor['location'],
                       style: AppTypography.bodySmall.copyWith(
                         color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        fontSize: isMobile ? 10 : 11,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -280,31 +352,45 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildMetric(
-                    Icons.battery_std,
-                    '$batteryLevel%',
-                    batteryLevel > 80 ? AppColors.success : 
-                    batteryLevel > 50 ? AppColors.warning : AppColors.error,
-                    isDark,
+                  Expanded(
+                    child: _buildMetric(
+                      Icons.battery_std,
+                      '$batteryLevel%',
+                      batteryLevel > 80 ? AppColors.success : 
+                      batteryLevel > 50 ? AppColors.warning : AppColors.error,
+                      isDark,
+                      isMobile: isMobile,
+                      isTablet: isTablet,
+                    ),
                   ),
-                  _buildMetric(
-                    Icons.signal_cellular_alt,
-                    '$signalStrength%',
-                    signalStrength > 70 ? AppColors.success : 
-                    signalStrength > 40 ? AppColors.warning : AppColors.error,
-                    isDark,
+                  SizedBox(width: isMobile ? 4 : AppSpacing.xs),
+                  Expanded(
+                    child: _buildMetric(
+                      Icons.signal_cellular_alt,
+                      '$signalStrength%',
+                      signalStrength > 70 ? AppColors.success : 
+                      signalStrength > 40 ? AppColors.warning : AppColors.error,
+                      isDark,
+                      isMobile: isMobile,
+                      isTablet: isTablet,
+                    ),
                   ),
-                  _buildMetric(
-                    Icons.schedule,
-                    '${daysSinceCalibration}d',
-                    daysSinceCalibration < 14 ? AppColors.success : 
-                    daysSinceCalibration < 21 ? AppColors.warning : AppColors.error,
-                    isDark,
+                  SizedBox(width: isMobile ? 4 : AppSpacing.xs),
+                  Expanded(
+                    child: _buildMetric(
+                      Icons.schedule,
+                      '${daysSinceCalibration}d',
+                      daysSinceCalibration < 14 ? AppColors.success : 
+                      daysSinceCalibration < 21 ? AppColors.warning : AppColors.error,
+                      isDark,
+                      isMobile: isMobile,
+                      isTablet: isTablet,
+                    ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: isMobile ? AppSpacing.xs : AppSpacing.sm),
 
               // Action buttons
               Row(
@@ -312,21 +398,33 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => _calibrateSensor(sensor),
-                      icon: const Icon(Icons.tune, size: 16),
-                      label: const Text('Calibrate'),
+                      icon: Icon(Icons.tune, size: isMobile ? 14 : 16),
+                      label: Text(
+                        'Calibrate',
+                        style: TextStyle(fontSize: isMobile ? 11 : 12),
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: color,
                         side: BorderSide(color: color),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: EdgeInsets.symmetric(
+                          vertical: isMobile ? 6 : 8,
+                          horizontal: isMobile ? AppSpacing.xs : AppSpacing.sm,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
                   IconButton(
                     onPressed: () => _showSensorDetails(sensor, isDark),
-                    icon: const Icon(Icons.more_vert),
-                    iconSize: 20,
+                    icon: Icon(Icons.more_vert, size: isMobile ? 18 : 20),
                     color: isDark ? Colors.white70 : AppColors.textSecondary,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                   ),
                 ],
               ),
@@ -337,7 +435,7 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
     );
   }
 
-  Widget _buildStatusBadge(String status, bool isDark) {
+  Widget _buildStatusBadge(String status, bool isDark, {bool isMobile = false, bool isTablet = false}) {
     Color color;
     switch (status) {
       case 'normal':
@@ -354,7 +452,10 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 6 : (isTablet ? 7 : 8),
+        vertical: isMobile ? 3 : 4,
+      ),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
@@ -365,24 +466,34 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
         style: AppTypography.bodySmall.copyWith(
           color: color,
           fontWeight: FontWeight.bold,
-          fontSize: 10,
+          fontSize: isMobile ? 9 : 10,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }
 
-  Widget _buildMetric(IconData icon, String value, Color color, bool isDark) {
+  Widget _buildMetric(IconData icon, String value, Color color, bool isDark, {bool isMobile = false, bool isTablet = false}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 4),
-        Text(
-          value,
-          style: AppTypography.bodySmall.copyWith(
-            color: color,
-            fontWeight: FontWeight.w600,
-            fontSize: 11,
+        Icon(
+          icon,
+          size: isMobile ? 12 : (isTablet ? 13 : 14),
+          color: color,
+        ),
+        SizedBox(width: isMobile ? 2 : 4),
+        Flexible(
+          child: Text(
+            value,
+            style: AppTypography.bodySmall.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: isMobile ? 10 : 11,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -394,45 +505,83 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
     String value,
     List<String> items,
     Function(String?) onChanged,
-    bool isDark,
-  ) {
+    bool isDark, {
+    bool isMobile = false,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? AppSpacing.sm : AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? Colors.white10 : AppColors.neutral100,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
+        ),
       ),
       child: DropdownButton<String>(
         value: value,
-        items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+        items: items.map((item) => DropdownMenuItem(
+          value: item,
+          child: Text(
+            item,
+            style: TextStyle(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontSize: isMobile ? 12 : 13,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        )).toList(),
         onChanged: onChanged,
         underline: const SizedBox(),
         isExpanded: true,
-        icon: const Icon(Icons.arrow_drop_down),
+        icon: Icon(
+          Icons.arrow_drop_down,
+          color: isDark ? Colors.white : AppColors.textPrimary,
+          size: isMobile ? 20 : 24,
+        ),
+        style: TextStyle(
+          color: isDark ? Colors.white : AppColors.textPrimary,
+          fontSize: isMobile ? 12 : 13,
+        ),
+        dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
       ),
     );
   }
 
   void _showSensorDetails(Map<String, dynamic> sensor, bool isDark) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(sensor['name']),
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        title: Text(
+          sensor['name'],
+          style: TextStyle(
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            fontSize: isMobile ? 18 : 20,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('Sensor ID', sensor['id']),
-              _buildDetailRow('Type', sensor['type']),
-              _buildDetailRow('Location', sensor['location']),
-              _buildDetailRow('Current Value', '${sensor['value']} ${sensor['unit']}'),
-              _buildDetailRow('Status', sensor['status']),
-              _buildDetailRow('Battery Level', '${sensor['batteryLevel']}%'),
-              _buildDetailRow('Signal Strength', '${sensor['signalStrength']}%'),
+              _buildDetailRow('Sensor ID', sensor['id'], isDark, isMobile: isMobile),
+              _buildDetailRow('Type', sensor['type'], isDark, isMobile: isMobile),
+              _buildDetailRow('Location', sensor['location'], isDark, isMobile: isMobile),
+              _buildDetailRow('Current Value', '${sensor['value']} ${sensor['unit']}', isDark, isMobile: isMobile),
+              _buildDetailRow('Status', sensor['status'], isDark, isMobile: isMobile),
+              _buildDetailRow('Battery Level', '${sensor['batteryLevel']}%', isDark, isMobile: isMobile),
+              _buildDetailRow('Signal Strength', '${sensor['signalStrength']}%', isDark, isMobile: isMobile),
               _buildDetailRow(
                 'Last Calibrated',
                 DateFormat('MMM dd, yyyy').format(sensor['lastCalibrated']),
+                isDark,
+                isMobile: isMobile,
               ),
             ],
           ),
@@ -440,34 +589,62 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(
+              'Close',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : AppColors.textPrimary,
+              ),
+            ),
           ),
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(context);
               _calibrateSensor(sensor);
             },
-            icon: const Icon(Icons.tune),
-            label: const Text('Calibrate'),
+            icon: Icon(Icons.tune, size: isMobile ? 16 : 18),
+            label: Text(
+              'Calibrate',
+              style: TextStyle(fontSize: isMobile ? 13 : 14),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String value, bool isDark, {bool isMobile = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.symmetric(vertical: isMobile ? 6 : 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+          Flexible(
+            flex: 2,
+            child: Text(
+              label,
+              style: AppTypography.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontSize: isMobile ? 13 : 14,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-          Text(
-            value,
-            style: AppTypography.bodyMedium,
+          const SizedBox(width: AppSpacing.sm),
+          Flexible(
+            flex: 3,
+            child: Text(
+              value,
+              style: AppTypography.bodyMedium.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+                fontSize: isMobile ? 13 : 14,
+              ),
+              textAlign: TextAlign.end,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
@@ -487,19 +664,43 @@ class _SensorManagementScreenState extends State<SensorManagementScreen> {
   }
 
   void _showAddSensorDialog(BuildContext context, bool isDark) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add New Sensor'),
-        content: const Text('Sensor addition feature coming soon!'),
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        title: Text(
+          'Add New Sensor',
+          style: TextStyle(
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            fontSize: isMobile ? 18 : 20,
+          ),
+        ),
+        content: Text(
+          'Sensor addition feature coming soon!',
+          style: TextStyle(
+            color: isDark ? Colors.white70 : AppColors.textSecondary,
+            fontSize: isMobile ? 13 : 14,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : AppColors.textPrimary,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Add'),
+            child: Text(
+              'Add',
+              style: TextStyle(fontSize: isMobile ? 13 : 14),
+            ),
           ),
         ],
       ),

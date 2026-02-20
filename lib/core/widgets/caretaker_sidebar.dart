@@ -38,7 +38,7 @@ class _CaretakerSidebarState extends State<CaretakerSidebar>
       icon: Icons.dashboard_outlined,
       activeIcon: Icons.dashboard_rounded,
       label: 'Dashboard',
-      route: '/caretaker-dashboard',
+      route: '/caretaker_dashboard',
     ),
     _NavItem(
       icon: Icons.edit_note_outlined,
@@ -68,7 +68,7 @@ class _CaretakerSidebarState extends State<CaretakerSidebar>
       icon: Icons.settings_outlined,
       activeIcon: Icons.settings_rounded,
       label: 'Settings',
-      route: '/settings',
+      route: '/caretaker_settings',
     ),
   ];
 
@@ -117,7 +117,7 @@ class _CaretakerSidebarState extends State<CaretakerSidebar>
         return Container(
           width: _widthAnimation.value,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : AppColors.neutral100,
+            color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -320,8 +320,17 @@ class _CaretakerSidebarState extends State<CaretakerSidebar>
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         child: InkWell(
           onTap: () {
-            widget.onItemSelected(_navItems.indexOf(item));
-            Navigator.pushNamed(context, item.route);
+            final index = _navItems.indexOf(item);
+            widget.onItemSelected(index);
+            try {
+              Navigator.pushReplacementNamed(context, item.route);
+            } catch (e) {
+              try {
+                Navigator.pushNamed(context, item.route);
+              } catch (e2) {
+                debugPrint('Navigation error: $e2');
+              }
+            }
           },
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           child: Container(

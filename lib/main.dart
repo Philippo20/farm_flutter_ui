@@ -1,7 +1,11 @@
 import 'package:farmestates_ai_dashbaord/screens/farm_manager/batch_generation_screen.dart';
+import 'package:farmestates_ai_dashbaord/screens/farm_manager/delivery_management_screen.dart';
+import 'package:farmestates_ai_dashbaord/screens/farm_manager/farms_screen.dart';
+import 'package:farmestates_ai_dashbaord/screens/farm_manager/farm_manager_settings_screen.dart';
 import 'package:farmestates_ai_dashbaord/screens/farm_manager/fund_request_screen.dart';
 import 'package:farmestates_ai_dashbaord/screens/farm_manager/inventory_management_screen.dart';
 import 'package:farmestates_ai_dashbaord/screens/farm_manager/reports_screen.dart';
+import 'package:farmestates_ai_dashbaord/screens/farm_manager/team_management_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -13,6 +17,8 @@ import 'screens/admin/modern_farms_screen.dart';
 import 'screens/admin/modern_sensors_screen.dart';
 import 'screens/admin/modern_analytics_screen.dart';
 import 'screens/admin/modern_settings_screen.dart';
+import 'screens/admin/admin_inventory_overview_screen.dart';
+import 'screens/admin/admin_delivery_control_screen.dart';
 import 'screens/auth/modern_login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/owner/farm_screen.dart';
@@ -28,9 +34,10 @@ import 'screens/caretaker/calendar_screen.dart';
 import 'screens/farm_manager/farm_manager_dashboard_redesigned.dart';
 import 'screens/farm_owner/farm_owner_dashboard_new.dart';
 import 'screens/farm_owner/farm_owner_dashboard_redesigned.dart';
+import 'screens/farm_owner/farm_overview_screen.dart';
 import 'screens/farm_owner/digital_wallet_screen.dart';
+import 'screens/farm_owner/wallet_actions_screen.dart';
 import 'screens/farm_owner/analytics_screen.dart';
-import 'screens/farm_owner/withdraw_funds_screen.dart';
 import 'screens/farm_owner/reports_screen.dart' as farm_owner;
 import 'screens/farm_owner/settings_screen.dart';
 import 'screens/technician/technician_dashboard_new.dart';
@@ -56,6 +63,8 @@ import 'screens/superadmin/pricing_management_screen.dart';
 import 'screens/superadmin/audit_logs_screen.dart';
 import 'screens/superadmin/system_config_screen.dart';
 import 'screens/superadmin/backup_restore_screen.dart';
+import 'screens/superadmin/superadmin_inventory_overview_screen.dart';
+import 'screens/superadmin/superadmin_delivery_control_screen.dart';
 
 /// Main entry point for Farm Estates ADOM application
 void main() async {
@@ -109,6 +118,8 @@ class MyApp extends ConsumerWidget {
         '/superadmin/audit': (context) => const AuditLogsScreen(),
         '/superadmin/config': (context) => const SystemConfigScreen(),
         '/superadmin/backup': (context) => const BackupRestoreScreen(),
+        '/superadmin/inventory': (context) => const SuperAdminInventoryOverviewScreen(),
+        '/superadmin/deliveries': (context) => const SuperAdminDeliveryControlScreen(),
 
         // Admin
         '/dashboard': (context) => const RedesignedAdminDashboard(),
@@ -117,18 +128,25 @@ class MyApp extends ConsumerWidget {
         '/sensors': (context) => const ModernSensorsScreen(),
         '/analytics': (context) => const ModernAnalyticsScreen(),
         '/settings': (context) => const ModernSettingsScreen(),
+        '/inventory-admin': (context) => const AdminInventoryOverviewScreen(),
+        '/deliveries-admin': (context) => const AdminDeliveryControlScreen(),
 
         // Farm Manager (NEW - REDESIGNED)
         '/farm-manager': (context) => const FarmManagerDashboardRedesigned(),
         '/farm-manager/inventory': (context) => const InventoryManagementScreen(),
         '/farm-manager/batch-generation': (context) => const BatchGenerationScreen(),
         '/farm-manager/fund-request': (context) => const FundRequestScreen(),
+        '/farm-manager/deliveries': (context) => const DeliveryManagementScreen(),
+        '/farm-manager/farms': (context) => const FarmsScreen(),
+        '/farm-manager/settings': (context) => const FarmManagerSettingsScreen(),
         '/farm-manager/reports': (context) => const ReportsScreen(),
+        '/farm-manager/team': (context) => const TeamManagementScreen(),
         // Farm Owner (NEW - REDESIGNED)
         '/farm-owner': (context) => const FarmOwnerDashboardRedesigned(),
+        '/farm-owner/farm': (context) => const FarmOverviewScreen(),
         '/farm-owner/digital-wallet': (context) => const DigitalWalletScreen(),
+        '/farm-owner/wallet-actions': (context) => const WalletActionsScreen(),
         '/farm-owner/analytics': (context) => const AnalyticsScreen(),
-        '/farm-owner/withdraw-funds': (context) => const WithdrawFundsScreen(),
         '/farm-owner/reports': (context) => const farm_owner.ReportsScreen(),
         '/farm-owner/settings': (context) => const SettingsScreen(),
         '/owner_dashboard': (context) => const FarmOwnerDashboardRedesigned(),

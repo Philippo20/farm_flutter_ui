@@ -83,6 +83,7 @@ flutter:
      - assets/onboarding/
      - assets/weather/
      - assets/caretakers/
+     - assets/images/
   #   - images/a_dot_burr.jpeg
     
   #   - images/a_dot_ham.jpeg

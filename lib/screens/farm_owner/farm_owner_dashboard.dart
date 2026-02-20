@@ -30,6 +30,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
           style: AppTypography.h5.copyWith(
             fontFamily: 'Poppins',
             fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
         actions: [
@@ -587,7 +588,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Available Balance: \$24,580.50', style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
+            Text('Available Balance: \$24,580.50', style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.textPrimary)),
             const SizedBox(height: AppSpacing.lg),
             TextField(
               controller: amountController,

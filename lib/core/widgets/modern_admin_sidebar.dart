@@ -71,6 +71,18 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
       label: 'Settings',
       route: '/settings',
     ),
+    _NavItem(
+      icon: Icons.inventory_2_outlined,
+      activeIcon: Icons.inventory_2_rounded,
+      label: 'Inventory',
+      route: '/inventory-admin',
+    ),
+    _NavItem(
+      icon: Icons.local_shipping_outlined,
+      activeIcon: Icons.local_shipping_rounded,
+      label: 'Deliveries',
+      route: '/deliveries-admin',
+    ),
   ];
 
   @override
@@ -118,7 +130,7 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
         return Container(
           width: _widthAnimation.value,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : AppColors.neutral100,
+            color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

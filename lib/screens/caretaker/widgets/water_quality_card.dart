@@ -38,7 +38,7 @@ class WaterQualityCard extends StatelessWidget {
             color: _getStatusColor(overallStatus).withOpacity(0.3),
             width: 2,
           ),
-          boxShadow: [
+          boxShadow: isDark ? null : [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
@@ -234,11 +234,15 @@ class WaterQualityCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                value,
-                style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: statusColor,
+              Flexible(
+                child: Text(
+                  value,
+                  style: AppTypography.h5.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: statusColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 4),

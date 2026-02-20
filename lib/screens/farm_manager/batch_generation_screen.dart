@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -8,6 +9,7 @@ import '../../core/models/batch/batch_model.dart';
 import '../../core/providers/batch_provider.dart';
 import '../../core/widgets/farm_manager_sidebar.dart';
 import '../../core/widgets/farm_manager_header.dart';
+import '../../core/widgets/farm_manager_mobile_drawer.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/widgets/status_badge.dart';
 
@@ -22,8 +24,9 @@ class BatchGenerationScreen extends ConsumerStatefulWidget {
 
 class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   final _formKey = GlobalKey<FormState>();
-  int _selectedNavIndex = 2;
+  int _selectedNavIndex = 3;
   final _scrollController = ScrollController();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Form controllers
   String? _selectedFarm;
@@ -210,58 +213,38 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
 
   Widget _buildFormCard(bool isDark, bool isMobile) {
     return Container(
-      padding: EdgeInsets.all(isMobile ? AppSpacing.lg : AppSpacing.xl),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral100,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.1 : 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06)),
+        boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Form Header
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                child: const Icon(Icons.add_circle, color: AppColors.primary, size: 28),
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [AppColors.primary, AppColors.primary.withOpacity(0.75)]),
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Create New Batch',
-                      style: AppTypography.h5.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      'Fill in the details to generate a new production batch',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+              child: const Icon(Icons.add_circle_rounded, color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Create New Batch',
+                    style: GoogleFonts.inter(fontSize: isMobile ? 16 : 18, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textPrimary)),
+                const SizedBox(height: 2),
+                Text('Fill in the details to generate a new production batch',
+                    style: GoogleFonts.inter(fontSize: isMobile ? 11 : 12, color: isDark ? Colors.white38 : AppColors.textSecondary)),
+              ],
+            )),
+          ]),
           const SizedBox(height: AppSpacing.xl),
 
           // Form Fields
@@ -890,10 +873,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
           padding: EdgeInsets.all(padding),
           decoration: BoxDecoration(
             color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(
-              color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral100,
-            ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06)),
+            boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 3))],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -901,18 +883,18 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.insights_outlined,
-                    color: AppColors.primary,
-                    size: isMobile ? 20 : 24,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: BorderRadius.circular(9)),
+                    child: Icon(Icons.insights_rounded, color: AppColors.primary, size: isMobile ? 16 : 18),
                   ),
                   SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
                   Text(
                     'Batch Overview',
-                    style: AppTypography.h5.copyWith(
+                    style: GoogleFonts.inter(
                       fontWeight: FontWeight.w700,
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontSize: isMobile ? 16 : 20,
+                      fontSize: isMobile ? 15 : 17,
                     ),
                   ),
                 ],
@@ -943,61 +925,44 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   }
 
   Widget _buildBatchStatCard(Map<String, dynamic> stat, bool isDark, [bool isMobile = false]) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? AppSpacing.xs : AppSpacing.md),
-      decoration: BoxDecoration(
-        color: (stat['color'] as Color).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: (stat['color'] as Color).withOpacity(0.3),
-          width: isMobile ? 1 : 1.5,
+    final color = stat['color'] as Color;
+    return LayoutBuilder(builder: (context, box) {
+      final compact = box.maxWidth < 140;
+      return Container(
+        padding: EdgeInsets.all(compact ? 8 : 12),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(isDark ? 0.15 : 0.12)),
+          boxShadow: isDark ? null : [BoxShadow(color: color.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 2))],
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Icon row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(
-                stat['icon'] as IconData,
-                color: stat['color'] as Color,
-                size: isMobile ? 18 : 20,
-              ),
-            ],
-          ),
-          const Spacer(),
-          // Value
-          Text(
-            stat['value'] as String,
-            style: AppTypography.h4.copyWith(
-              fontWeight: FontWeight.w700,
-              color: stat['color'] as Color,
-              fontSize: isMobile ? 20 : 22,
-              height: 1.1,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: EdgeInsets.all(compact ? 5 : 7),
+              decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(8)),
+              child: Icon(stat['icon'] as IconData, color: color, size: compact ? 14 : 16),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: isMobile ? 4 : 6),
-          // Title
-          Text(
-            stat['title'] as String,
-            style: AppTypography.caption.copyWith(
-              color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
-              fontSize: isMobile ? 11 : 12,
-              height: 1.2,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
+            const Spacer(),
+            Text(stat['value'] as String,
+                style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textPrimary, fontSize: compact ? 18 : 22, height: 1.1),
+                maxLines: 1, overflow: TextOverflow.ellipsis),
+            SizedBox(height: compact ? 2 : 4),
+            Text(stat['title'] as String,
+                style: GoogleFonts.inter(color: isDark ? Colors.white38 : AppColors.textSecondary, fontSize: compact ? 10 : 11, height: 1.2),
+                maxLines: 2, overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      );
+    });
   }
+
+  // ============================================
+  // PROFESSIONAL BATCHES TABLE & CARDS
+  // ============================================
 
   Widget _buildBatchesTable(bool isDark, bool isMobile, List<BatchModel> batches) {
     final filteredBatches = batches
@@ -1005,572 +970,575 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         .toList();
 
     if (isMobile) {
-      return ListView.builder(
+      return ListView.separated(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: filteredBatches.length,
-        itemBuilder: (context, index) {
-          final batch = filteredBatches[index];
-          return _buildBatchCard(batch, isDark);
-        },
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (context, index) => _buildBatchCard(filteredBatches[index], isDark),
       );
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral100,
-        ),
+    // Desktop: professional data table with custom styling
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Column(
+        children: [
+          // Table header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+              border: Border(bottom: BorderSide(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06))),
+            ),
+            child: Row(children: [
+              _thCell('Batch No.', flex: 2, isDark: isDark),
+              _thCell('Farm', flex: 2, isDark: isDark),
+              _thCell('Crop', flex: 1, isDark: isDark),
+              _thCell('Status', flex: 1, isDark: isDark),
+              _thCell('Pipeline', flex: 3, isDark: isDark),
+              _thCell('Progress', flex: 1, isDark: isDark),
+              _thCell('Started', flex: 2, isDark: isDark),
+              _thCell('', flex: 1, isDark: isDark), // Actions
+            ]),
+          ),
+          // Table rows
+          ...filteredBatches.asMap().entries.map((entry) {
+            final i = entry.key;
+            final batch = entry.value;
+            final isEven = i % 2 == 0;
+            return _buildTableRow(batch, isDark, isEven);
+          }),
+        ],
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columns: [
-            DataColumn(label: Text('Batch No.', style: _tableHeaderStyle(isDark))),
-            DataColumn(label: Text('Farm', style: _tableHeaderStyle(isDark))),
-            DataColumn(label: Text('Plant Type', style: _tableHeaderStyle(isDark))),
-            DataColumn(label: Text('Status', style: _tableHeaderStyle(isDark))),
-            DataColumn(label: Text('Progress', style: _tableHeaderStyle(isDark))),
-            DataColumn(label: Text('Nursed', style: _tableHeaderStyle(isDark))),
-            DataColumn(label: Text('Transplanted', style: _tableHeaderStyle(isDark))),
-            DataColumn(label: Text('Harvested', style: _tableHeaderStyle(isDark))),
-            DataColumn(label: Text('Progress %', style: _tableHeaderStyle(isDark))),
-            DataColumn(label: Text('Start Date', style: _tableHeaderStyle(isDark))),
-            DataColumn(label: Text('Actions', style: _tableHeaderStyle(isDark))),
-          ],
-          rows: filteredBatches.map((batch) {
-            return DataRow(cells: [
-              DataCell(Text(
-                batch.batchNumber,
-                style: _tableCellStyle(isDark, isBold: true),
-              )),
-              DataCell(Text(batch.farmName, style: _tableCellStyle(isDark))),
-              DataCell(Text(batch.plantType, style: _tableCellStyle(isDark))),
-              DataCell(StatusBadge(status: batch.status)),
-              DataCell(_buildProgressIndicator(batch, isDark)),
-              DataCell(Text(
-                batch.nursedSeeds.toString(),
-                style: _tableCellStyle(isDark),
-              )),
-              DataCell(Text(
-                batch.transplantedPlants.toString(),
-                style: _tableCellStyle(isDark,
-                    color: batch.transplantedPlants > 0 ? AppColors.success : null),
-              )),
-              DataCell(Text(
-                batch.harvestedHeads.toString(),
-                style: _tableCellStyle(isDark,
-                    color: batch.harvestedHeads > 0 ? AppColors.warning : null),
-              )),
-              DataCell(Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    );
+  }
+
+  Widget _thCell(String label, {required int flex, required bool isDark}) {
+    return Expanded(
+      flex: flex,
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: isDark ? Colors.white38 : AppColors.textSecondary,
+          letterSpacing: 0.3,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  Widget _buildTableRow(BatchModel batch, bool isDark, bool isEven) {
+    final pct = batch.progressPercentage;
+    final pctColor = pct >= 75 ? AppColors.success : (pct >= 40 ? AppColors.warning : AppColors.info);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _viewBatchDetails(batch),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: isEven
+                ? (isDark ? Colors.transparent : Colors.transparent)
+                : (isDark ? Colors.white.withOpacity(0.02) : AppColors.neutral50.withOpacity(0.5)),
+            border: Border(bottom: BorderSide(color: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.04))),
+          ),
+          child: Row(children: [
+            // Batch No.
+            Expanded(
+              flex: 2,
+              child: Row(children: [
+                Container(
+                  width: 6, height: 6,
+                  decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(
+                  batch.batchNumber,
+                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppColors.textPrimary),
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                )),
+              ]),
+            ),
+            // Farm
+            Expanded(
+              flex: 2,
+              child: Text(batch.farmName, style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white70 : AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+            // Crop
+            Expanded(
+              flex: 1,
+              child: Row(children: [
+                Icon(Icons.eco_rounded, size: 13, color: AppColors.success.withOpacity(0.7)),
+                const SizedBox(width: 4),
+                Expanded(child: Text(batch.plantType, style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white70 : AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              ]),
+            ),
+            // Status
+            Expanded(flex: 1, child: StatusBadge(status: batch.status)),
+            // Pipeline (N → T → H)
+            Expanded(
+              flex: 3,
+              child: _buildPipeline(batch, isDark),
+            ),
+            // Progress %
+            Expanded(
+              flex: 1,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  color: pctColor.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '${batch.progressPercentage.toStringAsFixed(0)}%',
-                  style: _tableCellStyle(isDark, color: AppColors.primary, isBold: true),
+                  '${pct.toStringAsFixed(0)}%',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: pctColor),
                 ),
-              )),
-              DataCell(Text(
+              ),
+            ),
+            // Start Date
+            Expanded(
+              flex: 2,
+              child: Text(
                 DateFormat('MMM dd, yyyy').format(batch.startDate),
-                style: _tableCellStyle(isDark),
-              )),
-              DataCell(Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.visibility_outlined, size: 18),
-                    onPressed: () => _viewBatchDetails(batch),
-                    tooltip: 'View Details',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    onPressed: () => _editBatch(batch),
-                    tooltip: 'Edit',
-                  ),
-                ],
-              )),
-            ]);
-          }).toList(),
+                style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white54 : AppColors.textSecondary),
+              ),
+            ),
+            // Actions
+            Expanded(
+              flex: 1,
+              child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                _actionIcon(Icons.visibility_outlined, 'View', () => _viewBatchDetails(batch), isDark),
+                const SizedBox(width: 4),
+                _actionIcon(Icons.edit_outlined, 'Edit', () => _editBatch(batch), isDark),
+              ]),
+            ),
+          ]),
         ),
       ),
     );
   }
 
-  Widget _buildProgressIndicator(BatchModel batch, bool isDark) {
-    return SizedBox(
-      width: 120,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              _buildProgressDot(batch.nursedSeeds > 0, AppColors.info, 'N'),
-              const SizedBox(width: 4),
-              _buildProgressDot(batch.transplantedPlants > 0, AppColors.success, 'T'),
-              const SizedBox(width: 4),
-              _buildProgressDot(batch.harvestedHeads > 0, AppColors.warning, 'H'),
-            ],
+  Widget _actionIcon(IconData icon, String tooltip, VoidCallback onTap, bool isDark) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          padding: const EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(6),
           ),
-          const SizedBox(height: 4),
-          LinearProgressIndicator(
-            value: batch.progressPercentage / 100,
-            backgroundColor: isDark ? Colors.white10 : AppColors.neutral100,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-            minHeight: 4,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ],
+          child: Icon(icon, size: 15, color: isDark ? Colors.white54 : AppColors.textSecondary),
+        ),
       ),
     );
   }
 
-  Widget _buildProgressDot(bool isActive, Color color, String label) {
-    return Container(
-      width: 20,
-      height: 20,
-      decoration: BoxDecoration(
-        color: isActive ? color : Colors.grey.withOpacity(0.3),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isActive ? color : Colors.grey.withOpacity(0.5),
-          width: 2,
-        ),
-      ),
-      child: Center(
-        child: Text(
-          label,
-          style: AppTypography.caption.copyWith(
-            color: isActive ? Colors.white : Colors.grey,
-            fontSize: 9,
-            fontWeight: FontWeight.bold,
+  Widget _buildPipeline(BatchModel batch, bool isDark) {
+    final stages = [
+      {'label': 'Nursed', 'value': batch.nursedSeeds, 'color': AppColors.info, 'icon': Icons.spa_rounded},
+      {'label': 'Transplanted', 'value': batch.transplantedPlants, 'color': AppColors.success, 'icon': Icons.eco_rounded},
+      {'label': 'Harvested', 'value': batch.harvestedHeads, 'color': AppColors.warning, 'icon': Icons.agriculture_rounded},
+    ];
+
+    return Row(children: [
+      ...stages.asMap().entries.map((entry) {
+        final i = entry.key;
+        final s = entry.value;
+        final value = s['value'] as int;
+        final color = s['color'] as Color;
+        final isActive = value > 0;
+        final isLast = i == stages.length - 1;
+
+        return Expanded(child: Row(children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: isActive ? color.withOpacity(0.1) : (isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.03)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(s['icon'] as IconData, size: 10, color: isActive ? color : (isDark ? Colors.white24 : AppColors.neutral400)),
+              const SizedBox(width: 3),
+              Text(
+                '$value',
+                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: isActive ? color : (isDark ? Colors.white24 : AppColors.neutral400)),
+              ),
+            ]),
           ),
-        ),
-      ),
-    );
+          if (!isLast) Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Icon(Icons.arrow_forward_ios_rounded, size: 8, color: isDark ? Colors.white12 : AppColors.neutral300),
+          ),
+        ]));
+      }),
+    ]);
   }
+
+  // ============================================
+  // MOBILE BATCH CARD — PROFESSIONAL DESIGN
+  // ============================================
 
   Widget _buildBatchCard(BatchModel batch, bool isDark) {
+    final pct = batch.progressPercentage;
+    final pctColor = pct >= 75 ? AppColors.success : (pct >= 40 ? AppColors.warning : AppColors.info);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral100,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.1 : 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06)),
+        boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 2))],
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              ),
-              child: const Icon(Icons.grid_view_outlined, size: 20, color: AppColors.primary),
+        // Header row
+        Row(children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [AppColors.primary, AppColors.primary.withOpacity(0.75)]),
+              borderRadius: BorderRadius.circular(9),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    batch.batchNumber,
-                    style: AppTypography.bodyLarge.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : AppColors.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    batch.farmName,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            StatusBadge(status: batch.status),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-
-        // Progress Metrics
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.black.withOpacity(0.2) : AppColors.neutral50,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            child: const Icon(Icons.layers_rounded, size: 16, color: Colors.white),
           ),
-          child: Column(
+          const SizedBox(width: 10),
+          Expanded(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Progress Metrics',
-                style: AppTypography.labelLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: 12,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildProgressMetric(
-                      'Nursed',
-                      batch.nursedSeeds.toString(),
-                      Icons.spa_outlined,
-                      AppColors.info,
-                      isDark,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: _buildProgressMetric(
-                      'Transplanted',
-                      batch.transplantedPlants.toString(),
-                      Icons.eco_outlined,
-                      AppColors.success,
-                      isDark,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: _buildProgressMetric(
-                      'Harvested',
-                      batch.harvestedHeads.toString(),
-                      Icons.agriculture_outlined,
-                      AppColors.warning,
-                      isDark,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildProgressBar(
-                      'Progress',
-                      batch.progressPercentage,
-                      AppColors.primary,
-                      isDark,
-                    ),
-                  ),
-                ],
-              ),
+              Text(batch.batchNumber, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 1),
+              Row(children: [
+                Icon(Icons.location_on_outlined, size: 11, color: isDark ? Colors.white38 : AppColors.textSecondary),
+                const SizedBox(width: 3),
+                Expanded(child: Text(batch.farmName, style: GoogleFonts.inter(fontSize: 11, color: isDark ? Colors.white38 : AppColors.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              ]),
             ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
+          )),
+          StatusBadge(status: batch.status),
+        ]),
 
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: AppSpacing.sm,
-          mainAxisSpacing: AppSpacing.sm,
-          childAspectRatio: 3.2,
-          children: [
-            _buildBatchDetailItem(
-              'Plant Type',
-              batch.plantType,
-              Icons.eco_outlined,
-              isDark,
-            ),
-            _buildBatchDetailItem(
-              'Start Date',
-              DateFormat('MMM dd').format(batch.startDate),
-              Icons.calendar_today_outlined,
-              isDark,
-            ),
-            _buildBatchDetailItem(
-              'End Date',
-              DateFormat('MMM dd').format(batch.endDate),
-              Icons.event_available_outlined,
-              isDark,
-            ),
-            _buildBatchDetailItem(
-              'Survival Rate',
-              '${batch.survivalRate.toStringAsFixed(1)}%',
-              Icons.trending_up_outlined,
-              isDark,
-            ),
-          ],
-        ),
-        if (batch.caretakerName != null) ...[
-          const SizedBox(height: AppSpacing.md),
-          _buildBatchDetailItem(
-            'Caretaker',
-            batch.caretakerName!,
-            Icons.person_outlined,
-            isDark,
+        const SizedBox(height: 14),
+
+        // Pipeline visual
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
+            borderRadius: BorderRadius.circular(10),
           ),
-        ],
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _viewBatchDetails(batch),
-                icon: const Icon(Icons.visibility_outlined, size: 14),
-                label: const Text('View', style: TextStyle(fontSize: 12)),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  minimumSize: const Size(0, 32),
+          child: Column(children: [
+            // Pipeline stages
+            Row(children: [
+              _mobilePipelineStage('Nursed', batch.nursedSeeds, AppColors.info, Icons.spa_rounded, isDark),
+              _mobilePipelineArrow(isDark),
+              _mobilePipelineStage('Transplant', batch.transplantedPlants, AppColors.success, Icons.eco_rounded, isDark),
+              _mobilePipelineArrow(isDark),
+              _mobilePipelineStage('Harvest', batch.harvestedHeads, AppColors.warning, Icons.agriculture_rounded, isDark),
+            ]),
+            const SizedBox(height: 10),
+            // Progress bar
+            Row(children: [
+              Expanded(child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: pct / 100,
+                  backgroundColor: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06),
+                  valueColor: AlwaysStoppedAnimation<Color>(pctColor),
+                  minHeight: 5,
                 ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => _editBatch(batch),
-                icon: const Icon(Icons.edit_outlined, size: 14),
-                label: const Text('Edit', style: TextStyle(fontSize: 12)),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  minimumSize: const Size(0, 32),
-                ),
-              ),
-            ),
-          ],
+              )),
+              const SizedBox(width: 8),
+              Text('${pct.toStringAsFixed(0)}%', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: pctColor)),
+            ]),
+          ]),
         ),
+
+        const SizedBox(height: 12),
+
+        // Details row
+        Row(children: [
+          _mobileDetail(Icons.eco_outlined, batch.plantType, isDark),
+          const SizedBox(width: 10),
+          _mobileDetail(Icons.calendar_today_rounded, DateFormat('MMM dd').format(batch.startDate), isDark),
+          const SizedBox(width: 10),
+          _mobileDetail(Icons.trending_up_rounded, '${batch.survivalRate.toStringAsFixed(0)}%', isDark),
+        ]),
+
+        if (batch.caretakerName != null) ...[
+          const SizedBox(height: 8),
+          Row(children: [
+            Icon(Icons.person_outline_rounded, size: 12, color: isDark ? Colors.white24 : AppColors.textSecondary),
+            const SizedBox(width: 4),
+            Expanded(child: Text(batch.caretakerName!, style: GoogleFonts.inter(fontSize: 11, color: isDark ? Colors.white38 : AppColors.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis)),
+          ]),
+        ],
+
+        const SizedBox(height: 12),
+
+        // Action buttons
+        Row(children: [
+          Expanded(child: OutlinedButton.icon(
+            onPressed: () => _viewBatchDetails(batch),
+            icon: const Icon(Icons.visibility_outlined, size: 14),
+            label: Text('View', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500)),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+              side: BorderSide(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.08)),
+            ),
+          )),
+          const SizedBox(width: 8),
+          Expanded(child: ElevatedButton.icon(
+            onPressed: () => _editBatch(batch),
+            icon: const Icon(Icons.edit_outlined, size: 14),
+            label: Text('Edit', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 7),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+            ),
+          )),
+        ]),
       ]),
     );
   }
 
-  Widget _buildProgressMetric(String label, String value, IconData icon, Color color, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xs),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 12, color: color),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  value,
-                  style: AppTypography.bodySmall.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: color,
-                    fontSize: 14,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
+  Widget _mobilePipelineStage(String label, int value, Color color, IconData icon, bool isDark) {
+    final isActive = value > 0;
+    return Expanded(child: Column(children: [
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          color: isActive ? color.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: isActive ? color.withOpacity(0.2) : (isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06))),
+        ),
+        child: Column(children: [
+          Icon(icon, size: 14, color: isActive ? color : (isDark ? Colors.white24 : AppColors.neutral400)),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: AppTypography.caption.copyWith(
-              color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
-              fontSize: 9,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          Text('$value', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: isActive ? color : (isDark ? Colors.white24 : AppColors.neutral400))),
+        ]),
       ),
+      const SizedBox(height: 3),
+      Text(label, style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w500, color: isDark ? Colors.white38 : AppColors.textSecondary)),
+    ]));
+  }
+
+  Widget _mobilePipelineArrow(bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Icon(Icons.chevron_right_rounded, size: 16, color: isDark ? Colors.white12 : AppColors.neutral300),
     );
   }
 
-  Widget _buildProgressBar(String label, double percentage, Color color, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: AppTypography.caption.copyWith(
-                color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
-                fontSize: 11,
-              ),
-            ),
-            Text(
-              '${percentage.toStringAsFixed(0)}%',
-              style: AppTypography.caption.copyWith(
-                fontWeight: FontWeight.w600,
-                color: color,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        LinearProgressIndicator(
-          value: percentage / 100,
-          backgroundColor: isDark ? Colors.white10 : AppColors.neutral100,
-          valueColor: AlwaysStoppedAnimation<Color>(color),
-          minHeight: 6,
-          borderRadius: BorderRadius.circular(3),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBatchDetailItem(String label, String value, IconData icon, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xs),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.black.withOpacity(0.1) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon,
-              size: 12, color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  value,
-                  style: AppTypography.bodySmall.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: 11,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  label,
-                  style: AppTypography.caption.copyWith(
-                    color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
-                    fontSize: 9,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  Widget _mobileDetail(IconData icon, String text, bool isDark) {
+    return Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 12, color: isDark ? Colors.white24 : AppColors.textSecondary),
+      const SizedBox(width: 4),
+      Text(text, style: GoogleFonts.inter(fontSize: 11, color: isDark ? Colors.white54 : AppColors.textSecondary)),
+    ]);
   }
 
   TextStyle _tableHeaderStyle(bool isDark) {
-    return AppTypography.labelLarge.copyWith(
+    return GoogleFonts.inter(
       fontWeight: FontWeight.w600,
-      color: isDark ? Colors.white : AppColors.textPrimary,
+      fontSize: 12,
+      color: isDark ? Colors.white54 : AppColors.textSecondary,
     );
   }
 
   TextStyle _tableCellStyle(bool isDark, {bool isBold = false, Color? color}) {
-    return AppTypography.bodyMedium.copyWith(
+    return GoogleFonts.inter(
       fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+      fontSize: 13,
       color: color ?? (isDark ? Colors.white.withOpacity(0.9) : AppColors.textPrimary),
     );
   }
 
   void _viewBatchDetails(BatchModel batch) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final pct = batch.progressPercentage;
+    final pctColor = pct >= 75 ? AppColors.success : (pct >= 40 ? AppColors.warning : AppColors.info);
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.grid_view_outlined, color: AppColors.primary),
-            const SizedBox(width: AppSpacing.sm),
-            Text('Batch Details'),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDetailRow('Batch Number', batch.batchNumber),
-              _buildDetailRow('Farm', batch.farmName),
-              _buildDetailRow('Plant Type', batch.plantType),
-              _buildDetailRow('Status', batch.status.toString().split('.').last),
-              _buildDetailRow('Start Date', DateFormat('MMM dd, yyyy').format(batch.startDate)),
-              _buildDetailRow('End Date', DateFormat('MMM dd, yyyy').format(batch.endDate)),
-              _buildDetailRow('Nursed Seeds', batch.nursedSeeds.toString()),
-              if (batch.caretakerName != null) _buildDetailRow('Caretaker', batch.caretakerName!),
-              if (batch.notes != null) ...[
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'Notes:',
-                  style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(batch.notes!),
-              ],
-            ],
+      builder: (context) => Dialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  Row(children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [AppColors.primary, AppColors.primary.withOpacity(0.75)]),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.layers_rounded, size: 20, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(batch.batchNumber, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textPrimary)),
+                        Text(batch.farmName, style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white38 : AppColors.textSecondary)),
+                      ],
+                    )),
+                    InkWell(
+                      onTap: () => Navigator.of(context).pop(),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.04),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.close_rounded, size: 16, color: isDark ? Colors.white38 : AppColors.textSecondary),
+                      ),
+                    ),
+                  ]),
+                  const SizedBox(height: 20),
+
+                  // Progress section
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(children: [
+                      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                        Text('Overall Progress', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.white54 : AppColors.textSecondary)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(color: pctColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                          child: Text('${pct.toStringAsFixed(0)}%', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: pctColor)),
+                        ),
+                      ]),
+                      const SizedBox(height: 10),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(value: pct / 100, backgroundColor: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06), valueColor: AlwaysStoppedAnimation<Color>(pctColor), minHeight: 6),
+                      ),
+                      const SizedBox(height: 14),
+                      Row(children: [
+                        _dialogMetric('Nursed', batch.nursedSeeds.toString(), AppColors.info, isDark),
+                        const SizedBox(width: 8),
+                        _dialogMetric('Transplanted', batch.transplantedPlants.toString(), AppColors.success, isDark),
+                        const SizedBox(width: 8),
+                        _dialogMetric('Harvested', batch.harvestedHeads.toString(), AppColors.warning, isDark),
+                      ]),
+                    ]),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Detail rows
+                  _buildDetailRow('Plant Type', batch.plantType, Icons.eco_outlined, isDark),
+                  _buildDetailRow('Status', batch.status.toString().split('.').last, Icons.flag_outlined, isDark),
+                  _buildDetailRow('Start Date', DateFormat('MMM dd, yyyy').format(batch.startDate), Icons.calendar_today_outlined, isDark),
+                  _buildDetailRow('End Date', DateFormat('MMM dd, yyyy').format(batch.endDate), Icons.event_available_outlined, isDark),
+                  _buildDetailRow('Survival Rate', '${batch.survivalRate.toStringAsFixed(1)}%', Icons.trending_up_rounded, isDark),
+                  if (batch.caretakerName != null) _buildDetailRow('Caretaker', batch.caretakerName!, Icons.person_outline_rounded, isDark),
+
+                  if (batch.notes != null) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: isDark ? Colors.white.withOpacity(0.04) : Colors.black.withOpacity(0.04)),
+                      ),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text('Notes', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: isDark ? Colors.white38 : AppColors.textSecondary)),
+                        const SizedBox(height: 4),
+                        Text(batch.notes!, style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white70 : AppColors.textPrimary, height: 1.5)),
+                      ]),
+                    ),
+                  ],
+
+                  const SizedBox(height: 20),
+                  Row(children: [
+                    Expanded(child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        side: BorderSide(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.08)),
+                      ),
+                      child: Text('Close', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500)),
+                    )),
+                    const SizedBox(width: 8),
+                    Expanded(child: ElevatedButton.icon(
+                      onPressed: () { Navigator.of(context).pop(); _editBatch(batch); },
+                      icon: const Icon(Icons.edit_outlined, size: 15),
+                      label: Text('Edit Batch', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    )),
+                  ]),
+                ],
+              ),
+            ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          Expanded(child: Text(value)),
-        ],
+  Widget _dialogMetric(String label, String value, Color color, bool isDark) {
+    return Expanded(child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.12)),
       ),
+      child: Column(children: [
+        Text(value, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: color)),
+        const SizedBox(height: 2),
+        Text(label, style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w500, color: isDark ? Colors.white38 : AppColors.textSecondary)),
+      ]),
+    ));
+  }
+
+  Widget _buildDetailRow(String label, String value, IconData icon, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(children: [
+        Icon(icon, size: 14, color: isDark ? Colors.white24 : AppColors.textSecondary),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 100,
+          child: Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: isDark ? Colors.white38 : AppColors.textSecondary)),
+        ),
+        Expanded(child: Text(value, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppColors.textPrimary))),
+      ]),
     );
   }
 
@@ -1596,7 +1564,15 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     final userRole = 'Farm Manager';
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      drawer: isMobile
+          ? FarmManagerMobileDrawer(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (i) => setState(() => _selectedNavIndex = i),
+              userName: userName,
+            )
+          : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName, batches)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole, batches),
@@ -1707,91 +1683,117 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
 
                         // Batches Table Section
                         Container(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          padding: const EdgeInsets.all(0),
                           decoration: BoxDecoration(
                             color: isDark ? AppColors.surfaceDark : Colors.white,
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                            border: Border.all(
-                              color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral100,
-                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06)),
+                            boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 3))],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
+                              // Search & Actions bar
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                                child: Row(children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(9),
+                                    ),
+                                    child: Icon(Icons.table_chart_rounded, size: 18, color: AppColors.primary),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(child: Text('Batch Tracking', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textPrimary))),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text('${batches.length} batches', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                                  ),
+                                ]),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(children: [
                                   Expanded(
                                     child: TextField(
                                       onChanged: (value) => setState(() => _searchQuery = value),
+                                      style: GoogleFonts.inter(fontSize: 13, color: isDark ? Colors.white : AppColors.textPrimary),
                                       decoration: InputDecoration(
-                                        hintText:
-                                            'Search batches by number, farm, or plant type...',
-                                        prefixIcon: const Icon(Icons.search),
+                                        hintText: 'Search batches...',
+                                        hintStyle: GoogleFonts.inter(fontSize: 13, color: isDark ? Colors.white24 : AppColors.textSecondary),
+                                        prefixIcon: Icon(Icons.search_rounded, size: 18, color: isDark ? Colors.white24 : AppColors.textSecondary),
                                         filled: true,
-                                        fillColor: isDark
-                                            ? Colors.black.withOpacity(0.1)
-                                            : AppColors.neutral50,
+                                        fillColor: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+                                        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                                          borderSide: BorderSide.none,
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06)),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06)),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(10),
+                                          borderSide: BorderSide(color: AppColors.primary, width: 1.5),
                                         ),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: AppSpacing.md),
+                                  const SizedBox(width: 10),
                                   ElevatedButton.icon(
                                     onPressed: () => setState(() => _showForm = true),
-                                    icon: const Icon(Icons.add),
-                                    label: const Text('New Batch'),
+                                    icon: const Icon(Icons.add_rounded, size: 16),
+                                    label: Text('New Batch', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.primary,
                                       foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppSpacing.lg,
-                                        vertical: AppSpacing.md,
-                                      ),
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                     ),
                                   ),
-                                ],
+                                ]),
                               ),
-                              const SizedBox(height: AppSpacing.lg),
                               if (batches.isEmpty)
-                                Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.grid_view_outlined,
-                                        size: 64,
-                                        color: isDark
-                                            ? Colors.white.withOpacity(0.3)
-                                            : AppColors.neutral300,
-                                      ),
-                                      const SizedBox(height: AppSpacing.md),
-                                      Text(
-                                        'No batches created yet',
-                                        style: AppTypography.bodyLarge.copyWith(
-                                          color: isDark
-                                              ? Colors.white.withOpacity(0.5)
-                                              : AppColors.textSecondary,
+                                Padding(
+                                  padding: const EdgeInsets.all(40),
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.primary.withOpacity(0.06),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(Icons.layers_outlined, size: 40, color: AppColors.primary.withOpacity(0.4)),
                                         ),
-                                      ),
-                                      const SizedBox(height: AppSpacing.sm),
-                                      Text(
-                                        'Create your first batch to get started',
-                                        style: AppTypography.bodySmall.copyWith(
-                                          color: isDark
-                                              ? Colors.white.withOpacity(0.4)
-                                              : AppColors.textSecondary,
+                                        const SizedBox(height: 16),
+                                        Text('No batches created yet', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: isDark ? Colors.white54 : AppColors.textSecondary)),
+                                        const SizedBox(height: 4),
+                                        Text('Create your first batch to get started', style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white24 : AppColors.textSecondary)),
+                                        const SizedBox(height: 16),
+                                        ElevatedButton.icon(
+                                          onPressed: () => setState(() => _showForm = true),
+                                          icon: const Icon(Icons.add_rounded, size: 16),
+                                          label: Text('Create First Batch', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColors.primary,
+                                            foregroundColor: Colors.white,
+                                            elevation: 0,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(height: AppSpacing.lg),
-                                      ElevatedButton.icon(
-                                        onPressed: () => setState(() => _showForm = true),
-                                        icon: const Icon(Icons.add),
-                                        label: const Text('Create First Batch'),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 )
                               else
@@ -1817,6 +1819,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         FarmManagerHeader(
           userName: userName,
           onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         if (_showForm) ...[
           // Mobile Form View (Secondary)
@@ -1861,49 +1864,64 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
 
                   // Batches List Header
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.md,
-                    ),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-                      border: Border(
-                        bottom: BorderSide(
-                          color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral100,
-                          width: 1,
-                        ),
-                      ),
+                      color: isDark ? AppColors.surfaceDark : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06)),
+                      boxShadow: isDark ? null : [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'All Batches (${batches.length})',
-                            style: AppTypography.h5.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : AppColors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                    child: Column(children: [
+                      Row(children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
                           ),
+                          child: Icon(Icons.table_chart_rounded, size: 16, color: AppColors.primary),
                         ),
+                        const SizedBox(width: 10),
+                        Expanded(child: Text('All Batches', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textPrimary))),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+                          child: Text('${batches.length}', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primary)),
+                        ),
+                        const SizedBox(width: 8),
                         ElevatedButton.icon(
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('New'),
+                          icon: const Icon(Icons.add_rounded, size: 15),
+                          label: Text('New', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600)),
                           onPressed: () => setState(() => _showForm = true),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                              vertical: AppSpacing.sm,
-                            ),
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
                           ),
                         ),
-                      ],
-                    ),
+                      ]),
+                      const SizedBox(height: 10),
+                      // Mobile search
+                      TextField(
+                        onChanged: (value) => setState(() => _searchQuery = value),
+                        style: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white : AppColors.textPrimary),
+                        decoration: InputDecoration(
+                          hintText: 'Search batches...',
+                          hintStyle: GoogleFonts.inter(fontSize: 12, color: isDark ? Colors.white24 : AppColors.textSecondary),
+                          prefixIcon: Icon(Icons.search_rounded, size: 16, color: isDark ? Colors.white24 : AppColors.textSecondary),
+                          filled: true,
+                          fillColor: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(9), borderSide: BorderSide.none),
+                          enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(9), borderSide: BorderSide(color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06))),
+                          focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(9), borderSide: BorderSide(color: AppColors.primary, width: 1.5)),
+                        ),
+                      ),
+                    ]),
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: 12),
 
                   // Batches Table
                   _buildBatchesTable(isDark, true, batches),
@@ -1918,36 +1936,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
 
   Widget _buildBottomNavigation(bool isDark) {
     final navItems = [
-      {
-        'icon': Icons.dashboard_outlined,
-        'label': 'Dashboard',
-        'index': 0,
-        'route': '/farm-manager'
-      },
-      {
-        'icon': Icons.inventory_2_outlined,
-        'label': 'Inventory',
-        'index': 1,
-        'route': '/farm-manager/inventory'
-      },
-      {
-        'icon': Icons.grid_view_outlined,
-        'label': 'Batches',
-        'index': 2,
-        'route': '/farm-manager/batch-generation'
-      },
-      {
-        'icon': Icons.request_quote_outlined,
-        'label': 'Funds',
-        'index': 3,
-        'route': '/farm-manager/fund-request'
-      },
-      {
-        'icon': Icons.assessment_outlined,
-        'label': 'Reports',
-        'index': 4,
-        'route': '/farm-manager/reports'
-      },
+      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/farm-manager'},
+      {'icon': Icons.agriculture_outlined, 'label': 'Farms', 'index': 1, 'route': '/farm-manager/farms'},
+      {'icon': Icons.inventory_2_outlined, 'label': 'Inventory', 'index': 2, 'route': '/farm-manager/inventory'},
+      {'icon': Icons.local_shipping_outlined, 'label': 'Deliveries', 'index': 3, 'route': '/farm-manager/deliveries'},
+      {'icon': Icons.assessment_outlined, 'label': 'Reports', 'index': 4, 'route': '/farm-manager/reports'},
     ];
 
     return Container(
@@ -1974,7 +1967,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: navItems.map((item) {
               final index = item['index'] as int;
-              final isSelected = index == _selectedNavIndex;
+              const isSelected = false; // Batches is not in bottom nav
 
               return Expanded(
                 child: Material(

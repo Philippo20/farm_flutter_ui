@@ -78,108 +78,201 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final weather = _weatherData;
+    return const SizedBox.shrink();
+  }
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black12,
-        ),
-      ),
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Row(
-              children: [
-                // Weather Icon & Temp
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.wb_sunny,
-                    color: AppColors.warning,
-                    size: 32,
-                  ),
-                ),
-                
-                const SizedBox(width: AppSpacing.md),
-                
-                // Weather Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildMobileLayout(bool isDark, WeatherData? weather) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Weather Icon
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.wb_sunny,
+                color: AppColors.warning,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            // Weather Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            '${weather?.temperature.toStringAsFixed(1) ?? '28'}°C',
-                            style: AppTypography.h5.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppColors.textPrimary,
-                            ),
+                      Flexible(
+                        child: Text(
+                          '${weather?.temperature.toStringAsFixed(1) ?? '28'}°C',
+                          style: AppTypography.h5.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            fontSize: 20,
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            weather?.description ?? 'Sunny',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: isDark ? Colors.white70 : AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        weather?.farmingCondition ?? 'Perfect for farming',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: isDark ? Colors.white60 : AppColors.textSecondary,
-                          fontSize: 11,
+                      const SizedBox(width: AppSpacing.xs),
+                      Flexible(
+                        child: Text(
+                          weather?.description ?? 'Sunny',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: isDark ? Colors.white70 : AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
+                ],
+              ),
+            ),
+            // Time
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      size: 14,
+                      color: isDark ? Colors.white70 : AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _currentTime,
+                      style: AppTypography.h6.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
                 ),
-          
-          const SizedBox(width: AppSpacing.md),
-          
-          // Time & Date
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        // Date row
+        Text(
+          _currentDate,
+          style: AppTypography.bodySmall.copyWith(
+            color: isDark ? Colors.white60 : AppColors.textSecondary,
+            fontSize: 10,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDesktopLayout(bool isDark, WeatherData? weather) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Weather Icon & Temp
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: AppColors.warning.withOpacity(0.12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.wb_sunny,
+            color: AppColors.warning,
+            size: 32,
+          ),
+        ),
+        
+        const SizedBox(width: AppSpacing.md),
+        
+        // Weather Details
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.access_time,
-                    size: 16,
-                    color: isDark ? Colors.white70 : AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 4),
                   Text(
-                    _currentTime,
-                    style: AppTypography.h6.copyWith(
+                    '${weather?.temperature.toStringAsFixed(1) ?? '28'}°C',
+                    style: AppTypography.h5.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Flexible(
+                    child: Text(
+                      weather?.description ?? 'Sunny',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _currentDate,
-                style: AppTypography.bodySmall.copyWith(
-                  color: isDark ? Colors.white60 : AppColors.textSecondary,
-                  fontSize: 11,
-                ),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+  
+        const SizedBox(width: AppSpacing.md),
+        
+        // Time & Date
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.access_time,
+                  size: 16,
+                  color: isDark ? Colors.white70 : AppColors.textSecondary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _currentTime,
+                  style: AppTypography.h6.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              _currentDate,
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white60 : AppColors.textSecondary,
+                fontSize: 11,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -254,3 +347,4 @@ class _CompactWeatherTimeWidgetState extends State<CompactWeatherTimeWidget> {
     );
   }
 }
+

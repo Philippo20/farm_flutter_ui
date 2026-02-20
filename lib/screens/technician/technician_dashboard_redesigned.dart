@@ -36,6 +36,8 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
     final authState = ref.watch(authProvider);
     final userName = authState.user?.name ?? 'Technician';
     final userEmail = authState.user?.email ?? 'technician@farmestates.com';
@@ -43,100 +45,300 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: Row(
-        children: [
-          // Sidebar
-          TechnicianSidebar(
-            selectedIndex: _selectedNavIndex,
-            onItemSelected: (index) {
-              setState(() {
-                _selectedNavIndex = index;
-              });
-            },
-            userName: userName,
-            userEmail: userEmail,
-            userRole: userRole,
-          ),
+      body: isMobile
+          ? _buildMobileLayout(isDark, userName)
+          : _buildDesktopLayout(isDark, userName, userEmail, userRole),
+      floatingActionButton: !isMobile
+          ? FloatingActionButton.extended(
+              onPressed: () {},
+              backgroundColor: AppColors.error,
+              icon: const Icon(Icons.add),
+              label: const Text('Report Issue'),
+            )
+          : null,
+      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+    );
+  }
 
-          // Main Content
-          Expanded(
+  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail, String userRole) {
+    return Row(
+      children: [
+        // Sidebar
+        TechnicianSidebar(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (index) {
+            setState(() {
+              _selectedNavIndex = index;
+            });
+          },
+          userName: userName,
+          userEmail: userEmail,
+          userRole: userRole,
+        ),
+
+        // Main Content
+        Expanded(
+          child: Column(
+            children: [
+              // Header
+              TechnicianHeader(
+                userName: userName,
+                weatherInfo: _weatherInfo,
+                onNotificationTap: () {
+                  // Handle notifications
+                },
+              ),
+
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Weather & Time Widget
+                      const WeatherTimeWidget(),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Compact Stats Section
+                      _buildStatsSection(context),
+
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // Alert Summary
+                      const AlertSummaryCard(
+                        showRecentAlerts: true,
+                        maxRecentAlerts: 2,
+                      ),
+
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // Section Title
+                      Text(
+                        'Farm Asset Monitoring',
+                        style: AppTypography.h5.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.md),
+
+                      // Asset Monitoring Grid
+                      _buildAssetMonitoringGrid(context),
+
+                      const SizedBox(height: AppSpacing.xl),
+
+                      // Section Title
+                      Text(
+                        'Maintenance Tasks',
+                        style: AppTypography.h5.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.md),
+
+                      // Features Grid
+                      _buildFeaturesGrid(context),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(bool isDark, String userName) {
+    return Column(
+      children: [
+        TechnicianHeader(
+          userName: userName,
+          weatherInfo: _weatherInfo,
+          onNotificationTap: () {
+            // Handle notifications
+          },
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
-                TechnicianHeader(
-                  userName: userName,
-                  weatherInfo: _weatherInfo,
-                  onNotificationTap: () {
-                    // Handle notifications
-                  },
+                // Weather & Time Widget
+                const WeatherTimeWidget(),
+
+                const SizedBox(height: AppSpacing.md),
+
+                // Compact Stats Section
+                _buildStatsSection(context),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // Alert Summary
+                const AlertSummaryCard(
+                  showRecentAlerts: true,
+                  maxRecentAlerts: 2,
                 ),
 
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
+
+                // Section Title
+                Text(
+                  'Farm Asset Monitoring',
+                  style: AppTypography.h5.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
+                // Asset Monitoring Grid
+                _buildAssetMonitoringGrid(context),
+
+                const SizedBox(height: AppSpacing.lg),
+
+                // Section Title
+                Text(
+                  'Maintenance Tasks',
+                  style: AppTypography.h5.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.md),
+
+                // Features Grid
+                _buildFeaturesGrid(context),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomNavigation(bool isDark) {
+    final navItems = [
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Dashboard',
+        'index': 0,
+        'route': '/technician_dashboard'
+      },
+      {
+        'icon': Icons.sensors_outlined,
+        'label': 'Sensors',
+        'index': 1,
+        'route': '/sensor-management'
+      },
+      {
+        'icon': Icons.build_outlined,
+        'label': 'Maintenance',
+        'index': 2,
+        'route': '/maintenance-schedule'
+      },
+      {
+        'icon': Icons.history_outlined,
+        'label': 'History',
+        'index': 3,
+        'route': '/repair-history'
+      },
+      {
+        'icon': Icons.settings_outlined,
+        'label': 'Settings',
+        'index': 4,
+        'route': '/technician-settings'
+      },
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+        border: Border(
+          top: BorderSide(
+            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            width: 1,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 70,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: navItems.map((item) {
+              final index = item['index'] as int;
+              final route = item['route'] as String;
+              final isSelected = index == _selectedNavIndex;
+
+              return Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      if (_selectedNavIndex != index) {
+                        setState(() => _selectedNavIndex = index);
+                        try {
+                          Navigator.pushReplacementNamed(context, route);
+                        } catch (e) {
+                          try {
+                            Navigator.pushNamed(context, route);
+                          } catch (e2) {
+                            debugPrint('Navigation error: $e2');
+                          }
+                        }
+                      }
+                    },
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Weather & Time Widget
-                        const WeatherTimeWidget(),
-
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Compact Stats Section
-                        _buildStatsSection(context),
-
-                        const SizedBox(height: AppSpacing.xl),
-
-                        // Alert Summary
-                        const AlertSummaryCard(
-                          showRecentAlerts: true,
-                          maxRecentAlerts: 2,
+                        Icon(
+                          item['icon'] as IconData,
+                          size: 24,
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
                         ),
-
-                        const SizedBox(height: AppSpacing.xl),
-
-                        // Section Title
+                        const SizedBox(height: 4),
                         Text(
-                          'Farm Asset Monitoring',
-                          style: AppTypography.h5.copyWith(
-                            fontWeight: FontWeight.bold,
+                          item['label'] as String,
+                          style: AppTypography.caption.copyWith(
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark
+                                    ? Colors.white.withOpacity(0.5)
+                                    : AppColors.textSecondary),
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontSize: 11,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Asset Monitoring Grid
-                        _buildAssetMonitoringGrid(context),
-
-                        const SizedBox(height: AppSpacing.xl),
-
-                        // Section Title
-                        Text(
-                          'Maintenance Tasks',
-                          style: AppTypography.h5.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Features Grid
-                        _buildFeaturesGrid(context),
                       ],
                     ),
                   ),
                 ),
-              ],
-            ),
+              );
+            }).toList(),
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
-        backgroundColor: AppColors.error,
-        icon: const Icon(Icons.add),
-        label: const Text('Report Issue'),
+        ),
       ),
     );
   }
@@ -192,23 +394,27 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
 
   Widget _buildAssetMonitoringGrid(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
+        // Adjust aspect ratio for mobile to prevent overflow
+        final childAspectRatio = isMobile ? 1.4 : 1.2;
 
         return GridView.count(
           crossAxisCount: crossAxisCount,
-          childAspectRatio: 1.2,
-          crossAxisSpacing: AppSpacing.md,
-          mainAxisSpacing: AppSpacing.md,
+          childAspectRatio: childAspectRatio,
+          crossAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
+          mainAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: [
             _buildAssetCard(context, isDark, 'Pumps', Icons.water_drop, AppColors.info, '8 Active',
-                '2 Need service', () {}),
+                '2 Need service', () {}, isMobile),
             _buildAssetCard(context, isDark, 'Fans', Icons.air, AppColors.primary, '12 Active',
-                'All operational', () {}),
+                'All operational', () {}, isMobile),
             _buildAssetCard(
               context,
               isDark,
@@ -225,9 +431,10 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
                   ),
                 );
               },
+              isMobile,
             ),
             _buildAssetCard(context, isDark, 'Air Condition', Icons.ac_unit, AppColors.warning,
-                '6 Active', '1 Maintenance', () {}),
+                '6 Active', '1 Maintenance', () {}, isMobile),
           ],
         );
       },
@@ -235,7 +442,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
   }
 
   Widget _buildAssetCard(BuildContext context, bool isDark, String title, IconData icon,
-      Color color, String status, String subtitle, VoidCallback onTap) {
+      Color color, String status, String subtitle, VoidCallback onTap, bool isMobile) {
     // Check if this card has an action (not empty callback)
     final hasAction = title == 'Sensors'; // Only Sensors card has navigation
 
@@ -243,7 +450,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -254,18 +461,20 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Stack(
+              clipBehavior: Clip.none,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
+                  padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
                   decoration: BoxDecoration(color: color.withOpacity(0.12), shape: BoxShape.circle),
-                  child: Icon(icon, size: 32, color: color),
+                  child: Icon(icon, size: isMobile ? 28 : 32, color: color),
                 ),
                 if (hasAction)
                   Positioned(
-                    right: 0,
-                    top: 0,
+                    right: -2,
+                    top: -2,
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
@@ -281,46 +490,62 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
                   ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(title,
+            SizedBox(height: isMobile ? 6 : AppSpacing.sm),
+            Flexible(
+              child: Text(
+                title,
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : AppColors.textPrimary),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 4),
-            Text(status,
-                textAlign: TextAlign.center,
-                style: AppTypography.bodySmall
-                    .copyWith(color: color, fontSize: 12, fontWeight: FontWeight.w600),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 2),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Flexible(
-                  child: Text(
-                    subtitle,
-                    textAlign: TextAlign.center,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: isDark ? Colors.white60 : AppColors.textSecondary,
-                      fontSize: 10,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                  fontSize: isMobile ? 13 : 14,
                 ),
-                if (hasAction) ...[
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.chevron_right,
-                    size: 14,
-                    color: color,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            SizedBox(height: isMobile ? 3 : 4),
+            Flexible(
+              child: Text(
+                status,
+                textAlign: TextAlign.center,
+                style: AppTypography.bodySmall.copyWith(
+                  color: color,
+                  fontSize: isMobile ? 11 : 12,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            SizedBox(height: isMobile ? 2 : 2),
+            Flexible(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      subtitle,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        fontSize: isMobile ? 9 : 10,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                  if (hasAction) ...[
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right,
+                      size: isMobile ? 12 : 14,
+                      color: color,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ],
         ),
@@ -330,16 +555,20 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
 
   Widget _buildFeaturesGrid(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
+        // Adjust aspect ratio for mobile to prevent overflow
+        final childAspectRatio = isMobile ? 1.4 : 1.2;
 
         return GridView.count(
           crossAxisCount: crossAxisCount,
-          childAspectRatio: 1.2,
-          crossAxisSpacing: AppSpacing.md,
-          mainAxisSpacing: AppSpacing.md,
+          childAspectRatio: childAspectRatio,
+          crossAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
+          mainAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: [
@@ -351,6 +580,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               AppColors.error,
               '5 open issues',
               () {},
+              isMobile,
             ),
             _buildFeatureCard(
               context,
@@ -360,6 +590,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               AppColors.warning,
               'Knowledge base',
               () {},
+              isMobile,
             ),
             _buildFeatureCard(
               context,
@@ -369,6 +600,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               AppColors.info,
               '3 tasks due',
               () {},
+              isMobile,
             ),
             _buildFeatureCard(
               context,
@@ -378,6 +610,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               AppColors.primary,
               'Order supplies',
               () {},
+              isMobile,
             ),
             _buildFeatureCard(
               context,
@@ -387,6 +620,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               AppColors.success,
               'Verify equipment',
               () {},
+              isMobile,
             ),
             _buildFeatureCard(
               context,
@@ -396,6 +630,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               AppColors.info,
               '95% operational',
               () {},
+              isMobile,
             ),
             _buildFeatureCard(
               context,
@@ -405,6 +640,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               AppColors.warning,
               'View past fixes',
               () {},
+              isMobile,
             ),
             _buildFeatureCard(
               context,
@@ -414,6 +650,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               AppColors.textSecondary,
               'Preferences',
               () {},
+              isMobile,
             ),
           ],
         );
@@ -429,12 +666,13 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
     Color color,
     String subtitle,
     VoidCallback onTap,
+    bool isMobile,
   ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -444,40 +682,46 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                size: 32,
+                size: isMobile ? 28 : 32,
                 color: color,
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : AppColors.textPrimary,
+            SizedBox(height: isMobile ? 6 : AppSpacing.sm),
+            Flexible(
+              child: Text(
+                title,
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                  fontSize: isMobile ? 13 : 14,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontSize: 11,
+            SizedBox(height: isMobile ? 3 : 4),
+            Flexible(
+              child: Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: AppTypography.bodySmall.copyWith(
+                  color: isDark ? Colors.white60 : AppColors.textSecondary,
+                  fontSize: isMobile ? 10 : 11,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
