@@ -512,7 +512,7 @@ class CaretakerHeader extends ConsumerWidget {
                   content: Text(
                     'Are you sure you want to logout?',
                     style: TextStyle(
-                      color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                      color: dialogIsDark ? Colors.white : AppColors.textSecondary,
                     ),
                   ),
                   actions: [
@@ -521,7 +521,7 @@ class CaretakerHeader extends ConsumerWidget {
                       child: Text(
                         'Cancel',
                         style: TextStyle(
-                          color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                          color: dialogIsDark ? Colors.white : AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -543,7 +543,7 @@ class CaretakerHeader extends ConsumerWidget {
                 }
               }
             } else if (value == 'settings') {
-              Navigator.of(context).pushNamed('/settings');
+              Navigator.of(context).pushNamed('/caretaker_settings');
             } else if (value == 'profile') {
               if (onProfileTap != null) onProfileTap!();
             }
@@ -662,16 +662,32 @@ class CaretakerHeader extends ConsumerWidget {
           ],
           onSelected: (value) async {
             if (value == 'logout') {
-              // Show confirmation dialog
+              final dialogIsDark = Theme.of(context).brightness == Brightness.dark;
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (dialogContext) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Are you sure you want to logout?'),
+                  backgroundColor: dialogIsDark ? AppColors.surfaceDark : Colors.white,
+                  title: Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: dialogIsDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                  content: Text(
+                    'Are you sure you want to logout?',
+                    style: TextStyle(
+                      color: dialogIsDark ? Colors.white : AppColors.textSecondary,
+                    ),
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(dialogContext, false),
-                      child: const Text('Cancel'),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: dialogIsDark ? Colors.white : AppColors.textSecondary,
+                        ),
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(dialogContext, true),
@@ -693,7 +709,7 @@ class CaretakerHeader extends ConsumerWidget {
                 }
               }
             } else if (value == 'settings') {
-              Navigator.of(context).pushNamed('/settings');
+              Navigator.of(context).pushNamed('/caretaker_settings');
             } else if (value == 'profile') {
               if (onProfileTap != null) onProfileTap!();
             }

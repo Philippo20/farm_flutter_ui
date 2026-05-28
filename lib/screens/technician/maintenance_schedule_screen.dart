@@ -6,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/permission_gate.dart';
 import '../../core/models/user/user_permissions.dart';
+import '../../core/widgets/technician_mobile_bottom_nav.dart';
 import '../../core/widgets/technician_sidebar.dart';
 import '../../core/widgets/technician_header.dart';
 import '../../providers/auth_provider.dart';
@@ -56,7 +57,12 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? TechnicianMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+            )
+          : null,
       floatingActionButton: PermissionGate(
         permission: Permission.scheduleMaintenace,
         child: FloatingActionButton.extended(
@@ -126,12 +132,11 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  _buildDrawerItem(Icons.dashboard_outlined, 'Dashboard', 0, '/technician-dashboard', isDark),
-                  _buildDrawerItem(Icons.warning_amber_outlined, 'Open Issues', 1, '/open-issues', isDark),
-                  _buildDrawerItem(Icons.build_outlined, 'Maintenance', 2, '/maintenance', isDark),
-                  _buildDrawerItem(Icons.shopping_cart_outlined, 'Request Items', 3, '/request-items', isDark),
-                  _buildDrawerItem(Icons.inventory_outlined, 'Asset Check', 4, '/asset-check', isDark),
-                  _buildDrawerItem(Icons.settings_outlined, 'Settings', 5, '/settings', isDark),
+                  _buildDrawerItem(Icons.dashboard_outlined, 'Dashboard', 0, '/technician_dashboard', isDark),
+                  _buildDrawerItem(Icons.sensors_outlined, 'Sensors', 1, '/sensor-management', isDark),
+                  _buildDrawerItem(Icons.build_outlined, 'Maintenance', 2, '/maintenance-schedule', isDark),
+                  _buildDrawerItem(Icons.history_outlined, 'Repair History', 3, '/repair-history', isDark),
+                  _buildDrawerItem(Icons.settings_outlined, 'Settings', 4, '/technician-settings', isDark),
                 ],
               ),
             ),
@@ -158,9 +163,10 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
       selected: isSelected,
       selectedTileColor: AppColors.primary.withOpacity(0.1),
       onTap: () {
-        setState(() => _selectedNavIndex = index);
+        final shouldNavigate = index != _selectedNavIndex;
         Navigator.pop(context);
-        if (index != _selectedNavIndex) {
+        if (shouldNavigate) {
+          setState(() => _selectedNavIndex = index);
           try {
             Navigator.pushReplacementNamed(context, route);
           } catch (e) {
@@ -188,19 +194,14 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                 userName: userName,
                 onNotificationTap: () {},
               ),
-              // Tab Bar
-              Container(
-                color: isDark ? AppColors.surfaceDark : Colors.white,
-                child: TabBar(
-                  controller: _tabController,
-                  labelColor: AppColors.primary,
-                  unselectedLabelColor: isDark ? Colors.white60 : AppColors.textSecondary,
-                  indicatorColor: AppColors.primary,
-                  tabs: const [
-                    Tab(text: 'Maintenance Schedule'),
-                    Tab(text: 'Technical Issues'),
-                  ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                  AppSpacing.lg,
+                  0,
                 ),
+                child: _buildTabShell(isDark, false),
               ),
               Expanded(
                 child: TabBarView(
@@ -226,20 +227,14 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
           onNotificationTap: () {},
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
-        // Tab Bar
-        Container(
-          color: isDark ? AppColors.surfaceDark : Colors.white,
-          child: TabBar(
-            controller: _tabController,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: isDark ? Colors.white60 : AppColors.textSecondary,
-            indicatorColor: AppColors.primary,
-            labelStyle: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600),
-            tabs: const [
-              Tab(text: 'Maintenance'),
-              Tab(text: 'Issues'),
-            ],
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xs,
+            AppSpacing.md,
+            0,
           ),
+          child: _buildTabShell(isDark, true),
         ),
         Expanded(
           child: TabBarView(
@@ -254,13 +249,56 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
     );
   }
 
+  Widget _buildTabShell(bool isDark, bool isMobile) {
+    return Container(
+      padding: EdgeInsets.all(isMobile ? AppSpacing.xs : AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppColors.neutral200,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.16 : 0.05),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: TabBar(
+        controller: _tabController,
+        labelColor: Colors.white,
+        unselectedLabelColor: isDark ? Colors.white70 : AppColors.textSecondary,
+        indicator: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
+        labelStyle: AppTypography.bodySmall.copyWith(
+          fontWeight: FontWeight.w700,
+          fontSize: isMobile ? 12 : 13,
+        ),
+        unselectedLabelStyle: AppTypography.bodySmall.copyWith(
+          fontWeight: FontWeight.w600,
+          fontSize: isMobile ? 12 : 13,
+        ),
+        tabs: [
+          Tab(text: isMobile ? 'Maintenance' : 'Maintenance Schedule'),
+          Tab(text: isMobile ? 'Issues' : 'Technical Issues'),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBottomNavigation(bool isDark) {
     final navItems = [
-      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/technician-dashboard'},
-      {'icon': Icons.warning_amber_outlined, 'label': 'Issues', 'index': 1, 'route': '/open-issues'},
-      {'icon': Icons.build_outlined, 'label': 'Maintain', 'index': 2, 'route': '/maintenance'},
-      {'icon': Icons.shopping_cart_outlined, 'label': 'Request', 'index': 3, 'route': '/request-items'},
-      {'icon': Icons.inventory_outlined, 'label': 'Assets', 'index': 4, 'route': '/asset-check'},
+      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/technician_dashboard'},
+      {'icon': Icons.sensors_outlined, 'label': 'Sensors', 'index': 1, 'route': '/sensor-management'},
+      {'icon': Icons.build_outlined, 'label': 'Maintain', 'index': 2, 'route': '/maintenance-schedule'},
+      {'icon': Icons.history_outlined, 'label': 'History', 'index': 3, 'route': '/repair-history'},
+      {'icon': Icons.settings_outlined, 'label': 'Settings', 'index': 4, 'route': '/technician-settings'},
     ];
 
     return Container(
@@ -349,13 +387,14 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
     
-    return Column(
-      children: [
-        // Stats Overview
-        _buildStatsOverview(isDark, isMobile, isMaintenanceTab: true),
-        _buildFilterChips(isDark, ['All', 'Scheduled', 'In Progress', 'Completed', 'Overdue']),
-        Expanded(child: _buildMaintenanceList(isDark)),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _buildStatsOverview(isDark, isMobile, isMaintenanceTab: true),
+          _buildFilterChips(isDark, ['All', 'Scheduled', 'In Progress', 'Completed', 'Overdue']),
+          _buildMaintenanceList(isDark),
+        ],
+      ),
     );
   }
 
@@ -363,13 +402,14 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
     
-    return Column(
-      children: [
-        // Stats Overview
-        _buildStatsOverview(isDark, isMobile, isMaintenanceTab: false),
-        _buildFilterChips(isDark, ['All', 'Critical', 'High', 'Medium', 'Low']),
-        Expanded(child: _buildIssuesList(isDark)),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _buildStatsOverview(isDark, isMobile, isMaintenanceTab: false),
+          _buildFilterChips(isDark, ['All', 'Critical', 'High', 'Medium', 'Low']),
+          _buildIssuesList(isDark),
+        ],
+      ),
     );
   }
 
@@ -389,72 +429,164 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
           ];
 
     return Container(
-      padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: isMobile ? 2 : 4,
-          crossAxisSpacing: AppSpacing.sm,
-          mainAxisSpacing: AppSpacing.sm,
-          childAspectRatio: isMobile ? 1.8 : 2.5,
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? AppSpacing.md : AppSpacing.lg,
+        isMobile ? AppSpacing.md : AppSpacing.lg,
+        isMobile ? AppSpacing.md : AppSpacing.lg,
+        0,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildOperationsHero(isDark, isMobile, isMaintenanceTab: isMaintenanceTab),
+          SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: isMobile ? 2 : 4,
+              crossAxisSpacing: AppSpacing.sm,
+              mainAxisSpacing: AppSpacing.sm,
+              childAspectRatio: isMobile ? 1.42 : 1.95,
+            ),
+            itemCount: stats.length,
+            itemBuilder: (context, index) {
+              final stat = stats[index];
+              return _buildStatCard(
+                isDark,
+                isMobile,
+                title: stat['title'] as String,
+                value: stat['value'] as String,
+                icon: stat['icon'] as IconData,
+                color: stat['color'] as Color,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOperationsHero(bool isDark, bool isMobile, {required bool isMaintenanceTab}) {
+    final title = isMaintenanceTab ? 'Maintenance Command Center' : 'Issue Response Queue';
+    final subtitle = isMaintenanceTab
+        ? 'Track scheduled work, active repairs, and overdue equipment tasks across farms.'
+        : 'Prioritize faults, field incidents, and production risks before they escalate.';
+    final accent = isMaintenanceTab ? AppColors.primary : AppColors.error;
+    final badge = isMaintenanceTab ? '20 active tasks' : '9 open incidents';
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [
+                  accent.withOpacity(0.24),
+                  AppColors.surfaceDark,
+                ]
+              : [
+                  accent.withOpacity(0.10),
+                  Colors.white,
+                ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        itemCount: stats.length,
-        itemBuilder: (context, index) {
-          final stat = stats[index];
-          return Container(
-            padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: accent.withOpacity(isDark ? 0.28 : 0.18),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.surfaceDark : Colors.white,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              border: Border.all(
-                color: (stat['color'] as Color).withOpacity(0.3),
+              color: accent.withOpacity(isDark ? 0.18 : 0.10),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            ),
+            child: Text(
+              badge,
+              style: AppTypography.caption.copyWith(
+                color: accent,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(isMobile ? 6 : 8),
-                  decoration: BoxDecoration(
-                    color: (stat['color'] as Color).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
-                  child: Icon(
-                    stat['icon'] as IconData,
-                    size: isMobile ? 18 : 20,
-                    color: stat['color'] as Color,
-                  ),
-                ),
-                SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        stat['value'] as String,
-                        style: AppTypography.h5.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: stat['color'] as Color,
-                          fontSize: isMobile ? 18 : 20,
-                        ),
-                      ),
-                      Text(
-                        stat['title'] as String,
-                        style: AppTypography.caption.copyWith(
-                          color: isDark ? Colors.white60 : AppColors.textSecondary,
-                          fontSize: isMobile ? 10 : 11,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            title,
+            style: AppTypography.h5.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+              fontSize: isMobile ? 20 : 24,
             ),
-          );
-        },
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            subtitle,
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? Colors.white70 : AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+    bool isDark,
+    bool isMobile, {
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: color.withOpacity(0.22),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: Icon(
+              icon,
+              size: isMobile ? 18 : 20,
+              color: color,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: AppTypography.h5.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+              fontSize: isMobile ? 18 : 22,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            title,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white70 : AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
@@ -462,101 +594,47 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
   Widget _buildFilterChips(bool isDark, List<String> filters) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
-    
-    if (isMobile) {
-      // Use Wrap for mobile to prevent overflow
-      return Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? AppSpacing.md : AppSpacing.lg,
+        AppSpacing.sm,
+        isMobile ? AppSpacing.md : AppSpacing.lg,
+        AppSpacing.sm,
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
         child: Wrap(
-          spacing: AppSpacing.xs,
-          runSpacing: AppSpacing.xs,
+          alignment: WrapAlignment.start,
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
           children: filters.map((filter) {
             final isSelected = _selectedFilter == filter;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedFilter = filter),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary
-                      : (isDark ? AppColors.surfaceDark : Colors.white),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : (isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-                  ),
-                ),
-                child: Text(
-                  filter,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark ? Colors.white : AppColors.textPrimary),
-                  ),
-                ),
+            return ChoiceChip(
+              label: Text(filter),
+              selected: isSelected,
+              onSelected: (_) => setState(() => _selectedFilter = filter),
+              selectedColor: AppColors.primary.withOpacity(0.18),
+              backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+              labelStyle: AppTypography.bodySmall.copyWith(
+                color: isSelected
+                    ? AppColors.primary
+                    : (isDark ? Colors.white : AppColors.textPrimary),
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
+              side: BorderSide(
+                color: isSelected
+                    ? AppColors.primary.withOpacity(0.35)
+                    : (isDark ? Colors.white12 : AppColors.neutral200),
               ),
             );
           }).toList(),
         ),
-      );
-    }
-    
-    // Use horizontal list for desktop/tablet
-    return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        itemCount: filters.length,
-        itemBuilder: (context, index) {
-          final filter = filters[index];
-          final isSelected = _selectedFilter == filter;
-
-          return GestureDetector(
-            onTap: () => setState(() => _selectedFilter = filter),
-            child: Container(
-              margin: const EdgeInsets.only(right: AppSpacing.sm),
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary
-                    : (isDark ? AppColors.surfaceDark : Colors.white),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.primary
-                      : (isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  filter,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    color: isSelected
-                        ? Colors.white
-                        : (isDark ? Colors.white : AppColors.textPrimary),
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
       ),
     );
   }
 
   Widget _buildMaintenanceList(bool isDark) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     final maintenanceItems = [
       {
         'id': '1',
@@ -608,8 +686,21 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
       },
     ];
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return GridView.builder(
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? AppSpacing.md : AppSpacing.lg,
+        AppSpacing.sm,
+        isMobile ? AppSpacing.md : AppSpacing.lg,
+        isMobile ? 96 : AppSpacing.lg,
+      ),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isMobile ? 1 : 2,
+        crossAxisSpacing: AppSpacing.md,
+        mainAxisSpacing: AppSpacing.md,
+        mainAxisExtent: isMobile ? 230 : 250,
+      ),
       itemCount: maintenanceItems.length,
       itemBuilder: (context, index) {
         final item = maintenanceItems[index];
@@ -622,24 +713,40 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
             color: isDark ? AppColors.surfaceDark : Colors.white,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.14 : 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: InkWell(
-            onTap: () => _showMaintenanceDetails(item),
+            onTap: () => _showMaintenanceDetailsModal(item),
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          gradient: LinearGradient(
+                            colors: [
+                              statusColor.withOpacity(0.20),
+                              statusColor.withOpacity(0.08),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          border: Border.all(color: statusColor.withOpacity(0.18)),
                         ),
-                        child: Icon(Icons.build, color: statusColor, size: 24),
+                        child: Icon(Icons.build_rounded, color: statusColor, size: 24),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
@@ -648,10 +755,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                           children: [
                             Text(
                               item['equipment'] as String,
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
+                              style: AppTypography.bodyLarge.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: isMobile ? 14 : 15,
                                 color: isDark ? Colors.white : AppColors.textPrimary,
                               ),
                             ),
@@ -674,11 +780,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                         ),
                         child: Text(
                           item['status'] as String,
-                          style: TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 10,
+                          style: AppTypography.caption.copyWith(
                             color: statusColor,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
@@ -773,6 +877,7 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
   }
 
   Widget _buildIssuesList(bool isDark) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     final issues = [
       {
         'id': '1',
@@ -809,8 +914,21 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
       },
     ];
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+    return GridView.builder(
+      padding: EdgeInsets.fromLTRB(
+        isMobile ? AppSpacing.md : AppSpacing.lg,
+        AppSpacing.sm,
+        isMobile ? AppSpacing.md : AppSpacing.lg,
+        isMobile ? 96 : AppSpacing.lg,
+      ),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isMobile ? 1 : 2,
+        crossAxisSpacing: AppSpacing.md,
+        mainAxisSpacing: AppSpacing.md,
+        mainAxisExtent: isMobile ? 220 : 236,
+      ),
       itemCount: issues.length,
       itemBuilder: (context, index) {
         final issue = issues[index];
@@ -827,24 +945,39 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                   ? AppColors.error.withOpacity(0.3)
                   : (isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.14 : 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: InkWell(
-            onTap: () => _showIssueDetails(issue),
+            onTap: () => _showIssueDetailsModal(issue),
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.sm),
                         decoration: BoxDecoration(
-                          color: severityColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          gradient: LinearGradient(
+                            colors: [
+                              severityColor.withOpacity(0.20),
+                              severityColor.withOpacity(0.08),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                         ),
-                        child: Icon(Icons.warning_amber, color: severityColor, size: 24),
+                        child: Icon(Icons.warning_amber_rounded, color: severityColor, size: 24),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
@@ -853,10 +986,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                           children: [
                             Text(
                               issue['title'] as String,
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
+                              style: AppTypography.bodyLarge.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: isMobile ? 14 : 15,
                                 color: isDark ? Colors.white : AppColors.textPrimary,
                               ),
                             ),
@@ -879,11 +1011,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                         ),
                         child: Text(
                           issue['severity'] as String,
-                          style: TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 10,
+                          style: AppTypography.caption.copyWith(
                             color: severityColor,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
@@ -900,11 +1030,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                         ),
                         child: Text(
                           issue['status'] as String,
-                          style: TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 10,
+                          style: AppTypography.caption.copyWith(
                             color: statusColor,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
@@ -1072,6 +1200,339 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
     );
   }
 
+  void _showMaintenanceDetailsModal(Map<String, dynamic> item) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(AppSpacing.lg),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(
+                color: isDark ? Colors.white10 : AppColors.neutral200,
+              ),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetailModalHeader(
+                    title: item['equipment'] as String,
+                    subtitle: '${item['type']} • ${item['farm']}',
+                    accent: _getStatusColor(item['status'] as String),
+                    isDark: isDark,
+                    badges: [
+                      _buildDetailBadge(item['status'] as String, _getStatusColor(item['status'] as String), isDark),
+                      _buildDetailBadge(item['priority'] as String, _getPriorityColor(item['priority'] as String), isDark),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildDetailInfoGrid(
+                    isDark,
+                    [
+                      _DetailField('Assigned To', item['assignedTo'] as String),
+                      _DetailField('Duration', '${item['estimatedDuration']} min'),
+                      _DetailField('Scheduled Date', DateFormat('MMM d, yyyy').format(item['scheduledDate'] as DateTime)),
+                      _DetailField('Task Count', '${(item['tasks'] as List).length} items'),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    'Planned Work',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  ...(item['tasks'] as List).map(
+                    (task) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: _buildChecklistItem(task.toString(), isDark),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.tonal(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Close'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.play_circle_outline, size: 18),
+                          label: const Text('Start Task'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showIssueDetailsModal(Map<String, dynamic> issue) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(AppSpacing.lg),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(
+                color: isDark ? Colors.white10 : AppColors.neutral200,
+              ),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetailModalHeader(
+                    title: issue['title'] as String,
+                    subtitle: '${issue['category']} • ${issue['farm']}',
+                    accent: _getSeverityColor(issue['severity'] as String),
+                    isDark: isDark,
+                    badges: [
+                      _buildDetailBadge(issue['severity'] as String, _getSeverityColor(issue['severity'] as String), isDark),
+                      _buildDetailBadge(issue['status'] as String, _getIssueStatusColor(issue['status'] as String), isDark),
+                      if (issue['affectsProduction'] as bool)
+                        _buildDetailBadge('Affects Production', AppColors.error, isDark),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildDetailInfoGrid(
+                    isDark,
+                    [
+                      _DetailField('Reported By', issue['reportedBy'] as String),
+                      _DetailField('Reported', _getTimeAgo(issue['reportedAt'] as DateTime)),
+                      _DetailField('Farm', issue['farm'] as String),
+                      _DetailField('Production Impact', (issue['affectsProduction'] as bool) ? 'Yes' : 'No'),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Response Guidance',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          (issue['affectsProduction'] as bool)
+                              ? 'This incident affects production. Escalate immediately and dispatch a technician on-site.'
+                              : 'This incident can be handled in the normal response queue without immediate production shutdown.',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: isDark ? Colors.white70 : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.tonal(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Close'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.assignment_turned_in_outlined, size: 18),
+                          label: const Text('Acknowledge'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailModalHeader({
+    required String title,
+    required String subtitle,
+    required Color accent,
+    required bool isDark,
+    required List<Widget> badges,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDark
+              ? [accent.withOpacity(0.22), AppColors.backgroundDark]
+              : [accent.withOpacity(0.10), Colors.white],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: accent.withOpacity(isDark ? 0.28 : 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: AppTypography.h5.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            subtitle,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white70 : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: badges,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailBadge(String label, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(isDark ? 0.18 : 0.10),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        border: Border.all(color: color.withOpacity(0.24)),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.caption.copyWith(
+          color: color,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailInfoGrid(bool isDark, List<_DetailField> fields) {
+    return Wrap(
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.md,
+      children: fields
+          .map(
+            (field) => SizedBox(
+              width: 260,
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(
+                    color: isDark ? Colors.white10 : AppColors.neutral200,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      field.label,
+                      style: AppTypography.caption.copyWith(
+                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      field.value,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget _buildChecklistItem(String text, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.check, size: 12, color: AppColors.primary),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              text,
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showMaintenanceDetails(Map<String, dynamic> item) {
     showDialog(
       context: context,
@@ -1130,4 +1591,11 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
       ),
     );
   }
+}
+
+class _DetailField {
+  final String label;
+  final String value;
+
+  const _DetailField(this.label, this.value);
 }

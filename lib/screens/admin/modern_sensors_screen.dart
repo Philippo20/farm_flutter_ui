@@ -1,902 +1,603 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/widgets/modern_admin_sidebar.dart';
 import '../../core/widgets/modern_admin_header.dart';
+import '../../core/widgets/modern_admin_sidebar.dart';
+import '../../core/widgets/superadmin_sidebar.dart';
 
-/// Modern Sensors Dashboard with real-time monitoring
 class ModernSensorsScreen extends ConsumerStatefulWidget {
-  const ModernSensorsScreen({super.key});
+  const ModernSensorsScreen({super.key, this.isSuperAdmin = false});
+
+  final bool isSuperAdmin;
 
   @override
-  ConsumerState<ModernSensorsScreen> createState() => _ModernSensorsScreenState();
+  ConsumerState<ModernSensorsScreen> createState() =>
+      _ModernSensorsScreenState();
 }
 
 class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
   String _selectedFarm = 'All Farms';
   String _selectedStatus = 'All';
   String _selectedType = 'All Types';
-  
-  final List<Map<String, dynamic>> _sensors = [
-    {'id': 'S001', 'name': 'Temperature Sensor A', 'type': 'Temperature', 'location': 'Northern Estate - Greenhouse 1', 'value': '22°C', 'status': 'Normal', 'battery': 85, 'lastUpdate': '2 mins ago', 'icon': Icons.thermostat, 'color': Colors.orange},
-    {'id': 'S002', 'name': 'Humidity Sensor B', 'type': 'Humidity', 'location': 'Northern Estate - Field 2', 'value': '65%', 'status': 'Normal', 'battery': 92, 'lastUpdate': '5 mins ago', 'icon': Icons.water_drop, 'color': Colors.blue},
-    {'id': 'S003', 'name': 'pH Sensor C', 'type': 'pH Level', 'location': 'Southern Estate - Hydroponic', 'value': '6.2 pH', 'status': 'Warning', 'battery': 45, 'lastUpdate': '1 min ago', 'icon': Icons.science, 'color': Colors.purple},
-    {'id': 'S004', 'name': 'CO2 Sensor D', 'type': 'CO2', 'location': 'Eastern Farm - Storage', 'value': '800 ppm', 'status': 'Normal', 'battery': 78, 'lastUpdate': '8 mins ago', 'icon': Icons.air, 'color': Colors.grey},
-    {'id': 'S005', 'name': 'Soil Moisture E', 'type': 'Moisture', 'location': 'Western Farm - Field 5', 'value': '42%', 'status': 'Alert', 'battery': 15, 'lastUpdate': '30 secs ago', 'icon': Icons.grass, 'color': Colors.brown},
-    {'id': 'S006', 'name': 'Water Level F', 'type': 'Water Level', 'location': 'Northern Estate - Tank A', 'value': '75 cm', 'status': 'Normal', 'battery': 68, 'lastUpdate': '3 mins ago', 'icon': Icons.water, 'color': Colors.cyan},
+
+  final List<_IotSensor> _sensors = const [
+    _IotSensor(
+      id: 'IOT-TMP-001',
+      name: 'Greenhouse Climate Node A1',
+      type: 'Temperature',
+      farm: 'Northern Estate',
+      zone: 'Greenhouse 1',
+      reading: '22.4',
+      unit: 'C',
+      status: 'Online',
+      health: 98,
+      battery: 85,
+      signal: -54,
+      firmware: 'v3.8.1',
+      gateway: 'GW-NOR-01',
+      protocol: 'LoRaWAN',
+      lastSeen: '42 sec ago',
+      rangeLabel: '18 - 28 C',
+      trend: '+0.8 C',
+      icon: Icons.thermostat_rounded,
+      color: AppColors.chartOrange,
+    ),
+    _IotSensor(
+      id: 'IOT-HUM-014',
+      name: 'Canopy Humidity Probe B2',
+      type: 'Humidity',
+      farm: 'Northern Estate',
+      zone: 'Field 2',
+      reading: '65',
+      unit: '% RH',
+      status: 'Online',
+      health: 96,
+      battery: 92,
+      signal: -49,
+      firmware: 'v3.8.1',
+      gateway: 'GW-NOR-02',
+      protocol: 'LoRaWAN',
+      lastSeen: '1 min ago',
+      rangeLabel: '55 - 75% RH',
+      trend: '-2%',
+      icon: Icons.water_drop_rounded,
+      color: AppColors.chartBlue,
+    ),
+    _IotSensor(
+      id: 'IOT-PH-031',
+      name: 'Hydroponic pH Inline Sensor',
+      type: 'pH Level',
+      farm: 'Southern Estate',
+      zone: 'Hydroponic Bay',
+      reading: '6.2',
+      unit: 'pH',
+      status: 'Warning',
+      health: 74,
+      battery: 45,
+      signal: -72,
+      firmware: 'v3.7.9',
+      gateway: 'GW-SOU-01',
+      protocol: 'MQTT',
+      lastSeen: '2 min ago',
+      rangeLabel: '5.8 - 6.4 pH',
+      trend: '+0.3 pH',
+      icon: Icons.science_rounded,
+      color: AppColors.chartPurple,
+    ),
+    _IotSensor(
+      id: 'IOT-CO2-008',
+      name: 'Storage CO2 Air Quality Node',
+      type: 'CO2',
+      farm: 'Eastern Farm',
+      zone: 'Cold Storage',
+      reading: '810',
+      unit: 'ppm',
+      status: 'Online',
+      health: 91,
+      battery: 78,
+      signal: -61,
+      firmware: 'v3.8.0',
+      gateway: 'GW-EAS-01',
+      protocol: 'Wi-Fi',
+      lastSeen: '3 min ago',
+      rangeLabel: '650 - 950 ppm',
+      trend: '+32 ppm',
+      icon: Icons.air_rounded,
+      color: AppColors.chartTeal,
+    ),
+    _IotSensor(
+      id: 'IOT-SM-056',
+      name: 'Soil Moisture Stake E5',
+      type: 'Moisture',
+      farm: 'Western Farm',
+      zone: 'Field 5',
+      reading: '27',
+      unit: '% VWC',
+      status: 'Critical',
+      health: 58,
+      battery: 15,
+      signal: -86,
+      firmware: 'v3.6.4',
+      gateway: 'GW-WES-02',
+      protocol: 'LoRaWAN',
+      lastSeen: '18 sec ago',
+      rangeLabel: '35 - 55% VWC',
+      trend: '-11%',
+      icon: Icons.grass_rounded,
+      color: AppColors.primary,
+    ),
+    _IotSensor(
+      id: 'IOT-WL-022',
+      name: 'Reservoir Level Ultrasonic Node',
+      type: 'Water Level',
+      farm: 'Northern Estate',
+      zone: 'Tank A',
+      reading: '75',
+      unit: 'cm',
+      status: 'Online',
+      health: 89,
+      battery: 68,
+      signal: -64,
+      firmware: 'v3.8.1',
+      gateway: 'GW-NOR-03',
+      protocol: 'NB-IoT',
+      lastSeen: '58 sec ago',
+      rangeLabel: '60 - 100 cm',
+      trend: '-4 cm',
+      icon: Icons.water_rounded,
+      color: AppColors.info,
+    ),
   ];
-  
+
+  List<_IotSensor> get _filteredSensors {
+    return _sensors.where((sensor) {
+      if (_selectedFarm != 'All Farms' && sensor.farm != _selectedFarm) {
+        return false;
+      }
+      if (_selectedStatus != 'All' && sensor.status != _selectedStatus) {
+        return false;
+      }
+      if (_selectedType != 'All Types' && sensor.type != _selectedType) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    
+    final isMobile = MediaQuery.of(context).size.width < 700;
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile ? _buildMobileLayout(isDark) : _buildDesktopLayout(isDark),
       bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
     );
   }
-  
-  Widget _buildBottomNavigation(bool isDark) {
-    final navItems = [
-      {'icon': Icons.dashboard_outlined, 'activeIcon': Icons.dashboard_rounded, 'label': 'Dashboard', 'index': 0, 'route': '/dashboard'},
-      {'icon': Icons.people_outline, 'activeIcon': Icons.people_rounded, 'label': 'Users', 'index': 1, 'route': '/users'},
-      {'icon': Icons.agriculture_outlined, 'activeIcon': Icons.agriculture_rounded, 'label': 'Farms', 'index': 2, 'route': '/farms'},
-      {'icon': Icons.sensors_outlined, 'activeIcon': Icons.sensors, 'label': 'Sensors', 'index': 3, 'route': '/sensors'},
-      {'icon': Icons.analytics_outlined, 'activeIcon': Icons.analytics_rounded, 'label': 'Analytics', 'index': 4, 'route': '/analytics'},
-    ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-        border: Border(
-          top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
-            width: 1,
-          ),
-        ),
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: navItems.map((item) {
-              final index = item['index'] as int;
-              final route = item['route'] as String;
-              final isSelected = index == 3; // Sensors screen is index 3
-
-              return Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      if (index != 3) {
-                        Navigator.pushReplacementNamed(context, route);
-                      }
-                    },
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          isSelected ? item['activeIcon'] as IconData : item['icon'] as IconData,
-                          size: 22,
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item['label'] as String,
-                          style: AppTypography.caption.copyWith(
-                            color: isSelected
-                                ? AppColors.primary
-                                : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                            fontSize: 10,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
-  
   Widget _buildDesktopLayout(bool isDark) {
     return Row(
       children: [
-        ModernAdminSidebar(selectedIndex: 3, onItemSelected: (_) {}),
+        widget.isSuperAdmin
+            ? SuperAdminSidebar(
+                selectedIndex: 11,
+                onItemSelected: (_) {},
+                userName: 'Super Admin',
+                userEmail: 'superadmin@farmestates.com',
+                userRole: 'Super Administrator',
+              )
+            : ModernAdminSidebar(selectedIndex: 3, onItemSelected: (_) {}),
         Expanded(
           child: Column(
             children: [
-              ModernAdminHeader(userName: 'Admin', onNotificationTap: () {}, onProfileTap: () {}),
+              ModernAdminHeader(
+                userName: widget.isSuperAdmin ? 'Super Admin' : 'Admin',
+                onNotificationTap: () {},
+                onProfileTap: () {},
+              ),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title
-                        Builder(
-                          builder: (context) {
-                            final screenWidth = MediaQuery.of(context).size.width;
-                            final isTablet = screenWidth < 1200;
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Sensors Dashboard',
-                                            style: AppTypography.h4.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: isDark ? Colors.white : AppColors.textPrimary,
-                                              fontSize: isTablet ? 22 : 28,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          Text(
-                                            'Monitor all sensor readings in real-time',
-                                            style: AppTypography.bodyMedium.copyWith(
-                                              color: isDark ? Colors.white70 : AppColors.textSecondary,
-                                              fontSize: isTablet ? 13 : 14,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    if (!isTablet) ...[
-                                      const SizedBox(width: AppSpacing.md),
-                                      ElevatedButton.icon(
-                                        onPressed: () => _showAddSensorDialog(context, isDark),
-                                        icon: const Icon(Icons.add_circle_outline, size: 20),
-                                        label: const Text('Add Sensor'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppColors.primary,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                if (isTablet) ...[
-                                  const SizedBox(height: AppSpacing.md),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton.icon(
-                                      onPressed: () => _showAddSensorDialog(context, isDark),
-                                      icon: const Icon(Icons.add_circle_outline, size: 18),
-                                      label: const Text('Add Sensor'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primary,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            );
-                          },
-                        ),
-                        
-                        const SizedBox(height: AppSpacing.xl),
-                        
-                        // Live Sensor Readings Grid
-                        _buildSensorReadingsGrid(isDark),
-                        
-                        const SizedBox(height: AppSpacing.xl),
-                        
-                        // Filters
-                        _buildDesktopFilterSection(isDark),
-                        
-                        const SizedBox(height: AppSpacing.lg),
-                        
-                        // Sensors Table
-                        Builder(
-                          builder: (context) {
-                            final screenWidth = MediaQuery.of(context).size.width;
-                            final isTablet = screenWidth < 1200 && screenWidth >= 600;
-                            
-                            final filteredSensors = _sensors.where((sensor) {
-                              if (_selectedStatus != 'All' && sensor['status'] != _selectedStatus) return false;
-                              if (_selectedFarm != 'All Farms' && !sensor['location'].contains(_selectedFarm)) return false;
-                              if (_selectedType != 'All Types' && sensor['type'] != _selectedType) return false;
-                              return true;
-                            }).toList();
-                            
-                            if (filteredSensors.isEmpty) {
-                              return Container(
-                                padding: const EdgeInsets.all(AppSpacing.xxl),
-                                decoration: BoxDecoration(
-                                  color: isDark ? AppColors.surfaceDark : Colors.white,
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                                  border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.sensors_off,
-                                      size: 48,
-                                      color: isDark ? Colors.white30 : AppColors.textSecondary.withOpacity(0.5),
-                                    ),
-                                    const SizedBox(height: AppSpacing.md),
-                                    Text(
-                                      'No sensors match the current filters',
-                                      style: AppTypography.bodyMedium.copyWith(
-                                        color: isDark ? Colors.white60 : AppColors.textSecondary,
-                                      ),
-                                    ),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        setState(() {
-                                          _selectedFarm = 'All Farms';
-                                          _selectedStatus = 'All';
-                                          _selectedType = 'All Types';
-                                        });
-                                      },
-                                      icon: const Icon(Icons.refresh, size: 16),
-                                      label: const Text('Reset Filters'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }
-                            
-                            if (isTablet) {
-                              // Use card layout for tablet
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                                    child: Text(
-                                      '${filteredSensors.length} sensor${filteredSensors.length == 1 ? '' : 's'} found',
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: isDark ? Colors.white60 : AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                  ...filteredSensors.map((sensor) {
-                                    Color statusColor = sensor['status'] == 'Normal' ? AppColors.success : sensor['status'] == 'Warning' ? AppColors.warning : AppColors.error;
-                                    Color batteryColor = sensor['battery'] > 50 ? AppColors.success : sensor['battery'] > 20 ? AppColors.warning : AppColors.error;
-                                    return _buildTabletSensorCard(sensor, isDark, statusColor, batteryColor);
-                                  }),
-                                ],
-                              );
-                            }
-                            
-                            // Use table layout for desktop
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${filteredSensors.length} sensor${filteredSensors.length == 1 ? '' : 's'} found',
-                                        style: AppTypography.bodySmall.copyWith(
-                                          color: isDark ? Colors.white60 : AppColors.textSecondary,
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.sort,
-                                            size: 16,
-                                            color: isDark ? Colors.white60 : AppColors.textSecondary,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Sort by: Name',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: isDark ? Colors.white60 : AppColors.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: isDark ? AppColors.surfaceDark : Colors.white,
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                                    border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-                                    boxShadow: isDark ? null : [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.04),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      // Header
-                                      Container(
-                                        padding: const EdgeInsets.all(AppSpacing.lg),
-                                        decoration: BoxDecoration(
-                                          color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusLg)),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                'Sensor',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 12,
-                                                  color: isDark ? Colors.white70 : AppColors.textSecondary,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                'Location',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 12,
-                                                  color: isDark ? Colors.white70 : AppColors.textSecondary,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                'Value',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 12,
-                                                  color: isDark ? Colors.white70 : AppColors.textSecondary,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                'Status',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 12,
-                                                  color: isDark ? Colors.white70 : AppColors.textSecondary,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                'Battery',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 12,
-                                                  color: isDark ? Colors.white70 : AppColors.textSecondary,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Text(
-                                                'Last Update',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 12,
-                                                  color: isDark ? Colors.white70 : AppColors.textSecondary,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: 100,
-                                              child: Text(
-                                                'Actions',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 12,
-                                                  color: isDark ? Colors.white70 : AppColors.textSecondary,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      // Rows
-                                      ...filteredSensors.map((sensor) => _buildSensorRow(sensor, isDark)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: _buildContent(isDark, isMobile: false),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
   Widget _buildMobileLayout(bool isDark) {
-    final filteredSensors = _sensors.where((sensor) {
-      if (_selectedStatus != 'All' && sensor['status'] != _selectedStatus) return false;
-      if (_selectedFarm != 'All Farms' && !sensor['location'].contains(_selectedFarm)) return false;
-      if (_selectedType != 'All Types' && sensor['type'] != _selectedType) return false;
-      return true;
-    }).toList();
-    
     return Column(
       children: [
         ModernAdminHeader(
-          userName: 'Admin',
+          userName: widget.isSuperAdmin ? 'Super Admin' : 'Admin',
           onNotificationTap: () {},
           onProfileTap: () {},
         ),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title & Add Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Sensors',
-                            style: AppTypography.h5.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppColors.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            '${filteredSensors.length} devices active',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: isDark ? Colors.white60 : AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      ),
-                      child: IconButton(
-                        onPressed: () => _showAddSensorDialog(context, isDark),
-                        icon: const Icon(Icons.add, color: Colors.white, size: 20),
-                        tooltip: 'Add Sensor',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                
-                // Quick Stats
-                _buildMobileQuickStats(isDark),
-                const SizedBox(height: AppSpacing.md),
-                
-                // Filter Chips
-                _buildMobileFilterChips(isDark),
-                const SizedBox(height: AppSpacing.md),
-                
-                // Sensors List
-                ...filteredSensors.map((sensor) => _buildMobileSensorCard(sensor, isDark)),
-                
-                if (filteredSensors.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    alignment: Alignment.center,
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.sensors_off,
-                          size: 48,
-                          color: isDark ? Colors.white30 : AppColors.textSecondary.withOpacity(0.5),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          'No sensors found',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: isDark ? Colors.white60 : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
+            child: _buildContent(isDark, isMobile: true),
           ),
         ),
       ],
     );
   }
-  
-  Widget _buildMobileQuickStats(bool isDark) {
-    final normalCount = _sensors.where((s) => s['status'] == 'Normal').length;
-    final warningCount = _sensors.where((s) => s['status'] == 'Warning').length;
-    final alertCount = _sensors.where((s) => s['status'] == 'Alert').length;
-    
-    return Row(
+
+  Widget _buildContent(bool isDark, {required bool isMobile}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: _buildMiniStatCard('Total', '${_sensors.length}', Icons.sensors, AppColors.primary, isDark)),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(child: _buildMiniStatCard('Normal', '$normalCount', Icons.check_circle, AppColors.success, isDark)),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(child: _buildMiniStatCard('Warning', '$warningCount', Icons.warning, AppColors.warning, isDark)),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(child: _buildMiniStatCard('Alert', '$alertCount', Icons.error, AppColors.error, isDark)),
+        _buildHero(isDark, isMobile),
+        const SizedBox(height: AppSpacing.lg),
+        _buildHealthStrip(isDark),
+        const SizedBox(height: AppSpacing.lg),
+        _buildFilters(isDark),
+        const SizedBox(height: AppSpacing.lg),
+        _buildFleetGrid(isDark),
       ],
     );
   }
-  
-  Widget _buildMiniStatCard(String label, String value, IconData icon, Color color, bool isDark) {
+
+  Widget _buildHero(bool isDark, bool isMobile) {
+    final online = _sensors.where((sensor) => sensor.status == 'Online').length;
+    final critical =
+        _sensors.where((sensor) => sensor.status == 'Critical').length;
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: AppSpacing.xs),
+      width: double.infinity,
+      padding: EdgeInsets.all(isMobile ? AppSpacing.lg : AppSpacing.xl),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: color.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(28),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  const Color(0xFF062E2E),
+                  const Color(0xFF0B3B30),
+                  AppColors.surfaceDark,
+                ]
+              : [
+                  const Color(0xFFE8FAF7),
+                  const Color(0xFFF4FFF4),
+                  Colors.white,
+                ],
+        ),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : AppColors.primary.withValues(alpha: 0.14),
+        ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.10),
+              blurRadius: 28,
+              offset: const Offset(0, 16),
+            ),
+        ],
       ),
-      child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 820;
+          return Flex(
+            direction: compact ? Axis.vertical : Axis.horizontal,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: compact ? 0 : 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildLivePill(isDark),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'IoT Sensor Fleet',
+                      style: AppTypography.h3.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -1,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Real-time farm telemetry, device health, gateway connectivity, and sensor diagnostics across all estates.',
+                      style: AppTypography.bodyLarge.copyWith(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.72)
+                            : AppColors.textSecondary,
+                        height: 1.45,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!compact) const SizedBox(width: AppSpacing.xl),
+              if (compact) const SizedBox(height: AppSpacing.lg),
+              Expanded(
+                flex: compact ? 0 : 2,
+                child: _buildNetworkSummary(isDark, online, critical),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLivePill(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.13),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.24)),
+      ),
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: color,
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: AppColors.success,
+              shape: BoxShape.circle,
             ),
           ),
+          const SizedBox(width: AppSpacing.sm),
           Text(
-            label,
-            style: TextStyle(
-              fontSize: 9,
-              color: color.withOpacity(0.8),
+            'Live telemetry stream',
+            style: AppTypography.label.copyWith(
+              color: isDark ? Colors.white : AppColors.primaryDark,
+              fontWeight: FontWeight.w600,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
-      ),
-    );
-  }
-  
-  Widget _buildMobileFilterChips(bool isDark) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _buildFilterChip('All', _selectedStatus == 'All', () => setState(() => _selectedStatus = 'All'), isDark),
-          const SizedBox(width: AppSpacing.xs),
-          _buildFilterChip('Normal', _selectedStatus == 'Normal', () => setState(() => _selectedStatus = 'Normal'), isDark, color: AppColors.success),
-          const SizedBox(width: AppSpacing.xs),
-          _buildFilterChip('Warning', _selectedStatus == 'Warning', () => setState(() => _selectedStatus = 'Warning'), isDark, color: AppColors.warning),
-          const SizedBox(width: AppSpacing.xs),
-          _buildFilterChip('Alert', _selectedStatus == 'Alert', () => setState(() => _selectedStatus = 'Alert'), isDark, color: AppColors.error),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildFilterChip(String label, bool isSelected, VoidCallback onTap, bool isDark, {Color? color}) {
-    final chipColor = color ?? AppColors.primary;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? chipColor : (isDark ? Colors.white.withOpacity(0.05) : Colors.grey.withOpacity(0.1)),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          border: Border.all(
-            color: isSelected ? chipColor : (isDark ? Colors.white12 : Colors.grey.withOpacity(0.2)),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? Colors.white : (isDark ? Colors.white70 : AppColors.textSecondary),
-          ),
-        ),
       ),
     );
   }
 
-  Widget _buildMobileSensorCard(Map<String, dynamic> sensor, bool isDark) {
-    Color statusColor = sensor['status'] == 'Normal' ? AppColors.success : sensor['status'] == 'Warning' ? AppColors.warning : AppColors.error;
-    Color batteryColor = sensor['battery'] > 50 ? AppColors.success : sensor['battery'] > 20 ? AppColors.warning : AppColors.error;
-    
+  Widget _buildNetworkSummary(bool isDark, int online, int critical) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-        boxShadow: isDark ? null : [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.07)
+            : Colors.white.withValues(alpha: 0.82),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.10)
+              : AppColors.neutral300,
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildNetworkRow(
+            isDark,
+            icon: Icons.hub_rounded,
+            label: 'Connected gateways',
+            value: '5 / 5',
+            color: AppColors.info,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildNetworkRow(
+            isDark,
+            icon: Icons.sensors_rounded,
+            label: 'Online devices',
+            value: '$online / ${_sensors.length}',
+            color: AppColors.success,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildNetworkRow(
+            isDark,
+            icon: Icons.priority_high_rounded,
+            label: 'Critical devices',
+            value: '$critical',
+            color: AppColors.error,
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header Row
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            (sensor['color'] as Color).withOpacity(0.2),
-                            (sensor['color'] as Color).withOpacity(0.1),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      ),
-                      child: Icon(
-                        sensor['icon'] as IconData,
-                        color: sensor['color'] as Color,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            sensor['name'],
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: isDark ? Colors.white : AppColors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.category_outlined,
-                                size: 12,
-                                color: isDark ? Colors.white.withOpacity(0.4) : AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                sensor['type'],
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: isDark ? Colors.white60 : AppColors.textSecondary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                        border: Border.all(color: statusColor.withOpacity(0.3)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: statusColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            sensor['status'],
-                            style: TextStyle(
-                              color: statusColor,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: AppSpacing.md),
-                
-                // Value & Battery Row
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Current Value',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isDark ? Colors.white.withOpacity(0.4) : AppColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              sensor['value'],
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: sensor['color'] as Color,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: 1,
-                        height: 36,
-                        color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Battery',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isDark ? Colors.white.withOpacity(0.4) : AppColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: LinearProgressIndicator(
-                                      value: sensor['battery'] / 100,
-                                      backgroundColor: isDark ? Colors.white12 : Colors.grey.withOpacity(0.2),
-                                      valueColor: AlwaysStoppedAnimation(batteryColor),
-                                      minHeight: 6,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  '${sensor['battery']}%',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: batteryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: AppSpacing.sm),
-                
-                // Footer Row
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 12,
-                      color: isDark ? Colors.white.withOpacity(0.4) : AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        sensor['location'],
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isDark ? Colors.white60 : AppColors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Icon(
-                      Icons.access_time,
-                      size: 12,
-                      color: isDark ? Colors.white.withOpacity(0.4) : AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      sensor['lastUpdate'],
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? Colors.white60 : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+    );
+  }
+
+  Widget _buildNetworkRow(
+    bool isDark, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          ),
+          child: Icon(icon, color: color, size: 22),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.72)
+                  : AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: AppTypography.titleSmall.copyWith(
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHealthStrip(bool isDark) {
+    final warning =
+        _sensors.where((sensor) => sensor.status == 'Warning').length;
+    final critical =
+        _sensors.where((sensor) => sensor.status == 'Critical').length;
+    final avgHealth =
+        (_sensors.fold<int>(0, (sum, s) => sum + s.health) / _sensors.length)
+            .round();
+    final lowBattery = _sensors.where((sensor) => sensor.battery < 25).length;
+
+    final stats = [
+      _FleetStat('Fleet Health', '$avgHealth%', Icons.health_and_safety_rounded,
+          AppColors.success),
+      _FleetStat('Warning', '$warning', Icons.warning_amber_rounded,
+          AppColors.warning),
+      _FleetStat('Critical', '$critical', Icons.error_rounded, AppColors.error),
+      _FleetStat('Low Battery', '$lowBattery', Icons.battery_alert_rounded,
+          AppColors.chartOrange),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 1000
+            ? 4
+            : constraints.maxWidth >= 620
+                ? 2
+                : 1;
+        final cardWidth =
+            (constraints.maxWidth - (AppSpacing.md * (columns - 1))) / columns;
+
+        return Wrap(
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.md,
+          children: stats.map((stat) {
+            return SizedBox(
+              width: cardWidth,
+              child: _FleetStatCard(stat: stat, isDark: isDark),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildFilters(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: _cardDecoration(isDark),
+      child: Wrap(
+        spacing: AppSpacing.md,
+        runSpacing: AppSpacing.md,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          _buildDropdown(
+            label: 'Farm',
+            value: _selectedFarm,
+            items: const [
+              'All Farms',
+              'Northern Estate',
+              'Southern Estate',
+              'Eastern Farm',
+              'Western Farm',
+            ],
+            isDark: isDark,
+            onChanged: (value) => setState(() => _selectedFarm = value!),
+          ),
+          _buildDropdown(
+            label: 'Status',
+            value: _selectedStatus,
+            items: const ['All', 'Online', 'Warning', 'Critical'],
+            isDark: isDark,
+            onChanged: (value) => setState(() => _selectedStatus = value!),
+          ),
+          _buildDropdown(
+            label: 'Sensor Type',
+            value: _selectedType,
+            items: const [
+              'All Types',
+              'Temperature',
+              'Humidity',
+              'pH Level',
+              'CO2',
+              'Moisture',
+              'Water Level',
+            ],
+            isDark: isDark,
+            onChanged: (value) => setState(() => _selectedType = value!),
+          ),
+          OutlinedButton.icon(
+            onPressed: () {
+              setState(() {
+                _selectedFarm = 'All Farms';
+                _selectedStatus = 'All';
+                _selectedType = 'All Types';
+              });
+            },
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Reset'),
+          ),
+          FilledButton.icon(
+            onPressed: () => _showAddSensorDialog(isDark),
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: const Text('Register Device'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required bool isDark,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return SizedBox(
+      width: 210,
+      child: DropdownButtonFormField<String>(
+        initialValue: value,
+        items: items
+            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+            .toList(),
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: isDark
+              ? Colors.white.withValues(alpha: 0.06)
+              : AppColors.neutral50,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            borderSide: BorderSide(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : AppColors.neutral300,
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            borderSide: BorderSide(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : AppColors.neutral300,
             ),
           ),
         ),
@@ -904,968 +605,916 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     );
   }
 
-  Widget _buildSensorReadingsGrid(bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth < 1200 && screenWidth >= 600;
-    final readings = [
-      {'label': 'Temperature', 'value': '22°C', 'trend': '+2°', 'icon': Icons.thermostat, 'color': Colors.orange},
-      {'label': 'Humidity', 'value': '65%', 'trend': '-3%', 'icon': Icons.water_drop, 'color': Colors.blue},
-      {'label': 'pH Level', 'value': '6.2', 'trend': '+0.1', 'icon': Icons.science, 'color': Colors.purple},
-      {'label': 'CO2', 'value': '800ppm', 'trend': '+50', 'icon': Icons.air, 'color': Colors.grey},
-      {'label': 'Moisture', 'value': '42%', 'trend': '-5%', 'icon': Icons.grass, 'color': Colors.brown},
-      {'label': 'Water', 'value': '75cm', 'trend': '-2cm', 'icon': Icons.water, 'color': Colors.cyan},
-    ];
-    
+  Widget _buildFleetGrid(bool isDark) {
+    final sensors = _filteredSensors;
+
+    if (sensors.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        decoration: _cardDecoration(isDark),
+        child: Column(
+          children: [
+            Icon(
+              Icons.sensors_off_rounded,
+              size: 52,
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.28)
+                  : AppColors.textSecondary.withValues(alpha: 0.45),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'No IoT devices match these filters',
+              style: AppTypography.bodyLarge.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Live Readings',
-              style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : AppColors.textPrimary,
+            Expanded(
+              child: Text(
+                'Device Telemetry',
+                style: AppTypography.h5.copyWith(
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: AppColors.success,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Live',
-                    style: TextStyle(
-                      color: AppColors.success,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+            Text(
+              '${sensors.length} devices',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white60 : AppColors.textSecondary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isTablet ? 2 : 3,
-            crossAxisSpacing: AppSpacing.md,
-            mainAxisSpacing: AppSpacing.md,
-            childAspectRatio: isTablet ? 2.5 : 2.2,
-          ),
-          itemCount: readings.length,
-          itemBuilder: (context, index) {
-            final reading = readings[index];
-            final trendIsPositive = reading['trend'].toString().startsWith('+');
-            return Container(
-              padding: EdgeInsets.all(isTablet ? AppSpacing.sm : AppSpacing.md),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    (reading['color'] as Color).withOpacity(0.15),
-                    (reading['color'] as Color).withOpacity(0.05),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                border: Border.all(color: (reading['color'] as Color).withOpacity(0.25)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(isTablet ? 8 : 10),
-                    decoration: BoxDecoration(
-                      color: (reading['color'] as Color).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                    child: Icon(
-                      reading['icon'] as IconData,
-                      color: reading['color'] as Color,
-                      size: isTablet ? 18 : 22,
-                    ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 1220
+                ? 3
+                : constraints.maxWidth >= 820
+                    ? 2
+                    : 1;
+            final cardWidth =
+                (constraints.maxWidth - (AppSpacing.md * (columns - 1))) /
+                    columns;
+
+            return Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+              children: sensors.map((sensor) {
+                return SizedBox(
+                  width: cardWidth,
+                  child: _SensorDeviceCard(
+                    sensor: sensor,
+                    isDark: isDark,
+                    onDetails: () => _showSensorDetails(sensor, isDark),
+                    onSettings: () => _showSensorSettings(sensor, isDark),
                   ),
-                  SizedBox(width: isTablet ? AppSpacing.sm : AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          reading['label'] as String,
-                          style: TextStyle(
-                            fontSize: isTablet ? 10 : 11,
-                            color: (reading['color'] as Color).withOpacity(0.8),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Text(
-                              reading['value'] as String,
-                              style: TextStyle(
-                                fontSize: isTablet ? 15 : 17,
-                                fontWeight: FontWeight.bold,
-                                color: reading['color'] as Color,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              trendIsPositive ? Icons.trending_up : Icons.trending_down,
-                              size: isTablet ? 12 : 14,
-                              color: trendIsPositive ? AppColors.success : AppColors.error,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              reading['trend'] as String,
-                              style: TextStyle(
-                                fontSize: isTablet ? 9 : 10,
-                                fontWeight: FontWeight.w500,
-                                color: trendIsPositive ? AppColors.success : AppColors.error,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                );
+              }).toList(),
             );
           },
         ),
       ],
     );
   }
-  
-  Widget _buildSensorRow(Map<String, dynamic> sensor, bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth < 1200 && screenWidth >= 600;
-    Color statusColor = sensor['status'] == 'Normal' ? AppColors.success : sensor['status'] == 'Warning' ? AppColors.warning : AppColors.error;
-    Color batteryColor = sensor['battery'] > 50 ? AppColors.success : sensor['battery'] > 20 ? AppColors.warning : AppColors.error;
-    
-    if (isTablet) {
-      return _buildTabletSensorCard(sensor, isDark, statusColor, batteryColor);
-    }
-    
+
+  Widget _buildBottomNavigation(bool isDark) {
+    final navItems = widget.isSuperAdmin
+        ? const [
+            _MobileNavItem(Icons.dashboard_outlined, Icons.dashboard_rounded,
+                'Dashboard', '/superadmin_dashboard'),
+            _MobileNavItem(Icons.people_outline, Icons.people_rounded, 'Users',
+                '/superadmin/users'),
+            _MobileNavItem(Icons.agriculture_outlined,
+                Icons.agriculture_rounded, 'Farms', '/superadmin/farms'),
+            _MobileNavItem(Icons.sensors_outlined, Icons.sensors_rounded,
+                'Sensors', '/superadmin/sensors'),
+            _MobileNavItem(Icons.settings_outlined, Icons.settings_rounded,
+                'Config', '/superadmin/config'),
+          ]
+        : const [
+            _MobileNavItem(Icons.dashboard_outlined, Icons.dashboard_rounded,
+                'Dashboard', '/dashboard'),
+            _MobileNavItem(
+                Icons.people_outline, Icons.people_rounded, 'Users', '/users'),
+            _MobileNavItem(Icons.agriculture_outlined,
+                Icons.agriculture_rounded, 'Farms', '/farms'),
+            _MobileNavItem(Icons.sensors_outlined, Icons.sensors_rounded,
+                'Sensors', '/sensors'),
+            _MobileNavItem(Icons.analytics_outlined, Icons.analytics_rounded,
+                'Analytics', '/analytics'),
+          ];
+
     return Container(
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05))),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.md,
       ),
-      child: InkWell(
-        onTap: () {},
-        child: Padding(
-          padding: EdgeInsets.all(isTablet ? AppSpacing.md : AppSpacing.lg),
-          child: Row(
-            children: [
-              // Sensor Info
-              Expanded(
-                flex: 2,
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(isTablet ? 6 : 8),
-                      decoration: BoxDecoration(
-                        color: (sensor['color'] as Color).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      ),
-                      child: Icon(
-                        sensor['icon'] as IconData,
-                        color: sensor['color'] as Color,
-                        size: isTablet ? 14 : 16,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            sensor['name'],
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: isTablet ? 12 : 13,
-                              color: isDark ? Colors.white : AppColors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Text(
-                            sensor['type'],
-                            style: TextStyle(
-                              fontSize: isTablet ? 10 : 11,
-                              color: isDark ? Colors.white60 : AppColors.textSecondary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Location
-              Expanded(
-                flex: 2,
-                child: Text(
-                  sensor['location'],
-                  style: TextStyle(
-                    fontSize: isTablet ? 11 : 12,
-                    color: isDark ? Colors.white70 : AppColors.textSecondary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              // Value
-              Expanded(
-                child: Text(
-                  sensor['value'],
-                  style: TextStyle(
-                    fontSize: isTablet ? 11 : 12,
-                    fontWeight: FontWeight.w600,
-                    color: sensor['color'] as Color,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              // Status
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                  child: Text(
-                    sensor['status'],
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: isTablet ? 10 : 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-              // Battery
-              Expanded(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: LinearProgressIndicator(
-                        value: sensor['battery'] / 100,
-                        backgroundColor: Colors.grey.withOpacity(0.2),
-                        valueColor: AlwaysStoppedAnimation(batteryColor),
-                        minHeight: isTablet ? 4 : 6,
-                      ),
-                    ),
-                    SizedBox(width: isTablet ? 4 : 8),
-                    Flexible(
-                      child: Text(
-                        '${sensor['battery']}%',
-                        style: TextStyle(
-                          fontSize: isTablet ? 10 : 11,
-                          color: batteryColor,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Last Update
-              Expanded(
-                child: Text(
-                  sensor['lastUpdate'],
-                  style: TextStyle(
-                    fontSize: isTablet ? 10 : 11,
-                    color: isDark ? Colors.white60 : AppColors.textSecondary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              // Actions
-              SizedBox(
-                width: isTablet ? 80 : 100,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: () => _showSensorSettingsDialog(context, sensor, isDark),
-                      icon: const Icon(Icons.settings_outlined),
-                      iconSize: isTablet ? 16 : 18,
-                      color: AppColors.primary,
-                    ),
-                    IconButton(
-                      onPressed: () => _showDeleteSensorDialog(context, sensor, isDark),
-                      icon: const Icon(Icons.delete_outline),
-                      iconSize: isTablet ? 16 : 18,
-                      color: AppColors.error,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : AppColors.neutral300,
           ),
         ),
+      ),
+      child: Row(
+        children: navItems.map((item) {
+          final selected = item.label == 'Sensors';
+          return Expanded(
+            child: InkWell(
+              onTap: () {
+                if (!selected) {
+                  Navigator.pushReplacementNamed(context, item.route);
+                }
+              },
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              child: Container(
+                height: 54,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? AppColors.primary.withValues(alpha: 0.14)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      selected ? item.activeIcon : item.icon,
+                      size: 21,
+                      color: selected
+                          ? AppColors.primary
+                          : (isDark
+                              ? Colors.white.withValues(alpha: 0.62)
+                              : AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      item.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.caption.copyWith(
+                        fontSize: 10,
+                        color: selected
+                            ? AppColors.primary
+                            : (isDark
+                                ? Colors.white.withValues(alpha: 0.62)
+                                : AppColors.textSecondary),
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 
-  Widget _buildTabletSensorCard(Map<String, dynamic> sensor, bool isDark, Color statusColor, Color batteryColor) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-      ),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: (sensor['color'] as Color).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                    child: Icon(
-                      sensor['icon'] as IconData,
-                      color: sensor['color'] as Color,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          sensor['name'],
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color: isDark ? Colors.white : AppColors.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          sensor['type'],
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isDark ? Colors.white60 : AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                    ),
-                    child: Text(
-                      sensor['status'],
-                      style: TextStyle(
-                        color: statusColor,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
+  void _showAddSensorDialog(bool isDark) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Device registration workflow coming soon')),
+    );
+  }
+
+  void _showSensorSettings(_IotSensor sensor, bool isDark) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Opening settings for ${sensor.id}')),
+    );
+  }
+
+  void _showSensorDetails(_IotSensor sensor, bool isDark) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        color: sensor.color.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(18),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      child: Icon(sensor.icon, color: sensor.color, size: 28),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Value',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isDark ? Colors.white60 : AppColors.textSecondary,
-                          ),
-                        ),
-                        Text(
-                          sensor['value'],
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: sensor['color'] as Color,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Battery',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isDark ? Colors.white60 : AppColors.textSecondary,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: LinearProgressIndicator(
-                                value: sensor['battery'] / 100,
-                                backgroundColor: Colors.grey.withOpacity(0.2),
-                                valueColor: AlwaysStoppedAnimation(batteryColor),
-                              ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            sensor.name,
+                            style: AppTypography.titleMedium.copyWith(
+                              color:
+                                  isDark ? Colors.white : AppColors.textPrimary,
+                              fontWeight: FontWeight.w700,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${sensor['battery']}%',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: batteryColor,
-                              ),
+                          ),
+                          Text(
+                            '${sensor.id} • ${sensor.gateway}',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.62)
+                                  : AppColors.textSecondary,
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                sensor['location'],
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isDark ? Colors.white60 : AppColors.textSecondary,
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Last update: ${sensor['lastUpdate']}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => _showSensorSettingsDialog(context, sensor, isDark),
-                        icon: const Icon(Icons.settings_outlined),
-                        iconSize: 16,
-                        color: AppColors.primary,
-                      ),
-                      IconButton(
-                        onPressed: () => _showDeleteSensorDialog(context, sensor, isDark),
-                        icon: const Icon(Icons.delete_outline),
-                        iconSize: 16,
-                        color: AppColors.error,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
+                const SizedBox(height: AppSpacing.lg),
+                Wrap(
+                  spacing: AppSpacing.md,
+                  runSpacing: AppSpacing.md,
+                  children: [
+                    _DetailTile('Reading', '${sensor.reading} ${sensor.unit}',
+                        sensor.icon, sensor.color, isDark),
+                    _DetailTile(
+                        'Health',
+                        '${sensor.health}%',
+                        Icons.health_and_safety_rounded,
+                        AppColors.success,
+                        isDark),
+                    _DetailTile(
+                        'Battery',
+                        '${sensor.battery}%',
+                        Icons.battery_charging_full_rounded,
+                        _batteryColor(sensor),
+                        isDark),
+                    _DetailTile(
+                        'Signal',
+                        '${sensor.signal} dBm',
+                        Icons.network_cell_rounded,
+                        _signalColor(sensor),
+                        isDark),
+                    _DetailTile('Protocol', sensor.protocol,
+                        Icons.settings_input_antenna, AppColors.info, isDark),
+                    _DetailTile(
+                        'Firmware',
+                        sensor.firmware,
+                        Icons.system_update_alt_rounded,
+                        AppColors.chartPurple,
+                        isDark),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _InfoLine('Farm', sensor.farm, isDark),
+                _InfoLine('Zone', sensor.zone, isDark),
+                _InfoLine('Safe range', sensor.rangeLabel, isDark),
+                _InfoLine('Last telemetry', sensor.lastSeen, isDark),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-  
-  Widget _buildDropdown(String label, String value, List<String> items, Function(String?) onChanged, bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth < 1200 && screenWidth >= 600;
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (!isTablet)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4, left: 4),
+}
+
+class _SensorDeviceCard extends StatelessWidget {
+  const _SensorDeviceCard({
+    required this.sensor,
+    required this.isDark,
+    required this.onDetails,
+    required this.onSettings,
+  });
+
+  final _IotSensor sensor;
+  final bool isDark;
+  final VoidCallback onDetails;
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    final statusColor = _statusColor(sensor);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: _cardDecoration(isDark),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: sensor.color.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(sensor.icon, color: sensor.color, size: 27),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      sensor.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.titleSmall.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      '${sensor.id} • ${sensor.protocol}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.62)
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _StatusBadge(label: sensor.status, color: statusColor),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                sensor.reading,
+                style: AppTypography.h3.copyWith(
+                  color: sensor.color,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -1,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  sensor.unit,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.62)
+                        : AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _TrendPill(sensor.trend, sensor.trend.startsWith('-'), isDark),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Target range: ${sensor.rangeLabel}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.60)
+                  : AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _HealthBar(
+            label: 'Device health',
+            value: sensor.health,
+            color: statusColor,
+            isDark: isDark,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: _TelemetryChip(
+                  icon: Icons.battery_charging_full_rounded,
+                  label: '${sensor.battery}%',
+                  color: _batteryColor(sensor),
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _TelemetryChip(
+                  icon: Icons.network_cell_rounded,
+                  label: '${sensor.signal} dBm',
+                  color: _signalColor(sensor),
+                  isDark: isDark,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Icon(
+                Icons.place_rounded,
+                size: 16,
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.58)
+                    : AppColors.textSecondary,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  '${sensor.farm} • ${sensor.zone}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.64)
+                        : AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Last seen ${sensor.lastSeen}',
+                  style: AppTypography.caption.copyWith(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.52)
+                        : AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: onDetails,
+                tooltip: 'Diagnostics',
+                icon: const Icon(Icons.visibility_outlined),
+                color: AppColors.info,
+              ),
+              IconButton(
+                onPressed: onSettings,
+                tooltip: 'Settings',
+                icon: const Icon(Icons.tune_rounded),
+                color: AppColors.primary,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FleetStatCard extends StatelessWidget {
+  const _FleetStatCard({required this.stat, required this.isDark});
+
+  final _FleetStat stat;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: _cardDecoration(isDark),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: stat.color.withValues(alpha: 0.13),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            ),
+            child: Icon(stat.icon, color: stat.color, size: 25),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  stat.value,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  stat.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.62)
+                        : AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _TrendPill extends StatelessWidget {
+  const _TrendPill(this.label, this.isDown, this.isDark);
+
+  final String label;
+  final bool isDown;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isDown ? AppColors.warning : AppColors.success;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isDown ? Icons.trending_down_rounded : Icons.trending_up_rounded,
+            size: 15,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TelemetryChip extends StatelessWidget {
+  const _TelemetryChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.isDark,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: AppSpacing.xs),
+          Flexible(
             child: Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: isDark ? Colors.white60 : AppColors.textSecondary,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.caption.copyWith(
+                color: color,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isTablet ? AppSpacing.sm : AppSpacing.md,
-            vertical: isTablet ? 2 : 4,
-          ),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.white,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(
-              color: isDark ? Colors.white12 : Colors.black.withOpacity(0.1),
-            ),
-          ),
-          child: DropdownButton<String>(
-            value: value,
-            isExpanded: true,
-            style: TextStyle(
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              fontSize: isTablet ? 12 : 13,
-            ),
-            items: items.map((item) => DropdownMenuItem(
-              value: item,
+        ],
+      ),
+    );
+  }
+}
+
+class _HealthBar extends StatelessWidget {
+  const _HealthBar({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.isDark,
+  });
+
+  final String label;
+  final int value;
+  final Color color;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
               child: Text(
-                item,
-                style: TextStyle(
-                  fontSize: isTablet ? 12 : 13,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
+                label,
+                style: AppTypography.bodySmall.copyWith(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.62)
+                      : AppColors.textSecondary,
+                  fontWeight: FontWeight.w700,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
-            )).toList(),
-            onChanged: onChanged,
-            underline: const SizedBox(),
-            icon: Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: isTablet ? 18 : 20,
-              color: isDark ? Colors.white60 : AppColors.textSecondary,
             ),
-            dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+            Text(
+              '$value%',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+          child: LinearProgressIndicator(
+            value: value / 100,
+            minHeight: 7,
+            backgroundColor: color.withValues(alpha: 0.13),
+            valueColor: AlwaysStoppedAnimation(color),
           ),
         ),
       ],
     );
   }
-  
-  Widget _buildDesktopFilterSection(bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth < 1200 && screenWidth >= 600;
-    
+}
+
+class _DetailTile extends StatelessWidget {
+  const _DetailTile(this.label, this.value, this.icon, this.color, this.isDark);
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-      ),
+      width: 156,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: _cardDecoration(isDark),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.filter_list,
-                    size: 18,
-                    color: isDark ? Colors.white70 : AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Filters',
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              if (_selectedFarm != 'All Farms' || _selectedStatus != 'All' || _selectedType != 'All Types')
-                TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _selectedFarm = 'All Farms';
-                      _selectedStatus = 'All';
-                      _selectedType = 'All Types';
-                    });
-                  },
-                  icon: const Icon(Icons.clear_all, size: 16),
-                  label: const Text('Clear All'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                    textStyle: const TextStyle(fontSize: 12),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          if (isTablet)
-            Column(
-              children: [
-                _buildDropdown('Farm', _selectedFarm, ['All Farms', 'Northern Estate', 'Southern Estate', 'Eastern Farm', 'Western Farm'], 
-                  (v) => setState(() => _selectedFarm = v!), isDark),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildDropdown('Status', _selectedStatus, ['All', 'Normal', 'Warning', 'Alert'], 
-                        (v) => setState(() => _selectedStatus = v!), isDark),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: _buildDropdown('Type', _selectedType, ['All Types', 'Temperature', 'Humidity', 'pH Level', 'CO2', 'Moisture', 'Water Level'], 
-                        (v) => setState(() => _selectedType = v!), isDark),
-                    ),
-                  ],
-                ),
-              ],
-            )
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDropdown('Farm', _selectedFarm, ['All Farms', 'Northern Estate', 'Southern Estate', 'Eastern Farm', 'Western Farm'], 
-                    (v) => setState(() => _selectedFarm = v!), isDark),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: _buildDropdown('Status', _selectedStatus, ['All', 'Normal', 'Warning', 'Alert'], 
-                    (v) => setState(() => _selectedStatus = v!), isDark),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: _buildDropdown('Type', _selectedType, ['All Types', 'Temperature', 'Humidity', 'pH Level', 'CO2', 'Moisture', 'Water Level'], 
-                    (v) => setState(() => _selectedType = v!), isDark),
-                ),
-              ],
+          Icon(icon, color: color, size: 21),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
             ),
+          ),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.caption.copyWith(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.56)
+                  : AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
   }
-  
-  // ============ MODAL DIALOGS ============
-  
-  void _showAddSensorDialog(BuildContext context, bool isDark) {
-    final nameController = TextEditingController();
-    final locationController = TextEditingController();
-    String selectedType = 'Temperature';
-    String selectedFarm = 'Northern Estate';
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-          insetPadding: EdgeInsets.symmetric(horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl, vertical: AppSpacing.xl),
-          child: Container(
-            width: isMobile ? double.infinity : 500,
-            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [AppColors.info, AppColors.info.withOpacity(0.8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(AppSpacing.radiusMd)), child: const Icon(Icons.sensors, color: Colors.white, size: 24)),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Add New Sensor', style: AppTypography.h6.copyWith(color: Colors.white, fontWeight: FontWeight.bold)), Text('Register a new sensor device', style: AppTypography.bodySmall.copyWith(color: Colors.white70))])),
-                      IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, color: Colors.white70)),
-                    ],
-                  ),
-                ),
-                // Form
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildFormLabel('Sensor Name', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildFormTextField(controller: nameController, hint: 'e.g., Temperature Sensor A', icon: Icons.sensors, isDark: isDark),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Location/Zone', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildFormTextField(controller: locationController, hint: 'e.g., Greenhouse 1', icon: Icons.location_on, isDark: isDark),
-                        const SizedBox(height: AppSpacing.lg),
-                        if (!isMobile) Row(children: [
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildFormLabel('Sensor Type', isDark), const SizedBox(height: AppSpacing.sm), _buildFormDropdown(value: selectedType, items: ['Temperature', 'Humidity', 'pH Level', 'CO2', 'Moisture', 'Water Level'], icon: Icons.category, isDark: isDark, onChanged: (v) => setDialogState(() => selectedType = v!))])),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildFormLabel('Farm', isDark), const SizedBox(height: AppSpacing.sm), _buildFormDropdown(value: selectedFarm, items: ['Northern Estate', 'Southern Estate', 'Eastern Farm', 'Western Farm'], icon: Icons.agriculture, isDark: isDark, onChanged: (v) => setDialogState(() => selectedFarm = v!))])),
-                        ]) else ...[
-                          _buildFormLabel('Sensor Type', isDark), const SizedBox(height: AppSpacing.sm), _buildFormDropdown(value: selectedType, items: ['Temperature', 'Humidity', 'pH Level', 'CO2', 'Moisture', 'Water Level'], icon: Icons.category, isDark: isDark, onChanged: (v) => setDialogState(() => selectedType = v!)),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Farm', isDark), const SizedBox(height: AppSpacing.sm), _buildFormDropdown(value: selectedFarm, items: ['Northern Estate', 'Southern Estate', 'Eastern Farm', 'Western Farm'], icon: Icons.agriculture, isDark: isDark, onChanged: (v) => setDialogState(() => selectedFarm = v!)),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                // Actions
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50, borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppSpacing.radiusXl))),
-                  child: Row(
-                    children: [
-                      Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), side: BorderSide(color: isDark ? Colors.white24 : AppColors.neutral300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))), child: Text('Cancel', style: TextStyle(color: isDark ? Colors.white70 : AppColors.textSecondary)))),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(flex: 2, child: ElevatedButton.icon(onPressed: () { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Row(children: [const Icon(Icons.check_circle, color: Colors.white), const SizedBox(width: 8), Text('${nameController.text.isEmpty ? "Sensor" : nameController.text} added!')]), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)))); }, icon: const Icon(Icons.add, size: 18), label: const Text('Add Sensor'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.info, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))))),
-                    ],
-                  ),
-                ),
-              ],
+}
+
+class _InfoLine extends StatelessWidget {
+  const _InfoLine(this.label, this.value, this.isDark);
+
+  final String label;
+  final String value;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.56)
+                    : AppColors.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-  
-  void _showSensorSettingsDialog(BuildContext context, Map<String, dynamic> sensor, bool isDark) {
-    String selectedThreshold = 'Medium';
-    bool alertsEnabled = true;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-          insetPadding: EdgeInsets.symmetric(horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl, vertical: AppSpacing.xl),
-          child: Container(
-            width: isMobile ? double.infinity : 480,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [sensor['color'] as Color, (sensor['color'] as Color).withOpacity(0.8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(AppSpacing.radiusMd)), child: Icon(sensor['icon'] as IconData, color: Colors.white, size: 24)),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Sensor Settings', style: AppTypography.h6.copyWith(color: Colors.white, fontWeight: FontWeight.bold)), Text(sensor['name'], style: AppTypography.bodySmall.copyWith(color: Colors.white70))])),
-                      IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, color: Colors.white70)),
-                    ],
-                  ),
-                ),
-                // Sensor Preview Card
-                Container(
-                  margin: const EdgeInsets.all(AppSpacing.lg),
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.05) : (sensor['color'] as Color).withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    border: Border.all(color: (sensor['color'] as Color).withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: (sensor['color'] as Color).withOpacity(0.1), borderRadius: BorderRadius.circular(AppSpacing.radiusSm)), child: Icon(sensor['icon'] as IconData, color: sensor['color'] as Color, size: 24)),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(sensor['type'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : AppColors.textPrimary)),
-                        Text(sensor['location'], style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textSecondary)),
-                      ])),
-                      Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                        Text(sensor['value'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: sensor['color'] as Color)),
-                        Row(children: [
-                          Icon(Icons.battery_charging_full, size: 14, color: sensor['battery'] > 50 ? AppColors.success : AppColors.warning),
-                          const SizedBox(width: 2),
-                          Text('${sensor['battery']}%', style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textSecondary)),
-                        ]),
-                      ]),
-                    ],
-                  ),
-                ),
-                // Settings
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildFormLabel('Alert Threshold', isDark),
-                      const SizedBox(height: AppSpacing.sm),
-                      _buildFormDropdown(value: selectedThreshold, items: ['Low', 'Medium', 'High', 'Critical'], icon: Icons.warning, isDark: isDark, onChanged: (v) => setDialogState(() => selectedThreshold = v!)),
-                      const SizedBox(height: AppSpacing.lg),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Enable Alerts', style: TextStyle(fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppColors.textPrimary)),
-                          Switch(value: alertsEnabled, onChanged: (v) => setDialogState(() => alertsEnabled = v), activeColor: AppColors.success),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                // Actions
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50, borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppSpacing.radiusXl))),
-                  child: Row(
-                    children: [
-                      OutlinedButton(onPressed: () { Navigator.pop(context); _showDeleteSensorDialog(context, sensor, isDark); }, style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: AppSpacing.md), side: const BorderSide(color: AppColors.error), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))), child: const Icon(Icons.delete_outline, color: AppColors.error, size: 20)),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), side: BorderSide(color: isDark ? Colors.white24 : AppColors.neutral300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))), child: Text('Cancel', style: TextStyle(color: isDark ? Colors.white70 : AppColors.textSecondary)))),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(flex: 2, child: ElevatedButton.icon(onPressed: () { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Row(children: [const Icon(Icons.check_circle, color: Colors.white), const SizedBox(width: 8), const Text('Settings saved!')]), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)))); }, icon: const Icon(Icons.save, size: 18), label: const Text('Save'), style: ElevatedButton.styleFrom(backgroundColor: sensor['color'] as Color, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))))),
-                    ],
-                  ),
-                ),
-              ],
+          Expanded(
+            child: Text(
+              value,
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+BoxDecoration _cardDecoration(bool isDark) {
+  return BoxDecoration(
+    color: isDark ? AppColors.surfaceDark : Colors.white,
+    borderRadius: BorderRadius.circular(22),
+    border: Border.all(
+      color: isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : AppColors.neutral300.withValues(alpha: 0.72),
+    ),
+    boxShadow: [
+      if (!isDark)
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.045),
+          blurRadius: 20,
+          offset: const Offset(0, 12),
         ),
-      ),
-    );
+    ],
+  );
+}
+
+Color _statusColor(_IotSensor sensor) {
+  switch (sensor.status) {
+    case 'Online':
+      return AppColors.success;
+    case 'Warning':
+      return AppColors.warning;
+    case 'Critical':
+      return AppColors.error;
+    default:
+      return AppColors.textSecondary;
   }
-  
-  void _showDeleteSensorDialog(BuildContext context, Map<String, dynamic> sensor, bool isDark) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-        child: Container(
-          width: 400,
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppColors.error.withOpacity(0.1), shape: BoxShape.circle), child: const Icon(Icons.sensors_off, color: AppColors.error, size: 40)),
-              const SizedBox(height: AppSpacing.lg),
-              Text('Delete Sensor?', style: AppTypography.h5.copyWith(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.textPrimary)),
-              const SizedBox(height: AppSpacing.sm),
-              Text('Are you sure you want to delete "${sensor['name']}"?', style: AppTypography.bodyMedium.copyWith(color: isDark ? Colors.white70 : AppColors.textSecondary), textAlign: TextAlign.center),
-              const SizedBox(height: AppSpacing.md),
-              // Sensor Preview
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : AppColors.error.withOpacity(0.05), borderRadius: BorderRadius.circular(AppSpacing.radiusMd), border: Border.all(color: AppColors.error.withOpacity(0.2))),
-                child: Row(
-                  children: [
-                    Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: (sensor['color'] as Color).withOpacity(0.1), borderRadius: BorderRadius.circular(AppSpacing.radiusSm)), child: Icon(sensor['icon'] as IconData, color: sensor['color'] as Color, size: 20)),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(sensor['name'], style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: isDark ? Colors.white : AppColors.textPrimary)),
-                      Text(sensor['location'], style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textSecondary)),
-                    ])),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(color: AppColors.warning.withOpacity(0.1), borderRadius: BorderRadius.circular(AppSpacing.radiusMd), border: Border.all(color: AppColors.warning.withOpacity(0.3))),
-                child: Row(
-                  children: [
-                    const Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(child: Text('All sensor data and history will be permanently deleted.', style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : AppColors.textSecondary))),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Row(
-                children: [
-                  Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), side: BorderSide(color: isDark ? Colors.white24 : AppColors.neutral300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))), child: Text('Cancel', style: TextStyle(color: isDark ? Colors.white70 : AppColors.textSecondary)))),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(child: ElevatedButton.icon(onPressed: () { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Row(children: [const Icon(Icons.delete, color: Colors.white), const SizedBox(width: 8), Text('${sensor['name']} deleted')]), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)))); }, icon: const Icon(Icons.delete, size: 18), label: const Text('Delete'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))))),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-  
-  // Helper Widgets
-  Widget _buildFormLabel(String label, bool isDark) => Text(label, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppColors.textPrimary));
-  
-  Widget _buildFormTextField({required TextEditingController controller, required String hint, required IconData icon, required bool isDark}) {
-    return TextFormField(
-      controller: controller,
-      style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: isDark ? Colors.white38 : AppColors.textSecondary.withOpacity(0.5)),
-        prefixIcon: Icon(icon, color: isDark ? Colors.white54 : AppColors.textSecondary, size: 20),
-        filled: true,
-        fillColor: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd), borderSide: BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd), borderSide: BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd), borderSide: const BorderSide(color: AppColors.primary, width: 2)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
-      ),
-    );
-  }
-  
-  Widget _buildFormDropdown({required String value, required List<String> items, required IconData icon, required bool isDark, required Function(String?) onChanged}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50, borderRadius: BorderRadius.circular(AppSpacing.radiusMd), border: Border.all(color: isDark ? Colors.white12 : AppColors.neutral200)),
-      child: DropdownButtonHideUnderline(child: DropdownButton<String>(value: value, isExpanded: true, icon: Icon(Icons.keyboard_arrow_down, color: isDark ? Colors.white54 : AppColors.textSecondary), dropdownColor: isDark ? AppColors.surfaceDark : Colors.white, style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary, fontSize: 14), items: items.map((item) => DropdownMenuItem(value: item, child: Row(children: [Icon(icon, color: isDark ? Colors.white54 : AppColors.textSecondary, size: 20), const SizedBox(width: AppSpacing.md), Text(item)]))).toList(), onChanged: onChanged)),
-    );
-  }
+}
+
+Color _batteryColor(_IotSensor sensor) {
+  if (sensor.battery >= 60) return AppColors.success;
+  if (sensor.battery >= 25) return AppColors.warning;
+  return AppColors.error;
+}
+
+Color _signalColor(_IotSensor sensor) {
+  if (sensor.signal >= -60) return AppColors.success;
+  if (sensor.signal >= -78) return AppColors.warning;
+  return AppColors.error;
+}
+
+class _IotSensor {
+  const _IotSensor({
+    required this.id,
+    required this.name,
+    required this.type,
+    required this.farm,
+    required this.zone,
+    required this.reading,
+    required this.unit,
+    required this.status,
+    required this.health,
+    required this.battery,
+    required this.signal,
+    required this.firmware,
+    required this.gateway,
+    required this.protocol,
+    required this.lastSeen,
+    required this.rangeLabel,
+    required this.trend,
+    required this.icon,
+    required this.color,
+  });
+
+  final String id;
+  final String name;
+  final String type;
+  final String farm;
+  final String zone;
+  final String reading;
+  final String unit;
+  final String status;
+  final int health;
+  final int battery;
+  final int signal;
+  final String firmware;
+  final String gateway;
+  final String protocol;
+  final String lastSeen;
+  final String rangeLabel;
+  final String trend;
+  final IconData icon;
+  final Color color;
+}
+
+class _FleetStat {
+  const _FleetStat(this.label, this.value, this.icon, this.color);
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+}
+
+class _MobileNavItem {
+  const _MobileNavItem(this.icon, this.activeIcon, this.label, this.route);
+
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final String route;
 }

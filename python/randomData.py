@@ -42,7 +42,7 @@ def generate_values():
         "setCurrent": str(random.randint(15, 20)),
         "Temp2": str(random.randint(15, 20)),
         "waterTempreture": str(random.randint(15, 20)),
-        "Distance": str(random.randint(0, 100)),
+        "Distance": str(random.randint(30, 40)),
 
         "humdity": str(random.randint(50, 70)),
         "humidity2": str(random.randint(50, 70)),
@@ -53,21 +53,21 @@ def generate_values():
         "tds-sensor": str(random.randint(300, 800)),
         "c02-sensor": str(random.randint(400, 1200)),
 
-        "grid_powersupply": str(random.randint(100, 3000)),
-        "grid_current": str(random.randint(1, 20)),
-        "grid_Voltage": str(random.randint(210, 250)),
+        "grid_powersupply": str(random.randint(2800, 3000)),
+        "grid_current": str(random.randint(18, 20)),
+        "grid_Voltage": str(random.randint(230, 240)),
         "grid_energy": f"{random.uniform(0, 100):.1f}",
-        "grid_bill": str(random.randint(1, 500)),
+        "grid_bill": str(random.randint(450, 460)),
 
-        "solar_power": f"{random.uniform(0, 1000):.1f}",
-        "solar_powersupply": f"{random.uniform(0, 1000):.1f}",
+       # "solar_power": f"{random.uniform(0, 1000):.1f}",
+        # "solar_powersupply": f"{random.uniform(0, 1000):.1f}",
 
-        "battery_power": str(random.randint(20, 100)),
-        "battery_charge": str(random.randint(20, 100)),
+       # "battery_power": str(random.randint(20, 100)),
+       # "battery_charge": str(random.randint(20, 100)),
 
-        "Rack1_lights": random.choice(["OFF", "OFF"]),
+        "Rack1_lights": random.choice(["ON", "0N"]),
         "Rack2_lights": random.choice(["OFF", "OFF"]),
-        "Rack3_lights": random.choice(["ON", "OFF"]),
+        "Rack3_lights": random.choice(["OFF", "OFF"]),
 
         "WaterPumpState": random.choice(["ON", "OFF"]),
         "AirPumpState": random.choice(["ON", "OFF"]),
@@ -87,7 +87,7 @@ try:
         now = time.time()
 
         # Regenerate data every 1 minute
-        if now - last_update >= 60:
+        if now - last_update >= 30:
             current_values = generate_values()
             last_update = now
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
+import 'sidebar_collapse_state.dart';
 
 /// Modern collapsible sidebar for technician dashboard
 class TechnicianSidebar extends StatefulWidget {
@@ -26,7 +27,7 @@ class TechnicianSidebar extends StatefulWidget {
 
 class _TechnicianSidebarState extends State<TechnicianSidebar>
     with SingleTickerProviderStateMixin {
-  bool _isCollapsed = false;
+  bool _isCollapsed = SidebarCollapseState.isCollapsed;
   late AnimationController _animationController;
   late Animation<double> _widthAnimation;
   late Animation<double> _logoSizeAnimation;
@@ -38,37 +39,31 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
       icon: Icons.dashboard_outlined,
       activeIcon: Icons.dashboard_rounded,
       label: 'Dashboard',
-      route: '/technician-dashboard',
+      route: '/technician_dashboard',
     ),
     _NavItem(
-      icon: Icons.warning_amber_outlined,
-      activeIcon: Icons.warning_amber_rounded,
-      label: 'Open Issues',
-      route: '/open-issues',
+      icon: Icons.sensors_outlined,
+      activeIcon: Icons.sensors_rounded,
+      label: 'Sensors',
+      route: '/sensor-management',
     ),
     _NavItem(
       icon: Icons.build_outlined,
       activeIcon: Icons.build_rounded,
       label: 'Maintenance',
-      route: '/maintenance',
+      route: '/maintenance-schedule',
     ),
     _NavItem(
-      icon: Icons.shopping_cart_outlined,
-      activeIcon: Icons.shopping_cart_rounded,
-      label: 'Request Items',
-      route: '/request-items',
-    ),
-    _NavItem(
-      icon: Icons.inventory_outlined,
-      activeIcon: Icons.inventory_rounded,
-      label: 'Asset Check',
-      route: '/asset-check',
+      icon: Icons.history_outlined,
+      activeIcon: Icons.history_rounded,
+      label: 'Repair History',
+      route: '/repair-history',
     ),
     _NavItem(
       icon: Icons.settings_outlined,
       activeIcon: Icons.settings_rounded,
       label: 'Settings',
-      route: '/settings',
+      route: '/technician-settings',
     ),
   ];
 
@@ -82,12 +77,15 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
     _widthAnimation = Tween<double>(begin: 220, end: 70).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    _logoSizeAnimation = Tween<double>(begin: 100, end: 40).animate(
+    _logoSizeAnimation = Tween<double>(begin: 82, end: 34).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _opacityAnimation = Tween<double>(begin: 1, end: 0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+    if (_isCollapsed) {
+      _animationController.value = 1.0;
+    }
   }
 
   @override
@@ -99,6 +97,7 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
   void _toggleCollapse() {
     setState(() {
       _isCollapsed = !_isCollapsed;
+      SidebarCollapseState.isCollapsed = _isCollapsed;
       if (_isCollapsed) {
         _animationController.forward();
       } else {
@@ -132,7 +131,9 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
                   thickness: 1,
                   indent: AppSpacing.md,
                   endIndent: 0,
-                  color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral300,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.neutral300,
                 ),
 
               // Toggle Button
@@ -152,7 +153,9 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
                   thickness: 1,
                   indent: AppSpacing.md,
                   endIndent: 0,
-                  color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral300,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.neutral300,
                 ),
 
               // User Profile Section
@@ -171,21 +174,18 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
 
   Widget _buildLogoSection(bool isDark) {
     return Container(
-      padding: EdgeInsets.only(
-        top: AppSpacing.sm,
-        bottom: AppSpacing.sm,
-        left: _isCollapsed ? 0 : AppSpacing.md,
-        right: 0,
-      ),
-      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      alignment: Alignment.center,
       child: AnimatedBuilder(
         animation: _logoSizeAnimation,
         builder: (context, child) {
           return SizedBox(
-            width: _isCollapsed ? 60 : _logoSizeAnimation.value,
-            height: _isCollapsed ? 60 : _logoSizeAnimation.value,
+            width: _isCollapsed ? 46 : _logoSizeAnimation.value,
+            height: _isCollapsed ? 46 : _logoSizeAnimation.value,
             child: Image.asset(
-              isDark ? 'assets/logos/logo_white.png' : 'assets/logos/logo_black.png',
+              isDark
+                  ? 'assets/logos/logo_white.png'
+                  : 'assets/logos/logo_black.png',
               fit: BoxFit.contain,
             ),
           );
@@ -216,10 +216,12 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
               vertical: AppSpacing.xs,
             ),
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : AppColors.primary).withOpacity(0.08),
+              color:
+                  (isDark ? Colors.white : AppColors.primary).withOpacity(0.08),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(
-                color: (isDark ? Colors.white : AppColors.primary).withOpacity(0.15),
+                color: (isDark ? Colors.white : AppColors.primary)
+                    .withOpacity(0.15),
                 width: 1,
               ),
             ),
@@ -228,7 +230,9 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
                     child: Icon(
                       Icons.chevron_right,
                       size: 20,
-                      color: isDark ? Colors.white.withOpacity(0.8) : AppColors.primary,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.8)
+                          : AppColors.primary,
                     ),
                   )
                 : Row(
@@ -240,7 +244,10 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
                           duration: const Duration(milliseconds: 200),
                           child: Text(
                             'Collapse',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
                                   fontSize: 11,
                                   color: isDark
                                       ? Colors.white.withOpacity(0.7)
@@ -256,7 +263,9 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
                       Icon(
                         Icons.chevron_left,
                         size: 16,
-                        color: isDark ? Colors.white.withOpacity(0.8) : AppColors.primary,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.8)
+                            : AppColors.primary,
                       ),
                     ],
                   ),
@@ -321,7 +330,8 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
         child: InkWell(
           onTap: () {
             widget.onItemSelected(_navItems.indexOf(item));
-            Navigator.pushNamed(context, item.route);
+            SidebarCollapseState.isCollapsed = _isCollapsed;
+            Navigator.pushReplacementNamed(context, item.route);
           },
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           child: Container(
@@ -369,7 +379,9 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
                         size: 22,
                         color: isSelected
                             ? AppColors.primary
-                            : (isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary),
+                            : (isDark
+                                ? Colors.white.withOpacity(0.7)
+                                : AppColors.textSecondary),
                       ),
                     ),
                   )
@@ -401,7 +413,9 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
                           size: 18,
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark ? Colors.white.withOpacity(0.8) : AppColors.textSecondary),
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.8)
+                                  : AppColors.textSecondary),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.xs),
@@ -416,8 +430,12 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
                               fontSize: 13,
                               color: isSelected
                                   ? AppColors.primary
-                                  : (isDark ? Colors.white : AppColors.textPrimary),
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  : (isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary),
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                               letterSpacing: 0.1,
                             ),
                           ),
@@ -496,7 +514,9 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
               ),
               child: Center(
                 child: Text(
-                  widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : 'T',
+                  widget.userName.isNotEmpty
+                      ? widget.userName[0].toUpperCase()
+                      : 'T',
                   style: AppTypography.bodyMedium.copyWith(
                     fontSize: 18,
                     color: Colors.white,
@@ -526,7 +546,9 @@ class _TechnicianSidebarState extends State<TechnicianSidebar>
                     widget.userRole,
                     style: AppTypography.caption.copyWith(
                       fontSize: 13,
-                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.7)
+                          : AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,

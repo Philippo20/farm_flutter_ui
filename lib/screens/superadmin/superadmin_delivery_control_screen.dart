@@ -33,11 +33,13 @@ class _SuperAdminDeliveryControlScreenState
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       drawer: isMobile
           ? SuperAdminDrawer(
               selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
               userName: userName,
               userEmail: userEmail,
               userRole: 'Super Administrator',

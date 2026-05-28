@@ -18,16 +18,64 @@ class PackagingScreen extends ConsumerStatefulWidget {
 class _PackagingScreenState extends ConsumerState<PackagingScreen> {
   int _selectedNavIndex = 4;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  
+
   final List<Map<String, dynamic>> _packagingData = [
-    {'id': 'PK001', 'type': 'Box', 'weight': 500, 'unit': 'g', 'material': 'Cardboard', 'cost': 0.50, 'stock': 1200},
-    {'id': 'PK002', 'type': 'Crate', 'weight': 1, 'unit': 'kg', 'material': 'Plastic', 'cost': 1.20, 'stock': 450},
-    {'id': 'PK003', 'type': 'Bag', 'weight': 100, 'unit': 'g', 'material': 'Biodegradable', 'cost': 0.15, 'stock': 3000},
-    {'id': 'PK004', 'type': 'Box', 'weight': 250, 'unit': 'g', 'material': 'Cardboard', 'cost': 0.35, 'stock': 800},
-    {'id': 'PK005', 'type': 'Container', 'weight': 2, 'unit': 'kg', 'material': 'Plastic', 'cost': 2.50, 'stock': 200},
-    {'id': 'PK006', 'type': 'Bag', 'weight': 50, 'unit': 'g', 'material': 'Paper', 'cost': 0.10, 'stock': 5000},
+    {
+      'id': 'PK001',
+      'type': 'Box',
+      'weight': 500,
+      'unit': 'g',
+      'material': 'Cardboard',
+      'cost': 0.50,
+      'stock': 1200
+    },
+    {
+      'id': 'PK002',
+      'type': 'Crate',
+      'weight': 1,
+      'unit': 'kg',
+      'material': 'Plastic',
+      'cost': 1.20,
+      'stock': 450
+    },
+    {
+      'id': 'PK003',
+      'type': 'Bag',
+      'weight': 100,
+      'unit': 'g',
+      'material': 'Biodegradable',
+      'cost': 0.15,
+      'stock': 3000
+    },
+    {
+      'id': 'PK004',
+      'type': 'Box',
+      'weight': 250,
+      'unit': 'g',
+      'material': 'Cardboard',
+      'cost': 0.35,
+      'stock': 800
+    },
+    {
+      'id': 'PK005',
+      'type': 'Container',
+      'weight': 2,
+      'unit': 'kg',
+      'material': 'Plastic',
+      'cost': 2.50,
+      'stock': 200
+    },
+    {
+      'id': 'PK006',
+      'type': 'Bag',
+      'weight': 50,
+      'unit': 'g',
+      'material': 'Paper',
+      'cost': 0.10,
+      'stock': 5000
+    },
   ];
-  
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -37,10 +85,11 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
     final userName = user?.name ?? 'Super Admin';
     final userEmail = user?.email ?? '';
     final firstName = userName.split(' ').first;
-    
+
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       drawer: isMobile
           ? SuperAdminDrawer(
               selectedIndex: _selectedNavIndex,
@@ -57,8 +106,9 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
           : _buildDesktopLayout(isDark, userName, userEmail, firstName),
     );
   }
-  
-  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail, String firstName) {
+
+  Widget _buildDesktopLayout(
+      bool isDark, String userName, String userEmail, String firstName) {
     return Row(
       children: [
         SuperAdminSidebar(
@@ -88,7 +138,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
       ],
     );
   }
-  
+
   Widget _buildMobileLayout(bool isDark, String firstName) {
     return Column(
       children: [
@@ -107,7 +157,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
       ],
     );
   }
-  
+
   Widget _buildMobileContent(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,14 +191,14 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
             ),
           ),
         ),
-        
+
         const SizedBox(height: AppSpacing.lg),
-        
+
         // Stats - Mobile Grid
         _buildMobileStats(isDark),
-        
+
         const SizedBox(height: AppSpacing.lg),
-        
+
         // Packaging List - Mobile Cards
         Text(
           'All Packaging Types',
@@ -163,7 +213,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
       ],
     );
   }
-  
+
   Widget _buildContent(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -176,8 +226,17 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Packaging Management', style: AppTypography.h4.copyWith(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.textPrimary)),
-                  Text('Define packaging types, weights, materials, and track inventory', style: AppTypography.bodyMedium.copyWith(color: isDark ? Colors.white70 : AppColors.textSecondary)),
+                  Text('Packaging Management',
+                      style: AppTypography.h4.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color:
+                              isDark ? Colors.white : AppColors.textPrimary)),
+                  Text(
+                      'Define packaging types, weights, materials, and track inventory',
+                      style: AppTypography.bodyMedium.copyWith(
+                          color: isDark
+                              ? Colors.white70
+                              : AppColors.textSecondary)),
                 ],
               ),
             ),
@@ -188,32 +247,56 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg, vertical: AppSpacing.md),
               ),
             ),
           ],
         ),
-        
+
         const SizedBox(height: AppSpacing.xl),
-        
+
         // Stats
         _buildStats(isDark),
-        
+
         const SizedBox(height: AppSpacing.xl),
-        
+
         // Packaging Table
         Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: isDark ? AppColors.surfaceDark : Colors.white,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+            border: Border.all(
+                color:
+                    isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('All Packaging Types', style: AppTypography.h6.copyWith(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.textPrimary)),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'All Packaging Types',
+                      style: AppTypography.h6.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${_packagingData.length} records',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white60 : AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: AppSpacing.lg),
+              _buildPackagingTableHeader(isDark),
+              const SizedBox(height: AppSpacing.sm),
               ..._packagingData.map((p) => _buildPackagingRow(p, isDark)),
             ],
           ),
@@ -221,15 +304,35 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
       ],
     );
   }
-  
+
   Widget _buildMobileStats(bool isDark) {
     final stats = [
-      {'title': 'Total Types', 'value': '24', 'icon': Icons.inventory_2, 'color': AppColors.info},
-      {'title': 'Materials', 'value': '5', 'icon': Icons.category, 'color': AppColors.success},
-      {'title': 'Stock', 'value': '10.6K', 'icon': Icons.warehouse, 'color': AppColors.primary},
-      {'title': 'Avg Cost', 'value': '\$0.80', 'icon': Icons.attach_money, 'color': AppColors.warning},
+      {
+        'title': 'Total Types',
+        'value': '24',
+        'icon': Icons.inventory_2,
+        'color': AppColors.info
+      },
+      {
+        'title': 'Materials',
+        'value': '5',
+        'icon': Icons.category,
+        'color': AppColors.success
+      },
+      {
+        'title': 'Stock',
+        'value': '10.6K',
+        'icon': Icons.warehouse,
+        'color': AppColors.primary
+      },
+      {
+        'title': 'Avg Cost',
+        'value': '\$0.80',
+        'icon': Icons.attach_money,
+        'color': AppColors.warning
+      },
     ];
-    
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -288,58 +391,94 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
       },
     );
   }
-  
+
   Widget _buildStats(bool isDark) {
     final stats = [
-      {'title': 'Total Types', 'value': '24', 'icon': Icons.inventory_2, 'color': AppColors.info},
-      {'title': 'Materials', 'value': '5', 'icon': Icons.category, 'color': AppColors.success},
-      {'title': 'Total Stock', 'value': '10.6K', 'icon': Icons.warehouse, 'color': AppColors.primary},
-      {'title': 'Avg Cost', 'value': '\$0.80', 'icon': Icons.attach_money, 'color': AppColors.warning},
+      {
+        'title': 'Total Types',
+        'value': '24',
+        'icon': Icons.inventory_2,
+        'color': AppColors.info
+      },
+      {
+        'title': 'Materials',
+        'value': '5',
+        'icon': Icons.category,
+        'color': AppColors.success
+      },
+      {
+        'title': 'Total Stock',
+        'value': '10.6K',
+        'icon': Icons.warehouse,
+        'color': AppColors.primary
+      },
+      {
+        'title': 'Avg Cost',
+        'value': '\$0.80',
+        'icon': Icons.attach_money,
+        'color': AppColors.warning
+      },
     ];
-    
+
     return Row(
-      children: stats.map((stat) => Expanded(
-        child: Container(
-          margin: EdgeInsets.only(right: stat != stats.last ? AppSpacing.md : 0),
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: (stat['color'] as Color).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: (stat['color'] as Color).withOpacity(0.3)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: (stat['color'] as Color).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      children: stats
+          .map((stat) => Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(
+                      right: stat != stats.last ? AppSpacing.md : 0),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: (stat['color'] as Color).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    border: Border.all(
+                        color: (stat['color'] as Color).withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: (stat['color'] as Color).withOpacity(0.2),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                        ),
+                        child: Icon(stat['icon'] as IconData,
+                            color: stat['color'] as Color, size: 22),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(stat['value'] as String,
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: stat['color'] as Color)),
+                          Text(stat['title'] as String,
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: (stat['color'] as Color)
+                                      .withOpacity(0.8))),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                child: Icon(stat['icon'] as IconData, color: stat['color'] as Color, size: 22),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(stat['value'] as String, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: stat['color'] as Color)),
-                  Text(stat['title'] as String, style: TextStyle(fontSize: 11, color: (stat['color'] as Color).withOpacity(0.8))),
-                ],
-              ),
-            ],
-          ),
-        ),
-      )).toList(),
+              ))
+          .toList(),
     );
   }
-  
-  Widget _buildMobilePackagingCard(Map<String, dynamic> packaging, bool isDark) {
+
+  Widget _buildMobilePackagingCard(
+      Map<String, dynamic> packaging, bool isDark) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+        border: Border.all(
+            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,7 +491,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                   color: AppColors.info.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
-                child: const Icon(Icons.inventory_2, color: AppColors.info, size: 18),
+                child: const Icon(Icons.inventory_2,
+                    color: AppColors.info, size: 18),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -371,7 +511,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                       '${packaging['weight']}${packaging['unit']} • ${packaging['material']}',
                       style: TextStyle(
                         fontSize: 11,
-                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -402,7 +543,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                 height: 32,
                 child: IconButton(
                   padding: EdgeInsets.zero,
-                  onPressed: () => _showEditPackagingDialog(context, packaging, isDark),
+                  onPressed: () =>
+                      _showEditPackagingDialog(context, packaging, isDark),
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   color: AppColors.primary,
                 ),
@@ -412,7 +554,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                 height: 32,
                 child: IconButton(
                   padding: EdgeInsets.zero,
-                  onPressed: () => _showDeletePackagingDialog(context, packaging, isDark),
+                  onPressed: () =>
+                      _showDeletePackagingDialog(context, packaging, isDark),
                   icon: const Icon(Icons.delete_outline, size: 18),
                   color: AppColors.error,
                 ),
@@ -423,9 +566,11 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
       ),
     );
   }
-  
-  Widget _buildInfoChip(String text, IconData icon, bool isDark, {Color? color}) {
-    final chipColor = color ?? (isDark ? Colors.white54 : AppColors.textSecondary);
+
+  Widget _buildInfoChip(String text, IconData icon, bool isDark,
+      {Color? color}) {
+    final chipColor =
+        color ?? (isDark ? Colors.white54 : AppColors.textSecondary);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
@@ -439,89 +584,277 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
           const SizedBox(width: 3),
           Text(
             text,
-            style: TextStyle(fontSize: 10, color: chipColor, fontWeight: FontWeight.w500),
+            style: TextStyle(
+                fontSize: 10, color: chipColor, fontWeight: FontWeight.w500),
           ),
         ],
       ),
     );
   }
-  
-  Widget _buildPackagingRow(Map<String, dynamic> packaging, bool isDark) {
+
+  Widget _buildPackagingTableHeader(bool isDark) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.04),
+        ),
+      ),
+      child: Row(
+        children: [
+          _buildTableHeader('Packaging', flex: 3, isDark: isDark),
+          _buildTableHeader('Material', flex: 2, isDark: isDark),
+          _buildTableHeader('Unit Cost', isDark: isDark),
+          _buildTableHeader('Stock', isDark: isDark),
+          _buildTableHeader('Value', isDark: isDark),
+          const SizedBox(width: 88),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableHeader(
+    String label, {
+    int flex = 1,
+    required bool isDark,
+  }) {
+    return Expanded(
+      flex: flex,
+      child: Text(
+        label,
+        style: AppTypography.bodySmall.copyWith(
+          color: isDark ? Colors.white54 : AppColors.textSecondary,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMaterialBadge(String material) {
+    final color = material == 'Biodegradable'
+        ? AppColors.success
+        : material == 'Cardboard'
+            ? AppColors.warning
+            : material == 'Paper'
+                ? AppColors.info
+                : AppColors.primary;
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+          border: Border.all(color: color.withOpacity(0.22)),
+        ),
+        child: Text(
+          material,
+          style: TextStyle(
+            color: color,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStockBadge(int stock) {
+    final color = stock >= 1000
+        ? AppColors.success
+        : stock >= 400
+            ? AppColors.warning
+            : AppColors.error;
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+          border: Border.all(color: color.withOpacity(0.22)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.warehouse_rounded, size: 13, color: color),
+            const SizedBox(width: 4),
+            Text(
+              '$stock',
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPackagingRow(Map<String, dynamic> packaging, bool isDark) {
+    final cost = packaging['cost'] as double;
+    final stock = packaging['stock'] as int;
+    final inventoryValue = cost * stock;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.04),
+        ),
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.info.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            ),
-            child: const Icon(Icons.inventory_2, color: AppColors.info, size: 20),
-          ),
-          const SizedBox(width: AppSpacing.md),
           Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(packaging['type'], style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: isDark ? Colors.white : AppColors.textPrimary)),
-                Text('${packaging['weight']}${packaging['unit']}', style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textSecondary)),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Text(packaging['material'], style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : AppColors.textSecondary)),
-          ),
-          Expanded(
-            child: Text('\$${packaging['cost'].toStringAsFixed(2)}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.warning)),
-          ),
-          Expanded(
+            flex: 3,
             child: Row(
               children: [
-                const Icon(Icons.warehouse, size: 14, color: AppColors.primary),
-                const SizedBox(width: 4),
-                Text('${packaging['stock']} units', style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : AppColors.textSecondary)),
+                Container(
+                  padding: const EdgeInsets.all(9),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  ),
+                  child: const Icon(
+                    Icons.inventory_2_rounded,
+                    color: AppColors.info,
+                    size: 21,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        packaging['type'],
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 14,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        '${packaging['id']} • ${packaging['weight']}${packaging['unit']} capacity',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color:
+                              isDark ? Colors.white54 : AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(onPressed: () => _showEditPackagingDialog(context, packaging, isDark), icon: const Icon(Icons.edit_outlined, size: 18), color: AppColors.primary),
-              IconButton(onPressed: () => _showDeletePackagingDialog(context, packaging, isDark), icon: const Icon(Icons.delete_outline, size: 18), color: AppColors.error),
-            ],
+          Expanded(
+            flex: 2,
+            child: _buildMaterialBadge(packaging['material']),
+          ),
+          Expanded(
+            child: Text(
+              '\$${cost.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: AppColors.warning,
+              ),
+            ),
+          ),
+          Expanded(child: _buildStockBadge(stock)),
+          Expanded(
+            child: Text(
+              '\$${inventoryValue.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 88,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () =>
+                        _showEditPackagingDialog(context, packaging, isDark),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    color: AppColors.primary,
+                    tooltip: 'Edit',
+                  ),
+                ),
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () =>
+                        _showDeletePackagingDialog(context, packaging, isDark),
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                    color: AppColors.error,
+                    tooltip: 'Delete',
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
-  
-  void _showEditPackagingDialog(BuildContext context, Map<String, dynamic> packaging, bool isDark) {
+
+  void _showEditPackagingDialog(
+      BuildContext context, Map<String, dynamic> packaging, bool isDark) {
     final typeController = TextEditingController(text: packaging['type']);
-    final weightController = TextEditingController(text: packaging['weight'].toString());
-    final costController = TextEditingController(text: packaging['cost'].toString());
-    final stockController = TextEditingController(text: packaging['stock'].toString());
+    final weightController =
+        TextEditingController(text: packaging['weight'].toString());
+    final costController =
+        TextEditingController(text: packaging['cost'].toString());
+    final stockController =
+        TextEditingController(text: packaging['stock'].toString());
     String selectedUnit = packaging['unit'];
     String selectedMaterial = packaging['material'];
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-          insetPadding: EdgeInsets.symmetric(horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl, vertical: AppSpacing.xl),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
+          insetPadding: EdgeInsets.symmetric(
+              horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
+              vertical: AppSpacing.xl),
           child: Container(
             width: isMobile ? double.infinity : 500,
-            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.9),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -529,15 +862,39 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [AppColors.info, AppColors.info.withOpacity(0.8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
+                    gradient: LinearGradient(colors: [
+                      AppColors.info,
+                      AppColors.info.withOpacity(0.8)
+                    ], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppSpacing.radiusXl)),
                   ),
                   child: Row(
                     children: [
-                      Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(AppSpacing.radiusMd)), child: const Icon(Icons.edit, color: Colors.white, size: 24)),
+                      Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusMd)),
+                          child: const Icon(Icons.edit,
+                              color: Colors.white, size: 24)),
                       const SizedBox(width: AppSpacing.md),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Edit Packaging', style: AppTypography.h6.copyWith(color: Colors.white, fontWeight: FontWeight.bold)), Text('Modify packaging details', style: AppTypography.bodySmall.copyWith(color: Colors.white70))])),
-                      IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, color: Colors.white70)),
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text('Edit Packaging',
+                                style: AppTypography.h6.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
+                            Text('Modify packaging details',
+                                style: AppTypography.bodySmall
+                                    .copyWith(color: Colors.white70))
+                          ])),
+                      IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close, color: Colors.white70)),
                     ],
                   ),
                 ),
@@ -546,22 +903,52 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                   margin: const EdgeInsets.all(AppSpacing.lg),
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.05) : AppColors.info.withOpacity(0.05),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.05)
+                        : AppColors.info.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     border: Border.all(color: AppColors.info.withOpacity(0.2)),
                   ),
                   child: Row(
                     children: [
-                      Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.info.withOpacity(0.1), borderRadius: BorderRadius.circular(AppSpacing.radiusSm)), child: const Icon(Icons.inventory_2, color: AppColors.info, size: 24)),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(packaging['type'], style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.textPrimary)),
-                        Text('${packaging['weight']}${packaging['unit']} • ${packaging['material']}', style: AppTypography.bodySmall.copyWith(color: isDark ? Colors.white60 : AppColors.textSecondary)),
-                      ])),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: AppColors.warning.withOpacity(0.1), borderRadius: BorderRadius.circular(AppSpacing.radiusFull)),
-                        child: Text('\$${packaging['cost'].toStringAsFixed(2)}', style: const TextStyle(color: AppColors.warning, fontSize: 12, fontWeight: FontWeight.bold)),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                              color: AppColors.info.withOpacity(0.1),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusSm)),
+                          child: const Icon(Icons.inventory_2,
+                              color: AppColors.info, size: 24)),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text(packaging['type'],
+                                style: AppTypography.bodyLarge.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.textPrimary)),
+                            Text(
+                                '${packaging['weight']}${packaging['unit']} • ${packaging['material']}',
+                                style: AppTypography.bodySmall.copyWith(
+                                    color: isDark
+                                        ? Colors.white60
+                                        : AppColors.textSecondary)),
+                          ])),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                            color: AppColors.warning.withOpacity(0.1),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusFull)),
+                        child: Text('\$${packaging['cost'].toStringAsFixed(2)}',
+                            style: const TextStyle(
+                                color: AppColors.warning,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
@@ -569,36 +956,139 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                 // Form
                 Flexible(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildFormLabel('Packaging Type', isDark),
                         const SizedBox(height: AppSpacing.sm),
-                        _buildTextField(controller: typeController, hint: 'e.g., Small Box', icon: Icons.inventory_2_outlined, isDark: isDark),
+                        _buildTextField(
+                            controller: typeController,
+                            hint: 'e.g., Small Box',
+                            icon: Icons.inventory_2_outlined,
+                            isDark: isDark),
                         const SizedBox(height: AppSpacing.lg),
-                        if (!isMobile) Row(children: [
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildFormLabel('Weight', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: weightController, hint: '500', icon: Icons.scale, isDark: isDark, keyboardType: TextInputType.number)])),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildFormLabel('Unit', isDark), const SizedBox(height: AppSpacing.sm), _buildDropdownField(value: selectedUnit, items: ['g', 'kg', 'lbs', 'oz'], icon: Icons.straighten, isDark: isDark, onChanged: (v) => setDialogState(() => selectedUnit = v!))])),
-                        ]) else ...[
-                          _buildFormLabel('Weight', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: weightController, hint: '500', icon: Icons.scale, isDark: isDark, keyboardType: TextInputType.number),
+                        if (!isMobile)
+                          Row(children: [
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildFormLabel('Weight', isDark),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _buildTextField(
+                                      controller: weightController,
+                                      hint: '500',
+                                      icon: Icons.scale,
+                                      isDark: isDark,
+                                      keyboardType: TextInputType.number)
+                                ])),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildFormLabel('Unit', isDark),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _buildDropdownField(
+                                      value: selectedUnit,
+                                      items: ['g', 'kg', 'lbs', 'oz'],
+                                      icon: Icons.straighten,
+                                      isDark: isDark,
+                                      onChanged: (v) => setDialogState(
+                                          () => selectedUnit = v!))
+                                ])),
+                          ])
+                        else ...[
+                          _buildFormLabel('Weight', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                              controller: weightController,
+                              hint: '500',
+                              icon: Icons.scale,
+                              isDark: isDark,
+                              keyboardType: TextInputType.number),
                           const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Unit', isDark), const SizedBox(height: AppSpacing.sm), _buildDropdownField(value: selectedUnit, items: ['g', 'kg', 'lbs', 'oz'], icon: Icons.straighten, isDark: isDark, onChanged: (v) => setDialogState(() => selectedUnit = v!)),
+                          _buildFormLabel('Unit', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildDropdownField(
+                              value: selectedUnit,
+                              items: ['g', 'kg', 'lbs', 'oz'],
+                              icon: Icons.straighten,
+                              isDark: isDark,
+                              onChanged: (v) =>
+                                  setDialogState(() => selectedUnit = v!)),
                         ],
                         const SizedBox(height: AppSpacing.lg),
                         _buildFormLabel('Material', isDark),
                         const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(value: selectedMaterial, items: ['Plastic', 'Cardboard', 'Paper', 'Biodegradable', 'Glass'], icon: Icons.category, isDark: isDark, onChanged: (v) => setDialogState(() => selectedMaterial = v!)),
+                        _buildDropdownField(
+                            value: selectedMaterial,
+                            items: [
+                              'Plastic',
+                              'Cardboard',
+                              'Paper',
+                              'Biodegradable',
+                              'Glass'
+                            ],
+                            icon: Icons.category,
+                            isDark: isDark,
+                            onChanged: (v) =>
+                                setDialogState(() => selectedMaterial = v!)),
                         const SizedBox(height: AppSpacing.lg),
-                        if (!isMobile) Row(children: [
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildFormLabel('Cost (\$)', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: costController, hint: '2.50', icon: Icons.attach_money, isDark: isDark, keyboardType: TextInputType.number)])),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildFormLabel('Stock', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: stockController, hint: '1000', icon: Icons.warehouse, isDark: isDark, keyboardType: TextInputType.number)])),
-                        ]) else ...[
-                          _buildFormLabel('Cost (\$)', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: costController, hint: '2.50', icon: Icons.attach_money, isDark: isDark, keyboardType: TextInputType.number),
+                        if (!isMobile)
+                          Row(children: [
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildFormLabel('Cost (\$)', isDark),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _buildTextField(
+                                      controller: costController,
+                                      hint: '2.50',
+                                      icon: Icons.attach_money,
+                                      isDark: isDark,
+                                      keyboardType: TextInputType.number)
+                                ])),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildFormLabel('Stock', isDark),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _buildTextField(
+                                      controller: stockController,
+                                      hint: '1000',
+                                      icon: Icons.warehouse,
+                                      isDark: isDark,
+                                      keyboardType: TextInputType.number)
+                                ])),
+                          ])
+                        else ...[
+                          _buildFormLabel('Cost (\$)', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                              controller: costController,
+                              hint: '2.50',
+                              icon: Icons.attach_money,
+                              isDark: isDark,
+                              keyboardType: TextInputType.number),
                           const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Stock', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: stockController, hint: '1000', icon: Icons.warehouse, isDark: isDark, keyboardType: TextInputType.number),
+                          _buildFormLabel('Stock', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                              controller: stockController,
+                              hint: '1000',
+                              icon: Icons.warehouse,
+                              isDark: isDark,
+                              keyboardType: TextInputType.number),
                         ],
                       ],
                     ),
@@ -607,14 +1097,77 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                 // Actions
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50, borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppSpacing.radiusXl))),
+                  decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.03)
+                          : AppColors.neutral50,
+                      borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(AppSpacing.radiusXl))),
                   child: Row(
                     children: [
-                      OutlinedButton(onPressed: () => _showDeletePackagingDialog(context, packaging, isDark), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: AppSpacing.md), side: const BorderSide(color: AppColors.error), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))), child: const Icon(Icons.delete_outline, color: AppColors.error, size: 20)),
+                      OutlinedButton(
+                          onPressed: () => _showDeletePackagingDialog(
+                              context, packaging, isDark),
+                          style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.md,
+                                  horizontal: AppSpacing.md),
+                              side: const BorderSide(color: AppColors.error),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusMd))),
+                          child: const Icon(Icons.delete_outline,
+                              color: AppColors.error, size: 20)),
                       const SizedBox(width: AppSpacing.md),
-                      Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), side: BorderSide(color: isDark ? Colors.white24 : AppColors.neutral300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))), child: Text('Cancel', style: TextStyle(color: isDark ? Colors.white70 : AppColors.textSecondary)))),
+                      Expanded(
+                          child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: AppSpacing.md),
+                                  side: BorderSide(
+                                      color: isDark
+                                          ? Colors.white24
+                                          : AppColors.neutral300),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusMd))),
+                              child: Text('Cancel',
+                                  style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white70
+                                          : AppColors.textSecondary)))),
                       const SizedBox(width: AppSpacing.md),
-                      Expanded(flex: 2, child: ElevatedButton.icon(onPressed: () { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Row(children: [const Icon(Icons.check_circle, color: Colors.white), const SizedBox(width: 8), Text('${typeController.text} updated!')]), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)))); }, icon: const Icon(Icons.save, size: 18), label: const Text('Save Changes'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.info, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))))),
+                      Expanded(
+                          flex: 2,
+                          child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Row(children: [
+                                          const Icon(Icons.check_circle,
+                                              color: Colors.white),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                              '${typeController.text} updated!')
+                                        ]),
+                                        backgroundColor: AppColors.success,
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                                AppSpacing.radiusMd))));
+                              },
+                              icon: const Icon(Icons.save, size: 18),
+                              label: const Text('Save Changes'),
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.info,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: AppSpacing.md),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusMd))))),
                     ],
                   ),
                 ),
@@ -625,13 +1178,15 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
       ),
     );
   }
-  
-  void _showDeletePackagingDialog(BuildContext context, Map<String, dynamic> packaging, bool isDark) {
+
+  void _showDeletePackagingDialog(
+      BuildContext context, Map<String, dynamic> packaging, bool isDark) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
         child: Container(
           width: 400,
           padding: const EdgeInsets.all(AppSpacing.xl),
@@ -640,31 +1195,94 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: AppColors.error.withOpacity(0.1), shape: BoxShape.circle),
-                child: const Icon(Icons.delete_forever, color: AppColors.error, size: 40),
+                decoration: BoxDecoration(
+                    color: AppColors.error.withOpacity(0.1),
+                    shape: BoxShape.circle),
+                child: const Icon(Icons.delete_forever,
+                    color: AppColors.error, size: 40),
               ),
               const SizedBox(height: AppSpacing.lg),
-              Text('Delete Packaging?', style: AppTypography.h5.copyWith(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.textPrimary)),
+              Text('Delete Packaging?',
+                  style: AppTypography.h5.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : AppColors.textPrimary)),
               const SizedBox(height: AppSpacing.sm),
-              Text('Are you sure you want to delete "${packaging['type']}"?', style: AppTypography.bodyMedium.copyWith(color: isDark ? Colors.white70 : AppColors.textSecondary), textAlign: TextAlign.center),
+              Text('Are you sure you want to delete "${packaging['type']}"?',
+                  style: AppTypography.bodyMedium.copyWith(
+                      color: isDark ? Colors.white70 : AppColors.textSecondary),
+                  textAlign: TextAlign.center),
               const SizedBox(height: AppSpacing.sm),
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(color: AppColors.warning.withOpacity(0.1), borderRadius: BorderRadius.circular(AppSpacing.radiusMd), border: Border.all(color: AppColors.warning.withOpacity(0.3))),
+                decoration: BoxDecoration(
+                    color: AppColors.warning.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border:
+                        Border.all(color: AppColors.warning.withOpacity(0.3))),
                 child: Row(
                   children: [
-                    const Icon(Icons.warning_amber, color: AppColors.warning, size: 20),
+                    const Icon(Icons.warning_amber,
+                        color: AppColors.warning, size: 20),
                     const SizedBox(width: AppSpacing.sm),
-                    Expanded(child: Text('This will also affect associated pricing configurations.', style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : AppColors.textSecondary))),
+                    Expanded(
+                        child: Text(
+                            'This will also affect associated pricing configurations.',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? Colors.white70
+                                    : AppColors.textSecondary))),
                   ],
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
               Row(
                 children: [
-                  Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), side: BorderSide(color: isDark ? Colors.white24 : AppColors.neutral300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))), child: Text('Cancel', style: TextStyle(color: isDark ? Colors.white70 : AppColors.textSecondary)))),
+                  Expanded(
+                      child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.md),
+                              side: BorderSide(
+                                  color: isDark
+                                      ? Colors.white24
+                                      : AppColors.neutral300),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusMd))),
+                          child: Text('Cancel',
+                              style: TextStyle(
+                                  color: isDark
+                                      ? Colors.white70
+                                      : AppColors.textSecondary)))),
                   const SizedBox(width: AppSpacing.md),
-                  Expanded(child: ElevatedButton.icon(onPressed: () { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Row(children: [const Icon(Icons.delete, color: Colors.white), const SizedBox(width: 8), Text('${packaging['type']} deleted!')]), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)))); }, icon: const Icon(Icons.delete, size: 18), label: const Text('Delete'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.error, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))))),
+                  Expanded(
+                      child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Row(children: [
+                                  const Icon(Icons.delete, color: Colors.white),
+                                  const SizedBox(width: 8),
+                                  Text('${packaging['type']} deleted!')
+                                ]),
+                                backgroundColor: AppColors.error,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd))));
+                          },
+                          icon: const Icon(Icons.delete, size: 18),
+                          label: const Text('Delete'),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.error,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.md),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusMd))))),
                 ],
               ),
             ],
@@ -673,7 +1291,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
       ),
     );
   }
-  
+
   void _showAddPackagingDialog(BuildContext context, bool isDark) {
     final typeController = TextEditingController();
     final weightController = TextEditingController();
@@ -683,17 +1301,21 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
     String selectedMaterial = 'Plastic';
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    
+
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-          insetPadding: EdgeInsets.symmetric(horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl, vertical: AppSpacing.xl),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
+          insetPadding: EdgeInsets.symmetric(
+              horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
+              vertical: AppSpacing.xl),
           child: Container(
             width: isMobile ? double.infinity : 500,
-            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.9),
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.9),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -701,15 +1323,39 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
+                    gradient: LinearGradient(colors: [
+                      AppColors.primary,
+                      AppColors.primary.withOpacity(0.8)
+                    ], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                    borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppSpacing.radiusXl)),
                   ),
                   child: Row(
                     children: [
-                      Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(AppSpacing.radiusMd)), child: const Icon(Icons.inventory_2, color: Colors.white, size: 24)),
+                      Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusMd)),
+                          child: const Icon(Icons.inventory_2,
+                              color: Colors.white, size: 24)),
                       const SizedBox(width: AppSpacing.md),
-                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Add Packaging', style: AppTypography.h6.copyWith(color: Colors.white, fontWeight: FontWeight.bold)), Text('Create new packaging option', style: AppTypography.bodySmall.copyWith(color: Colors.white70))])),
-                      IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, color: Colors.white70)),
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text('Add Packaging',
+                                style: AppTypography.h6.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
+                            Text('Create new packaging option',
+                                style: AppTypography.bodySmall
+                                    .copyWith(color: Colors.white70))
+                          ])),
+                      IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close, color: Colors.white70)),
                     ],
                   ),
                 ),
@@ -722,30 +1368,132 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                       children: [
                         _buildFormLabel('Packaging Type', isDark),
                         const SizedBox(height: AppSpacing.sm),
-                        _buildTextField(controller: typeController, hint: 'e.g., Small Box', icon: Icons.inventory_2_outlined, isDark: isDark),
+                        _buildTextField(
+                            controller: typeController,
+                            hint: 'e.g., Small Box',
+                            icon: Icons.inventory_2_outlined,
+                            isDark: isDark),
                         const SizedBox(height: AppSpacing.lg),
-                        if (!isMobile) Row(children: [
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildFormLabel('Weight', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: weightController, hint: '500', icon: Icons.scale, isDark: isDark, keyboardType: TextInputType.number)])),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildFormLabel('Unit', isDark), const SizedBox(height: AppSpacing.sm), _buildDropdownField(value: selectedUnit, items: ['g', 'kg', 'lbs', 'oz'], icon: Icons.straighten, isDark: isDark, onChanged: (v) => setDialogState(() => selectedUnit = v!))])),
-                        ]) else ...[
-                          _buildFormLabel('Weight', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: weightController, hint: '500', icon: Icons.scale, isDark: isDark, keyboardType: TextInputType.number),
+                        if (!isMobile)
+                          Row(children: [
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildFormLabel('Weight', isDark),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _buildTextField(
+                                      controller: weightController,
+                                      hint: '500',
+                                      icon: Icons.scale,
+                                      isDark: isDark,
+                                      keyboardType: TextInputType.number)
+                                ])),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildFormLabel('Unit', isDark),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _buildDropdownField(
+                                      value: selectedUnit,
+                                      items: ['g', 'kg', 'lbs', 'oz'],
+                                      icon: Icons.straighten,
+                                      isDark: isDark,
+                                      onChanged: (v) => setDialogState(
+                                          () => selectedUnit = v!))
+                                ])),
+                          ])
+                        else ...[
+                          _buildFormLabel('Weight', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                              controller: weightController,
+                              hint: '500',
+                              icon: Icons.scale,
+                              isDark: isDark,
+                              keyboardType: TextInputType.number),
                           const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Unit', isDark), const SizedBox(height: AppSpacing.sm), _buildDropdownField(value: selectedUnit, items: ['g', 'kg', 'lbs', 'oz'], icon: Icons.straighten, isDark: isDark, onChanged: (v) => setDialogState(() => selectedUnit = v!)),
+                          _buildFormLabel('Unit', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildDropdownField(
+                              value: selectedUnit,
+                              items: ['g', 'kg', 'lbs', 'oz'],
+                              icon: Icons.straighten,
+                              isDark: isDark,
+                              onChanged: (v) =>
+                                  setDialogState(() => selectedUnit = v!)),
                         ],
                         const SizedBox(height: AppSpacing.lg),
                         _buildFormLabel('Material', isDark),
                         const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(value: selectedMaterial, items: ['Plastic', 'Cardboard', 'Paper', 'Biodegradable', 'Glass'], icon: Icons.category, isDark: isDark, onChanged: (v) => setDialogState(() => selectedMaterial = v!)),
+                        _buildDropdownField(
+                            value: selectedMaterial,
+                            items: [
+                              'Plastic',
+                              'Cardboard',
+                              'Paper',
+                              'Biodegradable',
+                              'Glass'
+                            ],
+                            icon: Icons.category,
+                            isDark: isDark,
+                            onChanged: (v) =>
+                                setDialogState(() => selectedMaterial = v!)),
                         const SizedBox(height: AppSpacing.lg),
-                        if (!isMobile) Row(children: [
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildFormLabel('Cost (\$)', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: costController, hint: '2.50', icon: Icons.attach_money, isDark: isDark, keyboardType: TextInputType.number)])),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildFormLabel('Stock', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: stockController, hint: '1000', icon: Icons.warehouse, isDark: isDark, keyboardType: TextInputType.number)])),
-                        ]) else ...[
-                          _buildFormLabel('Cost (\$)', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: costController, hint: '2.50', icon: Icons.attach_money, isDark: isDark, keyboardType: TextInputType.number),
+                        if (!isMobile)
+                          Row(children: [
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildFormLabel('Cost (\$)', isDark),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _buildTextField(
+                                      controller: costController,
+                                      hint: '2.50',
+                                      icon: Icons.attach_money,
+                                      isDark: isDark,
+                                      keyboardType: TextInputType.number)
+                                ])),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  _buildFormLabel('Stock', isDark),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  _buildTextField(
+                                      controller: stockController,
+                                      hint: '1000',
+                                      icon: Icons.warehouse,
+                                      isDark: isDark,
+                                      keyboardType: TextInputType.number)
+                                ])),
+                          ])
+                        else ...[
+                          _buildFormLabel('Cost (\$)', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                              controller: costController,
+                              hint: '2.50',
+                              icon: Icons.attach_money,
+                              isDark: isDark,
+                              keyboardType: TextInputType.number),
                           const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Stock', isDark), const SizedBox(height: AppSpacing.sm), _buildTextField(controller: stockController, hint: '1000', icon: Icons.warehouse, isDark: isDark, keyboardType: TextInputType.number),
+                          _buildFormLabel('Stock', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                              controller: stockController,
+                              hint: '1000',
+                              icon: Icons.warehouse,
+                              isDark: isDark,
+                              keyboardType: TextInputType.number),
                         ],
                       ],
                     ),
@@ -754,12 +1502,63 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                 // Actions
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50, borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppSpacing.radiusXl))),
+                  decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.03)
+                          : AppColors.neutral50,
+                      borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(AppSpacing.radiusXl))),
                   child: Row(
                     children: [
-                      Expanded(child: OutlinedButton(onPressed: () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), side: BorderSide(color: isDark ? Colors.white24 : AppColors.neutral300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))), child: Text('Cancel', style: TextStyle(color: isDark ? Colors.white70 : AppColors.textSecondary)))),
+                      Expanded(
+                          child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: AppSpacing.md),
+                                  side: BorderSide(
+                                      color: isDark
+                                          ? Colors.white24
+                                          : AppColors.neutral300),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusMd))),
+                              child: Text('Cancel',
+                                  style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white70
+                                          : AppColors.textSecondary)))),
                       const SizedBox(width: AppSpacing.md),
-                      Expanded(flex: 2, child: ElevatedButton.icon(onPressed: () { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Row(children: [const Icon(Icons.check_circle, color: Colors.white), const SizedBox(width: 8), Text('${typeController.text.isEmpty ? "Packaging" : typeController.text} added!')]), backgroundColor: AppColors.success, behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)))); }, icon: const Icon(Icons.add, size: 18), label: const Text('Add Packaging'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: AppSpacing.md), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd))))),
+                      Expanded(
+                          flex: 2,
+                          child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Row(children: [
+                                          const Icon(Icons.check_circle,
+                                              color: Colors.white),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                              '${typeController.text.isEmpty ? "Packaging" : typeController.text} added!')
+                                        ]),
+                                        backgroundColor: AppColors.success,
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                                AppSpacing.radiusMd))));
+                              },
+                              icon: const Icon(Icons.add, size: 18),
+                              label: const Text('Add Packaging'),
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: AppSpacing.md),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusMd))))),
                     ],
                   ),
                 ),
@@ -770,22 +1569,88 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
       ),
     );
   }
-  
+
   // Helper widgets
-  Widget _buildFormLabel(String label, bool isDark) => Text(label, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppColors.textPrimary));
-  
-  Widget _buildTextField({required TextEditingController controller, required String hint, required IconData icon, required bool isDark, TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildFormLabel(String label, bool isDark) => Text(label,
+      style: AppTypography.bodyMedium.copyWith(
+          fontWeight: FontWeight.w600,
+          color: isDark ? Colors.white : AppColors.textPrimary));
+
+  Widget _buildTextField(
+      {required TextEditingController controller,
+      required String hint,
+      required IconData icon,
+      required bool isDark,
+      TextInputType keyboardType = TextInputType.text}) {
     return TextFormField(
-      controller: controller, keyboardType: keyboardType, style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
-      decoration: InputDecoration(hintText: hint, hintStyle: TextStyle(color: isDark ? Colors.white38 : AppColors.textSecondary.withOpacity(0.5)), prefixIcon: Icon(icon, color: isDark ? Colors.white54 : AppColors.textSecondary, size: 20), filled: true, fillColor: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50, border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd), borderSide: BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200)), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd), borderSide: BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200)), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd), borderSide: const BorderSide(color: AppColors.primary, width: 2)), contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md)),
+      controller: controller,
+      keyboardType: keyboardType,
+      style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
+      decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+              color: isDark
+                  ? Colors.white38
+                  : AppColors.textSecondary.withOpacity(0.5)),
+          prefixIcon: Icon(icon,
+              color: isDark ? Colors.white54 : AppColors.textSecondary,
+              size: 20),
+          filled: true,
+          fillColor:
+              isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderSide: BorderSide(
+                  color: isDark ? Colors.white12 : AppColors.neutral200)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderSide: BorderSide(
+                  color: isDark ? Colors.white12 : AppColors.neutral200)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+          contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md, vertical: AppSpacing.md)),
     );
   }
-  
-  Widget _buildDropdownField({required String value, required List<String> items, required IconData icon, required bool isDark, required Function(String?) onChanged}) {
+
+  Widget _buildDropdownField(
+      {required String value,
+      required List<String> items,
+      required IconData icon,
+      required bool isDark,
+      required Function(String?) onChanged}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50, borderRadius: BorderRadius.circular(AppSpacing.radiusMd), border: Border.all(color: isDark ? Colors.white12 : AppColors.neutral200)),
-      child: DropdownButtonHideUnderline(child: DropdownButton<String>(value: value, isExpanded: true, icon: Icon(Icons.keyboard_arrow_down, color: isDark ? Colors.white54 : AppColors.textSecondary), dropdownColor: isDark ? AppColors.surfaceDark : Colors.white, style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary, fontSize: 14), items: items.map((item) => DropdownMenuItem(value: item, child: Row(children: [Icon(icon, color: isDark ? Colors.white54 : AppColors.textSecondary, size: 20), const SizedBox(width: AppSpacing.md), Text(item)]))).toList(), onChanged: onChanged)),
+      decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+              color: isDark ? Colors.white12 : AppColors.neutral200)),
+      child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              icon: Icon(Icons.keyboard_arrow_down,
+                  color: isDark ? Colors.white54 : AppColors.textSecondary),
+              dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+              style: TextStyle(
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                  fontSize: 14),
+              items: items
+                  .map((item) => DropdownMenuItem(
+                      value: item,
+                      child: Row(children: [
+                        Icon(icon,
+                            color: isDark
+                                ? Colors.white54
+                                : AppColors.textSecondary,
+                            size: 20),
+                        const SizedBox(width: AppSpacing.md),
+                        Text(item)
+                      ])))
+                  .toList(),
+              onChanged: onChanged)),
     );
   }
 }

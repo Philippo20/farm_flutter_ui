@@ -3,14 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/modern_dashboard_scaffold.dart';
+import '../../core/widgets/technician_mobile_bottom_nav.dart';
 import '../../core/widgets/technician_sidebar.dart';
 import '../../core/widgets/technician_header.dart';
-import '../../core/widgets/modern_dashboard_scaffold.dart';
 import '../../core/widgets/weather_time_widget.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../widgets/alert_summary_card.dart';
 import '../../providers/auth_provider.dart';
-import 'sensor_management_screen.dart';
 
 /// Technician Dashboard - Redesigned
 /// Maintenance and technical support
@@ -56,7 +56,12 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               label: const Text('Report Issue'),
             )
           : null,
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? TechnicianMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+            )
+          : null,
     );
   }
 
@@ -423,14 +428,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               AppColors.success,
               '10 Active',
               'Manage all sensors',
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SensorManagementScreen(),
-                  ),
-                );
-              },
+                () => Navigator.pushNamed(context, '/sensor-management'),
               isMobile,
             ),
             _buildAssetCard(context, isDark, 'Air Condition', Icons.ac_unit, AppColors.warning,
@@ -579,7 +577,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               Icons.report_problem,
               AppColors.error,
               '5 open issues',
-              () {},
+               () => Navigator.pushNamed(context, '/maintenance-schedule'),
               isMobile,
             ),
             _buildFeatureCard(
@@ -589,7 +587,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               Icons.lightbulb_outline,
               AppColors.warning,
               'Knowledge base',
-              () {},
+               () => Navigator.pushNamed(context, '/maintenance-schedule'),
               isMobile,
             ),
             _buildFeatureCard(
@@ -599,7 +597,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               Icons.event,
               AppColors.info,
               '3 tasks due',
-              () {},
+               () => Navigator.pushNamed(context, '/maintenance-schedule'),
               isMobile,
             ),
             _buildFeatureCard(
@@ -609,7 +607,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               Icons.shopping_cart,
               AppColors.primary,
               'Order supplies',
-              () {},
+               () => Navigator.pushNamed(context, '/maintenance-schedule'),
               isMobile,
             ),
             _buildFeatureCard(
@@ -639,7 +637,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               Icons.history,
               AppColors.warning,
               'View past fixes',
-              () {},
+              () => Navigator.pushNamed(context, '/repair-history'),
               isMobile,
             ),
             _buildFeatureCard(
@@ -649,7 +647,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               Icons.settings_outlined,
               AppColors.textSecondary,
               'Preferences',
-              () {},
+              () => Navigator.pushNamed(context, '/technician-settings'),
               isMobile,
             ),
           ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
+import 'sidebar_collapse_state.dart';
 
 /// Super Admin Sidebar - Styled like Modern Admin Sidebar
 /// Expanded width: 220px, Collapsed width: 70px
@@ -29,7 +30,7 @@ class SuperAdminSidebar extends StatefulWidget {
 
 class _SuperAdminSidebarState extends State<SuperAdminSidebar>
     with SingleTickerProviderStateMixin {
-  bool _isCollapsed = false;
+  bool _isCollapsed = SidebarCollapseState.isCollapsed;
   late AnimationController _animationController;
   late Animation<double> _widthAnimation;
   late Animation<double> _logoSizeAnimation;
@@ -102,6 +103,12 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
       label: 'Deliveries',
       route: '/superadmin/deliveries',
     ),
+    _NavItem(
+      icon: Icons.sensors_outlined,
+      activeIcon: Icons.sensors_rounded,
+      label: 'Sensors',
+      route: '/superadmin/sensors',
+    ),
   ];
 
   @override
@@ -114,12 +121,15 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
     _widthAnimation = Tween<double>(begin: 220, end: 70).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    _logoSizeAnimation = Tween<double>(begin: 100, end: 40).animate(
+    _logoSizeAnimation = Tween<double>(begin: 82, end: 34).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _opacityAnimation = Tween<double>(begin: 1, end: 0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+    if (_isCollapsed) {
+      _animationController.value = 1.0;
+    }
   }
 
   @override
@@ -131,6 +141,7 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
   void _toggleCollapse() {
     setState(() {
       _isCollapsed = !_isCollapsed;
+      SidebarCollapseState.isCollapsed = _isCollapsed;
       if (_isCollapsed) {
         _animationController.forward();
       } else {
@@ -165,7 +176,9 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                   thickness: 1,
                   indent: AppSpacing.md,
                   endIndent: 0,
-                  color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral300,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.neutral300,
                 ),
 
               // Toggle Button
@@ -185,7 +198,9 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                   thickness: 1,
                   indent: AppSpacing.md,
                   endIndent: 0,
-                  color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral300,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.neutral300,
                 ),
 
               // User Profile Section
@@ -204,21 +219,18 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
 
   Widget _buildLogoSection(bool isDark) {
     return Container(
-      padding: EdgeInsets.only(
-        top: AppSpacing.sm,
-        bottom: AppSpacing.sm,
-        left: _isCollapsed ? 0 : AppSpacing.md,
-        right: 0,
-      ),
-      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      alignment: Alignment.center,
       child: AnimatedBuilder(
         animation: _logoSizeAnimation,
         builder: (context, child) {
           return SizedBox(
-            width: _isCollapsed ? 60 : _logoSizeAnimation.value,
-            height: _isCollapsed ? 60 : _logoSizeAnimation.value,
+            width: _isCollapsed ? 46 : _logoSizeAnimation.value,
+            height: _isCollapsed ? 46 : _logoSizeAnimation.value,
             child: Image.asset(
-              isDark ? 'assets/logos/logo_white.png' : 'assets/logos/logo_black.png',
+              isDark
+                  ? 'assets/logos/logo_white.png'
+                  : 'assets/logos/logo_black.png',
               fit: BoxFit.contain,
             ),
           );
@@ -249,10 +261,12 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
               vertical: AppSpacing.xs,
             ),
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : AppColors.primary).withOpacity(0.08),
+              color:
+                  (isDark ? Colors.white : AppColors.primary).withOpacity(0.08),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(
-                color: (isDark ? Colors.white : AppColors.primary).withOpacity(0.15),
+                color: (isDark ? Colors.white : AppColors.primary)
+                    .withOpacity(0.15),
                 width: 1,
               ),
             ),
@@ -261,7 +275,9 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                     child: Icon(
                       Icons.chevron_right,
                       size: 20,
-                      color: isDark ? Colors.white.withOpacity(0.8) : AppColors.primary,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.8)
+                          : AppColors.primary,
                     ),
                   )
                 : Row(
@@ -273,7 +289,10 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                           duration: const Duration(milliseconds: 200),
                           child: Text(
                             'Collapse',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
                                   fontSize: 11,
                                   color: isDark
                                       ? Colors.white.withOpacity(0.7)
@@ -289,7 +308,9 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                       Icon(
                         Icons.chevron_left,
                         size: 16,
-                        color: isDark ? Colors.white.withOpacity(0.8) : AppColors.primary,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.8)
+                            : AppColors.primary,
                       ),
                     ],
                   ),
@@ -355,6 +376,7 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
           onTap: () {
             final index = _navItems.indexOf(item);
             widget.onItemSelected(index);
+            SidebarCollapseState.isCollapsed = _isCollapsed;
             // Navigate to the route - use pushReplacementNamed to replace current route
             // instead of stacking routes
             try {
@@ -416,7 +438,9 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                         size: 22,
                         color: isSelected
                             ? AppColors.primary
-                            : (isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary),
+                            : (isDark
+                                ? Colors.white.withOpacity(0.7)
+                                : AppColors.textSecondary),
                       ),
                     ),
                   )
@@ -448,7 +472,9 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                           size: 18,
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark ? Colors.white.withOpacity(0.8) : AppColors.textSecondary),
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.8)
+                                  : AppColors.textSecondary),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.xs),
@@ -463,8 +489,12 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                               fontSize: 13,
                               color: isSelected
                                   ? AppColors.primary
-                                  : (isDark ? Colors.white : AppColors.textPrimary),
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  : (isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary),
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                               letterSpacing: 0.1,
                             ),
                           ),
@@ -543,7 +573,9 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
               ),
               child: Center(
                 child: Text(
-                  widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : 'A',
+                  widget.userName.isNotEmpty
+                      ? widget.userName[0].toUpperCase()
+                      : 'A',
                   style: AppTypography.bodyMedium.copyWith(
                     fontSize: 18,
                     color: Colors.white,
@@ -573,7 +605,9 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                     widget.userRole,
                     style: AppTypography.caption.copyWith(
                       fontSize: 13,
-                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.7)
+                          : AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,
@@ -733,78 +767,84 @@ class SuperAdminDrawer extends StatelessWidget {
   });
 
   List<_NavItem> get _navItems => const [
-    const _NavItem(
-      icon: Icons.dashboard_outlined,
-      activeIcon: Icons.dashboard_rounded,
-      label: 'Dashboard',
-      route: '/superadmin_dashboard',
-    ),
-    const _NavItem(
-      icon: Icons.people_outline,
-      activeIcon: Icons.people_alt_rounded,
-      label: 'User Management',
-      route: '/superadmin/users',
-    ),
-    const _NavItem(
-      icon: Icons.agriculture_outlined,
-      activeIcon: Icons.agriculture_rounded,
-      label: 'Farm Management',
-      route: '/superadmin/farms',
-    ),
-    const _NavItem(
-      icon: Icons.eco_outlined,
-      activeIcon: Icons.eco_rounded,
-      label: 'Plant Types',
-      route: '/superadmin/plants',
-    ),
-    const _NavItem(
-      icon: Icons.inventory_2_outlined,
-      activeIcon: Icons.inventory_2_rounded,
-      label: 'Packaging',
-      route: '/superadmin/packaging',
-    ),
-    const _NavItem(
-      icon: Icons.attach_money_outlined,
-      activeIcon: Icons.attach_money_rounded,
-      label: 'Pricing',
-      route: '/superadmin/pricing',
-    ),
-    const _NavItem(
-      icon: Icons.history_outlined,
-      activeIcon: Icons.history_rounded,
-      label: 'Audit Logs',
-      route: '/superadmin/audit',
-    ),
-    const _NavItem(
-      icon: Icons.settings_outlined,
-      activeIcon: Icons.settings_rounded,
-      label: 'System Config',
-      route: '/superadmin/config',
-    ),
-    const _NavItem(
-      icon: Icons.backup_outlined,
-      activeIcon: Icons.backup_rounded,
-      label: 'Backup & Restore',
-      route: '/superadmin/backup',
-    ),
-    const _NavItem(
-      icon: Icons.inventory_outlined,
-      activeIcon: Icons.inventory_2_rounded,
-      label: 'Inventory',
-      route: '/superadmin/inventory',
-    ),
-    const _NavItem(
-      icon: Icons.local_shipping_outlined,
-      activeIcon: Icons.local_shipping_rounded,
-      label: 'Deliveries',
-      route: '/superadmin/deliveries',
-    ),
-  ];
+        _NavItem(
+          icon: Icons.dashboard_outlined,
+          activeIcon: Icons.dashboard_rounded,
+          label: 'Dashboard',
+          route: '/superadmin_dashboard',
+        ),
+        _NavItem(
+          icon: Icons.people_outline,
+          activeIcon: Icons.people_alt_rounded,
+          label: 'User Management',
+          route: '/superadmin/users',
+        ),
+        _NavItem(
+          icon: Icons.agriculture_outlined,
+          activeIcon: Icons.agriculture_rounded,
+          label: 'Farm Management',
+          route: '/superadmin/farms',
+        ),
+        _NavItem(
+          icon: Icons.eco_outlined,
+          activeIcon: Icons.eco_rounded,
+          label: 'Plant Types',
+          route: '/superadmin/plants',
+        ),
+        _NavItem(
+          icon: Icons.inventory_2_outlined,
+          activeIcon: Icons.inventory_2_rounded,
+          label: 'Packaging',
+          route: '/superadmin/packaging',
+        ),
+        _NavItem(
+          icon: Icons.attach_money_outlined,
+          activeIcon: Icons.attach_money_rounded,
+          label: 'Pricing',
+          route: '/superadmin/pricing',
+        ),
+        _NavItem(
+          icon: Icons.history_outlined,
+          activeIcon: Icons.history_rounded,
+          label: 'Audit Logs',
+          route: '/superadmin/audit',
+        ),
+        _NavItem(
+          icon: Icons.settings_outlined,
+          activeIcon: Icons.settings_rounded,
+          label: 'System Config',
+          route: '/superadmin/config',
+        ),
+        _NavItem(
+          icon: Icons.backup_outlined,
+          activeIcon: Icons.backup_rounded,
+          label: 'Backup & Restore',
+          route: '/superadmin/backup',
+        ),
+        _NavItem(
+          icon: Icons.inventory_outlined,
+          activeIcon: Icons.inventory_2_rounded,
+          label: 'Inventory',
+          route: '/superadmin/inventory',
+        ),
+        _NavItem(
+          icon: Icons.local_shipping_outlined,
+          activeIcon: Icons.local_shipping_rounded,
+          label: 'Deliveries',
+          route: '/superadmin/deliveries',
+        ),
+        _NavItem(
+          icon: Icons.sensors_outlined,
+          activeIcon: Icons.sensors_rounded,
+          label: 'Sensors',
+          route: '/superadmin/sensors',
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Drawer(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.neutral100,
       child: SafeArea(
@@ -812,9 +852,9 @@ class SuperAdminDrawer extends StatelessWidget {
           children: [
             // Header Section
             _buildDrawerHeader(context, isDark),
-            
+
             const Divider(height: 1),
-            
+
             // Navigation Items
             Expanded(
               child: ListView(
@@ -822,20 +862,20 @@ class SuperAdminDrawer extends StatelessWidget {
                 children: _navItems.map((item) {
                   final index = _navItems.indexOf(item);
                   final isSelected = index == selectedIndex;
-                  
+
                   return _buildDrawerNavItem(context, item, isSelected, isDark);
                 }).toList(),
               ),
             ),
-            
+
             const Divider(height: 1),
-            
+
             // User Profile Section
             _buildDrawerUserProfile(context, isDark),
-            
+
             // Logout Button
             _buildDrawerLogoutButton(context, isDark),
-            
+
             const SizedBox(height: AppSpacing.sm),
           ],
         ),
@@ -867,7 +907,8 @@ class SuperAdminDrawer extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: Colors.white.withOpacity(0.2),
-                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                  border: Border.all(
+                      color: Colors.white.withOpacity(0.3), width: 2),
                 ),
                 child: Center(
                   child: Text(
@@ -913,21 +954,26 @@ class SuperAdminDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerNavItem(BuildContext context, _NavItem item, bool isSelected, bool isDark) {
+  Widget _buildDrawerNavItem(
+      BuildContext context, _NavItem item, bool isSelected, bool isDark) {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withOpacity(0.2)
-              : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.04)),
+              : (isDark
+                  ? Colors.white.withOpacity(0.05)
+                  : Colors.black.withOpacity(0.04)),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         ),
         child: Icon(
           isSelected ? item.activeIcon : item.icon,
           color: isSelected
               ? AppColors.primary
-              : (isDark ? Colors.white.withOpacity(0.8) : AppColors.textSecondary),
+              : (isDark
+                  ? Colors.white.withOpacity(0.8)
+                  : AppColors.textSecondary),
           size: 22,
         ),
       ),
@@ -1034,7 +1080,9 @@ class SuperAdminDrawer extends StatelessWidget {
                   userEmail,
                   style: AppTypography.caption.copyWith(
                     fontSize: 12,
-                    color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.7)
+                        : AppColors.textSecondary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

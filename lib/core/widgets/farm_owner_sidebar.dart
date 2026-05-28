@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
+import 'sidebar_collapse_state.dart';
 
 /// Modern collapsible sidebar for farm owner dashboard
 class FarmOwnerSidebar extends StatefulWidget {
@@ -26,7 +27,7 @@ class FarmOwnerSidebar extends StatefulWidget {
 
 class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
     with SingleTickerProviderStateMixin {
-  bool _isCollapsed = false;
+  bool _isCollapsed = SidebarCollapseState.isCollapsed;
   late AnimationController _animationController;
   late Animation<double> _widthAnimation;
   late Animation<double> _logoSizeAnimation;
@@ -82,12 +83,15 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
     _widthAnimation = Tween<double>(begin: 220, end: 70).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    _logoSizeAnimation = Tween<double>(begin: 100, end: 40).animate(
+    _logoSizeAnimation = Tween<double>(begin: 82, end: 34).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _opacityAnimation = Tween<double>(begin: 1, end: 0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+    if (_isCollapsed) {
+      _animationController.value = 1.0;
+    }
   }
 
   @override
@@ -99,6 +103,7 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
   void _toggleCollapse() {
     setState(() {
       _isCollapsed = !_isCollapsed;
+      SidebarCollapseState.isCollapsed = _isCollapsed;
       if (_isCollapsed) {
         _animationController.forward();
       } else {
@@ -132,7 +137,9 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
                   thickness: 1,
                   indent: AppSpacing.md,
                   endIndent: 0,
-                  color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral300,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.neutral300,
                 ),
 
               // Toggle Button
@@ -152,7 +159,9 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
                   thickness: 1,
                   indent: AppSpacing.md,
                   endIndent: 0,
-                  color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral300,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : AppColors.neutral300,
                 ),
 
               // User Profile Section
@@ -171,21 +180,18 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
 
   Widget _buildLogoSection(bool isDark) {
     return Container(
-      padding: EdgeInsets.only(
-        top: AppSpacing.sm,
-        bottom: AppSpacing.sm,
-        left: _isCollapsed ? 0 : AppSpacing.md,
-        right: 0,
-      ),
-      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      alignment: Alignment.center,
       child: AnimatedBuilder(
         animation: _logoSizeAnimation,
         builder: (context, child) {
           return SizedBox(
-            width: _isCollapsed ? 60 : _logoSizeAnimation.value,
-            height: _isCollapsed ? 60 : _logoSizeAnimation.value,
+            width: _isCollapsed ? 46 : _logoSizeAnimation.value,
+            height: _isCollapsed ? 46 : _logoSizeAnimation.value,
             child: Image.asset(
-              isDark ? 'assets/logos/logo_white.png' : 'assets/logos/logo_black.png',
+              isDark
+                  ? 'assets/logos/logo_white.png'
+                  : 'assets/logos/logo_black.png',
               fit: BoxFit.contain,
             ),
           );
@@ -216,10 +222,12 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
               vertical: AppSpacing.xs,
             ),
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : AppColors.primary).withOpacity(0.08),
+              color:
+                  (isDark ? Colors.white : AppColors.primary).withOpacity(0.08),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(
-                color: (isDark ? Colors.white : AppColors.primary).withOpacity(0.15),
+                color: (isDark ? Colors.white : AppColors.primary)
+                    .withOpacity(0.15),
                 width: 1,
               ),
             ),
@@ -228,7 +236,9 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
                     child: Icon(
                       Icons.chevron_right,
                       size: 20,
-                      color: isDark ? Colors.white.withOpacity(0.8) : AppColors.primary,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.8)
+                          : AppColors.primary,
                     ),
                   )
                 : Row(
@@ -240,7 +250,10 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
                           duration: const Duration(milliseconds: 200),
                           child: Text(
                             'Collapse',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
                                   fontSize: 11,
                                   color: isDark
                                       ? Colors.white.withOpacity(0.7)
@@ -256,7 +269,9 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
                       Icon(
                         Icons.chevron_left,
                         size: 16,
-                        color: isDark ? Colors.white.withOpacity(0.8) : AppColors.primary,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.8)
+                            : AppColors.primary,
                       ),
                     ],
                   ),
@@ -321,6 +336,7 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
         child: InkWell(
           onTap: () {
             widget.onItemSelected(_navItems.indexOf(item));
+            SidebarCollapseState.isCollapsed = _isCollapsed;
             try {
               Navigator.pushReplacementNamed(context, item.route);
             } catch (e) {
@@ -377,7 +393,9 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
                         size: 22,
                         color: isSelected
                             ? AppColors.primary
-                            : (isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary),
+                            : (isDark
+                                ? Colors.white.withOpacity(0.7)
+                                : AppColors.textSecondary),
                       ),
                     ),
                   )
@@ -409,7 +427,9 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
                           size: 18,
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark ? Colors.white.withOpacity(0.8) : AppColors.textSecondary),
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.8)
+                                  : AppColors.textSecondary),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.xs),
@@ -424,8 +444,12 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
                               fontSize: 13,
                               color: isSelected
                                   ? AppColors.primary
-                                  : (isDark ? Colors.white : AppColors.textPrimary),
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  : (isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary),
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                               letterSpacing: 0.1,
                             ),
                           ),
@@ -504,7 +528,9 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
               ),
               child: Center(
                 child: Text(
-                  widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : 'O',
+                  widget.userName.isNotEmpty
+                      ? widget.userName[0].toUpperCase()
+                      : 'O',
                   style: AppTypography.bodyMedium.copyWith(
                     fontSize: 18,
                     color: Colors.white,
@@ -534,7 +560,9 @@ class _FarmOwnerSidebarState extends State<FarmOwnerSidebar>
                     widget.userRole,
                     style: AppTypography.caption.copyWith(
                       fontSize: 13,
-                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.7)
+                          : AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,

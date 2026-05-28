@@ -3,15 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/widgets/packaging_supervisor_sidebar.dart';
 import '../../core/widgets/packaging_supervisor_header.dart';
-import '../../core/widgets/modern_dashboard_scaffold.dart';
-import '../../core/widgets/weather_time_widget.dart';
+import '../../core/widgets/packaging_supervisor_sidebar.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../providers/auth_provider.dart';
 
 /// Packaging Supervisor Dashboard - Redesigned
-/// Package recording and waste tracking
+/// Package recording, waste tracking, and line progress control.
 class PackagingSupervisorDashboardRedesigned extends ConsumerStatefulWidget {
   const PackagingSupervisorDashboardRedesigned({super.key});
 
@@ -25,6 +23,60 @@ class _PackagingSupervisorDashboardRedesignedState
   int _selectedNavIndex = 0;
   WeatherInfo? _weatherInfo;
 
+  static const _lines = [
+    {
+      'line': 'Line A',
+      'batch': 'LTC-24019',
+      'crop': 'Romaine Lettuce',
+      'progress': '76%',
+      'output': '638 packs',
+      'eta': '24 min',
+      'status': 'On pace',
+      'color': AppColors.success,
+    },
+    {
+      'line': 'Line B',
+      'batch': 'TMT-24022',
+      'crop': 'Cherry Tomato',
+      'progress': '48%',
+      'output': '149 packs',
+      'eta': '42 min',
+      'status': 'Watch',
+      'color': AppColors.warning,
+    },
+    {
+      'line': 'Line C',
+      'batch': 'BSL-24007',
+      'crop': 'Sweet Basil',
+      'progress': '91%',
+      'output': '1,392 sleeves',
+      'eta': '11 min',
+      'status': 'Closing',
+      'color': AppColors.primary,
+    },
+  ];
+
+  static const _activity = [
+    {
+      'title': 'Line C final count submitted',
+      'subtitle': 'Ama K. recorded 1,392 herb sleeves',
+      'time': '8 min ago',
+      'color': AppColors.success,
+    },
+    {
+      'title': 'Line B below expected pace',
+      'subtitle': 'Throughput dropped to 126 packs/hr',
+      'time': '18 min ago',
+      'color': AppColors.warning,
+    },
+    {
+      'title': 'Waste event requires review',
+      'subtitle': 'Label mismatch on BSL-24007',
+      'time': '31 min ago',
+      'color': AppColors.error,
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -34,21 +86,23 @@ class _PackagingSupervisorDashboardRedesignedState
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final isMobile = MediaQuery.of(context).size.width < 600;
     final authState = ref.watch(authProvider);
     final userName = authState.user?.name ?? 'Packaging Supervisor';
     final userEmail = authState.user?.email ?? 'packaging@farmestates.com';
-    final userRole = 'Packaging Supervisor';
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
-          : _buildDesktopLayout(isDark, userName, userEmail, userRole),
+          : _buildDesktopLayout(isDark, userName, userEmail),
       floatingActionButton: !isMobile
           ? FloatingActionButton.extended(
-              onPressed: () {},
+              onPressed: () => Navigator.pushNamed(
+                context,
+                '/package-recording',
+              ),
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.add),
               label: const Text('Record Package'),
@@ -58,55 +112,30 @@ class _PackagingSupervisorDashboardRedesignedState
     );
   }
 
-  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail, String userRole) {
+  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail) {
     return Row(
       children: [
-        // Sidebar
         PackagingSupervisorSidebar(
           selectedIndex: _selectedNavIndex,
           onItemSelected: (index) {
-            setState(() {
-              _selectedNavIndex = index;
-            });
+            setState(() => _selectedNavIndex = index);
           },
           userName: userName,
           userEmail: userEmail,
-          userRole: userRole,
+          userRole: 'Packaging Supervisor',
         ),
-
-        // Main Content
         Expanded(
           child: Column(
             children: [
-              // Header
               PackagingSupervisorHeader(
                 userName: userName,
                 weatherInfo: _weatherInfo,
                 onNotificationTap: () {},
               ),
-
-              // Content
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const WeatherTimeWidget(),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildStatsSection(context),
-                      const SizedBox(height: AppSpacing.xl),
-                      Text(
-                        'Packaging Operations',
-                        style: AppTypography.h5.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _buildFeaturesGrid(context),
-                    ],
-                  ),
+                  child: _buildDashboardContent(isDark, false),
                 ),
               ),
             ],
@@ -126,29 +155,242 @@ class _PackagingSupervisorDashboardRedesignedState
         ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const WeatherTimeWidget(),
-                const SizedBox(height: AppSpacing.md),
-                _buildStatsSection(context),
-                const SizedBox(height: AppSpacing.lg),
-                Text(
-                  'Packaging Operations',
-                  style: AppTypography.h5.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _buildFeaturesGrid(context),
-              ],
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              92,
             ),
+            child: _buildDashboardContent(isDark, true),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDashboardContent(bool isDark, bool isMobile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHero(isDark, isMobile),
+        const SizedBox(height: AppSpacing.lg),
+        Wrap(
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.md,
+          children: const [
+            _DashboardKpi(
+              title: 'Packaging progress',
+              value: '72%',
+              subtitle: 'Across active lines',
+              icon: Icons.pie_chart_outline,
+              color: AppColors.primary,
+            ),
+            _DashboardKpi(
+              title: 'Completed today',
+              value: '2,179',
+              subtitle: 'Packages recorded',
+              icon: Icons.inventory_2_outlined,
+              color: AppColors.success,
+            ),
+            _DashboardKpi(
+              title: 'Waste rate',
+              value: '2.3%',
+              subtitle: 'Below 3% target',
+              icon: Icons.delete_sweep_outlined,
+              color: AppColors.error,
+            ),
+            _DashboardKpi(
+              title: 'Line efficiency',
+              value: '92%',
+              subtitle: 'Current shift',
+              icon: Icons.speed_outlined,
+              color: AppColors.warning,
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        _buildMainDashboardGrid(isDark),
+      ],
+    );
+  }
+
+  Widget _buildHero(bool isDark, bool isMobile) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F766E), Color(0xFF1D4ED8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F766E).withOpacity(isDark ? 0.22 : 0.14),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.16),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: const Icon(
+                  Icons.precision_manufacturing_outlined,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Packaging Command Center',
+                      style: AppTypography.h4.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: isMobile ? 24 : 28,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'Supervise package recording, waste exceptions, and active line performance in one place.',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: Colors.white.withOpacity(0.88),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: const [
+              _HeroChip(label: '3 active lines', icon: Icons.conveyor_belt),
+              _HeroChip(label: '1 line watch', icon: Icons.visibility_outlined),
+              _HeroChip(label: '2 reviews pending', icon: Icons.task_alt_outlined),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMainDashboardGrid(bool isDark) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final twoColumns = constraints.maxWidth >= 980;
+
+        if (!twoColumns) {
+          return Column(
+            children: [
+              _buildLinePanel(isDark),
+              const SizedBox(height: AppSpacing.md),
+              _buildActionPanel(isDark),
+              const SizedBox(height: AppSpacing.md),
+              _buildActivityPanel(isDark),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: _buildLinePanel(isDark),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              flex: 2,
+              child: Column(
+                children: [
+                  _buildActionPanel(isDark),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildActivityPanel(isDark),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildLinePanel(bool isDark) {
+    return _DashboardPanel(
+      title: 'Active Packaging Lines',
+      subtitle: 'Live production state by batch and line.',
+      icon: Icons.conveyor_belt,
+      color: AppColors.primary,
+      child: Column(
+        children: _lines.map((line) => _LineStatusRow(line: line)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildActionPanel(bool isDark) {
+    return _DashboardPanel(
+      title: 'Priority Actions',
+      subtitle: 'Fast paths for supervisor work.',
+      icon: Icons.bolt_outlined,
+      color: AppColors.warning,
+      child: Column(
+        children: [
+          _ActionTile(
+            title: 'Record package count',
+            subtitle: 'Submit completed output by line',
+            icon: Icons.inventory_2_outlined,
+            color: AppColors.primary,
+            route: '/package-recording',
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _ActionTile(
+            title: 'Review waste event',
+            subtitle: 'Investigate label mismatch',
+            icon: Icons.delete_sweep_outlined,
+            color: AppColors.error,
+            route: '/waste-tracking',
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _ActionTile(
+            title: 'Check line progress',
+            subtitle: 'Line B needs pace review',
+            icon: Icons.trending_up_outlined,
+            color: AppColors.success,
+            route: '/progress',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivityPanel(bool isDark) {
+    return _DashboardPanel(
+      title: 'Supervisor Activity',
+      subtitle: 'Recent events from packaging operations.',
+      icon: Icons.history_outlined,
+      color: AppColors.success,
+      child: Column(
+        children: _activity
+            .map((activity) => _ActivityRow(activity: activity))
+            .toList(),
+      ),
     );
   }
 
@@ -164,19 +406,19 @@ class _PackagingSupervisorDashboardRedesignedState
         'icon': Icons.inventory_outlined,
         'label': 'Record',
         'index': 1,
-        'route': '/record-package'
+        'route': '/package-recording'
       },
       {
         'icon': Icons.delete_outline,
         'label': 'Waste',
         'index': 2,
-        'route': '/track-waste'
+        'route': '/waste-tracking'
       },
       {
         'icon': Icons.assessment_outlined,
-        'label': 'Reports',
+        'label': 'Progress',
         'index': 3,
-        'route': '/packaging-reports'
+        'route': '/progress'
       },
     ];
 
@@ -192,7 +434,9 @@ class _PackagingSupervisorDashboardRedesignedState
         ],
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
             width: 1,
           ),
         ),
@@ -233,7 +477,9 @@ class _PackagingSupervisorDashboardRedesignedState
                           size: 24,
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.5)
+                                  : AppColors.textSecondary),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -244,7 +490,9 @@ class _PackagingSupervisorDashboardRedesignedState
                                 : (isDark
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                             fontSize: 11,
                           ),
                           maxLines: 1,
@@ -261,104 +509,487 @@ class _PackagingSupervisorDashboardRedesignedState
       ),
     );
   }
+}
 
-  Widget _buildStatsSection(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return GridView.count(
-          crossAxisCount: constraints.maxWidth > 800 ? 4 : 2,
-          childAspectRatio: 3.2,
-          crossAxisSpacing: AppSpacing.sm,
-          mainAxisSpacing: AppSpacing.sm,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            CompactStatCard(title: 'Progress', value: '65%', icon: Icons.pie_chart, color: AppColors.primary, trend: '+5%', isPositive: true),
-            CompactStatCard(title: 'Completed', value: '45 Pkgs', icon: Icons.check_circle, color: AppColors.success, trend: '+12', isPositive: true),
-            CompactStatCard(title: 'Waste', value: '2.3%', icon: Icons.delete, color: AppColors.error, trend: '-0.5%', isPositive: true),
-            CompactStatCard(title: 'Efficiency', value: '92%', icon: Icons.speed, color: AppColors.info, trend: '+3%', isPositive: true),
-          ],
-        );
-      },
-    );
-  }
+class _DashboardKpi extends StatelessWidget {
+  final String title;
+  final String value;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
 
-  Widget _buildFeaturesGrid(BuildContext context) {
+  const _DashboardKpi({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final width =
+        MediaQuery.of(context).size.width < 600 ? double.infinity : 230.0;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 800 ? 2 : 2;
-        // Adjust aspect ratio for mobile to prevent overflow
-        final childAspectRatio = isMobile ? 1.4 : 1.2;
-
-        return GridView.count(
-          crossAxisCount: crossAxisCount,
-          childAspectRatio: childAspectRatio,
-          crossAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
-          mainAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            _buildFeatureCard(context, isDark, 'Record Package', Icons.inventory, AppColors.primary, 'Log packages', () {}, isMobile),
-            _buildFeatureCard(context, isDark, 'Track Waste', Icons.delete_outline, AppColors.error, 'Monitor waste', () {}, isMobile),
-          ],
-        );
-      },
+    return Container(
+      width: width,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: color.withOpacity(isDark ? 0.26 : 0.16)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.12 : 0.035),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          _IconBox(icon: icon, color: color),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _MutedText(title),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: AppTypography.h5.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                _MutedText(subtitle),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildFeatureCard(BuildContext context, bool isDark, String title, IconData icon, Color color, String subtitle, VoidCallback onTap, bool isMobile) {
+class _DashboardPanel extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final Widget child;
+
+  const _DashboardPanel({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: color.withOpacity(isDark ? 0.24 : 0.16)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.14 : 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _IconBox(icon: icon, color: color),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.bodyLarge.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    _MutedText(subtitle),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _LineStatusRow extends StatelessWidget {
+  final Map<String, Object> line;
+
+  const _LineStatusRow({required this.line});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = line['color']! as Color;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppColors.neutral200,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _IconBox(icon: Icons.conveyor_belt, color: color),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      line['line']! as String,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${line['crop']} | ${line['batch']}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall.copyWith(
+                        color:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _StatusBadge(label: line['status']! as String, color: color),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: _MetricBlock(
+                  label: 'Progress',
+                  value: line['progress']! as String,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _MetricBlock(
+                  label: 'Output',
+                  value: line['output']! as String,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _MetricBlock(label: 'ETA', value: line['eta']! as String),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final String route;
+
+  const _ActionTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.route,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return InkWell(
-      onTap: onTap,
+      onTap: () => Navigator.pushNamed(context, route),
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
-        padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : Colors.white,
+          color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(color: isDark ? Colors.white10 : Colors.black12),
+          border: Border.all(
+            color: isDark ? Colors.white10 : AppColors.neutral200,
+          ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: [
-            Container(
-              padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
-              decoration: BoxDecoration(color: color.withOpacity(0.12), shape: BoxShape.circle),
-              child: Icon(icon, size: isMobile ? 28 : 32, color: color),
-            ),
-            SizedBox(height: isMobile ? 6 : AppSpacing.sm),
-            Flexible(
-              child: Text(
-                title,
-                textAlign: TextAlign.center,
-                style: AppTypography.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: isMobile ? 13 : 14,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+            _IconBox(icon: icon, color: color),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  _MutedText(subtitle),
+                ],
               ),
             ),
-            SizedBox(height: isMobile ? 3 : 4),
-            Flexible(
-              child: Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: AppTypography.bodySmall.copyWith(
-                  color: isDark ? Colors.white60 : AppColors.textSecondary,
-                  fontSize: isMobile ? 10 : 11,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: isDark ? Colors.white70 : AppColors.textSecondary,
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ActivityRow extends StatelessWidget {
+  final Map<String, Object> activity;
+
+  const _ActivityRow({required this.activity});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = activity['color']! as Color;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppColors.neutral200,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  activity['title']! as String,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                _MutedText(activity['subtitle']! as String),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          _MutedText(activity['time']! as String),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricBlock extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _MetricBlock({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.04) : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppColors.neutral200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _MutedText(label),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+
+  const _HeroChip({
+    required this.label,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        border: Border.all(color: Colors.white.withOpacity(0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: AppTypography.caption.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconBox extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+
+  const _IconBox({
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: color.withOpacity(isDark ? 0.18 : 0.10),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Icon(icon, color: color, size: 22),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _StatusBadge({
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 136),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        border: Border.all(color: color.withOpacity(0.22)),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTypography.caption.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _MutedText extends StatelessWidget {
+  final String text;
+
+  const _MutedText(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: AppTypography.caption.copyWith(
+        color: isDark ? Colors.white60 : AppColors.textSecondary,
+        fontWeight: FontWeight.w600,
       ),
     );
   }

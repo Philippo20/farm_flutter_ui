@@ -6,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/caretaker_sidebar.dart';
 import '../../core/widgets/caretaker_header.dart';
+import '../../core/widgets/caretaker_mobile_bottom_nav.dart';
 import '../../providers/auth_provider.dart';
 
 /// Calendar Screen for Caretaker
@@ -57,6 +58,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     },
   ];
 
+  Color _primaryTextColor(bool isDark) {
+    return isDark ? Colors.white : AppColors.textPrimary;
+  }
+
+  Color _secondaryTextColor(bool isDark) {
+    return isDark ? AppColors.textOnDark.withOpacity(0.82) : AppColors.textSecondary;
+  }
+
+  Color _inactiveNavColor(bool isDark) {
+    return isDark ? AppColors.textOnDark.withOpacity(0.75) : AppColors.textSecondary;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -72,7 +85,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? CaretakerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+            )
+          : null,
     );
   }
 
@@ -170,12 +188,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 style: AppTypography.h5.copyWith(
                   fontWeight: FontWeight.bold,
                   fontSize: isMobile ? 18 : 20,
+                  color: _primaryTextColor(isDark),
                 ),
               ),
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left),
+                    icon: Icon(
+                      Icons.chevron_left,
+                      color: _primaryTextColor(isDark),
+                    ),
                     onPressed: () {
                       setState(() {
                         _focusedDate = DateTime(_focusedDate.year, _focusedDate.month - 1);
@@ -183,16 +205,28 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     },
                   ),
                   TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: _primaryTextColor(isDark),
+                    ),
                     onPressed: () {
                       setState(() {
                         _focusedDate = DateTime.now();
                         _selectedDate = DateTime.now();
                       });
                     },
-                    child: const Text('Today'),
+                    child: Text(
+                      'Today',
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: _primaryTextColor(isDark),
+                      ),
+                    ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right),
+                    icon: Icon(
+                      Icons.chevron_right,
+                      color: _primaryTextColor(isDark),
+                    ),
                     onPressed: () {
                       setState(() {
                         _focusedDate = DateTime(_focusedDate.year, _focusedDate.month + 1);
@@ -233,7 +267,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   style: AppTypography.caption.copyWith(
                     fontWeight: FontWeight.w600,
                     fontSize: isMobile ? 11 : 12,
-                    color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+                    color: _primaryTextColor(isDark),
                   ),
                 ),
               ),
@@ -350,6 +384,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             style: AppTypography.h5.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: isMobile ? 16 : 18,
+              color: _primaryTextColor(isDark),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -360,69 +395,68 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 child: Text(
                   'No events scheduled',
                   style: AppTypography.bodyMedium.copyWith(
-                    color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+                    color: _secondaryTextColor(isDark),
                   ),
                 ),
               ),
             )
           else
-            Expanded(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: selectedDateEvents.length,
-                itemBuilder: (context, index) {
-                  final event = selectedDateEvents[index];
-                  final color = event['color'] as Color;
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: selectedDateEvents.length,
+              itemBuilder: (context, index) {
+                final event = selectedDateEvents[index];
+                final color = event['color'] as Color;
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      border: Border.all(
-                        color: color.withOpacity(0.3),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(
+                      color: color.withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 4,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 4,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                event['title'] as String,
-                                style: AppTypography.bodyMedium.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark ? Colors.white : AppColors.textPrimary,
-                                  fontSize: isMobile ? 13 : 14,
-                                ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              event['title'] as String,
+                              style: AppTypography.bodyMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? Colors.white : AppColors.textPrimary,
+                                fontSize: isMobile ? 13 : 14,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                event['time'] as String,
-                                style: AppTypography.caption.copyWith(
-                                  color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
-                                  fontSize: isMobile ? 11 : 12,
-                                ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              event['time'] as String,
+                              style: AppTypography.caption.copyWith(
+                                color: _secondaryTextColor(isDark),
+                                fontSize: isMobile ? 11 : 12,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
         ],
       ),
@@ -516,7 +550,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           size: 24,
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                              : _inactiveNavColor(isDark),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -524,9 +558,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           style: AppTypography.caption.copyWith(
                             color: isSelected
                                 ? AppColors.primary
-                                : (isDark
-                                    ? Colors.white.withOpacity(0.5)
-                                    : AppColors.textSecondary),
+                                : _inactiveNavColor(isDark),
                             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                             fontSize: 11,
                           ),

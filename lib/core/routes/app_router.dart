@@ -46,6 +46,7 @@ import '../../screens/controls/system_control_panel.dart';
 
 // Admin Screens
 import '../../screens/admin/admin_dashboard_screen.dart';
+import '../../screens/admin/modern_sensors_screen.dart';
 import '../../screens/admin/manage_users_screen.dart';
 import '../../screens/admin/settings_screen.dart';
 
@@ -257,6 +258,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/super-admin/backup',
         name: 'backup-restore',
         builder: (context, state) => const BackupRestoreScreen(),
+      ),
+
+      GoRoute(
+        path: '/super-admin/sensors',
+        name: 'super-admin-sensors',
+        builder: (context, state) =>
+            const ModernSensorsScreen(isSuperAdmin: true),
       ),
 
       // Alert Routes

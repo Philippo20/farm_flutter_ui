@@ -1,23 +1,157 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/widgets/superadmin_sidebar.dart';
 import '../../core/widgets/modern_admin_header.dart';
+import '../../core/widgets/superadmin_sidebar.dart';
 import '../../providers/auth_provider.dart';
 
-/// Super Admin Dashboard - Full system control and monitoring
+/// Super Admin Dashboard - platform command center.
 class SuperAdminDashboard extends ConsumerStatefulWidget {
   const SuperAdminDashboard({super.key});
 
   @override
-  ConsumerState<SuperAdminDashboard> createState() => _SuperAdminDashboardState();
+  ConsumerState<SuperAdminDashboard> createState() =>
+      _SuperAdminDashboardState();
 }
 
 class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
   int _selectedNavIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  final List<_DashboardMetric> _metrics = const [
+    _DashboardMetric(
+      label: 'Users',
+      value: '248',
+      detail: '7 pending approvals',
+      icon: Icons.people_alt_rounded,
+      color: AppColors.primary,
+      route: '/superadmin/users',
+    ),
+    _DashboardMetric(
+      label: 'Farms',
+      value: '24',
+      detail: '2 pending onboarding',
+      icon: Icons.agriculture_rounded,
+      color: AppColors.success,
+      route: '/superadmin/farms',
+    ),
+    _DashboardMetric(
+      label: 'Plant Types',
+      value: '45',
+      detail: '8 categories managed',
+      icon: Icons.local_florist_rounded,
+      color: AppColors.info,
+      route: '/superadmin/plants',
+    ),
+    _DashboardMetric(
+      label: 'Hub Pricing',
+      value: '42',
+      detail: 'spoke farm price records',
+      icon: Icons.price_change_rounded,
+      color: AppColors.warning,
+      route: '/superadmin/pricing',
+    ),
+    _DashboardMetric(
+      label: 'Inventory',
+      value: '\$1.24M',
+      detail: 'global stock value',
+      icon: Icons.inventory_2_rounded,
+      color: AppColors.success,
+      route: '/superadmin/inventory',
+    ),
+    _DashboardMetric(
+      label: 'Deliveries',
+      value: '38',
+      detail: 'active farm deliveries',
+      icon: Icons.local_shipping_rounded,
+      color: AppColors.info,
+      route: '/superadmin/deliveries',
+    ),
+    _DashboardMetric(
+      label: 'Sensors',
+      value: '503',
+      detail: 'global IoT devices monitored',
+      icon: Icons.sensors_rounded,
+      color: AppColors.chartTeal,
+      route: '/superadmin/sensors',
+    ),
+  ];
+
+  final List<_DashboardAction> _actions = const [
+    _DashboardAction(
+      title: 'User Management',
+      subtitle: 'Approve users and control platform roles',
+      icon: Icons.manage_accounts_rounded,
+      color: AppColors.primary,
+      route: '/superadmin/users',
+    ),
+    _DashboardAction(
+      title: 'Farm Management',
+      subtitle: 'Approve farms and monitor operational status',
+      icon: Icons.agriculture_rounded,
+      color: AppColors.success,
+      route: '/superadmin/farms',
+    ),
+    _DashboardAction(
+      title: 'Plant Types',
+      subtitle: 'Categories, maturity units, and crop catalog',
+      icon: Icons.eco_rounded,
+      color: AppColors.info,
+      route: '/superadmin/plants',
+    ),
+    _DashboardAction(
+      title: 'Packaging',
+      subtitle: 'Materials, stock levels, and unit costs',
+      icon: Icons.inventory_2_rounded,
+      color: AppColors.warning,
+      route: '/superadmin/packaging',
+    ),
+    _DashboardAction(
+      title: 'Hub Pricing',
+      subtitle: 'Spoke farm selling and bulk prices to hub',
+      icon: Icons.price_change_rounded,
+      color: AppColors.warning,
+      route: '/superadmin/pricing',
+    ),
+    _DashboardAction(
+      title: 'IoT Sensors',
+      subtitle: 'Global sensor fleet, telemetry, and diagnostics',
+      icon: Icons.sensors_rounded,
+      color: AppColors.chartTeal,
+      route: '/superadmin/sensors',
+    ),
+    _DashboardAction(
+      title: 'Audit Logs',
+      subtitle: 'Global and spoke farm governance trail',
+      icon: Icons.manage_search_rounded,
+      color: AppColors.info,
+      route: '/superadmin/audit',
+    ),
+    _DashboardAction(
+      title: 'Backups',
+      subtitle: 'Global and individual farm restore points',
+      icon: Icons.backup_rounded,
+      color: AppColors.primary,
+      route: '/superadmin/backup',
+    ),
+    _DashboardAction(
+      title: 'System Config',
+      subtitle: 'Security, automation, and platform settings',
+      icon: Icons.settings_applications_rounded,
+      color: AppColors.error,
+      route: '/superadmin/config',
+    ),
+    _DashboardAction(
+      title: 'Deliveries',
+      subtitle: 'Global delivery control and farm logistics',
+      icon: Icons.local_shipping_rounded,
+      color: AppColors.success,
+      route: '/superadmin/deliveries',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -28,11 +162,12 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     final isTablet = screenWidth < 1200 && screenWidth >= 600;
     final userName = user?.name ?? 'Super Admin';
     final userEmail = user?.email ?? '';
-    final firstName = (user?.name ?? 'Admin').split(' ').first;
-    
+    final firstName = userName.split(' ').first;
+
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       drawer: isMobile
           ? SuperAdminDrawer(
               selectedIndex: _selectedNavIndex,
@@ -45,32 +180,29 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
             )
           : null,
       body: isMobile
-          ? _buildMobileLayout(
-              isDark: isDark,
-              firstName: firstName,
-            )
+          ? _buildMobileLayout(isDark, firstName)
           : _buildDesktopLayout(
-              isDark: isDark,
-              userName: userName,
-              userEmail: userEmail,
-              firstName: firstName,
-              isTablet: isTablet,
+              isDark,
+              userName,
+              userEmail,
+              firstName,
+              isTablet,
             ),
     );
   }
 
-  Widget _buildDesktopLayout({
-    required bool isDark,
-    required String userName,
-    required String userEmail,
-    required String firstName,
-    required bool isTablet,
-  }) {
+  Widget _buildDesktopLayout(
+    bool isDark,
+    String userName,
+    String userEmail,
+    String firstName,
+    bool isTablet,
+  ) {
     return Row(
       children: [
         SuperAdminSidebar(
           selectedIndex: 0,
-          onItemSelected: (index) {},
+          onItemSelected: (_) {},
           userName: userName,
           userEmail: userEmail,
           userRole: 'Super Administrator',
@@ -100,10 +232,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     );
   }
 
-  Widget _buildMobileLayout({
-    required bool isDark,
-    required String firstName,
-  }) {
+  Widget _buildMobileLayout(bool isDark, String firstName) {
     return Column(
       children: [
         ModernAdminHeader(
@@ -131,800 +260,662 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     required bool isMobile,
     required bool isTablet,
   }) {
-    final sectionSpacing = isMobile ? AppSpacing.md : AppSpacing.xl;
-    final statsColumns = isMobile ? 2 : 3;
-    final statsRatio = isMobile ? 1.6 : (isTablet ? 2.0 : 2.5);
-    final actionsColumns = isMobile ? 2 : (isTablet ? 2 : 3);
-    final actionsRatio = isMobile ? 1.8 : (isTablet ? 2.8 : 3.0);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildWelcomeSection(isDark, isMobile),
-        SizedBox(height: sectionSpacing),
-        _buildSystemStats(
-          isDark,
-          crossAxisCount: statsColumns,
-          childAspectRatio: statsRatio,
-        ),
-        SizedBox(height: sectionSpacing),
-        _buildQuickActions(
-          isDark,
-          crossAxisCount: actionsColumns,
-          childAspectRatio: actionsRatio,
-        ),
-        SizedBox(height: sectionSpacing),
-        _buildPendingApprovals(isDark),
-        SizedBox(height: sectionSpacing),
-        _buildRecentActivity(isDark),
+        _buildHero(isDark, isMobile),
+        const SizedBox(height: AppSpacing.lg),
+        _buildMetricGrid(isDark, isMobile, isTablet),
+        const SizedBox(height: AppSpacing.lg),
+        _buildOperationsGrid(isDark, isMobile, isTablet),
+        const SizedBox(height: AppSpacing.lg),
+        _buildGovernanceRow(isDark, isMobile),
+        const SizedBox(height: AppSpacing.lg),
+        _buildActivityPanel(isDark),
       ],
     );
   }
-  
-  Widget _buildWelcomeSection(bool isDark, bool isMobile) {
+
+  Widget _buildHero(bool isDark, bool isMobile) {
     return Container(
-      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.xl),
+      padding: EdgeInsets.all(isMobile ? AppSpacing.lg : AppSpacing.xl),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            AppColors.primary.withOpacity(isDark ? 0.15 : 0.1),
-            AppColors.primary.withOpacity(isDark ? 0.08 : 0.05),
-          ],
+          colors: isDark
+              ? [const Color(0xFF10251E), const Color(0xFF0D1721)]
+              : [const Color(0xFFEFFAF4), const Color(0xFFE9F2FF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(
+          color: isDark
+              ? Colors.white10
+              : AppColors.primary.withValues(alpha: 0.12),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.06),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
       child: isMobile
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.admin_panel_settings, size: 24, color: AppColors.primary),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Super Admin Control',
-                            style: AppTypography.h6.copyWith(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppColors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Full system access',
-                            style: AppTypography.bodySmall.copyWith(
-                              fontFamily: 'Roboto',
-                              color: isDark ? Colors.white70 : AppColors.textSecondary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                        border: Border.all(color: AppColors.success.withOpacity(0.3)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          Icon(Icons.verified_user, size: 12, color: AppColors.success),
-                          SizedBox(width: 2),
-                          Text('All Access', style: TextStyle(color: AppColors.success, fontSize: 10, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                _buildHeroCopy(isDark),
+                const SizedBox(height: AppSpacing.lg),
+                _buildHeroStatus(isDark),
               ],
             )
           : Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.admin_panel_settings, size: 40, color: AppColors.primary),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Super Admin Control Center',
-                        style: AppTypography.h4.copyWith(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Full system access and configuration',
-                        style: AppTypography.bodyMedium.copyWith(
-                          fontFamily: 'Roboto',
-                          color: isDark ? Colors.white70 : AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                    border: Border.all(color: AppColors.success.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    children: const [
-                      Icon(Icons.verified_user, size: 16, color: AppColors.success),
-                      SizedBox(width: 4),
-                      Text('All Access', style: TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
+                Expanded(child: _buildHeroCopy(isDark)),
+                const SizedBox(width: AppSpacing.xl),
+                SizedBox(width: 340, child: _buildHeroStatus(isDark)),
               ],
             ),
     );
   }
-  
-  Widget _buildSystemStats(
-    bool isDark, {
-    required int crossAxisCount,
-    required double childAspectRatio,
-  }) {
-    final stats = [
-      {'title': 'Total Users', 'value': '248', 'change': '+12', 'icon': Icons.people, 'color': AppColors.primary},
-      {'title': 'Active Farms', 'value': '24', 'change': '+3', 'icon': Icons.agriculture, 'color': AppColors.success},
-      {'title': 'Plant Types', 'value': '45', 'change': '+5', 'icon': Icons.local_florist, 'color': AppColors.info},
-      {'title': 'System Health', 'value': '98%', 'change': '+2%', 'icon': Icons.health_and_safety, 'color': AppColors.warning},
-      {'title': 'Pending Approvals', 'value': '7', 'change': '', 'icon': Icons.pending_actions, 'color': AppColors.error},
-      {'title': 'Revenue (MTD)', 'value': '\$420K', 'change': '+18%', 'icon': Icons.attach_money, 'color': AppColors.success},
-    ];
-    
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: childAspectRatio,
-      ),
-      itemCount: stats.length,
-      itemBuilder: (context, index) {
-        final stat = stats[index];
-        final statColor = stat['color'] as Color;
-        return Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-            boxShadow: isDark ? null : [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: statColor.withOpacity(isDark ? 0.2 : 0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                child: Icon(stat['icon'] as IconData, color: statColor, size: 22),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      stat['title'] as String,
-                      style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 11,
-                        color: isDark ? Colors.white70 : AppColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Row(
-                        children: [
-                          Text(
-                            stat['value'] as String,
-                            style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : AppColors.textPrimary,
-                            ),
-                          ),
-                          if ((stat['change'] as String).isNotEmpty) ...[
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: (stat['change'] as String).startsWith('+') 
-                                    ? AppColors.success.withOpacity(0.1) 
-                                    : AppColors.error.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                stat['change'] as String,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: (stat['change'] as String).startsWith('+') ? AppColors.success : AppColors.error,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-  
-  Widget _buildQuickActions(
-    bool isDark, {
-    required int crossAxisCount,
-    required double childAspectRatio,
-  }) {
-    final actions = [
-      {'title': 'Manage Users', 'subtitle': 'Add, edit, approve users', 'icon': Icons.person_add, 'color': AppColors.primary, 'route': '/superadmin/users'},
-      {'title': 'Plant Types', 'subtitle': 'Create plant varieties', 'icon': Icons.eco, 'color': AppColors.success, 'route': '/superadmin/plants'},
-      {'title': 'Pricing', 'subtitle': 'Set prices & packaging', 'icon': Icons.price_change, 'color': AppColors.warning, 'route': '/superadmin/pricing'},
-      {'title': 'Audit Logs', 'subtitle': 'View system activity', 'icon': Icons.history, 'color': AppColors.info, 'route': '/superadmin/audit'},
-      {'title': 'System Config', 'subtitle': 'Platform settings', 'icon': Icons.settings_applications, 'color': AppColors.error, 'route': '/superadmin/config'},
-      {'title': 'Backup Data', 'subtitle': 'Export & restore', 'icon': Icons.backup, 'color': Colors.purple, 'route': '/superadmin/backup'},
-    ];
-    
+
+  Widget _buildHeroCopy(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Quick Actions',
-          style: AppTypography.h6.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.textPrimary,
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: 8,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: isDark ? 0.18 : 0.1),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            border:
+                Border.all(color: AppColors.primary.withValues(alpha: 0.24)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.admin_panel_settings_rounded,
+                color: AppColors.primary,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Super Admin Command Center',
+                style: AppTypography.bodySmall.copyWith(
+                  color: isDark ? Colors.white : AppColors.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: AppSpacing.sm,
-            mainAxisSpacing: AppSpacing.sm,
-            childAspectRatio: childAspectRatio,
+        Text(
+          'Platform Control Dashboard',
+          style: AppTypography.h4.copyWith(
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
           ),
-          itemCount: actions.length,
-          itemBuilder: (context, index) {
-            final action = actions[index];
-            final actionColor = action['color'] as Color;
-            return Material(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              child: InkWell(
-                onTap: () {
-                  Navigator.pushNamed(context, action['route'] as String);
-                },
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: BoxDecoration(
-                    color: actionColor.withOpacity(isDark ? 0.15 : 0.1),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    border: Border.all(color: actionColor.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: actionColor.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(action['icon'] as IconData, color: actionColor, size: 22),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              action['title'] as String,
-                              style: TextStyle(
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: isDark ? Colors.white : AppColors.textPrimary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              action['subtitle'] as String,
-                              style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 10,
-                                color: isDark ? Colors.white70 : AppColors.textSecondary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(Icons.chevron_right, size: 18, color: actionColor),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Monitor farms, users, plant catalog, packaging, hub pricing, inventory, deliveries, audit, backups, and platform configuration from one executive view.',
+          style: AppTypography.bodyMedium.copyWith(
+            color: isDark ? Colors.white70 : AppColors.textSecondary,
+            height: 1.5,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildPendingApprovals(bool isDark) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final useColumn = constraints.maxWidth < 900;
-        if (useColumn) {
-          return Column(
-            children: [
-              _buildPendingUsers(isDark),
-              const SizedBox(height: AppSpacing.lg),
-              _buildPendingFarms(isDark),
-            ],
-          );
-        }
+  Widget _buildHeroStatus(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.06) : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06),
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildHeroLine('Platform health', '98%', AppColors.success, isDark),
+          const SizedBox(height: AppSpacing.sm),
+          _buildHeroLine('Backup coverage', '100%', AppColors.primary, isDark),
+          const SizedBox(height: AppSpacing.sm),
+          _buildHeroLine('Open approvals', '9', AppColors.warning, isDark),
+        ],
+      ),
+    );
+  }
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildHeroLine(String label, String value, Color color, bool isDark) {
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white60 : AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: AppTypography.bodyMedium.copyWith(
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricGrid(bool isDark, bool isMobile, bool isTablet) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _metrics.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
+        crossAxisSpacing: AppSpacing.md,
+        mainAxisSpacing: AppSpacing.md,
+        childAspectRatio: isMobile ? 2.7 : 2.45,
+      ),
+      itemBuilder: (context, index) =>
+          _buildMetricCard(_metrics[index], isDark),
+    );
+  }
+
+  Widget _buildMetricCard(_DashboardMetric metric, bool isDark) {
+    return InkWell(
+      onTap: () => Navigator.pushNamed(context, metric.route),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: _panelDecoration(isDark),
+        child: Row(
           children: [
-            Expanded(child: _buildPendingUsers(isDark)),
-            const SizedBox(width: AppSpacing.lg),
-            Expanded(child: _buildPendingFarms(isDark)),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: metric.color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              child: Icon(metric.icon, color: metric.color, size: 24),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    metric.value,
+                    style: AppTypography.h5.copyWith(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    metric.label,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white70 : AppColors.textSecondary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    metric.detail,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white54 : AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: metric.color),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
-  
-  Widget _buildPendingUsers(bool isDark) {
-    final pendingUsers = [
-      {'name': 'John Smith', 'email': 'john@example.com', 'role': 'Caretaker', 'date': '2 hours ago'},
-      {'name': 'Mary Johnson', 'email': 'mary@example.com', 'role': 'Owner', 'date': '5 hours ago'},
-      {'name': 'Bob Wilson', 'email': 'bob@example.com', 'role': 'Caretaker', 'date': '1 day ago'},
-    ];
-    
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-        boxShadow: isDark ? null : [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+
+  Widget _buildOperationsGrid(bool isDark, bool isMobile, bool isTablet) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+          'Platform Operations',
+          'Jump into the core Super Admin control surfaces.',
+          isDark,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _actions.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
+            crossAxisSpacing: AppSpacing.md,
+            mainAxisSpacing: AppSpacing.md,
+            childAspectRatio: isMobile ? 2.85 : 2.35,
           ),
-        ],
+          itemBuilder: (context, index) =>
+              _buildActionCard(_actions[index], isDark),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard(_DashboardAction action, bool isDark) {
+    return InkWell(
+      onTap: () => Navigator.pushNamed(context, action.route),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: action.color.withValues(alpha: isDark ? 0.14 : 0.08),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(color: action.color.withValues(alpha: 0.24)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: action.color.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              child: Icon(action.icon, color: action.color, size: 22),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    action.title,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    action.subtitle,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white60 : AppColors.textSecondary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_rounded, color: action.color, size: 18),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildGovernanceRow(bool isDark, bool isMobile) {
+    final panels = [
+      _GovernancePanel(
+        title: 'Approval Queue',
+        subtitle: 'Users and farms waiting for review',
+        value: '9',
+        color: AppColors.warning,
+        icon: Icons.pending_actions_rounded,
+        route: '/superadmin/users',
+      ),
+      _GovernancePanel(
+        title: 'Audit Risk',
+        subtitle: 'High-severity global and farm events',
+        value: '23',
+        color: AppColors.error,
+        icon: Icons.gpp_maybe_rounded,
+        route: '/superadmin/audit',
+      ),
+      _GovernancePanel(
+        title: 'Restore Readiness',
+        subtitle: 'Global and farm backups verified',
+        value: '100%',
+        color: AppColors.success,
+        icon: Icons.verified_user_rounded,
+        route: '/superadmin/backup',
+      ),
+    ];
+
+    return isMobile
+        ? Column(
+            children: panels
+                .map(
+                  (panel) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: _buildGovernanceCard(panel, isDark),
+                  ),
+                )
+                .toList(),
+          )
+        : Row(
+            children: panels
+                .map(
+                  (panel) => Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: panel == panels.last ? 0 : AppSpacing.md,
+                      ),
+                      child: _buildGovernanceCard(panel, isDark),
+                    ),
+                  ),
+                )
+                .toList(),
+          );
+  }
+
+  Widget _buildGovernanceCard(_GovernancePanel panel, bool isDark) {
+    return InkWell(
+      onTap: () => Navigator.pushNamed(context, panel.route),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: _panelDecoration(isDark),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: panel.color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              child: Icon(panel.icon, color: panel.color, size: 24),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    panel.title,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    panel.subtitle,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white60 : AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              panel.value,
+              style: AppTypography.h6.copyWith(
+                color: panel.color,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivityPanel(bool isDark) {
+    final activities = const [
+      _ActivityItem(
+        title: 'Hub pricing updated',
+        subtitle: 'Green Valley Spoke Farm changed lettuce bulk price to hub',
+        time: '12 min ago',
+        icon: Icons.price_change_rounded,
+        color: AppColors.warning,
+      ),
+      _ActivityItem(
+        title: 'Farm backup verified',
+        subtitle: 'North Ridge Farm backup passed restore validation',
+        time: '45 min ago',
+        icon: Icons.backup_rounded,
+        color: AppColors.success,
+      ),
+      _ActivityItem(
+        title: 'Packaging stock threshold reached',
+        subtitle: 'Reusable crates dropped below preferred warehouse level',
+        time: '2 hrs ago',
+        icon: Icons.inventory_2_rounded,
+        color: AppColors.info,
+      ),
+      _ActivityItem(
+        title: 'Audit event escalated',
+        subtitle: 'Sunset Acres compliance suspension recorded',
+        time: '4 hrs ago',
+        icon: Icons.manage_search_rounded,
+        color: AppColors.error,
+      ),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: _panelDecoration(isDark),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(
-                  'Pending User Approvals',
-                  style: AppTypography.h6.copyWith(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                ),
-                child: Text(
-                  '${pendingUsers.length}',
-                  style: const TextStyle(
-                    color: AppColors.error,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ...pendingUsers.map((user) => Container(
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
-                  child: Text(
-                    user['name']!.substring(0, 1),
-                    style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user['name']!,
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '${user['role']} • ${user['date']}',
-                        style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 10,
-                          color: isDark ? Colors.white70 : AppColors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.check_circle, color: AppColors.success, size: 20),
-                        onPressed: () {},
-                        tooltip: 'Approve',
-                      ),
-                    ),
-                    SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.cancel, color: AppColors.error, size: 20),
-                        onPressed: () {},
-                        tooltip: 'Reject',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          )),
-          TextButton(
-            onPressed: () => Navigator.pushNamed(context, '/superadmin/users'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            ),
-            child: const Text('View All Pending Users →', style: TextStyle(fontSize: 12)),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildPendingFarms(bool isDark) {
-    final pendingFarms = [
-      {'name': 'Green Valley Farm', 'owner': 'Alice Brown', 'location': 'North Region', 'date': '3 hours ago'},
-      {'name': 'Sunny Acres', 'owner': 'Tom Davis', 'location': 'East Hills', 'date': '1 day ago'},
-    ];
-    
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-        boxShadow: isDark ? null : [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  'Pending Farm Approvals',
-                  style: AppTypography.h6.copyWith(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                ),
-                child: Text(
-                  '${pendingFarms.length}',
-                  style: const TextStyle(
-                    color: AppColors.warning,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ...pendingFarms.map((farm) => Container(
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
-                  child: const Icon(Icons.agriculture, color: AppColors.success, size: 20),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        farm['name']!,
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '${farm['owner']} • ${farm['date']}',
-                        style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 10,
-                          color: isDark ? Colors.white70 : AppColors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.check_circle, color: AppColors.success, size: 20),
-                        onPressed: () {},
-                        tooltip: 'Approve',
-                      ),
-                    ),
-                    SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: const Icon(Icons.cancel, color: AppColors.error, size: 20),
-                        onPressed: () {},
-                        tooltip: 'Reject',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          )),
-          TextButton(
-            onPressed: () => Navigator.pushNamed(context, '/superadmin/farms'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            ),
-            child: const Text('View All Pending Farms →', style: TextStyle(fontSize: 12)),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildRecentActivity(bool isDark) {
-    final activities = [
-      {'user': 'Sarah SuperAdmin', 'action': 'Created new plant type "Cherry Tomatoes"', 'time': '10 mins ago', 'icon': Icons.add_circle, 'color': AppColors.success},
-      {'user': 'Sarah SuperAdmin', 'action': 'Approved user "John Smith"', 'time': '2 hours ago', 'icon': Icons.check_circle, 'color': AppColors.info},
-      {'user': 'Sarah SuperAdmin', 'action': 'Updated pricing for "Lettuce - 500g"', 'time': '5 hours ago', 'icon': Icons.edit, 'color': AppColors.warning},
-      {'user': 'Sarah SuperAdmin', 'action': 'Created system backup', 'time': '1 day ago', 'icon': Icons.backup, 'color': AppColors.primary},
-    ];
-    
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-        boxShadow: isDark ? null : [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  'Recent Activity',
-                  style: AppTypography.h6.copyWith(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
+                child: _buildSectionHeader(
+                  'Executive Activity',
+                  'Recent platform events from operational modules.',
+                  isDark,
                 ),
               ),
               TextButton(
-                onPressed: () => Navigator.pushNamed(context, '/superadmin/audit'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                ),
-                child: const Text('View All →', style: TextStyle(fontSize: 12)),
+                onPressed: () =>
+                    Navigator.pushNamed(context, '/superadmin/audit'),
+                child: const Text('View Audit'),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          ...activities.map((activity) => Container(
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: (activity['color'] as Color).withOpacity(isDark ? 0.2 : 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(activity['icon'] as IconData, color: activity['color'] as Color, size: 14),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        activity['action'] as String,
-                        style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 12,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${activity['user']} • ${activity['time']}',
-                        style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 10,
-                          color: isDark ? Colors.white70 : AppColors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          )),
+          const SizedBox(height: AppSpacing.md),
+          ...activities.map((activity) => _buildActivityRow(activity, isDark)),
         ],
       ),
     );
   }
 
+  Widget _buildActivityRow(_ActivityItem activity, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color:
+            isDark ? Colors.white.withValues(alpha: 0.03) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: activity.color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: Icon(activity.icon, color: activity.color, size: 20),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  activity.title,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  activity.subtitle,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white60 : AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Text(
+            activity.time,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white54 : AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, String subtitle, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: AppTypography.h6.copyWith(
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: AppTypography.bodySmall.copyWith(
+            color: isDark ? Colors.white60 : AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  BoxDecoration _panelDecoration(bool isDark) {
+    return BoxDecoration(
+      color: isDark ? AppColors.surfaceDark : Colors.white,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      border: Border.all(
+        color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.07),
+      ),
+      boxShadow: isDark
+          ? null
+          : [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 8),
+              ),
+            ],
+    );
+  }
+}
+
+class _DashboardMetric {
+  const _DashboardMetric({
+    required this.label,
+    required this.value,
+    required this.detail,
+    required this.icon,
+    required this.color,
+    required this.route,
+  });
+
+  final String label;
+  final String value;
+  final String detail;
+  final IconData icon;
+  final Color color;
+  final String route;
+}
+
+class _DashboardAction {
+  const _DashboardAction({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.route,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final String route;
+}
+
+class _GovernancePanel {
+  const _GovernancePanel({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.color,
+    required this.icon,
+    required this.route,
+  });
+
+  final String title;
+  final String subtitle;
+  final String value;
+  final Color color;
+  final IconData icon;
+  final String route;
+}
+
+class _ActivityItem {
+  const _ActivityItem({
+    required this.title,
+    required this.subtitle,
+    required this.time,
+    required this.icon,
+    required this.color,
+  });
+
+  final String title;
+  final String subtitle;
+  final String time;
+  final IconData icon;
+  final Color color;
 }

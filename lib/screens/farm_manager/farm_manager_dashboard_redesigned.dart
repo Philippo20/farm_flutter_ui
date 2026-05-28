@@ -2466,24 +2466,32 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
               ),
               SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
 
-              // Schedule New Delivery Section
+              // Schedule New Delivery Section (move select - must come before round history on mobile)
               _buildSectionTitle('Schedule New Delivery', Icons.add_circle, isDark, isMobile),
               const SizedBox(height: AppSpacing.md),
               _buildDeliveryForm(isDark, isMobile),
 
               SizedBox(height: isMobile ? AppSpacing.lg : AppSpacing.xl),
 
-              // Upcoming Deliveries Section
-              _buildSectionTitle('Upcoming Deliveries', Icons.upcoming, isDark, isMobile),
-              const SizedBox(height: AppSpacing.md),
-              _buildUpcomingDeliveries(isDark, isMobile),
-
-              SizedBox(height: isMobile ? AppSpacing.lg : AppSpacing.xl),
-
-              // Recent Deliveries Section
-              _buildSectionTitle('Recent Deliveries', Icons.history, isDark, isMobile),
-              const SizedBox(height: AppSpacing.md),
-              _buildRecentDeliveries(isDark, isMobile),
+              if (isMobile) ...[
+                // Mobile: move select (form) before round history - Recent first, then Upcoming
+                _buildSectionTitle('Recent Deliveries', Icons.history, isDark, isMobile),
+                const SizedBox(height: AppSpacing.md),
+                _buildRecentDeliveries(isDark, isMobile),
+                SizedBox(height: AppSpacing.lg),
+                _buildSectionTitle('Upcoming Deliveries', Icons.upcoming, isDark, isMobile),
+                const SizedBox(height: AppSpacing.md),
+                _buildUpcomingDeliveries(isDark, isMobile),
+              ] else ...[
+                // Desktop: Upcoming first, then Recent
+                _buildSectionTitle('Upcoming Deliveries', Icons.upcoming, isDark, isMobile),
+                const SizedBox(height: AppSpacing.md),
+                _buildUpcomingDeliveries(isDark, isMobile),
+                SizedBox(height: AppSpacing.xl),
+                _buildSectionTitle('Recent Deliveries', Icons.history, isDark, isMobile),
+                const SizedBox(height: AppSpacing.md),
+                _buildRecentDeliveries(isDark, isMobile),
+              ],
             ],
           ),
         );

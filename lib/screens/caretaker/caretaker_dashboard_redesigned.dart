@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/caretaker_mobile_bottom_nav.dart';
 import '../../core/widgets/caretaker_sidebar.dart';
 import '../../core/widgets/caretaker_header.dart';
 import '../../core/widgets/weather_time_widget.dart';
@@ -58,7 +59,12 @@ class _CaretakerDashboardRedesignedState
             style:
                 GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
       ),
-      bottomNavigationBar: isMobile ? _bottomNav(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? CaretakerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+            )
+          : null,
     );
   }
 
@@ -267,7 +273,7 @@ class _CaretakerDashboardRedesignedState
       _QA('Records', Icons.history_rounded, const Color(0xFF7E57C2),
           'Past entries', () {}),
       _QA('Settings', Icons.tune_rounded, AppColors.neutral600, 'Preferences',
-          () {}),
+          () => Navigator.pushNamed(context, '/caretaker_settings')),
     ];
 
     return LayoutBuilder(builder: (context, box) {

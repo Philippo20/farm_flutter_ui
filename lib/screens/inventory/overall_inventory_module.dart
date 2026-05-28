@@ -191,7 +191,9 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       children: [
         _buildHeader(isDark),
         const SizedBox(height: AppSpacing.lg),
-        _buildStats(isDark, filteredItems),
+        _buildStats(isDark, _items),
+        const SizedBox(height: AppSpacing.lg),
+        _buildFarmOverview(isDark),
         const SizedBox(height: AppSpacing.lg),
         _buildFilters(isDark),
         const SizedBox(height: AppSpacing.lg),
@@ -206,24 +208,180 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
   }
 
   Widget _buildHeader(bool isDark) {
-    return Column(
+    final totalValue =
+        _items.fold<double>(0, (sum, entry) => sum + entry.totalValue);
+    final farmsCovered = _items.map((entry) => entry.farm).toSet().length;
+
+    return Container(
+      padding: EdgeInsets.all(widget.isMobile ? AppSpacing.lg : AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  AppColors.primary.withOpacity(0.26),
+                  AppColors.surfaceDark,
+                  AppColors.backgroundDark,
+                ]
+              : [
+                  AppColors.primary.withOpacity(0.11),
+                  Colors.white,
+                  AppColors.neutral50,
+                ],
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppColors.primary.withOpacity(0.14),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.24 : 0.06),
+            blurRadius: 28,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      ),
+      child: widget.isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeaderCopy(isDark),
+                const SizedBox(height: AppSpacing.lg),
+                _buildHeroMetrics(isDark, farmsCovered, totalValue),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: _buildHeaderCopy(isDark)),
+                const SizedBox(width: AppSpacing.xl),
+                _buildHeroMetrics(isDark, farmsCovered, totalValue),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildHeaderCopy(bool isDark) {
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.title,
-          style: AppTypography.h4.copyWith(
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.textPrimary,
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+          ),
+          child: const Icon(
+            Icons.inventory_2_rounded,
+            color: AppColors.primary,
+            size: 28,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          widget.subtitle,
-          style: AppTypography.bodyMedium.copyWith(
-            color: isDark ? Colors.white70 : AppColors.textSecondary,
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.title,
+                style: AppTypography.h4.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                widget.subtitle,
+                style: AppTypography.bodyMedium.copyWith(
+                  height: 1.45,
+                  color: isDark ? Colors.white70 : AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHeroMetrics(bool isDark, int farmsCovered, double totalValue) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        _heroMetric(
+          isDark: isDark,
+          label: 'Farms covered',
+          value: '$farmsCovered',
+          icon: Icons.agriculture_rounded,
+          color: AppColors.success,
+        ),
+        _heroMetric(
+          isDark: isDark,
+          label: 'Global value',
+          value: '\$${totalValue.toStringAsFixed(0)}',
+          icon: Icons.account_balance_wallet_rounded,
+          color: AppColors.primary,
+        ),
+      ],
+    );
+  }
+
+  Widget _heroMetric({
+    required bool isDark,
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      width: widget.isMobile ? double.infinity : 170,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withOpacity(0.06)
+            : Colors.white.withOpacity(0.82),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: color.withOpacity(0.18)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.13),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: AppTypography.titleMedium.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption.copyWith(
+                    color: isDark ? Colors.white60 : AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -231,11 +389,12 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
     final totalItems = items.length;
     final lowStock = items.where((entry) => entry.isLowStock).length;
     final outOfStock = items.where((entry) => entry.isOutOfStock).length;
-    final totalValue = items.fold<double>(0, (sum, entry) => sum + entry.totalValue);
+    final totalValue =
+        items.fold<double>(0, (sum, entry) => sum + entry.totalValue);
 
     final cards = [
       _StatCardData(
-        title: 'Items',
+        title: 'Global SKUs',
         value: '$totalItems',
         icon: Icons.inventory_2,
         color: AppColors.primary,
@@ -254,7 +413,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       ),
       _StatCardData(
         title: 'Total Value',
-        value: '\$${totalValue.toStringAsFixed(2)}',
+        value: '\$${totalValue.toStringAsFixed(0)}',
         icon: Icons.attach_money_rounded,
         color: AppColors.success,
       ),
@@ -279,23 +438,34 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           itemBuilder: (context, index) {
             final card = cards[index];
             return Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: card.color.withOpacity(isDark ? 0.15 : 0.1),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                border: Border.all(color: card.color.withOpacity(0.3)),
+                color: isDark ? AppColors.surfaceDark : Colors.white,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                border: Border.all(
+                  color:
+                      isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.16 : 0.04),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
-                      color: card.color.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      color: card.color.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     ),
-                    child: Icon(card.icon, color: card.color, size: 18),
+                    child: Icon(card.icon, color: card.color, size: 22),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -304,14 +474,19 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                         Text(
                           card.value,
                           style: AppTypography.h6.copyWith(
-                            color: card.color,
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           card.title,
                           style: AppTypography.caption.copyWith(
-                            color: card.color.withOpacity(0.9),
+                            color: isDark
+                                ? Colors.white60
+                                : AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -326,16 +501,250 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
     );
   }
 
-  Widget _buildFilters(bool isDark) {
+  Widget _buildFarmOverview(bool isDark) {
+    final summaries = _farmSummaries();
+
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
+        ),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: const Icon(
+                  Icons.agriculture_rounded,
+                  color: AppColors.success,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Farm-Level Inventory',
+                      style: AppTypography.h6.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Select a farm to inspect its current stock, risk items, and inventory value.',
+                      style: AppTypography.bodySmall.copyWith(
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!widget.isMobile)
+                TextButton.icon(
+                  onPressed: () => setState(() => _selectedFarm = 'All Farms'),
+                  icon: const Icon(Icons.public_rounded, size: 18),
+                  label: const Text('Global View'),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final columns = widget.isMobile ? 1 : (width > 1000 ? 4 : 2);
+              final gap = AppSpacing.md;
+              final cardWidth = columns == 1
+                  ? width
+                  : (width - (gap * (columns - 1))) / columns;
+
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: summaries
+                    .map(
+                      (summary) => SizedBox(
+                        width: cardWidth,
+                        child: _buildFarmSummaryCard(summary, isDark),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFarmSummaryCard(_FarmInventorySummary summary, bool isDark) {
+    final isSelected = _selectedFarm == summary.farm;
+    final riskColor = summary.outOfStock > 0
+        ? AppColors.error
+        : summary.lowStock > 0
+            ? AppColors.warning
+            : AppColors.success;
+
+    return InkWell(
+      onTap: () => setState(() => _selectedFarm = summary.farm),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withOpacity(isDark ? 0.2 : 0.09)
+              : (isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary.withOpacity(0.55)
+                : (isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    summary.farm,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                Icon(
+                  isSelected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_off,
+                  color: isSelected
+                      ? AppColors.primary
+                      : (isDark ? Colors.white38 : AppColors.textSecondary),
+                  size: 18,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                    child: _farmMetric(
+                        isDark, 'SKUs', '${summary.items}', AppColors.primary)),
+                Expanded(
+                    child: _farmMetric(
+                        isDark,
+                        'Value',
+                        '\$${summary.value.toStringAsFixed(0)}',
+                        AppColors.success)),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: riskColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.circle, size: 8, color: riskColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    summary.outOfStock > 0
+                        ? '${summary.outOfStock} out, ${summary.lowStock} low'
+                        : summary.lowStock > 0
+                            ? '${summary.lowStock} low stock'
+                            : 'Healthy stock',
+                    style: AppTypography.caption.copyWith(
+                      color: riskColor,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _farmMetric(bool isDark, String label, String value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.bodyMedium.copyWith(
+            color: color,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        Text(
+          label,
+          style: AppTypography.caption.copyWith(
+            color: isDark ? Colors.white54 : AppColors.textSecondary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilters(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(
+            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _selectedFarm == 'All Farms'
+                      ? 'Global Inventory Records'
+                      : '$_selectedFarm Inventory Records',
+                  style: AppTypography.h6.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              if (_selectedFarm != 'All Farms')
+                TextButton.icon(
+                  onPressed: () => setState(() => _selectedFarm = 'All Farms'),
+                  icon: const Icon(Icons.close_rounded, size: 16),
+                  label: const Text('Clear Farm'),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
           if (widget.isMobile)
             Column(
               children: [
@@ -371,7 +780,9 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                     }
                   },
                   selectedColor: AppColors.primary.withOpacity(0.18),
-                  backgroundColor: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral100,
+                  backgroundColor: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : AppColors.neutral100,
                   labelStyle: AppTypography.bodySmall.copyWith(
                     color: selected
                         ? AppColors.primary
@@ -394,17 +805,22 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
       decoration: InputDecoration(
         hintText: 'Search item, category, ID...',
-        hintStyle: TextStyle(color: isDark ? Colors.white38 : AppColors.textSecondary),
-        prefixIcon: Icon(Icons.search, color: isDark ? Colors.white54 : AppColors.textSecondary),
+        hintStyle:
+            TextStyle(color: isDark ? Colors.white38 : AppColors.textSecondary),
+        prefixIcon: Icon(Icons.search,
+            color: isDark ? Colors.white54 : AppColors.textSecondary),
         filled: true,
-        fillColor: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+        fillColor:
+            isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200),
+          borderSide:
+              BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200),
+          borderSide:
+              BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -420,15 +836,18 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: isDark ? Colors.white12 : AppColors.neutral200),
+        border:
+            Border.all(color: isDark ? Colors.white12 : AppColors.neutral200),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedFarm,
           isExpanded: true,
-          icon: Icon(Icons.keyboard_arrow_down, color: isDark ? Colors.white54 : AppColors.textSecondary),
+          icon: Icon(Icons.keyboard_arrow_down,
+              color: isDark ? Colors.white54 : AppColors.textSecondary),
           dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
-          style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
+          style:
+              TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
           items: _farms
               .map((farm) => DropdownMenuItem<String>(
                     value: farm,
@@ -452,7 +871,8 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+        border: Border.all(
+            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
       ),
       child: Row(
         children: [
@@ -487,7 +907,9 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           decoration: BoxDecoration(
-            color: selected ? AppColors.primary.withOpacity(0.14) : Colors.transparent,
+            color: selected
+                ? AppColors.primary.withOpacity(0.14)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           ),
           child: Row(
@@ -528,14 +950,26 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(
+            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
       ),
       child: Column(
-        children: items.map((entry) => _buildInventoryRow(isDark, entry)).toList(),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Stock Ledger',
+            style: AppTypography.h6.copyWith(
+              fontWeight: FontWeight.w800,
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ...items.map((entry) => _buildInventoryRow(isDark, entry)),
+        ],
       ),
     );
   }
@@ -571,7 +1005,8 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                   color: AppColors.primary.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
-                child: const Icon(Icons.inventory, size: 18, color: AppColors.primary),
+                child: const Icon(Icons.inventory,
+                    size: 18, color: AppColors.primary),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -589,14 +1024,16 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                     Text(
                       '${entry.id}  |  ${entry.category}  |  ${entry.farm}',
                       style: AppTypography.caption.copyWith(
-                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: statusColor.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
@@ -767,8 +1204,8 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
+        insetPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
         child: Container(
           constraints: const BoxConstraints(maxWidth: 620),
           decoration: BoxDecoration(
@@ -820,7 +1257,9 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                 onConfirm: () {
                   Navigator.of(dialogContext).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('$confirmLabel completed for ${entry.id}')),
+                    SnackBar(
+                        content:
+                            Text('$confirmLabel completed for ${entry.id}')),
                   );
                 },
               ),
@@ -842,8 +1281,8 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       context: context,
       builder: (dialogContext) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
+        insetPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
         child: Container(
           constraints: const BoxConstraints(maxWidth: 700),
           decoration: BoxDecoration(
@@ -871,7 +1310,9 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.04)
+                          : AppColors.neutral50,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                       border: Border.all(
                         color: isDark ? Colors.white10 : AppColors.neutral200,
@@ -883,12 +1324,17 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                         _detailRow(isDark, 'Item', entry.name),
                         _detailRow(isDark, 'Category', entry.category),
                         _detailRow(isDark, 'Farm', entry.farm),
-                        _detailRow(isDark, 'Quantity', '${entry.quantity} ${entry.unit}'),
-                        _detailRow(isDark, 'Minimum Stock', '${entry.minStock} ${entry.unit}'),
-                        _detailRow(isDark, 'Unit Cost', '\$${entry.unitCost.toStringAsFixed(2)}'),
-                        _detailRow(isDark, 'Total Value', '\$${entry.totalValue.toStringAsFixed(2)}'),
+                        _detailRow(isDark, 'Quantity',
+                            '${entry.quantity} ${entry.unit}'),
+                        _detailRow(isDark, 'Minimum Stock',
+                            '${entry.minStock} ${entry.unit}'),
+                        _detailRow(isDark, 'Unit Cost',
+                            '\$${entry.unitCost.toStringAsFixed(2)}'),
+                        _detailRow(isDark, 'Total Value',
+                            '\$${entry.totalValue.toStringAsFixed(2)}'),
                         _detailRow(isDark, 'Status', statusText),
-                        _detailRow(isDark, 'Last Updated By', entry.lastUpdatedBy),
+                        _detailRow(
+                            isDark, 'Last Updated By', entry.lastUpdatedBy),
                       ],
                     ),
                   ),
@@ -1095,7 +1541,8 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
     );
   }
 
-  Widget _buildMovementHistory(bool isDark, List<_InventoryMovement> movements) {
+  Widget _buildMovementHistory(
+      bool isDark, List<_InventoryMovement> movements) {
     if (movements.isEmpty) {
       return _buildEmptyState(
         isDark: isDark,
@@ -1110,18 +1557,23 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+        border: Border.all(
+            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
       ),
       child: Column(
-        children: movements.map((movement) => _buildMovementRow(isDark, movement)).toList(),
+        children: movements
+            .map((movement) => _buildMovementRow(isDark, movement))
+            .toList(),
       ),
     );
   }
 
   Widget _buildMovementRow(bool isDark, _InventoryMovement movement) {
-    final typeColor =
-        movement.type == _MovementType.stockIn ? AppColors.success : AppColors.error;
-    final typeText = movement.type == _MovementType.stockIn ? 'Stock In' : 'Stock Out';
+    final typeColor = movement.type == _MovementType.stockIn
+        ? AppColors.success
+        : AppColors.error;
+    final typeText =
+        movement.type == _MovementType.stockIn ? 'Stock In' : 'Stock Out';
     final sign = movement.type == _MovementType.stockIn ? '+' : '-';
 
     return Container(
@@ -1165,10 +1617,12 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
                         color: typeColor.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusFull),
                       ),
                       child: Text(
                         '$typeText  $sign${movement.quantity.toStringAsFixed(1)} ${movement.unit}',
@@ -1223,11 +1677,14 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+        border: Border.all(
+            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
       ),
       child: Column(
         children: [
-          Icon(icon, size: 36, color: isDark ? Colors.white54 : AppColors.textSecondary),
+          Icon(icon,
+              size: 36,
+              color: isDark ? Colors.white54 : AppColors.textSecondary),
           const SizedBox(height: AppSpacing.sm),
           Text(
             title,
@@ -1272,7 +1729,8 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
 
   List<_InventoryMovement> _filteredMovements() {
     final query = _searchController.text.trim().toLowerCase();
-    final sorted = [..._movements]..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    final sorted = [..._movements]
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return sorted.where((movement) {
       if (_selectedFarm != 'All Farms' && movement.farm != _selectedFarm) {
         return false;
@@ -1285,6 +1743,36 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           movement.id.toLowerCase().contains(query);
     }).toList();
   }
+
+  List<_FarmInventorySummary> _farmSummaries() {
+    final farms = _items.map((entry) => entry.farm).toSet().toList()..sort();
+    return farms.map((farm) {
+      final entries = _items.where((entry) => entry.farm == farm).toList();
+      return _FarmInventorySummary(
+        farm: farm,
+        items: entries.length,
+        lowStock: entries.where((entry) => entry.isLowStock).length,
+        outOfStock: entries.where((entry) => entry.isOutOfStock).length,
+        value: entries.fold<double>(0, (sum, entry) => sum + entry.totalValue),
+      );
+    }).toList();
+  }
+}
+
+class _FarmInventorySummary {
+  final String farm;
+  final int items;
+  final int lowStock;
+  final int outOfStock;
+  final double value;
+
+  const _FarmInventorySummary({
+    required this.farm,
+    required this.items,
+    required this.lowStock,
+    required this.outOfStock,
+    required this.value,
+  });
 }
 
 class _InventoryEntry {

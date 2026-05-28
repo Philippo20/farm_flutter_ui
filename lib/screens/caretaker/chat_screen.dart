@@ -5,6 +5,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/caretaker_sidebar.dart';
 import '../../core/widgets/caretaker_header.dart';
+import '../../core/widgets/caretaker_mobile_bottom_nav.dart';
 import '../../providers/auth_provider.dart';
 
 /// Chat Screen for Caretaker
@@ -84,7 +85,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? CaretakerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+            )
+          : null,
     );
   }
 

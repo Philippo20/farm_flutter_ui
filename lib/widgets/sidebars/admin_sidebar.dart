@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
+import '../../core/widgets/sidebar_collapse_state.dart';
 
 class AdminSidebar extends StatefulWidget {
   final int selectedIndex;
@@ -26,8 +27,9 @@ class AdminSidebar extends StatefulWidget {
   State<AdminSidebar> createState() => _AdminSidebarState();
 }
 
-class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderStateMixin {
-  bool _isCollapsed = false;
+class _AdminSidebarState extends State<AdminSidebar>
+    with SingleTickerProviderStateMixin {
+  bool _isCollapsed = SidebarCollapseState.isCollapsed;
   late AnimationController _animationController;
   late Animation<double> _widthAnimation;
 
@@ -41,6 +43,9 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
     _widthAnimation = Tween<double>(begin: 240, end: 72).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+    if (_isCollapsed) {
+      _animationController.value = 1.0;
+    }
   }
 
   @override
@@ -52,6 +57,7 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
   void _toggleCollapse() {
     setState(() {
       _isCollapsed = !_isCollapsed;
+      SidebarCollapseState.isCollapsed = _isCollapsed;
       if (_isCollapsed) {
         _animationController.forward();
       } else {
@@ -69,7 +75,10 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
           activeIcon: Icons.dashboard,
           route: '/dashboard'),
       _NavItem(
-          icon: Icons.people_outline, label: 'Users', activeIcon: Icons.people, route: '/users'),
+          icon: Icons.people_outline,
+          label: 'Users',
+          activeIcon: Icons.people,
+          route: '/users'),
       _NavItem(
           icon: Icons.agriculture_outlined,
           label: 'Farms',
@@ -124,10 +133,12 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
             children: [
               // Toggle button
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 child: Row(
-                  mainAxisAlignment:
-                      _isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: _isCollapsed
+                      ? MainAxisAlignment.center
+                      : MainAxisAlignment.spaceBetween,
                   children: [
                     if (!_isCollapsed)
                       Text(
@@ -147,7 +158,9 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
                         child: Padding(
                           padding: const EdgeInsets.all(8),
                           child: Icon(
-                            _isCollapsed ? Icons.chevron_right : Icons.chevron_left,
+                            _isCollapsed
+                                ? Icons.chevron_right
+                                : Icons.chevron_left,
                             size: 20,
                             color: textColor.withOpacity(0.7),
                           ),
@@ -163,19 +176,24 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
               // Navigation items
               Expanded(
                 child: ListView.separated(
-                  padding: EdgeInsets.symmetric(horizontal: _isCollapsed ? 8 : 16),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: _isCollapsed ? 8 : 16),
                   itemCount: navItems.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 8),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 8),
                   itemBuilder: (context, idx) {
                     final item = navItems[idx];
                     final bool selected = idx == widget.selectedIndex;
 
                     return Material(
-                      color: selected ? selectedColor.withOpacity(0.12) : Colors.transparent,
+                      color: selected
+                          ? selectedColor.withOpacity(0.12)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
                         onTap: () {
                           widget.onItemSelected(idx);
+                          SidebarCollapseState.isCollapsed = _isCollapsed;
                           Navigator.of(context).pushReplacementNamed(item.route,
                               arguments: {'isDark': widget.isDark});
                         },
@@ -190,7 +208,9 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
                                   child: Icon(
                                     selected ? item.activeIcon : item.icon,
                                     size: 24,
-                                    color: selected ? selectedColor : textColor.withOpacity(0.7),
+                                    color: selected
+                                        ? selectedColor
+                                        : textColor.withOpacity(0.7),
                                   ),
                                 )
                               : Row(
@@ -198,7 +218,9 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
                                     Icon(
                                       selected ? item.activeIcon : item.icon,
                                       size: 22,
-                                      color: selected ? selectedColor : textColor.withOpacity(0.7),
+                                      color: selected
+                                          ? selectedColor
+                                          : textColor.withOpacity(0.7),
                                     ),
                                     const SizedBox(width: 16),
                                     Expanded(
@@ -206,8 +228,12 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
                                         item.label,
                                         style: GoogleFonts.inter(
                                           fontSize: 14,
-                                          color: selected ? selectedColor : textColor,
-                                          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                                          color: selected
+                                              ? selectedColor
+                                              : textColor,
+                                          fontWeight: selected
+                                              ? FontWeight.w600
+                                              : FontWeight.w500,
                                         ),
                                       ),
                                     ),
@@ -309,8 +335,9 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
                   child: InkWell(
                     onTap: () {
                       widget.onItemSelected(index);
-                      Navigator.of(context)
-                          .pushReplacementNamed(item.route, arguments: {'isDark': widget.isDark});
+                      SidebarCollapseState.isCollapsed = _isCollapsed;
+                      Navigator.of(context).pushReplacementNamed(item.route,
+                          arguments: {'isDark': widget.isDark});
                     },
                     splashColor: AppColors.primary.withOpacity(0.2),
                     child: Column(
@@ -327,7 +354,8 @@ class _AdminSidebarState extends State<AdminSidebar> with SingleTickerProviderSt
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             color: color,
-                            fontWeight: selected ? FontWeight.w500 : FontWeight.normal,
+                            fontWeight:
+                                selected ? FontWeight.w500 : FontWeight.normal,
                           ),
                         ),
                       ],

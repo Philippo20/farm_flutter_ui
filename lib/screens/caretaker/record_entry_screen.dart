@@ -9,6 +9,7 @@ import '../../core/models/records/farm_record_model.dart';
 import '../../core/providers/records_provider.dart';
 import '../../core/widgets/caretaker_sidebar.dart';
 import '../../core/widgets/caretaker_header.dart';
+import '../../core/widgets/caretaker_mobile_bottom_nav.dart';
 import '../../providers/auth_provider.dart';
 
 /// Record Entry Screen
@@ -86,7 +87,12 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? CaretakerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+            )
+          : null,
     );
   }
 

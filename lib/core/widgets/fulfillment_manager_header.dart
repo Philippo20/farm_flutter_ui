@@ -543,7 +543,7 @@ class FulfillmentManagerHeader extends ConsumerWidget {
                 }
               }
             } else if (value == 'settings') {
-              Navigator.of(context).pushNamed('/settings');
+              Navigator.of(context).pushNamed('/fulfillment-settings');
             } else if (value == 'profile') {
               if (onProfileTap != null) onProfileTap!();
             }
@@ -693,7 +693,7 @@ class FulfillmentManagerHeader extends ConsumerWidget {
                 }
               }
             } else if (value == 'settings') {
-              Navigator.of(context).pushNamed('/settings');
+              Navigator.of(context).pushNamed('/fulfillment-settings');
             } else if (value == 'profile') {
               if (onProfileTap != null) onProfileTap!();
             }
