@@ -5,8 +5,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/modern_admin_header.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../core/widgets/superadmin_sidebar.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Super Admin Dashboard - platform command center.
 class SuperAdminDashboard extends ConsumerStatefulWidget {
@@ -20,65 +22,290 @@ class SuperAdminDashboard extends ConsumerStatefulWidget {
 class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
   int _selectedNavIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final SuperAdminApiService _api = SuperAdminApiService();
 
-  final List<_DashboardMetric> _metrics = const [
-    _DashboardMetric(
-      label: 'Users',
-      value: '248',
-      detail: '7 pending approvals',
-      icon: Icons.people_alt_rounded,
-      color: AppColors.primary,
-      route: '/superadmin/users',
-    ),
-    _DashboardMetric(
-      label: 'Farms',
-      value: '24',
-      detail: '2 pending onboarding',
-      icon: Icons.agriculture_rounded,
-      color: AppColors.success,
-      route: '/superadmin/farms',
-    ),
-    _DashboardMetric(
-      label: 'Plant Types',
-      value: '45',
-      detail: '8 categories managed',
-      icon: Icons.local_florist_rounded,
-      color: AppColors.info,
-      route: '/superadmin/plants',
-    ),
-    _DashboardMetric(
-      label: 'Hub Pricing',
-      value: '42',
-      detail: 'spoke farm price records',
-      icon: Icons.price_change_rounded,
-      color: AppColors.warning,
-      route: '/superadmin/pricing',
-    ),
-    _DashboardMetric(
-      label: 'Inventory',
-      value: '\$1.24M',
-      detail: 'global stock value',
-      icon: Icons.inventory_2_rounded,
-      color: AppColors.success,
-      route: '/superadmin/inventory',
-    ),
-    _DashboardMetric(
-      label: 'Deliveries',
-      value: '38',
-      detail: 'active farm deliveries',
-      icon: Icons.local_shipping_rounded,
-      color: AppColors.info,
-      route: '/superadmin/deliveries',
-    ),
-    _DashboardMetric(
-      label: 'Sensors',
-      value: '503',
-      detail: 'global IoT devices monitored',
-      icon: Icons.sensors_rounded,
-      color: AppColors.chartTeal,
-      route: '/superadmin/sensors',
-    ),
-  ];
+  final List<_DashboardMetric> _metrics = [];
+  final List<Map<String, dynamic>> _users = [];
+  final List<Map<String, dynamic>> _farms = [];
+  final List<Map<String, dynamic>> _plantTypes = [];
+  final List<Map<String, dynamic>> _cropVarieties = [];
+  final List<Map<String, dynamic>> _packages = [];
+  final List<Map<String, dynamic>> _pricing = [];
+  final List<Map<String, dynamic>> _inventory = [];
+  final List<Map<String, dynamic>> _fulfillments = [];
+  final List<Map<String, dynamic>> _sensors = [];
+  final List<Map<String, dynamic>> _audits = [];
+  final List<Map<String, dynamic>> _backups = [];
+  bool _isLoadingDashboard = true;
+  String? _dashboardError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardMetrics();
+  }
+
+  Future<void> _loadDashboardMetrics() async {
+    setState(() {
+      _isLoadingDashboard = true;
+      _dashboardError = null;
+    });
+
+    try {
+      final results = await Future.wait([
+        _api.getUsers(),
+        _api.getFarms(),
+        _api.getPlantTypes(),
+        _api.getCrops(),
+        _api.getPackages(),
+        _api.getPricing(),
+        _api.getInventory(),
+        _api.getFulfillments(),
+        _api.getSensors(),
+        _api.getAudits(),
+        _api.getBackups(),
+      ]);
+      if (!mounted) return;
+      final users = results[0];
+      final farms = results[1];
+      final plantTypes = results[2];
+      final cropVarieties = results[3];
+      final packages = results[4];
+      final pricing = results[5];
+      final inventory = results[6];
+      final fulfillments = results[7];
+      final sensors = results[8];
+      final audits = results[9];
+      final backups = results[10];
+      final inventoryValue = inventory.fold<double>(
+        0,
+        (sum, item) {
+          final value = item['total_value'];
+          if (value is num) return sum + value.toDouble();
+          return sum + (double.tryParse(value?.toString() ?? '') ?? 0);
+        },
+      );
+      setState(() {
+        _users
+          ..clear()
+          ..addAll(users);
+        _farms
+          ..clear()
+          ..addAll(farms);
+        _plantTypes
+          ..clear()
+          ..addAll(plantTypes);
+        _cropVarieties
+          ..clear()
+          ..addAll(cropVarieties);
+        _packages
+          ..clear()
+          ..addAll(packages);
+        _pricing
+          ..clear()
+          ..addAll(pricing);
+        _inventory
+          ..clear()
+          ..addAll(inventory);
+        _fulfillments
+          ..clear()
+          ..addAll(fulfillments);
+        _sensors
+          ..clear()
+          ..addAll(sensors);
+        _audits
+          ..clear()
+          ..addAll(audits);
+        _backups
+          ..clear()
+          ..addAll(backups);
+        _metrics
+          ..clear()
+          ..addAll([
+            _metric(
+              label: 'Users',
+              value: '${users.length}',
+              detail: 'database user records',
+              icon: Icons.people_alt_rounded,
+              color: AppColors.primary,
+              route: '/superadmin/users',
+            ),
+            _metric(
+              label: 'Farms',
+              value: '${farms.length}',
+              detail: 'registered farm records',
+              icon: Icons.agriculture_rounded,
+              color: AppColors.success,
+              route: '/superadmin/farms',
+            ),
+            _metric(
+              label: 'Plant Types',
+              value: '${plantTypes.length}',
+              detail: 'crop catalog records',
+              icon: Icons.local_florist_rounded,
+              color: AppColors.info,
+              route: '/superadmin/plants',
+            ),
+            _metric(
+              label: 'Crop Varieties',
+              value: '${cropVarieties.length}',
+              detail: 'variety records',
+              icon: Icons.grass_rounded,
+              color: AppColors.success,
+              route: '/superadmin/crop-varieties',
+            ),
+            _metric(
+              label: 'Packaging',
+              value: '${packages.length}',
+              detail: 'packaging records',
+              icon: Icons.inventory_2_rounded,
+              color: AppColors.warning,
+              route: '/superadmin/packaging',
+            ),
+            _metric(
+              label: 'Hub Pricing',
+              value: '${pricing.length}',
+              detail: 'price records',
+              icon: Icons.price_change_rounded,
+              color: AppColors.warning,
+              route: '/superadmin/pricing',
+            ),
+            _metric(
+              label: 'Inventory',
+              value: 'GHS ${inventoryValue.toStringAsFixed(0)}',
+              detail: 'global stock value',
+              icon: Icons.inventory_2_rounded,
+              color: AppColors.success,
+              route: '/superadmin/inventory',
+            ),
+            _metric(
+              label: 'Deliveries',
+              value: '${fulfillments.length}',
+              detail: 'fulfillment records',
+              icon: Icons.local_shipping_rounded,
+              color: AppColors.info,
+              route: '/superadmin/deliveries',
+            ),
+            _metric(
+              label: 'Sensors',
+              value: '${sensors.length}',
+              detail: 'registered telemetry devices',
+              icon: Icons.sensors_rounded,
+              color: AppColors.chartTeal,
+              route: '/superadmin/sensors',
+            ),
+            _metric(
+              label: 'Backups',
+              value: '${backups.length}',
+              detail: 'available restore points',
+              icon: Icons.backup_rounded,
+              color: AppColors.primary,
+              route: '/superadmin/backup',
+            ),
+          ]);
+        _isLoadingDashboard = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _metrics.clear();
+        _users.clear();
+        _farms.clear();
+        _plantTypes.clear();
+        _cropVarieties.clear();
+        _packages.clear();
+        _pricing.clear();
+        _inventory.clear();
+        _fulfillments.clear();
+        _sensors.clear();
+        _audits.clear();
+        _backups.clear();
+        _isLoadingDashboard = false;
+        _dashboardError = error.toString();
+      });
+    }
+  }
+
+  _DashboardMetric _metric({
+    required String label,
+    required String value,
+    required String detail,
+    required IconData icon,
+    required Color color,
+    required String route,
+  }) {
+    return _DashboardMetric(
+      label: label,
+      value: value,
+      detail: detail,
+      icon: icon,
+      color: color,
+      route: route,
+    );
+  }
+
+  int get _openApprovals {
+    return _users.where(_isPendingRecord).length +
+        _farms.where(_isPendingRecord).length;
+  }
+
+  int get _highRiskAudits {
+    return _audits.where((audit) {
+      final status = (audit['status'] ?? '').toString().toLowerCase();
+      final details = (audit['action_details'] ?? '').toString().toLowerCase();
+      return status.contains('failed') ||
+          status.contains('critical') ||
+          status.contains('high') ||
+          details.contains('failed') ||
+          details.contains('suspend') ||
+          details.contains('delete');
+    }).length;
+  }
+
+  int get _platformHealth {
+    if (_users.isEmpty && _farms.isEmpty && _sensors.isEmpty) return 0;
+    var score = 100;
+    score -= (_openApprovals * 3).clamp(0, 30);
+    score -= (_highRiskAudits * 2).clamp(0, 30);
+    score -= (_inactiveSensors * 2).clamp(0, 20);
+    if (_backups.isEmpty) score -= 15;
+    return score.clamp(0, 100);
+  }
+
+  int get _inactiveSensors {
+    return _sensors.where((sensor) {
+      final status = (sensor['status'] ?? '').toString().toLowerCase();
+      return status.contains('inactive') ||
+          status.contains('faulty') ||
+          status.contains('maintenance');
+    }).length;
+  }
+
+  String get _backupCoverageLabel {
+    if (_backups.isEmpty) return '0 backups';
+    final farmsWithBackups = _backups
+        .map((backup) => (backup['scope_id'] ??
+                backup['farm_id'] ??
+                backup['farm_name'] ??
+                backup['scope'])
+            ?.toString()
+            .trim())
+        .whereType<String>()
+        .where((value) => value.isNotEmpty)
+        .toSet()
+        .length;
+    if (_farms.isEmpty) return '${_backups.length} backups';
+    return '$farmsWithBackups / ${_farms.length} farms';
+  }
+
+  bool _isPendingRecord(Map<String, dynamic> record) {
+    final status = (record['status'] ?? record['approval_status'] ?? '')
+        .toString()
+        .toLowerCase();
+    return status.contains('pending') ||
+        status.contains('review') ||
+        status.contains('submitted');
+  }
 
   final List<_DashboardAction> _actions = const [
     _DashboardAction(
@@ -101,6 +328,13 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
       icon: Icons.eco_rounded,
       color: AppColors.info,
       route: '/superadmin/plants',
+    ),
+    _DashboardAction(
+      title: 'Crop Varieties',
+      subtitle: 'Varieties, growing ranges, and seed specifications',
+      icon: Icons.grass_rounded,
+      color: AppColors.success,
+      route: '/superadmin/crop-varieties',
     ),
     _DashboardAction(
       title: 'Packaging',
@@ -260,6 +494,14 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     required bool isMobile,
     required bool isTablet,
   }) {
+    if (_isLoadingDashboard) {
+      return const AdminDataSkeleton(rowCount: 6);
+    }
+
+    if (_dashboardError != null) {
+      return _buildDashboardError(isDark);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -273,6 +515,41 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
         const SizedBox(height: AppSpacing.lg),
         _buildActivityPanel(isDark),
       ],
+    );
+  }
+
+  Widget _buildDashboardError(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: _panelDecoration(isDark),
+      child: Column(
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.error),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Unable to load dashboard data',
+            style: AppTypography.titleMedium.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            _dashboardError!,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white70 : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FilledButton.icon(
+            onPressed: _loadDashboardMetrics,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -348,7 +625,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                 'Super Admin Command Center',
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white : AppColors.primary,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -359,7 +636,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
           'Platform Control Dashboard',
           style: AppTypography.h4.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 6),
@@ -386,11 +663,26 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
       ),
       child: Column(
         children: [
-          _buildHeroLine('Platform health', '98%', AppColors.success, isDark),
+          _buildHeroLine(
+            'Platform health',
+            '$_platformHealth%',
+            _platformHealth >= 80 ? AppColors.success : AppColors.warning,
+            isDark,
+          ),
           const SizedBox(height: AppSpacing.sm),
-          _buildHeroLine('Backup coverage', '100%', AppColors.primary, isDark),
+          _buildHeroLine(
+            'Backup coverage',
+            _backupCoverageLabel,
+            _backups.isEmpty ? AppColors.warning : AppColors.primary,
+            isDark,
+          ),
           const SizedBox(height: AppSpacing.sm),
-          _buildHeroLine('Open approvals', '9', AppColors.warning, isDark),
+          _buildHeroLine(
+            'Open approvals',
+            '$_openApprovals',
+            _openApprovals > 0 ? AppColors.warning : AppColors.success,
+            isDark,
+          ),
         ],
       ),
     );
@@ -410,7 +702,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -418,7 +710,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
           value,
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -468,7 +760,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                     metric.value,
                     style: AppTypography.h5.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w600,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -477,7 +769,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                     metric.label,
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white70 : AppColors.textSecondary,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -560,7 +852,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                     action.title,
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -589,24 +881,24 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
       _GovernancePanel(
         title: 'Approval Queue',
         subtitle: 'Users and farms waiting for review',
-        value: '9',
-        color: AppColors.warning,
+        value: '$_openApprovals',
+        color: _openApprovals > 0 ? AppColors.warning : AppColors.success,
         icon: Icons.pending_actions_rounded,
         route: '/superadmin/users',
       ),
       _GovernancePanel(
         title: 'Audit Risk',
         subtitle: 'High-severity global and farm events',
-        value: '23',
-        color: AppColors.error,
+        value: '$_highRiskAudits',
+        color: _highRiskAudits > 0 ? AppColors.error : AppColors.success,
         icon: Icons.gpp_maybe_rounded,
         route: '/superadmin/audit',
       ),
       _GovernancePanel(
         title: 'Restore Readiness',
         subtitle: 'Global and farm backups verified',
-        value: '100%',
-        color: AppColors.success,
+        value: _backups.isEmpty ? '0' : '${_backups.length}',
+        color: _backups.isEmpty ? AppColors.warning : AppColors.success,
         icon: Icons.verified_user_rounded,
         route: '/superadmin/backup',
       ),
@@ -665,7 +957,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                     panel.title,
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
@@ -683,7 +975,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
               panel.value,
               style: AppTypography.h6.copyWith(
                 color: panel.color,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -693,36 +985,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
   }
 
   Widget _buildActivityPanel(bool isDark) {
-    final activities = const [
-      _ActivityItem(
-        title: 'Hub pricing updated',
-        subtitle: 'Green Valley Spoke Farm changed lettuce bulk price to hub',
-        time: '12 min ago',
-        icon: Icons.price_change_rounded,
-        color: AppColors.warning,
-      ),
-      _ActivityItem(
-        title: 'Farm backup verified',
-        subtitle: 'North Ridge Farm backup passed restore validation',
-        time: '45 min ago',
-        icon: Icons.backup_rounded,
-        color: AppColors.success,
-      ),
-      _ActivityItem(
-        title: 'Packaging stock threshold reached',
-        subtitle: 'Reusable crates dropped below preferred warehouse level',
-        time: '2 hrs ago',
-        icon: Icons.inventory_2_rounded,
-        color: AppColors.info,
-      ),
-      _ActivityItem(
-        title: 'Audit event escalated',
-        subtitle: 'Sunset Acres compliance suspension recorded',
-        time: '4 hrs ago',
-        icon: Icons.manage_search_rounded,
-        color: AppColors.error,
-      ),
-    ];
+    final activities = _activityItems;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -747,10 +1010,56 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          ...activities.map((activity) => _buildActivityRow(activity, isDark)),
+          if (activities.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.03)
+                    : AppColors.neutral50,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white10
+                      : Colors.black.withValues(alpha: 0.04),
+                ),
+              ),
+              child: Text(
+                'No audit activity has been recorded yet.',
+                style: AppTypography.bodySmall.copyWith(
+                  color: isDark ? Colors.white60 : AppColors.textSecondary,
+                ),
+              ),
+            )
+          else
+            ...activities
+                .map((activity) => _buildActivityRow(activity, isDark)),
         ],
       ),
     );
+  }
+
+  List<_ActivityItem> get _activityItems {
+    final sortedAudits = [..._audits]..sort((a, b) {
+        return _parseDate(b['timestamp'] ?? b[r'$createdAt']).compareTo(
+          _parseDate(a['timestamp'] ?? a[r'$createdAt']),
+        );
+      });
+    return sortedAudits.take(5).map((audit) {
+      final collection = (audit['collection_name'] ?? 'Platform').toString();
+      final actionType = _labelFromSnakeCase(
+        (audit['action_type'] ?? 'System event').toString(),
+      );
+      final details = (audit['action_details'] ?? '').toString().trim();
+      return _ActivityItem(
+        title: actionType,
+        subtitle: details.isEmpty ? collection : details,
+        time: _timeAgo(audit['timestamp'] ?? audit[r'$createdAt']),
+        icon: _iconForCollection(collection),
+        color: _colorForAudit(audit),
+      );
+    }).toList();
   }
 
   Widget _buildActivityRow(_ActivityItem activity, bool isDark) {
@@ -784,7 +1093,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                   activity.title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
@@ -802,7 +1111,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
             activity.time,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white54 : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -818,7 +1127,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
           title,
           style: AppTypography.h6.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 4),
@@ -830,6 +1139,62 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
         ),
       ],
     );
+  }
+
+  String _labelFromSnakeCase(String value) {
+    return value
+        .replaceAll('_', ' ')
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
+
+  DateTime _parseDate(dynamic value) {
+    return DateTime.tryParse(value?.toString() ?? '') ??
+        DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  String _timeAgo(dynamic value) {
+    final parsed = DateTime.tryParse(value?.toString() ?? '');
+    if (parsed == null) return '-';
+    final difference = DateTime.now().difference(parsed.toLocal());
+    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.inHours < 1) return '${difference.inMinutes} min ago';
+    if (difference.inDays < 1) return '${difference.inHours} hr ago';
+    return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
+  }
+
+  IconData _iconForCollection(String collection) {
+    final value = collection.toLowerCase();
+    if (value.contains('user')) return Icons.manage_accounts_rounded;
+    if (value.contains('farm')) return Icons.agriculture_rounded;
+    if (value.contains('price')) return Icons.price_change_rounded;
+    if (value.contains('package')) return Icons.inventory_2_rounded;
+    if (value.contains('inventory')) return Icons.inventory_rounded;
+    if (value.contains('fulfillment') || value.contains('delivery')) {
+      return Icons.local_shipping_rounded;
+    }
+    if (value.contains('backup')) return Icons.backup_rounded;
+    if (value.contains('sensor')) return Icons.sensors_rounded;
+    return Icons.manage_search_rounded;
+  }
+
+  Color _colorForAudit(Map<String, dynamic> audit) {
+    final status = (audit['status'] ?? '').toString().toLowerCase();
+    final collection =
+        (audit['collection_name'] ?? '').toString().toLowerCase();
+    if (status.contains('failed') || status.contains('error')) {
+      return AppColors.error;
+    }
+    if (status.contains('pending')) return AppColors.warning;
+    if (collection.contains('farm') || collection.contains('sensor')) {
+      return AppColors.success;
+    }
+    if (collection.contains('price') || collection.contains('package')) {
+      return AppColors.warning;
+    }
+    return AppColors.info;
   }
 
   BoxDecoration _panelDecoration(bool isDark) {

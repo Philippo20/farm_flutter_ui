@@ -34,7 +34,8 @@ class FarmManagerMobileDrawer extends StatelessWidget {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.md, AppSpacing.md),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, AppSpacing.lg, AppSpacing.md, AppSpacing.md),
               child: Row(
                 children: [
                   Container(
@@ -65,7 +66,8 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                           userName,
                           style: AppTypography.bodyMedium.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -73,7 +75,9 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                         Text(
                           userRole,
                           style: AppTypography.caption.copyWith(
-                            color: isDark ? Colors.white60 : AppColors.textSecondary,
+                            color: isDark
+                                ? Colors.white60
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -82,11 +86,19 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            Divider(height: 1, color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200),
+            Divider(
+                height: 1,
+                color: isDark
+                    ? Colors.white.withOpacity(0.08)
+                    : AppColors.neutral200),
             Expanded(
               child: _buildNavItems(context, isDark),
             ),
-            Divider(height: 1, color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200),
+            Divider(
+                height: 1,
+                color: isDark
+                    ? Colors.white.withOpacity(0.08)
+                    : AppColors.neutral200),
             Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: InkWell(
@@ -102,7 +114,8 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.logout_rounded, size: 16, color: AppColors.error),
+                      const Icon(Icons.logout_rounded,
+                          size: 16, color: AppColors.error),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         'Logout',
@@ -124,15 +137,66 @@ class FarmManagerMobileDrawer extends StatelessWidget {
 
   Widget _buildNavItems(BuildContext context, bool isDark) {
     final items = [
-      {'icon': Icons.dashboard_outlined, 'active': Icons.dashboard_rounded, 'label': 'Dashboard', 'route': '/farm-manager'},
-      {'icon': Icons.agriculture_outlined, 'active': Icons.agriculture_rounded, 'label': 'My Farms', 'route': '/farm-manager/farms'},
-      {'icon': Icons.inventory_2_outlined, 'active': Icons.inventory_2_rounded, 'label': 'Inventory', 'route': '/farm-manager/inventory'},
-      {'icon': Icons.grid_view_outlined, 'active': Icons.grid_view_rounded, 'label': 'Batch Generation', 'route': '/farm-manager/batch-generation'},
-      {'icon': Icons.request_quote_outlined, 'active': Icons.request_quote_rounded, 'label': 'Fund Requests', 'route': '/farm-manager/fund-request'},
-      {'icon': Icons.local_shipping_outlined, 'active': Icons.local_shipping_rounded, 'label': 'Deliveries', 'route': '/farm-manager/deliveries'},
-      {'icon': Icons.assessment_outlined, 'active': Icons.assessment_rounded, 'label': 'Reports', 'route': '/farm-manager/reports'},
-      {'icon': Icons.groups_outlined, 'active': Icons.groups_rounded, 'label': 'Team', 'route': '/farm-manager/team'},
-      {'icon': Icons.settings_outlined, 'active': Icons.settings_rounded, 'label': 'Settings', 'route': '/farm-manager/settings'},
+      {
+        'icon': Icons.dashboard_outlined,
+        'active': Icons.dashboard_rounded,
+        'label': 'Dashboard',
+        'route': '/farm-manager'
+      },
+      {
+        'icon': Icons.agriculture_outlined,
+        'active': Icons.agriculture_rounded,
+        'label': 'My Farms',
+        'route': '/farm-manager/farms'
+      },
+      {
+        'icon': Icons.inventory_2_outlined,
+        'active': Icons.inventory_2_rounded,
+        'label': 'Inventory',
+        'route': '/farm-manager/inventory'
+      },
+      {
+        'icon': Icons.grid_view_outlined,
+        'active': Icons.grid_view_rounded,
+        'label': 'Batch Generation',
+        'route': '/farm-manager/batch-generation'
+      },
+      {
+        'icon': Icons.request_quote_outlined,
+        'active': Icons.request_quote_rounded,
+        'label': 'Fund Requests',
+        'route': '/farm-manager/fund-request'
+      },
+      {
+        'icon': Icons.local_shipping_outlined,
+        'active': Icons.local_shipping_rounded,
+        'label': 'Deliveries',
+        'route': '/farm-manager/deliveries'
+      },
+      {
+        'icon': Icons.assessment_outlined,
+        'active': Icons.assessment_rounded,
+        'label': 'Reports',
+        'route': '/farm-manager/reports'
+      },
+      {
+        'icon': Icons.groups_outlined,
+        'active': Icons.groups_rounded,
+        'label': 'Team',
+        'route': '/farm-manager/team'
+      },
+      {
+        'icon': Icons.settings_outlined,
+        'active': Icons.settings_rounded,
+        'label': 'Settings',
+        'route': '/farm-manager/settings'
+      },
+      {
+        'icon': Icons.sensors_outlined,
+        'active': Icons.sensors_rounded,
+        'label': 'Sensors',
+        'route': '/farm-manager/sensors'
+      },
     ];
 
     return ListView.separated(
@@ -142,7 +206,8 @@ class FarmManagerMobileDrawer extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = items[index];
         final isSelected = index == selectedIndex;
-        final icon = isSelected ? item['active'] as IconData : item['icon'] as IconData;
+        final icon =
+            isSelected ? item['active'] as IconData : item['icon'] as IconData;
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -152,7 +217,8 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                 onItemSelected(index);
                 Navigator.pop(context);
                 try {
-                  Navigator.pushReplacementNamed(context, item['route'] as String);
+                  Navigator.pushReplacementNamed(
+                      context, item['route'] as String);
                 } catch (_) {
                   Navigator.pushNamed(context, item['route'] as String);
                 }
@@ -162,10 +228,13 @@ class FarmManagerMobileDrawer extends StatelessWidget {
             },
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: AppSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                  vertical: 10, horizontal: AppSpacing.sm),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? (isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral50)
+                    ? (isDark
+                        ? Colors.white.withOpacity(0.08)
+                        : AppColors.neutral50)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
@@ -184,7 +253,8 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                       item['label'] as String,
                       style: AppTypography.bodySmall.copyWith(
                         fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
                         color: isSelected
                             ? AppColors.primary
                             : (isDark ? Colors.white70 : AppColors.textPrimary),

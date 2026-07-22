@@ -24,7 +24,9 @@ class PermissionGate extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     if (user == null) {
-      return showFallback ? (fallback ?? const SizedBox.shrink()) : const SizedBox.shrink();
+      return showFallback
+          ? (fallback ?? const SizedBox.shrink())
+          : const SizedBox.shrink();
     }
 
     final hasPermission = user.hasPermission(permission);
@@ -33,7 +35,9 @@ class PermissionGate extends ConsumerWidget {
       return child;
     }
 
-    return showFallback ? (fallback ?? const SizedBox.shrink()) : const SizedBox.shrink();
+    return showFallback
+        ? (fallback ?? const SizedBox.shrink())
+        : const SizedBox.shrink();
   }
 }
 
@@ -58,7 +62,9 @@ class AnyPermissionGate extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     if (user == null) {
-      return showFallback ? (fallback ?? const SizedBox.shrink()) : const SizedBox.shrink();
+      return showFallback
+          ? (fallback ?? const SizedBox.shrink())
+          : const SizedBox.shrink();
     }
 
     final hasAnyPermission = user.hasAnyPermission(permissions);
@@ -67,7 +73,9 @@ class AnyPermissionGate extends ConsumerWidget {
       return child;
     }
 
-    return showFallback ? (fallback ?? const SizedBox.shrink()) : const SizedBox.shrink();
+    return showFallback
+        ? (fallback ?? const SizedBox.shrink())
+        : const SizedBox.shrink();
   }
 }
 
@@ -92,7 +100,9 @@ class AllPermissionsGate extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     if (user == null) {
-      return showFallback ? (fallback ?? const SizedBox.shrink()) : const SizedBox.shrink();
+      return showFallback
+          ? (fallback ?? const SizedBox.shrink())
+          : const SizedBox.shrink();
     }
 
     final hasAllPermissions = user.hasAllPermissions(permissions);
@@ -101,7 +111,9 @@ class AllPermissionsGate extends ConsumerWidget {
       return child;
     }
 
-    return showFallback ? (fallback ?? const SizedBox.shrink()) : const SizedBox.shrink();
+    return showFallback
+        ? (fallback ?? const SizedBox.shrink())
+        : const SizedBox.shrink();
   }
 }
 
@@ -126,7 +138,9 @@ class RoleGate extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
 
     if (user == null) {
-      return showFallback ? (fallback ?? const SizedBox.shrink()) : const SizedBox.shrink();
+      return showFallback
+          ? (fallback ?? const SizedBox.shrink())
+          : const SizedBox.shrink();
     }
 
     final hasRole = allowedRoles.contains(user.role.code);
@@ -135,7 +149,9 @@ class RoleGate extends ConsumerWidget {
       return child;
     }
 
-    return showFallback ? (fallback ?? const SizedBox.shrink()) : const SizedBox.shrink();
+    return showFallback
+        ? (fallback ?? const SizedBox.shrink())
+        : const SizedBox.shrink();
   }
 }
 

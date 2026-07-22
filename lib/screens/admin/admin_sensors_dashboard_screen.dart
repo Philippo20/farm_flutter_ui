@@ -7,7 +7,6 @@ import '../../widgets/cards/sensor_status_container.dart';
 import '../../widgets/cards/sensor_tabs_container.dart';
 
 class Sensor {
-
   final String id;
   final String name;
   final String type;
@@ -25,7 +24,6 @@ class Sensor {
     required this.lastReading,
     required this.batteryLevel,
   });
-
 }
 
 class SensorsScreen extends StatefulWidget {
@@ -39,8 +37,7 @@ class _SensorsScreenState extends State<SensorsScreen> {
   int selectedIndex = 3;
   bool isDark = false;
   final TextEditingController _searchController = TextEditingController();
-  
-  
+
   @override
   void initState() {
     super.initState();
@@ -58,106 +55,113 @@ class _SensorsScreenState extends State<SensorsScreen> {
 
   @override
   Widget build(BuildContext context) {
-  final screenWidth = MediaQuery.of(context).size.width;
-  final isMobile = screenWidth < 600;
-  final textColor = isDark ? AppColors.darkText : AppColors.text;
-  final cardColor = isDark ? AppColors.darkCard : AppColors.card;
-  final secondaryTextColor = isDark ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.6);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final textColor = isDark ? AppColors.darkText : AppColors.text;
+    final cardColor = isDark ? AppColors.darkCard : AppColors.card;
+    final secondaryTextColor =
+        isDark ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.6);
 
-  return Scaffold(
-    backgroundColor: Colors.transparent,
-    body: Container(
-      decoration: BoxDecoration(
-        gradient: isDark 
-            ? AppBackgroundGradient.getDarkGradient()
-            : AppBackgroundGradient.getLightGradient(),
-      ),
-      child: Column(
-        children: [
-          AdminHeader(
-            isDark: isDark,
-            onToggleDarkMode: () => setState(() => isDark = !isDark),
-            onMenuPressed: null,
-          ),
-          Expanded(
-            child: Row(
-              children: [
-                if (!isMobile)
-                  AdminSidebar(
-                    selectedIndex: selectedIndex,
-                    onItemSelected: (idx) => setState(() => selectedIndex = idx),
-                    isDark: isDark,
-                    isMobile: false,
-                  ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 16 : 32,
-                        vertical: 20,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildHeaderSection(isMobile, textColor),
-                          const SizedBox(height: 24),
-                          _buildStatsSection(isMobile),
-                          const SizedBox(height: 28),
-                          _buildSearchAndFilter(cardColor, secondaryTextColor),
-                          const SizedBox(height: 22),
-                          
-                          // Responsive containers section
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              if (constraints.maxWidth < 800) {
-                                // Mobile/Tablet layout - Column
-                                return Column(
-                                  children: [
-                                    SensorTabsContainer(isDark: isDark),
-                                    const SizedBox(height: 20),
-                                    EnergyConsumptionContainer(isDark: isDark),
-                                  ],
-                                );
-                              } else {
-                                // Desktop layout - Row
-                                return Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: SensorTabsContainer(isDark: isDark),
-                                    ),
-                                    const SizedBox(width: 20),
-                                    Expanded(
-                                      flex: 1,
-                                      child: EnergyConsumptionContainer(isDark: isDark),
-                                    ),
-                                  ],
-                                );
-                              }
-                            },
-                          ),
-                        ],
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? AppBackgroundGradient.getDarkGradient()
+              : AppBackgroundGradient.getLightGradient(),
+        ),
+        child: Column(
+          children: [
+            AdminHeader(
+              isDark: isDark,
+              onToggleDarkMode: () => setState(() => isDark = !isDark),
+              onMenuPressed: null,
+            ),
+            Expanded(
+              child: Row(
+                children: [
+                  if (!isMobile)
+                    AdminSidebar(
+                      selectedIndex: selectedIndex,
+                      onItemSelected: (idx) =>
+                          setState(() => selectedIndex = idx),
+                      isDark: isDark,
+                      isMobile: false,
+                    ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 16 : 32,
+                          vertical: 20,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeaderSection(isMobile, textColor),
+                            const SizedBox(height: 24),
+                            _buildStatsSection(isMobile),
+                            const SizedBox(height: 28),
+                            _buildSearchAndFilter(
+                                cardColor, secondaryTextColor),
+                            const SizedBox(height: 22),
+
+                            // Responsive containers section
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                if (constraints.maxWidth < 800) {
+                                  // Mobile/Tablet layout - Column
+                                  return Column(
+                                    children: [
+                                      SensorTabsContainer(isDark: isDark),
+                                      const SizedBox(height: 20),
+                                      EnergyConsumptionContainer(
+                                          isDark: isDark),
+                                    ],
+                                  );
+                                } else {
+                                  // Desktop layout - Row
+                                  return Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        flex: 3,
+                                        child:
+                                            SensorTabsContainer(isDark: isDark),
+                                      ),
+                                      const SizedBox(width: 20),
+                                      Expanded(
+                                        flex: 1,
+                                        child: EnergyConsumptionContainer(
+                                            isDark: isDark),
+                                      ),
+                                    ],
+                                  );
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-    bottomNavigationBar: isMobile
-        ? AdminSidebar(
-            selectedIndex: selectedIndex,
-            onItemSelected: (idx) => setState(() => selectedIndex = idx),
-            isDark: isDark,
-            isMobile: true,
-          )
-        : null,
-  );
-}
+      bottomNavigationBar: isMobile
+          ? AdminSidebar(
+              selectedIndex: selectedIndex,
+              onItemSelected: (idx) => setState(() => selectedIndex = idx),
+              isDark: isDark,
+              isMobile: true,
+            )
+          : null,
+    );
+  }
 
   Widget _buildHeaderSection(bool isMobile, Color textColor) {
     return Row(
@@ -167,7 +171,7 @@ class _SensorsScreenState extends State<SensorsScreen> {
             'Sensor Management',
             style: GoogleFonts.poppins(
               fontSize: isMobile ? 24 : 28,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
               color: textColor,
               letterSpacing: 0.3,
             ),
@@ -188,7 +192,7 @@ class _SensorsScreenState extends State<SensorsScreen> {
               borderRadius: BorderRadius.circular(14),
             ),
             textStyle: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               fontSize: isMobile ? 14 : 15,
               letterSpacing: 0.2,
             ),
@@ -203,25 +207,35 @@ class _SensorsScreenState extends State<SensorsScreen> {
     return isMobile
         ? Column(
             children: [
-              _buildSensorStatCard('Total Sensors', '42', '+8%', true, Icons.sensors, Colors.blue),
+              _buildSensorStatCard('Total Sensors', '42', '+8%', true,
+                  Icons.sensors, Colors.blue),
               const SizedBox(height: 12),
-              _buildSensorStatCard('Active Sensors', '36', '+5%', true, Icons.check_circle, Colors.green),
+              _buildSensorStatCard('Active Sensors', '36', '+5%', true,
+                  Icons.check_circle, Colors.green),
               const SizedBox(height: 12),
-              _buildSensorStatCard('Needs Attention', '6', '-2%', false, Icons.warning, Colors.orange),
+              _buildSensorStatCard('Needs Attention', '6', '-2%', false,
+                  Icons.warning, Colors.orange),
             ],
           )
         : Row(
             children: [
-              Expanded(child: _buildSensorStatCard('Total Sensors', '42', '+8%', true, Icons.sensors, Colors.blue)),
+              Expanded(
+                  child: _buildSensorStatCard('Total Sensors', '42', '+8%',
+                      true, Icons.sensors, Colors.blue)),
               const SizedBox(width: 16),
-              Expanded(child: _buildSensorStatCard('Active Sensors', '36', '+5%', true, Icons.check_circle, Colors.green)),
+              Expanded(
+                  child: _buildSensorStatCard('Active Sensors', '36', '+5%',
+                      true, Icons.check_circle, Colors.green)),
               const SizedBox(width: 16),
-              Expanded(child: _buildSensorStatCard('Needs Attention', '6', '-2%', false, Icons.warning, Colors.orange)),
+              Expanded(
+                  child: _buildSensorStatCard('Needs Attention', '6', '-2%',
+                      false, Icons.warning, Colors.orange)),
             ],
           );
   }
 
-  Widget _buildSensorStatCard(String title, String value, String change, bool isPositive, IconData icon, Color color) {
+  Widget _buildSensorStatCard(String title, String value, String change,
+      bool isPositive, IconData icon, Color color) {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[850] : Colors.white,
@@ -252,7 +266,9 @@ class _SensorsScreenState extends State<SensorsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isPositive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                  color: isPositive
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -267,7 +283,7 @@ class _SensorsScreenState extends State<SensorsScreen> {
                       change,
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         color: isPositive ? Colors.green : Colors.red,
                       ),
                     ),
@@ -281,7 +297,9 @@ class _SensorsScreenState extends State<SensorsScreen> {
             title,
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: isDark ? Colors.white.withOpacity(0.7) : Colors.black.withOpacity(0.6),
+              color: isDark
+                  ? Colors.white.withOpacity(0.7)
+                  : Colors.black.withOpacity(0.6),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -290,7 +308,7 @@ class _SensorsScreenState extends State<SensorsScreen> {
             value,
             style: GoogleFonts.poppins(
               fontSize: 24,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
               color: isDark ? Colors.white : Colors.black,
             ),
           ),
@@ -328,7 +346,8 @@ class _SensorsScreenState extends State<SensorsScreen> {
                     color: secondaryTextColor,
                   ),
                 ),
-                style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
+                style: GoogleFonts.inter(
+                    color: isDark ? Colors.white : Colors.black),
               ),
             ),
             Container(
@@ -360,8 +379,6 @@ class _SensorsScreenState extends State<SensorsScreen> {
       ),
     );
   }
-
-  
 
   void _showAddSensorDialog() {
     // Implement add sensor dialog

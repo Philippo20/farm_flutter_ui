@@ -145,7 +145,7 @@ class _AdminSidebarState extends State<AdminSidebar>
                         'MENU',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                           color: textColor.withOpacity(0.5),
                           letterSpacing: 1.2,
                         ),
@@ -232,7 +232,7 @@ class _AdminSidebarState extends State<AdminSidebar>
                                               ? selectedColor
                                               : textColor,
                                           fontWeight: selected
-                                              ? FontWeight.w600
+                                              ? FontWeight.w500
                                               : FontWeight.w500,
                                         ),
                                       ),

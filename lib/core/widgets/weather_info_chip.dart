@@ -38,9 +38,8 @@ class WeatherInfoChip extends StatelessWidget {
     final chipColor = isDark
         ? AppColors.primary.withOpacity(0.15)
         : AppColors.primary.withOpacity(0.08);
-    final textColor = isDark
-        ? Colors.white
-        : AppColors.darkBackground.withOpacity(0.8);
+    final textColor =
+        isDark ? Colors.white : AppColors.darkBackground.withOpacity(0.8);
 
     return Container(
       decoration: BoxDecoration(

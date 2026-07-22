@@ -18,7 +18,12 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
   bool isDark = false;
 
   // Dynamic list of available farms
-  List<String> availableFarms = ['All Farms', 'Greenhouse A', 'Field B', 'Hydroponic C'];
+  List<String> availableFarms = [
+    'All Farms',
+    'Greenhouse A',
+    'Field B',
+    'Hydroponic C'
+  ];
   late String selectedFarm; // Initialize later in initState
 
   final Map<String, bool> _automationSettings = {
@@ -57,7 +62,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    selectedFarm = availableFarms.first; // Set initial selected farm to the first in the list
+    selectedFarm = availableFarms
+        .first; // Set initial selected farm to the first in the list
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final args = ModalRoute.of(context)?.settings.arguments as Map?;
       setState(() => isDark = args?['isDark'] ?? false);
@@ -89,7 +95,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
             AdminHeader(
               isDark: isDark,
               onToggleDarkMode: () => setState(() => isDark = !isDark),
-              onMenuPressed: null, // This can be wired up to a drawer for mobile if needed
+              onMenuPressed:
+                  null, // This can be wired up to a drawer for mobile if needed
             ),
             Expanded(
               child: Row(
@@ -99,10 +106,12 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                   Expanded(
                     child: Column(
                       children: [
-                        _buildFarmSelector(isMobile, textColor, cardColor, activeColor),
+                        _buildFarmSelector(
+                            isMobile, textColor, cardColor, activeColor),
                         _buildTabBar(activeColor, textColor),
                         Expanded(
-                          child: _buildTabViews(cardColor, textColor, activeColor, subtitleColor),
+                          child: _buildTabViews(
+                              cardColor, textColor, activeColor, subtitleColor),
                         ),
                       ],
                     ),
@@ -114,7 +123,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
         ),
       ),
       // AdminSidebar for mobile (bottom navigation bar)
-      bottomNavigationBar: isMobile ? _buildMobileSidebar(selectedIndex, isDark) : null,
+      bottomNavigationBar:
+          isMobile ? _buildMobileSidebar(selectedIndex, isDark) : null,
     );
   }
 
@@ -152,7 +162,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
   }
 
   // Builds the farm selection dropdown and new farm button
-  Widget _buildFarmSelector(bool isMobile, Color textColor, Color cardColor, Color activeColor) {
+  Widget _buildFarmSelector(
+      bool isMobile, Color textColor, Color cardColor, Color activeColor) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       child: Row(
@@ -161,7 +172,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
             child: DropdownButtonFormField<String>(
               value: selectedFarm,
               dropdownColor: cardColor, // Background color of the dropdown menu
-              style: GoogleFonts.inter(color: textColor), // Text color of dropdown items
+              style: GoogleFonts.inter(
+                  color: textColor), // Text color of dropdown items
               // Use the dynamic availableFarms list
               items: availableFarms
                   .map((farm) => DropdownMenuItem(
@@ -176,7 +188,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
               },
               decoration: InputDecoration(
                 labelText: 'Select Farm',
-                labelStyle: GoogleFonts.inter(color: textColor.withOpacity(0.8)),
+                labelStyle:
+                    GoogleFonts.inter(color: textColor.withOpacity(0.8)),
                 prefixIcon: Icon(Icons.agriculture, color: activeColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -184,7 +197,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: textColor.withOpacity(0.2), width: 1),
+                  borderSide:
+                      BorderSide(color: textColor.withOpacity(0.2), width: 1),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -192,7 +206,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                 ),
                 filled: true,
                 fillColor: cardColor, // Background color of the input field
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
             ),
           ),
@@ -204,17 +219,22 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
               icon: const Icon(Icons.add, size: 20),
               label: Text(
                 'New Farm',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16),
+                style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w500, fontSize: 16),
               ),
-              onPressed: () =>
-                  _addNewFarm(context, textColor, cardColor, activeColor), // Call the new method
+              onPressed: () => _addNewFarm(context, textColor, cardColor,
+                  activeColor), // Call the new method
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                backgroundColor: activeColor, // Use active color for primary action
-                foregroundColor: isDark ? Colors.black : Colors.white, // Text color for button
+                backgroundColor:
+                    activeColor, // Use active color for primary action
+                foregroundColor: isDark
+                    ? Colors.black
+                    : Colors.white, // Text color for button
                 elevation: 5,
                 shadowColor: activeColor.withOpacity(0.4),
               ),
@@ -226,7 +246,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
   }
 
   // Dialog to add a new farm
-  void _addNewFarm(BuildContext context, Color textColor, Color cardColor, Color activeColor) {
+  void _addNewFarm(BuildContext context, Color textColor, Color cardColor,
+      Color activeColor) {
     TextEditingController newFarmController = TextEditingController();
     showDialog(
       context: context,
@@ -237,7 +258,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
             'Add New Farm',
             style: GoogleFonts.inter(
               color: textColor,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w500,
             ),
           ),
           content: TextField(
@@ -272,21 +293,25 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: activeColor,
                 foregroundColor: isDark ? Colors.black : Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
               ),
               child: Text(
                 'Add',
-                style: GoogleFonts.inter(fontWeight: FontWeight.bold),
+                style: GoogleFonts.inter(fontWeight: FontWeight.w500),
               ),
               onPressed: () {
                 if (newFarmController.text.isNotEmpty) {
                   setState(() {
                     availableFarms.add(newFarmController.text);
-                    selectedFarm = newFarmController.text; // Automatically select the new farm
+                    selectedFarm = newFarmController
+                        .text; // Automatically select the new farm
                   });
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Farm "${newFarmController.text}" added!')),
+                    SnackBar(
+                        content:
+                            Text('Farm "${newFarmController.text}" added!')),
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -307,7 +332,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? Colors.grey[850] : Colors.grey[100], // Background of the tab container
+          color: isDark
+              ? Colors.grey[850]
+              : Colors.grey[100], // Background of the tab container
           borderRadius: BorderRadius.circular(12),
           // Removed boxShadow for a flatter, more professional look
         ),
@@ -321,23 +348,34 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
               width: 4.0, // Thicker underline
               color: activeColor,
             ),
-            borderRadius: BorderRadius.circular(4), // Rounded corners for the underline
-            insets: const EdgeInsets.symmetric(horizontal: 16.0), // Adjust width
+            borderRadius:
+                BorderRadius.circular(4), // Rounded corners for the underline
+            insets:
+                const EdgeInsets.symmetric(horizontal: 16.0), // Adjust width
           ),
-          indicatorPadding: const EdgeInsets.symmetric(vertical: 8), // Padding around the indicator
-          labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15),
-          unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
+          indicatorPadding: const EdgeInsets.symmetric(
+              vertical: 8), // Padding around the indicator
+          labelStyle:
+              GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 15),
+          unselectedLabelStyle:
+              GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
           tabs: const [
             Tab(
                 icon: Icon(Icons.settings_remote, size: 20),
                 text: 'Automation',
                 iconMargin: EdgeInsets.zero),
-            Tab(icon: Icon(Icons.sensors, size: 20), text: 'Sensors', iconMargin: EdgeInsets.zero),
+            Tab(
+                icon: Icon(Icons.sensors, size: 20),
+                text: 'Sensors',
+                iconMargin: EdgeInsets.zero),
             Tab(
                 icon: Icon(Icons.notifications, size: 20),
                 text: 'Alerts',
                 iconMargin: EdgeInsets.zero),
-            Tab(icon: Icon(Icons.analytics, size: 20), text: 'Data', iconMargin: EdgeInsets.zero),
+            Tab(
+                icon: Icon(Icons.analytics, size: 20),
+                text: 'Data',
+                iconMargin: EdgeInsets.zero),
           ],
         ),
       ),
@@ -345,7 +383,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
   }
 
   // Builds the main tab views content
-  Widget _buildTabViews(Color cardColor, Color textColor, Color activeColor, Color subtitleColor) {
+  Widget _buildTabViews(Color cardColor, Color textColor, Color activeColor,
+      Color subtitleColor) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       child: TabBarView(
@@ -361,7 +400,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
   }
 
   // Content for the Automation tab
-  Widget _buildAutomationTab(Color cardColor, Color textColor, Color activeColor) {
+  Widget _buildAutomationTab(
+      Color cardColor, Color textColor, Color activeColor) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,7 +410,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
             'Automated Farm Operations',
             style: GoogleFonts.inter(
               fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w500,
               color: textColor,
             ),
           ),
@@ -386,16 +426,19 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
               }
               return GridView.count(
                 shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(), // Disable scrolling within grid
+                physics:
+                    const NeverScrollableScrollPhysics(), // Disable scrolling within grid
                 crossAxisCount: crossAxisCount,
-                childAspectRatio: 3.0, // Adjusted aspect ratio for better card height
+                childAspectRatio:
+                    3.0, // Adjusted aspect ratio for better card height
                 crossAxisSpacing: 20,
                 mainAxisSpacing: 20,
                 children: _automationSettings.entries.map((entry) {
                   return Card(
                     color: cardColor,
                     elevation: 5,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)),
                     child: Padding(
                       padding: const EdgeInsets.all(18),
                       child: Row(
@@ -419,18 +462,21 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                               entry.key,
                               style: GoogleFonts.inter(
                                 fontSize: 17,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                                 color: textColor,
                               ),
                             ),
                           ),
                           Switch(
                             value: entry.value,
-                            onChanged: (val) =>
-                                setState(() => _automationSettings[entry.key] = val),
-                            inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
-                            inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[500],
-                            activeColor: activeColor, // Use the correct parameter for active color
+                            onChanged: (val) => setState(
+                                () => _automationSettings[entry.key] = val),
+                            inactiveTrackColor:
+                                isDark ? Colors.grey[600] : Colors.grey[300],
+                            inactiveThumbColor:
+                                isDark ? Colors.grey[400] : Colors.grey[500],
+                            activeColor:
+                                activeColor, // Use the correct parameter for active color
                             activeTrackColor: activeColor.withOpacity(0.5),
                           ),
                         ],
@@ -447,8 +493,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
   }
 
   // Content for the Sensors tab
-  Widget _buildSensorsTab(
-      Color cardColor, Color textColor, Color activeColor, Color subtitleColor) {
+  Widget _buildSensorsTab(Color cardColor, Color textColor, Color activeColor,
+      Color subtitleColor) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -457,7 +503,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
             'Sensor Thresholds & Monitoring',
             style: GoogleFonts.inter(
               fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w500,
               color: textColor,
             ),
           ),
@@ -482,7 +528,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                   return Card(
                     color: cardColor,
                     elevation: 5,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15)),
                     child: Padding(
                       padding: const EdgeInsets.all(22),
                       child: Column(
@@ -490,7 +537,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         children: [
                           Row(
                             children: [
-                              Icon(_getSensorIcon(entry.key), color: activeColor, size: 30),
+                              Icon(_getSensorIcon(entry.key),
+                                  color: activeColor, size: 30),
                               const SizedBox(width: 15),
                               Expanded(
                                 // Use Expanded to prevent overflow
@@ -498,10 +546,11 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                                   entry.key,
                                   style: GoogleFonts.inter(
                                     fontSize: 19,
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w500,
                                     color: textColor,
                                   ),
-                                  overflow: TextOverflow.ellipsis, // Handle long text
+                                  overflow:
+                                      TextOverflow.ellipsis, // Handle long text
                                 ),
                               ),
                               const Spacer(),
@@ -509,7 +558,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                                 '${entry.value.toStringAsFixed(entry.key == 'Nutrient EC' || entry.key == 'Water pH' ? 1 : 0)}${_getSensorUnit(entry.key)}', // Adjust precision for EC/pH
                                 style: GoogleFonts.inter(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w500,
                                   color: activeColor,
                                 ),
                               ),
@@ -521,13 +570,16 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                             child: SliderTheme(
                               data: SliderTheme.of(context).copyWith(
                                 trackHeight: 8.0,
-                                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10.0),
-                                overlayShape: const RoundSliderOverlayShape(overlayRadius: 20.0),
-                                valueIndicatorShape: PaddleSliderValueIndicatorShape(),
+                                thumbShape: const RoundSliderThumbShape(
+                                    enabledThumbRadius: 10.0),
+                                overlayShape: const RoundSliderOverlayShape(
+                                    overlayRadius: 20.0),
+                                valueIndicatorShape:
+                                    PaddleSliderValueIndicatorShape(),
                                 valueIndicatorTextStyle: GoogleFonts.inter(
                                   color: isDark ? Colors.black : Colors.white,
                                   fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                               child: Slider(
@@ -539,8 +591,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                                 inactiveColor: activeColor.withOpacity(0.3),
                                 label:
                                     '${entry.value.toStringAsFixed(entry.key == 'Nutrient EC' || entry.key == 'Water pH' ? 1 : 0)}${_getSensorUnit(entry.key)}',
-                                onChanged: (val) =>
-                                    setState(() => _sensorThresholds[entry.key] = val),
+                                onChanged: (val) => setState(
+                                    () => _sensorThresholds[entry.key] = val),
                               ),
                             ),
                           ),
@@ -548,7 +600,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                             alignment: Alignment.centerRight,
                             child: Text(
                               'Adjust Threshold',
-                              style: GoogleFonts.inter(color: subtitleColor, fontSize: 13),
+                              style: GoogleFonts.inter(
+                                  color: subtitleColor, fontSize: 13),
                             ),
                           ),
                         ],
@@ -565,7 +618,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
   }
 
   // Content for the Alerts tab
-  Widget _buildAlertsTab(Color cardColor, Color textColor, Color activeColor, Color subtitleColor) {
+  Widget _buildAlertsTab(Color cardColor, Color textColor, Color activeColor,
+      Color subtitleColor) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -574,7 +628,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
             'Alert Settings & Notification Channels',
             style: GoogleFonts.inter(
               fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w500,
               color: textColor,
             ),
           ),
@@ -582,7 +636,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
           Card(
             color: cardColor,
             elevation: 5,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -592,7 +647,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                     'Alert Triggers',
                     style: GoogleFonts.inter(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                       color: textColor,
                     ),
                   ),
@@ -603,16 +658,22 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                       child: SwitchListTile(
                         title: Text(
                           entry.key,
-                          style: GoogleFonts.inter(color: textColor, fontSize: 16),
+                          style:
+                              GoogleFonts.inter(color: textColor, fontSize: 16),
                         ),
-                        secondary: Icon(_getAlertIcon(entry.key), color: activeColor, size: 28),
+                        secondary: Icon(_getAlertIcon(entry.key),
+                            color: activeColor, size: 28),
                         value: entry.value,
-                        onChanged: (val) => setState(() => _alertSettings[entry.key] = val),
+                        onChanged: (val) =>
+                            setState(() => _alertSettings[entry.key] = val),
                         activeColor: activeColor,
-                        inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
-                        inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[500],
+                        inactiveTrackColor:
+                            isDark ? Colors.grey[600] : Colors.grey[300],
+                        inactiveThumbColor:
+                            isDark ? Colors.grey[400] : Colors.grey[500],
                         activeTrackColor: activeColor.withOpacity(0.5),
-                        contentPadding: EdgeInsets.zero, // Remove default padding
+                        contentPadding:
+                            EdgeInsets.zero, // Remove default padding
                       ),
                     );
                   }),
@@ -624,7 +685,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
           Card(
             color: cardColor,
             elevation: 5,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -634,7 +696,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                     'Notification Channels',
                     style: GoogleFonts.inter(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                       color: textColor,
                     ),
                   ),
@@ -645,16 +707,22 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                       child: SwitchListTile(
                         title: Text(
                           entry.key,
-                          style: GoogleFonts.inter(color: textColor, fontSize: 16),
+                          style:
+                              GoogleFonts.inter(color: textColor, fontSize: 16),
                         ),
-                        secondary: Icon(_getChannelIcon(entry.key), color: activeColor, size: 28),
+                        secondary: Icon(_getChannelIcon(entry.key),
+                            color: activeColor, size: 28),
                         value: entry.value,
-                        onChanged: (val) => setState(() => _notificationChannels[entry.key] = val),
+                        onChanged: (val) => setState(
+                            () => _notificationChannels[entry.key] = val),
                         activeColor: activeColor,
-                        inactiveTrackColor: isDark ? Colors.grey[600] : Colors.grey[300],
-                        inactiveThumbColor: isDark ? Colors.grey[400] : Colors.grey[500],
+                        inactiveTrackColor:
+                            isDark ? Colors.grey[600] : Colors.grey[300],
+                        inactiveThumbColor:
+                            isDark ? Colors.grey[400] : Colors.grey[500],
                         activeTrackColor: activeColor.withOpacity(0.5),
-                        contentPadding: EdgeInsets.zero, // Remove default padding
+                        contentPadding:
+                            EdgeInsets.zero, // Remove default padding
                       ),
                     );
                   }),
@@ -677,7 +745,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
             'Data Analytics & Reporting',
             style: GoogleFonts.inter(
               fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w500,
               color: textColor,
             ),
           ),
@@ -685,7 +753,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
           Card(
             color: cardColor,
             elevation: 5,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
             child: Padding(
               padding: const EdgeInsets.all(22),
               child: Column(
@@ -695,7 +764,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                     'Recent Data Trends',
                     style: GoogleFonts.inter(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                       color: textColor,
                     ),
                   ),
@@ -706,23 +775,27 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                     decoration: BoxDecoration(
                       color: isDark ? Colors.grey[750] : Colors.grey[200],
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: subtitleColor.withOpacity(0.2), width: 1),
+                      border: Border.all(
+                          color: subtitleColor.withOpacity(0.2), width: 1),
                     ),
                     alignment: Alignment.center,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.bar_chart, size: 60, color: subtitleColor.withOpacity(0.6)),
+                        Icon(Icons.bar_chart,
+                            size: 60, color: subtitleColor.withOpacity(0.6)),
                         const SizedBox(height: 10),
                         Text(
                           'Interactive Chart / Data Visualization Placeholder',
-                          style: GoogleFonts.inter(color: subtitleColor, fontSize: 16),
+                          style: GoogleFonts.inter(
+                              color: subtitleColor, fontSize: 16),
                           textAlign: TextAlign.center,
                         ),
                         Text(
                           'Connect to data sources for live insights.',
                           style: GoogleFonts.inter(
-                              color: subtitleColor.withOpacity(0.7), fontSize: 13),
+                              color: subtitleColor.withOpacity(0.7),
+                              fontSize: 13),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -733,7 +806,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                     'Download Reports',
                     style: GoogleFonts.inter(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                       color: textColor,
                     ),
                   ),
@@ -745,8 +818,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                       'Export Sensor Data (CSV)',
                       style: GoogleFonts.inter(color: textColor, fontSize: 16),
                     ),
-                    trailing:
-                        Icon(Icons.arrow_forward_ios, color: textColor.withOpacity(0.7), size: 18),
+                    trailing: Icon(Icons.arrow_forward_ios,
+                        color: textColor.withOpacity(0.7), size: 18),
                     onTap: () {
                       // TODO: Implement CSV export logic
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -755,18 +828,19 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                     },
                   ),
                   ListTile(
-                    leading:
-                        Icon(Icons.picture_as_pdf, color: Theme.of(context).primaryColor, size: 30),
+                    leading: Icon(Icons.picture_as_pdf,
+                        color: Theme.of(context).primaryColor, size: 30),
                     title: Text(
                       'Generate Performance Report (PDF)',
                       style: GoogleFonts.inter(color: textColor, fontSize: 16),
                     ),
-                    trailing:
-                        Icon(Icons.arrow_forward_ios, color: textColor.withOpacity(0.7), size: 18),
+                    trailing: Icon(Icons.arrow_forward_ios,
+                        color: textColor.withOpacity(0.7), size: 18),
                     onTap: () {
                       // TODO: Implement PDF report generation logic
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Generating Performance Report...')),
+                        SnackBar(
+                            content: Text('Generating Performance Report...')),
                       );
                     },
                   ),
@@ -825,7 +899,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
       case 'Soil Moisture':
         return '%';
       case 'Temperature':
-        return '°C';
+        return 'Â°C';
       case 'Humidity':
         return '%';
       case 'Water pH':
@@ -835,7 +909,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
       case 'Dissolved Oxygen':
         return ' mg/L'; // milligrams per liter
       case 'Water Temperature':
-        return '°C';
+        return 'Â°C';
       default:
         return '';
     }

@@ -60,7 +60,7 @@ class _FulfillmentSettingsScreenState
             'Fulfillment Settings',
             style: AppTypography.h4.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -82,14 +82,17 @@ class _FulfillmentSettingsScreenState
                   isDark,
                   'Light mode',
                   themeMode == ThemeMode.light,
-                  () => ref.read(themeProvider.notifier).setTheme(ThemeMode.light),
+                  () => ref
+                      .read(themeProvider.notifier)
+                      .setTheme(ThemeMode.light),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _themeTile(
                   isDark,
                   'Dark mode',
                   themeMode == ThemeMode.dark,
-                  () => ref.read(themeProvider.notifier).setTheme(ThemeMode.dark),
+                  () =>
+                      ref.read(themeProvider.notifier).setTheme(ThemeMode.dark),
                 ),
               ],
             ),
@@ -107,7 +110,8 @@ class _FulfillmentSettingsScreenState
                   'Push alerts',
                   'Notify immediately when harvest intake status changes',
                   _pushAlerts,
-                  (value) => _setBool('pushAlerts', value, () => _pushAlerts = value),
+                  (value) =>
+                      _setBool('pushAlerts', value, () => _pushAlerts = value),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _switchTile(
@@ -165,7 +169,7 @@ class _FulfillmentSettingsScreenState
           title,
           style: AppTypography.bodyLarge.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -201,7 +205,7 @@ class _FulfillmentSettingsScreenState
                 label,
                 style: AppTypography.bodyMedium.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -239,7 +243,7 @@ class _FulfillmentSettingsScreenState
                   title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),

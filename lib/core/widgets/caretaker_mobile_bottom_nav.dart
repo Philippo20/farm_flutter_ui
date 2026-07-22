@@ -47,7 +47,9 @@ class CaretakerMobileBottomNav extends StatelessWidget {
   ];
 
   Color _inactiveColor(bool isDark) {
-    return isDark ? AppColors.textOnDark.withOpacity(0.74) : AppColors.textSecondary;
+    return isDark
+        ? AppColors.textOnDark.withOpacity(0.74)
+        : AppColors.textSecondary;
   }
 
   Future<void> _handleTap(BuildContext context, int index) async {
@@ -70,8 +72,9 @@ class CaretakerMobileBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dividerColor =
-        isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08);
+    final dividerColor = isDark
+        ? Colors.white.withOpacity(0.08)
+        : Colors.black.withOpacity(0.08);
 
     return Container(
       decoration: BoxDecoration(
@@ -140,8 +143,9 @@ class CaretakerMobileBottomNav extends StatelessWidget {
                             style: AppTypography.caption.copyWith(
                               color: color,
                               fontSize: 11,
-                              fontWeight:
-                                  isSelected ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                             ),
                           ),
                         ],

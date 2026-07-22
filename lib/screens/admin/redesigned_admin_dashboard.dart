@@ -6,6 +6,9 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/modern_admin_header.dart';
 import '../../core/widgets/modern_admin_sidebar.dart';
+import '../../core/widgets/skeleton_loader.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 class RedesignedAdminDashboard extends ConsumerStatefulWidget {
   const RedesignedAdminDashboard({super.key});
@@ -19,71 +22,26 @@ class _RedesignedAdminDashboardState
     extends ConsumerState<RedesignedAdminDashboard> {
   String _selectedPeriod = 'Today';
   String _selectedFarm = 'All Farms';
+  final SuperAdminApiService _api = SuperAdminApiService();
+  bool _isLoading = true;
+  String? _loadError;
 
-  final List<String> _farms = const [
-    'All Farms',
-    'Northern Estate',
-    'Southern Estate',
-    'Eastern Farm',
-    'Western Farm',
-  ];
+  final List<Map<String, dynamic>> _users = [];
+  final List<Map<String, dynamic>> _farmsData = [];
+  final List<Map<String, dynamic>> _sensors = [];
+  final List<Map<String, dynamic>> _inventory = [];
+  final List<Map<String, dynamic>> _deliveries = [];
+  final List<Map<String, dynamic>> _audits = [];
 
-  final List<_DashboardMetric> _metrics = const [
-    _DashboardMetric(
-      title: 'Managed Farms',
-      value: '12',
-      helper: '10 active, 2 onboarding',
-      trend: '+2 this quarter',
-      icon: Icons.agriculture_rounded,
-      color: AppColors.primary,
-      progress: .82,
-    ),
-    _DashboardMetric(
-      title: 'Team Members',
-      value: '148',
-      helper: '92 field users online',
-      trend: '+14.8%',
-      icon: Icons.groups_2_rounded,
-      color: AppColors.chartBlue,
-      progress: .74,
-    ),
-    _DashboardMetric(
-      title: 'Sensor Health',
-      value: '96%',
-      helper: '482 of 503 reporting',
-      trend: '7 need service',
-      icon: Icons.sensors_rounded,
-      color: AppColors.chartTeal,
-      progress: .96,
-    ),
-    _DashboardMetric(
-      title: 'Open Alerts',
-      value: '18',
-      helper: '4 critical escalations',
-      trend: '-9 today',
-      icon: Icons.warning_amber_rounded,
-      color: AppColors.warning,
-      progress: .38,
-    ),
-    _DashboardMetric(
-      title: 'Inventory Coverage',
-      value: '31d',
-      helper: 'Packaging and inputs',
-      trend: '5 low-stock items',
-      icon: Icons.inventory_2_rounded,
-      color: AppColors.chartPurple,
-      progress: .68,
-    ),
-    _DashboardMetric(
-      title: 'Deliveries Today',
-      value: '42',
-      helper: '34 dispatched, 8 pending',
-      trend: '91% on-time',
-      icon: Icons.local_shipping_rounded,
-      color: AppColors.chartOrange,
-      progress: .91,
-    ),
-  ];
+  List<String> get _farms {
+    final names = _farmsData
+        .map((farm) => (farm['name'] ?? farm['farm_name'] ?? '').toString())
+        .where((name) => name.trim().isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+    return ['All Farms', ...names];
+  }
 
   final List<_OperationShortcut> _shortcuts = const [
     _OperationShortcut(
@@ -99,6 +57,13 @@ class _RedesignedAdminDashboardState
       route: '/farms',
       icon: Icons.agriculture_rounded,
       color: AppColors.primary,
+    ),
+    _OperationShortcut(
+      title: 'Crop Varieties',
+      description: 'Review crop varieties and production specifications.',
+      route: '/crop-varieties',
+      icon: Icons.grass_rounded,
+      color: AppColors.success,
     ),
     _OperationShortcut(
       title: 'Sensor Command',
@@ -130,113 +95,462 @@ class _RedesignedAdminDashboardState
     ),
   ];
 
-  final List<_FarmPerformance> _farmPerformance = const [
-    _FarmPerformance(
-      name: 'Northern Estate',
-      manager: 'Kojo Mensah',
-      health: 96,
-      yieldScore: 91,
-      alerts: 2,
-      status: 'Excellent',
-      color: AppColors.success,
-    ),
-    _FarmPerformance(
-      name: 'Southern Estate',
-      manager: 'Ama Boateng',
-      health: 88,
-      yieldScore: 84,
-      alerts: 5,
-      status: 'Stable',
-      color: AppColors.primary,
-    ),
-    _FarmPerformance(
-      name: 'Eastern Farm',
-      manager: 'Esi Asante',
-      health: 79,
-      yieldScore: 76,
-      alerts: 8,
-      status: 'Watch',
-      color: AppColors.warning,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardData();
+  }
 
-  final List<_AdminAlert> _alerts = const [
-    _AdminAlert(
-      title: 'Hydroponic Zone B moisture variance',
-      farm: 'Eastern Farm',
-      severity: 'High',
-      time: '12 min ago',
-      icon: Icons.water_drop_rounded,
-      color: AppColors.error,
-    ),
-    _AdminAlert(
-      title: 'Packaging stock below reorder point',
-      farm: 'Global Inventory',
-      severity: 'Medium',
-      time: '32 min ago',
-      icon: Icons.inventory_rounded,
-      color: AppColors.warning,
-    ),
-    _AdminAlert(
-      title: 'Delivery route adjusted for Northern Estate',
-      farm: 'Delivery Control',
-      severity: 'Info',
-      time: '1 hr ago',
-      icon: Icons.route_rounded,
-      color: AppColors.info,
-    ),
-  ];
+  Future<void> _loadDashboardData() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
 
-  final List<_ActivityItem> _activities = const [
-    _ActivityItem(
-      title: 'New caretaker assigned to Southern Estate',
-      detail: 'Role and farm permissions approved',
-      time: '09:42 AM',
-      icon: Icons.badge_rounded,
-    ),
-    _ActivityItem(
-      title: 'Sensor calibration completed',
-      detail: '18 devices synced across Northern Estate',
-      time: '08:15 AM',
-      icon: Icons.tune_rounded,
-    ),
-    _ActivityItem(
-      title: 'Inventory transfer approved',
-      detail: 'Nutrients moved from hub to Eastern Farm',
-      time: 'Yesterday',
-      icon: Icons.swap_horiz_rounded,
-    ),
-  ];
+    try {
+      final results = await Future.wait([
+        _api.getUsers(),
+        _api.getFarms(),
+        _api.getSensors(),
+        _api.getInventory(),
+        _api.getFulfillments(),
+        _api.getAudits(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _users
+          ..clear()
+          ..addAll(results[0]);
+        _farmsData
+          ..clear()
+          ..addAll(results[1]);
+        _sensors
+          ..clear()
+          ..addAll(results[2]);
+        _inventory
+          ..clear()
+          ..addAll(results[3]);
+        _deliveries
+          ..clear()
+          ..addAll(results[4]);
+        _audits
+          ..clear()
+          ..addAll(results[5]);
+        if (!_farms.contains(_selectedFarm)) _selectedFarm = 'All Farms';
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadError = error.toString();
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> get _scopedFarms {
+    if (_selectedFarm == 'All Farms') return _farmsData;
+    return _farmsData.where((farm) {
+      return (farm['name'] ?? farm['farm_name'] ?? '').toString() ==
+          _selectedFarm;
+    }).toList();
+  }
+
+  List<Map<String, dynamic>> get _scopedSensors {
+    if (_selectedFarm == 'All Farms') return _sensors;
+    return _sensors.where((sensor) {
+      return (sensor['farm_name'] ?? '').toString() == _selectedFarm;
+    }).toList();
+  }
+
+  List<Map<String, dynamic>> get _scopedInventory {
+    if (_selectedFarm == 'All Farms') return _inventory;
+    final farmIds =
+        _scopedFarms.map((farm) => (farm[r'$id'] ?? '').toString()).toSet();
+    return _inventory.where((item) {
+      return farmIds
+              .contains((item['farm_id'] ?? item['farmID'] ?? '').toString()) ||
+          (item['farm_name'] ?? '').toString() == _selectedFarm;
+    }).toList();
+  }
+
+  List<Map<String, dynamic>> get _scopedDeliveries {
+    if (_selectedFarm == 'All Farms') return _deliveries;
+    return _deliveries.where((item) {
+      return (item['farm_name'] ?? '').toString() == _selectedFarm;
+    }).toList();
+  }
+
+  List<_DashboardMetric> get _metrics {
+    final farms = _scopedFarms;
+    final activeFarms =
+        farms.where((farm) => _status(farm['status']) == 'active').length;
+    final pendingFarms =
+        farms.where((farm) => _status(farm['status']) == 'pending').length;
+    final activeUsers =
+        _users.where((user) => _status(user['status']) == 'active').length;
+    final sensors = _scopedSensors;
+    final onlineSensors = sensors.where(_isSensorOnline).length;
+    final criticalSensors = sensors.where((sensor) {
+      final status = _status(sensor['status']);
+      return status == 'faulty' || status == 'critical';
+    }).length;
+    final warningSensors = sensors.where((sensor) {
+      final status = _status(sensor['status']);
+      return status == 'maintenance' || status == 'warning';
+    }).length;
+    final lowStock = _scopedInventory.where(_isLowStock).length;
+    final pendingDeliveries = _scopedDeliveries.where((delivery) {
+      final status = _status(delivery['status'] ?? delivery['delivery_status']);
+      return status.contains('pending') ||
+          status.contains('assigned') ||
+          status.contains('in transit') ||
+          status.contains('dispatch');
+    }).length;
+    final delivered = _scopedDeliveries.where((delivery) {
+      final status = _status(delivery['status'] ?? delivery['delivery_status']);
+      return status.contains('delivered') || status.contains('completed');
+    }).length;
+    final deliveryTotal = _scopedDeliveries.length;
+
+    return [
+      _DashboardMetric(
+        title: 'Managed Farms',
+        value: '${farms.length}',
+        helper: '$activeFarms active, $pendingFarms pending',
+        trend: _selectedFarm == 'All Farms' ? 'All estates' : _selectedFarm,
+        icon: Icons.agriculture_rounded,
+        color: AppColors.primary,
+        progress: farms.isEmpty ? 0 : activeFarms / farms.length,
+      ),
+      _DashboardMetric(
+        title: 'Team Members',
+        value: '${_users.length}',
+        helper: '$activeUsers active users',
+        trend:
+            '${_users.where((u) => _role(u['role']).contains('manager')).length} managers',
+        icon: Icons.groups_2_rounded,
+        color: AppColors.chartBlue,
+        progress: _users.isEmpty ? 0 : activeUsers / _users.length,
+      ),
+      _DashboardMetric(
+        title: 'Sensor Health',
+        value: sensors.isEmpty
+            ? '0%'
+            : '${((onlineSensors / sensors.length) * 100).round()}%',
+        helper: '$onlineSensors of ${sensors.length} reporting',
+        trend: '${criticalSensors + warningSensors} need review',
+        icon: Icons.sensors_rounded,
+        color: AppColors.chartTeal,
+        progress: sensors.isEmpty ? 0 : onlineSensors / sensors.length,
+      ),
+      _DashboardMetric(
+        title: 'Open Alerts',
+        value: '${criticalSensors + warningSensors + lowStock}',
+        helper: '$criticalSensors critical sensors',
+        trend: '$lowStock low stock',
+        icon: Icons.warning_amber_rounded,
+        color: AppColors.warning,
+        progress:
+            (criticalSensors + warningSensors + lowStock).clamp(0, 10) / 10,
+      ),
+      _DashboardMetric(
+        title: 'Inventory Coverage',
+        value: '${_scopedInventory.length}',
+        helper: 'Inventory records',
+        trend: '$lowStock below reorder',
+        icon: Icons.inventory_2_rounded,
+        color: AppColors.chartPurple,
+        progress: _scopedInventory.isEmpty
+            ? 0
+            : ((_scopedInventory.length - lowStock) / _scopedInventory.length)
+                .clamp(0, 1),
+      ),
+      _DashboardMetric(
+        title: 'Deliveries',
+        value: '$deliveryTotal',
+        helper: '$delivered completed, $pendingDeliveries active',
+        trend: deliveryTotal == 0
+            ? 'No deliveries'
+            : '${((delivered / deliveryTotal) * 100).round()}% complete',
+        icon: Icons.local_shipping_rounded,
+        color: AppColors.chartOrange,
+        progress: deliveryTotal == 0 ? 0 : delivered / deliveryTotal,
+      ),
+    ];
+  }
+
+  List<_AdminAlert> get _alerts {
+    final alerts = <_AdminAlert>[];
+    for (final sensor in _scopedSensors) {
+      final status = _status(sensor['status']);
+      if (status == 'faulty' ||
+          status == 'critical' ||
+          status == 'maintenance') {
+        final isCritical = status == 'faulty' || status == 'critical';
+        alerts.add(_AdminAlert(
+          title:
+              '${_label(sensor['sensortype'])} sensor ${isCritical ? 'critical' : 'needs maintenance'}',
+          farm: (sensor['farm_name'] ?? 'Unassigned Farm').toString(),
+          severity: isCritical ? 'High' : 'Medium',
+          time: _timeAgo(sensor['timestamp']),
+          icon: Icons.sensors_rounded,
+          color: isCritical ? AppColors.error : AppColors.warning,
+        ));
+      }
+    }
+    for (final item in _scopedInventory.where(_isLowStock)) {
+      alerts.add(_AdminAlert(
+        title:
+            '${item['item_name'] ?? item['item_id'] ?? 'Inventory item'} below reorder level',
+        farm: (item['farm_name'] ?? item['supplier_name'] ?? 'Inventory')
+            .toString(),
+        severity: 'Medium',
+        time: _timeAgo(item['date_added'] ?? item[r'$updatedAt']),
+        icon: Icons.inventory_rounded,
+        color: AppColors.warning,
+      ));
+    }
+    alerts.sort((a, b) =>
+        _severityRank(b.severity).compareTo(_severityRank(a.severity)));
+    return alerts.take(4).toList();
+  }
+
+  List<_ActivityItem> get _activities {
+    final sorted = [..._audits]..sort((a, b) =>
+        (b['timestamp'] ?? b[r'$createdAt'] ?? '')
+            .toString()
+            .compareTo((a['timestamp'] ?? a[r'$createdAt'] ?? '').toString()));
+    return sorted.take(5).map((audit) {
+      final collection = (audit['collection_name'] ?? 'Platform').toString();
+      final action = (audit['action_type'] ?? 'Update').toString();
+      return _ActivityItem(
+        title: '$action $collection',
+        detail:
+            (audit['action_details'] ?? 'Backend activity recorded').toString(),
+        time: _timeAgo(audit['timestamp'] ?? audit[r'$createdAt']),
+        icon: _activityIcon(collection),
+      );
+    }).toList();
+  }
+
+  List<_FarmPerformance> get _farmPerformance {
+    final farms = _scopedFarms.take(6).map((farm) {
+      final farmName =
+          (farm['name'] ?? farm['farm_name'] ?? 'Unnamed Farm').toString();
+      final farmId = (farm[r'$id'] ?? farm['farm_id'] ?? '').toString();
+      final sensors = _sensors.where((sensor) {
+        return (sensor['farmID'] ?? '').toString() == farmId ||
+            (sensor['farm_name'] ?? '').toString() == farmName;
+      }).toList();
+      final online = sensors.where(_isSensorOnline).length;
+      final sensorHealth =
+          sensors.isEmpty ? 0 : ((online / sensors.length) * 100).round();
+      final status = _status(farm['status']);
+      final farmHealth = status == 'active'
+          ? (sensors.isEmpty ? 80 : sensorHealth)
+          : status == 'pending'
+              ? 45
+              : 25;
+      final alerts = sensors.where((sensor) {
+        final sensorStatus = _status(sensor['status']);
+        return sensorStatus == 'faulty' ||
+            sensorStatus == 'critical' ||
+            sensorStatus == 'maintenance';
+      }).length;
+      final color = farmHealth >= 80
+          ? AppColors.success
+          : farmHealth >= 55
+              ? AppColors.warning
+              : AppColors.error;
+      return _FarmPerformance(
+        name: farmName,
+        manager: _userName(farm['ownerID']) == '-'
+            ? _userName(farm['caretakerID'])
+            : _userName(farm['ownerID']),
+        health: farmHealth.clamp(0, 100),
+        yieldScore: sensorHealth.clamp(0, 100),
+        alerts: alerts,
+        status: farmHealth >= 80
+            ? 'Healthy'
+            : farmHealth >= 55
+                ? 'Watch'
+                : 'Risk',
+        color: color,
+      );
+    }).toList();
+    return farms;
+  }
+
+  List<(String, IconData, Color)> get _priorities {
+    final sensorIssues =
+        _alerts.where((alert) => alert.icon == Icons.sensors_rounded).length;
+    final lowStock = _scopedInventory.where(_isLowStock).length;
+    final activeDeliveries = _scopedDeliveries.where((delivery) {
+      final status = _status(delivery['status'] ?? delivery['delivery_status']);
+      return status.contains('pending') || status.contains('in transit');
+    }).length;
+    return [
+      if (sensorIssues > 0)
+        (
+          'Review $sensorIssues sensor alerts',
+          Icons.sensors_rounded,
+          AppColors.error
+        ),
+      if (lowStock > 0)
+        (
+          'Restock $lowStock low inventory items',
+          Icons.inventory_rounded,
+          AppColors.warning
+        ),
+      if (activeDeliveries > 0)
+        (
+          'Track $activeDeliveries active deliveries',
+          Icons.local_shipping_rounded,
+          AppColors.info
+        ),
+      if (sensorIssues == 0 && lowStock == 0 && activeDeliveries == 0)
+        (
+          'No urgent admin priorities',
+          Icons.task_alt_rounded,
+          AppColors.success
+        ),
+    ];
+  }
+
+  int get _operationalReadiness {
+    final farmScore = _scopedFarms.isEmpty
+        ? 0
+        : ((_scopedFarms.where((f) => _status(f['status']) == 'active').length /
+                    _scopedFarms.length) *
+                100)
+            .round();
+    final sensorScore = _scopedSensors.isEmpty
+        ? 0
+        : ((_scopedSensors.where(_isSensorOnline).length /
+                    _scopedSensors.length) *
+                100)
+            .round();
+    if (_scopedFarms.isEmpty && _scopedSensors.isEmpty) return 0;
+    return ((farmScore + sensorScore) / 2).round();
+  }
+
+  String _status(dynamic value) =>
+      (value ?? '').toString().trim().toLowerCase();
+
+  String _role(dynamic value) => (value ?? '').toString().trim().toLowerCase();
+
+  String _label(dynamic value) {
+    final text = (value ?? '').toString().replaceAll('_', ' ').trim();
+    if (text.isEmpty) return 'Unknown';
+    return text
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
+
+  double _number(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  bool _isLowStock(Map<String, dynamic> item) {
+    final quantity = _number(item['quantity_available'] ?? item['quantity']);
+    final reorder = _number(item['reorder_level']);
+    return reorder > 0 && quantity <= reorder;
+  }
+
+  bool _isSensorOnline(Map<String, dynamic> sensor) {
+    final parsed = DateTime.tryParse((sensor['timestamp'] ?? '').toString());
+    if (parsed == null) return false;
+    final diff = DateTime.now().difference(parsed.toLocal());
+    return diff.inSeconds >= -5 && diff.inSeconds <= 20;
+  }
+
+  String _timeAgo(dynamic value) {
+    final parsed = DateTime.tryParse(value?.toString() ?? '');
+    if (parsed == null) return '-';
+    final diff = DateTime.now().difference(parsed.toLocal());
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inHours < 1) return '${diff.inMinutes} min ago';
+    if (diff.inDays < 1) return '${diff.inHours} hr ago';
+    return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
+  }
+
+  int _severityRank(String severity) {
+    switch (severity.toLowerCase()) {
+      case 'high':
+      case 'critical':
+        return 3;
+      case 'medium':
+        return 2;
+      case 'low':
+        return 1;
+      default:
+        return 0;
+    }
+  }
+
+  IconData _activityIcon(String collection) {
+    final text = collection.toLowerCase();
+    if (text.contains('user')) return Icons.people_alt_rounded;
+    if (text.contains('farm')) return Icons.agriculture_rounded;
+    if (text.contains('sensor')) return Icons.sensors_rounded;
+    if (text.contains('inventory')) return Icons.inventory_rounded;
+    if (text.contains('delivery') || text.contains('fulfillment')) {
+      return Icons.local_shipping_rounded;
+    }
+    return Icons.history_rounded;
+  }
+
+  String _userName(dynamic id) {
+    final key = (id ?? '').toString();
+    if (key.isEmpty || key == 'Unassigned') return '-';
+    for (final user in _users) {
+      if ((user[r'$id'] ?? user['id'] ?? user['user_id'] ?? '').toString() ==
+              key ||
+          (user['email'] ?? '').toString() == key) {
+        return (user['name'] ?? key).toString();
+      }
+    }
+    return key;
+  }
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 700;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final user = ref.watch(currentUserProvider);
+    final userName = user?.name ?? 'Admin';
+    final userEmail = user?.email ?? '';
 
     return Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: isMobile ? _buildMobileLayout(isDark) : _buildDesktopLayout(isDark),
+      body: isMobile
+          ? _buildMobileLayout(isDark, userName)
+          : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
     );
   }
 
-  Widget _buildDesktopLayout(bool isDark) {
+  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail) {
     return Row(
       children: [
-        const ModernAdminSidebar(
+        ModernAdminSidebar(
           selectedIndex: 0,
           onItemSelected: _noopNav,
-          userName: 'Admin',
-          userEmail: 'admin@farmestates.com',
+          userName: userName,
+          userEmail: userEmail,
           userRole: 'Administrator',
         ),
         Expanded(
           child: Column(
             children: [
               ModernAdminHeader(
-                userName: 'Admin',
+                userName: userName.split(' ').first,
                 farms: _farms,
                 selectedFarm: _selectedFarm,
                 onFarmChanged: (farm) {
@@ -253,11 +567,11 @@ class _RedesignedAdminDashboardState
     );
   }
 
-  Widget _buildMobileLayout(bool isDark) {
+  Widget _buildMobileLayout(bool isDark, String userName) {
     return Column(
       children: [
         ModernAdminHeader(
-          userName: 'Admin',
+          userName: userName.split(' ').first,
           farms: _farms,
           selectedFarm: _selectedFarm,
           onFarmChanged: (farm) {
@@ -272,6 +586,20 @@ class _RedesignedAdminDashboardState
   }
 
   Widget _buildContent(bool isDark, double padding) {
+    if (_isLoading) {
+      return SingleChildScrollView(
+        padding: EdgeInsets.all(padding),
+        child: const AdminDataSkeleton(rowCount: 6),
+      );
+    }
+
+    if (_loadError != null) {
+      return SingleChildScrollView(
+        padding: EdgeInsets.all(padding),
+        child: _buildErrorState(isDark),
+      );
+    }
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(padding),
       child: Column(
@@ -290,6 +618,41 @@ class _RedesignedAdminDashboardState
           _buildFarmPerformanceSection(isDark),
           const SizedBox(height: AppSpacing.xl),
           _buildActivityFeed(isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: _cardDecoration(context),
+      child: Column(
+        children: [
+          const Icon(Icons.cloud_off_rounded, size: 48, color: AppColors.error),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Unable to load admin dashboard',
+            style: AppTypography.titleMedium.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            _loadError!,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white70 : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FilledButton.icon(
+            onPressed: _loadDashboardData,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Retry'),
+          ),
         ],
       ),
     );
@@ -347,7 +710,7 @@ class _RedesignedAdminDashboardState
                       'Admin Operations Dashboard',
                       style: AppTypography.h3.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w500,
                         letterSpacing: -1,
                       ),
                     ),
@@ -407,7 +770,7 @@ class _RedesignedAdminDashboardState
             'Administrator Control Layer',
             style: AppTypography.label.copyWith(
               color: isDark ? Colors.white : AppColors.primaryDark,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -416,6 +779,15 @@ class _RedesignedAdminDashboardState
   }
 
   Widget _buildHeroPanel(bool isDark) {
+    final criticalItems =
+        _alerts.where((alert) => alert.severity == 'High').length;
+    final delivered = _scopedDeliveries.where((delivery) {
+      final status = _status(delivery['status'] ?? delivery['delivery_status']);
+      return status.contains('delivered') || status.contains('completed');
+    }).length;
+    final deliveryRate = _scopedDeliveries.isEmpty
+        ? 0
+        : ((delivered / _scopedDeliveries.length) * 100).round();
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -435,7 +807,7 @@ class _RedesignedAdminDashboardState
             isDark,
             Icons.task_alt_rounded,
             'Operational readiness',
-            '94%',
+            '$_operationalReadiness%',
             AppColors.success,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -443,15 +815,15 @@ class _RedesignedAdminDashboardState
             isDark,
             Icons.priority_high_rounded,
             'Critical items',
-            '4',
+            '$criticalItems',
             AppColors.error,
           ),
           const SizedBox(height: AppSpacing.md),
           _buildHeroPanelRow(
             isDark,
             Icons.schedule_rounded,
-            'SLA performance',
-            '91%',
+            'Delivery completion',
+            '$deliveryRate%',
             AppColors.info,
           ),
         ],
@@ -485,7 +857,7 @@ class _RedesignedAdminDashboardState
               color: isDark
                   ? Colors.white.withValues(alpha: .74)
                   : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -493,7 +865,7 @@ class _RedesignedAdminDashboardState
           value,
           style: AppTypography.titleMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -526,7 +898,7 @@ class _RedesignedAdminDashboardState
             color: selected
                 ? AppColors.primary
                 : (isDark ? Colors.white : AppColors.textSecondary),
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            fontWeight: selected ? FontWeight.w500 : FontWeight.w500,
           ),
         );
       }).toList(),
@@ -627,43 +999,30 @@ class _RedesignedAdminDashboardState
     return _Panel(
       title: 'Operational Alerts',
       subtitle: 'Items that need admin review',
-      child: Column(
-        children: _alerts
-            .map(
-              (alert) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: _AlertRow(alert: alert),
-              ),
+      child: _alerts.isEmpty
+          ? _EmptyPanelMessage(
+              icon: Icons.task_alt_rounded,
+              message: 'No operational alerts from backend records.',
             )
-            .toList(),
-      ),
+          : Column(
+              children: _alerts
+                  .map(
+                    (alert) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: _AlertRow(alert: alert),
+                    ),
+                  )
+                  .toList(),
+            ),
     );
   }
 
   Widget _buildPriorityPanel(bool isDark) {
-    final priorities = [
-      (
-        'Approve 3 inventory transfers',
-        Icons.approval_rounded,
-        AppColors.primary
-      ),
-      (
-        'Review 4 critical sensor alerts',
-        Icons.sensors_rounded,
-        AppColors.error
-      ),
-      (
-        'Confirm today delivery exceptions',
-        Icons.local_shipping_rounded,
-        AppColors.warning
-      ),
-    ];
-
     return _Panel(
       title: 'Today\'s Priorities',
       subtitle: 'Admin tasks ordered by impact',
       child: Column(
-        children: priorities.map((priority) {
+        children: _priorities.map((priority) {
           return Container(
             margin: const EdgeInsets.only(bottom: AppSpacing.md),
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -677,7 +1036,7 @@ class _RedesignedAdminDashboardState
                     priority.$1,
                     style: AppTypography.bodyMedium.copyWith(
                       color: _textColor(context),
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -694,25 +1053,29 @@ class _RedesignedAdminDashboardState
       title: 'Farm Performance Snapshot',
       subtitle: 'Live operating score by farm and manager.',
       trailing: _buildTextButton('View Farms', '/farms'),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = constraints.maxWidth >= 920 ? 3 : 1;
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _farmPerformance.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columns,
-              crossAxisSpacing: AppSpacing.md,
-              mainAxisSpacing: AppSpacing.md,
-              childAspectRatio: constraints.maxWidth < 430 ? 1.35 : 1.55,
+      child: _farmPerformance.isEmpty
+          ? _EmptyPanelMessage(
+              icon: Icons.agriculture_rounded,
+              message: 'No farms are available from the backend yet.',
+            )
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 920 ? 3 : 1;
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _farmPerformance.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    crossAxisSpacing: AppSpacing.md,
+                    mainAxisSpacing: AppSpacing.md,
+                    childAspectRatio: constraints.maxWidth < 430 ? 1.35 : 1.55,
+                  ),
+                  itemBuilder: (context, index) =>
+                      _FarmPerformanceCard(farm: _farmPerformance[index]),
+                );
+              },
             ),
-            itemBuilder: (context, index) {
-              return _FarmPerformanceCard(farm: _farmPerformance[index]);
-            },
-          );
-        },
-      ),
     );
   }
 
@@ -720,16 +1083,21 @@ class _RedesignedAdminDashboardState
     return _Panel(
       title: 'Recent Admin Activity',
       subtitle: 'Latest changes across users, farms, inventory, and sensors',
-      child: Column(
-        children: _activities
-            .map(
-              (activity) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: _ActivityRow(activity: activity),
-              ),
+      child: _activities.isEmpty
+          ? _EmptyPanelMessage(
+              icon: Icons.history_rounded,
+              message: 'No audit activity has been recorded yet.',
             )
-            .toList(),
-      ),
+          : Column(
+              children: _activities
+                  .map(
+                    (activity) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: _ActivityRow(activity: activity),
+                    ),
+                  )
+                  .toList(),
+            ),
     );
   }
 
@@ -803,7 +1171,7 @@ class _RedesignedAdminDashboardState
                                 ? Colors.white.withValues(alpha: .68)
                                 : AppColors.textSecondary),
                         fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w500,
+                            selected ? FontWeight.w500 : FontWeight.w500,
                       ),
                     ),
                   ],
@@ -862,7 +1230,7 @@ class _MetricCard extends StatelessWidget {
                 metric.trend,
                 style: AppTypography.caption.copyWith(
                   color: metric.color,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -872,7 +1240,7 @@ class _MetricCard extends StatelessWidget {
             metric.value,
             style: AppTypography.h3.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
               letterSpacing: -1,
             ),
           ),
@@ -883,7 +1251,7 @@ class _MetricCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 2),
@@ -951,7 +1319,7 @@ class _OperationCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.titleSmall.copyWith(
                         color: _textColor(context),
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -1006,14 +1374,14 @@ class _FarmPerformanceCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.titleSmall.copyWith(
                         color: _textColor(context),
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     Text(
                       farm.manager,
                       style: AppTypography.bodySmall.copyWith(
                         color: _mutedTextColor(context),
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -1044,7 +1412,7 @@ class _FarmPerformanceCard extends StatelessWidget {
                 '${farm.alerts} active alerts',
                 style: AppTypography.bodySmall.copyWith(
                   color: _mutedTextColor(context),
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -1087,12 +1455,12 @@ class _AlertRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodyMedium.copyWith(
                     color: _textColor(context),
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${alert.farm} • ${alert.time}',
+                  '${alert.farm} - ${alert.time}',
                   style: AppTypography.bodySmall.copyWith(
                     color: _mutedTextColor(context),
                     fontWeight: FontWeight.w500,
@@ -1152,7 +1520,7 @@ class _ActivityRow extends StatelessWidget {
                         activity.title,
                         style: AppTypography.bodyMedium.copyWith(
                           color: _textColor(context),
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -1170,7 +1538,7 @@ class _ActivityRow extends StatelessWidget {
                   activity.time,
                   style: AppTypography.caption.copyWith(
                     color: _mutedTextColor(context),
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -1205,7 +1573,7 @@ class _ScoreRow extends StatelessWidget {
                 label,
                 style: AppTypography.bodySmall.copyWith(
                   color: _mutedTextColor(context),
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -1213,7 +1581,7 @@ class _ScoreRow extends StatelessWidget {
               '$value%',
               style: AppTypography.bodySmall.copyWith(
                 color: _textColor(context),
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -1255,7 +1623,7 @@ class _StatusBadge extends StatelessWidget {
         label,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -1311,6 +1679,40 @@ class _Panel extends StatelessWidget {
           _SectionHeader(title: title, subtitle: subtitle),
           const SizedBox(height: AppSpacing.md),
           child,
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyPanelMessage extends StatelessWidget {
+  const _EmptyPanelMessage({
+    required this.icon,
+    required this.message,
+  });
+
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: _cardDecoration(context),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.success, size: 22),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTypography.bodyMedium.copyWith(
+                color: _mutedTextColor(context),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
         ],
       ),
     );

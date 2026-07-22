@@ -26,7 +26,9 @@ class PermissionWrapper extends ConsumerWidget {
 
     // If no user, show fallback or nothing
     if (userRole == null) {
-      return showFallback && fallback != null ? fallback! : const SizedBox.shrink();
+      return showFallback && fallback != null
+          ? fallback!
+          : const SizedBox.shrink();
     }
 
     // Check if user has permission
@@ -35,7 +37,9 @@ class PermissionWrapper extends ConsumerWidget {
     if (hasPermission) {
       return child;
     } else {
-      return showFallback && fallback != null ? fallback! : const SizedBox.shrink();
+      return showFallback && fallback != null
+          ? fallback!
+          : const SizedBox.shrink();
     }
   }
 
@@ -68,7 +72,9 @@ class RoleWrapper extends ConsumerWidget {
 
     // If no user, show fallback or nothing
     if (userRole == null) {
-      return showFallback && fallback != null ? fallback! : const SizedBox.shrink();
+      return showFallback && fallback != null
+          ? fallback!
+          : const SizedBox.shrink();
     }
 
     // Check if user's role is in allowed roles
@@ -77,7 +83,9 @@ class RoleWrapper extends ConsumerWidget {
     if (hasAccess) {
       return child;
     } else {
-      return showFallback && fallback != null ? fallback! : const SizedBox.shrink();
+      return showFallback && fallback != null
+          ? fallback!
+          : const SizedBox.shrink();
     }
   }
 }
@@ -106,16 +114,19 @@ class ProtectedButton extends ConsumerWidget {
     final userRole = authState.user?.role.name;
 
     // Check if user has permission
-    final hasPermission = userRole != null && _checkPermission(userRole, permission);
+    final hasPermission =
+        userRole != null && _checkPermission(userRole, permission);
 
     return ElevatedButton(
-      onPressed: hasPermission ? onPressed : () {
-        if (disabledMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(disabledMessage!)),
-          );
-        }
-      },
+      onPressed: hasPermission
+          ? onPressed
+          : () {
+              if (disabledMessage != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(disabledMessage!)),
+                );
+              }
+            },
       style: style,
       child: child,
     );

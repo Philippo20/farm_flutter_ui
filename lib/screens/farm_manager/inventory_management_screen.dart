@@ -12,6 +12,8 @@ import '../../core/widgets/farm_manager_mobile_drawer.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/widgets/app_search_bar.dart';
 import '../../core/widgets/app_filter_chip.dart';
+import '../../core/widgets/skeleton_loader.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Inventory Management Screen
 /// Manage farm inputs, track stock levels, and handle inventory transactions
@@ -19,16 +21,206 @@ class InventoryManagementScreen extends ConsumerStatefulWidget {
   const InventoryManagementScreen({super.key});
 
   @override
-  ConsumerState<InventoryManagementScreen> createState() => _InventoryManagementScreenState();
+  ConsumerState<InventoryManagementScreen> createState() =>
+      _InventoryManagementScreenState();
 }
 
-class _InventoryManagementScreenState extends ConsumerState<InventoryManagementScreen> {
+class _InventoryManagementScreenState
+    extends ConsumerState<InventoryManagementScreen> {
+  final SuperAdminApiService _api = SuperAdminApiService();
   String _selectedCategory = 'All';
   String _searchQuery = '';
   bool _showLowStockOnly = false;
   int _selectedNavIndex = 2;
   final _scrollController = ScrollController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final List<Map<String, dynamic>> _farms = [];
+  final List<Map<String, dynamic>> _inventory = [];
+  final List<Map<String, dynamic>> _movements = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInventory();
+  }
+
+  Future<void> _loadInventory() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final results = await Future.wait([
+        _api.getFarms(),
+        _api.getInventory(),
+        _api.getInventoryMovements(),
+      ]);
+      if (!mounted) return;
+      final assignedFarms = results[0].where(_isAssignedToCurrentManager);
+      setState(() {
+        _farms
+          ..clear()
+          ..addAll(assignedFarms);
+        _inventory
+          ..clear()
+          ..addAll(
+              results[1].where(_matchesAssignedFarm).map(_mapInventoryItem));
+        _movements
+          ..clear()
+          ..addAll(results[2].where(_matchesAssignedFarm));
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = error.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _docId(Map<String, dynamic> doc) =>
+      (doc[r'$id'] ?? doc['id'] ?? doc['farm_id'] ?? '').toString();
+
+  String _value(Map<String, dynamic> doc, List<String> keys,
+      {String fallback = ''}) {
+    for (final key in keys) {
+      final value = doc[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return fallback;
+  }
+
+  double _doubleValue(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  bool _isAssignedToCurrentManager(Map<String, dynamic> farm) {
+    final user = ref.read(authProvider).user;
+    if (user == null) return true;
+    final managerId = _value(farm, ['farm_manager_id', 'farmManagerId']);
+    final managerName = _value(farm, ['farm_manager_name', 'farmManagerName']);
+    return managerId == user.id ||
+        managerId == user.email ||
+        managerName.toLowerCase() == user.name.toLowerCase();
+  }
+
+  bool _matchesAssignedFarm(Map<String, dynamic> doc) {
+    if (_farms.isEmpty) return true;
+    final farmIds = _farms.map(_docId).where((id) => id.isNotEmpty).toSet();
+    final farmNames = _farms
+        .map((farm) => _value(farm, ['name', 'farm_name']))
+        .where((name) => name.isNotEmpty)
+        .toSet();
+    final farmId = _value(doc, ['farm_id', 'farmID', 'farmId']);
+    final farmName = _value(doc, ['farm_name', 'farmName']);
+    return farmIds.contains(farmId) || farmNames.contains(farmName);
+  }
+
+  Map<String, dynamic> _mapInventoryItem(Map<String, dynamic> doc) {
+    final quantity = _doubleValue(
+        doc['quantity_available'] ?? doc['quantity'] ?? doc['stock']);
+    final reorderLevel = _doubleValue(
+        doc['reorder_level'] ?? doc['minStock'] ?? doc['min_stock']);
+    final unitCost = _doubleValue(doc['unit_price'] ?? doc['unitCost']);
+    final maxStock = [
+      quantity,
+      reorderLevel * 2,
+      _doubleValue(doc['maxStock'] ?? doc['max_stock']),
+    ].reduce((a, b) => a > b ? a : b);
+    final status = _inventoryStatus(quantity, reorderLevel, doc);
+    final color = status == 'Out of Stock'
+        ? AppColors.error
+        : status == 'Low Stock'
+            ? AppColors.warning
+            : AppColors.success;
+    return {
+      ...doc,
+      'id': _docId(doc),
+      'name': _value(doc, ['item_name', 'name'], fallback: 'Inventory Item'),
+      'category': _value(doc, ['item_type', 'category'], fallback: 'Other'),
+      'quantity': quantity,
+      'unit': _value(doc, ['unit'], fallback: 'unit'),
+      'minStock': reorderLevel,
+      'maxStock': maxStock <= 0 ? 1.0 : maxStock,
+      'unitCost': unitCost,
+      'expiryDate': _value(doc, ['expiry_date', 'expiryDate']),
+      'status': status,
+      'color': color,
+      'farmName': _value(doc, ['farm_name', 'farmName']),
+      'farmId': _value(doc, ['farm_id', 'farmID', 'farmId']),
+      'supplier': _value(doc, ['supplier_name', 'supplierName']),
+      'batchNumber': _value(doc, ['batch_number', 'batchNumber']),
+      'notes': _value(doc, ['notes']),
+    };
+  }
+
+  String _inventoryStatus(
+      double quantity, double reorderLevel, Map<String, dynamic> doc) {
+    final rawStatus = _value(doc, ['status']).trim();
+    if (quantity <= 0) return 'Out of Stock';
+    if (reorderLevel > 0 && quantity <= reorderLevel) return 'Low Stock';
+    return rawStatus.isEmpty ? 'Good' : rawStatus;
+  }
+
+  String _formatCurrency(num value) {
+    if (value >= 1000) return 'GHS ${(value / 1000).toStringAsFixed(1)}K';
+    return 'GHS ${value.toStringAsFixed(2)}';
+  }
+
+  Future<void> _recordStockMovement(
+    Map<String, dynamic> item,
+    String movementType,
+    double quantity,
+  ) async {
+    final currentQuantity = item['quantity'] as double;
+    final nextQuantity = movementType == 'Stock In'
+        ? currentQuantity + quantity
+        : currentQuantity - quantity;
+    if (quantity <= 0) {
+      throw const SuperAdminApiException('Enter a quantity greater than zero.');
+    }
+    if (nextQuantity < 0) {
+      throw const SuperAdminApiException(
+          'Quantity is more than available stock.');
+    }
+    final user = ref.read(authProvider).user;
+    final itemId = item['id']?.toString() ?? '';
+    await _api.updateInventory(
+      id: itemId,
+      itemName: item['name'] as String,
+      itemType: item['category'] as String,
+      unit: item['unit'] as String,
+      quantityAvailable: nextQuantity,
+      reorderLevel: item['minStock'] as double,
+      unitPrice: item['unitCost'] as double,
+      supplierName: item['supplier'] as String,
+      batchNumber: item['batchNumber'] as String,
+      farmId: item['farmId'] as String,
+      addedBy: user?.name ?? 'Farm Manager',
+      status: _inventoryStatus(nextQuantity, item['minStock'] as double, item),
+      notes: item['notes'] as String,
+      dateAdded: _value(item, ['date_added', 'dateAdded'],
+          fallback: DateTime.now().toIso8601String()),
+    );
+    await _api.createInventoryMovement(
+      itemId: itemId,
+      itemName: item['name'] as String,
+      farmName: item['farmName'] as String,
+      farmId: item['farmId'] as String,
+      movementType: movementType,
+      quantity: quantity,
+      unit: item['unit'] as String,
+      actor: user?.name ?? 'Farm Manager',
+      note: '$movementType from Farm Manager inventory screen',
+    );
+    await _loadInventory();
+  }
 
   @override
   void dispose() {
@@ -49,7 +241,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       drawer: isMobile
           ? FarmManagerMobileDrawer(
               selectedIndex: _selectedNavIndex,
@@ -59,7 +252,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
           : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
-          : _buildDesktopLayout(isDark, userName, userEmail, userRole, isTablet),
+          : _buildDesktopLayout(
+              isDark, userName, userEmail, userRole, isTablet),
       bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
       floatingActionButton: isMobile
           ? null
@@ -80,8 +274,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
     );
   }
 
-  Widget _buildDesktopLayout(
-      bool isDark, String userName, String userEmail, String userRole, bool isTablet) {
+  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail,
+      String userRole, bool isTablet) {
     return Row(
       children: [
         FarmManagerSidebar(
@@ -104,25 +298,37 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                 child: CustomScrollView(
                   controller: _scrollController,
                   slivers: [
-                    // Stats Summary Section
-                    SliverToBoxAdapter(
-                      child: _buildStatsSummary(isDark, isTablet),
-                    ),
-
-                    // Filter and Search Section
-                    SliverToBoxAdapter(
-                      child: _buildFilterSection(isDark, isTablet),
-                    ),
-
-                    // Inventory List Section
-                    SliverPadding(
-                      padding: EdgeInsets.only(
-                        left: isTablet ? AppSpacing.lg : AppSpacing.xl,
-                        right: isTablet ? AppSpacing.lg : AppSpacing.xl,
-                        bottom: AppSpacing.xl,
+                    if (_isLoading || _errorMessage != null)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          child: _isLoading
+                              ? const AdminDataSkeleton(rowCount: 6)
+                              : _buildErrorState(isDark),
+                        ),
+                      )
+                    else ...[
+                      // Stats Summary Section
+                      SliverToBoxAdapter(
+                        child: _buildStatsSummary(isDark, isTablet),
                       ),
-                      sliver: _buildInventoryGrid(isDark, isTablet),
-                    ),
+
+                      // Filter and Search Section
+                      SliverToBoxAdapter(
+                        child: _buildFilterSection(isDark, isTablet),
+                      ),
+
+                      // Inventory List Section
+                      SliverPadding(
+                        padding: EdgeInsets.only(
+                          left: isTablet ? AppSpacing.lg : AppSpacing.xl,
+                          right: isTablet ? AppSpacing.lg : AppSpacing.xl,
+                          bottom: AppSpacing.xl,
+                        ),
+                        sliver: _buildInventoryGrid(isDark, isTablet),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -147,61 +353,76 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
         Expanded(
           child: CustomScrollView(
             slivers: [
-              // Search and Filter Section
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AppSearchBar(
-                              hintText: 'Search inventory...',
-                              onChanged: (value) => setState(() => _searchQuery = value),
-                              isDark: isDark,
+              if (_isLoading || _errorMessage != null)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: _isLoading
+                        ? const AdminDataSkeleton(rowCount: 6)
+                        : _buildErrorState(isDark),
+                  ),
+                )
+              else ...[
+                // Search and Filter Section
+                SliverToBoxAdapter(
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    color: isDark
+                        ? AppColors.backgroundDark
+                        : AppColors.backgroundLight,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AppSearchBar(
+                                hintText: 'Search inventory...',
+                                onChanged: (value) =>
+                                    setState(() => _searchQuery = value),
+                                isDark: isDark,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          _buildActionButton(
-                            icon: Icons.filter_alt_outlined,
-                            tooltip: 'Filter',
-                            isDark: isDark,
-                            onPressed: _showFilterDialog,
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          _buildActionButton(
-                            icon: Icons.add,
-                            tooltip: 'Add Item',
-                            isDark: isDark,
-                            onPressed: () => _showAddInventoryDialog(),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: AppSpacing.xs),
+                            _buildActionButton(
+                              icon: Icons.filter_alt_outlined,
+                              tooltip: 'Filter',
+                              isDark: isDark,
+                              onPressed: _showFilterDialog,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            _buildActionButton(
+                              icon: Icons.add,
+                              tooltip: 'Add Item',
+                              isDark: isDark,
+                              onPressed: () => _showAddInventoryDialog(),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // Stats Section
-              SliverToBoxAdapter(
-                child: _buildMobileStats(isDark),
-              ),
+                // Stats Section
+                SliverToBoxAdapter(
+                  child: _buildMobileStats(isDark),
+                ),
 
-              // Category Chips
-              SliverToBoxAdapter(
-                child: _buildCategoryChips(isDark, true),
-              ),
+                // Category Chips
+                SliverToBoxAdapter(
+                  child: _buildCategoryChips(isDark, true),
+                ),
 
-              // Inventory List
-              _buildInventoryList(isDark, true),
+                // Inventory List
+                _buildInventoryList(isDark, true),
 
-              // Add padding at bottom for bottom navigation
-              SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.lg),
-              ),
+                // Add padding at bottom for bottom navigation
+                SliverToBoxAdapter(
+                  child: SizedBox(height: AppSpacing.lg),
+                ),
+              ],
             ],
           ),
         ),
@@ -209,11 +430,68 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
     );
   }
 
+  Widget _buildErrorState(bool isDark) {
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 520),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color:
+                isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.inventory_2_outlined, size: 42, color: AppColors.error),
+            const SizedBox(height: 12),
+            Text(
+              'Could not load inventory',
+              style: GoogleFonts.inter(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _errorMessage ?? 'The inventory service did not return data.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: isDark ? Colors.white54 : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _loadInventory,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStatsSummary(bool isDark, bool isTablet) {
+    final totalItems = _inventory.length;
+    final lowStock =
+        _inventory.where((item) => item['status'] == 'Low Stock').length;
+    final outOfStock =
+        _inventory.where((item) => item['status'] == 'Out of Stock').length;
+    final totalValue = _inventory.fold<double>(
+      0,
+      (sum, item) =>
+          sum + ((item['quantity'] as double) * (item['unitCost'] as double)),
+    );
     final stats = [
       {
         'title': 'Total Items',
-        'value': '48',
+        'value': '$totalItems',
         'icon': Icons.inventory_2,
         'color': AppColors.primary,
         'change': '+5.2%',
@@ -221,7 +499,7 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
       },
       {
         'title': 'Low Stock',
-        'value': '7',
+        'value': '$lowStock',
         'icon': Icons.warning,
         'color': AppColors.warning,
         'change': '+2',
@@ -229,7 +507,7 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
       },
       {
         'title': 'Out of Stock',
-        'value': '2',
+        'value': '$outOfStock',
         'icon': Icons.error,
         'color': AppColors.error,
         'change': '-1',
@@ -237,7 +515,7 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
       },
       {
         'title': 'Total Value',
-        'value': 'GH₵12,458',
+        'value': _formatCurrency(totalValue),
         'icon': Icons.attach_money,
         'color': AppColors.success,
         'change': '+12.5%',
@@ -292,48 +570,76 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
     );
   }
 
-  Widget _buildStatCard(Map<String, dynamic> stat, bool isDark, [bool isMobile = false]) {
+  Widget _buildStatCard(Map<String, dynamic> stat, bool isDark,
+      [bool isMobile = false]) {
     final color = stat['color'] as Color;
     return LayoutBuilder(builder: (context, box) {
       final compact = box.maxWidth < 160;
       return Container(
-        padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14, vertical: compact ? 8 : 10),
+        padding: EdgeInsets.symmetric(
+            horizontal: compact ? 10 : 14, vertical: compact ? 8 : 10),
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withOpacity(isDark ? 0.15 : 0.12)),
-          boxShadow: isDark ? null : [BoxShadow(color: color.withOpacity(0.06), blurRadius: 12, offset: const Offset(0, 3))],
+          boxShadow: isDark
+              ? null
+              : [
+                  BoxShadow(
+                      color: color.withOpacity(0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3))
+                ],
         ),
         child: Row(children: [
           Container(
             padding: EdgeInsets.all(compact ? 6 : 8),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-            child: Icon(stat['icon'] as IconData, size: compact ? 16 : 20, color: color),
+            decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8)),
+            child: Icon(stat['icon'] as IconData,
+                size: compact ? 16 : 20, color: color),
           ),
           SizedBox(width: compact ? 8 : 10),
-          Expanded(child: Column(
+          Expanded(
+              child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(stat['value'] as String,
-                  style: GoogleFonts.inter(fontSize: compact ? 16 : 20, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textPrimary, height: 1.1),
-                  maxLines: 1, overflow: TextOverflow.ellipsis),
+                  style: GoogleFonts.inter(
+                      fontSize: compact ? 16 : 20,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      height: 1.1),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
               const SizedBox(height: 2),
               Text(stat['title'] as String,
-                  style: GoogleFonts.inter(fontSize: compact ? 10 : 11, color: isDark ? Colors.white38 : AppColors.textSecondary),
-                  maxLines: 1, overflow: TextOverflow.ellipsis),
+                  style: GoogleFonts.inter(
+                      fontSize: compact ? 10 : 11,
+                      color: isDark ? Colors.white38 : AppColors.textSecondary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
             ],
           )),
           if (!compact && stat['change'] != null)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               decoration: BoxDecoration(
-                color: ((stat['isPositive'] as bool) ? AppColors.success : AppColors.error).withOpacity(0.08),
+                color: ((stat['isPositive'] as bool)
+                        ? AppColors.success
+                        : AppColors.error)
+                    .withOpacity(0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(stat['change'] as String,
-                  style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w600,
-                      color: (stat['isPositive'] as bool) ? AppColors.success : AppColors.error)),
+                  style: GoogleFonts.inter(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w600,
+                      color: (stat['isPositive'] as bool)
+                          ? AppColors.success
+                          : AppColors.error)),
             ),
         ]),
       );
@@ -341,6 +647,16 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
   }
 
   Widget _buildMobileStats(bool isDark) {
+    final totalItems = _inventory.length;
+    final lowStock =
+        _inventory.where((item) => item['status'] == 'Low Stock').length;
+    final outOfStock =
+        _inventory.where((item) => item['status'] == 'Out of Stock').length;
+    final totalValue = _inventory.fold<double>(
+      0,
+      (sum, item) =>
+          sum + ((item['quantity'] as double) * (item['unitCost'] as double)),
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -354,16 +670,21 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
         mainAxisSpacing: AppSpacing.sm,
         childAspectRatio: 1.5,
         children: [
-          _buildMobileStatCard('48', 'Total Items', AppColors.primary, isDark),
-          _buildMobileStatCard('7', 'Low Stock', AppColors.warning, isDark),
-          _buildMobileStatCard('2', 'Out of Stock', AppColors.error, isDark),
-          _buildMobileStatCard('GH₵12.5K', 'Total Value', AppColors.success, isDark),
+          _buildMobileStatCard(
+              '$totalItems', 'Total Items', AppColors.primary, isDark),
+          _buildMobileStatCard(
+              '$lowStock', 'Low Stock', AppColors.warning, isDark),
+          _buildMobileStatCard(
+              '$outOfStock', 'Out of Stock', AppColors.error, isDark),
+          _buildMobileStatCard(_formatCurrency(totalValue), 'Total Value',
+              AppColors.success, isDark),
         ],
       ),
     );
   }
 
-  Widget _buildMobileStatCard(String value, String title, Color color, bool isDark) {
+  Widget _buildMobileStatCard(
+      String value, String title, Color color, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -377,22 +698,38 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
         children: [
           Container(
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+                color: color.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8)),
             child: Icon(
-              title == 'Total Items' ? Icons.inventory_2_rounded :
-              title == 'Low Stock' ? Icons.warning_rounded :
-              title == 'Out of Stock' ? Icons.error_rounded : Icons.attach_money_rounded,
-              size: 16, color: color,
+              title == 'Total Items'
+                  ? Icons.inventory_2_rounded
+                  : title == 'Low Stock'
+                      ? Icons.warning_rounded
+                      : title == 'Out of Stock'
+                          ? Icons.error_rounded
+                          : Icons.attach_money_rounded,
+              size: 16,
+              color: color,
             ),
           ),
           const SizedBox(height: 6),
           Text(value,
-              style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: isDark ? Colors.white : AppColors.textPrimary),
-              maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
+              style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : AppColors.textPrimary),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center),
           const SizedBox(height: 2),
           Text(title,
-              style: GoogleFonts.inter(fontSize: 10, color: isDark ? Colors.white38 : AppColors.textSecondary),
-              textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+              style: GoogleFonts.inter(
+                  fontSize: 10,
+                  color: isDark ? Colors.white38 : AppColors.textSecondary),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
         ],
       ),
     );
@@ -436,7 +773,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                         label: 'Low Stock Only',
                         icon: Icons.warning,
                         isSelected: _showLowStockOnly,
-                        onChanged: (value) => setState(() => _showLowStockOnly = value),
+                        onChanged: (value) =>
+                            setState(() => _showLowStockOnly = value),
                         color: AppColors.warning,
                         isDark: isDark,
                       ),
@@ -450,7 +788,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                     Expanded(
                       child: AppSearchBar(
                         hintText: 'Search by item name, category or SKU...',
-                        onChanged: (value) => setState(() => _searchQuery = value),
+                        onChanged: (value) =>
+                            setState(() => _searchQuery = value),
                         isDark: isDark,
                       ),
                     ),
@@ -466,7 +805,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                       label: 'Low Stock Only',
                       icon: Icons.warning,
                       isSelected: _showLowStockOnly,
-                      onChanged: (value) => setState(() => _showLowStockOnly = value),
+                      onChanged: (value) =>
+                          setState(() => _showLowStockOnly = value),
                       color: AppColors.warning,
                       isDark: isDark,
                     ),
@@ -483,15 +823,23 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
   }
 
   Widget _buildCategoryChips(bool isDark, bool isMobile) {
+    final categoryNames = _inventory
+        .map((item) => item['category'].toString())
+        .where((category) => category.trim().isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
     final categories = [
-      {'label': 'All', 'icon': Icons.all_inclusive, 'count': 48},
-      {'label': 'Fertilizer', 'icon': Icons.grass, 'count': 12},
-      {'label': 'Seeds', 'icon': Icons.eco, 'count': 8},
-      {'label': 'Nutrients', 'icon': Icons.science, 'count': 9},
-      {'label': 'Pesticides', 'icon': Icons.pest_control, 'count': 6},
-      {'label': 'Tools', 'icon': Icons.build, 'count': 7},
-      {'label': 'Packaging', 'icon': Icons.inventory, 'count': 4},
-      {'label': 'Other', 'icon': Icons.category, 'count': 2},
+      {'label': 'All', 'icon': Icons.all_inclusive, 'count': _inventory.length},
+      ...categoryNames.map(
+        (category) => {
+          'label': category,
+          'icon': _getCategoryIcon(category),
+          'count': _inventory
+              .where((item) => item['category'].toString() == category)
+              .length,
+        },
+      ),
     ];
 
     return SizedBox(
@@ -507,7 +855,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
           final isSelected = _selectedCategory == category['label'];
 
           return Padding(
-            padding: EdgeInsets.only(right: isMobile ? AppSpacing.xs : AppSpacing.sm),
+            padding: EdgeInsets.only(
+                right: isMobile ? AppSpacing.xs : AppSpacing.sm),
             child: FilterChip(
               label: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -517,7 +866,9 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                     size: isMobile ? 14 : 16,
                     color: isSelected
                         ? Colors.white
-                        : (isDark ? Colors.white.withOpacity(0.8) : AppColors.textPrimary),
+                        : (isDark
+                            ? Colors.white.withOpacity(0.8)
+                            : AppColors.textPrimary),
                   ),
                   SizedBox(width: isMobile ? 4 : 6),
                   Text(
@@ -527,7 +878,9 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                       fontSize: isMobile ? 11 : 13,
                       color: isSelected
                           ? Colors.white
-                          : (isDark ? Colors.white.withOpacity(0.8) : AppColors.textPrimary),
+                          : (isDark
+                              ? Colors.white.withOpacity(0.8)
+                              : AppColors.textPrimary),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -541,7 +894,9 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Colors.white.withOpacity(0.2)
-                          : (isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral100),
+                          : (isDark
+                              ? Colors.white.withOpacity(0.1)
+                              : AppColors.neutral100),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -551,7 +906,9 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                         fontWeight: FontWeight.bold,
                         color: isSelected
                             ? Colors.white
-                            : (isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary),
+                            : (isDark
+                                ? Colors.white.withOpacity(0.6)
+                                : AppColors.textSecondary),
                       ),
                     ),
                   ),
@@ -568,7 +925,9 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                 side: BorderSide(
                   color: isSelected
                       ? AppColors.primary
-                      : (isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral200),
+                      : (isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : AppColors.neutral200),
                 ),
               ),
               elevation: 0,
@@ -583,7 +942,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
     final filteredItems = _getFilteredItems();
     // Use responsive crossAxisCount
     final screenWidth = MediaQuery.of(context).size.width;
-    final contentWidth = screenWidth - (isTablet ? 0 : 250); // account for sidebar
+    final contentWidth =
+        screenWidth - (isTablet ? 0 : 250); // account for sidebar
     final cols = contentWidth > 1000 ? 3 : (contentWidth > 600 ? 2 : 2);
     final ratio = contentWidth > 1000 ? 1.2 : (contentWidth > 600 ? 1.15 : 1.1);
 
@@ -624,9 +984,12 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
     );
   }
 
-  Widget _buildInventoryCard(Map<String, dynamic> item, bool isDark, [bool isMobile = false]) {
-    final totalValue = (item['quantity'] as double) * (item['unitCost'] as double);
-    final stockPercentage = (item['quantity'] as double) / (item['maxStock'] as double);
+  Widget _buildInventoryCard(Map<String, dynamic> item, bool isDark,
+      [bool isMobile = false]) {
+    final totalValue =
+        (item['quantity'] as double) * (item['unitCost'] as double);
+    final stockPercentage =
+        (item['quantity'] as double) / (item['maxStock'] as double);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -637,9 +1000,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           border: Border.all(
-            color: isDark 
-                ? Colors.white.withOpacity(0.1) 
-                : AppColors.neutral200,
+            color:
+                isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral200,
             width: 1,
           ),
           boxShadow: [
@@ -668,110 +1030,123 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                 ),
               ),
               child: Padding(
-                padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.lg),
+                padding:
+                    EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                        // Header
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(isMobile ? AppSpacing.xs : AppSpacing.sm),
-                              decoration: BoxDecoration(
-                                color: (item['color'] as Color).withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                                border: Border.all(
-                                  color: (item['color'] as Color).withOpacity(0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Icon(
-                                _getCategoryIcon(item['category'] as String),
-                                color: item['color'] as Color,
-                                size: isMobile ? 18 : 22,
-                              ),
+                    // Header
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(
+                              isMobile ? AppSpacing.xs : AppSpacing.sm),
+                          decoration: BoxDecoration(
+                            color: (item['color'] as Color).withOpacity(0.15),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
+                            border: Border.all(
+                              color: (item['color'] as Color).withOpacity(0.3),
+                              width: 1,
                             ),
-                            SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                          ),
+                          child: Icon(
+                            _getCategoryIcon(item['category'] as String),
+                            color: item['color'] as Color,
+                            size: isMobile ? 18 : 22,
+                          ),
+                        ),
+                        SizedBox(
+                            width: isMobile ? AppSpacing.xs : AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                item['name'] as String,
+                                style: AppTypography.bodyLarge.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary,
+                                  fontSize: isMobile ? 13 : 15,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 3),
+                              Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    item['name'] as String,
-                                    style: AppTypography.bodyLarge.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: isDark ? Colors.white : AppColors.textPrimary,
-                                      fontSize: isMobile ? 13 : 15,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                  Icon(
+                                    Icons.category_outlined,
+                                    size: isMobile ? 10 : 12,
+                                    color: isDark
+                                        ? Colors.white.withOpacity(0.5)
+                                        : AppColors.textSecondary,
                                   ),
-                                  const SizedBox(height: 3),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.category_outlined,
-                                        size: isMobile ? 10 : 12,
-                                        color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      item['category'] as String,
+                                      style: AppTypography.caption.copyWith(
+                                        color: isDark
+                                            ? Colors.white.withOpacity(0.6)
+                                            : AppColors.textSecondary,
+                                        fontSize: isMobile ? 10 : 11,
                                       ),
-                                      const SizedBox(width: 4),
-                                      Flexible(
-                                        child: Text(
-                                          item['category'] as String,
-                                          style: AppTypography.caption.copyWith(
-                                            color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
-                                            fontSize: isMobile ? 10 : 11,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isMobile ? 6 : 10,
-                                vertical: isMobile ? 3 : 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: (item['color'] as Color).withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                                border: Border.all(
-                                  color: (item['color'] as Color).withOpacity(0.4),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                item['status'] as String,
-                                style: AppTypography.caption.copyWith(
-                                  color: item['color'] as Color,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: isMobile ? 9 : 10,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 6 : 10,
+                            vertical: isMobile ? 3 : 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: (item['color'] as Color).withOpacity(0.15),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusFull),
+                            border: Border.all(
+                              color: (item['color'] as Color).withOpacity(0.4),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            item['status'] as String,
+                            style: AppTypography.caption.copyWith(
+                              color: item['color'] as Color,
+                              fontWeight: FontWeight.w700,
+                              fontSize: isMobile ? 9 : 10,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
 
                     SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
 
                     // Stock Level Section
                     Container(
-                      padding: EdgeInsets.all(isMobile ? AppSpacing.xs : AppSpacing.sm),
+                      padding: EdgeInsets.all(
+                          isMobile ? AppSpacing.xs : AppSpacing.sm),
                       decoration: BoxDecoration(
-                        color: isDark 
-                            ? Colors.white.withOpacity(0.03) 
+                        color: isDark
+                            ? Colors.white.withOpacity(0.03)
                             : AppColors.neutral50,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -786,14 +1161,18 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                                   Icon(
                                     Icons.inventory_2_outlined,
                                     size: isMobile ? 12 : 14,
-                                    color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+                                    color: isDark
+                                        ? Colors.white.withOpacity(0.6)
+                                        : AppColors.textSecondary,
                                   ),
                                   const SizedBox(width: 4),
                                   Flexible(
                                     child: Text(
                                       'Stock Level',
                                       style: AppTypography.caption.copyWith(
-                                        color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+                                        color: isDark
+                                            ? Colors.white.withOpacity(0.6)
+                                            : AppColors.textSecondary,
                                         fontSize: isMobile ? 10 : 12,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -809,8 +1188,10 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: (item['color'] as Color).withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                                  color: (item['color'] as Color)
+                                      .withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusFull),
                                 ),
                                 child: Text(
                                   '${(stockPercentage * 100).toStringAsFixed(0)}%',
@@ -825,11 +1206,15 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                           ),
                           SizedBox(height: isMobile ? 6 : 8),
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusFull),
                             child: LinearProgressIndicator(
                               value: stockPercentage,
-                              backgroundColor: isDark ? Colors.white10 : AppColors.neutral100,
-                              valueColor: AlwaysStoppedAnimation<Color>(item['color'] as Color),
+                              backgroundColor: isDark
+                                  ? Colors.white10
+                                  : AppColors.neutral100,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  item['color'] as Color),
                               minHeight: isMobile ? 6 : 8,
                             ),
                           ),
@@ -851,7 +1236,9 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                                       child: Text(
                                         '${item['quantity']} ${item['unit']}',
                                         style: AppTypography.caption.copyWith(
-                                          color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textPrimary,
+                                          color: isDark
+                                              ? Colors.white.withOpacity(0.7)
+                                              : AppColors.textPrimary,
                                           fontSize: isMobile ? 10 : 11,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -872,7 +1259,9 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                                       child: Text(
                                         'Max: ${item['maxStock']} ${item['unit']}',
                                         style: AppTypography.caption.copyWith(
-                                          color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
+                                          color: isDark
+                                              ? Colors.white.withOpacity(0.5)
+                                              : AppColors.textSecondary,
                                           fontSize: isMobile ? 9 : 10,
                                         ),
                                         maxLines: 1,
@@ -896,12 +1285,14 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                       children: [
                         Expanded(
                           child: Container(
-                            padding: EdgeInsets.all(isMobile ? AppSpacing.xs : AppSpacing.sm),
+                            padding: EdgeInsets.all(
+                                isMobile ? AppSpacing.xs : AppSpacing.sm),
                             decoration: BoxDecoration(
-                              color: isDark 
-                                  ? Colors.white.withOpacity(0.03) 
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.03)
                                   : AppColors.neutral50,
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusSm),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -913,13 +1304,17 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                                     Icon(
                                       Icons.attach_money,
                                       size: isMobile ? 10 : 12,
-                                      color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+                                      color: isDark
+                                          ? Colors.white.withOpacity(0.6)
+                                          : AppColors.textSecondary,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       'Unit Cost',
                                       style: AppTypography.caption.copyWith(
-                                        color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+                                        color: isDark
+                                            ? Colors.white.withOpacity(0.6)
+                                            : AppColors.textSecondary,
                                         fontSize: isMobile ? 9 : 10,
                                       ),
                                       maxLines: 1,
@@ -932,7 +1327,9 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                                   'GH₵${item['unitCost']}',
                                   style: AppTypography.bodySmall.copyWith(
                                     fontWeight: FontWeight.w700,
-                                    color: isDark ? Colors.white : AppColors.textPrimary,
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
                                     fontSize: isMobile ? 12 : 14,
                                   ),
                                   maxLines: 1,
@@ -942,15 +1339,18 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                             ),
                           ),
                         ),
-                        SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
+                        SizedBox(
+                            width: isMobile ? AppSpacing.xs : AppSpacing.sm),
                         Expanded(
                           child: Container(
-                            padding: EdgeInsets.all(isMobile ? AppSpacing.xs : AppSpacing.sm),
+                            padding: EdgeInsets.all(
+                                isMobile ? AppSpacing.xs : AppSpacing.sm),
                             decoration: BoxDecoration(
-                              color: isDark 
-                                  ? Colors.white.withOpacity(0.03) 
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.03)
                                   : AppColors.neutral50,
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusSm),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -962,13 +1362,17 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                                     Icon(
                                       Icons.account_balance_wallet_outlined,
                                       size: isMobile ? 10 : 12,
-                                      color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+                                      color: isDark
+                                          ? Colors.white.withOpacity(0.6)
+                                          : AppColors.textSecondary,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       'Total Value',
                                       style: AppTypography.caption.copyWith(
-                                        color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+                                        color: isDark
+                                            ? Colors.white.withOpacity(0.6)
+                                            : AppColors.textSecondary,
                                         fontSize: isMobile ? 9 : 10,
                                       ),
                                       maxLines: 1,
@@ -995,12 +1399,15 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                     ),
 
                     if (item['expiryDate'] != null) ...[
-                      SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
+                      SizedBox(
+                          height: isMobile ? AppSpacing.sm : AppSpacing.md),
                       Container(
-                        padding: EdgeInsets.all(isMobile ? AppSpacing.xs : AppSpacing.sm),
+                        padding: EdgeInsets.all(
+                            isMobile ? AppSpacing.xs : AppSpacing.sm),
                         decoration: BoxDecoration(
                           color: AppColors.warning.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusSm),
                           border: Border.all(
                             color: AppColors.warning.withOpacity(0.3),
                             width: 1,
@@ -1051,15 +1458,18 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.success.withOpacity(0.1),
+                              backgroundColor:
+                                  AppColors.success.withOpacity(0.1),
                               foregroundColor: AppColors.success,
                               elevation: 0,
                               padding: EdgeInsets.symmetric(
                                 vertical: isMobile ? 8 : 10,
-                                horizontal: isMobile ? AppSpacing.xs : AppSpacing.sm,
+                                horizontal:
+                                    isMobile ? AppSpacing.xs : AppSpacing.sm,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                borderRadius:
+                                    BorderRadius.circular(AppSpacing.radiusMd),
                                 side: BorderSide(
                                   color: AppColors.success.withOpacity(0.3),
                                   width: 1,
@@ -1070,7 +1480,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                             ),
                           ),
                         ),
-                        SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
+                        SizedBox(
+                            width: isMobile ? AppSpacing.xs : AppSpacing.sm),
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () => _showStockOutDialog(item),
@@ -1091,10 +1502,12 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                               elevation: 0,
                               padding: EdgeInsets.symmetric(
                                 vertical: isMobile ? 8 : 10,
-                                horizontal: isMobile ? AppSpacing.xs : AppSpacing.sm,
+                                horizontal:
+                                    isMobile ? AppSpacing.xs : AppSpacing.sm,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                borderRadius:
+                                    BorderRadius.circular(AppSpacing.radiusMd),
                                 side: BorderSide(
                                   color: AppColors.error.withOpacity(0.3),
                                   width: 1,
@@ -1119,11 +1532,36 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
 
   Widget _buildBottomNavigation(bool isDark) {
     final navItems = [
-      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/farm-manager'},
-      {'icon': Icons.agriculture_outlined, 'label': 'Farms', 'index': 1, 'route': '/farm-manager/farms'},
-      {'icon': Icons.inventory_2_outlined, 'label': 'Inventory', 'index': 2, 'route': '/farm-manager/inventory'},
-      {'icon': Icons.local_shipping_outlined, 'label': 'Deliveries', 'index': 3, 'route': '/farm-manager/deliveries'},
-      {'icon': Icons.assessment_outlined, 'label': 'Reports', 'index': 4, 'route': '/farm-manager/reports'},
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Dashboard',
+        'index': 0,
+        'route': '/farm-manager'
+      },
+      {
+        'icon': Icons.agriculture_outlined,
+        'label': 'Farms',
+        'index': 1,
+        'route': '/farm-manager/farms'
+      },
+      {
+        'icon': Icons.inventory_2_outlined,
+        'label': 'Inventory',
+        'index': 2,
+        'route': '/farm-manager/inventory'
+      },
+      {
+        'icon': Icons.local_shipping_outlined,
+        'label': 'Deliveries',
+        'index': 3,
+        'route': '/farm-manager/deliveries'
+      },
+      {
+        'icon': Icons.assessment_outlined,
+        'label': 'Reports',
+        'index': 4,
+        'route': '/farm-manager/reports'
+      },
     ];
 
     return Container(
@@ -1138,7 +1576,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
         ],
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral100,
+            color:
+                isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral100,
             width: 1,
           ),
         ),
@@ -1160,7 +1599,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                       if (_selectedNavIndex != index) {
                         setState(() => _selectedNavIndex = index);
                         try {
-                          Navigator.pushReplacementNamed(context, item['route'] as String);
+                          Navigator.pushReplacementNamed(
+                              context, item['route'] as String);
                         } catch (e) {
                           debugPrint('Navigation error: $e');
                         }
@@ -1171,7 +1611,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                       decoration: BoxDecoration(
                         border: isSelected
                             ? Border(
-                                top: BorderSide(color: AppColors.primary, width: 2),
+                                top: BorderSide(
+                                    color: AppColors.primary, width: 2),
                               )
                             : null,
                       ),
@@ -1196,7 +1637,9 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                                   : (isDark
                                       ? Colors.white.withOpacity(0.5)
                                       : AppColors.textSecondary),
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                               fontSize: 11,
                             ),
                           ),
@@ -1236,14 +1679,18 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral200,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : AppColors.neutral200,
                     width: 1,
                   ),
                 ),
                 child: Icon(
                   icon,
                   size: 20,
-                  color: isDark ? Colors.white.withOpacity(0.9) : AppColors.textPrimary,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.9)
+                      : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -1283,93 +1730,24 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
   }
 
   List<Map<String, dynamic>> _getFilteredItems() {
-    final items = [
-      {
-        'name': 'NPK Fertilizer 20-20-20',
-        'category': 'Fertilizer',
-        'quantity': 45.5,
-        'unit': 'kg',
-        'minStock': 20.0,
-        'maxStock': 100.0,
-        'unitCost': 25.0,
-        'expiryDate': '2025-12-31',
-        'status': 'Good',
-        'color': AppColors.success,
-      },
-      {
-        'name': 'Lettuce Seeds (Buttercrunch)',
-        'category': 'Seeds',
-        'quantity': 8.0,
-        'unit': 'kg',
-        'minStock': 10.0,
-        'maxStock': 50.0,
-        'unitCost': 120.0,
-        'expiryDate': '2025-06-30',
-        'status': 'Low Stock',
-        'color': AppColors.warning,
-      },
-      {
-        'name': 'Calcium Nitrate',
-        'category': 'Nutrients',
-        'quantity': 0.0,
-        'unit': 'kg',
-        'minStock': 15.0,
-        'maxStock': 80.0,
-        'unitCost': 18.0,
-        'expiryDate': '2026-03-15',
-        'status': 'Out of Stock',
-        'color': AppColors.error,
-      },
-      {
-        'name': 'pH Down Solution',
-        'category': 'Nutrients',
-        'quantity': 12.5,
-        'unit': 'L',
-        'minStock': 5.0,
-        'maxStock': 30.0,
-        'unitCost': 35.0,
-        'expiryDate': '2025-09-20',
-        'status': 'Good',
-        'color': AppColors.success,
-      },
-      {
-        'name': 'Neem Oil (Organic Pesticide)',
-        'category': 'Pesticides',
-        'quantity': 3.2,
-        'unit': 'L',
-        'minStock': 5.0,
-        'maxStock': 20.0,
-        'unitCost': 45.0,
-        'expiryDate': '2025-04-10',
-        'status': 'Low Stock',
-        'color': AppColors.warning,
-      },
-      {
-        'name': 'Pruning Shears',
-        'category': 'Tools',
-        'quantity': 8.0,
-        'unit': 'pcs',
-        'minStock': 5.0,
-        'maxStock': 15.0,
-        'unitCost': 25.0,
-        'expiryDate': null,
-        'status': 'Good',
-        'color': AppColors.success,
-      },
-    ];
-
-    var filteredItems = items;
+    var filteredItems = List<Map<String, dynamic>>.from(_inventory);
     if (_selectedCategory != 'All') {
-      filteredItems = items.where((item) => item['category'] == _selectedCategory).toList();
+      filteredItems = filteredItems
+          .where((item) => item['category'] == _selectedCategory)
+          .toList();
     }
     if (_showLowStockOnly) {
-      filteredItems = filteredItems.where((item) => item['status'] != 'Good').toList();
+      filteredItems =
+          filteredItems.where((item) => item['status'] != 'Good').toList();
     }
     if (_searchQuery.isNotEmpty) {
-      filteredItems = filteredItems
-          .where(
-              (item) => (item['name'] as String).toLowerCase().contains(_searchQuery.toLowerCase()))
-          .toList();
+      final query = _searchQuery.toLowerCase();
+      filteredItems = filteredItems.where((item) {
+        return (item['name'] as String).toLowerCase().contains(query) ||
+            (item['category'] as String).toLowerCase().contains(query) ||
+            (item['batchNumber'] as String).toLowerCase().contains(query) ||
+            (item['farmName'] as String).toLowerCase().contains(query);
+      }).toList();
     }
 
     return filteredItems;
@@ -1399,7 +1777,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Filter Options'),
-        content: const Text('Advanced filtering options will be implemented here.'),
+        content:
+            const Text('Advanced filtering options will be implemented here.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -1448,7 +1827,8 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
             Text('Quantity: ${item['quantity']} ${item['unit']}'),
             Text('Unit Cost: GH₵${item['unitCost']}'),
             Text('Status: ${item['status']}'),
-            if (item['expiryDate'] != null) Text('Expiry: ${item['expiryDate']}'),
+            if (item['expiryDate'] != null)
+              Text('Expiry: ${item['expiryDate']}'),
           ],
         ),
         actions: [
@@ -1470,83 +1850,141 @@ class _InventoryManagementScreenState extends ConsumerState<InventoryManagementS
 
   void _showStockInDialog(Map<String, dynamic> item) {
     final quantityController = TextEditingController();
+    var isSaving = false;
+    String? dialogError;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Stock In'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Item: ${item['name']}'),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: quantityController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Quantity (${item['unit']})',
-                border: const OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Stock In'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Item: ${item['name']}'),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: quantityController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Quantity (${item['unit']})',
+                  border: const OutlineInputBorder(),
+                  errorText: dialogError,
+                ),
               ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isSaving ? null : () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isSaving
+                  ? null
+                  : () async {
+                      final quantity =
+                          double.tryParse(quantityController.text.trim()) ?? 0;
+                      setDialogState(() {
+                        isSaving = true;
+                        dialogError = null;
+                      });
+                      try {
+                        await _recordStockMovement(item, 'Stock In', quantity);
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Stock updated successfully')),
+                        );
+                      } catch (error) {
+                        setDialogState(() {
+                          dialogError = error.toString();
+                          isSaving = false;
+                        });
+                      }
+                    },
+              child: isSaving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Confirm'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Stock updated successfully')),
-              );
-            },
-            child: const Text('Confirm'),
-          ),
-        ],
       ),
     );
   }
 
   void _showStockOutDialog(Map<String, dynamic> item) {
     final quantityController = TextEditingController();
+    var isSaving = false;
+    String? dialogError;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Stock Out'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Item: ${item['name']}'),
-            Text('Available: ${item['quantity']} ${item['unit']}'),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: quantityController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Quantity (${item['unit']})',
-                border: const OutlineInputBorder(),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Stock Out'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Item: ${item['name']}'),
+              Text('Available: ${item['quantity']} ${item['unit']}'),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: quantityController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Quantity (${item['unit']})',
+                  border: const OutlineInputBorder(),
+                  errorText: dialogError,
+                ),
               ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isSaving ? null : () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isSaving
+                  ? null
+                  : () async {
+                      final quantity =
+                          double.tryParse(quantityController.text.trim()) ?? 0;
+                      setDialogState(() {
+                        isSaving = true;
+                        dialogError = null;
+                      });
+                      try {
+                        await _recordStockMovement(item, 'Stock Out', quantity);
+                        if (!context.mounted) return;
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Stock updated successfully')),
+                        );
+                      } catch (error) {
+                        setDialogState(() {
+                          dialogError = error.toString();
+                          isSaving = false;
+                        });
+                      }
+                    },
+              child: isSaving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Confirm'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Stock updated successfully')),
-              );
-            },
-            child: const Text('Confirm'),
-          ),
-        ],
       ),
     );
   }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -6,6 +6,7 @@ import '../theme/app_spacing.dart';
 import '../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
 import 'weather_info_chip.dart';
+import 'notification_center.dart';
 
 /// Modern quality assurance header with greeting, weather, notifications, and theme toggle
 class QualityAssuranceHeader extends ConsumerWidget {
@@ -69,7 +70,9 @@ class QualityAssuranceHeader extends ConsumerWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
       ),
-      child: isMobile ? _buildMobileLayout(isDark, ref) : _buildDesktopLayout(isDark, ref),
+      child: isMobile
+          ? _buildMobileLayout(isDark, ref)
+          : _buildDesktopLayout(isDark, ref),
     );
   }
 
@@ -87,7 +90,7 @@ class QualityAssuranceHeader extends ConsumerWidget {
                   Text(
                     _getGreeting(),
                     style: AppTypography.h4.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                       fontSize: 28,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                       letterSpacing: -0.5,
@@ -105,11 +108,6 @@ class QualityAssuranceHeader extends ConsumerWidget {
                       letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    ' 👋',
-                    style: TextStyle(fontSize: 28),
-                  ),
                 ],
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -118,14 +116,18 @@ class QualityAssuranceHeader extends ConsumerWidget {
                   Icon(
                     Icons.calendar_today_outlined,
                     size: 16,
-                    color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.5)
+                        : AppColors.textSecondary,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     _getFormattedDate(),
                     style: AppTypography.bodyLarge.copyWith(
                       fontSize: 14,
-                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.7)
+                          : AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.2,
                     ),
@@ -157,7 +159,8 @@ class QualityAssuranceHeader extends ConsumerWidget {
 
             // Theme Toggle
             _buildActionButton(
-              icon: isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              icon:
+                  isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
               tooltip: isDark ? 'Light Mode' : 'Dark Mode',
               isDark: isDark,
               onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
@@ -166,13 +169,7 @@ class QualityAssuranceHeader extends ConsumerWidget {
             const SizedBox(width: AppSpacing.sm),
 
             // Notifications
-            _buildActionButton(
-              icon: Icons.notifications_outlined,
-              tooltip: 'Notifications',
-              isDark: isDark,
-              onPressed: onNotificationTap,
-              badge: 3,
-            ),
+            const NotificationCenter(),
 
             const SizedBox(width: AppSpacing.sm),
 
@@ -204,16 +201,11 @@ class QualityAssuranceHeader extends ConsumerWidget {
                       Text(
                         _getGreeting(),
                         style: AppTypography.h5.copyWith(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           fontSize: 20,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                           letterSpacing: -0.3,
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '👋',
-                        style: TextStyle(fontSize: 20),
                       ),
                     ],
                   ),
@@ -223,7 +215,7 @@ class QualityAssuranceHeader extends ConsumerWidget {
                     userName,
                     style: AppTypography.bodyLarge.copyWith(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: isDark
                           ? Colors.white.withOpacity(0.85)
                           : AppColors.textPrimary.withOpacity(0.75),
@@ -265,19 +257,16 @@ class QualityAssuranceHeader extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildMobileActionButton(
-                  icon: isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                  icon: isDark
+                      ? Icons.light_mode_outlined
+                      : Icons.dark_mode_outlined,
                   tooltip: isDark ? 'Light Mode' : 'Dark Mode',
                   isDark: isDark,
-                  onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
+                  onPressed: () =>
+                      ref.read(themeProvider.notifier).toggleTheme(),
                 ),
                 const SizedBox(width: AppSpacing.xs),
-                _buildMobileActionButton(
-                  icon: Icons.notifications_outlined,
-                  tooltip: 'Notifications',
-                  isDark: isDark,
-                  onPressed: onNotificationTap,
-                  badge: 3,
-                ),
+                const NotificationCenter(),
                 const SizedBox(width: AppSpacing.xs),
                 _buildMobileProfileButton(isDark, ref),
               ],
@@ -294,10 +283,14 @@ class QualityAssuranceHeader extends ConsumerWidget {
             vertical: AppSpacing.xs,
           ),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
+            color: isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.black.withOpacity(0.02),
             borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             border: Border.all(
-              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.04),
+              color: isDark
+                  ? Colors.white.withOpacity(0.08)
+                  : Colors.black.withOpacity(0.04),
               width: 1,
             ),
           ),
@@ -306,7 +299,9 @@ class QualityAssuranceHeader extends ConsumerWidget {
               Icon(
                 Icons.calendar_today_outlined,
                 size: 14,
-                color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+                color: isDark
+                    ? Colors.white.withOpacity(0.6)
+                    : AppColors.textSecondary,
               ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
@@ -314,7 +309,9 @@ class QualityAssuranceHeader extends ConsumerWidget {
                   _getFormattedDate(),
                   style: AppTypography.bodyMedium.copyWith(
                     fontSize: 12,
-                    color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.7)
+                        : AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.1,
                   ),
@@ -362,14 +359,18 @@ class QualityAssuranceHeader extends ConsumerWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.12) : Colors.black.withOpacity(0.08),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.12)
+                        : Colors.black.withOpacity(0.08),
                     width: 1,
                   ),
                 ),
                 child: Icon(
                   icon,
                   size: 20,
-                  color: isDark ? Colors.white.withOpacity(0.95) : AppColors.textPrimary,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.95)
+                      : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -393,7 +394,7 @@ class QualityAssuranceHeader extends ConsumerWidget {
                   style: AppTypography.caption.copyWith(
                     color: Colors.white,
                     fontSize: 9,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -440,7 +441,9 @@ class QualityAssuranceHeader extends ConsumerWidget {
                   ],
                 ),
                 border: Border.all(
-                  color: isDark ? Colors.white.withOpacity(0.12) : Colors.black.withOpacity(0.08),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.12)
+                      : Colors.black.withOpacity(0.08),
                   width: 1,
                 ),
                 boxShadow: [
@@ -456,7 +459,7 @@ class QualityAssuranceHeader extends ConsumerWidget {
                   initials,
                   style: AppTypography.bodyMedium.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                     fontSize: 14,
                   ),
                 ),
@@ -498,21 +501,26 @@ class QualityAssuranceHeader extends ConsumerWidget {
           ],
           onSelected: (value) async {
             if (value == 'logout') {
-              final dialogIsDark = Theme.of(context).brightness == Brightness.dark;
+              final dialogIsDark =
+                  Theme.of(context).brightness == Brightness.dark;
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (dialogContext) => AlertDialog(
-                  backgroundColor: dialogIsDark ? AppColors.surfaceDark : Colors.white,
+                  backgroundColor:
+                      dialogIsDark ? AppColors.surfaceDark : Colors.white,
                   title: Text(
                     'Logout',
                     style: TextStyle(
-                      color: dialogIsDark ? Colors.white : AppColors.textPrimary,
+                      color:
+                          dialogIsDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
                   content: Text(
                     'Are you sure you want to logout?',
                     style: TextStyle(
-                      color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                      color: dialogIsDark
+                          ? Colors.white70
+                          : AppColors.textSecondary,
                     ),
                   ),
                   actions: [
@@ -521,7 +529,9 @@ class QualityAssuranceHeader extends ConsumerWidget {
                       child: Text(
                         'Cancel',
                         style: TextStyle(
-                          color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                          color: dialogIsDark
+                              ? Colors.white70
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -539,7 +549,8 @@ class QualityAssuranceHeader extends ConsumerWidget {
               if (confirmed == true && context.mounted) {
                 await ref.read(authProvider.notifier).logout();
                 if (context.mounted) {
-                  Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/login', (route) => false);
                 }
               }
             } else if (value == 'settings') {
@@ -577,14 +588,18 @@ class QualityAssuranceHeader extends ConsumerWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.06),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.black.withOpacity(0.06),
                     width: 1,
                   ),
                 ),
                 child: Icon(
                   icon,
                   size: 22,
-                  color: isDark ? Colors.white.withOpacity(0.95) : AppColors.textPrimary,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.95)
+                      : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -608,7 +623,7 @@ class QualityAssuranceHeader extends ConsumerWidget {
                   style: AppTypography.caption.copyWith(
                     color: Colors.white,
                     fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -663,21 +678,26 @@ class QualityAssuranceHeader extends ConsumerWidget {
           onSelected: (value) async {
             if (value == 'logout') {
               // Show confirmation dialog
-              final dialogIsDark = Theme.of(context).brightness == Brightness.dark;
+              final dialogIsDark =
+                  Theme.of(context).brightness == Brightness.dark;
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (dialogContext) => AlertDialog(
-                  backgroundColor: dialogIsDark ? AppColors.surfaceDark : Colors.white,
+                  backgroundColor:
+                      dialogIsDark ? AppColors.surfaceDark : Colors.white,
                   title: Text(
                     'Logout',
                     style: TextStyle(
-                      color: dialogIsDark ? Colors.white : AppColors.textPrimary,
+                      color:
+                          dialogIsDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
                   content: Text(
                     'Are you sure you want to logout?',
                     style: TextStyle(
-                      color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                      color: dialogIsDark
+                          ? Colors.white70
+                          : AppColors.textSecondary,
                     ),
                   ),
                   actions: [
@@ -686,7 +706,9 @@ class QualityAssuranceHeader extends ConsumerWidget {
                       child: Text(
                         'Cancel',
                         style: TextStyle(
-                          color: dialogIsDark ? Colors.white70 : AppColors.textSecondary,
+                          color: dialogIsDark
+                              ? Colors.white70
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -706,7 +728,8 @@ class QualityAssuranceHeader extends ConsumerWidget {
                 await ref.read(authProvider.notifier).logout();
                 // Navigate to login
                 if (context.mounted) {
-                  Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/login', (route) => false);
                 }
               }
             } else if (value == 'settings') {
@@ -729,7 +752,9 @@ class QualityAssuranceHeader extends ConsumerWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                   border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.06),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.black.withOpacity(0.06),
                     width: 1,
                   ),
                 ),
@@ -762,7 +787,7 @@ class QualityAssuranceHeader extends ConsumerWidget {
                           userName.isNotEmpty ? userName[0].toUpperCase() : 'Q',
                           style: AppTypography.bodyMedium.copyWith(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w500,
                             fontSize: 16,
                           ),
                         ),
@@ -773,7 +798,7 @@ class QualityAssuranceHeader extends ConsumerWidget {
                       userName.split(' ').first,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         fontSize: 14,
                       ),
                     ),
@@ -781,7 +806,9 @@ class QualityAssuranceHeader extends ConsumerWidget {
                     Icon(
                       Icons.keyboard_arrow_down_rounded,
                       size: 20,
-                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.7)
+                          : AppColors.textSecondary,
                     ),
                   ],
                 ),
@@ -803,12 +830,16 @@ class QualityAssuranceHeader extends ConsumerWidget {
         color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.15) : AppColors.primary.withOpacity(0.2),
+          color: isDark
+              ? Colors.white.withOpacity(0.15)
+              : AppColors.primary.withOpacity(0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.2) : AppColors.primary.withOpacity(0.05),
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : AppColors.primary.withOpacity(0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -839,7 +870,7 @@ class QualityAssuranceHeader extends ConsumerWidget {
                   farm,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     fontSize: 14,
                   ),
                 ),

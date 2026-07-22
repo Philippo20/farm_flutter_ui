@@ -90,6 +90,22 @@ class UserModel {
   /// Check if user is caretaker
   bool get isCaretaker => role == UserRole.caretaker;
 
+  bool get isFarmManager => role == UserRole.farmManager;
+
+  bool get isTechnician => role == UserRole.technician;
+
+  bool get isFulfillmentManager => role == UserRole.fulfillmentManager;
+
+  bool get isPackagingSupervisor => role == UserRole.packagingSupervisor;
+
+  bool get isQualityAssurance => role == UserRole.qualityAssurance;
+
+  bool get isSalesManager => role == UserRole.salesManager;
+
+  bool get isSalesPersonnel => role == UserRole.salesPersonnel;
+
+  bool get isAccountant => role == UserRole.accountant;
+
   /// Get user initials for avatar
   String get initials {
     final names = name.split(' ');

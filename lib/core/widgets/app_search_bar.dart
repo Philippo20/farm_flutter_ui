@@ -31,11 +31,15 @@ class AppSearchBar extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: AppTypography.bodyMedium.copyWith(
-            color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
+            color: isDark
+                ? Colors.white.withOpacity(0.5)
+                : AppColors.textSecondary,
           ),
           prefixIcon: Icon(
             Icons.search,
-            color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
+            color: isDark
+                ? Colors.white.withOpacity(0.5)
+                : AppColors.textSecondary,
             size: 20,
           ),
           border: InputBorder.none,

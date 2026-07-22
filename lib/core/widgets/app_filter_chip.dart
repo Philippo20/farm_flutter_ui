@@ -31,14 +31,18 @@ class AppFilterChip extends StatelessWidget {
           Icon(
             icon,
             size: 16,
-            color: isSelected ? Colors.white : (isDark ? Colors.white.withOpacity(0.8) : color),
+            color: isSelected
+                ? Colors.white
+                : (isDark ? Colors.white.withOpacity(0.8) : color),
           ),
           const SizedBox(width: 6),
           Text(
             label,
             style: AppTypography.bodySmall.copyWith(
               fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : (isDark ? Colors.white.withOpacity(0.8) : color),
+              color: isSelected
+                  ? Colors.white
+                  : (isDark ? Colors.white.withOpacity(0.8) : color),
             ),
           ),
         ],
@@ -50,8 +54,9 @@ class AppFilterChip extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
         side: BorderSide(
-          color:
-              isSelected ? color : (isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral200),
+          color: isSelected
+              ? color
+              : (isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral200),
         ),
       ),
       elevation: 0,

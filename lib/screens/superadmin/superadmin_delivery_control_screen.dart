@@ -18,7 +18,7 @@ class SuperAdminDeliveryControlScreen extends ConsumerStatefulWidget {
 
 class _SuperAdminDeliveryControlScreenState
     extends ConsumerState<SuperAdminDeliveryControlScreen> {
-  int _selectedNavIndex = 10;
+  int _selectedNavIndex = 11;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -85,6 +85,7 @@ class _SuperAdminDeliveryControlScreenState
                     subtitle:
                         'Control delivery operations across all farms with approval, assignment, hold, cancellation, and traceable activity logs.',
                     isMobile: false,
+                    allowCreateDelivery: true,
                   ),
                 ),
               ),
@@ -112,6 +113,7 @@ class _SuperAdminDeliveryControlScreenState
               subtitle:
                   'Control delivery operations across all farms with approval, assignment, hold, cancellation, and traceable activity logs.',
               isMobile: true,
+              allowCreateDelivery: true,
             ),
           ),
         ),

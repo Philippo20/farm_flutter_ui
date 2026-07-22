@@ -116,7 +116,8 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
                           '${weather?.temperature.toStringAsFixed(1) ?? '28'}°C',
                           style: AppTypography.h5.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
                             fontSize: 20,
                           ),
                           maxLines: 1,
@@ -128,7 +129,9 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
                         child: Text(
                           weather?.description ?? 'Sunny',
                           style: AppTypography.bodyMedium.copyWith(
-                            color: isDark ? Colors.white70 : AppColors.textSecondary,
+                            color: isDark
+                                ? Colors.white70
+                                : AppColors.textSecondary,
                             fontSize: 13,
                           ),
                           maxLines: 1,
@@ -200,9 +203,9 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
             size: 32,
           ),
         ),
-        
+
         const SizedBox(width: AppSpacing.md),
-        
+
         // Weather Details
         Expanded(
           child: Column(
@@ -223,7 +226,8 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
                     child: Text(
                       weather?.description ?? 'Sunny',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: isDark ? Colors.white70 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -234,9 +238,9 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
             ],
           ),
         ),
-  
+
         const SizedBox(width: AppSpacing.md),
-        
+
         // Time & Date
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -282,7 +286,8 @@ class CompactWeatherTimeWidget extends StatefulWidget {
   const CompactWeatherTimeWidget({super.key});
 
   @override
-  State<CompactWeatherTimeWidget> createState() => _CompactWeatherTimeWidgetState();
+  State<CompactWeatherTimeWidget> createState() =>
+      _CompactWeatherTimeWidgetState();
 }
 
 class _CompactWeatherTimeWidgetState extends State<CompactWeatherTimeWidget> {
@@ -347,4 +352,3 @@ class _CompactWeatherTimeWidgetState extends State<CompactWeatherTimeWidget> {
     );
   }
 }
-

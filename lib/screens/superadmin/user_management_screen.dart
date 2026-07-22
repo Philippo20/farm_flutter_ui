@@ -5,7 +5,9 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/superadmin_sidebar.dart';
 import '../../core/widgets/modern_admin_header.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Super Admin User Management - Manage all users with approval workflow
 class UserManagementScreen extends ConsumerStatefulWidget {
@@ -17,9 +19,44 @@ class UserManagementScreen extends ConsumerStatefulWidget {
 }
 
 class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
+  static const List<String> _roleOptions = [
+    'Super Admin',
+    'Admin',
+    'Farm Manager',
+    'Owner',
+    'Caretaker',
+    'Technicians',
+    'Fulfillment Manager',
+    'Packaging Supervisor',
+    'Quality Officer',
+    'Sales Manager',
+    'Sales Person',
+    'Accountant',
+    'Driver',
+  ];
+  static const List<String> _departmentOptions = [
+    'Executive',
+    'Administration',
+    'Management',
+    'Farm Operations',
+    'Ownership',
+    'Daily Operations',
+    'Field Work',
+    'Maintenance',
+    'Fulfillment',
+    'Packaging',
+    'Quality Assurance',
+    'Sales',
+    'Finance',
+    'Logistics',
+  ];
+
   String _selectedFilter = 'All';
   int _selectedNavIndex = 1;
+  bool _isLoadingUsers = false;
+  String? _usersError;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final SuperAdminApiService _api = SuperAdminApiService();
 
   final List<Map<String, dynamic>> _users = [
     {
@@ -95,6 +132,158 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       'joined': '2024-04-01'
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsers();
+  }
+
+  Future<void> _loadUsers() async {
+    setState(() {
+      _isLoadingUsers = true;
+      _usersError = null;
+      _users.clear();
+    });
+
+    try {
+      final users = await _api.getUsers();
+      if (!mounted) return;
+      setState(() {
+        _users
+          ..clear()
+          ..addAll(users.map(_mapUserDocument));
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _usersError = error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingUsers = false);
+      }
+    }
+  }
+
+  Map<String, dynamic> _mapUserDocument(Map<String, dynamic> doc) {
+    final role = _roleLabel(doc['role']);
+    return {
+      'id': (doc[r'$id'] ?? doc['user_id'] ?? doc['id'] ?? '').toString(),
+      'name': (doc['name'] ?? 'Unnamed User').toString(),
+      'email': (doc['email'] ?? '').toString(),
+      'role': role,
+      'status': _statusLabel(doc['status']),
+      'department': (doc['department'] ?? _departmentForRole(role)).toString(),
+      'joined': _dateLabel(doc[r'$createdAt'] ?? doc['created_at']),
+      'password': (doc['password'] ?? '').toString(),
+      'address': (doc['address'] ?? '').toString(),
+      'phone': (doc['phone'] ?? '').toString(),
+    };
+  }
+
+  String _roleLabel(dynamic value) {
+    final raw = value?.toString() ?? '';
+    switch (raw.toLowerCase()) {
+      case 'superadmin':
+      case 'super_admin':
+        return 'Super Admin';
+      case 'admin':
+        return 'Admin';
+      case 'farm_manager':
+        return 'Farm Manager';
+      case 'farm_owner':
+      case 'owner':
+        return 'Owner';
+      case 'caretaker':
+        return 'Caretaker';
+      case 'technicians':
+      case 'technician':
+        return 'Technicians';
+      case 'fulfillment_manager':
+        return 'Fulfillment Manager';
+      case 'packaging_supervisor':
+        return 'Packaging Supervisor';
+      case 'quality_officer':
+      case 'quality_assurance':
+        return 'Quality Officer';
+      case 'sales_manager':
+        return 'Sales Manager';
+      case 'sales_person':
+      case 'sales_personnel':
+        return 'Sales Person';
+      case 'accountant':
+        return 'Accountant';
+      case 'driver':
+        return 'Driver';
+      default:
+        final label = _labelFromSnakeCase(raw);
+        return _roleOptions.contains(label) ? label : 'Caretaker';
+    }
+  }
+
+  String _labelFromSnakeCase(String value) {
+    return value
+        .replaceAll('_', ' ')
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
+
+  String _statusLabel(dynamic value) {
+    if (value == null || value.toString().isEmpty) return 'Active';
+    return _labelFromSnakeCase(value.toString());
+  }
+
+  String _departmentForRole(String role) {
+    final normalized = role.toLowerCase();
+    if (normalized.contains('admin')) return 'Administration';
+    if (normalized.contains('sales')) return 'Sales';
+    if (normalized.contains('driver')) return 'Logistics';
+    if (normalized.contains('accountant')) return 'Finance';
+    if (normalized.contains('packaging')) return 'Packaging';
+    if (normalized.contains('quality')) return 'Quality Assurance';
+    if (normalized.contains('fulfillment')) return 'Fulfillment';
+    return 'Farm Operations';
+  }
+
+  String _dateLabel(dynamic value) {
+    final text = value?.toString() ?? '';
+    if (text.length >= 10) return text.substring(0, 10);
+    return text.isEmpty ? '-' : text;
+  }
+
+  String _roleValue(String label) {
+    switch (label) {
+      case 'Super Admin':
+        return 'superadmin';
+      case 'Admin':
+        return 'admin';
+      case 'Farm Manager':
+        return 'farm_manager';
+      case 'Owner':
+        return 'farm_owner';
+      case 'Caretaker':
+        return 'caretaker';
+      case 'Technicians':
+        return 'technician';
+      case 'Fulfillment Manager':
+        return 'fulfillment_manager';
+      case 'Packaging Supervisor':
+        return 'packaging_supervisor';
+      case 'Quality Officer':
+        return 'quality_officer';
+      case 'Sales Manager':
+        return 'sales_manager';
+      case 'Sales Person':
+        return 'sales_person';
+      case 'Accountant':
+        return 'accountant';
+      case 'Driver':
+        return 'driver';
+      default:
+        return 'caretaker';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -238,11 +427,50 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         SizedBox(height: sectionSpacing),
         _buildFilters(isDark),
         const SizedBox(height: AppSpacing.lg),
-        if (isCompact)
+        if (_usersError != null) ...[
+          _buildSyncStatus(isDark),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        if (_isLoadingUsers && _users.isEmpty)
+          const AdminDataSkeleton(showStats: false)
+        else if (isCompact)
           _buildUserCards(filteredUsers, isDark)
         else
           _buildUserTable(filteredUsers, isDark),
       ],
+    );
+  }
+
+  Widget _buildSyncStatus(bool isDark) {
+    final hasError = _usersError != null;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: hasError
+            ? AppColors.error.withOpacity(0.08)
+            : AppColors.info.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: AppColors.error),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'Could not refresh users: $_usersError',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Refresh users',
+            onPressed: _isLoadingUsers ? null : _loadUsers,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
     );
   }
 
@@ -254,7 +482,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           Text(
             'User Management',
             style: AppTypography.h5.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -293,7 +521,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             Text(
               'User Management',
               style: AppTypography.h4.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -339,7 +567,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 child: Text(
                   'All Users',
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -348,7 +576,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 '${filteredUsers.length} records',
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white60 : AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -399,7 +627,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w500,
           letterSpacing: 0.2,
         ),
       ),
@@ -421,7 +649,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           style: TextStyle(
             color: color,
             fontSize: 11,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w500,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -506,28 +734,35 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     required int crossAxisCount,
     required double childAspectRatio,
   }) {
+    final totalUsers = _users.length;
+    final activeUsers =
+        _users.where((user) => user['status'] == 'Active').length;
+    final pendingUsers =
+        _users.where((user) => user['status'] == 'Pending').length;
+    final suspendedUsers =
+        _users.where((user) => user['status'] == 'Suspended').length;
     final stats = [
       {
         'title': 'Total Users',
-        'value': '248',
+        'value': totalUsers.toString(),
         'icon': Icons.people,
         'color': AppColors.primary
       },
       {
         'title': 'Active',
-        'value': '235',
+        'value': activeUsers.toString(),
         'icon': Icons.check_circle,
         'color': AppColors.success
       },
       {
         'title': 'Pending Approval',
-        'value': '7',
+        'value': pendingUsers.toString(),
         'icon': Icons.pending,
         'color': AppColors.warning
       },
       {
         'title': 'Suspended',
-        'value': '6',
+        'value': suspendedUsers.toString(),
         'icon': Icons.block,
         'color': AppColors.error
       },
@@ -574,7 +809,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       stat['value'] as String,
                       style: TextStyle(
                           fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                           color: stat['color'] as Color),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -652,7 +887,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     user['name'].toString().substring(0, 1),
                     style: const TextStyle(
                       color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -663,12 +898,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     children: [
                       Text(user['name'],
                           style: TextStyle(
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w500,
                               fontSize: 14,
                               color: isDark
                                   ? Colors.white
                                   : AppColors.textPrimary)),
-                      Text('${user['id']} • ${user['email']}',
+                      Text('${user['id']} | ${user['email']}',
                           style: TextStyle(
                               fontSize: 11,
                               color: isDark
@@ -689,7 +924,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               user['department'],
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
               ),
               maxLines: 1,
@@ -732,7 +967,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 child: Text(
                   user['name'].toString().substring(0, 1),
                   style: const TextStyle(
-                      color: AppColors.primary, fontWeight: FontWeight.bold),
+                      color: AppColors.primary, fontWeight: FontWeight.w500),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -743,7 +978,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     Text(
                       user['name'],
                       style: TextStyle(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         fontSize: 14,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
@@ -775,7 +1010,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   style: TextStyle(
                       color: statusColor,
                       fontSize: 11,
-                      fontWeight: FontWeight.w600),
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             ],
@@ -886,23 +1121,220 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     }
   }
 
-  void _approveUser(Map<String, dynamic> user) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${user['name']} approved successfully!')),
-    );
+  Future<void> _approveUser(Map<String, dynamic> user) async {
+    await _updateUserStatus(user, 'Active', 'approved');
   }
 
-  void _rejectUser(Map<String, dynamic> user) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${user['name']} rejected')),
-    );
+  Future<void> _rejectUser(Map<String, dynamic> user) async {
+    await _updateUserStatus(user, 'Suspended', 'rejected');
   }
 
-  void _toggleSuspend(Map<String, dynamic> user) {
-    final action = user['status'] == 'Suspended' ? 'activated' : 'suspended';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${user['name']} $action')),
-    );
+  Future<void> _toggleSuspend(Map<String, dynamic> user) async {
+    final nextStatus = user['status'] == 'Suspended' ? 'Active' : 'Suspended';
+    final action = nextStatus == 'Active' ? 'activated' : 'suspended';
+    await _updateUserStatus(user, nextStatus, action);
+  }
+
+  Future<void> _updateUserStatus(
+    Map<String, dynamic> user,
+    String status,
+    String action,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _api.updateUser(
+        id: user['id'].toString(),
+        name: user['name']?.toString() ?? '',
+        email: user['email']?.toString() ?? '',
+        password: user['password']?.toString() ?? '',
+        address: user['address']?.toString() ?? '',
+        role: _roleValueFromUser(user),
+        phone: user['phone']?.toString() ?? '',
+        department: _departmentFromUser(user),
+        status: status,
+      );
+      if (!mounted) return;
+      await _loadUsers();
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('${user['name']} $action successfully.'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Update failed: ${error.toString()}'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteUser(Map<String, dynamic> user) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _api.deleteUser(user['id'].toString());
+      if (!mounted) return;
+      await _loadUsers();
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('${user['name']} deleted.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Delete failed: ${error.toString()}'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _createUser({
+    required String name,
+    required String email,
+    required String role,
+    required String department,
+  }) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _api.createUser(
+        name: name,
+        email: email,
+        password: 'FarmDemo#2026New',
+        address: 'Farm Estates',
+        role: _roleValue(role),
+        phone: '+233000000000',
+        department: department,
+        status: 'Pending',
+      );
+      if (!mounted) return;
+      await _loadUsers();
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('$name added as Pending.'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Create failed: ${error.toString()}'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  String _roleValueFromUser(Map<String, dynamic> user) {
+    final rawRole = user['role']?.toString() ?? '';
+    const backendRoles = {
+      'superadmin',
+      'admin',
+      'farm_manager',
+      'farm_owner',
+      'caretaker',
+      'technician',
+      'fulfillment_manager',
+      'packaging_supervisor',
+      'quality_officer',
+      'sales_manager',
+      'sales_person',
+      'accountant',
+    };
+    if (backendRoles.contains(rawRole)) return rawRole;
+    return _roleValue(rawRole);
+  }
+
+  String _departmentFromUser(Map<String, dynamic> user) {
+    final department = user['department']?.toString() ?? '';
+    if (department.isNotEmpty) return department;
+    return _departmentForRole(_roleLabel(user['role']));
+  }
+
+  String _safeRequired(String? value, String fallback) {
+    final text = value?.trim() ?? '';
+    return text.isEmpty ? fallback : text;
+  }
+
+  Future<void> _saveUserEdit({
+    required BuildContext dialogContext,
+    required void Function(void Function()) setDialogState,
+    required Map<String, dynamic> user,
+    required TextEditingController nameController,
+    required TextEditingController emailController,
+    required String selectedRole,
+    required String selectedDepartment,
+    required String selectedStatus,
+    required void Function(bool value) setSaving,
+  }) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(dialogContext);
+    final name = nameController.text.trim();
+    final email = emailController.text.trim();
+
+    if (name.isEmpty || email.isEmpty) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: const Text('Name and email are required.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setDialogState(() => setSaving(true));
+    try {
+      await _api.updateUser(
+        id: user['id'].toString(),
+        name: name,
+        email: email,
+        password:
+            _safeRequired(user['password']?.toString(), 'FarmDemo#2026New'),
+        address: _safeRequired(user['address']?.toString(), 'Farm Estates'),
+        role: _roleValue(selectedRole),
+        phone: _safeRequired(user['phone']?.toString(), '+233000000000'),
+        department: selectedDepartment,
+        status: selectedStatus,
+      );
+      if (!mounted) return;
+      await _loadUsers();
+      if (!mounted) return;
+      navigator.pop();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('$name updated successfully.'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setDialogState(() => setSaving(false));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('Update failed: ${error.toString()}'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _showAddUserDialog(BuildContext context, bool isDark) {
@@ -967,7 +1399,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                               'Add New User',
                               style: AppTypography.h6.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             Text(
@@ -1021,7 +1453,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         const SizedBox(height: AppSpacing.sm),
                         _buildDropdownField(
                           value: selectedRole,
-                          items: ['Super Admin', 'Admin', 'Owner', 'Caretaker'],
+                          items: _roleOptions,
                           icon: Icons.badge_outlined,
                           isDark: isDark,
                           onChanged: (value) =>
@@ -1034,12 +1466,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         const SizedBox(height: AppSpacing.sm),
                         _buildDropdownField(
                           value: selectedDepartment,
-                          items: [
-                            'Administration',
-                            'Management',
-                            'Farm Operations',
-                            'Field Work'
-                          ],
+                          items: _departmentOptions,
                           icon: Icons.business_outlined,
                           isDark: isDark,
                           onChanged: (value) =>
@@ -1089,25 +1516,26 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       Expanded(
                         flex: 2,
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Row(
-                                  children: [
-                                    const Icon(Icons.check_circle,
-                                        color: Colors.white),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                        '${nameController.text.isEmpty ? "User" : nameController.text} added successfully!'),
-                                  ],
+                          onPressed: () async {
+                            final name = nameController.text.trim();
+                            final email = emailController.text.trim();
+                            if (name.isEmpty || email.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                      'Name and email are required.'),
+                                  backgroundColor: AppColors.error,
+                                  behavior: SnackBarBehavior.floating,
                                 ),
-                                backgroundColor: AppColors.success,
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusMd)),
-                              ),
+                              );
+                              return;
+                            }
+                            Navigator.pop(context);
+                            await _createUser(
+                              name: name,
+                              email: email,
+                              role: selectedRole,
+                              department: selectedDepartment,
                             );
                           },
                           icon: const Icon(Icons.add, size: 18),
@@ -1138,9 +1566,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       BuildContext context, Map<String, dynamic> user, bool isDark) {
     final nameController = TextEditingController(text: user['name']);
     final emailController = TextEditingController(text: user['email']);
-    String selectedRole = user['role'];
-    String selectedDepartment = user['department'];
+    String selectedRole = _roleLabel(user['role']);
+    String selectedDepartment = _departmentOptions.contains(user['department'])
+        ? user['department']
+        : _departmentForRole(selectedRole);
     String selectedStatus = user['status'];
+    bool isSaving = false;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -1198,7 +1629,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                               'Edit User',
                               style: AppTypography.h6.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             Text(
@@ -1240,7 +1671,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           user['name'].toString().substring(0, 1),
                           style: const TextStyle(
                               color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w500,
                               fontSize: 18),
                         ),
                       ),
@@ -1252,14 +1683,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             Text(
                               user['name'],
                               style: AppTypography.bodyLarge.copyWith(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
                               ),
                             ),
                             Text(
-                              'ID: ${user['id']} • Joined: ${user['joined']}',
+                              'ID: ${user['id']} | Joined: ${user['joined']}',
                               style: AppTypography.bodySmall.copyWith(
                                 color: isDark
                                     ? Colors.white60
@@ -1316,12 +1747,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                     const SizedBox(height: AppSpacing.sm),
                                     _buildDropdownField(
                                       value: selectedRole,
-                                      items: [
-                                        'Super Admin',
-                                        'Admin',
-                                        'Owner',
-                                        'Caretaker'
-                                      ],
+                                      items: _roleOptions,
                                       icon: Icons.badge_outlined,
                                       isDark: isDark,
                                       onChanged: (value) => setDialogState(
@@ -1355,12 +1781,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           const SizedBox(height: AppSpacing.sm),
                           _buildDropdownField(
                             value: selectedRole,
-                            items: [
-                              'Super Admin',
-                              'Admin',
-                              'Owner',
-                              'Caretaker'
-                            ],
+                            items: _roleOptions,
                             icon: Icons.badge_outlined,
                             isDark: isDark,
                             onChanged: (value) =>
@@ -1385,12 +1806,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                         const SizedBox(height: AppSpacing.sm),
                         _buildDropdownField(
                           value: selectedDepartment,
-                          items: [
-                            'Administration',
-                            'Management',
-                            'Farm Operations',
-                            'Field Work'
-                          ],
+                          items: _departmentOptions,
                           icon: Icons.business_outlined,
                           isDark: isDark,
                           onChanged: (value) =>
@@ -1461,29 +1877,32 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Row(
-                                  children: [
-                                    const Icon(Icons.check_circle,
-                                        color: Colors.white),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                        '${nameController.text} updated successfully!'),
-                                  ],
-                                ),
-                                backgroundColor: AppColors.success,
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusMd)),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.save, size: 18),
-                          label: const Text('Save'),
+                          onPressed: isSaving
+                              ? null
+                              : () async {
+                                  await _saveUserEdit(
+                                    dialogContext: context,
+                                    setDialogState: setDialogState,
+                                    user: user,
+                                    nameController: nameController,
+                                    emailController: emailController,
+                                    selectedRole: selectedRole,
+                                    selectedDepartment: selectedDepartment,
+                                    selectedStatus: selectedStatus,
+                                    setSaving: (value) => isSaving = value,
+                                  );
+                                },
+                          icon: isSaving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.save, size: 18),
+                          label: Text(isSaving ? 'Saving...' : 'Save'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
@@ -1532,7 +1951,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               Text(
                 'Delete User?',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -1572,24 +1991,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                const Icon(Icons.delete, color: Colors.white),
-                                const SizedBox(width: 8),
-                                Text('${user['name']} deleted'),
-                              ],
-                            ),
-                            backgroundColor: AppColors.error,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusMd)),
-                          ),
-                        );
+                        await _deleteUser(user);
                       },
                       icon: const Icon(Icons.delete, size: 18),
                       label: const Text('Delete'),
@@ -1618,7 +2022,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     return Text(
       label,
       style: AppTypography.bodyMedium.copyWith(
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
         color: isDark ? Colors.white : AppColors.textPrimary,
       ),
     );

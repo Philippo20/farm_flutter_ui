@@ -45,8 +45,8 @@ class SalesOffTakersScreen extends StatelessWidget {
             Icons.people_outlined, AppColors.primary),
         _KpiData('Pipeline value', 'GHS 92K', 'Open contract value',
             Icons.account_balance_wallet_outlined, AppColors.success),
-        _KpiData('Renewals', '3', 'Due this month',
-            Icons.autorenew_outlined, AppColors.warning),
+        _KpiData('Renewals', '3', 'Due this month', Icons.autorenew_outlined,
+            AppColors.warning),
       ],
       sectionTitle: 'Buyer Accounts',
       cards: _cards,
@@ -95,8 +95,8 @@ class SalesPerformanceScreen extends StatelessWidget {
             Icons.payments_outlined, AppColors.success),
         _KpiData('Target hit', '87%', 'Monthly progress',
             Icons.track_changes_outlined, AppColors.primary),
-        _KpiData('Open deals', '9', '3 closing soon',
-            Icons.handshake_outlined, AppColors.warning),
+        _KpiData('Open deals', '9', '3 closing soon', Icons.handshake_outlined,
+            AppColors.warning),
       ],
       sectionTitle: 'Performance Drivers',
       cards: _cards,
@@ -143,10 +143,10 @@ class SalesDeliveriesScreen extends StatelessWidget {
       kpis: const [
         _KpiData('Pending', '5', 'Awaiting dispatch',
             Icons.local_shipping_outlined, AppColors.warning),
-        _KpiData('Delivered', '18', 'This week',
-            Icons.task_alt_outlined, AppColors.success),
-        _KpiData('On time', '94%', 'Delivery SLA',
-            Icons.schedule_outlined, AppColors.primary),
+        _KpiData('Delivered', '18', 'This week', Icons.task_alt_outlined,
+            AppColors.success),
+        _KpiData('On time', '94%', 'Delivery SLA', Icons.schedule_outlined,
+            AppColors.primary),
       ],
       sectionTitle: 'Delivery Commitments',
       cards: _cards,
@@ -191,8 +191,8 @@ class SalesFinancialScreen extends StatelessWidget {
       icon: Icons.account_balance_wallet_outlined,
       colors: const [Color(0xFF7C2D12), Color(0xFFEA580C)],
       kpis: const [
-        _KpiData('Revenue', 'GHS 125K', 'This month',
-            Icons.payments_outlined, AppColors.success),
+        _KpiData('Revenue', 'GHS 125K', 'This month', Icons.payments_outlined,
+            AppColors.success),
         _KpiData('Receivables', 'GHS 37K', 'Open invoices',
             Icons.receipt_long_outlined, AppColors.warning),
         _KpiData('Commission', 'GHS 9.4K', 'Forecast payout',
@@ -241,12 +241,12 @@ class SalesReportsScreen extends StatelessWidget {
       icon: Icons.assessment_outlined,
       colors: const [Color(0xFF1E3A8A), Color(0xFF0F766E)],
       kpis: const [
-        _KpiData('Reports', '7', 'Ready now',
-            Icons.assessment_outlined, AppColors.primary),
-        _KpiData('Exports', '4', 'Scheduled',
-            Icons.file_download_outlined, AppColors.success),
-        _KpiData('Findings', '3', 'Need review',
-            Icons.report_problem_outlined, AppColors.warning),
+        _KpiData('Reports', '7', 'Ready now', Icons.assessment_outlined,
+            AppColors.primary),
+        _KpiData('Exports', '4', 'Scheduled', Icons.file_download_outlined,
+            AppColors.success),
+        _KpiData('Findings', '3', 'Need review', Icons.report_problem_outlined,
+            AppColors.warning),
       ],
       sectionTitle: 'Report Library',
       cards: _cards,
@@ -321,7 +321,7 @@ class _SalesPage extends StatelessWidget {
             sectionTitle,
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -383,7 +383,7 @@ class _Hero extends StatelessWidget {
                   title,
                   style: AppTypography.h4.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     fontSize: isMobile ? 24 : 28,
                   ),
                 ),
@@ -485,7 +485,7 @@ class _SalesCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -542,8 +542,7 @@ class _KpiCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border:
-            Border.all(color: data.color.withOpacity(isDark ? 0.26 : 0.16)),
+        border: Border.all(color: data.color.withOpacity(isDark ? 0.26 : 0.16)),
       ),
       child: Row(
         children: [
@@ -559,7 +558,7 @@ class _KpiCard extends StatelessWidget {
                   data.value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -642,7 +641,7 @@ class _SettingRow extends StatelessWidget {
                   title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -691,7 +690,7 @@ class _MetricPill extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -747,7 +746,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -769,7 +768,7 @@ class _MutedText extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: AppTypography.caption.copyWith(
         color: isDark ? Colors.white60 : AppColors.textSecondary,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
       ),
     );
   }

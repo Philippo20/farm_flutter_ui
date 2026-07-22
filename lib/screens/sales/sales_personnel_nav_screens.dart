@@ -212,7 +212,7 @@ class SalesPersonnelPipelineScreen extends StatelessWidget {
                 'Pipeline Board',
                 style: AppTypography.h5.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               _PipelineSummaryChip(
@@ -552,7 +552,7 @@ class _SalesPersonnelPage extends StatelessWidget {
             sectionTitle,
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -614,7 +614,7 @@ class _Hero extends StatelessWidget {
                   title,
                   style: AppTypography.h4.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     fontSize: isMobile ? 24 : 28,
                   ),
                 ),
@@ -717,7 +717,7 @@ class _SalesPersonnelCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -788,7 +788,7 @@ class _SalesCollectionPanel extends StatelessWidget {
                       'Collection Health',
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -856,7 +856,8 @@ class _SalesLedgerPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              _IconBox(icon: Icons.receipt_long_outlined, color: AppColors.primary),
+              _IconBox(
+                  icon: Icons.receipt_long_outlined, color: AppColors.primary),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -866,11 +867,12 @@ class _SalesLedgerPanel extends StatelessWidget {
                       'Sales Orders',
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 2),
-                    _MutedText('Invoice, buyer, crop, quantity, and delivery status.'),
+                    _MutedText(
+                        'Invoice, buyer, crop, quantity, and delivery status.'),
                   ],
                 ),
               ),
@@ -912,7 +914,8 @@ class _SaleOrderCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _IconBox(icon: Icons.shopping_cart_checkout_outlined, color: color),
+              _IconBox(
+                  icon: Icons.shopping_cart_checkout_outlined, color: color),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
@@ -924,7 +927,7 @@ class _SaleOrderCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -1012,7 +1015,7 @@ class _CollectionProgress extends StatelessWidget {
               value,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -1066,7 +1069,7 @@ class _PaymentStatusRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -1075,7 +1078,7 @@ class _PaymentStatusRow extends StatelessWidget {
             sale['amount']! as String,
             style: AppTypography.caption.copyWith(
               color: color,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1096,7 +1099,7 @@ class _SalesPerformanceNotesSection extends StatelessWidget {
           'Performance Notes',
           style: AppTypography.h5.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -1132,7 +1135,7 @@ class _SalesInsightCard extends StatelessWidget {
               'Focus on collecting Green Basket and North Ridge balances before opening new credit sales. FreshMart remains the strongest margin account this week.',
               style: AppTypography.bodyMedium.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -1235,7 +1238,7 @@ class _PipelineStage extends StatelessWidget {
                       stage['stage']! as String,
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1307,7 +1310,7 @@ class _PipelineDealCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.bodyMedium.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -1368,7 +1371,7 @@ class _PipelineDealCard extends StatelessWidget {
                   '$probability%',
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -1540,7 +1543,7 @@ class _PipelineDealDetailsContent extends StatelessWidget {
                       deal['buyer']! as String,
                       style: AppTypography.h5.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -1612,7 +1615,7 @@ class _PipelineDealDetailsContent extends StatelessWidget {
             'Opportunity Controls',
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -1712,7 +1715,7 @@ class _PipelineMetric extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1758,7 +1761,7 @@ class _PipelineNextAction extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1803,7 +1806,7 @@ class _PipelineSummaryChip extends StatelessWidget {
             '$label: $value',
             style: AppTypography.caption.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1839,8 +1842,7 @@ class _KpiCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border:
-            Border.all(color: data.color.withOpacity(isDark ? 0.26 : 0.16)),
+        border: Border.all(color: data.color.withOpacity(isDark ? 0.26 : 0.16)),
       ),
       child: Row(
         children: [
@@ -1856,7 +1858,7 @@ class _KpiCard extends StatelessWidget {
                   data.value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1939,7 +1941,7 @@ class _SettingRow extends StatelessWidget {
                   title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -1985,7 +1987,7 @@ class _MetricPill extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -2038,7 +2040,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -2060,7 +2062,7 @@ class _MutedText extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: AppTypography.caption.copyWith(
         color: isDark ? Colors.white60 : AppColors.textSecondary,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
       ),
     );
   }

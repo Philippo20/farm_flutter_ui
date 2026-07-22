@@ -4,17 +4,21 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/skeleton_loader.dart';
+import '../../services/superadmin_api_service.dart';
 
 class OverallDeliveryControlModule extends StatefulWidget {
   final String title;
   final String subtitle;
   final bool isMobile;
+  final bool allowCreateDelivery;
 
   const OverallDeliveryControlModule({
     super.key,
     required this.title,
     required this.subtitle,
     required this.isMobile,
+    this.allowCreateDelivery = false,
   });
 
   @override
@@ -29,126 +33,343 @@ class _OverallDeliveryControlModuleState
   String _selectedFarm = 'All Farms';
   String _selectedStatus = 'All';
   int _selectedTab = 0;
+  final SuperAdminApiService _api = SuperAdminApiService();
 
-  final List<String> _farms = const [
-    'All Farms',
-    'Green Valley Farm',
-    'Sunny Acres',
-    'Harvest Moon Farm',
-    'Golden Fields',
-  ];
+  final List<String> _farms = ['All Farms'];
+  final List<Map<String, dynamic>> _farmDocuments = [];
+  final List<Map<String, dynamic>> _batchDocuments = [];
+  final List<Map<String, dynamic>> _userDocuments = [];
+  final List<_DeliveryRecord> _deliveries = [];
+  final List<_DeliveryActivity> _activities = [];
+  bool _isLoadingDeliveries = true;
+  String? _deliveryError;
 
-  final List<_DeliveryRecord> _deliveries = const [
-    _DeliveryRecord(
-      id: 'DEL-001',
-      farm: 'Green Valley Farm',
-      destination: 'Fresh Mart Supermarket',
-      crop: 'Lettuce',
-      quantity: 500,
-      unit: 'heads',
-      status: _DeliveryStatus.inTransit,
-      priority: _DeliveryPriority.high,
-      driver: 'Adebayo Okonkwo',
-      vehicle: 'Toyota Dyna LG-234-ABC',
-      scheduledAt: '2026-02-17 09:30',
-      eta: '2026-02-17 14:30',
-    ),
-    _DeliveryRecord(
-      id: 'DEL-002',
-      farm: 'Sunny Acres',
-      destination: 'Shoprite Ikeja',
-      crop: 'Spinach',
-      quantity: 300,
-      unit: 'heads',
-      status: _DeliveryStatus.delivered,
-      priority: _DeliveryPriority.medium,
-      driver: 'Chinedu Eze',
-      vehicle: 'Hyundai H100 LG-567-DEF',
-      scheduledAt: '2026-02-16 08:00',
-      eta: '2026-02-16 11:00',
-    ),
-    _DeliveryRecord(
-      id: 'DEL-003',
-      farm: 'Harvest Moon Farm',
-      destination: 'Jara Foods Distribution',
-      crop: 'Tomatoes',
-      quantity: 1000,
-      unit: 'kg',
-      status: _DeliveryStatus.scheduled,
-      priority: _DeliveryPriority.high,
-      driver: 'Unassigned',
-      vehicle: 'Pending',
-      scheduledAt: '2026-02-18 07:30',
-      eta: '2026-02-18 10:00',
-    ),
-    _DeliveryRecord(
-      id: 'DEL-004',
-      farm: 'Golden Fields',
-      destination: 'Spar Lekki',
-      crop: 'Cabbage',
-      quantity: 200,
-      unit: 'heads',
-      status: _DeliveryStatus.pendingApproval,
-      priority: _DeliveryPriority.medium,
-      driver: 'Unassigned',
-      vehicle: 'Pending',
-      scheduledAt: '2026-02-17 16:00',
-      eta: '2026-02-17 19:00',
-    ),
-    _DeliveryRecord(
-      id: 'DEL-005',
-      farm: 'Green Valley Farm',
-      destination: 'Hubmart Stores',
-      crop: 'Lettuce',
-      quantity: 750,
-      unit: 'heads',
-      status: _DeliveryStatus.onHold,
-      priority: _DeliveryPriority.high,
-      driver: 'N/A',
-      vehicle: 'N/A',
-      scheduledAt: '2026-02-17 11:30',
-      eta: '2026-02-17 15:00',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadDeliveries();
+  }
 
-  final List<_DeliveryActivity> _activities = [
-    _DeliveryActivity(
-      id: 'ACT-5001',
-      deliveryId: 'DEL-004',
-      farm: 'Golden Fields',
-      message: 'Delivery submitted for approval',
-      actor: 'Farm Manager - Esi Boateng',
-      timestamp: DateTime.now().subtract(const Duration(hours: 1, minutes: 25)),
-      type: _ActivityType.info,
-    ),
-    _DeliveryActivity(
-      id: 'ACT-5002',
-      deliveryId: 'DEL-001',
-      farm: 'Green Valley Farm',
-      message: 'Driver check-in completed at dispatch point',
-      actor: 'Logistics - Kojo Asare',
-      timestamp: DateTime.now().subtract(const Duration(hours: 2, minutes: 10)),
-      type: _ActivityType.success,
-    ),
-    _DeliveryActivity(
-      id: 'ACT-5003',
-      deliveryId: 'DEL-005',
-      farm: 'Green Valley Farm',
-      message: 'Delivery moved to hold due to cold chain alert',
-      actor: 'Admin - Acquaye',
-      timestamp: DateTime.now().subtract(const Duration(hours: 3, minutes: 35)),
-      type: _ActivityType.warning,
-    ),
-    _DeliveryActivity(
-      id: 'ACT-5004',
-      deliveryId: 'DEL-002',
-      farm: 'Sunny Acres',
-      message: 'Proof of delivery uploaded and verified',
-      actor: 'Quality Team - Nana Ofori',
-      timestamp: DateTime.now().subtract(const Duration(hours: 6, minutes: 50)),
-      type: _ActivityType.success,
-    ),
-  ];
+  Future<void> _loadDeliveries() async {
+    setState(() {
+      _isLoadingDeliveries = true;
+      _deliveryError = null;
+    });
+    try {
+      final results = await Future.wait([
+        _api.getFulfillments(),
+        _api.getFarms(),
+        _api.getBatches(),
+        _api.getUsers(),
+        _api.getAudits(),
+      ]);
+      if (!mounted) return;
+      final fulfillments = results[0];
+      final farmsResponse = results[1];
+      final batches = results[2];
+      final users = results[3];
+      final audits = results[4];
+      final deliveries = fulfillments.map(_mapFulfillmentDocument).toList();
+      final farms = {
+        ...farmsResponse.map(_farmNameFromDocument),
+        ...deliveries.map((delivery) => delivery.farm),
+      }.where((farm) => farm.trim().isNotEmpty).toList()
+        ..sort();
+      final activities = audits
+          .where((audit) => _auditIsDeliveryRelated(audit))
+          .map(_mapAuditDocument)
+          .toList();
+      final nextSelectedFarm =
+          farms.contains(_selectedFarm) ? _selectedFarm : 'All Farms';
+      setState(() {
+        _deliveries
+          ..clear()
+          ..addAll(deliveries);
+        _activities
+          ..clear()
+          ..addAll(activities);
+        _farmDocuments
+          ..clear()
+          ..addAll(farmsResponse);
+        _batchDocuments
+          ..clear()
+          ..addAll(batches);
+        _userDocuments
+          ..clear()
+          ..addAll(users);
+        _farms
+          ..clear()
+          ..add('All Farms')
+          ..addAll(farms);
+        _selectedFarm = nextSelectedFarm;
+        _isLoadingDeliveries = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _deliveries.clear();
+        _activities.clear();
+        _farmDocuments.clear();
+        _batchDocuments.clear();
+        _userDocuments.clear();
+        _farms
+          ..clear()
+          ..add('All Farms');
+        _isLoadingDeliveries = false;
+        _deliveryError = error.toString();
+      });
+    }
+  }
+
+  _DeliveryRecord _mapFulfillmentDocument(Map<String, dynamic> doc) {
+    return _DeliveryRecord(
+      id: (doc[r'$id'] ?? doc['fulfillment_id'] ?? '').toString(),
+      farm: (doc['farm_name'] ?? 'Unassigned Farm').toString(),
+      destination: (doc['destination'] ??
+              (doc['sent_to_sales'] == true ? 'Sales Hub' : 'Fulfillment'))
+          .toString(),
+      crop: (doc['plant_type'] ?? 'Crop').toString(),
+      quantity: _toInt(doc['total_heads'] ?? doc['total_weight']),
+      unit: doc['total_heads'] != null ? 'heads' : 'kg',
+      status: _deliveryStatus(doc['delivery_status'] ?? doc['status']),
+      priority: _deliveryPriority(doc['priority']),
+      driver: (doc['driver_name'] ?? 'Unassigned').toString(),
+      vehicle: (doc['vehicle'] ?? 'Pending').toString(),
+      scheduledAt: _dateLabel(doc['packaging_date_time']),
+      eta: (doc['eta']?.toString().trim().isNotEmpty ?? false)
+          ? doc['eta'].toString()
+          : _dateLabel(doc['sent_to_sales_date_time']),
+      raw: Map<String, dynamic>.from(doc),
+    );
+  }
+
+  String _farmNameFromDocument(Map<String, dynamic> farm) {
+    return (farm['name'] ?? farm['farm_name'] ?? 'Unassigned Farm').toString();
+  }
+
+  String _documentId(Map<String, dynamic> doc) {
+    return (doc[r'$id'] ?? doc['id'] ?? '').toString();
+  }
+
+  Map<String, dynamic>? _farmByName(String farmName) {
+    for (final farm in _farmDocuments) {
+      if (_farmNameFromDocument(farm) == farmName) return farm;
+    }
+    return null;
+  }
+
+  List<String> _plantOptionsForFarm(String farmName) {
+    final values = <String>{};
+    final farm = _farmByName(farmName);
+    if (farm != null) {
+      for (final key in ['plant_type', 'plant_variety']) {
+        final raw = farm[key]?.toString() ?? '';
+        for (final item in raw.split(',')) {
+          final value = item.trim();
+          if (value.isNotEmpty && value.toLowerCase() != 'none') {
+            values.add(value);
+          }
+        }
+      }
+    }
+    for (final batch in _batchDocuments.where((batch) {
+      return _batchMatchesFarm(batch, farmName);
+    })) {
+      final plant = (batch['plant_name'] ?? '').toString().trim();
+      if (plant.isNotEmpty) values.add(plant);
+    }
+    return values.toList()..sort();
+  }
+
+  bool _batchMatchesFarm(Map<String, dynamic> batch, String farmName) {
+    final farm = _farmByName(farmName);
+    final farmId = farm == null ? '' : _documentId(farm);
+    final batchFarmId = (batch['farmID'] ?? batch['farm_id'] ?? '').toString();
+    final batchFarmName = (batch['farm_name'] ?? '').toString();
+    return batchFarmName == farmName ||
+        (farmId.isNotEmpty && batchFarmId == farmId);
+  }
+
+  bool _batchMatchesPlant(Map<String, dynamic> batch, String plant) {
+    final target = plant.toLowerCase();
+    return (batch['plant_name'] ?? '').toString().toLowerCase() == target ||
+        (batch['plant_type_ID'] ?? '').toString().toLowerCase() == target;
+  }
+
+  bool _batchIsAvailableForDelivery(Map<String, dynamic> batch) {
+    final production =
+        (batch['production_status'] ?? '').toString().toLowerCase();
+    final delivery = (batch['delivery_status'] ?? '').toString().toLowerCase();
+    final batchNo = (batch['batch_no'] ?? '').toString();
+    final alreadyInDelivery = _deliveries.any((deliveryRecord) {
+      return (deliveryRecord.raw['batch_number'] ?? '').toString() == batchNo &&
+          deliveryRecord.status != _DeliveryStatus.cancelled &&
+          deliveryRecord.status != _DeliveryStatus.delivered;
+    });
+    if (alreadyInDelivery) return false;
+    final harvested = production.contains('harvested') ||
+        production.contains('delivered') ||
+        production.contains('completed') ||
+        _toInt(batch['total_harvested']) > 0 ||
+        _toDouble(batch['total_weight_kg']) > 0;
+    final notCompletedDelivery =
+        !delivery.contains('delivered') && !delivery.contains('completed');
+    return harvested && notCompletedDelivery && batchNo.trim().isNotEmpty;
+  }
+
+  List<Map<String, dynamic>> _batchOptionsForFarmAndPlant(
+    String farmName,
+    String plant,
+  ) {
+    return _batchDocuments.where((batch) {
+      return _batchMatchesFarm(batch, farmName) &&
+          _batchMatchesPlant(batch, plant) &&
+          _batchIsAvailableForDelivery(batch);
+    }).toList()
+      ..sort((a, b) => (a['batch_no'] ?? '')
+          .toString()
+          .compareTo((b['batch_no'] ?? '').toString()));
+  }
+
+  double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String _batchLabel(Map<String, dynamic> batch) {
+    final batchNo = (batch['batch_no'] ?? 'Batch').toString();
+    final weight = _toDouble(batch['total_weight_kg']);
+    final heads = _toInt(batch['total_harvested']);
+    if (weight > 0) return '$batchNo - ${weight.toStringAsFixed(1)} kg';
+    if (heads > 0) return '$batchNo - $heads heads';
+    return batchNo;
+  }
+
+  bool _isActiveDriverUser(Map<String, dynamic> user) {
+    final role = (user['role'] ?? '').toString().toLowerCase();
+    final department = (user['department'] ?? '').toString().toLowerCase();
+    final status = (user['status'] ?? 'Active').toString().toLowerCase();
+    final driverTagged = role == 'driver' ||
+        role.contains('driver') ||
+        department.contains('driver') ||
+        department.contains('logistics') ||
+        department.contains('delivery') ||
+        department.contains('transport');
+    return driverTagged && status == 'active';
+  }
+
+  List<Map<String, dynamic>> _driverUsers() {
+    return _userDocuments.where(_isActiveDriverUser).toList()
+      ..sort((a, b) =>
+          (a['name'] ?? '').toString().compareTo((b['name'] ?? '').toString()));
+  }
+
+  String _userId(Map<String, dynamic> user) {
+    return (user[r'$id'] ?? user['user_id'] ?? user['id'] ?? '').toString();
+  }
+
+  String _driverLabel(Map<String, dynamic> user) {
+    final name = (user['name'] ?? 'Driver').toString();
+    final phone = (user['phone'] ?? '').toString();
+    return phone.trim().isEmpty ? name : '$name - $phone';
+  }
+
+  Map<String, dynamic>? _driverById(String id) {
+    for (final user in _driverUsers()) {
+      if (_userId(user) == id) return user;
+    }
+    return null;
+  }
+
+  List<String> _vehicleOptionsForDriver(Map<String, dynamic>? driver) {
+    final values = <String>{};
+    if (driver != null) {
+      for (final key in [
+        'vehicle',
+        'vehicle_number',
+        'vehicle_no',
+        'assigned_vehicle',
+        'driver_vehicle',
+        'plate_number',
+      ]) {
+        final value = (driver[key] ?? '').toString().trim();
+        if (value.isNotEmpty) values.add(value);
+      }
+    }
+    if (values.isEmpty) values.add('Pending assignment');
+    return values.toList()..sort();
+  }
+
+  _DeliveryStatus _deliveryStatus(dynamic value) {
+    final text = value?.toString().toLowerCase() ?? '';
+    if (text.contains('completed')) return _DeliveryStatus.delivered;
+    if (text.contains('delivered')) return _DeliveryStatus.delivered;
+    if (text.contains('cancel')) return _DeliveryStatus.cancelled;
+    if (text.contains('reject')) return _DeliveryStatus.cancelled;
+    if (text.contains('hold')) return _DeliveryStatus.onHold;
+    if (text.contains('transit')) return _DeliveryStatus.inTransit;
+    if (text.contains('scheduled')) return _DeliveryStatus.scheduled;
+    if (text.contains('sent')) return _DeliveryStatus.inTransit;
+    if (text.contains('packaged')) return _DeliveryStatus.scheduled;
+    if (text.contains('packaging')) return _DeliveryStatus.onHold;
+    return _DeliveryStatus.pendingApproval;
+  }
+
+  _DeliveryPriority _deliveryPriority(dynamic value) {
+    final text = value?.toString().toLowerCase() ?? '';
+    if (text.contains('high')) return _DeliveryPriority.high;
+    if (text.contains('low')) return _DeliveryPriority.low;
+    return _DeliveryPriority.medium;
+  }
+
+  int _toInt(dynamic value) {
+    if (value is num) return value.round();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String _dateLabel(dynamic value) {
+    final text = value?.toString() ?? '';
+    if (text.length >= 16) return text.substring(0, 16).replaceFirst('T', ' ');
+    return text.isEmpty ? '-' : text;
+  }
+
+  String? _dateOnly(dynamic value) {
+    final text = value?.toString() ?? '';
+    if (text.trim().isEmpty) return null;
+    return text.split('T').first.split(' ').first;
+  }
+
+  String _todayDate() => DateTime.now().toIso8601String().split('T').first;
+
+  bool _auditIsDeliveryRelated(Map<String, dynamic> audit) {
+    final collection =
+        (audit['collection_name'] ?? '').toString().toLowerCase();
+    final details = (audit['action_details'] ?? '').toString().toLowerCase();
+    return collection.contains('fulfillment') ||
+        collection.contains('delivery') ||
+        details.contains('fulfillment') ||
+        details.contains('delivery');
+  }
+
+  _DeliveryActivity _mapAuditDocument(Map<String, dynamic> audit) {
+    final action = (audit['action_type'] ?? 'Info').toString();
+    return _DeliveryActivity(
+      id: (audit[r'$id'] ?? audit['audit_id'] ?? '').toString(),
+      deliveryId: (audit['collection_name'] ?? 'Fulfillment').toString(),
+      farm: 'All Farms',
+      message: (audit['action_details'] ?? action).toString(),
+      actor: (audit['performed_by_id'] ?? 'System').toString(),
+      timestamp: DateTime.tryParse((audit['timestamp'] ?? '').toString()) ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      type: action.toLowerCase().contains('delete') ||
+              action.toLowerCase().contains('reject') ||
+              action.toLowerCase().contains('cancel')
+          ? _ActivityType.error
+          : action.toLowerCase().contains('update')
+              ? _ActivityType.warning
+              : _ActivityType.success,
+    );
+  }
 
   @override
   void dispose() {
@@ -167,19 +388,57 @@ class _OverallDeliveryControlModuleState
       children: [
         _buildHeader(isDark),
         const SizedBox(height: AppSpacing.lg),
-        _buildStats(isDark, _deliveries),
-        const SizedBox(height: AppSpacing.lg),
-        _buildFarmDeliveryOverview(isDark),
-        const SizedBox(height: AppSpacing.lg),
-        _buildFilters(isDark),
-        const SizedBox(height: AppSpacing.lg),
-        _buildTabs(isDark),
-        const SizedBox(height: AppSpacing.md),
-        if (_selectedTab == 0)
-          _buildDeliveryControlList(isDark, filteredDeliveries)
-        else
-          _buildActivityLog(isDark, filteredActivities),
+        if (_deliveryError != null) ...[
+          _buildSyncStatus(isDark),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+        if (_isLoadingDeliveries)
+          const AdminDataSkeleton(rowCount: 5)
+        else ...[
+          _buildStats(isDark, _deliveries),
+          const SizedBox(height: AppSpacing.lg),
+          _buildFarmDeliveryOverview(isDark),
+          const SizedBox(height: AppSpacing.lg),
+          _buildFilters(isDark),
+          const SizedBox(height: AppSpacing.lg),
+          _buildTabs(isDark),
+          const SizedBox(height: AppSpacing.md),
+          if (_selectedTab == 0)
+            _buildDeliveryControlList(isDark, filteredDeliveries)
+          else
+            _buildActivityLog(isDark, filteredActivities),
+        ],
       ],
+    );
+  }
+
+  Widget _buildSyncStatus(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.cloud_off_rounded, color: AppColors.error, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              _deliveryError ?? 'Unable to load delivery records.',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: _loadDeliveries,
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -266,7 +525,7 @@ class _OverallDeliveryControlModuleState
               Text(
                 widget.title,
                 style: AppTypography.h4.copyWith(
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                   letterSpacing: -0.5,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
@@ -279,6 +538,30 @@ class _OverallDeliveryControlModuleState
                   color: isDark ? Colors.white70 : AppColors.textSecondary,
                 ),
               ),
+              if (widget.allowCreateDelivery) ...[
+                const SizedBox(height: AppSpacing.md),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: ElevatedButton.icon(
+                    onPressed:
+                        _isLoadingDeliveries ? null : _showCreateDeliveryModal,
+                    icon: const Icon(Icons.add_road_rounded, size: 18),
+                    label: const Text('Create Delivery'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.info,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.sm,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -346,7 +629,7 @@ class _OverallDeliveryControlModuleState
                 Text(
                   value,
                   style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -355,7 +638,7 @@ class _OverallDeliveryControlModuleState
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -445,7 +728,7 @@ class _OverallDeliveryControlModuleState
                           style: AppTypography.h6.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -455,7 +738,7 @@ class _OverallDeliveryControlModuleState
                             color: isDark
                                 ? Colors.white60
                                 : AppColors.textSecondary,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -507,7 +790,7 @@ class _OverallDeliveryControlModuleState
                     Text(
                       'Farm Delivery Operations',
                       style: AppTypography.h6.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -595,7 +878,7 @@ class _OverallDeliveryControlModuleState
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -645,7 +928,7 @@ class _OverallDeliveryControlModuleState
                             : 'Operations normal',
                     style: AppTypography.caption.copyWith(
                       color: riskColor,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -666,14 +949,14 @@ class _OverallDeliveryControlModuleState
           overflow: TextOverflow.ellipsis,
           style: AppTypography.bodyMedium.copyWith(
             color: color,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
           ),
         ),
         Text(
           label,
           style: AppTypography.caption.copyWith(
             color: isDark ? Colors.white54 : AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -700,7 +983,7 @@ class _OverallDeliveryControlModuleState
                       ? 'Global Delivery Records'
                       : '$_selectedFarm Delivery Records',
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -840,28 +1123,34 @@ class _OverallDeliveryControlModuleState
   }
 
   Widget _buildTabs(bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-      ),
-      child: Row(
-        children: [
-          _buildTabItem(
-            isDark: isDark,
-            label: 'Control Center',
-            icon: Icons.local_shipping_rounded,
-            index: 0,
-          ),
-          _buildTabItem(
-            isDark: isDark,
-            label: 'Activity Logs',
-            icon: Icons.history_rounded,
-            index: 1,
-          ),
-        ],
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+              color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildTabItem(
+              isDark: isDark,
+              label: 'Control',
+              icon: Icons.local_shipping_rounded,
+              index: 0,
+            ),
+            const SizedBox(width: 4),
+            _buildTabItem(
+              isDark: isDark,
+              label: 'Logs',
+              icon: Icons.history_rounded,
+              index: 1,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -873,40 +1162,45 @@ class _OverallDeliveryControlModuleState
     required int index,
   }) {
     final selected = _selectedTab == index;
-    return Expanded(
-      child: InkWell(
-        onTap: () => setState(() => _selectedTab = index),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-          decoration: BoxDecoration(
-            color: selected
-                ? AppColors.primary.withOpacity(0.14)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: selected
-                    ? AppColors.primary
-                    : (isDark ? Colors.white70 : AppColors.textSecondary),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
+    return InkWell(
+      onTap: () => setState(() => _selectedTab = index),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      child: Container(
+        width: 110,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primary.withOpacity(0.14)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: selected
+                  ? AppColors.primary
+                  : (isDark ? Colors.white70 : AppColors.textSecondary),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(
+              child: Text(
                 label,
-                style: AppTypography.bodyMedium.copyWith(
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                   color: selected
                       ? AppColors.primary
                       : (isDark ? Colors.white70 : AppColors.textSecondary),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -936,7 +1230,7 @@ class _OverallDeliveryControlModuleState
           Text(
             'Delivery Control Center',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -981,7 +1275,7 @@ class _OverallDeliveryControlModuleState
                     Text(
                       '${record.id}  |  ${record.farm}',
                       style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w500,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -1111,6 +1405,16 @@ class _OverallDeliveryControlModuleState
             action: _DeliveryAction.viewDetails, record: record),
       ),
     );
+    actions.add(
+      _actionButton(
+        isDark: isDark,
+        label: 'Delete',
+        icon: Icons.delete_outline_rounded,
+        color: AppColors.error,
+        onPressed: () =>
+            _openActionModal(action: _DeliveryAction.delete, record: record),
+      ),
+    );
     return actions;
   }
 
@@ -1133,7 +1437,7 @@ class _OverallDeliveryControlModuleState
           label,
           style: AppTypography.caption.copyWith(
             color: color,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w500,
           ),
         ),
         style: TextButton.styleFrom(
@@ -1192,7 +1496,650 @@ class _OverallDeliveryControlModuleState
       case _DeliveryAction.viewDetails:
         _showDeliveryDetailsModal(record);
         break;
+      case _DeliveryAction.delete:
+        _showDeleteDeliveryModal(record);
+        break;
     }
+  }
+
+  void _showCreateDeliveryModal() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final quantityController = TextEditingController();
+    final unitController = TextEditingController(text: 'kg');
+    final destinationController = TextEditingController(text: 'Sales Hub');
+    final scheduledController = TextEditingController(text: _todayDate());
+    final etaController = TextEditingController(text: _todayDate());
+    final noteController = TextEditingController();
+    final driverOptions = _driverUsers();
+    String selectedDriverId =
+        driverOptions.isNotEmpty ? _userId(driverOptions.first) : '';
+    var vehicleOptions =
+        _vehicleOptionsForDriver(_driverById(selectedDriverId));
+    String selectedVehicle =
+        vehicleOptions.isNotEmpty ? vehicleOptions.first : 'Pending assignment';
+    final availableFarms = _farms.where((farm) => farm != 'All Farms').toList()
+      ..sort();
+    String selectedFarm =
+        availableFarms.isNotEmpty ? availableFarms.first : 'Unassigned Farm';
+    var plantOptions = _plantOptionsForFarm(selectedFarm);
+    String selectedPlant = plantOptions.isNotEmpty ? plantOptions.first : '';
+    var batchOptions = _batchOptionsForFarmAndPlant(
+      selectedFarm,
+      selectedPlant,
+    );
+    String selectedBatchNo = batchOptions.isNotEmpty
+        ? (batchOptions.first['batch_no'] ?? '').toString()
+        : '';
+    String selectedPriority = 'Medium';
+    bool isSaving = false;
+    String? formError;
+
+    Map<String, dynamic>? selectedBatchByNo() {
+      for (final batch in batchOptions) {
+        if ((batch['batch_no'] ?? '').toString() == selectedBatchNo) {
+          return batch;
+        }
+      }
+      return null;
+    }
+
+    void applySelectedBatchToFields() {
+      final selectedBatch = selectedBatchByNo();
+      if (selectedBatch == null) {
+        quantityController.clear();
+        unitController.text = 'kg';
+        scheduledController.text = _todayDate();
+        return;
+      }
+      final weight = _toDouble(selectedBatch['total_weight_kg']);
+      final heads = _toInt(selectedBatch['total_harvested']);
+      if (weight > 0) {
+        quantityController.text = weight.toStringAsFixed(1);
+        unitController.text = 'kg';
+      } else {
+        quantityController.text = heads.toString();
+        unitController.text = 'heads';
+      }
+      scheduledController.text =
+          _dateOnly(selectedBatch['actual_harvest_date']) ?? _todayDate();
+    }
+
+    applySelectedBatchToFields();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 720),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _modalHeader(
+                  isDark: isDark,
+                  title: 'Create Delivery',
+                  subtitle: 'Create a delivery control record in Appwrite',
+                  color: AppColors.info,
+                  icon: Icons.add_road_rounded,
+                  onClose: isSaving
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      children: [
+                        if (formError != null) ...[
+                          _modalError(isDark, formError!),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
+                        DropdownButtonFormField<String>(
+                          key: ValueKey('delivery-farm-$selectedFarm'),
+                          initialValue: selectedFarm,
+                          dropdownColor:
+                              isDark ? AppColors.surfaceDark : Colors.white,
+                          decoration: _inputDecoration(isDark, 'Farm'),
+                          items: [
+                            if (availableFarms.isEmpty)
+                              const DropdownMenuItem(
+                                value: 'Unassigned Farm',
+                                child: Text('Unassigned Farm'),
+                              ),
+                            ...availableFarms.map(
+                              (farm) => DropdownMenuItem(
+                                value: farm,
+                                child: Text(farm),
+                              ),
+                            ),
+                          ],
+                          onChanged: isSaving
+                              ? null
+                              : (value) => setDialogState(() {
+                                    selectedFarm = value ?? 'Unassigned Farm';
+                                    plantOptions =
+                                        _plantOptionsForFarm(selectedFarm);
+                                    selectedPlant = plantOptions.isNotEmpty
+                                        ? plantOptions.first
+                                        : '';
+                                    batchOptions = _batchOptionsForFarmAndPlant(
+                                      selectedFarm,
+                                      selectedPlant,
+                                    );
+                                    selectedBatchNo = batchOptions.isNotEmpty
+                                        ? (batchOptions.first['batch_no'] ?? '')
+                                            .toString()
+                                        : '';
+                                    formError = null;
+                                    applySelectedBatchToFields();
+                                  }),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        DropdownButtonFormField<String>(
+                          key: ValueKey(
+                              'delivery-plant-$selectedFarm-$selectedPlant'),
+                          initialValue:
+                              selectedPlant.isEmpty ? null : selectedPlant,
+                          dropdownColor:
+                              isDark ? AppColors.surfaceDark : Colors.white,
+                          decoration:
+                              _inputDecoration(isDark, 'Product Produced'),
+                          items: plantOptions
+                              .map(
+                                (plant) => DropdownMenuItem(
+                                  value: plant,
+                                  child: Text(plant),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: isSaving
+                              ? null
+                              : (value) => setDialogState(() {
+                                    selectedPlant = value ?? '';
+                                    batchOptions = _batchOptionsForFarmAndPlant(
+                                      selectedFarm,
+                                      selectedPlant,
+                                    );
+                                    selectedBatchNo = batchOptions.isNotEmpty
+                                        ? (batchOptions.first['batch_no'] ?? '')
+                                            .toString()
+                                        : '';
+                                    formError = null;
+                                    applySelectedBatchToFields();
+                                  }),
+                        ),
+                        if (plantOptions.isEmpty) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          _modalHint(
+                            isDark,
+                            'This farm has no product configured yet. Add plant data to the farm before creating a delivery.',
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.sm),
+                        DropdownButtonFormField<String>(
+                          key: ValueKey(
+                              'delivery-batch-$selectedFarm-$selectedPlant-$selectedBatchNo'),
+                          initialValue:
+                              selectedBatchNo.isEmpty ? null : selectedBatchNo,
+                          dropdownColor:
+                              isDark ? AppColors.surfaceDark : Colors.white,
+                          decoration: _inputDecoration(
+                              isDark, 'Available Batch at Hub'),
+                          items: batchOptions
+                              .map(
+                                (batch) => DropdownMenuItem(
+                                  value: (batch['batch_no'] ?? '').toString(),
+                                  child: Text(_batchLabel(batch)),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: isSaving
+                              ? null
+                              : (value) => setDialogState(() {
+                                    selectedBatchNo = value ?? '';
+                                    formError = null;
+                                    applySelectedBatchToFields();
+                                  }),
+                        ),
+                        if (batchOptions.isEmpty) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          _modalHint(
+                            isDark,
+                            'No harvested, undelivered batch is available for this farm and product.',
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _textField(
+                                isDark: isDark,
+                                controller: quantityController,
+                                label: 'Quantity',
+                                keyboardType: TextInputType.number,
+                                readOnly: true,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: _textField(
+                                isDark: isDark,
+                                controller: unitController,
+                                label: 'Unit',
+                                readOnly: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        _textField(
+                          isDark: isDark,
+                          controller: destinationController,
+                          label: 'Destination',
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        DropdownButtonFormField<String>(
+                          key: ValueKey('delivery-driver-$selectedDriverId'),
+                          initialValue: selectedDriverId.isEmpty
+                              ? null
+                              : selectedDriverId,
+                          dropdownColor:
+                              isDark ? AppColors.surfaceDark : Colors.white,
+                          decoration: _inputDecoration(isDark, 'Driver'),
+                          items: driverOptions
+                              .map(
+                                (driver) => DropdownMenuItem(
+                                  value: _userId(driver),
+                                  child: Text(_driverLabel(driver)),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: isSaving
+                              ? null
+                              : (value) => setDialogState(() {
+                                    selectedDriverId = value ?? '';
+                                    vehicleOptions = _vehicleOptionsForDriver(
+                                      _driverById(selectedDriverId),
+                                    );
+                                    selectedVehicle = vehicleOptions.isNotEmpty
+                                        ? vehicleOptions.first
+                                        : 'Pending assignment';
+                                    formError = null;
+                                  }),
+                        ),
+                        if (driverOptions.isEmpty) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          _modalHint(
+                            isDark,
+                            'No active driver users found. Create an active Driver user before assigning delivery.',
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.sm),
+                        DropdownButtonFormField<String>(
+                          key: ValueKey(
+                              'delivery-vehicle-$selectedDriverId-$selectedVehicle'),
+                          initialValue: selectedVehicle,
+                          dropdownColor:
+                              isDark ? AppColors.surfaceDark : Colors.white,
+                          decoration: _inputDecoration(isDark, 'Vehicle'),
+                          items: vehicleOptions
+                              .map(
+                                (vehicle) => DropdownMenuItem(
+                                  value: vehicle,
+                                  child: Text(vehicle),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: isSaving
+                              ? null
+                              : (value) => setDialogState(() {
+                                    selectedVehicle =
+                                        value ?? 'Pending assignment';
+                                    formError = null;
+                                  }),
+                        ),
+                        if (selectedVehicle == 'Pending assignment') ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          _modalHint(
+                            isDark,
+                            'This driver has no vehicle saved on the user record yet.',
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _textField(
+                                isDark: isDark,
+                                controller: scheduledController,
+                                label: 'Scheduled Date',
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: _textField(
+                                isDark: isDark,
+                                controller: etaController,
+                                label: 'ETA',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        DropdownButtonFormField<String>(
+                          initialValue: selectedPriority,
+                          dropdownColor:
+                              isDark ? AppColors.surfaceDark : Colors.white,
+                          decoration: _inputDecoration(isDark, 'Priority'),
+                          items: ['High', 'Medium', 'Low']
+                              .map(
+                                (priority) => DropdownMenuItem(
+                                  value: priority,
+                                  child: Text(priority),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: isSaving
+                              ? null
+                              : (value) => setDialogState(
+                                    () => selectedPriority = value ?? 'Medium',
+                                  ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        _textField(
+                          isDark: isDark,
+                          controller: noteController,
+                          label: 'Delivery Note',
+                          maxLines: 3,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                _modalActions(
+                  isDark: isDark,
+                  cancelLabel: 'Cancel',
+                  confirmLabel: isSaving ? 'Creating...' : 'Create Delivery',
+                  confirmColor: AppColors.info,
+                  onCancel: isSaving
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
+                  onConfirm: isSaving
+                      ? () {}
+                      : () async {
+                          final unit = unitController.text.trim();
+                          final quantity =
+                              double.tryParse(quantityController.text.trim());
+                          final selectedBatch = selectedBatchByNo();
+                          if (selectedFarm == 'Unassigned Farm' ||
+                              selectedPlant.isEmpty ||
+                              selectedBatch == null ||
+                              selectedDriverId.isEmpty ||
+                              unit.isEmpty) {
+                            setDialogState(() => formError =
+                                'Select a farm, product, available hub batch, and active driver before creating a delivery.');
+                            return;
+                          }
+                          if (quantity == null || quantity <= 0) {
+                            setDialogState(() => formError =
+                                'Quantity must be a valid number greater than zero.');
+                            return;
+                          }
+
+                          setDialogState(() {
+                            isSaving = true;
+                            formError = null;
+                          });
+                          final navigator = Navigator.of(dialogContext);
+                          final messenger = ScaffoldMessenger.of(context);
+                          final isHeads = unit.toLowerCase().contains('head');
+                          final selectedDriver = _driverById(selectedDriverId);
+                          try {
+                            await _api.createFulfillment(
+                              data: {
+                                'batch_number': selectedBatchNo,
+                                'farm_manager_id':
+                                    selectedBatch['farm_manager_id'] ??
+                                        'superadmin',
+                                'farm_name': selectedFarm,
+                                'plant_type': selectedPlant,
+                                'total_heads': isHeads ? quantity : 0,
+                                'total_weight': isHeads ? 0 : quantity,
+                                'harvest_received_images':
+                                    selectedBatch['harvest_images'] ?? '',
+                                'packaging_supervisor_id':
+                                    selectedBatch['created_by'] ?? 'superadmin',
+                                'packaging_type': 'Delivery',
+                                'packaging_weight': 0,
+                                'total_packaged_weight': isHeads ? 0 : quantity,
+                                'packaging_waste_type': 'None',
+                                'packaging_waste_weight': 0,
+                                'packaging_images': '',
+                                'yield_loss_percentage': 0,
+                                'received_date_time': _dateOnly(
+                                        selectedBatch['actual_harvest_date']) ??
+                                    _todayDate(),
+                                'packaging_date_time':
+                                    scheduledController.text.trim(),
+                                'sent_to_sales': false,
+                                'sent_to_sales_date_time':
+                                    etaController.text.trim(),
+                                'status': 'Packaged',
+                                'delivery_status': 'Scheduled',
+                                'driver_name':
+                                    (selectedDriver?['name'] ?? 'Unassigned')
+                                        .toString(),
+                                'vehicle': selectedVehicle,
+                                'destination':
+                                    destinationController.text.trim(),
+                                'eta': etaController.text.trim(),
+                                'priority': selectedPriority,
+                                'delivery_note': noteController.text.trim(),
+                              },
+                            );
+                            if (!mounted) return;
+                            navigator.pop();
+                            await _loadDeliveries();
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Delivery created for $selectedBatchNo'),
+                              ),
+                            );
+                          } catch (error) {
+                            if (!mounted) return;
+                            setDialogState(() {
+                              isSaving = false;
+                              formError = error.toString();
+                            });
+                          }
+                        },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _backendFulfillmentStatus(_DeliveryStatus status) {
+    switch (status) {
+      case _DeliveryStatus.scheduled:
+        return 'Packaged';
+      case _DeliveryStatus.inTransit:
+        return 'Sent to Sales';
+      case _DeliveryStatus.delivered:
+        return 'Completed';
+      case _DeliveryStatus.onHold:
+        return 'Packaging';
+      case _DeliveryStatus.pendingApproval:
+      case _DeliveryStatus.cancelled:
+        return 'Received';
+    }
+  }
+
+  Future<void> _updateDelivery({
+    required _DeliveryRecord record,
+    required _DeliveryStatus status,
+    String? driver,
+    String? vehicle,
+    String? eta,
+    String? note,
+  }) async {
+    final data = Map<String, dynamic>.from(record.raw);
+    data['delivery_status'] = status.label;
+    data['status'] = _backendFulfillmentStatus(status);
+    data['driver_name'] = driver ?? record.driver;
+    data['vehicle'] = vehicle ?? record.vehicle;
+    data['eta'] = eta ?? record.eta;
+    data['priority'] = record.priority.label;
+    data['destination'] = record.destination;
+    if (note != null) data['delivery_note'] = note;
+    data['sent_to_sales'] = status == _DeliveryStatus.inTransit ||
+        status == _DeliveryStatus.delivered;
+    if (status == _DeliveryStatus.inTransit ||
+        status == _DeliveryStatus.delivered) {
+      data['sent_to_sales_date_time'] =
+          DateTime.now().toIso8601String().split('T').first;
+    }
+
+    await _api.updateFulfillment(id: record.id, data: data);
+    await _loadDeliveries();
+  }
+
+  _DeliveryStatus _statusForAction(_DeliveryAction action) {
+    switch (action) {
+      case _DeliveryAction.approve:
+        return _DeliveryStatus.scheduled;
+      case _DeliveryAction.reject:
+      case _DeliveryAction.cancel:
+        return _DeliveryStatus.cancelled;
+      case _DeliveryAction.putOnHold:
+        return _DeliveryStatus.onHold;
+      case _DeliveryAction.assignDriver:
+        return _DeliveryStatus.scheduled;
+      case _DeliveryAction.viewDetails:
+      case _DeliveryAction.delete:
+        return _DeliveryStatus.pendingApproval;
+    }
+  }
+
+  void _showDeleteDeliveryModal(_DeliveryRecord record) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    bool isDeleting = false;
+    String? formError;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 560),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _modalHeader(
+                  isDark: isDark,
+                  title: 'Delete Delivery',
+                  subtitle: '${record.id} | ${record.farm}',
+                  color: AppColors.error,
+                  icon: Icons.delete_outline_rounded,
+                  onClose: isDeleting
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (formError != null) ...[
+                        _modalError(isDark, formError!),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                      Text(
+                        'This will remove the delivery record from the backend. Audit history will remain available.',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color:
+                              isDark ? Colors.white70 : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _detailRow(isDark, 'Crop',
+                          '${record.crop} (${record.quantity} ${record.unit})'),
+                      _detailRow(isDark, 'Destination', record.destination),
+                      _detailRow(isDark, 'Status', record.status.label),
+                    ],
+                  ),
+                ),
+                _modalActions(
+                  isDark: isDark,
+                  cancelLabel: 'Cancel',
+                  confirmLabel: isDeleting ? 'Deleting...' : 'Delete',
+                  confirmColor: AppColors.error,
+                  onCancel: isDeleting
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
+                  onConfirm: isDeleting
+                      ? () {}
+                      : () async {
+                          setDialogState(() {
+                            isDeleting = true;
+                            formError = null;
+                          });
+                          final navigator = Navigator.of(dialogContext);
+                          final messenger = ScaffoldMessenger.of(context);
+                          try {
+                            await _api.deleteFulfillment(record.id);
+                            if (!mounted) return;
+                            navigator.pop();
+                            await _loadDeliveries();
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Delivery ${record.id} removed from backend'),
+                              ),
+                            );
+                          } catch (error) {
+                            if (!mounted) return;
+                            setDialogState(() {
+                              isDeleting = false;
+                              formError = error.toString();
+                            });
+                          }
+                        },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _showDecisionModal({
@@ -1205,6 +2152,8 @@ class _OverallDeliveryControlModuleState
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final reasonController = TextEditingController();
     bool notifyFarmManager = true;
+    bool isSaving = false;
+    String? formError;
 
     showDialog(
       context: context,
@@ -1231,7 +2180,9 @@ class _OverallDeliveryControlModuleState
                   subtitle: '${record.id} | ${record.farm}',
                   color: confirmColor,
                   icon: Icons.assignment_turned_in_rounded,
-                  onClose: () => Navigator.of(dialogContext).pop(),
+                  onClose: isSaving
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
                 ),
                 Flexible(
                   child: SingleChildScrollView(
@@ -1239,6 +2190,10 @@ class _OverallDeliveryControlModuleState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (formError != null) ...[
+                          _modalError(isDark, formError!),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
                         Text(
                           prompt,
                           style: AppTypography.bodyMedium.copyWith(
@@ -1278,7 +2233,7 @@ class _OverallDeliveryControlModuleState
                                 color: isDark
                                     ? Colors.white70
                                     : AppColors.textSecondary,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             value: notifyFarmManager,
@@ -1295,20 +2250,52 @@ class _OverallDeliveryControlModuleState
                 _modalActions(
                   isDark: isDark,
                   cancelLabel: 'Close',
-                  confirmLabel: confirmLabel,
+                  confirmLabel: isSaving ? 'Saving...' : confirmLabel,
                   confirmColor: confirmColor,
-                  onCancel: () => Navigator.of(dialogContext).pop(),
-                  onConfirm: () {
-                    Navigator.of(dialogContext).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '$confirmLabel completed for ${record.id}'
-                          '${notifyFarmManager ? ' (manager notified)' : ''}',
-                        ),
-                      ),
-                    );
-                  },
+                  onCancel: isSaving
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
+                  onConfirm: isSaving
+                      ? () {}
+                      : () async {
+                          setDialogState(() {
+                            isSaving = true;
+                            formError = null;
+                          });
+                          final navigator = Navigator.of(dialogContext);
+                          final messenger = ScaffoldMessenger.of(context);
+                          try {
+                            await _updateDelivery(
+                              record: record,
+                              status: _statusForAction(
+                                confirmLabel == 'Reject'
+                                    ? _DeliveryAction.reject
+                                    : confirmLabel == 'Cancel Delivery'
+                                        ? _DeliveryAction.cancel
+                                        : confirmLabel == 'Hold Delivery'
+                                            ? _DeliveryAction.putOnHold
+                                            : _DeliveryAction.approve,
+                              ),
+                              note: reasonController.text.trim(),
+                            );
+                            if (!mounted) return;
+                            navigator.pop();
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '$confirmLabel completed for ${record.id}'
+                                  '${notifyFarmManager ? ' (manager notified)' : ''}',
+                                ),
+                              ),
+                            );
+                          } catch (error) {
+                            if (!mounted) return;
+                            setDialogState(() {
+                              isSaving = false;
+                              formError = error.toString();
+                            });
+                          }
+                        },
                 ),
               ],
             ),
@@ -1320,76 +2307,194 @@ class _OverallDeliveryControlModuleState
 
   void _showAssignDriverModal(_DeliveryRecord record) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final driverController = TextEditingController(text: record.driver);
-    final vehicleController = TextEditingController(text: record.vehicle);
     final etaController = TextEditingController(text: record.eta);
+    final driverOptions = _driverUsers();
+    String selectedDriverId = '';
+    for (final driver in driverOptions) {
+      if ((driver['name'] ?? '').toString() == record.driver) {
+        selectedDriverId = _userId(driver);
+        break;
+      }
+    }
+    if (selectedDriverId.isEmpty && driverOptions.isNotEmpty) {
+      selectedDriverId = _userId(driverOptions.first);
+    }
+    var vehicleOptions =
+        _vehicleOptionsForDriver(_driverById(selectedDriverId));
+    String selectedVehicle = vehicleOptions.contains(record.vehicle)
+        ? record.vehicle
+        : vehicleOptions.isNotEmpty
+            ? vehicleOptions.first
+            : 'Pending assignment';
+    bool isSaving = false;
+    String? formError;
 
     showDialog(
       context: context,
-      builder: (dialogContext) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 620),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            border: Border.all(
-              color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _modalHeader(
-                isDark: isDark,
-                title: 'Assign Driver',
-                subtitle: '${record.id} | ${record.destination}',
-                color: AppColors.primary,
-                icon: Icons.person_add_alt_1_rounded,
-                onClose: () => Navigator.of(dialogContext).pop(),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 620),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
               ),
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    children: [
-                      _textField(
-                        isDark: isDark,
-                        controller: driverController,
-                        label: 'Driver Name',
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      _textField(
-                        isDark: isDark,
-                        controller: vehicleController,
-                        label: 'Vehicle',
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      _textField(
-                        isDark: isDark,
-                        controller: etaController,
-                        label: 'ETA (YYYY-MM-DD HH:mm)',
-                      ),
-                    ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _modalHeader(
+                  isDark: isDark,
+                  title: 'Assign Driver',
+                  subtitle: '${record.id} | ${record.destination}',
+                  color: AppColors.primary,
+                  icon: Icons.person_add_alt_1_rounded,
+                  onClose: isSaving
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      children: [
+                        if (formError != null) ...[
+                          _modalError(isDark, formError!),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
+                        DropdownButtonFormField<String>(
+                          key: ValueKey('assign-driver-$selectedDriverId'),
+                          initialValue: selectedDriverId.isEmpty
+                              ? null
+                              : selectedDriverId,
+                          dropdownColor:
+                              isDark ? AppColors.surfaceDark : Colors.white,
+                          decoration: _inputDecoration(isDark, 'Driver'),
+                          items: driverOptions
+                              .map(
+                                (driver) => DropdownMenuItem(
+                                  value: _userId(driver),
+                                  child: Text(_driverLabel(driver)),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: isSaving
+                              ? null
+                              : (value) => setDialogState(() {
+                                    selectedDriverId = value ?? '';
+                                    vehicleOptions = _vehicleOptionsForDriver(
+                                      _driverById(selectedDriverId),
+                                    );
+                                    selectedVehicle = vehicleOptions.isNotEmpty
+                                        ? vehicleOptions.first
+                                        : 'Pending assignment';
+                                    formError = null;
+                                  }),
+                        ),
+                        if (driverOptions.isEmpty) ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          _modalHint(
+                            isDark,
+                            'No active driver users found. Create an active Driver user before assigning delivery.',
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.sm),
+                        DropdownButtonFormField<String>(
+                          key: ValueKey(
+                              'assign-vehicle-$selectedDriverId-$selectedVehicle'),
+                          initialValue: selectedVehicle,
+                          dropdownColor:
+                              isDark ? AppColors.surfaceDark : Colors.white,
+                          decoration: _inputDecoration(isDark, 'Vehicle'),
+                          items: vehicleOptions
+                              .map(
+                                (vehicle) => DropdownMenuItem(
+                                  value: vehicle,
+                                  child: Text(vehicle),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: isSaving
+                              ? null
+                              : (value) => setDialogState(() {
+                                    selectedVehicle =
+                                        value ?? 'Pending assignment';
+                                    formError = null;
+                                  }),
+                        ),
+                        if (selectedVehicle == 'Pending assignment') ...[
+                          const SizedBox(height: AppSpacing.xs),
+                          _modalHint(
+                            isDark,
+                            'This driver has no vehicle saved on the user record yet.',
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.sm),
+                        _textField(
+                          isDark: isDark,
+                          controller: etaController,
+                          label: 'ETA (YYYY-MM-DD HH:mm)',
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              _modalActions(
-                isDark: isDark,
-                cancelLabel: 'Close',
-                confirmLabel: 'Assign',
-                confirmColor: AppColors.primary,
-                onCancel: () => Navigator.of(dialogContext).pop(),
-                onConfirm: () {
-                  Navigator.of(dialogContext).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Driver assigned for ${record.id}')),
-                  );
-                },
-              ),
-            ],
+                _modalActions(
+                  isDark: isDark,
+                  cancelLabel: 'Close',
+                  confirmLabel: isSaving ? 'Assigning...' : 'Assign',
+                  confirmColor: AppColors.primary,
+                  onCancel: isSaving
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
+                  onConfirm: isSaving
+                      ? () {}
+                      : () async {
+                          final selectedDriver = _driverById(selectedDriverId);
+                          if (selectedDriver == null ||
+                              selectedVehicle.trim().isEmpty) {
+                            setDialogState(() =>
+                                formError = 'Driver and vehicle are required.');
+                            return;
+                          }
+                          setDialogState(() {
+                            isSaving = true;
+                            formError = null;
+                          });
+                          final navigator = Navigator.of(dialogContext);
+                          final messenger = ScaffoldMessenger.of(context);
+                          try {
+                            await _updateDelivery(
+                              record: record,
+                              status: _DeliveryStatus.scheduled,
+                              driver: (selectedDriver['name'] ?? 'Unassigned')
+                                  .toString(),
+                              vehicle: selectedVehicle,
+                              eta: etaController.text.trim(),
+                            );
+                            if (!mounted) return;
+                            navigator.pop();
+                            messenger.showSnackBar(
+                              SnackBar(
+                                  content:
+                                      Text('Driver assigned for ${record.id}')),
+                            );
+                          } catch (error) {
+                            if (!mounted) return;
+                            setDialogState(() {
+                              isSaving = false;
+                              formError = error.toString();
+                            });
+                          }
+                        },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1479,32 +2584,86 @@ class _OverallDeliveryControlModuleState
     required TextEditingController controller,
     required String label,
     int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
   }) {
     return TextField(
       controller: controller,
       maxLines: maxLines,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
       style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(
-          color: isDark ? Colors.white60 : AppColors.textSecondary,
+      decoration: _inputDecoration(isDark, label),
+    );
+  }
+
+  InputDecoration _inputDecoration(bool isDark, String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(
+        color: isDark ? Colors.white60 : AppColors.textSecondary,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        borderSide: BorderSide(
+          color: isDark ? Colors.white12 : AppColors.neutral200,
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        borderSide: const BorderSide(
+          color: AppColors.primary,
+          width: 1.5,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: BorderSide(
-            color: isDark ? Colors.white12 : AppColors.neutral200,
+      ),
+    );
+  }
+
+  Widget _modalError(bool isDark, String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.22)),
+      ),
+      child: Text(
+        message,
+        style: AppTypography.bodySmall.copyWith(
+          color: isDark ? Colors.white70 : AppColors.error,
+        ),
+      ),
+    );
+  }
+
+  Widget _modalHint(bool isDark, String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline_rounded,
+              size: 16, color: AppColors.warning),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTypography.caption.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
           ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: const BorderSide(
-            color: AppColors.primary,
-            width: 1.5,
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -1548,7 +2707,7 @@ class _OverallDeliveryControlModuleState
                   title,
                   style: AppTypography.h6.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
@@ -1638,7 +2797,7 @@ class _OverallDeliveryControlModuleState
           children: [
             TextSpan(
               text: '$label: ',
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             TextSpan(text: value),
           ],
@@ -1658,7 +2817,7 @@ class _OverallDeliveryControlModuleState
         label,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -1721,7 +2880,7 @@ class _OverallDeliveryControlModuleState
                   '${activity.deliveryId}  |  ${activity.farm}',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1771,7 +2930,7 @@ class _OverallDeliveryControlModuleState
             title,
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 4),
@@ -1966,6 +3125,7 @@ class _DeliveryRecord {
   final String vehicle;
   final String scheduledAt;
   final String eta;
+  final Map<String, dynamic> raw;
 
   const _DeliveryRecord({
     required this.id,
@@ -1980,6 +3140,7 @@ class _DeliveryRecord {
     required this.vehicle,
     required this.scheduledAt,
     required this.eta,
+    required this.raw,
   });
 }
 
@@ -1992,6 +3153,7 @@ enum _DeliveryAction {
   putOnHold,
   cancel,
   viewDetails,
+  delete,
 }
 
 class _DeliveryActivity {

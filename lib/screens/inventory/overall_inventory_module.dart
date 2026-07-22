@@ -1,9 +1,13 @@
+// ignore_for_file: unused_field, unused_element_parameter
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/skeleton_loader.dart';
+import '../../services/superadmin_api_service.dart';
 
 class OverallInventoryModule extends StatefulWidget {
   final String title;
@@ -27,152 +31,154 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
   String _selectedFarm = 'All Farms';
   String _selectedStockState = 'All';
   int _selectedTab = 0;
+  final SuperAdminApiService _api = SuperAdminApiService();
 
-  final List<String> _farms = const [
-    'All Farms',
-    'Green Valley Farm',
-    'Sunny Acres',
-    'Harvest Moon Farm',
-    'Golden Fields',
-  ];
+  final List<String> _farms = ['All Farms'];
+  final Map<String, String> _farmIdsByName = {};
+  final List<_InventoryEntry> _items = [];
+  final List<_InventoryMovement> _movements = [];
+  bool _isLoadingInventory = true;
+  String? _inventoryError;
 
-  final List<_InventoryEntry> _items = const [
-    _InventoryEntry(
-      id: 'INV-001',
-      name: 'NPK Fertilizer 20-20-20',
-      category: 'Fertilizer',
-      farm: 'Green Valley Farm',
-      quantity: 64.0,
-      unit: 'kg',
-      minStock: 20.0,
-      unitCost: 25.0,
-      lastUpdatedBy: 'Kwame Mensah',
-    ),
-    _InventoryEntry(
-      id: 'INV-002',
-      name: 'Lettuce Seeds (Buttercrunch)',
-      category: 'Seeds',
-      farm: 'Sunny Acres',
-      quantity: 9.0,
-      unit: 'kg',
-      minStock: 12.0,
-      unitCost: 120.0,
-      lastUpdatedBy: 'Ama Kusi',
-    ),
-    _InventoryEntry(
-      id: 'INV-003',
-      name: 'Calcium Nitrate',
-      category: 'Nutrients',
-      farm: 'Harvest Moon Farm',
-      quantity: 0.0,
-      unit: 'kg',
-      minStock: 15.0,
-      unitCost: 18.0,
-      lastUpdatedBy: 'Nana Ofori',
-    ),
-    _InventoryEntry(
-      id: 'INV-004',
-      name: 'Neem Oil (Organic)',
-      category: 'Pesticides',
-      farm: 'Golden Fields',
-      quantity: 4.0,
-      unit: 'L',
-      minStock: 6.0,
-      unitCost: 45.0,
-      lastUpdatedBy: 'Esi Boateng',
-    ),
-    _InventoryEntry(
-      id: 'INV-005',
-      name: 'Packaging Crates - Medium',
-      category: 'Packaging',
-      farm: 'Green Valley Farm',
-      quantity: 140.0,
-      unit: 'pcs',
-      minStock: 60.0,
-      unitCost: 5.5,
-      lastUpdatedBy: 'Kojo Asare',
-    ),
-    _InventoryEntry(
-      id: 'INV-006',
-      name: 'pH Down Solution',
-      category: 'Chemicals',
-      farm: 'Sunny Acres',
-      quantity: 17.0,
-      unit: 'L',
-      minStock: 8.0,
-      unitCost: 35.0,
-      lastUpdatedBy: 'Ama Kusi',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadInventory();
+  }
 
-  late final List<_InventoryMovement> _movements = [
-    _InventoryMovement(
-      id: 'MOV-1001',
-      itemName: 'NPK Fertilizer 20-20-20',
-      farm: 'Green Valley Farm',
-      type: _MovementType.stockIn,
-      quantity: 20.0,
-      unit: 'kg',
-      actor: 'Kwame Mensah',
-      timestamp: DateTime.now().subtract(const Duration(hours: 2, minutes: 18)),
-      note: 'Received from Agro Supplies Ltd.',
-    ),
-    _InventoryMovement(
-      id: 'MOV-1002',
-      itemName: 'Lettuce Seeds (Buttercrunch)',
-      farm: 'Sunny Acres',
-      type: _MovementType.stockOut,
-      quantity: 4.0,
-      unit: 'kg',
-      actor: 'Ama Kusi',
-      timestamp: DateTime.now().subtract(const Duration(hours: 5, minutes: 42)),
-      note: 'Assigned to Nursery Block B',
-    ),
-    _InventoryMovement(
-      id: 'MOV-1003',
-      itemName: 'Calcium Nitrate',
-      farm: 'Harvest Moon Farm',
-      type: _MovementType.stockOut,
-      quantity: 10.0,
-      unit: 'kg',
-      actor: 'Nana Ofori',
-      timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 1)),
-      note: 'Mixed for hydroponic line 2',
-    ),
-    _InventoryMovement(
-      id: 'MOV-1004',
-      itemName: 'Packaging Crates - Medium',
-      farm: 'Green Valley Farm',
-      type: _MovementType.stockIn,
-      quantity: 60.0,
-      unit: 'pcs',
-      actor: 'Kojo Asare',
-      timestamp: DateTime.now().subtract(const Duration(days: 1, hours: 4)),
-      note: 'Warehouse replenishment',
-    ),
-    _InventoryMovement(
-      id: 'MOV-1005',
-      itemName: 'Neem Oil (Organic)',
-      farm: 'Golden Fields',
-      type: _MovementType.stockOut,
-      quantity: 2.0,
-      unit: 'L',
-      actor: 'Esi Boateng',
-      timestamp: DateTime.now().subtract(const Duration(days: 2, hours: 3)),
-      note: 'Pest treatment zone C',
-    ),
-    _InventoryMovement(
-      id: 'MOV-1006',
-      itemName: 'pH Down Solution',
-      farm: 'Sunny Acres',
-      type: _MovementType.stockIn,
-      quantity: 12.0,
-      unit: 'L',
-      actor: 'Ama Kusi',
-      timestamp: DateTime.now().subtract(const Duration(days: 3, hours: 2)),
-      note: 'Emergency reorder fulfilled',
-    ),
-  ];
+  Future<void> _loadInventory() async {
+    setState(() {
+      _isLoadingInventory = true;
+      _inventoryError = null;
+    });
+
+    try {
+      final results = await Future.wait([
+        _api.getInventory(),
+        _api.getFarms(),
+        _api.getInventoryMovements(),
+      ]);
+      if (!mounted) return;
+      final inventory = results[0];
+      final farms = results[1];
+      final movements = results[2];
+      final farmNamesById = {
+        for (final farm in farms)
+          (farm[r'$id'] ?? farm['farm_id'] ?? '').toString():
+              _farmNameFromDocument(farm),
+      };
+      final farmNames = farms
+          .map(_farmNameFromDocument)
+          .where((name) => name.trim().isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
+      final items = inventory
+          .map((doc) => _mapInventoryDocument(doc, farmNamesById))
+          .toList();
+      final movementItems = movements.map(_mapMovementDocument).toList();
+      final nextSelectedFarm =
+          farmNames.contains(_selectedFarm) ? _selectedFarm : 'All Farms';
+      setState(() {
+        _items
+          ..clear()
+          ..addAll(items);
+        _movements
+          ..clear()
+          ..addAll(movementItems);
+        _farms
+          ..clear()
+          ..add('All Farms')
+          ..addAll(farmNames);
+        _selectedFarm = nextSelectedFarm;
+        _farmIdsByName
+          ..clear()
+          ..addEntries(
+            farms.map(
+              (farm) => MapEntry(
+                _farmNameFromDocument(farm),
+                (farm[r'$id'] ?? farm['farm_id'] ?? '').toString(),
+              ),
+            ),
+          );
+        _isLoadingInventory = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _items.clear();
+        _movements.clear();
+        _farms
+          ..clear()
+          ..add('All Farms');
+        _farmIdsByName.clear();
+        _isLoadingInventory = false;
+        _inventoryError = error.toString();
+      });
+    }
+  }
+
+  _InventoryEntry _mapInventoryDocument(
+    Map<String, dynamic> doc,
+    Map<String, String> farmNamesById,
+  ) {
+    final farmId = (doc['farm_id'] ?? '').toString();
+    return _InventoryEntry(
+      id: (doc[r'$id'] ?? doc['item_id'] ?? '').toString(),
+      farmId: farmId,
+      name: (doc['item_name'] ?? 'Inventory Item').toString(),
+      category: (doc['item_type'] ?? 'Inventory').toString(),
+      farm: farmNamesById[farmId] ??
+          (farmId.trim().isEmpty ? 'Unassigned Farm' : farmId),
+      quantity: _toDouble(doc['quantity_available']),
+      unit: (doc['unit'] ?? '').toString(),
+      minStock: _toDouble(doc['reorder_level']),
+      unitCost: _toDouble(doc['unit_price']),
+      supplierName: (doc['supplier_name'] ?? '').toString(),
+      batchNumber: (doc['batch_number'] ?? '').toString(),
+      status: (doc['status'] ?? 'Available').toString(),
+      notes: (doc['notes'] ?? '').toString(),
+      dateAdded: (doc['date_added'] ?? _todayDate()).toString(),
+      lastUpdatedBy: (doc['added_by'] ?? 'System').toString(),
+    );
+  }
+
+  String _farmNameFromDocument(Map<String, dynamic> farm) {
+    return (farm['name'] ?? farm['farm_name'] ?? 'Unassigned Farm').toString();
+  }
+
+  String _todayDate() => DateTime.now().toIso8601String().split('T').first;
+
+  String _statusForQuantity(double quantity, double reorderLevel) {
+    if (quantity <= 0) return 'Out of Stock';
+    if (quantity <= reorderLevel) return 'Low Stock';
+    return 'Available';
+  }
+
+  double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  _InventoryMovement _mapMovementDocument(Map<String, dynamic> doc) {
+    final type = (doc['movement_type'] ?? 'stock_in').toString();
+    return _InventoryMovement(
+      id: (doc[r'$id'] ?? doc['movement_id'] ?? '').toString(),
+      itemName: (doc['item_name'] ?? 'Inventory Item').toString(),
+      farm: (doc['farm_name'] ?? 'Unassigned Farm').toString(),
+      type: type == 'stock_out'
+          ? _MovementType.stockOut
+          : type == 'adjustment'
+              ? _MovementType.adjustment
+              : _MovementType.stockIn,
+      quantity: _toDouble(doc['quantity']),
+      unit: (doc['unit'] ?? '').toString(),
+      actor: (doc['actor'] ?? 'System').toString(),
+      timestamp: DateTime.tryParse((doc['timestamp'] ?? '').toString()) ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      note: (doc['note'] ?? '').toString(),
+    );
+  }
 
   @override
   void dispose() {
@@ -191,19 +197,57 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       children: [
         _buildHeader(isDark),
         const SizedBox(height: AppSpacing.lg),
-        _buildStats(isDark, _items),
-        const SizedBox(height: AppSpacing.lg),
-        _buildFarmOverview(isDark),
-        const SizedBox(height: AppSpacing.lg),
-        _buildFilters(isDark),
-        const SizedBox(height: AppSpacing.lg),
-        _buildTabs(isDark),
-        const SizedBox(height: AppSpacing.md),
-        if (_selectedTab == 0)
-          _buildInventoryList(isDark, filteredItems)
-        else
-          _buildMovementHistory(isDark, filteredMovements),
+        if (_inventoryError != null) ...[
+          _buildSyncStatus(isDark),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+        if (_isLoadingInventory)
+          const AdminDataSkeleton(rowCount: 5)
+        else ...[
+          _buildStats(isDark, _items),
+          const SizedBox(height: AppSpacing.lg),
+          _buildFarmOverview(isDark),
+          const SizedBox(height: AppSpacing.lg),
+          _buildFilters(isDark),
+          const SizedBox(height: AppSpacing.lg),
+          _buildTabs(isDark),
+          const SizedBox(height: AppSpacing.md),
+          if (_selectedTab == 0)
+            _buildInventoryList(isDark, filteredItems)
+          else
+            _buildMovementHistory(isDark, filteredMovements),
+        ],
       ],
+    );
+  }
+
+  Widget _buildSyncStatus(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.cloud_off_rounded, color: AppColors.error, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              _inventoryError ?? 'Unable to load inventory records.',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: _loadInventory,
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -286,7 +330,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
               Text(
                 widget.title,
                 style: AppTypography.h4.copyWith(
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w600,
                   letterSpacing: -0.5,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
@@ -297,6 +341,26 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                 style: AppTypography.bodyMedium.copyWith(
                   height: 1.45,
                   color: isDark ? Colors.white70 : AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: ElevatedButton.icon(
+                  onPressed: _showAddInventoryModal,
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Add Inventory'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -365,7 +429,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                 Text(
                   value,
                   style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -374,7 +438,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -476,7 +540,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                           style: AppTypography.h6.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -486,7 +550,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                             color: isDark
                                 ? Colors.white60
                                 : AppColors.textSecondary,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
@@ -538,7 +602,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                     Text(
                       'Farm-Level Inventory',
                       style: AppTypography.h6.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -626,7 +690,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -676,7 +740,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                             : 'Healthy stock',
                     style: AppTypography.caption.copyWith(
                       color: riskColor,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -697,14 +761,14 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           overflow: TextOverflow.ellipsis,
           style: AppTypography.bodyMedium.copyWith(
             color: color,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
           ),
         ),
         Text(
           label,
           style: AppTypography.caption.copyWith(
             color: isDark ? Colors.white54 : AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -731,7 +795,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                       ? 'Global Inventory Records'
                       : '$_selectedFarm Inventory Records',
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -867,28 +931,34 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
   }
 
   Widget _buildTabs(bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-      ),
-      child: Row(
-        children: [
-          _buildTabItem(
-            isDark: isDark,
-            label: 'Inventory',
-            icon: Icons.inventory_2_rounded,
-            index: 0,
-          ),
-          _buildTabItem(
-            isDark: isDark,
-            label: 'In/Out History',
-            icon: Icons.history_rounded,
-            index: 1,
-          ),
-        ],
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+              color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildTabItem(
+              isDark: isDark,
+              label: 'Inventory',
+              icon: Icons.inventory_2_rounded,
+              index: 0,
+            ),
+            const SizedBox(width: 4),
+            _buildTabItem(
+              isDark: isDark,
+              label: 'In/Out',
+              icon: Icons.history_rounded,
+              index: 1,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -900,40 +970,45 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
     required int index,
   }) {
     final selected = _selectedTab == index;
-    return Expanded(
-      child: InkWell(
-        onTap: () => setState(() => _selectedTab = index),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-          decoration: BoxDecoration(
-            color: selected
-                ? AppColors.primary.withOpacity(0.14)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: selected
-                    ? AppColors.primary
-                    : (isDark ? Colors.white70 : AppColors.textSecondary),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
+    return InkWell(
+      onTap: () => setState(() => _selectedTab = index),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      child: Container(
+        width: 122,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primary.withOpacity(0.14)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: selected
+                  ? AppColors.primary
+                  : (isDark ? Colors.white70 : AppColors.textSecondary),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(
+              child: Text(
                 label,
-                style: AppTypography.bodyMedium.copyWith(
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                   color: selected
                       ? AppColors.primary
                       : (isDark ? Colors.white70 : AppColors.textSecondary),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -963,7 +1038,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           Text(
             'Stock Ledger',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -1016,7 +1091,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                     Text(
                       entry.name,
                       style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w500,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -1042,7 +1117,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                   statusText,
                   style: AppTypography.caption.copyWith(
                     color: statusColor,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -1114,6 +1189,12 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                   entry: entry,
                 ),
               ),
+              _actionButton(
+                label: 'Delete',
+                icon: Icons.delete_outline_rounded,
+                color: AppColors.error,
+                onPressed: () => _showDeleteInventoryModal(entry),
+              ),
             ],
           ),
         ],
@@ -1139,7 +1220,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           label,
           style: AppTypography.caption.copyWith(
             color: color,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w500,
           ),
         ),
         style: TextButton.styleFrom(
@@ -1163,6 +1244,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           confirmLabel: 'Add Stock',
           confirmColor: AppColors.success,
           icon: Icons.add_circle_outline_rounded,
+          movementType: 'stock_in',
         );
         break;
       case _InventoryAction.stockOut:
@@ -1172,6 +1254,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           confirmLabel: 'Remove Stock',
           confirmColor: AppColors.warning,
           icon: Icons.remove_circle_outline_rounded,
+          movementType: 'stock_out',
         );
         break;
       case _InventoryAction.adjust:
@@ -1181,6 +1264,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           confirmLabel: 'Apply Adjustment',
           confirmColor: AppColors.primary,
           icon: Icons.tune_rounded,
+          movementType: 'adjustment',
         );
         break;
       case _InventoryAction.viewDetails:
@@ -1189,12 +1273,270 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
     }
   }
 
+  void _showAddInventoryModal() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final itemNameController = TextEditingController();
+    final itemTypeController = TextEditingController();
+    final unitController = TextEditingController(text: 'kg');
+    final quantityController = TextEditingController();
+    final reorderController = TextEditingController();
+    final unitPriceController = TextEditingController();
+    final supplierController = TextEditingController();
+    final batchController = TextEditingController();
+    final notesController = TextEditingController();
+    final availableFarms = _farms.where((farm) => farm != 'All Farms').toList()
+      ..sort();
+    String selectedFarm =
+        availableFarms.isNotEmpty ? availableFarms.first : 'Unassigned Farm';
+    String? formError;
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.xl,
+          ),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 720),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _modalHeader(
+                  isDark: isDark,
+                  title: 'Add Inventory',
+                  subtitle: 'Create a stock item in the backend inventory',
+                  color: AppColors.primary,
+                  icon: Icons.add_box_rounded,
+                  onClose: isSaving
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      children: [
+                        if (formError != null) ...[
+                          _modalError(isDark, formError!),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
+                        _textField(
+                          isDark: isDark,
+                          controller: itemNameController,
+                          label: 'Item Name',
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _textField(
+                                isDark: isDark,
+                                controller: itemTypeController,
+                                label: 'Item Type',
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: _textField(
+                                isDark: isDark,
+                                controller: unitController,
+                                label: 'Unit',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        DropdownButtonFormField<String>(
+                          initialValue: selectedFarm,
+                          dropdownColor:
+                              isDark ? AppColors.surfaceDark : Colors.white,
+                          decoration: _inputDecoration(isDark, 'Farm'),
+                          items: [
+                            if (availableFarms.isEmpty)
+                              const DropdownMenuItem(
+                                value: 'Unassigned Farm',
+                                child: Text('Unassigned Farm'),
+                              ),
+                            ...availableFarms.map(
+                              (farm) => DropdownMenuItem(
+                                value: farm,
+                                child: Text(farm),
+                              ),
+                            ),
+                          ],
+                          onChanged: isSaving
+                              ? null
+                              : (value) => setDialogState(
+                                    () => selectedFarm =
+                                        value ?? 'Unassigned Farm',
+                                  ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _textField(
+                                isDark: isDark,
+                                controller: quantityController,
+                                label: 'Quantity',
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: _textField(
+                                isDark: isDark,
+                                controller: reorderController,
+                                label: 'Reorder Level',
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        _textField(
+                          isDark: isDark,
+                          controller: unitPriceController,
+                          label: 'Unit Price',
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _textField(
+                                isDark: isDark,
+                                controller: supplierController,
+                                label: 'Supplier Name',
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: _textField(
+                                isDark: isDark,
+                                controller: batchController,
+                                label: 'Batch Number',
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        _textField(
+                          isDark: isDark,
+                          controller: notesController,
+                          label: 'Notes',
+                          maxLines: 3,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                _modalActions(
+                  isDark: isDark,
+                  cancelLabel: 'Cancel',
+                  confirmLabel: isSaving ? 'Saving...' : 'Create Inventory',
+                  confirmColor: AppColors.primary,
+                  onCancel: isSaving
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
+                  onConfirm: isSaving
+                      ? () {}
+                      : () async {
+                          final itemName = itemNameController.text.trim();
+                          final itemType = itemTypeController.text.trim();
+                          final unit = unitController.text.trim();
+                          final quantity =
+                              double.tryParse(quantityController.text.trim());
+                          final reorder =
+                              double.tryParse(reorderController.text.trim());
+                          final unitPrice =
+                              double.tryParse(unitPriceController.text.trim());
+
+                          if (itemName.isEmpty ||
+                              itemType.isEmpty ||
+                              unit.isEmpty) {
+                            setDialogState(() => formError =
+                                'Item name, item type, and unit are required.');
+                            return;
+                          }
+                          if (quantity == null ||
+                              reorder == null ||
+                              unitPrice == null ||
+                              quantity < 0 ||
+                              reorder < 0 ||
+                              unitPrice < 0) {
+                            setDialogState(() => formError =
+                                'Quantity, reorder level, and unit price must be valid numbers.');
+                            return;
+                          }
+
+                          setDialogState(() {
+                            isSaving = true;
+                            formError = null;
+                          });
+                          final dialogNavigator = Navigator.of(dialogContext);
+                          final messenger = ScaffoldMessenger.of(context);
+                          try {
+                            await _api.createInventory(
+                              itemName: itemName,
+                              itemType: itemType,
+                              unit: unit,
+                              quantityAvailable: quantity,
+                              reorderLevel: reorder,
+                              unitPrice: unitPrice,
+                              supplierName: supplierController.text.trim(),
+                              batchNumber: batchController.text.trim(),
+                              farmId: _farmIdsByName[selectedFarm] ?? '',
+                              addedBy: 'Super Admin',
+                              status: _statusForQuantity(quantity, reorder),
+                              notes: notesController.text.trim(),
+                              dateAdded: _todayDate(),
+                            );
+                            if (!mounted) return;
+                            dialogNavigator.pop();
+                            await _loadInventory();
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text('$itemName added to inventory'),
+                              ),
+                            );
+                          } catch (error) {
+                            if (!mounted) return;
+                            setDialogState(() {
+                              isSaving = false;
+                              formError = error.toString();
+                            });
+                          }
+                        },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showStockChangeModal({
     required _InventoryEntry entry,
     required String title,
     required String confirmLabel,
     required Color confirmColor,
     required IconData icon,
+    required String movementType,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final qtyController = TextEditingController();
@@ -1254,16 +1596,210 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                 confirmLabel: confirmLabel,
                 confirmColor: confirmColor,
                 onCancel: () => Navigator.of(dialogContext).pop(),
-                onConfirm: () {
+                onConfirm: () async {
+                  final quantity = double.tryParse(qtyController.text.trim());
+                  if (quantity == null || quantity <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Quantity must be greater than zero'),
+                      ),
+                    );
+                    return;
+                  }
+                  final updatedQuantity = movementType == 'stock_in'
+                      ? entry.quantity + quantity
+                      : movementType == 'stock_out'
+                          ? entry.quantity - quantity
+                          : quantity;
+                  if (updatedQuantity < 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Cannot remove more than ${entry.quantity.toStringAsFixed(1)} ${entry.unit}',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
                   Navigator.of(dialogContext).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                  try {
+                    await _api.updateInventory(
+                      id: entry.id,
+                      itemName: entry.name,
+                      itemType: entry.category,
+                      unit: entry.unit,
+                      quantityAvailable: updatedQuantity,
+                      reorderLevel: entry.minStock,
+                      unitPrice: entry.unitCost,
+                      supplierName: entry.supplierName,
+                      batchNumber: entry.batchNumber,
+                      farmId: entry.farmId,
+                      addedBy: 'Super Admin',
+                      status: _statusForQuantity(
+                        updatedQuantity,
+                        entry.minStock,
+                      ),
+                      notes: entry.notes,
+                      dateAdded: entry.dateAdded,
+                    );
+                    await _api.createInventoryMovement(
+                      itemId: entry.id,
+                      itemName: entry.name,
+                      farmId: entry.farmId,
+                      farmName: entry.farm,
+                      movementType: movementType,
+                      quantity: quantity,
+                      unit: entry.unit,
+                      actor: 'System',
+                      note: noteController.text.trim(),
+                    );
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
                         content:
-                            Text('$confirmLabel completed for ${entry.id}')),
-                  );
+                            Text('$confirmLabel completed for ${entry.id}'),
+                      ),
+                    );
+                    await _loadInventory();
+                  } catch (error) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(error.toString())),
+                    );
+                  }
                 },
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteInventoryModal(_InventoryEntry entry) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    String? formError;
+    bool isDeleting = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.xl,
+          ),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 560),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+              border: Border.all(
+                color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _modalHeader(
+                  isDark: isDark,
+                  title: 'Delete Inventory',
+                  subtitle: entry.name,
+                  color: AppColors.error,
+                  icon: Icons.delete_outline_rounded,
+                  onClose: isDeleting
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (formError != null) ...[
+                        _modalError(isDark, formError!),
+                        const SizedBox(height: AppSpacing.md),
+                      ],
+                      Text(
+                        'This will remove the inventory item from the backend database. Existing movement logs will remain for audit history.',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color:
+                              isDark ? Colors.white70 : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.04)
+                              : AppColors.neutral50,
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                          border: Border.all(
+                            color:
+                                isDark ? Colors.white10 : AppColors.neutral200,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _detailRow(isDark, 'Item', entry.name),
+                            _detailRow(isDark, 'Farm', entry.farm),
+                            _detailRow(
+                              isDark,
+                              'Quantity',
+                              '${entry.quantity.toStringAsFixed(1)} ${entry.unit}',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _modalActions(
+                  isDark: isDark,
+                  cancelLabel: 'Cancel',
+                  confirmLabel: isDeleting ? 'Deleting...' : 'Delete',
+                  confirmColor: AppColors.error,
+                  onCancel: isDeleting
+                      ? () {}
+                      : () => Navigator.of(dialogContext).pop(),
+                  onConfirm: isDeleting
+                      ? () {}
+                      : () async {
+                          setDialogState(() {
+                            isDeleting = true;
+                            formError = null;
+                          });
+                          final dialogNavigator = Navigator.of(dialogContext);
+                          final messenger = ScaffoldMessenger.of(context);
+                          try {
+                            await _api.deleteInventory(entry.id);
+                            if (!mounted) return;
+                            dialogNavigator.pop();
+                            await _loadInventory();
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    '${entry.name} removed from inventory'),
+                              ),
+                            );
+                          } catch (error) {
+                            if (!mounted) return;
+                            setDialogState(() {
+                              isDeleting = false;
+                              formError = error.toString();
+                            });
+                          }
+                        },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1324,6 +1860,8 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                         _detailRow(isDark, 'Item', entry.name),
                         _detailRow(isDark, 'Category', entry.category),
                         _detailRow(isDark, 'Farm', entry.farm),
+                        _detailRow(isDark, 'Supplier', entry.supplierName),
+                        _detailRow(isDark, 'Batch', entry.batchNumber),
                         _detailRow(isDark, 'Quantity',
                             '${entry.quantity} ${entry.unit}'),
                         _detailRow(isDark, 'Minimum Stock',
@@ -1333,6 +1871,8 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                         _detailRow(isDark, 'Total Value',
                             '\$${entry.totalValue.toStringAsFixed(2)}'),
                         _detailRow(isDark, 'Status', statusText),
+                        _detailRow(isDark, 'Notes',
+                            entry.notes.isEmpty ? 'None' : entry.notes),
                         _detailRow(
                             isDark, 'Last Updated By', entry.lastUpdatedBy),
                       ],
@@ -1367,26 +1907,48 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       maxLines: maxLines,
       keyboardType: keyboardType,
       style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(
-          color: isDark ? Colors.white60 : AppColors.textSecondary,
+      decoration: _inputDecoration(isDark, label),
+    );
+  }
+
+  InputDecoration _inputDecoration(bool isDark, String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(
+        color: isDark ? Colors.white60 : AppColors.textSecondary,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        borderSide: BorderSide(
+          color: isDark ? Colors.white12 : AppColors.neutral200,
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        borderSide: const BorderSide(
+          color: AppColors.primary,
+          width: 1.5,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: BorderSide(
-            color: isDark ? Colors.white12 : AppColors.neutral200,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: const BorderSide(
-            color: AppColors.primary,
-            width: 1.5,
-          ),
+      ),
+    );
+  }
+
+  Widget _modalError(bool isDark, String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.22)),
+      ),
+      child: Text(
+        message,
+        style: AppTypography.bodySmall.copyWith(
+          color: isDark ? Colors.white70 : AppColors.error,
         ),
       ),
     );
@@ -1403,7 +1965,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           children: [
             TextSpan(
               text: '$label: ',
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             TextSpan(text: value),
           ],
@@ -1451,7 +2013,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                   title,
                   style: AppTypography.h6.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
@@ -1571,10 +2133,19 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
   Widget _buildMovementRow(bool isDark, _InventoryMovement movement) {
     final typeColor = movement.type == _MovementType.stockIn
         ? AppColors.success
-        : AppColors.error;
-    final typeText =
-        movement.type == _MovementType.stockIn ? 'Stock In' : 'Stock Out';
-    final sign = movement.type == _MovementType.stockIn ? '+' : '-';
+        : movement.type == _MovementType.adjustment
+            ? AppColors.primary
+            : AppColors.error;
+    final typeText = movement.type == _MovementType.stockIn
+        ? 'Stock In'
+        : movement.type == _MovementType.adjustment
+            ? 'Adjustment'
+            : 'Stock Out';
+    final sign = movement.type == _MovementType.stockIn
+        ? '+'
+        : movement.type == _MovementType.adjustment
+            ? ''
+            : '-';
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -1595,7 +2166,9 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
             child: Icon(
               movement.type == _MovementType.stockIn
                   ? Icons.call_received_rounded
-                  : Icons.call_made_rounded,
+                  : movement.type == _MovementType.adjustment
+                      ? Icons.tune_rounded
+                      : Icons.call_made_rounded,
               size: 18,
               color: typeColor,
             ),
@@ -1612,7 +2185,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                         movement.itemName,
                         style: AppTypography.bodyMedium.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -1628,7 +2201,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                         '$typeText  $sign${movement.quantity.toStringAsFixed(1)} ${movement.unit}',
                         style: AppTypography.caption.copyWith(
                           color: typeColor,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -1690,7 +2263,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
             title,
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 4),
@@ -1777,6 +2350,7 @@ class _FarmInventorySummary {
 
 class _InventoryEntry {
   final String id;
+  final String farmId;
   final String name;
   final String category;
   final String farm;
@@ -1784,10 +2358,16 @@ class _InventoryEntry {
   final String unit;
   final double minStock;
   final double unitCost;
+  final String supplierName;
+  final String batchNumber;
+  final String status;
+  final String notes;
+  final String dateAdded;
   final String lastUpdatedBy;
 
   const _InventoryEntry({
     required this.id,
+    required this.farmId,
     required this.name,
     required this.category,
     required this.farm,
@@ -1795,6 +2375,11 @@ class _InventoryEntry {
     required this.unit,
     required this.minStock,
     required this.unitCost,
+    required this.supplierName,
+    required this.batchNumber,
+    required this.status,
+    required this.notes,
+    required this.dateAdded,
     required this.lastUpdatedBy,
   });
 
@@ -1803,7 +2388,7 @@ class _InventoryEntry {
   double get totalValue => quantity * unitCost;
 }
 
-enum _MovementType { stockIn, stockOut }
+enum _MovementType { stockIn, stockOut, adjustment }
 
 class _InventoryMovement {
   final String id;

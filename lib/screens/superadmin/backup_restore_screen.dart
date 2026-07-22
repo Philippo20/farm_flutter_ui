@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/modern_admin_header.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../core/widgets/superadmin_sidebar.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
+import '../../utils/backup_download_launcher.dart';
 
 /// Backup & Restore - System data backup and restore operations.
 class BackupRestoreScreen extends ConsumerStatefulWidget {
@@ -18,141 +22,624 @@ class BackupRestoreScreen extends ConsumerStatefulWidget {
 }
 
 class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
-  int _selectedNavIndex = 8;
+  int _selectedNavIndex = 9;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String _selectedScope = 'global';
+  final SuperAdminApiService _apiService = SuperAdminApiService();
 
-  final List<_BackupRecord> _backups = const [
-    _BackupRecord(
-      id: 'GBK-1048',
-      name: 'Platform Recovery Point',
-      date: '2026-05-18 02:00',
-      size: '18.6 GB',
-      type: 'Automated',
-      status: 'Verified',
-      scope: 'global',
-      farm: 'Global Platform',
-      retention: '90 days',
-    ),
-    _BackupRecord(
-      id: 'GBK-1047',
-      name: 'Pre-Release Snapshot',
-      date: '2026-05-17 21:15',
-      size: '18.2 GB',
-      type: 'Manual',
-      status: 'Verified',
-      scope: 'global',
-      farm: 'Global Platform',
-      retention: '180 days',
-    ),
-    _BackupRecord(
-      id: 'FRM-332',
-      name: 'Green Valley Daily Backup',
-      date: '2026-05-18 01:35',
-      size: '4.8 GB',
-      type: 'Automated',
-      status: 'Verified',
-      scope: 'green-valley',
-      farm: 'Green Valley Farm',
-      retention: '45 days',
-    ),
-    _BackupRecord(
-      id: 'FRM-331',
-      name: 'North Ridge Crop Ledger',
-      date: '2026-05-18 01:20',
-      size: '3.7 GB',
-      type: 'Automated',
-      status: 'Verified',
-      scope: 'north-ridge',
-      farm: 'North Ridge Farm',
-      retention: '45 days',
-    ),
-    _BackupRecord(
-      id: 'FRM-330',
-      name: 'Sunset Acres Manual Export',
-      date: '2026-05-17 18:45',
-      size: '5.1 GB',
-      type: 'Manual',
-      status: 'Verified',
-      scope: 'sunset-acres',
-      farm: 'Sunset Acres',
-      retention: '60 days',
-    ),
-    _BackupRecord(
-      id: 'FRM-329',
-      name: 'Riverbend Incremental Backup',
-      date: '2026-05-17 01:10',
-      size: '2.9 GB',
-      type: 'Automated',
-      status: 'Pending Review',
-      scope: 'riverbend',
-      farm: 'Riverbend Farm',
-      retention: '30 days',
-    ),
-  ];
-
-  final List<_FarmBackupSummary> _farmBackups = const [
-    _FarmBackupSummary(
-      id: 'global',
-      name: 'Global Platform',
-      subtitle: 'All farms, users, permissions, finance, inventory',
-      lastBackup: 'Today, 02:00',
-      backupSize: '18.6 GB',
-      restorePoint: 'Verified',
-      coverage: '100%',
-      icon: Icons.public_rounded,
-      color: AppColors.primary,
-      isGlobal: true,
-    ),
-    _FarmBackupSummary(
-      id: 'green-valley',
-      name: 'Green Valley Farm',
-      subtitle: 'Crops, sensors, inventory, local reports',
-      lastBackup: 'Today, 01:35',
-      backupSize: '4.8 GB',
-      restorePoint: 'Verified',
-      coverage: '100%',
-      icon: Icons.agriculture_rounded,
-      color: AppColors.success,
-    ),
-    _FarmBackupSummary(
-      id: 'north-ridge',
-      name: 'North Ridge Farm',
-      subtitle: 'Harvest, workers, maintenance, local ledger',
-      lastBackup: 'Today, 01:20',
-      backupSize: '3.7 GB',
-      restorePoint: 'Verified',
-      coverage: '98%',
-      icon: Icons.terrain_rounded,
-      color: AppColors.info,
-    ),
-    _FarmBackupSummary(
-      id: 'sunset-acres',
-      name: 'Sunset Acres',
-      subtitle: 'Sales, packaging, QA, deliveries',
-      lastBackup: 'Yesterday, 18:45',
-      backupSize: '5.1 GB',
-      restorePoint: 'Verified',
-      coverage: '100%',
-      icon: Icons.wb_sunny_rounded,
-      color: AppColors.warning,
-    ),
-    _FarmBackupSummary(
-      id: 'riverbend',
-      name: 'Riverbend Farm',
-      subtitle: 'Field notes, stock, compliance records',
-      lastBackup: 'Yesterday, 01:10',
-      backupSize: '2.9 GB',
-      restorePoint: 'Review',
-      coverage: '94%',
-      icon: Icons.water_drop_rounded,
-      color: AppColors.error,
-    ),
-  ];
+  List<_BackupRecord> _backups = [];
+  List<_FarmBackupSummary> _farmBackups = [];
+  bool _isLoading = true;
+  bool _isCreatingBackup = false;
+  bool _isRunningRecoveryAction = false;
+  String? _loadError;
 
   List<_BackupRecord> get _visibleBackups {
     if (_selectedScope == 'all') return _backups;
     return _backups.where((backup) => backup.scope == _selectedScope).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBackups();
+  }
+
+  Future<void> _loadBackups() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    try {
+      final backups = await _apiService.getBackups();
+      if (!mounted) return;
+      final records = backups.map(_mapBackupRecord).toList()
+        ..sort((a, b) => b.sortDate.compareTo(a.sortDate));
+      setState(() {
+        _backups = records;
+        _farmBackups = _buildFarmSummaries(records);
+        _isLoading = false;
+        if (!_farmBackups.any((summary) => summary.id == _selectedScope)) {
+          _selectedScope = 'global';
+        }
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadError = error.toString();
+        _farmBackups = _buildFarmSummaries(_backups);
+      });
+    }
+  }
+
+  _BackupRecord _mapBackupRecord(Map<String, dynamic> doc) {
+    final createdAt =
+        (doc['created_at'] ?? doc[r'$createdAt'] ?? '').toString();
+    final sortDate = DateTime.tryParse(createdAt)?.toLocal() ??
+        DateTime.fromMillisecondsSinceEpoch(0);
+    final fileName = (doc['file_name'] ?? 'Farm Estates backup').toString();
+    final scope = (doc['scope'] ?? 'global').toString();
+    final farm = (doc['farm'] ?? 'Global Platform').toString();
+    final retentionDays = int.tryParse('${doc['retention_days'] ?? 90}') ?? 90;
+    final sizeBytes = int.tryParse('${doc['size_bytes'] ?? 0}') ?? 0;
+    final collections =
+        doc['collections'] is List ? (doc['collections'] as List).length : 0;
+
+    return _BackupRecord(
+      id: (doc['id'] ?? doc[r'$id'] ?? '').toString(),
+      name: fileName,
+      date: _formatDate(sortDate),
+      size: _formatBytes(sizeBytes),
+      type: (doc['backup_type'] ?? 'Manual').toString(),
+      status: (doc['status'] ?? 'Verified').toString(),
+      scope: scope,
+      farm: farm,
+      retention: '$retentionDays days',
+      retentionDays: retentionDays,
+      sizeBytes: sizeBytes,
+      sortDate: sortDate,
+      collectionsCount: collections,
+    );
+  }
+
+  List<_FarmBackupSummary> _buildFarmSummaries(List<_BackupRecord> records) {
+    final globalRecords =
+        records.where((record) => record.scope == 'global').toList();
+    final summaries = <_FarmBackupSummary>[
+      _buildSummary(
+        id: 'global',
+        name: 'Global Platform',
+        subtitle: 'All farms, users, permissions, finance, inventory',
+        records: globalRecords.isEmpty ? records : globalRecords,
+        icon: Icons.public_rounded,
+        color: AppColors.primary,
+        isGlobal: true,
+      ),
+    ];
+
+    final farmScopes = records
+        .where((record) => record.scope != 'global')
+        .map((record) => record.scope)
+        .toSet()
+        .toList()
+      ..sort();
+
+    final colors = [
+      AppColors.success,
+      AppColors.info,
+      AppColors.warning,
+      AppColors.error,
+    ];
+    for (var index = 0; index < farmScopes.length; index++) {
+      final scope = farmScopes[index];
+      final scopedRecords =
+          records.where((record) => record.scope == scope).toList();
+      summaries.add(
+        _buildSummary(
+          id: scope,
+          name: scopedRecords.first.farm,
+          subtitle: 'Farm-level recovery records',
+          records: scopedRecords,
+          icon: Icons.agriculture_rounded,
+          color: colors[index % colors.length],
+        ),
+      );
+    }
+    return summaries;
+  }
+
+  _FarmBackupSummary _buildSummary({
+    required String id,
+    required String name,
+    required String subtitle,
+    required List<_BackupRecord> records,
+    required IconData icon,
+    required Color color,
+    bool isGlobal = false,
+  }) {
+    final totalBytes = records.fold<int>(
+      0,
+      (total, record) => total + record.sizeBytes,
+    );
+    final latest = records.isEmpty ? null : records.first;
+    return _FarmBackupSummary(
+      id: id,
+      name: name,
+      subtitle: subtitle,
+      lastBackup: latest?.date ?? 'No backups yet',
+      backupSize: _formatBytes(totalBytes),
+      restorePoint: latest?.status ?? 'Pending',
+      coverage: records.isEmpty ? '0 records' : '${records.length} records',
+      icon: icon,
+      color: color,
+      isGlobal: isGlobal,
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    if (date.millisecondsSinceEpoch == 0) return 'Unknown date';
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '$year-$month-$day $hour:$minute';
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes <= 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    var size = bytes.toDouble();
+    var unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    return '${size.toStringAsFixed(size >= 10 || unitIndex == 0 ? 0 : 1)} ${units[unitIndex]}';
+  }
+
+  Future<void> _createBackup({
+    required BuildContext context,
+    required String name,
+    required String scope,
+    required String type,
+  }) async {
+    setState(() => _isCreatingBackup = true);
+    try {
+      final notes = [
+        if (name.trim().isNotEmpty) name.trim(),
+        type,
+        scope,
+      ].join(' | ');
+      await _apiService.createBackup(notes: notes);
+      if (!context.mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Backup created successfully.'),
+            ],
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          ),
+        ),
+      );
+      await _loadBackups();
+    } catch (error) {
+      rethrow;
+    } finally {
+      if (mounted) setState(() => _isCreatingBackup = false);
+    }
+  }
+
+  Future<void> _requestDownload(_BackupRecord backup) async {
+    try {
+      final result = await _apiService.getBackupDownload(backup.id);
+      if (!mounted) return;
+      final url = (result['download_url'] ?? '').toString();
+      if (url.isEmpty) {
+        _showSnackBar('Download link could not be generated.', AppColors.error);
+        return;
+      }
+      final opened = await openBackupDownload(url);
+      if (!mounted) return;
+      _showSnackBar(
+        opened
+            ? 'Download opened for ${backup.name}.'
+            : 'Download link ready: $url',
+        AppColors.success,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString()),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _confirmDeleteBackup(_BackupRecord backup, bool isDark) {
+    var isDeleting = false;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => Dialog(
+          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          ),
+          child: Container(
+            width: 420,
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: AppColors.error,
+                    size: 40,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  'Delete Backup?',
+                  style: AppTypography.h5.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'This will remove the selected backup from Appwrite storage and backup history.',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white70 : AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : AppColors.neutral50,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white10
+                          : Colors.black.withValues(alpha: 0.08),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.folder_zip_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              backup.name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              '${backup.farm} | ${backup.date} | ${backup.size}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? Colors.white60
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(
+                        color: AppColors.error.withValues(alpha: 0.3)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: AppColors.error,
+                        size: 20,
+                      ),
+                      SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          'This action cannot be undone. The storage file and metadata record will both be deleted.',
+                          style: TextStyle(
+                            color: AppColors.error,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: isDeleting
+                            ? null
+                            : () => Navigator.pop(dialogContext),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.md,
+                          ),
+                          side: BorderSide(
+                            color:
+                                isDark ? Colors.white24 : AppColors.neutral300,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: isDark
+                                ? Colors.white70
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: isDeleting
+                            ? null
+                            : () async {
+                                setDialogState(() => isDeleting = true);
+                                await _deleteBackup(backup);
+                                if (dialogContext.mounted) {
+                                  Navigator.pop(dialogContext);
+                                }
+                              },
+                        icon: isDeleting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.delete_outline_rounded,
+                                size: 18),
+                        label: Text(isDeleting ? 'Deleting...' : 'Delete'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.md,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteBackup(_BackupRecord backup) async {
+    try {
+      await _apiService.deleteBackup(backup.id);
+      if (!mounted) return;
+      _showSnackBar('Backup deleted successfully.', AppColors.success);
+      await _loadBackups();
+    } catch (error) {
+      if (!mounted) return;
+      _showSnackBar(error.toString(), AppColors.error);
+    }
+  }
+
+  Future<void> _exportSelectedArchive() async {
+    final candidates = _visibleBackups;
+    if (candidates.isEmpty) {
+      _showSnackBar(
+        'No backup is available for the selected scope.',
+        AppColors.warning,
+      );
+      return;
+    }
+    await _requestDownload(candidates.first);
+  }
+
+  Future<void> _importSnapshot() async {
+    final picked = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+      withData: true,
+    );
+    if (picked == null || picked.files.isEmpty) return;
+
+    final file = picked.files.single;
+    final bytes = file.bytes;
+    if (bytes == null) {
+      _showSnackBar(
+        'Could not read the selected backup file.',
+        AppColors.error,
+      );
+      return;
+    }
+
+    setState(() => _isRunningRecoveryAction = true);
+    try {
+      await _apiService.restoreBackup(
+        fileName: file.name,
+        fileBytes: bytes,
+        replaceCollections: true,
+      );
+      if (!mounted) return;
+      _showSnackBar('Restore completed successfully.', AppColors.success);
+      await _loadBackups();
+    } catch (error) {
+      if (!mounted) return;
+      _showSnackBar(error.toString(), AppColors.error);
+    } finally {
+      if (mounted) setState(() => _isRunningRecoveryAction = false);
+    }
+  }
+
+  void _showRetentionDialog(bool isDark) {
+    final scopedBackups = _visibleBackups;
+    final controller = TextEditingController(
+      text: scopedBackups.isNotEmpty
+          ? scopedBackups.first.retentionDays.toString()
+          : '90',
+    );
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        title: Text(
+          'Retention Rules',
+          style:
+              TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              scopedBackups.isEmpty
+                  ? 'No backup records are available for this scope yet.'
+                  : 'Apply retention days to ${scopedBackups.length} backup record(s) in the selected scope.',
+              style: TextStyle(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Retention Days',
+                hintText: 'Example: 90',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: scopedBackups.isEmpty || _isRunningRecoveryAction
+                ? null
+                : () async {
+                    final days = int.tryParse(controller.text.trim());
+                    if (days == null || days < 1 || days > 3650) {
+                      _showSnackBar(
+                        'Retention days must be between 1 and 3650.',
+                        AppColors.error,
+                      );
+                      return;
+                    }
+                    Navigator.pop(dialogContext);
+                    await _updateRetention(scopedBackups, days);
+                  },
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updateRetention(List<_BackupRecord> backups, int days) async {
+    setState(() => _isRunningRecoveryAction = true);
+    try {
+      for (final backup in backups) {
+        await _apiService.updateBackupRetention(
+          id: backup.id,
+          retentionDays: days,
+        );
+      }
+      if (!mounted) return;
+      _showSnackBar('Retention rules updated.', AppColors.success);
+      await _loadBackups();
+    } catch (error) {
+      if (!mounted) return;
+      _showSnackBar(error.toString(), AppColors.error);
+    } finally {
+      if (mounted) setState(() => _isRunningRecoveryAction = false);
+    }
+  }
+
+  void _showSnackBar(String message, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+      ),
+    );
   }
 
   @override
@@ -195,7 +682,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     return Row(
       children: [
         SuperAdminSidebar(
-          selectedIndex: 8,
+          selectedIndex: 9,
           onItemSelected: (_) {},
           userName: userName,
           userEmail: userEmail,
@@ -247,20 +734,68 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       children: [
         _buildHero(isDark, isMobile),
         const SizedBox(height: AppSpacing.lg),
-        _buildScopeCards(isDark, isMobile),
-        const SizedBox(height: AppSpacing.lg),
-        _buildOperationalPanel(isDark, isMobile),
-        const SizedBox(height: AppSpacing.lg),
-        _buildBackupHistory(isDark, isMobile),
+        if (_loadError != null) ...[
+          _buildSyncStatus(isDark),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+        if (_isLoading)
+          const AdminDataSkeleton(rowCount: 5)
+        else ...[
+          _buildScopeCards(isDark, isMobile),
+          const SizedBox(height: AppSpacing.lg),
+          _buildOperationalPanel(isDark, isMobile),
+          const SizedBox(height: AppSpacing.lg),
+          _buildBackupHistory(isDark, isMobile),
+        ],
       ],
     );
   }
 
-  Widget _buildHero(bool isDark, bool isMobile) {
-    final selectedSummary = _farmBackups.firstWhere(
-      (summary) => summary.id == _selectedScope,
-      orElse: () => _farmBackups.first,
+  Widget _buildSyncStatus(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.cloud_off_rounded, color: AppColors.error, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              _loadError ?? 'Unable to sync backup records.',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton.icon(
+            onPressed: _loadBackups,
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildHero(bool isDark, bool isMobile) {
+    final selectedSummary = _farmBackups.isEmpty
+        ? _buildSummary(
+            id: 'global',
+            name: 'Global Platform',
+            subtitle: 'All farms, users, permissions, finance, inventory',
+            records: const [],
+            icon: Icons.public_rounded,
+            color: AppColors.primary,
+            isGlobal: true,
+          )
+        : _farmBackups.firstWhere(
+            (summary) => summary.id == _selectedScope,
+            orElse: () => _farmBackups.first,
+          );
 
     return Container(
       padding: EdgeInsets.all(isMobile ? AppSpacing.lg : AppSpacing.xl),
@@ -349,7 +884,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                 'Disaster recovery command center',
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white : AppColors.primary,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -360,7 +895,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           'Backup & Restore',
           style: AppTypography.h4.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 6),
@@ -392,7 +927,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             _selectedScope == 'global' ? 'Global Coverage' : 'Selected Farm',
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -415,7 +950,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                       summary.name,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     Text(
@@ -444,9 +979,11 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ElevatedButton.icon(
-          onPressed: () => _showCreateBackupDialog(context, isDark),
+          onPressed: _isCreatingBackup
+              ? null
+              : () => _showCreateBackupDialog(context, isDark),
           icon: const Icon(Icons.backup_rounded, size: 18),
-          label: const Text('Create Backup'),
+          label: Text(_isCreatingBackup ? 'Creating...' : 'Create Backup'),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
@@ -577,7 +1114,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               summary.name,
               style: AppTypography.bodyLarge.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -687,7 +1224,21 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
   Widget _buildActionTile(_BackupAction action, bool isDark) {
     return InkWell(
-      onTap: () {},
+      onTap: _isRunningRecoveryAction
+          ? null
+          : () {
+              switch (action.title) {
+                case 'Export Archive':
+                  _exportSelectedArchive();
+                  break;
+                case 'Import Snapshot':
+                  _importSnapshot();
+                  break;
+                case 'Retention Rules':
+                  _showRetentionDialog(isDark);
+                  break;
+              }
+            },
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -715,7 +1266,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                     action.title,
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -744,12 +1295,14 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     final backups = _visibleBackups;
     final activeLabel = _selectedScope == 'all'
         ? 'All backup records'
-        : _farmBackups
-            .firstWhere(
-              (summary) => summary.id == _selectedScope,
-              orElse: () => _farmBackups.first,
-            )
-            .name;
+        : _farmBackups.isEmpty
+            ? 'Global Platform'
+            : _farmBackups
+                .firstWhere(
+                  (summary) => summary.id == _selectedScope,
+                  orElse: () => _farmBackups.first,
+                )
+                .name;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -789,10 +1342,51 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                   ],
                 ),
           const SizedBox(height: AppSpacing.md),
-          if (isMobile)
+          if (backups.isEmpty)
+            _buildEmptyBackups(isDark)
+          else if (isMobile)
             ...backups.map((backup) => _buildMobileBackupCard(backup, isDark))
           else
             _buildBackupTable(backups, isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyBackups(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color:
+            isDark ? Colors.white.withValues(alpha: 0.03) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.folder_zip_outlined,
+            color: isDark ? Colors.white38 : AppColors.textSecondary,
+            size: 34,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'No backup records found',
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Create a backup to store the first recovery point in Appwrite.',
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white60 : AppColors.textSecondary,
+            ),
+          ),
         ],
       ),
     );
@@ -875,14 +1469,14 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                       Text(
                         backup.name,
                         style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w500,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        '${backup.id} • ${backup.date}',
+                        '${backup.id} | ${backup.date}',
                         style: AppTypography.bodySmall.copyWith(
                           color:
                               isDark ? Colors.white60 : AppColors.textSecondary,
@@ -902,7 +1496,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               backup.farm,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -911,7 +1505,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               backup.size,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -931,13 +1525,13 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                 _buildIconAction(
                   Icons.download_rounded,
                   AppColors.primary,
-                  () {},
+                  () => _requestDownload(backup),
                   'Download',
                 ),
                 _buildIconAction(
                   Icons.delete_outline_rounded,
                   AppColors.error,
-                  () {},
+                  () => _confirmDeleteBackup(backup, isDark),
                   'Delete',
                 ),
               ],
@@ -994,7 +1588,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                       backup.name,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w500,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1052,13 +1646,13 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               _buildIconAction(
                 Icons.download_rounded,
                 AppColors.primary,
-                () {},
+                () => _requestDownload(backup),
                 'Download',
               ),
               _buildIconAction(
                 Icons.delete_outline_rounded,
                 AppColors.error,
-                () {},
+                () => _confirmDeleteBackup(backup, isDark),
                 'Delete',
               ),
             ],
@@ -1076,7 +1670,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           title,
           style: AppTypography.h6.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 4),
@@ -1105,7 +1699,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           value,
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -1137,7 +1731,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             value,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1162,7 +1756,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
         '$count recovery point${count == 1 ? '' : 's'}',
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white : AppColors.primary,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -1182,7 +1776,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           text,
           style: AppTypography.bodySmall.copyWith(
             color: color,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
             fontSize: 11,
           ),
           maxLines: 1,
@@ -1203,7 +1797,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w500,
           letterSpacing: 0.2,
         ),
       ),
@@ -1235,7 +1829,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             style: AppTypography.bodySmall.copyWith(
               color: chipColor,
               fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1268,6 +1862,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     );
     String selectedType = 'Full Backup';
     String selectedScope = _selectedScope == 'all' ? 'global' : _selectedScope;
+    bool isDialogCreating = false;
+    String? dialogError;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -1327,7 +1923,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                               'Create Backup',
                               style: AppTypography.h6.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             Text(
@@ -1340,7 +1936,9 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                         ),
                       ),
                       IconButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: isDialogCreating
+                            ? null
+                            : () => Navigator.pop(context),
                         icon: const Icon(Icons.close, color: Colors.white70),
                       ),
                     ],
@@ -1364,8 +1962,11 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                       const SizedBox(height: AppSpacing.sm),
                       _buildDropdownField(
                         value: selectedScope,
-                        items: _farmBackups.map((farm) => farm.id).toList(),
+                        items: _farmBackups.isEmpty
+                            ? const ['global']
+                            : _farmBackups.map((farm) => farm.id).toList(),
                         labels: {
+                          if (_farmBackups.isEmpty) 'global': 'Global Platform',
                           for (final farm in _farmBackups) farm.id: farm.name,
                         },
                         icon: Icons.account_tree_rounded,
@@ -1412,13 +2013,49 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                                 'The backup will be encrypted, verified, and added to the selected recovery scope.',
                                 style: AppTypography.bodySmall.copyWith(
                                   color: AppColors.info,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
+                      if (dialogError != null) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.error.withValues(alpha: 0.1),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
+                            border: Border.all(
+                              color: AppColors.error.withValues(alpha: 0.28),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.error_outline_rounded,
+                                color: AppColors.error,
+                                size: 20,
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: Text(
+                                  dialogError!,
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.error,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1436,7 +2073,9 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: isDialogCreating
+                              ? null
+                              : () => Navigator.pop(context),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
                               vertical: AppSpacing.md,
@@ -1465,30 +2104,46 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                       Expanded(
                         flex: 2,
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: const Row(
-                                  children: [
-                                    Icon(Icons.check_circle,
-                                        color: Colors.white),
-                                    SizedBox(width: 8),
-                                    Text('Backup created successfully.'),
-                                  ],
-                                ),
-                                backgroundColor: AppColors.success,
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                    AppSpacing.radiusMd,
+                          onPressed: isDialogCreating || _isCreatingBackup
+                              ? null
+                              : () async {
+                                  setDialogState(() {
+                                    isDialogCreating = true;
+                                    dialogError = null;
+                                  });
+                                  try {
+                                    await _createBackup(
+                                      context: context,
+                                      name: nameController.text,
+                                      scope: selectedScope,
+                                      type: selectedType,
+                                    );
+                                  } catch (error) {
+                                    if (!context.mounted) return;
+                                    setDialogState(() {
+                                      dialogError = error.toString();
+                                      isDialogCreating = false;
+                                    });
+                                    return;
+                                  }
+                                  if (context.mounted) {
+                                    setDialogState(
+                                        () => isDialogCreating = false);
+                                  }
+                                },
+                          icon: isDialogCreating
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
                                   ),
-                                ),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.backup_rounded, size: 18),
-                          label: const Text('Create Backup'),
+                                )
+                              : const Icon(Icons.backup_rounded, size: 18),
+                          label: Text(
+                            isDialogCreating ? 'Creating...' : 'Create Backup',
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
@@ -1547,7 +2202,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               Text(
                 'Restore Backup?',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -1595,13 +2250,13 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                           Text(
                             backup.name,
                             style: TextStyle(
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w500,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
                             ),
                           ),
                           Text(
-                            '${backup.farm} • ${backup.date} • ${backup.size}',
+                            '${backup.farm} | ${backup.date} | ${backup.size}',
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark
@@ -1640,7 +2295,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                         style: const TextStyle(
                           color: AppColors.error,
                           fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -1724,7 +2379,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
   Widget _buildFormLabel(String label, bool isDark) => Text(
         label,
         style: AppTypography.bodyMedium.copyWith(
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
           color: isDark ? Colors.white : AppColors.textPrimary,
         ),
       );
@@ -1845,6 +2500,10 @@ class _BackupRecord {
     required this.scope,
     required this.farm,
     required this.retention,
+    required this.retentionDays,
+    required this.sizeBytes,
+    required this.sortDate,
+    required this.collectionsCount,
   });
 
   final String id;
@@ -1856,6 +2515,10 @@ class _BackupRecord {
   final String scope;
   final String farm;
   final String retention;
+  final int retentionDays;
+  final int sizeBytes;
+  final DateTime sortDate;
+  final int collectionsCount;
 }
 
 class _FarmBackupSummary {

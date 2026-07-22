@@ -10,16 +10,19 @@ class PackagingSupervisorDashboard extends ConsumerStatefulWidget {
   const PackagingSupervisorDashboard({super.key});
 
   @override
-  ConsumerState<PackagingSupervisorDashboard> createState() => _PackagingSupervisorDashboardState();
+  ConsumerState<PackagingSupervisorDashboard> createState() =>
+      _PackagingSupervisorDashboardState();
 }
 
-class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervisorDashboard> {
+class _PackagingSupervisorDashboardState
+    extends ConsumerState<PackagingSupervisorDashboard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
         title: const Text('Packaging Supervisor'),
         actions: [
@@ -53,18 +56,18 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
               Text(
                 'Packaging Operations',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
               _buildFeaturesGrid(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Active Batches
               _buildActiveBatches(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Waste Summary
@@ -106,7 +109,7 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
                   'Packaging Station',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -118,7 +121,7 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '3 Active Batches • 720 kg Packaged Today',
+                  '3 Active Batches â€¢ 720 kg Packaged Today',
                   style: AppTypography.bodySmall.copyWith(
                     color: Colors.white.withOpacity(0.8),
                   ),
@@ -163,7 +166,7 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
               Text(
                 'Today\'s Progress',
                 style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -173,13 +176,16 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
           Row(
             children: [
               Expanded(
-                child: _buildProgressItem('Started', '3', 'batches', AppColors.info, isDark),
+                child: _buildProgressItem(
+                    'Started', '3', 'batches', AppColors.info, isDark),
               ),
               Expanded(
-                child: _buildProgressItem('In Progress', '2', 'batches', AppColors.warning, isDark),
+                child: _buildProgressItem(
+                    'In Progress', '2', 'batches', AppColors.warning, isDark),
               ),
               Expanded(
-                child: _buildProgressItem('Completed', '1', 'batch', AppColors.success, isDark),
+                child: _buildProgressItem(
+                    'Completed', '1', 'batch', AppColors.success, isDark),
               ),
             ],
           ),
@@ -203,13 +209,14 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
     );
   }
 
-  Widget _buildProgressItem(String label, String value, String unit, Color color, bool isDark) {
+  Widget _buildProgressItem(
+      String label, String value, String unit, Color color, bool isDark) {
     return Column(
       children: [
         Text(
           value,
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: color,
           ),
         ),
@@ -302,7 +309,7 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
             Text(
               feature.title,
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w500,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
@@ -333,7 +340,7 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
         Text(
           'Active Batches',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -397,7 +404,7 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
                     Text(
                       batchNumber,
                       style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w500,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -405,7 +412,8 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
                     Text(
                       details,
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -425,7 +433,7 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
                   style: AppTypography.bodySmall.copyWith(
                     color: Colors.white,
                     fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -448,7 +456,7 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
                 progress,
                 style: AppTypography.bodySmall.copyWith(
                   color: color,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   fontSize: 11,
                 ),
               ),
@@ -466,7 +474,7 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
         Text(
           'Waste Summary',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -494,14 +502,14 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
                   Text(
                     'Total Waste Today',
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
                   Text(
                     '15 kg',
                     style: AppTypography.h6.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.error,
                     ),
                   ),
@@ -514,7 +522,8 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
     );
   }
 
-  Widget _buildWasteReasonRow(String reason, String amount, String percentage, bool isDark) {
+  Widget _buildWasteReasonRow(
+      String reason, String amount, String percentage, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -530,7 +539,7 @@ class _PackagingSupervisorDashboardState extends ConsumerState<PackagingSupervis
           Text(
             amount,
             style: AppTypography.bodySmall.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),

@@ -11,16 +11,19 @@ class FulfillmentManagerDashboard extends ConsumerStatefulWidget {
   const FulfillmentManagerDashboard({super.key});
 
   @override
-  ConsumerState<FulfillmentManagerDashboard> createState() => _FulfillmentManagerDashboardState();
+  ConsumerState<FulfillmentManagerDashboard> createState() =>
+      _FulfillmentManagerDashboardState();
 }
 
-class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManagerDashboard> {
+class _FulfillmentManagerDashboardState
+    extends ConsumerState<FulfillmentManagerDashboard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
         title: const Text('Fulfillment Manager'),
         actions: [
@@ -52,18 +55,18 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
               Text(
                 'Fulfillment Operations',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
               _buildFeaturesGrid(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Pending Confirmations
               _buildPendingConfirmations(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Recent Activities
@@ -105,7 +108,7 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
                   'Fulfillment Center',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -117,7 +120,7 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '5 Pending Confirmations • 12 Active Batches',
+                  '5 Pending Confirmations â€¢ 12 Active Batches',
                   style: AppTypography.bodySmall.copyWith(
                     color: Colors.white.withOpacity(0.8),
                   ),
@@ -162,7 +165,7 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
               Text(
                 'Today\'s Overview',
                 style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -172,16 +175,20 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
           Row(
             children: [
               Expanded(
-                child: _buildOverviewItem('Received', '850', 'kg', AppColors.success, isDark),
+                child: _buildOverviewItem(
+                    'Received', '850', 'kg', AppColors.success, isDark),
               ),
               Expanded(
-                child: _buildOverviewItem('Packaged', '720', 'kg', AppColors.info, isDark),
+                child: _buildOverviewItem(
+                    'Packaged', '720', 'kg', AppColors.info, isDark),
               ),
               Expanded(
-                child: _buildOverviewItem('Waste', '15', 'kg', AppColors.warning, isDark),
+                child: _buildOverviewItem(
+                    'Waste', '15', 'kg', AppColors.warning, isDark),
               ),
               Expanded(
-                child: _buildOverviewItem('Loss', '1.8', '%', AppColors.error, isDark),
+                child: _buildOverviewItem(
+                    'Loss', '1.8', '%', AppColors.error, isDark),
               ),
             ],
           ),
@@ -190,13 +197,14 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
     );
   }
 
-  Widget _buildOverviewItem(String label, String value, String unit, Color color, bool isDark) {
+  Widget _buildOverviewItem(
+      String label, String value, String unit, Color color, bool isDark) {
     return Column(
       children: [
         Text(
           value,
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: color,
           ),
         ),
@@ -306,7 +314,7 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
                 Text(
                   feature.title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                   textAlign: TextAlign.center,
@@ -344,7 +352,7 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white,
                       fontSize: 8,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -365,7 +373,7 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
             Text(
               'Pending Confirmations',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -382,7 +390,7 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
                 '5',
                 style: AppTypography.bodySmall.copyWith(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   fontSize: 10,
                 ),
               ),
@@ -449,7 +457,7 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
                 Text(
                   title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -470,14 +478,15 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
                       ),
                       decoration: BoxDecoration(
                         color: color.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Text(
                         status,
                         style: AppTypography.bodySmall.copyWith(
                           color: color,
                           fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -485,7 +494,8 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
                     Text(
                       time,
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark ? Colors.white38 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white38 : AppColors.textSecondary,
                         fontSize: 10,
                       ),
                     ),
@@ -514,7 +524,7 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
             Text(
               'Recent Activities',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -590,7 +600,7 @@ class _FulfillmentManagerDashboardState extends ConsumerState<FulfillmentManager
                 Text(
                   title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),

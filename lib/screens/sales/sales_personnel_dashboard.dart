@@ -11,16 +11,19 @@ class SalesPersonnelDashboard extends ConsumerStatefulWidget {
   const SalesPersonnelDashboard({super.key});
 
   @override
-  ConsumerState<SalesPersonnelDashboard> createState() => _SalesPersonnelDashboardState();
+  ConsumerState<SalesPersonnelDashboard> createState() =>
+      _SalesPersonnelDashboardState();
 }
 
-class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboard> {
+class _SalesPersonnelDashboardState
+    extends ConsumerState<SalesPersonnelDashboard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
         title: const Text('Sales Personnel'),
         actions: [
@@ -54,18 +57,18 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
               Text(
                 'Sales Operations',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
               _buildFeaturesGrid(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Active Deliveries
               _buildActiveDeliveries(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Off-Taker Pipeline
@@ -107,7 +110,7 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
                   'Sales & Delivery',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -119,7 +122,7 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '5 Active Deliveries • \$45,200 This Month',
+                  '5 Active Deliveries â€¢ \$45,200 This Month',
                   style: AppTypography.bodySmall.copyWith(
                     color: Colors.white.withOpacity(0.8),
                   ),
@@ -164,7 +167,7 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
               Text(
                 'Today\'s Deliveries',
                 style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -174,13 +177,16 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
           Row(
             children: [
               Expanded(
-                child: _buildDeliveryItem('Pending', '2', AppColors.warning, isDark),
+                child: _buildDeliveryItem(
+                    'Pending', '2', AppColors.warning, isDark),
               ),
               Expanded(
-                child: _buildDeliveryItem('In Transit', '3', AppColors.info, isDark),
+                child: _buildDeliveryItem(
+                    'In Transit', '3', AppColors.info, isDark),
               ),
               Expanded(
-                child: _buildDeliveryItem('Delivered', '5', AppColors.success, isDark),
+                child: _buildDeliveryItem(
+                    'Delivered', '5', AppColors.success, isDark),
               ),
             ],
           ),
@@ -189,13 +195,14 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
     );
   }
 
-  Widget _buildDeliveryItem(String label, String count, Color color, bool isDark) {
+  Widget _buildDeliveryItem(
+      String label, String count, Color color, bool isDark) {
     return Column(
       children: [
         Text(
           count,
           style: AppTypography.h4.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: color,
           ),
         ),
@@ -298,7 +305,7 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
                 Text(
                   feature.title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                   textAlign: TextAlign.center,
@@ -336,7 +343,7 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white,
                       fontSize: 8,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -354,7 +361,7 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
         Text(
           'Active Deliveries',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -415,7 +422,7 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
                 Text(
                   batchNumber,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -424,7 +431,7 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
                   company,
                   style: AppTypography.bodySmall.copyWith(
                     color: color,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -452,7 +459,7 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
               style: AppTypography.bodySmall.copyWith(
                 color: Colors.white,
                 fontSize: 10,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -468,7 +475,7 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
         Text(
           'Off-Taker Pipeline',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -534,7 +541,7 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
                 Text(
                   company,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -548,14 +555,15 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
                       ),
                       decoration: BoxDecoration(
                         color: color,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Text(
                         stage,
                         style: AppTypography.bodySmall.copyWith(
                           color: Colors.white,
                           fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -564,7 +572,8 @@ class _SalesPersonnelDashboardState extends ConsumerState<SalesPersonnelDashboar
                       child: Text(
                         note,
                         style: AppTypography.bodySmall.copyWith(
-                          color: isDark ? Colors.white60 : AppColors.textSecondary,
+                          color:
+                              isDark ? Colors.white60 : AppColors.textSecondary,
                           fontSize: 11,
                         ),
                       ),

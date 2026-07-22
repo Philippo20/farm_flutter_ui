@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import 'skeleton_loader.dart';
 
 /// Data column configuration
 class AppDataColumn {
@@ -211,10 +211,14 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
     // Colors
     final headerBgColor = widget.headerBackgroundColor ??
         (isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50);
-    final rowBgColor = widget.rowBackgroundColor ?? (isDark ? AppColors.surfaceDark : Colors.white);
+    final rowBgColor = widget.rowBackgroundColor ??
+        (isDark ? AppColors.surfaceDark : Colors.white);
     final selectedColor = widget.selectedRowColor ??
-        (isDark ? AppColors.primary.withOpacity(0.15) : AppColors.primary.withOpacity(0.08));
-    final borderColor = isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral200;
+        (isDark
+            ? AppColors.primary.withOpacity(0.15)
+            : AppColors.primary.withOpacity(0.08));
+    final borderColor =
+        isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral200;
 
     // Empty State
     if (!hasData && !widget.isLoading) {
@@ -228,13 +232,17 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                   Icon(
                     Icons.table_chart_outlined,
                     size: 64,
-                    color: isDark ? Colors.white.withOpacity(0.2) : AppColors.neutral300,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.2)
+                        : AppColors.neutral300,
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
                     widget.emptyMessage ?? 'No data available',
                     style: AppTypography.bodyLarge.copyWith(
-                      color: isDark ? Colors.white.withOpacity(0.5) : AppColors.neutral300,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.5)
+                          : AppColors.neutral300,
                     ),
                   ),
                 ],
@@ -246,23 +254,9 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
     // Loading State
     if (widget.isLoading) {
       return widget.loadingWidget ??
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    'Loading data...',
-                    style: AppTypography.bodyLarge.copyWith(
-                      color: isDark ? Colors.white.withOpacity(0.5) : AppColors.neutral300,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          const Padding(
+            padding: EdgeInsets.all(AppSpacing.md),
+            child: AdminDataSkeleton(showStats: false, rowCount: 5),
           );
     }
 
@@ -273,8 +267,9 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color:
-                  isDark ? AppColors.primary.withOpacity(0.1) : AppColors.primary.withOpacity(0.05),
+              color: isDark
+                  ? AppColors.primary.withOpacity(0.1)
+                  : AppColors.primary.withOpacity(0.05),
               border: Border(
                 bottom: BorderSide(color: borderColor),
               ),
@@ -293,7 +288,8 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                   onPressed: () => _toggleAllSelection(false),
                   child: Text(
                     'Clear',
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.error),
+                    style: AppTypography.bodySmall
+                        .copyWith(color: AppColors.error),
                   ),
                 ),
               ],
@@ -303,10 +299,12 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
         // Table
         Expanded(
           child: SingleChildScrollView(
-            controller: widget.verticalScrollController ?? _verticalScrollController,
+            controller:
+                widget.verticalScrollController ?? _verticalScrollController,
             scrollDirection: Axis.vertical,
             child: SingleChildScrollView(
-              controller: widget.horizontalScrollController ?? _horizontalScrollController,
+              controller: widget.horizontalScrollController ??
+                  _horizontalScrollController,
               scrollDirection: Axis.horizontal,
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -328,7 +326,8 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                           color: headerBgColor,
                           border: widget.showBorder
                               ? Border(
-                                  bottom: BorderSide(color: borderColor, width: 2),
+                                  bottom:
+                                      BorderSide(color: borderColor, width: 2),
                                 )
                               : null,
                         ),
@@ -338,9 +337,11 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                               padding: const EdgeInsets.all(AppSpacing.md),
                               child: Checkbox(
                                 value: _allSelected,
-                                onChanged: (value) => _toggleAllSelection(value ?? false),
+                                onChanged: (value) =>
+                                    _toggleAllSelection(value ?? false),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                  borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusSm),
                                 ),
                               ),
                             ),
@@ -350,13 +351,17 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                       ),
 
                     // Data Rows
-                    for (var rowIndex = 0; rowIndex < widget.rows.length; rowIndex++)
+                    for (var rowIndex = 0;
+                        rowIndex < widget.rows.length;
+                        rowIndex++)
                       TableRow(
                         decoration: BoxDecoration(
                           color: _isRowSelected(widget.rows[rowIndex].data)
                               ? selectedColor
                               : (widget.striped && rowIndex % 2 == 0
-                                  ? (isDark ? Colors.white.withOpacity(0.02) : AppColors.neutral50)
+                                  ? (isDark
+                                      ? Colors.white.withOpacity(0.02)
+                                      : AppColors.neutral50)
                                   : rowBgColor),
                         ),
                         children: [
@@ -364,11 +369,13 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                             Padding(
                               padding: const EdgeInsets.all(AppSpacing.md),
                               child: Checkbox(
-                                value: _isRowSelected(widget.rows[rowIndex].data),
-                                onChanged: (value) =>
-                                    _toggleRowSelection(widget.rows[rowIndex].data, value ?? false),
+                                value:
+                                    _isRowSelected(widget.rows[rowIndex].data),
+                                onChanged: (value) => _toggleRowSelection(
+                                    widget.rows[rowIndex].data, value ?? false),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                  borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusSm),
                                 ),
                               ),
                             ),
@@ -404,8 +411,10 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
     return Container(
       decoration: BoxDecoration(
         color: rowBgColor,
-        borderRadius: widget.borderRadius ?? BorderRadius.circular(AppSpacing.radiusLg),
-        border: widget.border ?? (widget.showBorder ? Border.all(color: borderColor) : null),
+        borderRadius:
+            widget.borderRadius ?? BorderRadius.circular(AppSpacing.radiusLg),
+        border: widget.border ??
+            (widget.showBorder ? Border.all(color: borderColor) : null),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -417,7 +426,9 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: headerBgColor,
-                border: widget.showBorder ? Border(bottom: BorderSide(color: borderColor)) : null,
+                border: widget.showBorder
+                    ? Border(bottom: BorderSide(color: borderColor))
+                    : null,
               ),
               child: widget.trailingHeaderWidget,
             ),
@@ -432,7 +443,8 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                           color: headerBgColor,
                           border: widget.showBorder
                               ? Border(
-                                  bottom: BorderSide(color: borderColor, width: 2),
+                                  bottom:
+                                      BorderSide(color: borderColor, width: 2),
                                 )
                               : null,
                         ),
@@ -443,9 +455,11 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                                 padding: const EdgeInsets.all(AppSpacing.md),
                                 child: Checkbox(
                                   value: _allSelected,
-                                  onChanged: (value) => _toggleAllSelection(value ?? false),
+                                  onChanged: (value) =>
+                                      _toggleAllSelection(value ?? false),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusSm),
                                   ),
                                 ),
                               ),
@@ -458,9 +472,11 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                       )
                     : null,
                 body: SingleChildScrollView(
-                  controller: widget.verticalScrollController ?? _verticalScrollController,
+                  controller: widget.verticalScrollController ??
+                      _verticalScrollController,
                   child: SingleChildScrollView(
-                    controller: widget.horizontalScrollController ?? _horizontalScrollController,
+                    controller: widget.horizontalScrollController ??
+                        _horizontalScrollController,
                     scrollDirection: Axis.horizontal,
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
@@ -470,49 +486,61 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                         defaultColumnWidth: const IntrinsicColumnWidth(),
                         border: widget.showBorder
                             ? TableBorder(
-                                horizontalInside: BorderSide(color: borderColor),
+                                horizontalInside:
+                                    BorderSide(color: borderColor),
                               )
                             : null,
                         children: [
-                          for (var rowIndex = 0; rowIndex < widget.rows.length; rowIndex++)
+                          for (var rowIndex = 0;
+                              rowIndex < widget.rows.length;
+                              rowIndex++)
                             TableRow(
                               decoration: BoxDecoration(
-                                color: _isRowSelected(widget.rows[rowIndex].data)
-                                    ? selectedColor
-                                    : (widget.striped && rowIndex % 2 == 0
-                                        ? (isDark
-                                            ? Colors.white.withOpacity(0.02)
-                                            : AppColors.neutral50)
-                                        : rowBgColor),
+                                color:
+                                    _isRowSelected(widget.rows[rowIndex].data)
+                                        ? selectedColor
+                                        : (widget.striped && rowIndex % 2 == 0
+                                            ? (isDark
+                                                ? Colors.white.withOpacity(0.02)
+                                                : AppColors.neutral50)
+                                            : rowBgColor),
                               ),
                               children: [
                                 if (widget.selectable && widget.showCheckboxes)
                                   Padding(
-                                    padding: const EdgeInsets.all(AppSpacing.md),
+                                    padding:
+                                        const EdgeInsets.all(AppSpacing.md),
                                     child: Checkbox(
-                                      value: _isRowSelected(widget.rows[rowIndex].data),
+                                      value: _isRowSelected(
+                                          widget.rows[rowIndex].data),
                                       onChanged: (value) => _toggleRowSelection(
-                                          widget.rows[rowIndex].data, value ?? false),
+                                          widget.rows[rowIndex].data,
+                                          value ?? false),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                        borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusSm),
                                       ),
                                     ),
                                   ),
                                 for (var cellIndex = 0;
-                                    cellIndex < widget.rows[rowIndex].cells.length;
+                                    cellIndex <
+                                        widget.rows[rowIndex].cells.length;
                                     cellIndex++)
                                   GestureDetector(
                                     onTap: widget.rows[rowIndex].onTap,
                                     child: Container(
-                                      padding: const EdgeInsets.all(AppSpacing.md),
+                                      padding:
+                                          const EdgeInsets.all(AppSpacing.md),
                                       constraints: BoxConstraints(
                                         minHeight: widget.rowHeight ?? 56,
                                       ),
                                       child: Align(
-                                        alignment: widget.columns[cellIndex].numeric
-                                            ? Alignment.centerRight
-                                            : Alignment.centerLeft,
-                                        child: widget.rows[rowIndex].cells[cellIndex],
+                                        alignment:
+                                            widget.columns[cellIndex].numeric
+                                                ? Alignment.centerRight
+                                                : Alignment.centerLeft,
+                                        child: widget
+                                            .rows[rowIndex].cells[cellIndex],
                                       ),
                                     ),
                                   ),
@@ -529,7 +557,8 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
             Expanded(child: tableContent),
 
           // Pagination Footer
-          if (widget.pagination != null) _buildPaginationFooter(widget.pagination!, isDark),
+          if (widget.pagination != null)
+            _buildPaginationFooter(widget.pagination!, isDark),
         ],
       ),
     );
@@ -578,7 +607,9 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                 Icon(
                   Icons.unfold_more,
                   size: 16,
-                  color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.5)
+                      : AppColors.textSecondary,
                 ),
             ],
           ],
@@ -588,7 +619,8 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
   }
 
   Widget _buildPaginationFooter(AppPaginationInfo pagination, bool isDark) {
-    final borderColor = isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral200;
+    final borderColor =
+        isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral200;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -604,7 +636,9 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
             '-${(pagination.currentPage * pagination.itemsPerPage).clamp(0, pagination.totalItems)}'
             ' of ${pagination.totalItems}',
             style: AppTypography.bodySmall.copyWith(
-              color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+              color: isDark
+                  ? Colors.white.withOpacity(0.6)
+                  : AppColors.textSecondary,
             ),
           ),
           const Spacer(),
@@ -614,31 +648,39 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
             children: [
               // First page
               IconButton(
-                onPressed: pagination.currentPage > 1 && pagination.onPageChanged != null
+                onPressed: pagination.currentPage > 1 &&
+                        pagination.onPageChanged != null
                     ? () => pagination.onPageChanged!(1)
                     : null,
                 icon: const Icon(Icons.first_page, size: 18),
                 color: pagination.currentPage > 1
                     ? AppColors.primary
-                    : (isDark ? Colors.white.withOpacity(0.3) : AppColors.neutral400),
+                    : (isDark
+                        ? Colors.white.withOpacity(0.3)
+                        : AppColors.neutral400),
               ),
               const SizedBox(width: 4),
 
               // Previous page
               IconButton(
-                onPressed: pagination.currentPage > 1 && pagination.onPageChanged != null
-                    ? () => pagination.onPageChanged!(pagination.currentPage - 1)
+                onPressed: pagination.currentPage > 1 &&
+                        pagination.onPageChanged != null
+                    ? () =>
+                        pagination.onPageChanged!(pagination.currentPage - 1)
                     : null,
                 icon: const Icon(Icons.chevron_left, size: 18),
                 color: pagination.currentPage > 1
                     ? AppColors.primary
-                    : (isDark ? Colors.white.withOpacity(0.3) : AppColors.neutral400),
+                    : (isDark
+                        ? Colors.white.withOpacity(0.3)
+                        : AppColors.neutral400),
               ),
               const SizedBox(width: 8),
 
               // Page number
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
@@ -657,12 +699,15 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
               IconButton(
                 onPressed: pagination.currentPage < pagination.totalPages &&
                         pagination.onPageChanged != null
-                    ? () => pagination.onPageChanged!(pagination.currentPage + 1)
+                    ? () =>
+                        pagination.onPageChanged!(pagination.currentPage + 1)
                     : null,
                 icon: const Icon(Icons.chevron_right, size: 18),
                 color: pagination.currentPage < pagination.totalPages
                     ? AppColors.primary
-                    : (isDark ? Colors.white.withOpacity(0.3) : AppColors.neutral400),
+                    : (isDark
+                        ? Colors.white.withOpacity(0.3)
+                        : AppColors.neutral400),
               ),
               const SizedBox(width: 4),
 
@@ -675,7 +720,9 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                 icon: const Icon(Icons.last_page, size: 18),
                 color: pagination.currentPage < pagination.totalPages
                     ? AppColors.primary
-                    : (isDark ? Colors.white.withOpacity(0.3) : AppColors.neutral400),
+                    : (isDark
+                        ? Colors.white.withOpacity(0.3)
+                        : AppColors.neutral400),
               ),
             ],
           ),

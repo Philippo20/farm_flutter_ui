@@ -5,6 +5,7 @@ import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import '../../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
+import 'notification_center.dart';
 
 /// Modern Dashboard Scaffold
 /// Consistent layout for all role-specific dashboards
@@ -23,10 +24,12 @@ class ModernDashboardScaffold extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ModernDashboardScaffold> createState() => _ModernDashboardScaffoldState();
+  ConsumerState<ModernDashboardScaffold> createState() =>
+      _ModernDashboardScaffoldState();
 }
 
-class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffold> {
+class _ModernDashboardScaffoldState
+    extends ConsumerState<ModernDashboardScaffold> {
   bool _isSidebarCollapsed = false;
 
   @override
@@ -36,19 +39,20 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
     final userName = authState.user?.name ?? 'User';
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: Row(
         children: [
           // Sidebar
           _buildSidebar(isDark, userName),
-          
+
           // Main Content
           Expanded(
             child: Column(
               children: [
                 // Top AppBar
                 _buildTopBar(isDark, userName),
-                
+
                 // Content
                 Expanded(
                   child: SingleChildScrollView(
@@ -75,7 +79,9 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
         color: isDark ? AppColors.surfaceDark : Colors.white,
         border: Border(
           right: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
             width: 1,
           ),
         ),
@@ -97,7 +103,9 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
             ),
             child: Center(
               child: Image.asset(
-                isDark ? 'assets/logos/logo_white.png' : 'assets/logos/logo_black.png',
+                isDark
+                    ? 'assets/logos/logo_white.png'
+                    : 'assets/logos/logo_black.png',
                 height: _isSidebarCollapsed ? 32 : 48,
                 width: _isSidebarCollapsed ? 32 : 48,
                 fit: BoxFit.contain,
@@ -119,7 +127,7 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
               ),
             ),
           ),
-          
+
           // Toggle Button (MENU X style)
           Container(
             padding: EdgeInsets.symmetric(
@@ -137,7 +145,8 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
                 child: Container(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : AppColors.primary).withOpacity(0.08),
+                    color: (isDark ? Colors.white : AppColors.primary)
+                        .withOpacity(0.08),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   ),
                   child: Row(
@@ -149,7 +158,9 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
                         Text(
                           'MENU',
                           style: AppTypography.labelSmall.copyWith(
-                            color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+                            color: isDark
+                                ? Colors.white.withOpacity(0.6)
+                                : AppColors.textSecondary,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1.2,
                           ),
@@ -157,7 +168,9 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
                       Icon(
                         _isSidebarCollapsed ? Icons.menu : Icons.close,
                         size: 20,
-                        color: isDark ? Colors.white.withOpacity(0.8) : AppColors.textPrimary,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.8)
+                            : AppColors.textPrimary,
                       ),
                     ],
                   ),
@@ -165,9 +178,9 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
               ),
             ),
           ),
-          
+
           const SizedBox(height: AppSpacing.md),
-          
+
           // Menu Items
           Expanded(
             child: ListView(
@@ -176,13 +189,14 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
               ),
               children: [
                 if (widget.menuItems != null)
-                  ...widget.menuItems!.map((item) => _buildMenuItem(item, isDark)),
+                  ...widget.menuItems!
+                      .map((item) => _buildMenuItem(item, isDark)),
               ],
             ),
           ),
-          
+
           const Divider(height: 1),
-          
+
           // Logout Button at Bottom
           SizedBox(
             height: 56,
@@ -190,7 +204,8 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
               onTap: _handleLogout,
               child: Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: _isSidebarCollapsed ? AppSpacing.sm : AppSpacing.md,
+                  horizontal:
+                      _isSidebarCollapsed ? AppSpacing.sm : AppSpacing.md,
                   vertical: AppSpacing.sm,
                 ),
                 child: Row(
@@ -225,7 +240,7 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
 
   Widget _buildMenuItem(DashboardMenuItem item, bool isDark) {
     final isSelected = item.isSelected ?? false;
-    
+
     return InkWell(
       onTap: item.onTap,
       child: Container(
@@ -261,7 +276,8 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
                     color: isSelected
                         ? AppColors.primary
                         : (isDark ? Colors.white70 : AppColors.textPrimary),
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
               ),
@@ -329,7 +345,7 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
               ],
             ),
           ),
-          
+
           // Dark Mode Toggle
           IconButton(
             icon: Icon(
@@ -342,36 +358,14 @@ class _ModernDashboardScaffoldState extends ConsumerState<ModernDashboardScaffol
               ref.read(themeProvider.notifier).toggleTheme();
             },
           ),
-          
+
           const SizedBox(width: AppSpacing.sm),
-          
+
           // Notifications
-          Stack(
-            children: [
-              IconButton(
-                icon: Icon(
-                  Icons.notifications_outlined,
-                  color: isDark ? Colors.white70 : AppColors.textSecondary,
-                ),
-                onPressed: () {},
-              ),
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.error,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          
+          const NotificationCenter(),
+
           const SizedBox(width: AppSpacing.sm),
-          
+
           // User Menu
           PopupMenuButton<String>(
             offset: const Offset(0, 48),
@@ -567,9 +561,9 @@ class CompactStatCard extends StatelessWidget {
                   size: 18,
                 ),
               ),
-              
+
               const SizedBox(width: AppSpacing.sm),
-              
+
               // Title and Value
               Expanded(
                 child: Column(
@@ -608,9 +602,9 @@ class CompactStatCard extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(width: AppSpacing.xs),
-              
+
               // Trend Badge
               if (trend != null)
                 Container(
@@ -622,7 +616,9 @@ class CompactStatCard extends StatelessWidget {
                     color: Colors.white.withOpacity(isDark ? 0.15 : 0.9),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     border: Border.all(
-                      color: isPositive == true ? AppColors.success : AppColors.error,
+                      color: isPositive == true
+                          ? AppColors.success
+                          : AppColors.error,
                       width: 1,
                     ),
                   ),
@@ -630,9 +626,13 @@ class CompactStatCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isPositive == true ? Icons.arrow_upward : Icons.arrow_downward,
+                        isPositive == true
+                            ? Icons.arrow_upward
+                            : Icons.arrow_downward,
                         size: 10,
-                        color: isPositive == true ? AppColors.success : AppColors.error,
+                        color: isPositive == true
+                            ? AppColors.success
+                            : AppColors.error,
                       ),
                       const SizedBox(width: 2),
                       Text(
@@ -640,7 +640,9 @@ class CompactStatCard extends StatelessWidget {
                         style: AppTypography.bodySmall.copyWith(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: isPositive == true ? AppColors.success : AppColors.error,
+                          color: isPositive == true
+                              ? AppColors.success
+                              : AppColors.error,
                         ),
                       ),
                     ],

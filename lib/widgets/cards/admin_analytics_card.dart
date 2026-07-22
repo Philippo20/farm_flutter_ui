@@ -6,15 +6,15 @@ import '../../constants/colors.dart';
 class AnalyticsDashboard extends StatelessWidget {
   final bool isDark;
 
-  
   const AnalyticsDashboard({super.key, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-   final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 1025; // Adjust breakpoint as needed 627.00
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen =
+        screenWidth < 1025; // Adjust breakpoint as needed 627.00
 
-     return SingleChildScrollView(
+    return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.only(top: 16),
         child: isSmallScreen
@@ -45,8 +45,6 @@ class AnalyticsDashboard extends StatelessWidget {
     );
   }
 }
-  
-
 
 class _BarChartCard extends StatelessWidget {
   final bool isDark;
@@ -60,8 +58,9 @@ class _BarChartCard extends StatelessWidget {
 
     final cardColor = isDark ? AppColors.darkCard : AppColors.card;
     final textColor = isDark ? AppColors.darkText : AppColors.text;
-    final secondaryTextColor =
-        isDark ? AppColors.darkText.withOpacity(0.7) : AppColors.text.withOpacity(0.7);
+    final secondaryTextColor = isDark
+        ? AppColors.darkText.withOpacity(0.7)
+        : AppColors.text.withOpacity(0.7);
     final gridColor =
         isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1);
 
@@ -89,12 +88,13 @@ class _BarChartCard extends StatelessWidget {
                 "Energy Consumption",
                 style: GoogleFonts.poppins(
                   fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                   color: textColor,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -122,7 +122,9 @@ class _BarChartCard extends StatelessWidget {
           const SizedBox(height: 24),
           SizedBox(
             height: 320,
-            width: isSmallScreen ? 420 : null, // Ensures chart fits on small screens
+            width: isSmallScreen
+                ? 420
+                : null, // Ensures chart fits on small screens
             child: BarChart(
               BarChartData(
                 barTouchData: BarTouchData(
@@ -134,8 +136,8 @@ class _BarChartCard extends StatelessWidget {
                         '${rod.toY} kWh',
                         GoogleFonts.inter(
                           fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color:  Colors.white,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
                         ),
                       );
                     },
@@ -206,26 +208,22 @@ class _BarChartCard extends StatelessWidget {
                     strokeWidth: 1,
                   ),
                 ),
-                barGroups: barData
-                    .asMap()
-                    .entries
-                    .map((entry) {
-                      final index = entry.key;
-                      final data = entry.value;
-                      return BarChartGroupData(
-                        x: index,
-                        barRods: [
-                          BarChartRodData(
-                            toY: data.value,
-                            color: data.color,
-                            width: 16,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ],
-                        showingTooltipIndicators: isSmallScreen ? [1] :  [0],
-                      );
-                    })
-                    .toList(),
+                barGroups: barData.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final data = entry.value;
+                  return BarChartGroupData(
+                    x: index,
+                    barRods: [
+                      BarChartRodData(
+                        toY: data.value,
+                        color: data.color,
+                        width: 16,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                    showingTooltipIndicators: isSmallScreen ? [1] : [0],
+                  );
+                }).toList(),
                 maxY: 20,
                 alignment: BarChartAlignment.spaceAround,
               ),
@@ -285,7 +283,6 @@ class _BarChartCard extends StatelessWidget {
   }
 }
 
-
 class _PieChartCard extends StatefulWidget {
   final bool isDark;
   const _PieChartCard({required this.isDark});
@@ -296,21 +293,17 @@ class _PieChartCard extends StatefulWidget {
 
 class _PieChartCardState extends State<_PieChartCard> {
   int? _hoveredIndex;
-  
+
   @override
   Widget build(BuildContext context) {
     final isDark = widget.isDark;
-    final isSmallScreen = MediaQuery.of(context).size.width < 600; // Adjust breakpoint as needed
-  
-    final cardColor = isDark
-        ? const Color(0xFF20232C)
-        : Colors.white;
-    final textColor = isDark
-        ? Colors.white
-        : const Color(0xFF232535);
-    final secondaryTextColor = isDark
-        ? Colors.white70
-        : Colors.black.withOpacity(0.65);
+    final isSmallScreen =
+        MediaQuery.of(context).size.width < 600; // Adjust breakpoint as needed
+
+    final cardColor = isDark ? const Color(0xFF20232C) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF232535);
+    final secondaryTextColor =
+        isDark ? Colors.white70 : Colors.black.withOpacity(0.65);
 
     // Pie chart data
     final pieData = [
@@ -346,13 +339,14 @@ class _PieChartCardState extends State<_PieChartCard> {
                   "Energy Distribution",
                   style: GoogleFonts.poppins(
                     fontSize: 17,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                     color: textColor,
                     letterSpacing: 0.2,
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.filter_alt_outlined, color: AppColors.primary),
+                  icon:
+                      Icon(Icons.filter_alt_outlined, color: AppColors.primary),
                   onPressed: () {},
                   tooltip: "Filter data",
                 ),
@@ -370,7 +364,7 @@ class _PieChartCardState extends State<_PieChartCard> {
             const SizedBox(height: 18),
 
             // Responsive content layout
-            isSmallScreen 
+            isSmallScreen
                 ? Column(
                     children: [
                       // Pie chart on top for mobile
@@ -392,7 +386,7 @@ class _PieChartCardState extends State<_PieChartCard> {
                                   title: isHovered ? pieData[i].category : '',
                                   titleStyle: GoogleFonts.poppins(
                                     fontSize: isHovered ? 14 : 12,
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: FontWeight.w500,
                                     color: Colors.white,
                                   ),
                                   titlePositionPercentageOffset: 0.6,
@@ -406,11 +400,15 @@ class _PieChartCardState extends State<_PieChartCard> {
                               }),
                               pieTouchData: PieTouchData(
                                 touchCallback: (event, pieTouchResponse) {
-                                  final idx = pieTouchResponse?.touchedSection?.touchedSectionIndex;
+                                  final idx = pieTouchResponse
+                                      ?.touchedSection?.touchedSectionIndex;
                                   setState(() {
-                                    if (event.isInterestedForInteractions && idx != null) {
+                                    if (event.isInterestedForInteractions &&
+                                        idx != null) {
                                       _hoveredIndex = idx;
-                                    } else if (event is FlTapUpEvent || event is FlLongPressEnd || event is FlPanEndEvent) {
+                                    } else if (event is FlTapUpEvent ||
+                                        event is FlLongPressEnd ||
+                                        event is FlPanEndEvent) {
                                       _hoveredIndex = null;
                                     }
                                   });
@@ -426,7 +424,8 @@ class _PieChartCardState extends State<_PieChartCard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: pieData
                             .map((item) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
                                   child: Row(
                                     children: [
                                       Container(
@@ -434,17 +433,20 @@ class _PieChartCardState extends State<_PieChartCard> {
                                         height: 13,
                                         decoration: BoxDecoration(
                                           color: item.color,
-                                          borderRadius: BorderRadius.circular(5),
+                                          borderRadius:
+                                              BorderRadius.circular(5),
                                         ),
                                       ),
                                       const SizedBox(width: 10),
-                                      Icon(item.icon, size: 17, color: item.color.withOpacity(0.82)),
+                                      Icon(item.icon,
+                                          size: 17,
+                                          color: item.color.withOpacity(0.82)),
                                       const SizedBox(width: 6),
                                       Expanded(
                                         child: Text(
                                           item.category,
                                           style: GoogleFonts.inter(
-                                            fontWeight: FontWeight.w600,
+                                            fontWeight: FontWeight.w500,
                                             color: textColor,
                                             fontSize: 14,
                                           ),
@@ -454,7 +456,7 @@ class _PieChartCardState extends State<_PieChartCard> {
                                         "${item.percent}%",
                                         style: GoogleFonts.poppins(
                                           color: item.color,
-                                          fontWeight: FontWeight.w700,
+                                          fontWeight: FontWeight.w500,
                                           fontSize: 15,
                                         ),
                                       ),
@@ -475,7 +477,8 @@ class _PieChartCardState extends State<_PieChartCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: pieData
                               .map((item) => Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 8),
                                     child: Row(
                                       children: [
                                         Container(
@@ -483,17 +486,21 @@ class _PieChartCardState extends State<_PieChartCard> {
                                           height: 13,
                                           decoration: BoxDecoration(
                                             color: item.color,
-                                            borderRadius: BorderRadius.circular(5),
+                                            borderRadius:
+                                                BorderRadius.circular(5),
                                           ),
                                         ),
                                         const SizedBox(width: 10),
-                                        Icon(item.icon, size: 17, color: item.color.withOpacity(0.82)),
+                                        Icon(item.icon,
+                                            size: 17,
+                                            color:
+                                                item.color.withOpacity(0.82)),
                                         const SizedBox(width: 6),
                                         Expanded(
                                           child: Text(
                                             item.category,
                                             style: GoogleFonts.inter(
-                                              fontWeight: FontWeight.w600,
+                                              fontWeight: FontWeight.w500,
                                               color: textColor,
                                               fontSize: 14,
                                             ),
@@ -503,7 +510,7 @@ class _PieChartCardState extends State<_PieChartCard> {
                                           "${item.percent}%",
                                           style: GoogleFonts.poppins(
                                             color: item.color,
-                                            fontWeight: FontWeight.w700,
+                                            fontWeight: FontWeight.w500,
                                             fontSize: 15,
                                           ),
                                         ),
@@ -531,10 +538,10 @@ class _PieChartCardState extends State<_PieChartCard> {
                                     color: pieData[i].color,
                                     radius: isHovered ? 80 : 75,
                                     showTitle: isHovered,
-                                    title: isHovered ? pieData[i].category: '',
+                                    title: isHovered ? pieData[i].category : '',
                                     titleStyle: GoogleFonts.poppins(
                                       fontSize: isHovered ? 17 : 14,
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w500,
                                       color: Colors.white,
                                     ),
                                     titlePositionPercentageOffset: 0.58,
@@ -548,11 +555,15 @@ class _PieChartCardState extends State<_PieChartCard> {
                                 }),
                                 pieTouchData: PieTouchData(
                                   touchCallback: (event, pieTouchResponse) {
-                                    final idx = pieTouchResponse?.touchedSection?.touchedSectionIndex;
+                                    final idx = pieTouchResponse
+                                        ?.touchedSection?.touchedSectionIndex;
                                     setState(() {
-                                      if (event.isInterestedForInteractions && idx != null) {
+                                      if (event.isInterestedForInteractions &&
+                                          idx != null) {
                                         _hoveredIndex = idx;
-                                      } else if (event is FlTapUpEvent || event is FlLongPressEnd || event is FlPanEndEvent) {
+                                      } else if (event is FlTapUpEvent ||
+                                          event is FlLongPressEnd ||
+                                          event is FlPanEndEvent) {
                                         _hoveredIndex = null;
                                       }
                                     });
@@ -565,20 +576,24 @@ class _PieChartCardState extends State<_PieChartCard> {
                       ),
                     ],
                   ),
-            
+
             // View Details Button
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: TextButton.icon(
                 style: TextButton.styleFrom(
-                  backgroundColor: isDark ? const Color(0xFF2A2D3A) : const Color(0xFFF8F9FC),
+                  backgroundColor: isDark
+                      ? const Color(0xFF2A2D3A)
+                      : const Color(0xFFF8F9FC),
                   foregroundColor: isDark ? AppColors.darkText : AppColors.text,
                   minimumSize: const Size(0, 48),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                     side: BorderSide(
-                      color: isDark ? const Color.fromARGB(255, 152, 152, 153) : const Color.fromARGB(255, 202, 209, 229),
+                      color: isDark
+                          ? const Color.fromARGB(255, 152, 152, 153)
+                          : const Color.fromARGB(255, 202, 209, 229),
                       width: 2,
                     ),
                   ),
@@ -603,8 +618,6 @@ class _PieChartCardState extends State<_PieChartCard> {
   }
 }
 
-
-
 class _StatIndicator extends StatelessWidget {
   final String label;
   final String value;
@@ -621,7 +634,7 @@ class _StatIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textColor = isDark ? AppColors.darkText : AppColors.text;
-    
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -641,7 +654,7 @@ class _StatIndicator extends StatelessWidget {
               value,
               style: GoogleFonts.poppins(
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: textColor,
               ),
             ),
@@ -679,7 +692,7 @@ class _EnergyRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textColor = isDark ? AppColors.darkText : AppColors.text;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -700,7 +713,7 @@ class _EnergyRow extends StatelessWidget {
             "$percent%",
             style: GoogleFonts.poppins(
               fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
               color: textColor,
             ),
           ),
@@ -709,7 +722,6 @@ class _EnergyRow extends StatelessWidget {
     );
   }
 }
-
 
 class BarData {
   final String day;

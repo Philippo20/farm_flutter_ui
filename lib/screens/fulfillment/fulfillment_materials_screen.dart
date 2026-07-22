@@ -125,7 +125,7 @@ class FulfillmentMaterialsScreen extends StatelessWidget {
             'Materials Inventory',
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -163,7 +163,7 @@ class FulfillmentMaterialsScreen extends StatelessWidget {
             'Materials Control',
             style: AppTypography.h4.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               fontSize: isMobile ? 24 : 28,
             ),
           ),
@@ -263,7 +263,7 @@ class FulfillmentMaterialsScreen extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -286,9 +286,8 @@ class FulfillmentMaterialsScreen extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withOpacity(0.04)
-                  : AppColors.neutral50,
+              color:
+                  isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               border: Border.all(
                 color: isDark ? Colors.white10 : AppColors.neutral200,
@@ -383,7 +382,7 @@ class FulfillmentMaterialsScreen extends StatelessWidget {
                       'Open Replenishment Requests',
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     Text(
@@ -462,7 +461,7 @@ class _MaterialsKpi extends StatelessWidget {
                   title,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -470,7 +469,7 @@ class _MaterialsKpi extends StatelessWidget {
                   value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -513,7 +512,7 @@ class _MaterialMetric extends StatelessWidget {
           label,
           style: AppTypography.caption.copyWith(
             color: isDark ? Colors.white60 : AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -523,7 +522,7 @@ class _MaterialMetric extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -563,7 +562,7 @@ class _InfoPill extends StatelessWidget {
             label,
             style: AppTypography.caption.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 2),
@@ -573,7 +572,7 @@ class _InfoPill extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -628,7 +627,7 @@ class _RequestRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -676,7 +675,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );

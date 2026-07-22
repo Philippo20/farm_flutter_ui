@@ -31,7 +31,8 @@ class _AdminDeliveryControlScreenState
     final firstName = userName.split(' ').first;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(firstName)
           : _buildDesktopLayout(
@@ -69,10 +70,11 @@ class _AdminDeliveryControlScreenState
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(AppSpacing.xl),
                   child: const OverallDeliveryControlModule(
-                    title: 'Delivery Control',
+                    title: 'Global Delivery Command',
                     subtitle:
-                        'Oversee deliveries across farms, approve requests, assign operations, and monitor delivery logs.',
+                        'Control delivery operations across all farms with approval, assignment, hold, cancellation, and traceable activity logs.',
                     isMobile: false,
+                    allowCreateDelivery: true,
                   ),
                 ),
               ),
@@ -95,10 +97,11 @@ class _AdminDeliveryControlScreenState
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: const OverallDeliveryControlModule(
-              title: 'Delivery Control',
+              title: 'Global Delivery Command',
               subtitle:
-                  'Oversee deliveries across farms, approve requests, assign operations, and monitor delivery logs.',
+                  'Control delivery operations across all farms with approval, assignment, hold, cancellation, and traceable activity logs.',
               isMobile: true,
+              allowCreateDelivery: true,
             ),
           ),
         ),
@@ -108,10 +111,30 @@ class _AdminDeliveryControlScreenState
 
   Widget _buildBottomNavigation(bool isDark) {
     final navItems = [
-      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/dashboard'},
-      {'icon': Icons.agriculture_outlined, 'label': 'Farms', 'index': 2, 'route': '/farms'},
-      {'icon': Icons.inventory_2_outlined, 'label': 'Inventory', 'index': 6, 'route': '/inventory-admin'},
-      {'icon': Icons.local_shipping_outlined, 'label': 'Deliveries', 'index': 7, 'route': '/deliveries-admin'},
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Dashboard',
+        'index': 0,
+        'route': '/dashboard'
+      },
+      {
+        'icon': Icons.agriculture_outlined,
+        'label': 'Farms',
+        'index': 2,
+        'route': '/farms'
+      },
+      {
+        'icon': Icons.inventory_2_outlined,
+        'label': 'Inventory',
+        'index': 6,
+        'route': '/inventory-admin'
+      },
+      {
+        'icon': Icons.local_shipping_outlined,
+        'label': 'Deliveries',
+        'index': 7,
+        'route': '/deliveries-admin'
+      },
     ];
 
     return Container(
@@ -137,7 +160,8 @@ class _AdminDeliveryControlScreenState
                   onTap: () {
                     if (_selectedNavIndex != index) {
                       setState(() => _selectedNavIndex = index);
-                      Navigator.pushReplacementNamed(context, item['route'] as String);
+                      Navigator.pushReplacementNamed(
+                          context, item['route'] as String);
                     }
                   },
                   child: Column(
@@ -157,7 +181,8 @@ class _AdminDeliveryControlScreenState
                         item['label'] as String,
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.normal,
                           color: isSelected
                               ? AppColors.primary
                               : (isDark

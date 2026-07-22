@@ -80,6 +80,7 @@ import 'screens/superadmin/system_config_screen.dart';
 import 'screens/superadmin/backup_restore_screen.dart';
 import 'screens/superadmin/superadmin_inventory_overview_screen.dart';
 import 'screens/superadmin/superadmin_delivery_control_screen.dart';
+import 'screens/shared/crop_varieties_screen.dart';
 
 /// Main entry point for Farm Estates ADOM application
 void main() async {
@@ -139,6 +140,10 @@ class MyApp extends ConsumerWidget {
             const SuperAdminInventoryOverviewScreen(),
         '/superadmin/deliveries': (context) =>
             const SuperAdminDeliveryControlScreen(),
+        '/superadmin/crop-varieties': (context) =>
+            const CropVarietiesScreen(isSuperAdmin: true),
+        '/superadmin/analytics': (context) =>
+            const ModernAnalyticsScreen(isSuperAdmin: true),
 
         // Admin
         '/dashboard': (context) => const RedesignedAdminDashboard(),
@@ -149,6 +154,8 @@ class MyApp extends ConsumerWidget {
         '/settings': (context) => const ModernSettingsScreen(),
         '/inventory-admin': (context) => const AdminInventoryOverviewScreen(),
         '/deliveries-admin': (context) => const AdminDeliveryControlScreen(),
+        '/crop-varieties': (context) =>
+            const CropVarietiesScreen(isSuperAdmin: false),
 
         // Farm Manager (NEW - REDESIGNED)
         '/farm-manager': (context) => const FarmManagerDashboardRedesigned(),
@@ -164,6 +171,8 @@ class MyApp extends ConsumerWidget {
             const FarmManagerSettingsScreen(),
         '/farm-manager/reports': (context) => const ReportsScreen(),
         '/farm-manager/team': (context) => const TeamManagementScreen(),
+        '/farm-manager/sensors': (context) =>
+            const ModernSensorsScreen(isFarmManager: true),
         // Farm Owner (NEW - REDESIGNED)
         '/farm-owner': (context) => const FarmOwnerDashboardRedesigned(),
         '/farm-owner/farm': (context) => const FarmOverviewScreen(),

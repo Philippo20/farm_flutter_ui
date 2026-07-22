@@ -66,14 +66,17 @@ class UsersScreen extends StatefulWidget {
   State<UsersScreen> createState() => _UsersScreenState();
 }
 
-class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin {
+class _UsersScreenState extends State<UsersScreen>
+    with TickerProviderStateMixin {
   int _selectedNavIndex = 1;
   bool _isDark = false;
   bool get isDark => _isDark;
   final TextEditingController _searchController = TextEditingController();
 
-  late TabController _insightsTabController; // Controller for the new insights tabs
-  late TabController _editUserTabController; // Controller for the edit user dialog tabs
+  late TabController
+      _insightsTabController; // Controller for the new insights tabs
+  late TabController
+      _editUserTabController; // Controller for the edit user dialog tabs
 
   int currentPage = 1;
   int itemsPerPage = 10;
@@ -244,10 +247,10 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
     super.initState();
     filteredUsers = users;
     _searchController.addListener(_filterUsers);
-    _insightsTabController =
-        TabController(length: 2, vsync: this); // Initialize insights tab controller
-    _editUserTabController =
-        TabController(length: 2, vsync: this); // Initialize edit user tab controller
+    _insightsTabController = TabController(
+        length: 2, vsync: this); // Initialize insights tab controller
+    _editUserTabController = TabController(
+        length: 2, vsync: this); // Initialize edit user tab controller
   }
 
   @override
@@ -265,7 +268,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
         final matchesSearch = user.name.toLowerCase().contains(query) ||
             user.email.toLowerCase().contains(query) ||
             user.role.toLowerCase().contains(query);
-        final matchesRole = _selectedRoleFilter == 'All Users' || user.role == _selectedRoleFilter;
+        final matchesRole = _selectedRoleFilter == 'All Users' ||
+            user.role == _selectedRoleFilter;
         return matchesSearch && matchesRole;
       }).toList();
     });
@@ -360,11 +364,14 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
               isMobile
                   ? Column(
                       children: [
-                        _buildSearchAndFilter(cardColor, secondaryTextColor, textColor),
+                        _buildSearchAndFilter(
+                            cardColor, secondaryTextColor, textColor),
                         const SizedBox(height: 22),
-                        _buildUsersTable(isMobile, cardColor, textColor, secondaryTextColor),
+                        _buildUsersTable(
+                            isMobile, cardColor, textColor, secondaryTextColor),
                         const SizedBox(height: 28),
-                        _buildUserLogsCard(cardColor, textColor, secondaryTextColor),
+                        _buildUserLogsCard(
+                            cardColor, textColor, secondaryTextColor),
                       ],
                     )
                   : Row(
@@ -374,15 +381,18 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                           flex: 3,
                           child: Column(
                             children: [
-                              _buildSearchAndFilter(cardColor, secondaryTextColor, textColor),
+                              _buildSearchAndFilter(
+                                  cardColor, secondaryTextColor, textColor),
                               const SizedBox(height: 22),
-                              _buildUsersTable(isMobile, cardColor, textColor, secondaryTextColor),
+                              _buildUsersTable(isMobile, cardColor, textColor,
+                                  secondaryTextColor),
                             ],
                           ),
                         ),
                         const SizedBox(width: 28),
                         Expanded(
-                          child: _buildUserLogsCard(cardColor, textColor, secondaryTextColor),
+                          child: _buildUserLogsCard(
+                              cardColor, textColor, secondaryTextColor),
                         ),
                       ],
                     ),
@@ -401,7 +411,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
             'User Management',
             style: GoogleFonts.poppins(
               fontSize: isMobile ? 24 : 28,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
               color: textColor,
               letterSpacing: 0.3,
             ),
@@ -422,7 +432,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
               borderRadius: BorderRadius.circular(14),
             ),
             textStyle: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               fontSize: isMobile ? 14 : 15,
               letterSpacing: 0.2,
             ),
@@ -436,7 +446,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
   Widget _buildStatsSection(bool isMobile) {
     final totalUsers = users.length;
     final activeUsers = users.where((user) => user.status == 'Active').length;
-    final inactiveUsers = users.where((user) => user.status == 'Inactive').length;
+    final inactiveUsers =
+        users.where((user) => user.status == 'Inactive').length;
 
     return isMobile
         ? Column(
@@ -514,7 +525,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
   }
 
   // Widget for User Logs Card (now separate from insights section)
-  Widget _buildUserLogsCard(Color cardColor, Color textColor, Color secondaryTextColor) {
+  Widget _buildUserLogsCard(
+      Color cardColor, Color textColor, Color secondaryTextColor) {
     return Card(
       color: cardColor,
       elevation: 5,
@@ -528,7 +540,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
               'Recent User Logs',
               style: GoogleFonts.inter(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w500,
                 color: textColor,
               ),
             ),
@@ -537,14 +549,14 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildLogEntry(
-                    'Admin John Smith logged in', '2024-06-21 14:30', secondaryTextColor),
-                _buildLogEntry('Manager Sarah Johnson updated settings', '2024-06-21 13:15',
+                _buildLogEntry('Admin John Smith logged in', '2024-06-21 14:30',
                     secondaryTextColor),
-                _buildLogEntry('Technician David Kimani accessed device X', '2024-06-20 10:00',
-                    secondaryTextColor),
-                _buildLogEntry(
-                    'Viewer Grace Omondi viewed reports', '2024-06-20 09:45', secondaryTextColor),
+                _buildLogEntry('Manager Sarah Johnson updated settings',
+                    '2024-06-21 13:15', secondaryTextColor),
+                _buildLogEntry('Technician David Kimani accessed device X',
+                    '2024-06-20 10:00', secondaryTextColor),
+                _buildLogEntry('Viewer Grace Omondi viewed reports',
+                    '2024-06-20 09:45', secondaryTextColor),
               ],
             ),
             const SizedBox(height: 10),
@@ -559,7 +571,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                 },
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primary,
-                  textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                  textStyle: GoogleFonts.inter(fontWeight: FontWeight.w500),
                 ),
                 child: const Text('View All Logs'),
               ),
@@ -571,14 +583,16 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
   }
 
   // Helper widget for a single log entry
-  Widget _buildLogEntry(String action, String timestamp, Color secondaryTextColor) {
+  Widget _buildLogEntry(
+      String action, String timestamp, Color secondaryTextColor) {
     final isDark = _isDark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.history, size: 18, color: AppColors.primary.withOpacity(0.7)),
+          Icon(Icons.history,
+              size: 18, color: AppColors.primary.withOpacity(0.7)),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -606,7 +620,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildSearchAndFilter(Color cardColor, Color secondaryTextColor, Color textColor) {
+  Widget _buildSearchAndFilter(
+      Color cardColor, Color secondaryTextColor, Color textColor) {
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
@@ -636,7 +651,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                     color: secondaryTextColor,
                   ),
                 ),
-                style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
+                style: GoogleFonts.inter(
+                    color: isDark ? Colors.white : Colors.black),
               ),
             ),
             Container(
@@ -667,8 +683,9 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                     choice,
                     style: GoogleFonts.inter(
                       color: textColor,
-                      fontWeight:
-                          _selectedRoleFilter == choice ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: _selectedRoleFilter == choice
+                          ? FontWeight.w500
+                          : FontWeight.normal,
                     ),
                   ),
                 );
@@ -680,16 +697,19 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildUsersTable(
-      bool isMobile, Color cardColor, Color textColor, Color secondaryTextColor) {
-    final dividerColor = isDark ? Colors.white.withOpacity(0.09) : Colors.black.withOpacity(0.06);
+  Widget _buildUsersTable(bool isMobile, Color cardColor, Color textColor,
+      Color secondaryTextColor) {
+    final dividerColor = isDark
+        ? Colors.white.withOpacity(0.09)
+        : Colors.black.withOpacity(0.06);
 
     // Calculate paginated data
     final totalItems = filteredUsers.length;
     final totalPages = (totalItems / itemsPerPage).ceil();
     final startIndex = (currentPage - 1) * itemsPerPage;
-    final endIndex =
-        startIndex + itemsPerPage > totalItems ? totalItems : startIndex + itemsPerPage;
+    final endIndex = startIndex + itemsPerPage > totalItems
+        ? totalItems
+        : startIndex + itemsPerPage;
     final paginatedUsers = filteredUsers.sublist(startIndex, endIndex);
 
     return Container(
@@ -715,7 +735,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                   flex: 2,
                   child: Text('User',
                       style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w500,
                         color: secondaryTextColor,
                         letterSpacing: 0.2,
                         fontSize: 14,
@@ -725,7 +745,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                   Expanded(
                     child: Text('Role',
                         style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                           color: secondaryTextColor,
                           fontSize: 13,
                         )),
@@ -733,7 +753,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                   Expanded(
                     child: Text('Status',
                         style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                           color: secondaryTextColor,
                           fontSize: 13,
                         )),
@@ -741,7 +761,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                   Expanded(
                     child: Text('Last Active',
                         style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                           color: secondaryTextColor,
                           fontSize: 13,
                         )),
@@ -749,7 +769,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                   Expanded(
                     child: Text('Department',
                         style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                           color: secondaryTextColor,
                           fontSize: 13,
                         )),
@@ -762,8 +782,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
           Divider(height: 1, color: dividerColor, thickness: 1),
 
           // User Rows
-          ...paginatedUsers
-              .map((user) => _buildUserRow(user, isMobile, textColor, secondaryTextColor)),
+          ...paginatedUsers.map((user) =>
+              _buildUserRow(user, isMobile, textColor, secondaryTextColor)),
 
           if (filteredUsers.isEmpty)
             Padding(
@@ -778,7 +798,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
           if (filteredUsers.length > itemsPerPage) ...[
             Divider(height: 1, color: dividerColor, thickness: 1),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -836,9 +857,13 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                         icon: Icon(
                           Icons.chevron_left,
                           size: 20,
-                          color: currentPage > 1 ? textColor : secondaryTextColor.withOpacity(0.5),
+                          color: currentPage > 1
+                              ? textColor
+                              : secondaryTextColor.withOpacity(0.5),
                         ),
-                        onPressed: currentPage > 1 ? () => setState(() => currentPage--) : null,
+                        onPressed: currentPage > 1
+                            ? () => setState(() => currentPage--)
+                            : null,
                       ),
                       IconButton(
                         icon: Icon(
@@ -848,8 +873,9 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                               ? textColor
                               : secondaryTextColor.withOpacity(0.5),
                         ),
-                        onPressed:
-                            currentPage < totalPages ? () => setState(() => currentPage++) : null,
+                        onPressed: currentPage < totalPages
+                            ? () => setState(() => currentPage++)
+                            : null,
                       ),
                     ],
                   ),
@@ -862,15 +888,18 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildUserRow(User user, bool isMobile, Color textColor, Color secondaryTextColor) {
+  Widget _buildUserRow(
+      User user, bool isMobile, Color textColor, Color secondaryTextColor) {
     final isDark = _isDark;
-    final statusColor = user.status == 'Active' ? Colors.green : Colors.grey[600];
+    final statusColor =
+        user.status == 'Active' ? Colors.green : Colors.grey[600];
 
     return InkWell(
       onTap: () => _showUserDetailsDialog(user),
       child: Container(
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: secondaryTextColor.withOpacity(0.1))),
+          border: Border(
+              bottom: BorderSide(color: secondaryTextColor.withOpacity(0.1))),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -883,14 +912,15 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: AppColors.primary.withOpacity(0.09),
-                      backgroundImage: user.avatar != null && user.avatar!.isNotEmpty
-                          ? NetworkImage(user.avatar!)
-                          : null,
+                      backgroundImage:
+                          user.avatar != null && user.avatar!.isNotEmpty
+                              ? NetworkImage(user.avatar!)
+                              : null,
                       child: user.avatar == null || user.avatar!.isEmpty
                           ? Text(
                               user.name[0].toUpperCase(),
                               style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w500,
                                 color: AppColors.primary,
                               ),
                             )
@@ -902,7 +932,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                       children: [
                         Text(user.name,
                             style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w500,
                               color: textColor,
                             )),
                         Text(user.email,
@@ -925,7 +955,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                 ),
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: statusColor!.withOpacity(0.09),
                       borderRadius: BorderRadius.circular(20),
@@ -934,7 +965,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                       user.status,
                       style: GoogleFonts.inter(
                         color: statusColor,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         fontSize: 13,
                       ),
                     ),
@@ -966,20 +997,24 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                 itemBuilder: (context) => [
                   PopupMenuItem<String>(
                     value: 'Edit User',
-                    child: Text('Edit User', style: GoogleFonts.inter(color: textColor)),
+                    child: Text('Edit User',
+                        style: GoogleFonts.inter(color: textColor)),
                   ),
                   PopupMenuItem<String>(
                     value: 'Reset Password',
-                    child: Text('Reset Password', style: GoogleFonts.inter(color: textColor)),
+                    child: Text('Reset Password',
+                        style: GoogleFonts.inter(color: textColor)),
                   ),
                   PopupMenuItem<String>(
                     value: user.status == 'Active' ? 'Deactivate' : 'Activate',
-                    child: Text(user.status == 'Active' ? 'Deactivate' : 'Activate',
+                    child: Text(
+                        user.status == 'Active' ? 'Deactivate' : 'Activate',
                         style: GoogleFonts.inter(color: textColor)),
                   ),
                   PopupMenuItem<String>(
                     value: 'Delete',
-                    child: Text('Delete', style: GoogleFonts.inter(color: Colors.red)),
+                    child: Text('Delete',
+                        style: GoogleFonts.inter(color: Colors.red)),
                   ),
                 ].toList(),
                 onSelected: (value) => _handleUserAction(value, user),
@@ -1045,7 +1080,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                             'Add New User',
                             style: GoogleFonts.poppins(
                               fontSize: 20,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
                               color: Colors.white,
                             ),
                           ),
@@ -1072,7 +1107,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                               const SizedBox(width: 8),
                               ElevatedButton(
                                 onPressed: details.onStepContinue,
-                                child: Text(currentStep == 2 ? 'Finish' : 'Next'),
+                                child:
+                                    Text(currentStep == 2 ? 'Finish' : 'Next'),
                               ),
                             ],
                           );
@@ -1084,7 +1120,9 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                                 selectedStatus == null ||
                                 selectedDepartment == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please fill all required fields')),
+                                const SnackBar(
+                                    content: Text(
+                                        'Please fill all required fields')),
                               );
                               return;
                             }
@@ -1100,8 +1138,9 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                               role: selectedRole!,
                               status: selectedStatus!,
                               lastActive: 'Just now',
-                              avatar:
-                                  avatarController.text.isNotEmpty ? avatarController.text : null,
+                              avatar: avatarController.text.isNotEmpty
+                                  ? avatarController.text
+                                  : null,
                               contactNumber: contactController.text,
                               department: selectedDepartment!,
                               permissions: selectedPermissions.toList(),
@@ -1125,8 +1164,10 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                           Step(
                             title: Text('User Info',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark ? AppColors.card : AppColors.darkCard,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark
+                                      ? AppColors.card
+                                      : AppColors.darkCard,
                                 )),
                             isActive: currentStep >= 0,
                             content: Form(
@@ -1139,9 +1180,14 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                                     icon: Icons.person_outline,
                                     isRequired: true,
                                     isDark: isDark,
-                                    cardColor: isDark ? AppColors.card : AppColors.darkCard,
-                                    textColor: isDark ? AppColors.card : AppColors.darkCard,
-                                    secondaryTextColor: AppColors.text.withOpacity(0.7),
+                                    cardColor: isDark
+                                        ? AppColors.card
+                                        : AppColors.darkCard,
+                                    textColor: isDark
+                                        ? AppColors.card
+                                        : AppColors.darkCard,
+                                    secondaryTextColor:
+                                        AppColors.text.withOpacity(0.7),
                                     primaryColor: AppColors.primary,
                                     dividerColor: Colors.grey,
                                   ),
@@ -1153,9 +1199,14 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                                     keyboardType: TextInputType.emailAddress,
                                     isRequired: true,
                                     isDark: isDark,
-                                    cardColor: isDark ? AppColors.card : AppColors.darkCard,
-                                    textColor: isDark ? AppColors.card : AppColors.darkCard,
-                                    secondaryTextColor: AppColors.text.withOpacity(0.7),
+                                    cardColor: isDark
+                                        ? AppColors.card
+                                        : AppColors.darkCard,
+                                    textColor: isDark
+                                        ? AppColors.card
+                                        : AppColors.darkCard,
+                                    secondaryTextColor:
+                                        AppColors.text.withOpacity(0.7),
                                     primaryColor: AppColors.primary,
                                     dividerColor: Colors.grey,
                                   ),
@@ -1166,9 +1217,14 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                                     icon: Icons.phone_outlined,
                                     keyboardType: TextInputType.phone,
                                     isDark: isDark,
-                                    cardColor: isDark ? AppColors.card : AppColors.darkCard,
-                                    textColor: isDark ? AppColors.card : AppColors.darkCard,
-                                    secondaryTextColor: AppColors.text.withOpacity(0.7),
+                                    cardColor: isDark
+                                        ? AppColors.card
+                                        : AppColors.darkCard,
+                                    textColor: isDark
+                                        ? AppColors.card
+                                        : AppColors.darkCard,
+                                    secondaryTextColor:
+                                        AppColors.text.withOpacity(0.7),
                                     primaryColor: AppColors.primary,
                                     dividerColor: Colors.grey,
                                   ),
@@ -1183,7 +1239,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                                       'Technician',
                                       'Field Worker'
                                     ],
-                                    onChanged: (value) => setState(() => selectedRole = value),
+                                    onChanged: (value) =>
+                                        setState(() => selectedRole = value),
                                     icon: Icons.badge_outlined,
                                     isDark: isDark,
                                   ),
@@ -1198,7 +1255,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                                       'Onboarding',
                                       'Terminated'
                                     ],
-                                    onChanged: (value) => setState(() => selectedStatus = value),
+                                    onChanged: (value) =>
+                                        setState(() => selectedStatus = value),
                                     icon: Icons.circle_outlined,
                                     isDark: isDark,
                                   ),
@@ -1206,9 +1264,14 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                                   _buildModernDropdown(
                                     label: 'Department',
                                     value: selectedDepartment,
-                                    items: const ['Admin', 'IT', 'Operations', 'Field'],
-                                    onChanged: (value) =>
-                                        setState(() => selectedDepartment = value),
+                                    items: const [
+                                      'Admin',
+                                      'IT',
+                                      'Operations',
+                                      'Field'
+                                    ],
+                                    onChanged: (value) => setState(
+                                        () => selectedDepartment = value),
                                     icon: Icons.business_center_outlined,
                                     isDark: isDark,
                                   ),
@@ -1219,8 +1282,10 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                           Step(
                             title: Text('Permissions',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark ? AppColors.card : AppColors.darkCard,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark
+                                      ? AppColors.card
+                                      : AppColors.darkCard,
                                 )),
                             isActive: currentStep >= 1,
                             content: Wrap(
@@ -1229,7 +1294,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                               children: _availablePermissions.map((permission) {
                                 return _buildPermissionChip(
                                   permission: permission,
-                                  isSelected: selectedPermissions.contains(permission),
+                                  isSelected:
+                                      selectedPermissions.contains(permission),
                                   onSelected: (selected) {
                                     setState(() {
                                       if (selected) {
@@ -1249,21 +1315,25 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                           Step(
                             title: Text('Congratulations',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark ? AppColors.card : AppColors.darkCard,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark
+                                      ? AppColors.card
+                                      : AppColors.darkCard,
                                 )),
                             isActive: currentStep >= 2,
                             content: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '🎉 ${nameController.text} has been successfully added!',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  'ðŸŽ‰ ${nameController.text} has been successfully added!',
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500),
                                 ),
                                 const SizedBox(height: 10),
                                 Text(
                                   'A temporary password has been sent to their email.',
-                                  style: TextStyle(color: AppColors.text.withOpacity(0.7)),
+                                  style: TextStyle(
+                                      color: AppColors.text.withOpacity(0.7)),
                                 ),
                                 const SizedBox(height: 10),
                                 SelectableText(
@@ -1380,11 +1450,12 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
             ),
             child: TabBar(
               labelColor: AppColors.primary,
-              unselectedLabelColor:
-                  isDark ? AppColors.darkText.withOpacity(0.6) : AppColors.text.withOpacity(0.6),
+              unselectedLabelColor: isDark
+                  ? AppColors.darkText.withOpacity(0.6)
+                  : AppColors.text.withOpacity(0.6),
               indicatorColor: AppColors.primary,
               indicatorSize: TabBarIndicatorSize.tab,
-              labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500),
               tabs: const [
                 Tab(text: 'User Details'),
                 Tab(text: 'Performance'),
@@ -1438,7 +1509,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                 child: CircleAvatar(
                   radius: 30,
                   backgroundColor: isDark ? AppColors.darkCard : Colors.white,
-                  backgroundImage: user.avatar != null ? NetworkImage(user.avatar!) : null,
+                  backgroundImage:
+                      user.avatar != null ? NetworkImage(user.avatar!) : null,
                   child: user.avatar == null
                       ? Icon(Icons.person, size: 30, color: AppColors.primary)
                       : null,
@@ -1454,7 +1526,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                     user.name,
                     style: GoogleFonts.poppins(
                       fontSize: 22,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? AppColors.darkText : AppColors.text,
                     ),
                   ),
@@ -1485,7 +1557,9 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
         _buildDetailItem(
           icon: Icons.phone_outlined,
           label: 'Contact',
-          value: user.contactNumber.isNotEmpty ? user.contactNumber : 'Not provided',
+          value: user.contactNumber.isNotEmpty
+              ? user.contactNumber
+              : 'Not provided',
           isDark: isDark,
         ),
         _buildDetailItem(
@@ -1498,7 +1572,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
           icon: Icons.circle_outlined,
           label: 'Status',
           value: user.status,
-          valueColor: user.status == 'Active' ? AppColors.primary : AppColors.warning,
+          valueColor:
+              user.status == 'Active' ? AppColors.primary : AppColors.warning,
           isDark: isDark,
         ),
         _buildDetailItem(
@@ -1521,7 +1596,9 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
           style: GoogleFonts.poppins(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: isDark ? AppColors.darkText.withOpacity(0.8) : AppColors.text.withOpacity(0.8),
+            color: isDark
+                ? AppColors.darkText.withOpacity(0.8)
+                : AppColors.text.withOpacity(0.8),
           ),
         ),
         const SizedBox(height: 8),
@@ -1538,7 +1615,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
             children: user.permissions.map((permission) {
               return Chip(
                 label: Text(permission),
-                backgroundColor: AppColors.primary.withOpacity(isDark ? 0.2 : 0.1),
+                backgroundColor:
+                    AppColors.primary.withOpacity(isDark ? 0.2 : 0.1),
                 labelStyle: GoogleFonts.inter(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w500,
@@ -1553,7 +1631,9 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
           Text(
             'No specific permissions assigned',
             style: GoogleFonts.inter(
-              color: isDark ? AppColors.darkText.withOpacity(0.5) : AppColors.text.withOpacity(0.5),
+              color: isDark
+                  ? AppColors.darkText.withOpacity(0.5)
+                  : AppColors.text.withOpacity(0.5),
             ),
           ),
       ],
@@ -1568,7 +1648,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
           'Performance Metrics',
           style: GoogleFonts.poppins(
             fontSize: 18,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
             color: isDark ? AppColors.darkText : AppColors.text,
           ),
         ),
@@ -1615,15 +1695,18 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkCard : Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: isDark ? Colors.grey[800]! : Colors.grey[200]!, width: 1),
+            border: Border.all(
+                color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                width: 1),
           ),
           padding: const EdgeInsets.all(12),
           child: Center(
             child: Text(
               'Performance Trend Chart',
               style: GoogleFonts.inter(
-                color:
-                    isDark ? AppColors.darkText.withOpacity(0.6) : AppColors.text.withOpacity(0.6),
+                color: isDark
+                    ? AppColors.darkText.withOpacity(0.6)
+                    : AppColors.text.withOpacity(0.6),
               ),
             ),
           ),
@@ -1647,7 +1730,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
             child: Text(
               'Edit Profile',
               style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -1659,8 +1742,9 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
             onPressed: () => Navigator.pop(context),
             style: OutlinedButton.styleFrom(
               side: BorderSide(
-                color:
-                    isDark ? AppColors.darkText.withOpacity(0.3) : AppColors.text.withOpacity(0.3),
+                color: isDark
+                    ? AppColors.darkText.withOpacity(0.3)
+                    : AppColors.text.withOpacity(0.3),
               ),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
@@ -1670,7 +1754,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
             child: Text(
               'Close',
               style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
                 color: isDark ? AppColors.darkText : AppColors.text,
               ),
             ),
@@ -1695,7 +1779,9 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
           Icon(
             icon,
             size: 20,
-            color: isDark ? AppColors.darkText.withOpacity(0.6) : AppColors.text.withOpacity(0.6),
+            color: isDark
+                ? AppColors.darkText.withOpacity(0.6)
+                : AppColors.text.withOpacity(0.6),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1717,7 +1803,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: valueColor ?? (isDark ? AppColors.darkText : AppColors.text),
+                    color: valueColor ??
+                        (isDark ? AppColors.darkText : AppColors.text),
                   ),
                 ),
               ],
@@ -1774,13 +1861,14 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                       value,
                       style: GoogleFonts.inter(
                         fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         color: isDark ? AppColors.darkText : AppColors.text,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: isPositive
                             ? AppColors.primary.withOpacity(0.1)
@@ -1791,8 +1879,9 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                         change,
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: isPositive ? AppColors.primary : AppColors.danger,
+                          fontWeight: FontWeight.w500,
+                          color:
+                              isPositive ? AppColors.primary : AppColors.danger,
                         ),
                       ),
                     ),
@@ -1825,9 +1914,12 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
         final primaryColor = AppColors.primary;
         final cardColor = isDark ? AppColors.darkCard : AppColors.card;
         final textColor = isDark ? AppColors.darkText : AppColors.text;
-        final secondaryTextColor =
-            isDark ? AppColors.darkText.withOpacity(0.7) : AppColors.text.withOpacity(0.7);
-        final dividerColor = isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1);
+        final secondaryTextColor = isDark
+            ? AppColors.darkText.withOpacity(0.7)
+            : AppColors.text.withOpacity(0.7);
+        final dividerColor = isDark
+            ? Colors.white.withOpacity(0.1)
+            : Colors.black.withOpacity(0.1);
         final buttonTextColor = isDark ? Colors.black : Colors.white;
 
         return Dialog(
@@ -1868,7 +1960,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                           'Edit User Profile',
                           style: GoogleFonts.poppins(
                             fontSize: 20,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             color: Colors.white,
                           ),
                         ),
@@ -1898,7 +1990,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                         ),
                       ),
                       labelStyle: GoogleFonts.inter(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         fontSize: 14,
                       ),
                       unselectedLabelStyle: GoogleFonts.inter(
@@ -1993,7 +2085,12 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                               _buildModernDropdown(
                                 label: 'User Role',
                                 value: selectedRole,
-                                items: const ['Admin', 'Manager', 'Technician', 'Viewer'],
+                                items: const [
+                                  'Admin',
+                                  'Manager',
+                                  'Technician',
+                                  'Viewer'
+                                ],
                                 onChanged: (value) => selectedRole = value!,
                                 icon: Icons.badge_outlined,
                                 isDark: isDark,
@@ -2021,7 +2118,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                                     'HR',
                                     'Finance'
                                   ],
-                                  onChanged: (value) => selectedDepartment = value!,
+                                  onChanged: (value) =>
+                                      selectedDepartment = value!,
                                   icon: Icons.business_center_outlined,
                                   isDark: isDark),
                             ],
@@ -2038,7 +2136,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                                 'User Permissions',
                                 style: GoogleFonts.poppins(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                   color: textColor,
                                 ),
                               ),
@@ -2060,17 +2158,20 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
                                 childAspectRatio: 3,
-                                children: _availablePermissions.map((permission) {
+                                children:
+                                    _availablePermissions.map((permission) {
                                   return _buildPermissionCard(
                                     permission: permission,
-                                    isSelected: selectedPermissions.contains(permission),
+                                    isSelected: selectedPermissions
+                                        .contains(permission),
                                     onChanged: (selected) {
                                       if (selected) {
                                         selectedPermissions.add(permission);
                                       } else {
                                         selectedPermissions.remove(permission);
                                       }
-                                      (dialogContext as Element).markNeedsBuild();
+                                      (dialogContext as Element)
+                                          .markNeedsBuild();
                                     },
                                     isDark: isDark,
                                     primaryColor: primaryColor,
@@ -2103,7 +2204,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                           onPressed: () => Navigator.of(dialogContext).pop(),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: secondaryTextColor,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
                             side: BorderSide(color: dividerColor),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -2123,14 +2225,16 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                                 user.status = selectedStatus;
                                 user.department = selectedDepartment;
                                 user.permissions = selectedPermissions.toList();
-                                user.avatar =
-                                    avatarController.text.isNotEmpty ? avatarController.text : null;
+                                user.avatar = avatarController.text.isNotEmpty
+                                    ? avatarController.text
+                                    : null;
                                 _filterUsers();
                               });
                               Navigator.of(dialogContext).pop();
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
                                 SnackBar(
-                                  content: Text('${user.name} updated successfully'),
+                                  content:
+                                      Text('${user.name} updated successfully'),
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -2142,7 +2246,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryColor,
                             foregroundColor: buttonTextColor,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -2180,9 +2285,12 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
             CircleAvatar(
               radius: 40,
               backgroundColor: isDark ? AppColors.darkCard : Colors.white,
-              backgroundImage: controller.text.isNotEmpty ? NetworkImage(controller.text) : null,
+              backgroundImage: controller.text.isNotEmpty
+                  ? NetworkImage(controller.text)
+                  : null,
               child: controller.text.isEmpty
-                  ? Icon(Icons.person, size: 40, color: textColor.withOpacity(0.5))
+                  ? Icon(Icons.person,
+                      size: 40, color: textColor.withOpacity(0.5))
                   : null,
             ),
             Container(
@@ -2221,15 +2329,17 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      validator: (value) => isRequired && value!.isEmpty ? 'Required field' : null,
+      validator: (value) =>
+          isRequired && value!.isEmpty ? 'Required field' : null,
       style: GoogleFonts.inter(
         color: textColor,
         fontSize: 14,
       ),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon:
-            Icon(icon, color: isDark ? AppColors.darkText.withOpacity(0.7) : Colors.black54),
+        prefixIcon: Icon(icon,
+            color:
+                isDark ? AppColors.darkText.withOpacity(0.7) : Colors.black54),
         filled: true,
         fillColor: isDark ? AppColors.darkCard : Colors.white,
         border: OutlineInputBorder(
@@ -2262,9 +2372,11 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
     final primaryColor = AppColors.primary;
     final cardColor = isDark ? AppColors.darkCard : AppColors.card;
     final textColor = isDark ? AppColors.darkText : AppColors.text;
-    final secondaryTextColor =
-        isDark ? AppColors.darkText.withOpacity(0.7) : AppColors.text.withOpacity(0.7);
-    final dividerColor = isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1);
+    final secondaryTextColor = isDark
+        ? AppColors.darkText.withOpacity(0.7)
+        : AppColors.text.withOpacity(0.7);
+    final dividerColor =
+        isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.1);
 
     return DropdownButtonFormField<String>(
       value: value,
@@ -2325,7 +2437,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
   }) {
     return Card(
       elevation: 0,
-      color: isSelected ? primaryColor.withOpacity(isDark ? 0.2 : 0.1) : cardColor,
+      color:
+          isSelected ? primaryColor.withOpacity(isDark ? 0.2 : 0.1) : cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
@@ -2347,10 +2460,13 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
                   color: isSelected ? primaryColor : cardColor,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: isSelected ? primaryColor : textColor.withOpacity(0.4),
+                    color:
+                        isSelected ? primaryColor : textColor.withOpacity(0.4),
                   ),
                 ),
-                child: isSelected ? Icon(Icons.check, size: 16, color: buttonTextColor) : null,
+                child: isSelected
+                    ? Icon(Icons.check, size: 16, color: buttonTextColor)
+                    : null,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -2418,7 +2534,7 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
             'Delete User',
             style: GoogleFonts.poppins(
               color: dialogTextColor,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w500,
             ),
           ),
           content: Text(
@@ -2428,7 +2544,8 @@ class _UsersScreenState extends State<UsersScreen> with TickerProviderStateMixin
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Cancel', style: GoogleFonts.inter(color: dialogActiveColor)),
+              child: Text('Cancel',
+                  style: GoogleFonts.inter(color: dialogActiveColor)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -2471,7 +2588,9 @@ Widget _buildPermissionChip({
     ),
     selected: isSelected,
     onSelected: onSelected,
-    backgroundColor: isSelected ? primaryColor : (isDark ? Colors.grey[800] : Colors.grey[200]),
+    backgroundColor: isSelected
+        ? primaryColor
+        : (isDark ? Colors.grey[800] : Colors.grey[200]),
     selectedColor: primaryColor,
     checkmarkColor: isDark ? Colors.black : Colors.white,
     shape: RoundedRectangleBorder(
@@ -2505,7 +2624,9 @@ class DialogColors {
 }
 
 String _generateTempPassword({int length = 8}) {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const chars =
+      'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   final rand = math.Random();
-  return List.generate(length, (index) => chars[rand.nextInt(chars.length)]).join();
+  return List.generate(length, (index) => chars[rand.nextInt(chars.length)])
+      .join();
 }

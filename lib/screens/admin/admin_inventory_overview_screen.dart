@@ -31,7 +31,8 @@ class _AdminInventoryOverviewScreenState
     final firstName = userName.split(' ').first;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, firstName)
           : _buildDesktopLayout(
@@ -110,10 +111,30 @@ class _AdminInventoryOverviewScreenState
 
   Widget _buildBottomNavigation(bool isDark) {
     final navItems = [
-      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/dashboard'},
-      {'icon': Icons.people_outline, 'label': 'Users', 'index': 1, 'route': '/users'},
-      {'icon': Icons.agriculture_outlined, 'label': 'Farms', 'index': 2, 'route': '/farms'},
-      {'icon': Icons.inventory_2_outlined, 'label': 'Inventory', 'index': 6, 'route': '/inventory-admin'},
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Dashboard',
+        'index': 0,
+        'route': '/dashboard'
+      },
+      {
+        'icon': Icons.people_outline,
+        'label': 'Users',
+        'index': 1,
+        'route': '/users'
+      },
+      {
+        'icon': Icons.agriculture_outlined,
+        'label': 'Farms',
+        'index': 2,
+        'route': '/farms'
+      },
+      {
+        'icon': Icons.inventory_2_outlined,
+        'label': 'Inventory',
+        'index': 6,
+        'route': '/inventory-admin'
+      },
     ];
 
     return Container(
@@ -139,7 +160,8 @@ class _AdminInventoryOverviewScreenState
                   onTap: () {
                     if (_selectedNavIndex != index) {
                       setState(() => _selectedNavIndex = index);
-                      Navigator.pushReplacementNamed(context, item['route'] as String);
+                      Navigator.pushReplacementNamed(
+                          context, item['route'] as String);
                     }
                   },
                   child: Column(
@@ -159,7 +181,8 @@ class _AdminInventoryOverviewScreenState
                         item['label'] as String,
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.normal,
                           color: isSelected
                               ? AppColors.primary
                               : (isDark

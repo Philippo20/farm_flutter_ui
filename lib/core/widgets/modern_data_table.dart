@@ -49,21 +49,25 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
 
   List<T> get _filteredData {
     if (_searchQuery.isEmpty) return widget.data;
-    
+
     return widget.data.where((item) {
       return widget.columns.any((column) {
         final value = column.value(item);
-        return value.toString().toLowerCase().contains(_searchQuery.toLowerCase());
+        return value
+            .toString()
+            .toLowerCase()
+            .contains(_searchQuery.toLowerCase());
       });
     }).toList();
   }
 
   List<T> get _paginatedData {
     if (!widget.enablePagination) return _filteredData;
-    
+
     final startIndex = _currentPage * widget.itemsPerPage;
-    final endIndex = (startIndex + widget.itemsPerPage).clamp(0, _filteredData.length);
-    
+    final endIndex =
+        (startIndex + widget.itemsPerPage).clamp(0, _filteredData.length);
+
     if (startIndex >= _filteredData.length) return [];
     return _filteredData.sublist(startIndex, endIndex);
   }
@@ -86,14 +90,14 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
         widget.data.sort((a, b) {
           final aValue = column.value(a);
           final bValue = column.value(b);
-          
+
           int comparison = 0;
           if (aValue is Comparable && bValue is Comparable) {
             comparison = aValue.compareTo(bValue);
           } else {
             comparison = aValue.toString().compareTo(bValue.toString());
           }
-          
+
           return _sortAscending ? comparison : -comparison;
         });
       }
@@ -109,7 +113,7 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -124,13 +128,13 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
         children: [
           // Header
           _buildHeader(colorScheme),
-          
+
           // Search bar
           if (widget.showSearch) _buildSearchBar(colorScheme),
-          
+
           // Table
           _buildTable(colorScheme),
-          
+
           // Pagination
           if (widget.enablePagination && _totalPages > 1)
             _buildPagination(colorScheme),
@@ -143,7 +147,8 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: widget.headerColor ?? colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: widget.headerColor ??
+            colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(AppSpacing.radiusLg),
           topRight: Radius.circular(AppSpacing.radiusLg),
@@ -194,7 +199,8 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
         },
         decoration: InputDecoration(
           hintText: widget.searchHint,
-          prefixIcon: Icon(Icons.search, color: colorScheme.onSurface.withOpacity(0.5)),
+          prefixIcon:
+              Icon(Icons.search, color: colorScheme.onSurface.withOpacity(0.5)),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.clear),
@@ -236,7 +242,9 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
               ),
               const SizedBox(height: AppSpacing.md),
               Text(
-                _searchQuery.isNotEmpty ? 'No results found' : 'No data available',
+                _searchQuery.isNotEmpty
+                    ? 'No results found'
+                    : 'No data available',
                 style: AppTypography.bodyLarge.copyWith(
                   color: colorScheme.onSurface.withOpacity(0.5),
                 ),
@@ -264,12 +272,13 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
         columns: widget.columns.asMap().entries.map((entry) {
           final index = entry.key;
           final column = entry.value;
-          
+
           return DataColumn(
             label: Row(
               children: [
                 if (column.icon != null) ...[
-                  Icon(column.icon, size: 18, color: colorScheme.onSurface.withOpacity(0.7)),
+                  Icon(column.icon,
+                      size: 18, color: colorScheme.onSurface.withOpacity(0.7)),
                   const SizedBox(width: AppSpacing.xs),
                 ],
                 Text(
@@ -281,15 +290,18 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
               ],
             ),
             numeric: column.numeric,
-            onSort: column.sortable ? (columnIndex, ascending) => _sort(index) : null,
+            onSort: column.sortable
+                ? (columnIndex, ascending) => _sort(index)
+                : null,
           );
         }).toList(),
         rows: _paginatedData.map((item) {
           return DataRow(
-            onSelectChanged: widget.onRowTap != null ? (_) => widget.onRowTap!(item) : null,
+            onSelectChanged:
+                widget.onRowTap != null ? (_) => widget.onRowTap!(item) : null,
             cells: widget.columns.map((column) {
               final value = column.value(item);
-              
+
               return DataCell(
                 column.builder != null
                     ? column.builder!(item, value)
@@ -337,12 +349,11 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
               ...List.generate(
                 _totalPages.clamp(0, 5),
                 (index) {
-                  final pageIndex = _currentPage < 3
-                      ? index
-                      : _currentPage + index - 2;
-                  
+                  final pageIndex =
+                      _currentPage < 3 ? index : _currentPage + index - 2;
+
                   if (pageIndex >= _totalPages) return const SizedBox.shrink();
-                  
+
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Material(
@@ -352,7 +363,8 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       child: InkWell(
                         onTap: () => setState(() => _currentPage = pageIndex),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                         child: Container(
                           width: 36,
                           height: 36,

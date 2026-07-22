@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,9 +9,15 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/modern_admin_header.dart';
 import '../../core/widgets/modern_admin_sidebar.dart';
+import '../../core/widgets/skeleton_loader.dart';
+import '../../core/widgets/superadmin_sidebar.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 class ModernAnalyticsScreen extends ConsumerStatefulWidget {
-  const ModernAnalyticsScreen({super.key});
+  const ModernAnalyticsScreen({super.key, this.isSuperAdmin = false});
+
+  final bool isSuperAdmin;
 
   @override
   ConsumerState<ModernAnalyticsScreen> createState() =>
@@ -17,113 +25,426 @@ class ModernAnalyticsScreen extends ConsumerStatefulWidget {
 }
 
 class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
+  final SuperAdminApiService _api = SuperAdminApiService();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  final List<Map<String, dynamic>> _farms = [];
+  final List<Map<String, dynamic>> _users = [];
+  final List<Map<String, dynamic>> _batches = [];
+  final List<Map<String, dynamic>> _sales = [];
+  final List<Map<String, dynamic>> _sensors = [];
+  final List<Map<String, dynamic>> _inventory = [];
+  final List<Map<String, dynamic>> _fulfillments = [];
+
   String _selectedPeriod = 'Last 30 Days';
   String _selectedFarm = 'All Farms';
+  bool _isLoading = true;
+  String? _loadError;
+  int _selectedNavIndex = 13;
 
-  final List<String> _farms = const [
-    'All Farms',
-    'Northern Estate',
-    'Southern Estate',
-    'Eastern Farm',
-    'Western Farm',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadAnalytics();
+  }
 
-  final List<_FarmAnalytics> _farmAnalytics = const [
-    _FarmAnalytics(
-      name: 'Northern Estate',
-      revenue: 142000,
-      productionKg: 38500,
-      efficiency: 94,
-      yieldPerAcre: 82,
-      sensorHealth: 98,
-      risk: 'Low',
-      color: AppColors.success,
-    ),
-    _FarmAnalytics(
-      name: 'Southern Estate',
-      revenue: 116000,
-      productionKg: 31200,
-      efficiency: 88,
-      yieldPerAcre: 76,
-      sensorHealth: 92,
-      risk: 'Low',
-      color: AppColors.primary,
-    ),
-    _FarmAnalytics(
-      name: 'Eastern Farm',
-      revenue: 93000,
-      productionKg: 26700,
-      efficiency: 79,
-      yieldPerAcre: 69,
-      sensorHealth: 86,
-      risk: 'Watch',
-      color: AppColors.warning,
-    ),
-    _FarmAnalytics(
-      name: 'Western Farm',
-      revenue: 69000,
-      productionKg: 21800,
-      efficiency: 73,
-      yieldPerAcre: 63,
-      sensorHealth: 81,
-      risk: 'High',
-      color: AppColors.error,
-    ),
-  ];
+  Future<void> _loadAnalytics() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    try {
+      final results = await Future.wait([
+        _api.getFarms(),
+        _api.getUsers(),
+        _api.getBatches(),
+        _api.getSales(),
+        _api.getSensors(),
+        _api.getInventory(),
+        _api.getFulfillments(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _farms
+          ..clear()
+          ..addAll(results[0]);
+        _users
+          ..clear()
+          ..addAll(results[1]);
+        _batches
+          ..clear()
+          ..addAll(results[2]);
+        _sales
+          ..clear()
+          ..addAll(results[3]);
+        _sensors
+          ..clear()
+          ..addAll(results[4]);
+        _inventory
+          ..clear()
+          ..addAll(results[5]);
+        _fulfillments
+          ..clear()
+          ..addAll(results[6]);
+        if (_selectedFarm != 'All Farms' &&
+            !_farmNames.contains(_selectedFarm)) {
+          _selectedFarm = 'All Farms';
+        }
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = error.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<String> get _farmNames => [
+        'All Farms',
+        ..._farms
+            .map((farm) => _text(farm, ['name', 'farm_name', 'farmName']))
+            .where((name) => name.isNotEmpty)
+            .toSet(),
+      ];
+
+  List<Map<String, dynamic>> get _periodBatches => _batches
+      .where((batch) => _withinSelectedPeriod(
+            _date(batch, ['actual_harvest_date', 'updated_at', 'created_at']),
+          ))
+      .toList();
+
+  List<Map<String, dynamic>> get _periodSales => _sales
+      .where((sale) => _withinSelectedPeriod(
+            _date(sale, ['payment_date', 'delivered_at', 'created_at']),
+          ))
+      .toList();
+
+  List<_FarmAnalytics> get _farmAnalytics {
+    final periodBatches = _periodBatches;
+    final periodSales = _periodSales;
+    final batchesById = {
+      for (final batch in _batches) _id(batch): batch,
+    };
+    final salesByFarm = <String, List<Map<String, dynamic>>>{};
+    final batchesByFarm = <String, List<Map<String, dynamic>>>{};
+    final sensorsByFarm = <String, List<Map<String, dynamic>>>{};
+    final inventoryByFarm = <String, List<Map<String, dynamic>>>{};
+
+    for (final batch in periodBatches) {
+      final farmId = _value(batch, ['farm_id', 'farmId']);
+      if (farmId.isNotEmpty) {
+        batchesByFarm.putIfAbsent(farmId, () => []).add(batch);
+      }
+    }
+    for (final sale in periodSales) {
+      var farmId = _value(sale, ['farm_id', 'farmId']);
+      if (farmId.isEmpty) {
+        final batchId = _value(sale, ['batch_id', 'batchId']);
+        farmId =
+            _value(batchesById[batchId] ?? const {}, ['farm_id', 'farmId']);
+      }
+      if (farmId.isNotEmpty) {
+        salesByFarm.putIfAbsent(farmId, () => []).add(sale);
+      }
+    }
+    for (final sensor in _sensors) {
+      final farmId = _value(sensor, ['farm_id', 'farmId']);
+      if (farmId.isNotEmpty) {
+        sensorsByFarm.putIfAbsent(farmId, () => []).add(sensor);
+      }
+    }
+    for (final item in _inventory) {
+      final farmId = _value(item, ['farm_id', 'farmId']);
+      if (farmId.isNotEmpty) {
+        inventoryByFarm.putIfAbsent(farmId, () => []).add(item);
+      }
+    }
+
+    return _farms.map((farm) {
+      final farmId = _id(farm);
+      final name =
+          _text(farm, ['name', 'farm_name', 'farmName'], fallback: 'Farm');
+      final farmBatches = batchesByFarm[farmId] ?? const [];
+      final farmSales = salesByFarm[farmId] ?? const [];
+      final farmSensors = sensorsByFarm[farmId] ?? const [];
+      final farmInventory = inventoryByFarm[farmId] ?? const [];
+      final revenue = farmSales.fold<double>(
+        0,
+        (sum, sale) => sum + _number(sale, ['total_amount', 'amount', 'total']),
+      );
+      final paidRevenue = farmSales
+          .where(
+              (sale) => _status(sale, ['payment_status', 'status']) == 'paid')
+          .fold<double>(
+            0,
+            (sum, sale) =>
+                sum + _number(sale, ['total_amount', 'amount', 'total']),
+          );
+      final productionKg = farmBatches.fold<double>(
+        0,
+        (sum, batch) =>
+            sum +
+            _number(batch, [
+              'total_weight_kg',
+              'harvested_weight_kg',
+              'actual_yield_kg',
+              'quantity_kg',
+              'weight_kg',
+            ]),
+      );
+      final expectedHeads = farmBatches.fold<double>(
+        0,
+        (sum, batch) =>
+            sum +
+            _number(batch, [
+              'total_transplanted',
+              'expected_heads',
+              'planned_quantity',
+            ]),
+      );
+      final harvestedHeads = farmBatches.fold<double>(
+        0,
+        (sum, batch) =>
+            sum +
+            _number(batch, [
+              'total_harvested',
+              'harvested_heads',
+              'actual_quantity',
+            ]),
+      );
+      final completedBatches = farmBatches
+          .where((batch) => {
+                'completed',
+                'harvested',
+                'closed',
+              }.contains(_status(batch, ['status', 'batch_status'])))
+          .length;
+      final sensorHealth = _sensorHealth(farmSensors);
+      final productionCompletion = farmBatches.isEmpty
+          ? 0
+          : (completedBatches / farmBatches.length) * 100;
+      final paymentCompletion =
+          revenue <= 0 ? 0 : (paidRevenue / revenue) * 100;
+      final efficiency = ((productionCompletion + paymentCompletion) / 2)
+          .clamp(0, 100)
+          .round();
+      final acres = math.max(
+        1,
+        _number(farm, ['acreage', 'area_acres', 'size', 'land_size']).round(),
+      );
+      final yieldPerAcre = (productionKg / acres).clamp(0, 100).round();
+      final inventoryValue = farmInventory.fold<double>(
+        0,
+        (sum, item) =>
+            sum +
+            (_number(item, ['total_value', 'value']) > 0
+                ? _number(item, ['total_value', 'value'])
+                : _number(item, ['quantity', 'stock']) *
+                    _number(item, ['unit_price', 'price'])),
+      );
+      final riskScore =
+          math.min(100, ((100 - sensorHealth) + (100 - efficiency)) / 2);
+      final risk = riskScore >= 45
+          ? 'High'
+          : riskScore >= 25
+              ? 'Watch'
+              : 'Low';
+
+      return _FarmAnalytics(
+        id: farmId,
+        name: name,
+        revenue: revenue,
+        productionKg: productionKg,
+        inventoryValue: inventoryValue,
+        efficiency: efficiency,
+        yieldPerAcre: yieldPerAcre,
+        sensorHealth: sensorHealth,
+        batchCount: farmBatches.length,
+        salesCount: farmSales.length,
+        lossHeads: math.max(0, expectedHeads - harvestedHeads),
+        risk: risk,
+        color: risk == 'High'
+            ? AppColors.error
+            : risk == 'Watch'
+                ? AppColors.warning
+                : AppColors.success,
+      );
+    }).toList()
+      ..sort((a, b) => b.revenue.compareTo(a.revenue));
+  }
 
   List<_FarmAnalytics> get _visibleFarms {
-    if (_selectedFarm == 'All Farms') return _farmAnalytics;
-    return _farmAnalytics.where((farm) => farm.name == _selectedFarm).toList();
+    final analytics = _farmAnalytics;
+    if (_selectedFarm == 'All Farms') return analytics;
+    return analytics.where((farm) => farm.name == _selectedFarm).toList();
   }
 
   _AnalyticsTotals get _totals {
     final farms = _visibleFarms;
-    final revenue = farms.fold<double>(0, (sum, farm) => sum + farm.revenue);
-    final production =
-        farms.fold<double>(0, (sum, farm) => sum + farm.productionKg);
-    final efficiency =
-        farms.fold<double>(0, (sum, farm) => sum + farm.efficiency) /
-            farms.length;
-    final sensorHealth =
-        farms.fold<double>(0, (sum, farm) => sum + farm.sensorHealth) /
-            farms.length;
+    if (farms.isEmpty) {
+      return const _AnalyticsTotals(
+        revenue: 0,
+        productionKg: 0,
+        inventoryValue: 0,
+        efficiency: 0,
+        sensorHealth: 0,
+        losses: 0,
+      );
+    }
     return _AnalyticsTotals(
-      revenue: revenue,
-      productionKg: production,
-      efficiency: efficiency.round(),
-      sensorHealth: sensorHealth.round(),
+      revenue: farms.fold(0, (sum, farm) => sum + farm.revenue),
+      productionKg: farms.fold(0, (sum, farm) => sum + farm.productionKg),
+      inventoryValue: farms.fold(0, (sum, farm) => sum + farm.inventoryValue),
+      efficiency: (farms.fold<int>(0, (sum, farm) => sum + farm.efficiency) /
+              farms.length)
+          .round(),
+      sensorHealth:
+          (farms.fold<int>(0, (sum, farm) => sum + farm.sensorHealth) /
+                  farms.length)
+              .round(),
+      losses: farms.fold(0, (sum, farm) => sum + farm.lossHeads),
     );
+  }
+
+  List<FlSpot> get _revenueTrend => _trendFromRecords(
+      _periodSales,
+      ['payment_date', 'delivered_at', 'created_at'],
+      ['total_amount', 'amount', 'total']);
+
+  List<FlSpot> get _productionTrend => _trendFromRecords(
+      _periodBatches,
+      ['actual_harvest_date', 'updated_at', 'created_at'],
+      ['total_weight_kg', 'harvested_weight_kg', 'actual_yield_kg']);
+
+  List<_BarMetric> get _sensorBars {
+    final grouped = <String, List<Map<String, dynamic>>>{};
+    for (final sensor in _sensors) {
+      final type = _text(sensor, ['type', 'sensor_type', 'metric_type'],
+          fallback: 'Other');
+      grouped.putIfAbsent(type, () => []).add(sensor);
+    }
+    if (grouped.isEmpty) {
+      return const [_BarMetric('None', 0, AppColors.neutral400)];
+    }
+    return grouped.entries.take(5).map((entry) {
+      final value = _sensorHealth(entry.value).toDouble();
+      return _BarMetric(_shortLabel(entry.key), value, _barColor(value));
+    }).toList();
+  }
+
+  List<_InsightItem> get _insights {
+    final farms = _farmAnalytics;
+    final topFarm = farms.isEmpty ? null : farms.first;
+    final lowSensor = farms.where((farm) => farm.sensorHealth < 85).toList();
+    final pendingFulfillments = _fulfillments
+        .where((item) => !{'completed', 'delivered', 'cancelled'}
+            .contains(_status(item, ['status', 'delivery_status'])))
+        .length;
+
+    return [
+      _InsightItem(
+        title: topFarm == null
+            ? 'Revenue analytics needs farm activity'
+            : '${topFarm.name} is leading revenue performance',
+        detail: topFarm == null
+            ? 'Create farms, batches, and sales to unlock live revenue trends.'
+            : '${topFarm.name} has ${_money(topFarm.revenue)} in linked sales for the selected dataset.',
+        icon: Icons.trending_up_rounded,
+        color: AppColors.success,
+      ),
+      _InsightItem(
+        title: lowSensor.isEmpty
+            ? 'Sensor network is within operating range'
+            : '${lowSensor.length} farm${lowSensor.length == 1 ? '' : 's'} need sensor review',
+        detail: lowSensor.isEmpty
+            ? 'Current telemetry health is above the operational threshold.'
+            : 'Prioritize diagnostics where sensor health is below 85%.',
+        icon: Icons.sensors_rounded,
+        color: lowSensor.isEmpty ? AppColors.info : AppColors.warning,
+      ),
+      _InsightItem(
+        title: pendingFulfillments == 0
+            ? 'Fulfillment queue is clear'
+            : '$pendingFulfillments fulfillment records need attention',
+        detail: widget.isSuperAdmin
+            ? 'Super Admin can inspect global pricing, inventory, deliveries, and audit controls from this page.'
+            : 'Admin has operational analytics access; restricted platform controls stay with Super Admin.',
+        icon: Icons.assignment_turned_in_rounded,
+        color: pendingFulfillments == 0 ? AppColors.success : AppColors.warning,
+      ),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isMobile = MediaQuery.of(context).size.width < 700;
+    final user = ref.watch(currentUserProvider);
+    final userName =
+        user?.name ?? (widget.isSuperAdmin ? 'Super Admin' : 'Admin');
+    final userEmail = user?.email ?? 'admin@farmestates.com';
+    final firstName = userName.split(' ').first;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: isMobile ? _buildMobileLayout(isDark) : _buildDesktopLayout(isDark),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      drawer: widget.isSuperAdmin && isMobile
+          ? SuperAdminDrawer(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Super Administrator',
+            )
+          : null,
+      body: isMobile
+          ? _buildMobileLayout(isDark, firstName)
+          : _buildDesktopLayout(isDark, firstName, userName, userEmail),
+      bottomNavigationBar: !widget.isSuperAdmin && isMobile
+          ? _buildBottomNavigation(isDark)
+          : null,
     );
   }
 
-  Widget _buildDesktopLayout(bool isDark) {
+  Widget _buildDesktopLayout(
+    bool isDark,
+    String firstName,
+    String userName,
+    String userEmail,
+  ) {
     return Row(
       children: [
-        ModernAdminSidebar(selectedIndex: 4, onItemSelected: (_) {}),
+        if (widget.isSuperAdmin)
+          SuperAdminSidebar(
+            selectedIndex: _selectedNavIndex,
+            onItemSelected: (index) =>
+                setState(() => _selectedNavIndex = index),
+            userName: userName,
+            userEmail: userEmail,
+            userRole: 'Super Administrator',
+          )
+        else
+          ModernAdminSidebar(selectedIndex: 4, onItemSelected: (_) {}),
         Expanded(
           child: Column(
             children: [
               ModernAdminHeader(
-                userName: 'Admin',
+                userName: firstName,
                 onNotificationTap: () {},
                 onProfileTap: () {},
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: _buildContent(isDark, isMobile: false),
+                child: RefreshIndicator(
+                  onRefresh: _loadAnalytics,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    child: _buildBody(isDark, isMobile: false),
+                  ),
                 ),
               ),
             ],
@@ -133,25 +454,38 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
     );
   }
 
-  Widget _buildMobileLayout(bool isDark) {
+  Widget _buildMobileLayout(bool isDark, String firstName) {
     return Column(
       children: [
         ModernAdminHeader(
-          userName: 'Admin',
+          userName: firstName,
+          onMenuTap: widget.isSuperAdmin
+              ? () => _scaffoldKey.currentState?.openDrawer()
+              : null,
           onNotificationTap: () {},
           onProfileTap: () {},
         ),
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: _buildContent(isDark, isMobile: true),
+          child: RefreshIndicator(
+            onRefresh: _loadAnalytics,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: _buildBody(isDark, isMobile: true),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildContent(bool isDark, {required bool isMobile}) {
+  Widget _buildBody(bool isDark, {required bool isMobile}) {
+    if (_isLoading) {
+      return const AdminDataSkeleton(rowCount: 6);
+    }
+    if (_loadError != null) {
+      return _buildError(isDark);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -163,10 +497,51 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
         const SizedBox(height: AppSpacing.lg),
         _buildPrimaryCharts(isDark),
         const SizedBox(height: AppSpacing.lg),
+        if (widget.isSuperAdmin) ...[
+          _buildControlPanel(isDark),
+          const SizedBox(height: AppSpacing.lg),
+        ],
         _buildFarmComparison(isDark),
         const SizedBox(height: AppSpacing.lg),
         _buildInsights(isDark),
       ],
+    );
+  }
+
+  Widget _buildError(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: _cardDecoration(isDark),
+      child: Column(
+        children: [
+          const Icon(Icons.cloud_off_rounded, color: AppColors.error, size: 42),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Analytics data could not be loaded',
+            style: AppTypography.titleMedium.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            _loadError ?? 'Unknown backend error',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.62)
+                  : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FilledButton.icon(
+            onPressed: _loadAnalytics,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -197,14 +572,6 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
               ? Colors.white.withValues(alpha: 0.08)
               : AppColors.primary.withValues(alpha: 0.14),
         ),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.10),
-              blurRadius: 28,
-              offset: const Offset(0, 16),
-            ),
-        ],
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -221,18 +588,19 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
                     _buildScopePill(isDark),
                     const SizedBox(height: AppSpacing.md),
                     Text(
-                      'Farm Analytics Command Center',
+                      widget.isSuperAdmin
+                          ? 'Platform Analytics Control Center'
+                          : 'Farm Analytics Command Center',
                       style: AppTypography.h3.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -1,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      _selectedFarm == 'All Farms'
-                          ? 'Global view of production, revenue, sensor reliability, and farm efficiency across the full operation.'
-                          : 'Focused performance view for $_selectedFarm with production, revenue, sensor, and risk indicators.',
+                      widget.isSuperAdmin
+                          ? 'Global analytics across farms, sales, batches, sensors, inventory, fulfillment, and operational controls.'
+                          : 'Operational analytics from backend sales, batches, sensors, inventory, and fulfillment records.',
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.72)
@@ -270,19 +638,14 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.analytics_rounded,
-            size: 17,
-            color: isDark ? Colors.white : AppColors.info,
-          ),
+          Icon(Icons.analytics_rounded,
+              size: 17, color: isDark ? Colors.white : AppColors.info),
           const SizedBox(width: AppSpacing.sm),
           Text(
-            _selectedFarm == 'All Farms'
-                ? 'Global farm intelligence'
-                : 'Individual farm intelligence',
+            widget.isSuperAdmin ? '100% platform control' : '90% admin control',
             style: AppTypography.label.copyWith(
               color: isDark ? Colors.white : AppColors.info,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -306,29 +669,18 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
       ),
       child: Column(
         children: [
-          _scoreRow(
-            isDark,
-            Icons.payments_rounded,
-            'Revenue',
-            _money(totals.revenue),
-            AppColors.success,
-          ),
+          _scoreRow(isDark, Icons.payments_rounded, 'Revenue',
+              _money(totals.revenue), AppColors.success),
           const SizedBox(height: AppSpacing.md),
           _scoreRow(
-            isDark,
-            Icons.inventory_2_rounded,
-            'Production',
-            '${(totals.productionKg / 1000).toStringAsFixed(1)}K kg',
-            AppColors.primary,
-          ),
+              isDark,
+              Icons.inventory_2_rounded,
+              'Production',
+              '${(totals.productionKg / 1000).toStringAsFixed(1)}K kg',
+              AppColors.primary),
           const SizedBox(height: AppSpacing.md),
-          _scoreRow(
-            isDark,
-            Icons.speed_rounded,
-            'Efficiency',
-            '${totals.efficiency}%',
-            AppColors.warning,
-          ),
+          _scoreRow(isDark, Icons.speed_rounded, 'Efficiency',
+              '${totals.efficiency}%', AppColors.warning),
         ],
       ),
     );
@@ -360,7 +712,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
               color: isDark
                   ? Colors.white.withValues(alpha: 0.72)
                   : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -368,7 +720,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
           value,
           style: AppTypography.titleSmall.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -388,7 +740,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
           _dropdown(
             label: 'Analytics Scope',
             value: _selectedFarm,
-            items: _farms,
+            items: _farmNames.isEmpty ? const ['All Farms'] : _farmNames,
             isDark: isDark,
             onChanged: (value) => setState(() => _selectedFarm = value!),
           ),
@@ -405,13 +757,18 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
             onChanged: (value) => setState(() => _selectedPeriod = value!),
           ),
           _ScopeChip(
-            icon: Icons.public_rounded,
-            label: _selectedFarm == 'All Farms'
-                ? 'Comparing all farms'
-                : 'Focused on one farm',
-            color: _selectedFarm == 'All Farms'
-                ? AppColors.info
-                : AppColors.primary,
+            icon: Icons.storage_rounded,
+            label: '${_farms.length} farms from backend',
+            color: AppColors.info,
+          ),
+          _ScopeChip(
+            icon: widget.isSuperAdmin
+                ? Icons.admin_panel_settings_rounded
+                : Icons.manage_accounts_rounded,
+            label: widget.isSuperAdmin
+                ? 'Full platform controls'
+                : 'Operational controls',
+            color: widget.isSuperAdmin ? AppColors.error : AppColors.primary,
           ),
         ],
       ),
@@ -425,10 +782,11 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
     required bool isDark,
     required ValueChanged<String?> onChanged,
   }) {
+    final safeValue = items.contains(value) ? value : items.first;
     return SizedBox(
       width: 230,
       child: DropdownButtonFormField<String>(
-        initialValue: value,
+        initialValue: safeValue,
         items: items
             .map((item) => DropdownMenuItem(value: item, child: Text(item)))
             .toList(),
@@ -461,38 +819,55 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
       _AnalyticsKpi(
         label: 'Revenue',
         value: _money(totals.revenue),
-        change: '+18.6%',
+        detail: '${_periodSales.length} sales records',
         icon: Icons.payments_rounded,
         color: AppColors.success,
       ),
       _AnalyticsKpi(
         label: 'Production',
         value: '${(totals.productionKg / 1000).toStringAsFixed(1)}K kg',
-        change: '+11.2%',
+        detail: '${_periodBatches.length} batches',
         icon: Icons.inventory_2_rounded,
         color: AppColors.primary,
       ),
       _AnalyticsKpi(
-        label: 'Efficiency',
-        value: '${totals.efficiency}%',
-        change: '+5.4%',
-        icon: Icons.speed_rounded,
+        label: 'Inventory Value',
+        value: _money(totals.inventoryValue),
+        detail: '${_inventory.length} stock records',
+        icon: Icons.warehouse_rounded,
         color: AppColors.warning,
       ),
       _AnalyticsKpi(
         label: 'Sensor Health',
         value: '${totals.sensorHealth}%',
-        change: '+2.1%',
+        detail: '${_sensors.length} sensors',
         icon: Icons.sensors_rounded,
         color: AppColors.info,
+      ),
+      _AnalyticsKpi(
+        label: 'Loss Heads',
+        value: totals.losses.toStringAsFixed(0),
+        detail: 'Batch yield variance',
+        icon: Icons.trending_down_rounded,
+        color: AppColors.error,
+      ),
+      _AnalyticsKpi(
+        label: 'Active Users',
+        value: _users
+            .where((user) => _status(user, ['status']) == 'active')
+            .length
+            .toString(),
+        detail: '${_users.length} total users',
+        icon: Icons.people_alt_rounded,
+        color: AppColors.primary,
       ),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 1050
-            ? 4
-            : constraints.maxWidth >= 620
+        final columns = constraints.maxWidth >= 1100
+            ? 3
+            : constraints.maxWidth >= 680
                 ? 2
                 : 1;
         final cardWidth =
@@ -522,6 +897,8 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
               title: _selectedFarm == 'All Farms'
                   ? 'Global Revenue vs Production'
                   : 'Farm Revenue vs Production',
+              revenueSpots: _revenueTrend,
+              productionSpots: _productionTrend,
               isDark: isDark,
             ),
           ),
@@ -530,7 +907,10 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
               height: wide ? 0 : AppSpacing.md),
           Expanded(
             flex: wide ? 2 : 0,
-            child: _SensorReliabilityChart(isDark: isDark),
+            child: _SensorReliabilityChart(
+              isDark: isDark,
+              bars: _sensorBars,
+            ),
           ),
         ];
 
@@ -543,7 +923,64 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
     );
   }
 
+  Widget _buildControlPanel(bool isDark) {
+    final actions = const [
+      _ControlAction('Pricing Control', Icons.price_change_rounded,
+          '/superadmin/pricing', AppColors.success),
+      _ControlAction('Inventory Control', Icons.inventory_2_rounded,
+          '/superadmin/inventory', AppColors.primary),
+      _ControlAction('Delivery Control', Icons.local_shipping_rounded,
+          '/superadmin/deliveries', AppColors.warning),
+      _ControlAction('System Config', Icons.settings_rounded,
+          '/superadmin/config', AppColors.info),
+      _ControlAction('Audit Logs', Icons.history_rounded, '/superadmin/audit',
+          AppColors.error),
+      _ControlAction('Backup & Restore', Icons.backup_rounded,
+          '/superadmin/backup', AppColors.neutral600),
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: _cardDecoration(isDark),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionHeader(
+            title: 'Super Admin Control Layer',
+            subtitle:
+                '100% control adds platform configuration, audit, backup, pricing, inventory, and delivery actions.',
+            isDark: isDark,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.md,
+            children: actions
+                .map(
+                  (action) => OutlinedButton.icon(
+                    onPressed: () => Navigator.pushNamed(context, action.route),
+                    icon: Icon(action.icon, color: action.color),
+                    label: Text(action.label),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.md,
+                      ),
+                      foregroundColor:
+                          isDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFarmComparison(bool isDark) {
+    final farms = _visibleFarms;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -556,70 +993,64 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
                 ? 'Farm Performance Comparison'
                 : 'Farm Performance Detail',
             subtitle:
-                'Revenue, yield, efficiency, sensor health, and risk by farm.',
+                'Revenue, production, inventory value, sensor health, losses, and risk by farm.',
             isDark: isDark,
           ),
           const SizedBox(height: AppSpacing.lg),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final columns = constraints.maxWidth >= 1100
-                  ? 2
-                  : constraints.maxWidth >= 760
-                      ? 2
-                      : 1;
-              final cardWidth =
-                  (constraints.maxWidth - (AppSpacing.md * (columns - 1))) /
-                      columns;
-              return Wrap(
-                spacing: AppSpacing.md,
-                runSpacing: AppSpacing.md,
-                children: _visibleFarms
-                    .map((farm) => SizedBox(
-                          width: cardWidth,
-                          child: _FarmComparisonCard(
-                            farm: farm,
-                            isDark: isDark,
-                            onSelect: () =>
-                                setState(() => _selectedFarm = farm.name),
-                          ),
-                        ))
-                    .toList(),
-              );
-            },
-          ),
+          if (farms.isEmpty)
+            _emptyState(isDark)
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 760 ? 2 : 1;
+                final cardWidth =
+                    (constraints.maxWidth - (AppSpacing.md * (columns - 1))) /
+                        columns;
+                return Wrap(
+                  spacing: AppSpacing.md,
+                  runSpacing: AppSpacing.md,
+                  children: farms
+                      .map((farm) => SizedBox(
+                            width: cardWidth,
+                            child: _FarmComparisonCard(
+                              farm: farm,
+                              isDark: isDark,
+                              onSelect: () =>
+                                  setState(() => _selectedFarm = farm.name),
+                            ),
+                          ))
+                      .toList(),
+                );
+              },
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildInsights(bool isDark) {
-    final farmLabel =
-        _selectedFarm == 'All Farms' ? 'all farms' : _selectedFarm;
-    final insights = [
-      _InsightItem(
-        title: 'Revenue momentum is strongest in Northern Estate',
-        detail: _selectedFarm == 'All Farms'
-            ? 'Northern Estate contributes 34% of current period revenue.'
-            : '$farmLabel revenue is tracking above its 90-day baseline.',
-        icon: Icons.trending_up_rounded,
-        color: AppColors.success,
+  Widget _emptyState(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.025)
+            : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       ),
-      _InsightItem(
-        title: 'Sensor reliability impacts yield confidence',
-        detail:
-            'Zones below 88% sensor health should be prioritized for calibration.',
-        icon: Icons.sensors_rounded,
-        color: AppColors.info,
+      child: Text(
+        'No farms are available in the backend yet.',
+        textAlign: TextAlign.center,
+        style: AppTypography.bodyMedium.copyWith(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.68)
+              : AppColors.textSecondary,
+        ),
       ),
-      _InsightItem(
-        title: 'Water and nutrient variance requires review',
-        detail:
-            'Moisture trends are below target in lower-performing farm zones.',
-        icon: Icons.water_drop_rounded,
-        color: AppColors.warning,
-      ),
-    ];
+    );
+  }
 
+  Widget _buildInsights(bool isDark) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -629,11 +1060,11 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
         children: [
           _SectionHeader(
             title: 'Operational Insights',
-            subtitle: 'Recommended admin actions based on current analytics.',
+            subtitle: 'Live recommendations based on backend analytics.',
             isDark: isDark,
           ),
           const SizedBox(height: AppSpacing.md),
-          ...insights.map(
+          ..._insights.map(
             (insight) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.md),
               child: _InsightRow(insight: insight, isDark: isDark),
@@ -713,8 +1144,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
                             : (isDark
                                 ? Colors.white.withValues(alpha: 0.62)
                                 : AppColors.textSecondary),
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -727,9 +1157,97 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
     );
   }
 
+  int _sensorHealth(List<Map<String, dynamic>> sensors) {
+    if (sensors.isEmpty) return 0;
+    final online = sensors.where((sensor) => _isOnlineSensor(sensor)).length;
+    return ((online / sensors.length) * 100).round();
+  }
+
+  bool _isOnlineSensor(Map<String, dynamic> sensor) {
+    final status = _status(sensor, ['connection_status', 'status']);
+    if (status == 'online' || status == 'active') return true;
+    final lastSeen =
+        _date(sensor, ['last_seen', 'last_reading_at', 'updated_at']);
+    if (lastSeen == null) return false;
+    return DateTime.now().difference(lastSeen).inSeconds <= 20;
+  }
+
+  bool _withinSelectedPeriod(DateTime? date) {
+    if (date == null || _selectedPeriod == 'This Year') {
+      if (date == null) return true;
+      return date.year == DateTime.now().year;
+    }
+    return DateTime.now().difference(date).inDays <= _periodDays;
+  }
+
+  int get _periodDays {
+    switch (_selectedPeriod) {
+      case 'Last 7 Days':
+        return 7;
+      case 'Last 90 Days':
+        return 90;
+      case 'This Year':
+        return 366;
+      case 'Last 30 Days':
+      default:
+        return 30;
+    }
+  }
+
+  String get _selectedFarmId {
+    if (_selectedFarm == 'All Farms') return '';
+    final farm = _farms.firstWhere(
+      (item) => _text(item, ['name', 'farm_name', 'farmName']) == _selectedFarm,
+      orElse: () => const {},
+    );
+    return _id(farm);
+  }
+
+  String _recordFarmId(Map<String, dynamic> record) {
+    final directFarmId = _value(record, ['farm_id', 'farmId']);
+    if (directFarmId.isNotEmpty) return directFarmId;
+    final batchId = _value(record, ['batch_id', 'batchId']);
+    if (batchId.isEmpty) return '';
+    final batch = _batches.firstWhere(
+      (item) => _id(item) == batchId,
+      orElse: () => const {},
+    );
+    return _value(batch, ['farm_id', 'farmId']);
+  }
+
+  List<FlSpot> _trendFromRecords(
+    List<Map<String, dynamic>> records,
+    List<String> dateKeys,
+    List<String> valueKeys,
+  ) {
+    final filtered = records.where((record) {
+      if (_selectedFarm == 'All Farms') return true;
+      final selectedFarmId = _selectedFarmId;
+      return selectedFarmId.isNotEmpty &&
+          _recordFarmId(record) == selectedFarmId;
+    });
+    final buckets = List<double>.filled(6, 0);
+    final now = DateTime.now();
+    for (final record in filtered) {
+      final date = _date(record, dateKeys) ?? now;
+      final diff = now.difference(date).inDays;
+      final index = 5 - (diff ~/ 7).clamp(0, 5);
+      buckets[index] += _number(record, valueKeys);
+    }
+    final maxValue = buckets.fold<double>(0, math.max);
+    if (maxValue <= 0) {
+      return List.generate(6, (index) => FlSpot(index.toDouble(), 0));
+    }
+    return List.generate(
+      6,
+      (index) => FlSpot(index.toDouble(), (buckets[index] / maxValue) * 100),
+    );
+  }
+
   String _money(double value) {
-    if (value >= 1000000) return '\$${(value / 1000000).toStringAsFixed(2)}M';
-    return '\$${(value / 1000).toStringAsFixed(0)}K';
+    if (value >= 1000000) return 'GHS ${(value / 1000000).toStringAsFixed(2)}M';
+    if (value >= 1000) return 'GHS ${(value / 1000).toStringAsFixed(1)}K';
+    return 'GHS ${value.toStringAsFixed(0)}';
   }
 }
 
@@ -764,7 +1282,7 @@ class _KpiCard extends StatelessWidget {
                   kpi.value,
                   style: AppTypography.titleMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
@@ -775,16 +1293,22 @@ class _KpiCard extends StatelessWidget {
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.64)
                         : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  kpi.detail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption.copyWith(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.50)
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
-          _ScopeChip(
-              icon: Icons.arrow_upward_rounded,
-              label: kpi.change,
-              color: kpi.color),
         ],
       ),
     );
@@ -792,9 +1316,16 @@ class _KpiCard extends StatelessWidget {
 }
 
 class _TrendChart extends StatelessWidget {
-  const _TrendChart({required this.title, required this.isDark});
+  const _TrendChart({
+    required this.title,
+    required this.revenueSpots,
+    required this.productionSpots,
+    required this.isDark,
+  });
 
   final String title;
+  final List<FlSpot> revenueSpots;
+  final List<FlSpot> productionSpots;
   final bool isDark;
 
   @override
@@ -808,7 +1339,7 @@ class _TrendChart extends StatelessWidget {
         children: [
           _SectionHeader(
             title: title,
-            subtitle: 'Monthly revenue and production index trends.',
+            subtitle: 'Six-week normalized trend from backend records.',
             isDark: isDark,
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -816,7 +1347,7 @@ class _TrendChart extends StatelessWidget {
             child: LineChart(
               LineChartData(
                 minY: 0,
-                maxY: 160,
+                maxY: 100,
                 gridData: FlGridData(
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (_) => FlLine(
@@ -842,12 +1373,12 @@ class _TrendChart extends StatelessWidget {
                       reservedSize: 28,
                       getTitlesWidget: (value, meta) {
                         const labels = [
-                          'Jan',
-                          'Feb',
-                          'Mar',
-                          'Apr',
-                          'May',
-                          'Jun'
+                          'W-5',
+                          'W-4',
+                          'W-3',
+                          'W-2',
+                          'W-1',
+                          'Now'
                         ];
                         final index = value.toInt();
                         if (index < 0 || index >= labels.length) {
@@ -867,36 +1398,16 @@ class _TrendChart extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
-                  _line(
-                    AppColors.success,
-                    const [
-                      FlSpot(0, 82),
-                      FlSpot(1, 94),
-                      FlSpot(2, 88),
-                      FlSpot(3, 114),
-                      FlSpot(4, 128),
-                      FlSpot(5, 142),
-                    ],
-                  ),
-                  _line(
-                    AppColors.primary,
-                    const [
-                      FlSpot(0, 65),
-                      FlSpot(1, 72),
-                      FlSpot(2, 78),
-                      FlSpot(3, 86),
-                      FlSpot(4, 98),
-                      FlSpot(5, 111),
-                    ],
-                  ),
+                  _line(AppColors.success, revenueSpots),
+                  _line(AppColors.primary, productionSpots),
                 ],
               ),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          Wrap(
+          const Wrap(
             spacing: AppSpacing.md,
-            children: const [
+            children: [
               _Legend(label: 'Revenue Index', color: AppColors.success),
               _Legend(label: 'Production Index', color: AppColors.primary),
             ],
@@ -913,18 +1424,17 @@ class _TrendChart extends StatelessWidget {
       color: color,
       barWidth: 3,
       dotData: const FlDotData(show: false),
-      belowBarData: BarAreaData(
-        show: true,
-        color: color.withValues(alpha: 0.10),
-      ),
+      belowBarData:
+          BarAreaData(show: true, color: color.withValues(alpha: 0.10)),
     );
   }
 }
 
 class _SensorReliabilityChart extends StatelessWidget {
-  const _SensorReliabilityChart({required this.isDark});
+  const _SensorReliabilityChart({required this.isDark, required this.bars});
 
   final bool isDark;
+  final List<_BarMetric> bars;
 
   @override
   Widget build(BuildContext context) {
@@ -937,7 +1447,7 @@ class _SensorReliabilityChart extends StatelessWidget {
         children: [
           _SectionHeader(
             title: 'Sensor Reliability',
-            subtitle: 'Average telemetry health by system.',
+            subtitle: 'Live telemetry health grouped by sensor type.',
             isDark: isDark,
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -968,13 +1478,12 @@ class _SensorReliabilityChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
-                        const labels = ['Temp', 'Hum', 'pH', 'Moist'];
                         final index = value.toInt();
-                        if (index < 0 || index >= labels.length) {
+                        if (index < 0 || index >= bars.length) {
                           return const SizedBox.shrink();
                         }
                         return Text(
-                          labels[index],
+                          bars[index].label,
                           style: AppTypography.caption.copyWith(
                             color: isDark
                                 ? Colors.white.withValues(alpha: 0.54)
@@ -987,10 +1496,8 @@ class _SensorReliabilityChart extends StatelessWidget {
                 ),
                 borderData: FlBorderData(show: false),
                 barGroups: [
-                  _bar(0, 96, AppColors.success),
-                  _bar(1, 92, AppColors.info),
-                  _bar(2, 86, AppColors.warning),
-                  _bar(3, 81, AppColors.error),
+                  for (var i = 0; i < bars.length; i++)
+                    _bar(i, bars[i].value, bars[i].color),
                 ],
               ),
             ),
@@ -1037,6 +1544,7 @@ class _FarmComparisonCard extends StatelessWidget {
       child: InkWell(
         onTap: onSelect,
         borderRadius: BorderRadius.circular(18),
+        mouseCursor: SystemMouseCursors.click,
         child: Ink(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
@@ -1061,7 +1569,7 @@ class _FarmComparisonCard extends StatelessWidget {
                       farm.name,
                       style: AppTypography.titleSmall.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -1078,7 +1586,9 @@ class _FarmComparisonCard extends StatelessWidget {
                   Expanded(
                     child: _MetricColumn(
                       label: 'Revenue',
-                      value: '\$${(farm.revenue / 1000).toStringAsFixed(0)}K',
+                      value: farm.revenue >= 1000
+                          ? 'GHS ${(farm.revenue / 1000).toStringAsFixed(1)}K'
+                          : 'GHS ${farm.revenue.toStringAsFixed(0)}',
                       isDark: isDark,
                     ),
                   ),
@@ -1113,6 +1623,28 @@ class _FarmComparisonCard extends StatelessWidget {
                 color: AppColors.primary,
                 isDark: isDark,
               ),
+              const SizedBox(height: AppSpacing.md),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  _ScopeChip(
+                    icon: Icons.grain_rounded,
+                    label: '${farm.batchCount} batches',
+                    color: AppColors.primary,
+                  ),
+                  _ScopeChip(
+                    icon: Icons.receipt_long_rounded,
+                    label: '${farm.salesCount} sales',
+                    color: AppColors.success,
+                  ),
+                  _ScopeChip(
+                    icon: Icons.trending_down_rounded,
+                    label: '${farm.lossHeads.toStringAsFixed(0)} loss heads',
+                    color: AppColors.error,
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -1136,6 +1668,7 @@ class _ProgressLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final progress = (value / 100).clamp(0.0, 1.0);
     return Column(
       children: [
         Row(
@@ -1147,7 +1680,7 @@ class _ProgressLine extends StatelessWidget {
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.64)
                       : AppColors.textSecondary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -1155,7 +1688,7 @@ class _ProgressLine extends StatelessWidget {
               '$value%',
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -1164,7 +1697,7 @@ class _ProgressLine extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
           child: LinearProgressIndicator(
-            value: value / 100,
+            value: progress,
             minHeight: 7,
             backgroundColor: color.withValues(alpha: 0.12),
             valueColor: AlwaysStoppedAnimation(color),
@@ -1193,9 +1726,11 @@ class _MetricColumn extends StatelessWidget {
       children: [
         Text(
           value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AppTypography.bodyLarge.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w500,
           ),
         ),
         Text(
@@ -1204,7 +1739,7 @@ class _MetricColumn extends StatelessWidget {
             color: isDark
                 ? Colors.white.withValues(alpha: 0.58)
                 : AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -1253,7 +1788,7 @@ class _InsightRow extends StatelessWidget {
                   insight.title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
@@ -1293,7 +1828,7 @@ class _SectionHeader extends StatelessWidget {
           title,
           style: AppTypography.titleMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 2),
@@ -1341,7 +1876,7 @@ class _ScopeChip extends StatelessWidget {
             style: TextStyle(
               color: color,
               fontSize: 11,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1393,38 +1928,108 @@ BoxDecoration _cardDecoration(bool isDark) {
   );
 }
 
+Color _barColor(double value) {
+  if (value >= 85) return AppColors.success;
+  if (value >= 65) return AppColors.warning;
+  return AppColors.error;
+}
+
+String _shortLabel(String value) {
+  final cleaned = value.trim();
+  if (cleaned.length <= 6) return cleaned;
+  return cleaned.substring(0, 6);
+}
+
+String _id(Map<String, dynamic> item) => _value(item, ['id', '\$id', '_id']);
+
+String _value(Map<String, dynamic> item, List<String> keys) {
+  for (final key in keys) {
+    final value = item[key];
+    if (value != null && value.toString().trim().isNotEmpty) {
+      return value.toString();
+    }
+  }
+  return '';
+}
+
+String _text(
+  Map<String, dynamic> item,
+  List<String> keys, {
+  String fallback = '',
+}) {
+  final value = _value(item, keys);
+  return value.isEmpty ? fallback : value;
+}
+
+String _status(Map<String, dynamic> item, List<String> keys) =>
+    _value(item, keys).toLowerCase().trim();
+
+double _number(Map<String, dynamic> item, List<String> keys) {
+  for (final key in keys) {
+    final value = item[key];
+    if (value is num) return value.toDouble();
+    final parsed = double.tryParse(value?.toString() ?? '');
+    if (parsed != null) return parsed;
+  }
+  return 0;
+}
+
+DateTime? _date(Map<String, dynamic> item, List<String> keys) {
+  for (final key in keys) {
+    final value = item[key];
+    if (value is DateTime) return value;
+    final parsed = DateTime.tryParse(value?.toString() ?? '');
+    if (parsed != null) return parsed;
+  }
+  return null;
+}
+
 class _AnalyticsTotals {
   const _AnalyticsTotals({
     required this.revenue,
     required this.productionKg,
+    required this.inventoryValue,
     required this.efficiency,
     required this.sensorHealth,
+    required this.losses,
   });
 
   final double revenue;
   final double productionKg;
+  final double inventoryValue;
   final int efficiency;
   final int sensorHealth;
+  final double losses;
 }
 
 class _FarmAnalytics {
   const _FarmAnalytics({
+    required this.id,
     required this.name,
     required this.revenue,
     required this.productionKg,
+    required this.inventoryValue,
     required this.efficiency,
     required this.yieldPerAcre,
     required this.sensorHealth,
+    required this.batchCount,
+    required this.salesCount,
+    required this.lossHeads,
     required this.risk,
     required this.color,
   });
 
+  final String id;
   final String name;
   final double revenue;
   final double productionKg;
+  final double inventoryValue;
   final int efficiency;
   final int yieldPerAcre;
   final int sensorHealth;
+  final int batchCount;
+  final int salesCount;
+  final double lossHeads;
   final String risk;
   final Color color;
 }
@@ -1433,14 +2038,14 @@ class _AnalyticsKpi {
   const _AnalyticsKpi({
     required this.label,
     required this.value,
-    required this.change,
+    required this.detail,
     required this.icon,
     required this.color,
   });
 
   final String label;
   final String value;
-  final String change;
+  final String detail;
   final IconData icon;
   final Color color;
 }
@@ -1456,6 +2061,23 @@ class _InsightItem {
   final String title;
   final String detail;
   final IconData icon;
+  final Color color;
+}
+
+class _BarMetric {
+  const _BarMetric(this.label, this.value, this.color);
+
+  final String label;
+  final double value;
+  final Color color;
+}
+
+class _ControlAction {
+  const _ControlAction(this.label, this.icon, this.route, this.color);
+
+  final String label;
+  final IconData icon;
+  final String route;
   final Color color;
 }
 

@@ -10,16 +10,19 @@ class QualityAssuranceDashboard extends ConsumerStatefulWidget {
   const QualityAssuranceDashboard({super.key});
 
   @override
-  ConsumerState<QualityAssuranceDashboard> createState() => _QualityAssuranceDashboardState();
+  ConsumerState<QualityAssuranceDashboard> createState() =>
+      _QualityAssuranceDashboardState();
 }
 
-class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDashboard> {
+class _QualityAssuranceDashboardState
+    extends ConsumerState<QualityAssuranceDashboard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
         title: const Text('Quality Assurance'),
         actions: [
@@ -53,18 +56,18 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
               Text(
                 'Quality Control',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
               _buildFeaturesGrid(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Pending Inspections
               _buildPendingInspections(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Recent Rejections
@@ -106,7 +109,7 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
                   'Quality Control',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -118,7 +121,7 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '8 Pending Inspections • 95% Pass Rate',
+                  '8 Pending Inspections â€¢ 95% Pass Rate',
                   style: AppTypography.bodySmall.copyWith(
                     color: Colors.white.withOpacity(0.8),
                   ),
@@ -179,7 +182,8 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
     );
   }
 
-  Widget _buildStatCard(String label, String count, IconData icon, Color color, bool isDark) {
+  Widget _buildStatCard(
+      String label, String count, IconData icon, Color color, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -194,7 +198,7 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
           Text(
             count,
             style: AppTypography.h4.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w600,
               color: color,
             ),
           ),
@@ -295,7 +299,7 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
             Text(
               feature.title,
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w500,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
@@ -329,7 +333,7 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
             Text(
               'Pending Inspections',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -346,7 +350,7 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
                 '8',
                 style: AppTypography.bodySmall.copyWith(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   fontSize: 10,
                 ),
               ),
@@ -413,7 +417,7 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
                 Text(
                   batchNumber,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -434,14 +438,15 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
                       ),
                       decoration: BoxDecoration(
                         color: color.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Text(
                         status,
                         style: AppTypography.bodySmall.copyWith(
                           color: color,
                           fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -449,7 +454,8 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
                     Text(
                       time,
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark ? Colors.white38 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white38 : AppColors.textSecondary,
                         fontSize: 10,
                       ),
                     ),
@@ -475,7 +481,7 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
         Text(
           'Recent Rejections',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -533,7 +539,7 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
                 Text(
                   batchNumber,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -547,14 +553,15 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
                       ),
                       decoration: BoxDecoration(
                         color: color,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Text(
                         reason,
                         style: AppTypography.bodySmall.copyWith(
                           color: Colors.white,
                           fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -563,7 +570,8 @@ class _QualityAssuranceDashboardState extends ConsumerState<QualityAssuranceDash
                       child: Text(
                         details,
                         style: AppTypography.bodySmall.copyWith(
-                          color: isDark ? Colors.white60 : AppColors.textSecondary,
+                          color:
+                              isDark ? Colors.white60 : AppColors.textSecondary,
                           fontSize: 11,
                         ),
                       ),

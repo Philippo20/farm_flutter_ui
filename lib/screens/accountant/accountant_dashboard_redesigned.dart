@@ -184,7 +184,7 @@ class AccountantDashboardRedesigned extends StatelessWidget {
                   'Finance Control Center',
                   style: AppTypography.h4.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     fontSize: isMobile ? 24 : 28,
                   ),
                 ),
@@ -256,8 +256,9 @@ class AccountantDashboardRedesigned extends StatelessWidget {
       icon: Icons.history_outlined,
       color: AppColors.warning,
       child: Column(
-        children:
-            _activity.map((activity) => _ActivityRow(activity: activity)).toList(),
+        children: _activity
+            .map((activity) => _ActivityRow(activity: activity))
+            .toList(),
       ),
     );
   }
@@ -305,7 +306,7 @@ class _Panel extends StatelessWidget {
                       title,
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -389,7 +390,7 @@ class _ActionCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -456,7 +457,7 @@ class _KpiCard extends StatelessWidget {
                   value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -496,7 +497,7 @@ class _ProgressLine extends StatelessWidget {
               value,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -554,7 +555,7 @@ class _ActivityRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -601,7 +602,7 @@ class _MetricPill extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -647,7 +648,7 @@ class _MutedText extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: AppTypography.caption.copyWith(
         color: isDark ? Colors.white60 : AppColors.textSecondary,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
       ),
     );
   }

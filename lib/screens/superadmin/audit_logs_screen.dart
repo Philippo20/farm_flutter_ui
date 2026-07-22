@@ -6,8 +6,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/modern_admin_header.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../core/widgets/superadmin_sidebar.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Audit Logs - View all system activities and user actions.
 class AuditLogsScreen extends ConsumerStatefulWidget {
@@ -21,189 +23,245 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _searchController = TextEditingController();
 
-  int _selectedNavIndex = 6;
+  int _selectedNavIndex = 7;
   String _selectedScope = 'all';
   String _selectedCategory = 'All';
   String _selectedUser = 'All Users';
   String _searchQuery = '';
+  bool _isLoadingAudits = false;
+  String? _auditsError;
+  final SuperAdminApiService _api = SuperAdminApiService();
 
-  final List<_AuditScope> _scopes = const [
-    _AuditScope(
-      id: 'all',
-      name: 'Global Audit',
-      subtitle: 'All platform and farm events',
-      eventCount: '12.5K',
-      criticalCount: '23',
-      lastEvent: '2 min ago',
-      icon: Icons.public_rounded,
-      color: AppColors.primary,
-      isGlobal: true,
-    ),
-    _AuditScope(
-      id: 'platform',
-      name: 'Platform Control',
-      subtitle: 'Users, roles, billing, config, backups',
-      eventCount: '4.8K',
-      criticalCount: '9',
-      lastEvent: '5 min ago',
-      icon: Icons.admin_panel_settings_rounded,
-      color: AppColors.info,
-      isGlobal: true,
-    ),
-    _AuditScope(
-      id: 'green-valley',
-      name: 'Green Valley Farm',
-      subtitle: 'Crops, sensors, stock, worker actions',
-      eventCount: '2.4K',
-      criticalCount: '4',
-      lastEvent: '11 min ago',
-      icon: Icons.agriculture_rounded,
-      color: AppColors.success,
-    ),
-    _AuditScope(
-      id: 'north-ridge',
-      name: 'North Ridge Farm',
-      subtitle: 'Harvest, maintenance, deliveries',
-      eventCount: '1.9K',
-      criticalCount: '3',
-      lastEvent: '18 min ago',
-      icon: Icons.terrain_rounded,
-      color: AppColors.warning,
-    ),
-    _AuditScope(
-      id: 'sunset-acres',
-      name: 'Sunset Acres',
-      subtitle: 'Fulfillment, QA, sales approvals',
-      eventCount: '2.1K',
-      criticalCount: '5',
-      lastEvent: '29 min ago',
-      icon: Icons.wb_sunny_rounded,
-      color: AppColors.error,
-    ),
-  ];
+  final List<_AuditLog> _auditLogs = [];
+  final Map<String, String> _actorNamesByKey = {};
 
-  final List<_AuditLog> _auditLogs = const [
-    _AuditLog(
-      id: 'AL-23091',
-      user: 'Sarah SuperAdmin',
-      action: 'Approved global pricing policy for premium lettuce',
-      category: 'Approve',
-      timestamp: '2026-05-18 14:30',
-      ip: '192.168.1.100',
-      scope: 'platform',
-      farm: 'Platform Control',
-      severity: 'High',
-      module: 'Pricing',
-    ),
-    _AuditLog(
-      id: 'AL-23090',
-      user: 'Sarah SuperAdmin',
-      action: 'Created platform recovery backup',
-      category: 'System',
-      timestamp: '2026-05-18 14:10',
-      ip: '192.168.1.100',
-      scope: 'platform',
-      farm: 'Platform Control',
-      severity: 'Medium',
-      module: 'Backup',
-    ),
-    _AuditLog(
-      id: 'AL-23089',
-      user: 'John Admin',
-      action: 'Updated sensor threshold for greenhouse humidity',
-      category: 'Update',
-      timestamp: '2026-05-18 13:45',
-      ip: '192.168.1.105',
-      scope: 'green-valley',
-      farm: 'Green Valley Farm',
-      severity: 'Medium',
-      module: 'Sensors',
-    ),
-    _AuditLog(
-      id: 'AL-23088',
-      user: 'Maya Technician',
-      action: 'Deleted inactive sensor TEMP-045 after replacement',
-      category: 'Delete',
-      timestamp: '2026-05-18 13:12',
-      ip: '192.168.1.144',
-      scope: 'green-valley',
-      farm: 'Green Valley Farm',
-      severity: 'High',
-      module: 'Sensors',
-    ),
-    _AuditLog(
-      id: 'AL-23087',
-      user: 'Alice Owner',
-      action: 'Created harvest batch BATCH-156',
-      category: 'Create',
-      timestamp: '2026-05-18 12:56',
-      ip: '192.168.1.110',
-      scope: 'north-ridge',
-      farm: 'North Ridge Farm',
-      severity: 'Low',
-      module: 'Harvest',
-    ),
-    _AuditLog(
-      id: 'AL-23086',
-      user: 'Sarah SuperAdmin',
-      action: 'Suspended farm access pending compliance review',
-      category: 'Suspend',
-      timestamp: '2026-05-18 12:20',
-      ip: '192.168.1.100',
-      scope: 'sunset-acres',
-      farm: 'Sunset Acres',
-      severity: 'Critical',
-      module: 'Compliance',
-    ),
-    _AuditLog(
-      id: 'AL-23085',
-      user: 'John Admin',
-      action: 'Updated delivery route assignment',
-      category: 'Update',
-      timestamp: '2026-05-18 11:30',
-      ip: '192.168.1.105',
-      scope: 'north-ridge',
-      farm: 'North Ridge Farm',
-      severity: 'Low',
-      module: 'Deliveries',
-    ),
-    _AuditLog(
-      id: 'AL-23084',
-      user: 'Quality Lead',
-      action: 'Approved QA inspection for shipment QA-882',
-      category: 'Approve',
-      timestamp: '2026-05-18 10:48',
-      ip: '192.168.1.132',
-      scope: 'sunset-acres',
-      farm: 'Sunset Acres',
-      severity: 'Medium',
-      module: 'Quality',
-    ),
-    _AuditLog(
-      id: 'AL-23083',
-      user: 'Sarah SuperAdmin',
-      action: 'Updated role permissions for fulfillment manager',
-      category: 'Update',
-      timestamp: '2026-05-18 10:12',
-      ip: '192.168.1.100',
-      scope: 'platform',
-      farm: 'Platform Control',
-      severity: 'High',
-      module: 'Users',
-    ),
-    _AuditLog(
-      id: 'AL-23082',
-      user: 'Care Team',
-      action: 'Created irrigation exception log',
-      category: 'Create',
-      timestamp: '2026-05-18 09:35',
-      ip: '192.168.1.121',
-      scope: 'green-valley',
-      farm: 'Green Valley Farm',
-      severity: 'Low',
-      module: 'Caretaker',
-    ),
-  ];
+  List<_AuditScope> get _scopes => [
+        _buildAuditScope(
+          id: 'all',
+          name: 'Global Audit',
+          subtitle: 'All backend audit events',
+          icon: Icons.public_rounded,
+          color: AppColors.primary,
+          isGlobal: true,
+        ),
+        _buildAuditScope(
+          id: 'platform',
+          name: 'Platform Control',
+          subtitle: 'Users, roles, settings, and admin changes',
+          icon: Icons.admin_panel_settings_rounded,
+          color: AppColors.info,
+          isGlobal: true,
+        ),
+        _buildAuditScope(
+          id: 'farm',
+          name: 'Farm Operations',
+          subtitle: 'Farms, crops, batches, sensors, and caretaker activity',
+          icon: Icons.agriculture_rounded,
+          color: AppColors.success,
+        ),
+        _buildAuditScope(
+          id: 'commerce',
+          name: 'Commercial Flow',
+          subtitle: 'Pricing, packaging, inventory, fulfillment, and sales',
+          icon: Icons.storefront_rounded,
+          color: AppColors.warning,
+        ),
+      ];
+
+  _AuditScope _buildAuditScope({
+    required String id,
+    required String name,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    bool isGlobal = false,
+  }) {
+    final logs = _logsForScope(id);
+    final highRisk = logs
+        .where((log) => log.severity == 'High' || log.severity == 'Critical')
+        .length;
+    return _AuditScope(
+      id: id,
+      name: name,
+      subtitle: subtitle,
+      eventCount: logs.length.toString(),
+      criticalCount: highRisk.toString(),
+      lastEvent: _lastActivityLabel(logs),
+      icon: icon,
+      color: color,
+      isGlobal: isGlobal,
+    );
+  }
+
+  List<_AuditLog> _logsForScope(String scope) {
+    if (scope == 'all') return _auditLogs;
+    return _auditLogs.where((log) => log.scope == scope).toList();
+  }
+
+  String _lastActivityLabel(List<_AuditLog> logs) {
+    if (logs.isEmpty) return '-';
+    return logs.first.timestamp;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAudits();
+  }
+
+  Future<void> _loadAudits() async {
+    setState(() {
+      _isLoadingAudits = true;
+      _auditsError = null;
+      _auditLogs.clear();
+    });
+
+    try {
+      final results = await Future.wait([
+        _api.getAudits(),
+        _api.getUsers(),
+      ]);
+      if (!mounted) return;
+      _actorNamesByKey
+        ..clear()
+        ..addAll(_buildActorNameLookup(results[1]));
+      final audits = results[0];
+      final mappedAudits = audits.map(_mapAuditDocument).toList()
+        ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      setState(() {
+        _auditLogs
+          ..clear()
+          ..addAll(mappedAudits);
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _auditsError = error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingAudits = false);
+      }
+    }
+  }
+
+  _AuditLog _mapAuditDocument(Map<String, dynamic> doc) {
+    final category = _categoryLabel(doc['action_type']);
+    final role = (doc['performed_by_role'] ?? '').toString();
+    final actor = _actorLabel(doc['performed_by_id'], role);
+    return _AuditLog(
+      id: (doc[r'$id'] ?? doc['audit_id'] ?? doc['id'] ?? '').toString(),
+      user: actor,
+      action: (doc['action_details'] ?? category).toString(),
+      category: category,
+      timestamp: _dateLabel(doc['timestamp'] ?? doc[r'$createdAt']),
+      ip: (doc['ip_address'] ?? '-').toString(),
+      scope: _scopeForCollection(doc['collection_name']),
+      farm: (doc['collection_name'] ?? 'Platform Control').toString(),
+      severity: _severityForStatus(doc['status']),
+      module:
+          role.isEmpty ? (doc['collection_name'] ?? 'System').toString() : role,
+      previousData: (doc['previous_data'] ?? '').toString(),
+      newData: (doc['new_data'] ?? '').toString(),
+    );
+  }
+
+  Map<String, String> _buildActorNameLookup(List<Map<String, dynamic>> users) {
+    final lookup = <String, String>{};
+    for (final user in users) {
+      final name = (user['name'] ?? '').toString().trim();
+      if (name.isEmpty) continue;
+      for (final key in [
+        user[r'$id'],
+        user['id'],
+        user['user_id'],
+        user['email'],
+        name,
+      ]) {
+        final normalized = key?.toString().trim().toLowerCase();
+        if (normalized != null && normalized.isNotEmpty) {
+          lookup[normalized] = name;
+        }
+      }
+    }
+    return lookup;
+  }
+
+  String _actorLabel(dynamic value, String role) {
+    final raw = value?.toString().trim() ?? '';
+    final normalized = raw.toLowerCase();
+    final currentUser = ref.read(currentUserProvider);
+    final currentName = currentUser?.name.trim() ?? '';
+
+    if (raw.isEmpty || normalized == 'system') {
+      if (role.toLowerCase().contains('superadmin') && currentName.isNotEmpty) {
+        return currentName;
+      }
+      return 'System';
+    }
+
+    return _actorNamesByKey[normalized] ?? raw;
+  }
+
+  String _categoryLabel(dynamic value) {
+    final text = value?.toString() ?? 'System';
+    if (text == 'Approval') return 'Approve';
+    if (text == 'Suspension') return 'Suspend';
+    return _labelFromSnakeCase(text);
+  }
+
+  String _severityForStatus(dynamic value) {
+    final text = value?.toString().toLowerCase() ?? '';
+    if (text.contains('failed')) return 'High';
+    if (text.contains('pending')) return 'Medium';
+    return 'Low';
+  }
+
+  String _scopeForCollection(dynamic value) {
+    final text = value?.toString().toLowerCase() ?? '';
+    if (text.contains('user') ||
+        text.contains('role') ||
+        text.contains('wallet') ||
+        text.contains('backup') ||
+        text.contains('setting') ||
+        text.contains('platform')) {
+      return 'platform';
+    }
+    if (text.contains('farm') ||
+        text.contains('crop') ||
+        text.contains('plant') ||
+        text.contains('batch') ||
+        text.contains('sensor') ||
+        text.contains('threshold') ||
+        text.contains('grow') ||
+        text.contains('caretaker')) {
+      return 'farm';
+    }
+    if (text.contains('pricing') ||
+        text.contains('price') ||
+        text.contains('package') ||
+        text.contains('inventory') ||
+        text.contains('fulfillment') ||
+        text.contains('sales') ||
+        text.contains('delivery') ||
+        text.contains('quality')) {
+      return 'commerce';
+    }
+    return 'platform';
+  }
+
+  String _labelFromSnakeCase(String value) {
+    return value
+        .replaceAll('_', ' ')
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
+
+  String _dateLabel(dynamic value) {
+    final text = value?.toString() ?? '';
+    if (text.length >= 16) return text.substring(0, 16).replaceFirst('T', ' ');
+    return text.isEmpty ? '-' : text;
+  }
 
   List<_AuditLog> get _filteredLogs {
     var logs = _auditLogs;
@@ -297,7 +355,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
     return Row(
       children: [
         SuperAdminSidebar(
-          selectedIndex: 6,
+          selectedIndex: 7,
           onItemSelected: (_) {},
           userName: userName,
           userEmail: userEmail,
@@ -357,12 +415,53 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
       children: [
         _buildHero(isDark, isMobile, filteredLogs),
         const SizedBox(height: AppSpacing.lg),
-        _buildScopeGrid(isDark, isMobile),
-        const SizedBox(height: AppSpacing.lg),
-        _buildFilterPanel(isDark, isMobile),
-        const SizedBox(height: AppSpacing.lg),
-        _buildLogsPanel(isDark, isMobile, filteredLogs),
+        if (_auditsError != null) ...[
+          _buildSyncStatus(isDark),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+        if (_isLoadingAudits && _auditLogs.isEmpty)
+          const AdminDataSkeleton()
+        else ...[
+          _buildScopeGrid(isDark, isMobile),
+          const SizedBox(height: AppSpacing.lg),
+          _buildFilterPanel(isDark, isMobile),
+          const SizedBox(height: AppSpacing.lg),
+          _buildLogsPanel(isDark, isMobile, filteredLogs),
+        ],
       ],
+    );
+  }
+
+  Widget _buildSyncStatus(bool isDark) {
+    final hasError = _auditsError != null;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: hasError
+            ? AppColors.error.withValues(alpha: 0.08)
+            : AppColors.info.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: AppColors.error),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'Could not refresh audit logs: $_auditsError',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Refresh audit logs',
+            onPressed: _isLoadingAudits ? null : _loadAudits,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
     );
   }
 
@@ -451,7 +550,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                 'Global audit intelligence',
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white : AppColors.info,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -462,7 +561,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           'Audit Logs',
           style: AppTypography.h4.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 6),
@@ -502,7 +601,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
             selectedScope.name,
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -634,7 +733,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               scope.name,
               style: AppTypography.bodyLarge.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -669,14 +768,12 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
 
   Widget _buildFilterPanel(bool isDark, bool isMobile) {
     final users = ['All Users', ..._auditLogs.map((log) => log.user).toSet()];
-    final categories = const [
+    final categories = [
       'All',
-      'Create',
-      'Update',
-      'Delete',
-      'Approve',
-      'Suspend',
-      'System',
+      ..._auditLogs
+          .map((log) => log.category)
+          .where((item) => item.isNotEmpty)
+          .toSet(),
     ];
 
     return Container(
@@ -753,7 +850,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                   color: isSelected
                       ? AppColors.primary
                       : (isDark ? Colors.white70 : AppColors.textSecondary),
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
               );
             }).toList(),
@@ -884,13 +981,13 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                         log.action,
                         style: AppTypography.bodyMedium.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        '${log.id} • ${log.module} • ${log.ip}',
+                        '${log.id} | ${log.module} | ${log.ip}',
                         style: AppTypography.bodySmall.copyWith(
                           color:
                               isDark ? Colors.white60 : AppColors.textSecondary,
@@ -910,7 +1007,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               log.farm,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -922,7 +1019,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               log.user,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -988,13 +1085,13 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                       log.action,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w500,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '${log.farm} • ${log.module}',
+                      '${log.farm} | ${log.module}',
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
@@ -1020,7 +1117,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
             children: [
               Expanded(
                 child: Text(
-                  '${log.id} • ${log.timestamp}',
+                  '${log.id} | ${log.timestamp}',
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
@@ -1154,7 +1251,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           title,
           style: AppTypography.h6.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 4),
@@ -1183,7 +1280,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           value,
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -1215,7 +1312,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
             value,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1238,7 +1335,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
         '$count event${count == 1 ? '' : 's'}',
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white : AppColors.primary,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -1258,7 +1355,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           text,
           style: AppTypography.bodySmall.copyWith(
             color: color,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
             fontSize: 11,
           ),
           maxLines: 1,
@@ -1279,7 +1376,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w500,
           letterSpacing: 0.2,
         ),
       ),
@@ -1307,7 +1404,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
             'No audit events match the current filters.',
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1352,7 +1449,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                           style: AppTypography.h6.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
@@ -1380,7 +1477,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                 log.action,
                 style: AppTypography.bodyLarge.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -1391,6 +1488,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               _buildDetailRow('Severity', log.severity, isDark),
               _buildDetailRow('Timestamp', log.timestamp, isDark),
               _buildDetailRow('IP Address', log.ip, isDark),
+              if (log.previousData.trim().isNotEmpty)
+                _buildDetailRow('Previous Data', log.previousData, isDark),
+              if (log.newData.trim().isNotEmpty)
+                _buildDetailRow('New Data', log.newData, isDark),
               const SizedBox(height: AppSpacing.lg),
               SizedBox(
                 width: double.infinity,
@@ -1440,7 +1541,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               textAlign: TextAlign.right,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -1513,7 +1614,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                               'Export Audit Logs',
                               style: AppTypography.h6.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             Text(
@@ -1540,7 +1641,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                       Text(
                         'Export Format',
                         style: AppTypography.bodySmall.copyWith(
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w500,
                           color:
                               isDark ? Colors.white70 : AppColors.textSecondary,
                         ),
@@ -1760,7 +1861,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
             value,
             style: TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -1829,10 +1930,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
 
   String _exportCsv(List<_AuditLog> logs) {
     final rows = [
-      'ID,Farm,User,Action,Category,Severity,Module,Timestamp,IP Address',
+      'ID,Farm,User,Action,Category,Severity,Module,Timestamp,IP Address,Previous Data,New Data',
       ...logs.map(
         (log) =>
-            '${log.id},${log.farm},"${log.user}","${log.action}",${log.category},${log.severity},${log.module},${log.timestamp},${log.ip}',
+            '${log.id},${log.farm},"${log.user}","${log.action}",${log.category},${log.severity},${log.module},${log.timestamp},${log.ip},"${log.previousData}","${log.newData}"',
       ),
     ];
     return rows.join('\n');
@@ -1850,7 +1951,9 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
     "severity": "${log.severity}",
     "module": "${log.module}",
     "timestamp": "${log.timestamp}",
-    "ip": "${log.ip}"
+    "ip": "${log.ip}",
+    "previousData": "${log.previousData}",
+    "newData": "${log.newData}"
   }''';
     }).join(',\n');
     return '[\n$rows\n]';
@@ -1883,7 +1986,9 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
         'Severity: ${log.severity}\n'
         'Module: ${log.module}\n'
         'Timestamp: ${log.timestamp}\n'
-        'IP: ${log.ip}';
+        'IP: ${log.ip}\n'
+        'Previous Data: ${log.previousData.isEmpty ? "-" : log.previousData}\n'
+        'New Data: ${log.newData.isEmpty ? "-" : log.newData}';
   }
 
   void _showSnack(String message) {
@@ -1918,6 +2023,8 @@ class _AuditLog {
     required this.farm,
     required this.severity,
     required this.module,
+    required this.previousData,
+    required this.newData,
   });
 
   final String id;
@@ -1930,6 +2037,8 @@ class _AuditLog {
   final String farm;
   final String severity;
   final String module;
+  final String previousData;
+  final String newData;
 }
 
 class _AuditScope {

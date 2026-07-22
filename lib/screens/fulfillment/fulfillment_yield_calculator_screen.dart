@@ -115,7 +115,7 @@ class FulfillmentYieldCalculatorScreen extends StatelessWidget {
             'Batch Yield Breakdown',
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -151,7 +151,7 @@ class FulfillmentYieldCalculatorScreen extends StatelessWidget {
             'Yield Loss Calculator',
             style: AppTypography.h4.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               fontSize: isMobile ? 24 : 28,
             ),
           ),
@@ -187,7 +187,7 @@ class FulfillmentYieldCalculatorScreen extends StatelessWidget {
                   'Current Batch Calculation',
                   style: AppTypography.bodyLarge.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -248,7 +248,7 @@ class FulfillmentYieldCalculatorScreen extends StatelessWidget {
               'Calculated recovery: 96.2% sellable output for LTC-24019.',
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -277,7 +277,7 @@ class FulfillmentYieldCalculatorScreen extends StatelessWidget {
                   'Yield Control Insights',
                   style: AppTypography.bodyLarge.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -402,7 +402,7 @@ class FulfillmentYieldCalculatorScreen extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -544,7 +544,7 @@ class _YieldKpi extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -552,7 +552,7 @@ class _YieldKpi extends StatelessWidget {
                   value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -602,7 +602,7 @@ class _CalculatorField extends StatelessWidget {
             label,
             style: AppTypography.caption.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -612,7 +612,7 @@ class _CalculatorField extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.h6.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -652,7 +652,7 @@ class _YieldMetric extends StatelessWidget {
             label,
             style: AppTypography.caption.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -662,7 +662,7 @@ class _YieldMetric extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -736,7 +736,7 @@ class _InsightRow extends StatelessWidget {
                   title,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -746,7 +746,7 @@ class _InsightRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -783,7 +783,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );

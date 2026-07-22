@@ -89,6 +89,12 @@ class _FarmManagerSidebarState extends State<FarmManagerSidebar>
       label: 'Settings',
       route: '/farm-manager/settings',
     ),
+    _NavItem(
+      icon: Icons.sensors_outlined,
+      activeIcon: Icons.sensors_rounded,
+      label: 'Sensors',
+      route: '/farm-manager/sensors',
+    ),
   ];
 
   @override

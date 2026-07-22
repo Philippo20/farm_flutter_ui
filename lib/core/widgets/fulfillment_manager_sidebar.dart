@@ -265,7 +265,7 @@ class _FulfillmentManagerSidebarState extends State<FulfillmentManagerSidebar>
                                   color: isDark
                                       ? Colors.white.withOpacity(0.7)
                                       : AppColors.textSecondary,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                   letterSpacing: 0.2,
                                 ),
                             overflow: TextOverflow.ellipsis,
@@ -533,7 +533,7 @@ class _FulfillmentManagerSidebarState extends State<FulfillmentManagerSidebar>
                   style: AppTypography.bodyMedium.copyWith(
                     fontSize: 18,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -548,7 +548,7 @@ class _FulfillmentManagerSidebarState extends State<FulfillmentManagerSidebar>
                     widget.userName,
                     style: AppTypography.bodyMedium.copyWith(
                       fontSize: 15,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                     maxLines: 1,
@@ -562,7 +562,7 @@ class _FulfillmentManagerSidebarState extends State<FulfillmentManagerSidebar>
                       color: isDark
                           ? Colors.white.withOpacity(0.7)
                           : AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -630,7 +630,7 @@ class _FulfillmentManagerSidebarState extends State<FulfillmentManagerSidebar>
                           style: AppTypography.bodyMedium.copyWith(
                             fontSize: 13,
                             color: AppColors.error,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -693,7 +693,7 @@ class _FulfillmentManagerSidebarState extends State<FulfillmentManagerSidebar>
               'Logout',
               style: AppTypography.bodyMedium.copyWith(
                 color: Colors.white,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),

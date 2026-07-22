@@ -5,6 +5,13 @@ import '../providers/notification_provider.dart';
 import '../models/notification/notification_model.dart';
 import '../theme/app_colors.dart';
 
+void showNotificationDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => const NotificationDialog(),
+  );
+}
+
 class NotificationCenter extends ConsumerWidget {
   const NotificationCenter({super.key});
 
@@ -21,12 +28,8 @@ class NotificationCenter extends ConsumerWidget {
       ),
       child: IconButton(
         icon: const Icon(Icons.notifications_outlined),
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => const NotificationDialog(),
-          );
-        },
+        tooltip: 'Notifications',
+        onPressed: () => showNotificationDialog(context),
       ),
     );
   }

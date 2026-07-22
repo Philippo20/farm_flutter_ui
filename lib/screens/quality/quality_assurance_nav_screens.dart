@@ -41,12 +41,12 @@ class QualityInspectionScreen extends StatelessWidget {
       icon: Icons.search_outlined,
       colors: const [Color(0xFF1D4ED8), Color(0xFF0F766E)],
       kpis: const [
-        _KpiData('Pending', '12', 'Items waiting', Icons.pending_actions_outlined,
-            AppColors.warning),
+        _KpiData('Pending', '12', 'Items waiting',
+            Icons.pending_actions_outlined, AppColors.warning),
         _KpiData('Inspected', '28', 'Today', Icons.fact_check_outlined,
             AppColors.success),
-        _KpiData('Pass rate', '95%', '+2% shift trend',
-            Icons.verified_outlined, AppColors.primary),
+        _KpiData('Pass rate', '95%', '+2% shift trend', Icons.verified_outlined,
+            AppColors.primary),
       ],
       sectionTitle: 'Inspection Queue',
       cards: _items,
@@ -84,8 +84,8 @@ class QualityApproveScreen extends StatelessWidget {
       icon: Icons.check_circle_outline,
       colors: const [Color(0xFF166534), Color(0xFF0F766E)],
       kpis: const [
-        _KpiData('Ready', '6', 'Awaiting approval',
-            Icons.check_circle_outline, AppColors.success),
+        _KpiData('Ready', '6', 'Awaiting approval', Icons.check_circle_outline,
+            AppColors.success),
         _KpiData('Released', '18', 'Today', Icons.task_alt_outlined,
             AppColors.primary),
         _KpiData('Avg score', '96%', 'Quality score', Icons.workspace_premium,
@@ -127,10 +127,10 @@ class QualityRejectScreen extends StatelessWidget {
       icon: Icons.cancel_outlined,
       colors: const [Color(0xFF991B1B), Color(0xFFEA580C)],
       kpis: const [
-        _KpiData('Rejected', '3', 'Today', Icons.cancel_outlined,
-            AppColors.error),
-        _KpiData('On hold', '5', 'Needs review',
-            Icons.pause_circle_outline, AppColors.warning),
+        _KpiData(
+            'Rejected', '3', 'Today', Icons.cancel_outlined, AppColors.error),
+        _KpiData('On hold', '5', 'Needs review', Icons.pause_circle_outline,
+            AppColors.warning),
         _KpiData('Resolved', '9', 'This week', Icons.task_alt_outlined,
             AppColors.success),
       ],
@@ -257,7 +257,7 @@ class _QualityPage extends StatelessWidget {
             sectionTitle,
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -319,7 +319,7 @@ class _Hero extends StatelessWidget {
                   title,
                   style: AppTypography.h4.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     fontSize: isMobile ? 24 : 28,
                   ),
                 ),
@@ -421,7 +421,7 @@ class _QualityCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -479,8 +479,7 @@ class _KpiCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border:
-            Border.all(color: data.color.withOpacity(isDark ? 0.26 : 0.16)),
+        border: Border.all(color: data.color.withOpacity(isDark ? 0.26 : 0.16)),
       ),
       child: Row(
         children: [
@@ -496,7 +495,7 @@ class _KpiCard extends StatelessWidget {
                   data.value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -579,7 +578,7 @@ class _SettingRow extends StatelessWidget {
                   title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -630,7 +629,7 @@ class _MetricPill extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -686,7 +685,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -708,7 +707,7 @@ class _MutedText extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: AppTypography.caption.copyWith(
         color: isDark ? Colors.white60 : AppColors.textSecondary,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
       ),
     );
   }

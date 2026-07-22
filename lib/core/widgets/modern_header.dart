@@ -11,7 +11,8 @@ import '../../constants/colors.dart';
 import 'notification_center.dart';
 import 'weather_info_chip.dart';
 
-class ModernHeader extends ConsumerStatefulWidget implements PreferredSizeWidget {
+class ModernHeader extends ConsumerStatefulWidget
+    implements PreferredSizeWidget {
   final String title;
   final String userName;
   final WeatherInfo? weatherInfo;
@@ -35,7 +36,7 @@ class ModernHeader extends ConsumerStatefulWidget implements PreferredSizeWidget
     this.selectedTenant,
     this.onTenantChanged,
     this.searchItems = const [],
-    this.searchPlaceholder = 'Search farms, users, sensors…',
+    this.searchPlaceholder = 'Search farms, users, sensors...',
     this.quickActions = const [],
     this.systemStatuses = const [],
     this.onSupportTap,
@@ -151,12 +152,16 @@ class _ModernHeaderState extends ConsumerState<ModernHeader> {
                       onPressed: widget.onSupportTap,
                     ),
                   IconButton(
-                    tooltip:
-                        themeMode == ThemeMode.dark ? 'Switch to light mode' : 'Switch to dark mode',
+                    tooltip: themeMode == ThemeMode.dark
+                        ? 'Switch to light mode'
+                        : 'Switch to dark mode',
                     icon: Icon(
-                      themeMode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode,
+                      themeMode == ThemeMode.dark
+                          ? Icons.light_mode
+                          : Icons.dark_mode,
                     ),
-                    onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
+                    onPressed: () =>
+                        ref.read(themeProvider.notifier).toggleTheme(),
                   ),
                   PopupMenuButton(
                     icon: const CircleAvatar(
@@ -220,7 +225,9 @@ class _LogoAndTenantSwitcher extends StatelessWidget {
         GestureDetector(
           onTap: onLogoTap,
           child: Image.asset(
-            isDark ? 'assets/logos/logo_white.png' : 'assets/logos/logo_black.png',
+            isDark
+                ? 'assets/logos/logo_white.png'
+                : 'assets/logos/logo_black.png',
             height: 40,
             fit: BoxFit.contain,
           ),
@@ -282,7 +289,8 @@ class _DateTimeBadge extends StatelessWidget {
         final now = snapshot.data ?? DateTime.now();
         final timezone = now.timeZoneName;
         final formattedTime = TimeOfDay.fromDateTime(now).format(context);
-        final formattedDate = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+        final formattedDate =
+            '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -296,7 +304,7 @@ class _DateTimeBadge extends StatelessWidget {
               const Icon(Icons.access_time, size: 18),
               const SizedBox(width: 6),
               Text(
-                '$formattedTime · $timezone',
+                '$formattedTime - $timezone',
                 style: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -367,7 +375,8 @@ class _StatusIndicatorsRow extends StatelessWidget {
             (status) => Tooltip(
               message: status.tooltip ?? status.label,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: _backgroundForLevel(status.level, colorScheme),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -435,9 +444,7 @@ class _NotificationSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = unreadCount > 0
-        ? '$unreadCount unread'
-        : 'All caught up';
+    final text = unreadCount > 0 ? '$unreadCount unread' : 'All caught up';
 
     return Row(
       children: [
@@ -603,7 +610,8 @@ class _GlobalSearchFieldState extends State<GlobalSearchField> {
         focusNode: _focusNode,
         onChanged: _onQueryChanged,
         decoration: InputDecoration(
-          prefixIcon: Icon(Icons.search, color: colorScheme.onSurface.withOpacity(0.6)),
+          prefixIcon:
+              Icon(Icons.search, color: colorScheme.onSurface.withOpacity(0.6)),
           suffixIcon: _controller.text.isNotEmpty
               ? IconButton(
                   icon: const Icon(Icons.close),

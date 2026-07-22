@@ -34,14 +34,15 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
     final password = _passwordController.text;
 
     // Use auth provider to login
-    final success = await ref.read(authProvider.notifier).login(email, password);
+    final success =
+        await ref.read(authProvider.notifier).login(email, password);
 
     if (!mounted) return;
 
     if (success) {
       // Get the appropriate dashboard route
       final route = ref.read(authProvider.notifier).getDashboardRoute();
-      
+
       // Navigate to dashboard
       Navigator.of(context).pushReplacementNamed(route);
     }
@@ -63,7 +64,10 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
             end: Alignment.bottomRight,
             colors: isDark
                 ? [AppColors.primary.withOpacity(0.2), AppColors.backgroundDark]
-                : [AppColors.primary.withOpacity(0.1), AppColors.backgroundLight],
+                : [
+                    AppColors.primary.withOpacity(0.1),
+                    AppColors.backgroundLight
+                  ],
           ),
         ),
         child: SafeArea(
@@ -79,14 +83,14 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                   children: [
                     // Logo and Title
                     _buildHeader(isDark, isMobile),
-                    
+
                     SizedBox(height: isMobile ? AppSpacing.lg : AppSpacing.xxl),
-                    
+
                     // Login Form Card
                     _buildLoginCard(isDark, isMobile),
-                    
+
                     SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
-                    
+
                     // Demo Accounts - One-Click Login
                     _buildDemoAccountsGrid(isDark, isMobile),
                   ],
@@ -171,7 +175,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            
+
             // Email Field
             TextFormField(
               controller: _emailController,
@@ -207,9 +211,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: AppSpacing.lg),
-            
+
             // Password Field
             TextFormField(
               controller: _passwordController,
@@ -255,7 +259,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                 return null;
               },
             ),
-            
+
             // Error message from auth state
             Consumer(
               builder: (context, ref, child) {
@@ -268,17 +272,21 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: AppColors.error.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                          border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                          border: Border.all(
+                              color: AppColors.error.withOpacity(0.3)),
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                            Icon(Icons.error_outline,
+                                color: AppColors.error, size: 20),
                             const SizedBox(width: AppSpacing.sm),
                             Expanded(
                               child: Text(
                                 authState.error!,
-                                style: TextStyle(color: AppColors.error, fontSize: 13),
+                                style: TextStyle(
+                                    color: AppColors.error, fontSize: 13),
                               ),
                             ),
                           ],
@@ -290,9 +298,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                 return const SizedBox.shrink();
               },
             ),
-            
+
             const SizedBox(height: AppSpacing.xl),
-            
+
             // Login Button
             Consumer(
               builder: (context, ref, child) {
@@ -306,7 +314,8 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
                       ),
                       elevation: 0,
                     ),
@@ -316,7 +325,8 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
                         : const Text(
@@ -330,9 +340,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                 );
               },
             ),
-            
+
             const SizedBox(height: AppSpacing.lg),
-            
+
             // Forgot Password
             Center(
               child: TextButton(
@@ -357,7 +367,8 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: isMobile ? AppSpacing.xs : AppSpacing.sm),
+          padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? AppSpacing.xs : AppSpacing.sm),
           child: Row(
             children: [
               Icon(
@@ -368,7 +379,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
               SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
               Flexible(
                 child: Text(
-                  'Quick Login - Click Any Account',
+                  'Demo Logins - Tap Any Role',
                   style: AppTypography.bodyLarge.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : AppColors.textPrimary,
@@ -387,7 +398,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: isMobile ? 1 : 2,
-            childAspectRatio: isMobile ? 3.5 : 2.5,
+            childAspectRatio: isMobile ? 2.7 : 2.05,
             crossAxisSpacing: isMobile ? 0 : AppSpacing.sm,
             mainAxisSpacing: isMobile ? AppSpacing.xs : AppSpacing.sm,
           ),
@@ -401,14 +412,15 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
     );
   }
 
-  Widget _buildDemoAccountCard(DemoAccount account, bool isDark, bool isMobile) {
+  Widget _buildDemoAccountCard(
+      DemoAccount account, bool isDark, bool isMobile) {
     return InkWell(
       onTap: () => _loginWithDemoAccount(account),
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Container(
         padding: EdgeInsets.all(isMobile ? AppSpacing.xs : AppSpacing.sm),
         decoration: BoxDecoration(
-          color: isDark 
+          color: isDark
               ? AppColors.surfaceDark.withOpacity(0.5)
               : Colors.white.withOpacity(0.8),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -460,6 +472,25 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: 3),
+                  Text(
+                    account.email,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white70 : AppColors.textSecondary,
+                      fontSize: isMobile ? 10 : 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    'Password: ${account.password}',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white70 : AppColors.textSecondary,
+                      fontSize: isMobile ? 10 : 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
@@ -473,7 +504,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
     // Auto-fill credentials
     _emailController.text = account.email;
     _passwordController.text = account.password;
-    
+
     // Show loading indicator
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -482,7 +513,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
         backgroundColor: AppColors.primary,
       ),
     );
-    
+
     // Perform login
     await _login();
   }

@@ -213,7 +213,7 @@ class _PackagingSupervisorSidebarState extends State<PackagingSupervisorSidebar>
                                       color: isDark
                                           ? Colors.white.withOpacity(0.7)
                                           : AppColors.textSecondary,
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w500,
                                       letterSpacing: 0.2),
                               overflow: TextOverflow.ellipsis),
                         ),
@@ -444,7 +444,7 @@ class _PackagingSupervisorSidebarState extends State<PackagingSupervisorSidebar>
                       style: AppTypography.bodyMedium.copyWith(
                           fontSize: 18,
                           color: Colors.white,
-                          fontWeight: FontWeight.bold))),
+                          fontWeight: FontWeight.w500))),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -455,7 +455,7 @@ class _PackagingSupervisorSidebarState extends State<PackagingSupervisorSidebar>
                   Text(widget.userName,
                       style: AppTypography.bodyMedium.copyWith(
                           fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                           color: isDark ? Colors.white : AppColors.textPrimary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
@@ -466,7 +466,7 @@ class _PackagingSupervisorSidebarState extends State<PackagingSupervisorSidebar>
                           color: isDark
                               ? Colors.white.withOpacity(0.7)
                               : AppColors.textSecondary,
-                          fontWeight: FontWeight.w600),
+                          fontWeight: FontWeight.w500),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
                 ],
@@ -519,7 +519,7 @@ class _PackagingSupervisorSidebarState extends State<PackagingSupervisorSidebar>
                               style: AppTypography.bodyMedium.copyWith(
                                   fontSize: 13,
                                   color: AppColors.error,
-                                  fontWeight: FontWeight.w600))),
+                                  fontWeight: FontWeight.w500))),
                     ],
                   ),
           ),
@@ -560,7 +560,7 @@ class _PackagingSupervisorSidebarState extends State<PackagingSupervisorSidebar>
                     horizontal: AppSpacing.lg, vertical: AppSpacing.md)),
             child: Text('Logout',
                 style: AppTypography.bodyMedium.copyWith(
-                    color: Colors.white, fontWeight: FontWeight.w600)),
+                    color: Colors.white, fontWeight: FontWeight.w500)),
           ),
         ],
       ),

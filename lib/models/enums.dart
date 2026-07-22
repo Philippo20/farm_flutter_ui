@@ -7,8 +7,16 @@ library;
 enum UserRole {
   superAdmin,
   admin,
+  farmManager,
   owner,
-  caretaker;
+  caretaker,
+  technician,
+  fulfillmentManager,
+  packagingSupervisor,
+  qualityAssurance,
+  salesManager,
+  salesPersonnel,
+  accountant;
 
   String get displayName {
     switch (this) {
@@ -16,10 +24,26 @@ enum UserRole {
         return 'Super Admin';
       case UserRole.admin:
         return 'Admin';
+      case UserRole.farmManager:
+        return 'Farm Manager';
       case UserRole.owner:
         return 'Farm Owner';
       case UserRole.caretaker:
         return 'Caretaker';
+      case UserRole.technician:
+        return 'Technician';
+      case UserRole.fulfillmentManager:
+        return 'Fulfillment Manager';
+      case UserRole.packagingSupervisor:
+        return 'Packaging Supervisor';
+      case UserRole.qualityAssurance:
+        return 'Quality Assurance';
+      case UserRole.salesManager:
+        return 'Sales Manager';
+      case UserRole.salesPersonnel:
+        return 'Sales Personnel';
+      case UserRole.accountant:
+        return 'Accountant';
     }
   }
 
@@ -31,10 +55,43 @@ enum UserRole {
         return UserRole.superAdmin;
       case 'admin':
         return UserRole.admin;
+      case 'farmmanager':
+      case 'farm_manager':
+      case 'farm manager':
+        return UserRole.farmManager;
       case 'owner':
+      case 'farm_owner':
+      case 'farm owner':
         return UserRole.owner;
       case 'caretaker':
         return UserRole.caretaker;
+      case 'technician':
+        return UserRole.technician;
+      case 'fulfillmentmanager':
+      case 'fulfillment_manager':
+      case 'fulfillment manager':
+        return UserRole.fulfillmentManager;
+      case 'packagingsupervisor':
+      case 'packaging_supervisor':
+      case 'packaging supervisor':
+        return UserRole.packagingSupervisor;
+      case 'qualityassurance':
+      case 'quality_assurance':
+      case 'quality_assurance_officer':
+      case 'quality officer':
+      case 'quality assurance':
+        return UserRole.qualityAssurance;
+      case 'salesmanager':
+      case 'sales_manager':
+      case 'sales manager':
+        return UserRole.salesManager;
+      case 'salespersonnel':
+      case 'sales_personnel':
+      case 'sales_person':
+      case 'sales personnel':
+        return UserRole.salesPersonnel;
+      case 'accountant':
+        return UserRole.accountant;
       default:
         throw ArgumentError('Invalid user role: $role');
     }

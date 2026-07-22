@@ -65,11 +65,11 @@ class AdminDashboardCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Hello Mr, $adminName 👋",
+                          "Hello Mr, $adminName ðŸ‘‹",
                           style: GoogleFonts.poppins(
                             color: textColor,
                             fontSize: 20,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             height: 1.4,
                           ),
                         ),
@@ -115,11 +115,11 @@ class AdminDashboardCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Welcome back, $adminName 👋",
+                      "Welcome back, $adminName ðŸ‘‹",
                       style: GoogleFonts.poppins(
                         color: textColor,
                         fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         height: 1.4,
                       ),
                     ),
@@ -160,19 +160,45 @@ class AdminDashboardCard extends StatelessWidget {
 
   String _formatFullDate(DateTime dt) {
     final weekDay = [
-      "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
     ][dt.weekday % 7];
     final month = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
     ][dt.month - 1];
     return "$weekDay, $month ${dt.day}, ${dt.year}";
   }
 
   String _shortDate(DateTime dt) {
     final month = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
     ][dt.month - 1];
     return "${dt.day} $month";
   }
@@ -262,7 +288,8 @@ class _SegmentPill extends StatelessWidget {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primary, size: 20),
+          icon: Icon(Icons.keyboard_arrow_down_rounded,
+              color: AppColors.primary, size: 20),
           items: options
               .map((opt) => DropdownMenuItem<String>(
                     value: opt,
@@ -322,10 +349,10 @@ class WeatherInfoWidget extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          "${temperature.toStringAsFixed(1)}°C",
+          "${temperature.toStringAsFixed(1)}Â°C",
           style: GoogleFonts.poppins(
             color: textColor,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
             fontSize: 15,
           ),
         ),

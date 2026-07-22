@@ -263,7 +263,7 @@ class _AccountantPage extends StatelessWidget {
                   sectionTitle,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -365,7 +365,7 @@ class _ToggleButton extends StatelessWidget {
                 color: selected
                     ? Colors.white
                     : (isDark ? Colors.white70 : AppColors.textSecondary),
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -436,7 +436,7 @@ class _FinanceTable extends StatelessWidget {
             'All Transactions (${items.length})',
             style: AppTypography.h6.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -503,7 +503,7 @@ class _FinanceTableRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
@@ -512,7 +512,7 @@ class _FinanceTableRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -525,7 +525,7 @@ class _FinanceTableRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -536,7 +536,7 @@ class _FinanceTableRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: AppTypography.bodyMedium.copyWith(
                 color: item.color,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -647,7 +647,7 @@ class _FilterBar extends StatelessWidget {
                   'Filters',
                   style: AppTypography.caption.copyWith(
                     color: AppColors.primary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -703,14 +703,14 @@ class _FilterChip extends StatelessWidget {
               '${option.label}: ',
               style: AppTypography.caption.copyWith(
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
             Text(
               option.value,
               style: AppTypography.caption.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(width: 4),
@@ -766,7 +766,7 @@ class _FinanceCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -833,7 +833,7 @@ class _Hero extends StatelessWidget {
                   title,
                   style: AppTypography.h4.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                     fontSize: isMobile ? 24 : 28,
                   ),
                 ),
@@ -896,7 +896,7 @@ class _KpiCard extends StatelessWidget {
                   data.value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -979,7 +979,7 @@ class _SettingRow extends StatelessWidget {
                   title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -1025,7 +1025,7 @@ class _MetricPill extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1078,7 +1078,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -1100,7 +1100,7 @@ class _MutedText extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: AppTypography.caption.copyWith(
         color: isDark ? Colors.white60 : AppColors.textSecondary,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w500,
       ),
     );
   }

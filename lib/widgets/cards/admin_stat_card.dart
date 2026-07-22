@@ -32,7 +32,9 @@ class AdminStatCard extends StatelessWidget {
       colors: [
         accentColor.withOpacity(isDark ? 0.30 : 0.20),
         accentColor.withOpacity(isDark ? 0.09 : 0.08),
-        isDark ? Colors.black.withOpacity(0.18) : Colors.white.withOpacity(0.11),
+        isDark
+            ? Colors.black.withOpacity(0.18)
+            : Colors.white.withOpacity(0.11),
       ],
     );
 
@@ -73,7 +75,8 @@ class AdminStatCard extends StatelessWidget {
                 Spacer(),
                 // More icon (three dots)
                 IconButton(
-                  icon: Icon(Icons.more_vert_rounded, color: secondaryTextColor, size: 22),
+                  icon: Icon(Icons.more_vert_rounded,
+                      color: secondaryTextColor, size: 22),
                   padding: EdgeInsets.zero,
                   splashRadius: 18,
                   onPressed: () {
@@ -94,7 +97,7 @@ class AdminStatCard extends StatelessWidget {
                   value,
                   style: GoogleFonts.poppins(
                     fontSize: 28,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : Colors.black,
                     height: 1.2,
                   ),

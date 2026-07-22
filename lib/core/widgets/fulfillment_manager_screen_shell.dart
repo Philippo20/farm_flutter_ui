@@ -26,7 +26,8 @@ class FulfillmentManagerScreenShell extends ConsumerWidget {
     final userEmail = authState.user?.email ?? 'fulfillment@farmestates.com';
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? Column(
               children: [

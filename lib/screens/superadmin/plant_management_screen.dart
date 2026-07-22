@@ -5,7 +5,9 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/superadmin_sidebar.dart';
 import '../../core/widgets/modern_admin_header.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Plant Type Management - Create and manage plant varieties with maturity duration
 class PlantManagementScreen extends ConsumerStatefulWidget {
@@ -17,9 +19,12 @@ class PlantManagementScreen extends ConsumerStatefulWidget {
 }
 
 class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
-  int _selectedNavIndex = 3;
+  int _selectedNavIndex = 4;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String _selectedCategoryFilter = 'All';
+  bool _isLoadingPlants = false;
+  String? _plantsError;
+  final SuperAdminApiService _api = SuperAdminApiService();
 
   final List<String> _plantCategories = [
     'Leafy Greens',
@@ -29,6 +34,94 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     'Vegetables',
     'Flowers',
   ];
+  final Map<String, String> _categoryIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPlantTypes();
+  }
+
+  Future<void> _loadPlantTypes() async {
+    setState(() {
+      _isLoadingPlants = true;
+      _plantsError = null;
+      _plantTypes.clear();
+    });
+
+    try {
+      final plants = await _api.getPlantTypes();
+      if (!mounted) return;
+      final mappedPlants = plants.map(_mapPlantDocument).toList();
+      final categoryMarkers =
+          mappedPlants.where((plant) => plant['isCategory'] == true).toList();
+      final visiblePlants =
+          mappedPlants.where((plant) => plant['isCategory'] != true).toList();
+      final categories = mappedPlants
+          .map((plant) => plant['category']?.toString() ?? '')
+          .where((category) => category.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
+      setState(() {
+        _plantTypes
+          ..clear()
+          ..addAll(visiblePlants);
+        _categoryIds
+          ..clear()
+          ..addEntries(categoryMarkers.map(
+            (category) => MapEntry(
+              category['category'].toString(),
+              category['id'].toString(),
+            ),
+          ));
+        if (categories.isNotEmpty) {
+          _plantCategories
+            ..clear()
+            ..addAll(categories);
+        }
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _plantsError = error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingPlants = false);
+      }
+    }
+  }
+
+  Map<String, dynamic> _mapPlantDocument(Map<String, dynamic> doc) {
+    return {
+      'id': (doc[r'$id'] ?? doc['plant_type_id'] ?? doc['id'] ?? '').toString(),
+      'name': (doc['name'] ?? 'Unnamed Plant').toString(),
+      'category':
+          (doc['category'] ?? doc['plant_type'] ?? 'Plant Types').toString(),
+      'isCategory': doc['is_category'] == true,
+      'maturity': doc['months_to_maturity'] ?? doc['maturity'] ?? 0,
+      'maturityUnit': 'months',
+      'imageUrl': (doc['image_url'] ?? '').toString(),
+      'status': _statusLabel(doc['status']),
+      'created': _dateLabel(doc[r'$createdAt'] ?? doc['created_at']),
+    };
+  }
+
+  String _statusLabel(dynamic value) {
+    final text = value?.toString() ?? '';
+    if (text.isEmpty) return 'Active';
+    return text
+        .replaceAll('_', ' ')
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
+
+  String _dateLabel(dynamic value) {
+    final text = value?.toString() ?? '';
+    if (text.length >= 10) return text.substring(0, 10);
+    return text.isEmpty ? '-' : text;
+  }
 
   final List<Map<String, dynamic>> _plantTypes = [
     {
@@ -91,6 +184,46 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     return '$value $unit';
   }
 
+  Future<bool> _savePlantType({
+    required String name,
+    required String category,
+    required String monthsToMaturity,
+    required String imageFileName,
+    required String status,
+  }) async {
+    final months = int.tryParse(monthsToMaturity.trim());
+    if (name.trim().isEmpty || months == null || imageFileName.trim().isEmpty) {
+      return false;
+    }
+
+    setState(() {
+      _isLoadingPlants = true;
+      _plantsError = null;
+    });
+
+    try {
+      await _api.createPlantType(
+        name: name.trim(),
+        category: category.trim(),
+        monthsToMaturity: months,
+        imageFileName: imageFileName.trim(),
+        status: status,
+      );
+      await _loadPlantTypes();
+      if (!mounted) return false;
+      _showSuccessSnack('${name.trim()} added.');
+      return true;
+    } catch (error) {
+      if (!mounted) return false;
+      setState(() {
+        _plantsError = error.toString();
+        _isLoadingPlants = false;
+      });
+      _showErrorSnack(error.toString());
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -127,7 +260,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     return Row(
       children: [
         SuperAdminSidebar(
-          selectedIndex: 3,
+          selectedIndex: 4,
           onItemSelected: (_) {},
           userName: userName,
           userEmail: userEmail,
@@ -181,7 +314,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         Text(
           'Plant Type Management',
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -218,7 +351,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         Text(
           'All Plant Types',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             fontSize: 14,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
@@ -246,7 +379,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                 children: [
                   Text('Plant Type Management',
                       style: AppTypography.h4.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
                   Text(
@@ -279,52 +412,95 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
 
         const SizedBox(height: AppSpacing.xl),
 
+        if (_plantsError != null) ...[
+          _buildSyncStatus(isDark),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+
         // Plant Types Table
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(
-                color:
-                    isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _selectedCategoryFilter == 'All'
-                          ? 'All Plant Types'
-                          : '$_selectedCategoryFilter Plant Types',
-                      style: AppTypography.h6.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? Colors.white : AppColors.textPrimary,
+        if (_isLoadingPlants && _plantTypes.isEmpty)
+          const AdminDataSkeleton(showStats: false)
+        else
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(
+                  color: isDark
+                      ? Colors.white10
+                      : Colors.black.withValues(alpha: 0.08)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _selectedCategoryFilter == 'All'
+                            ? 'All Plant Types'
+                            : '$_selectedCategoryFilter Plant Types',
+                        style: AppTypography.h6.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    '${_filteredPlantTypes.length} records',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: isDark ? Colors.white60 : AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
+                    Text(
+                      '${_filteredPlantTypes.length} records',
+                      style: AppTypography.bodySmall.copyWith(
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _buildCategoryFilters(isDark),
-              const SizedBox(height: AppSpacing.lg),
-              _buildPlantTableHeader(isDark),
-              const SizedBox(height: AppSpacing.sm),
-              ..._filteredPlantTypes
-                  .map((plant) => _buildPlantRow(plant, isDark)),
-            ],
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _buildCategoryFilters(isDark),
+                const SizedBox(height: AppSpacing.lg),
+                _buildPlantTableHeader(isDark),
+                const SizedBox(height: AppSpacing.sm),
+                ..._filteredPlantTypes
+                    .map((plant) => _buildPlantRow(plant, isDark)),
+              ],
+            ),
           ),
-        ),
       ],
+    );
+  }
+
+  Widget _buildSyncStatus(bool isDark) {
+    final hasError = _plantsError != null;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: hasError
+            ? AppColors.error.withValues(alpha: 0.08)
+            : AppColors.info.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: AppColors.error),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'Could not refresh plant types: $_plantsError',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Refresh plant types',
+            onPressed: _isLoadingPlants ? null : _loadPlantTypes,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
     );
   }
 
@@ -336,15 +512,25 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
       runSpacing: AppSpacing.sm,
       children: filters.map<Widget>((category) {
         final isSelected = _selectedCategoryFilter == category;
-        return ChoiceChip(
+        final categoryId = _categoryIds[category];
+        return InputChip(
           label: Text(category),
           selected: isSelected,
           onSelected: (selected) {
             if (selected) setState(() => _selectedCategoryFilter = category);
           },
-          selectedColor: AppColors.success.withOpacity(0.18),
+          onDeleted: category == 'All' || categoryId == null
+              ? null
+              : () => _showDeleteCategoryDialog(
+                    context,
+                    category,
+                    categoryId,
+                    isDark,
+                  ),
+          deleteIcon: const Icon(Icons.close_rounded, size: 16),
+          selectedColor: AppColors.success.withValues(alpha: 0.18),
           backgroundColor:
-              isDark ? Colors.white.withOpacity(0.04) : Colors.white,
+              isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white,
           side: BorderSide(
             color: isSelected
                 ? AppColors.success
@@ -363,14 +549,15 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
             avatar: const Icon(Icons.add_rounded, size: 18),
             label: const Text('Add Category'),
             onPressed: () => _showAddCategoryDialog(context, isDark),
-            backgroundColor:
-                isDark ? Colors.white.withOpacity(0.06) : AppColors.neutral50,
+            backgroundColor: isDark
+                ? Colors.white.withValues(alpha: 0.06)
+                : AppColors.neutral50,
             side: BorderSide(
               color: isDark ? Colors.white12 : AppColors.neutral200,
             ),
             labelStyle: TextStyle(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -378,33 +565,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   }
 
   Widget _buildMobileStats(bool isDark) {
-    final stats = [
-      {
-        'title': 'Total Types',
-        'value': '45',
-        'icon': Icons.eco,
-        'color': AppColors.success
-      },
-      {
-        'title': 'Active',
-        'value': '42',
-        'icon': Icons.check_circle,
-        'color': AppColors.primary
-      },
-      {
-        'title': 'Categories',
-        'value': '8',
-        'icon': Icons.category,
-        'color': AppColors.info
-      },
-      {
-        'title': 'Avg Maturity',
-        'value': '2.5 mo',
-        'icon': Icons.schedule,
-        'color': AppColors.warning
-      },
-    ];
-
+    final stats = _plantStats();
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -421,9 +582,9 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         return Container(
           padding: const EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(
-            color: statColor.withOpacity(isDark ? 0.15 : 0.1),
+            color: statColor.withValues(alpha: isDark ? 0.15 : 0.1),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(color: statColor.withOpacity(0.3)),
+            border: Border.all(color: statColor.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,7 +599,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                       stat['title'] as String,
                       style: TextStyle(
                         fontSize: 10,
-                        color: statColor.withOpacity(0.9),
+                        color: statColor.withValues(alpha: 0.9),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -451,7 +612,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                 stat['value'] as String,
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   color: statColor,
                 ),
                 maxLines: 1,
@@ -464,33 +625,54 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     );
   }
 
-  Widget _buildStatsCards(bool isDark) {
-    final stats = [
+  List<Map<String, Object>> _plantStats() {
+    final totalTypes = _plantTypes.length;
+    final activeTypes =
+        _plantTypes.where((plant) => plant['status'] == 'Active').length;
+    final categories = _plantTypes
+        .map((plant) => plant['category']?.toString() ?? '')
+        .where((category) => category.isNotEmpty)
+        .toSet()
+        .length;
+    final maturityValues = _plantTypes
+        .map((plant) => plant['maturity'])
+        .whereType<num>()
+        .map((value) => value.toDouble())
+        .toList();
+    final avgMaturity = maturityValues.isEmpty
+        ? 0
+        : maturityValues.reduce((a, b) => a + b) / maturityValues.length;
+
+    return [
       {
         'title': 'Total Types',
-        'value': '45',
+        'value': totalTypes.toString(),
         'icon': Icons.eco,
         'color': AppColors.success
       },
       {
         'title': 'Active',
-        'value': '42',
+        'value': activeTypes.toString(),
         'icon': Icons.check_circle,
         'color': AppColors.primary
       },
       {
         'title': 'Categories',
-        'value': '8',
+        'value': categories.toString(),
         'icon': Icons.category,
         'color': AppColors.info
       },
       {
         'title': 'Avg Maturity',
-        'value': '2.5 mo',
+        'value': '${avgMaturity.toStringAsFixed(1)} mo',
         'icon': Icons.schedule,
         'color': AppColors.warning
       },
     ];
+  }
+
+  Widget _buildStatsCards(bool isDark) {
+    final stats = _plantStats();
 
     return Row(
       children: stats
@@ -500,17 +682,18 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                       right: stat != stats.last ? AppSpacing.md : 0),
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: (stat['color'] as Color).withOpacity(0.1),
+                    color: (stat['color'] as Color).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                     border: Border.all(
-                        color: (stat['color'] as Color).withOpacity(0.3)),
+                        color: (stat['color'] as Color).withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: (stat['color'] as Color).withOpacity(0.2),
+                          color:
+                              (stat['color'] as Color).withValues(alpha: 0.2),
                           borderRadius:
                               BorderRadius.circular(AppSpacing.radiusMd),
                         ),
@@ -526,7 +709,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                               stat['value'] as String,
                               style: TextStyle(
                                   fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w500,
                                   color: stat['color'] as Color),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -536,7 +719,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                               style: TextStyle(
                                   fontSize: 10,
                                   color: (stat['color'] as Color)
-                                      .withOpacity(0.8)),
+                                      .withValues(alpha: 0.8)),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -559,7 +742,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+            color:
+                isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -569,7 +753,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
                 child: const Icon(Icons.local_florist,
@@ -583,7 +767,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                     Text(
                       plant['name'],
                       style: TextStyle(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         fontSize: 13,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
@@ -604,7 +788,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 ),
                 child: Text(
@@ -612,7 +796,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                   style: const TextStyle(
                     color: AppColors.success,
                     fontSize: 10,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -668,7 +852,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: chipColor.withOpacity(0.1),
+        color: chipColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
       ),
       child: Row(
@@ -693,10 +877,11 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+        color:
+            isDark ? Colors.white.withValues(alpha: 0.04) : AppColors.neutral50,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.04),
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04),
         ),
       ),
       child: Row(
@@ -723,7 +908,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w500,
           letterSpacing: 0.2,
         ),
       ),
@@ -736,16 +921,16 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: AppColors.info.withOpacity(0.1),
+          color: AppColors.info.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          border: Border.all(color: AppColors.info.withOpacity(0.2)),
+          border: Border.all(color: AppColors.info.withValues(alpha: 0.2)),
         ),
         child: Text(
           category,
           style: const TextStyle(
             color: AppColors.info,
             fontSize: 11,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w500,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -759,7 +944,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
       ),
       child: Text(
@@ -767,7 +952,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         style: TextStyle(
           color: color,
           fontSize: 11,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -778,10 +963,11 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
+        color:
+            isDark ? Colors.white.withValues(alpha: 0.03) : AppColors.neutral50,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.04),
+          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04),
         ),
       ),
       child: Row(
@@ -793,7 +979,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
+                    color: AppColors.success.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
                   child: const Icon(Icons.local_florist,
@@ -806,7 +992,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                     children: [
                       Text(plant['name'],
                           style: TextStyle(
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w500,
                               fontSize: 14,
                               color: isDark
                                   ? Colors.white
@@ -832,7 +1018,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               _maturityLabel(plant),
               style: TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
               ),
             ),
@@ -870,179 +1056,245 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   void _showAddCategoryDialog(BuildContext context, bool isDark) {
     final categoryController = TextEditingController();
     final isMobile = MediaQuery.of(context).size.width < 600;
+    var saving = false;
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        ),
-        insetPadding: EdgeInsets.symmetric(
-          horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
-          vertical: AppSpacing.xl,
-        ),
-        child: Container(
-          width: isMobile ? double.infinity : 420,
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          ),
+          insetPadding: EdgeInsets.symmetric(
+            horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
+            vertical: AppSpacing.xl,
+          ),
+          child: Container(
+            width: isMobile ? double.infinity : 420,
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.12),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
+                      ),
+                      child: const Icon(
+                        Icons.category_rounded,
+                        color: AppColors.success,
+                        size: 24,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.category_rounded,
-                      color: AppColors.success,
-                      size: 24,
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Add Category',
+                            style: AppTypography.h6.copyWith(
+                              color:
+                                  isDark ? Colors.white : AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            'Create a new plant type category',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: isDark
+                                  ? Colors.white60
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Add Category',
-                          style: AppTypography.h6.copyWith(
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _buildFormLabel('Category Name', isDark),
+                const SizedBox(height: AppSpacing.sm),
+                _buildTextField(
+                  controller: categoryController,
+                  hint: 'e.g., Microgreens',
+                  icon: Icons.label_outline_rounded,
+                  isDark: isDark,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: saving ? null : () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.md),
+                          side: BorderSide(
+                              color: isDark
+                                  ? Colors.white24
+                                  : AppColors.neutral300),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
                           ),
                         ),
-                        Text(
-                          'Create a new plant type category',
-                          style: AppTypography.bodySmall.copyWith(
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
                             color: isDark
-                                ? Colors.white60
+                                ? Colors.white70
                                 : AppColors.textSecondary,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _buildFormLabel('Category Name', isDark),
-              const SizedBox(height: AppSpacing.sm),
-              _buildTextField(
-                controller: categoryController,
-                hint: 'e.g., Microgreens',
-                icon: Icons.label_outline_rounded,
-                isDark: isDark,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                        side: BorderSide(
-                            color:
-                                isDark ? Colors.white24 : AppColors.neutral300),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusMd),
-                        ),
-                      ),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          color:
-                              isDark ? Colors.white70 : AppColors.textSecondary,
-                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        final category = categoryController.text.trim();
-                        if (category.isEmpty) return;
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        onPressed: saving
+                            ? null
+                            : () async {
+                                final category = categoryController.text.trim();
+                                if (category.isEmpty) return;
 
-                        final exists = _plantCategories.any(
-                          (item) =>
-                              item.toLowerCase() == category.toLowerCase(),
-                        );
-                        Navigator.pop(context);
+                                final exists = _plantCategories.any(
+                                  (item) =>
+                                      item.toLowerCase() ==
+                                      category.toLowerCase(),
+                                );
+                                if (exists) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          '$category already exists as a category.'),
+                                      backgroundColor: AppColors.warning,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                  return;
+                                }
 
-                        if (exists) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                  '$category already exists as a category.'),
-                              backgroundColor: AppColors.warning,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                          return;
-                        }
-
-                        setState(() {
-                          _plantCategories.add(category);
-                          _selectedCategoryFilter = category;
-                        });
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                const Icon(Icons.check_circle,
-                                    color: Colors.white),
-                                const SizedBox(width: 8),
-                                Text('$category category added.'),
-                              ],
-                            ),
-                            backgroundColor: AppColors.success,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd),
-                            ),
+                                setDialogState(() => saving = true);
+                                try {
+                                  await _api.createPlantCategory(
+                                      name: category);
+                                  await _loadPlantTypes();
+                                  if (!context.mounted) return;
+                                  setState(
+                                      () => _selectedCategoryFilter = category);
+                                  Navigator.pop(context);
+                                  _showSuccessSnack(
+                                      '$category category added.');
+                                } catch (error) {
+                                  if (!context.mounted) return;
+                                  setDialogState(() => saving = false);
+                                  _showErrorSnack(error.toString());
+                                }
+                              },
+                        icon: saving
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.add_rounded, size: 18),
+                        label: Text(saving ? 'Saving' : 'Add Category'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.success,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: AppSpacing.md),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
                           ),
-                        );
-                      },
-                      icon: const Icon(Icons.add_rounded, size: 18),
-                      label: const Text('Add Category'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.success,
-                        foregroundColor: Colors.white,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusMd),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  void _showDeleteCategoryDialog(
+    BuildContext context,
+    String category,
+    String categoryId,
+    bool isDark,
+  ) {
+    final hasPlants = _plantTypes.any((plant) => plant['category'] == category);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        title: const Text('Delete Category?'),
+        content: Text(
+          hasPlants
+              ? '$category has plant types assigned to it. Move or edit those plant types before deleting the category.'
+              : 'Delete $category from plant type categories?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: hasPlants
+                ? null
+                : () async {
+                    try {
+                      await _api.deletePlantCategory(categoryId);
+                      await _loadPlantTypes();
+                      if (!dialogContext.mounted) return;
+                      if (_selectedCategoryFilter == category) {
+                        setState(() => _selectedCategoryFilter = 'All');
+                      }
+                      Navigator.pop(dialogContext);
+                      _showSuccessSnack('$category deleted.');
+                    } catch (error) {
+                      if (!dialogContext.mounted) return;
+                      Navigator.pop(dialogContext);
+                      _showErrorSnack(error.toString());
+                    }
+                  },
+            icon: const Icon(Icons.delete_outline, size: 18),
+            label: const Text('Delete'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddPlantDialog(BuildContext context, bool isDark) {
+    final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController();
     final maturityController = TextEditingController();
-    String selectedCategory = 'Leafy Greens';
-    String selectedMaturityUnit = 'weeks';
+    final imageController = TextEditingController();
+    String selectedCategory =
+        _plantCategories.isNotEmpty ? _plantCategories.first : 'Plant Types';
     String selectedStatus = 'Active';
+    var saving = false;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -1069,7 +1321,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(colors: [
                       AppColors.success,
-                      AppColors.success.withOpacity(0.8)
+                      AppColors.success.withValues(alpha: 0.8)
                     ], begin: Alignment.topLeft, end: Alignment.bottomRight),
                     borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(AppSpacing.radiusXl)),
@@ -1079,7 +1331,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius:
                                 BorderRadius.circular(AppSpacing.radiusMd)),
                         child: const Icon(Icons.eco,
@@ -1093,8 +1345,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                             Text('Add Plant Type',
                                 style: AppTypography.h6.copyWith(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
-                            Text('Register a new plant variety',
+                                    fontWeight: FontWeight.w600)),
+                            Text('Register plant catalog details',
                                 style: AppTypography.bodySmall
                                     .copyWith(color: Colors.white70)),
                           ],
@@ -1110,49 +1362,87 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                 Flexible(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildFormLabel('Plant Name', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildTextField(
-                            controller: nameController,
-                            hint: 'e.g., Lettuce - Romaine',
-                            icon: Icons.eco,
-                            isDark: isDark),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Category', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(
-                            value: selectedCategory,
-                            items: _plantCategories,
-                            icon: Icons.category,
-                            isDark: isDark,
-                            onChanged: (v) =>
-                                setDialogState(() => selectedCategory = v!)),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Maturity Duration', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildMaturityControls(
-                          controller: maturityController,
-                          hint: 'e.g., 8',
-                          value: selectedMaturityUnit,
-                          isDark: isDark,
-                          isMobile: isMobile,
-                          onChanged: (v) =>
-                              setDialogState(() => selectedMaturityUnit = v!),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Status', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(
-                            value: selectedStatus,
-                            items: ['Active', 'Inactive'],
-                            icon: Icons.toggle_on_outlined,
-                            isDark: isDark,
-                            onChanged: (v) =>
-                                setDialogState(() => selectedStatus = v!)),
-                      ],
+                    child: Form(
+                      key: formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildFormLabel('Plant Name', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                              controller: nameController,
+                              hint: 'e.g., Lettuce',
+                              icon: Icons.eco,
+                              isDark: isDark,
+                              validator: (value) {
+                                if ((value ?? '').trim().isEmpty) {
+                                  return 'Add a plant name when ready.';
+                                }
+                                return null;
+                              }),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Months To Maturity', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                              controller: maturityController,
+                              hint: 'e.g., 2',
+                              icon: Icons.schedule,
+                              isDark: isDark,
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                final text = (value ?? '').trim();
+                                if (text.isEmpty) {
+                                  return 'Add the maturity time in months.';
+                                }
+                                final months = int.tryParse(text);
+                                if (months == null || months <= 0) {
+                                  return 'Use a whole number greater than 0.';
+                                }
+                                return null;
+                              }),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Image File Name', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                              controller: imageController,
+                              hint: 'e.g., lettuce.jpg',
+                              icon: Icons.image_outlined,
+                              isDark: isDark,
+                              validator: (value) {
+                                if ((value ?? '').trim().isEmpty) {
+                                  return 'Add an image file name if available.';
+                                }
+                                return null;
+                              }),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Category', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildDropdownField(
+                              value: selectedCategory,
+                              items: _plantCategories.isEmpty
+                                  ? ['Plant Types']
+                                  : _plantCategories,
+                              icon: Icons.category_outlined,
+                              isDark: isDark,
+                              onChanged: saving
+                                  ? null
+                                  : (v) => setDialogState(
+                                      () => selectedCategory = v!)),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Status', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildDropdownField(
+                              value: selectedStatus,
+                              items: ['Active', 'Inactive'],
+                              icon: Icons.toggle_on_outlined,
+                              isDark: isDark,
+                              onChanged: saving
+                                  ? null
+                                  : (v) => setDialogState(
+                                      () => selectedStatus = v!)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1161,7 +1451,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                       color: isDark
-                          ? Colors.white.withOpacity(0.03)
+                          ? Colors.white.withValues(alpha: 0.03)
                           : AppColors.neutral50,
                       borderRadius: const BorderRadius.vertical(
                           bottom: Radius.circular(AppSpacing.radiusXl))),
@@ -1169,7 +1459,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                     children: [
                       Expanded(
                           child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
+                              onPressed:
+                                  saving ? null : () => Navigator.pop(context),
                               style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                       vertical: AppSpacing.md),
@@ -1189,46 +1480,40 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                       Expanded(
                           flex: 2,
                           child: ElevatedButton.icon(
-                              onPressed: () {
-                                final plantName =
-                                    nameController.text.trim().isEmpty
-                                        ? 'New Plant Type'
-                                        : nameController.text.trim();
-                                final maturity =
-                                    int.tryParse(maturityController.text) ?? 0;
-                                setState(() {
-                                  _plantTypes.add({
-                                    'id':
-                                        'P${(_plantTypes.length + 1).toString().padLeft(3, '0')}',
-                                    'name': plantName,
-                                    'category': selectedCategory,
-                                    'maturity': maturity,
-                                    'maturityUnit': selectedMaturityUnit,
-                                    'status': selectedStatus,
-                                    'created': DateTime.now()
-                                        .toString()
-                                        .split(' ')
-                                        .first,
-                                  });
-                                  _selectedCategoryFilter = selectedCategory;
-                                });
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Row(children: [
-                                          const Icon(Icons.check_circle,
-                                              color: Colors.white),
-                                          const SizedBox(width: 8),
-                                          Text('$plantName added!')
-                                        ]),
-                                        backgroundColor: AppColors.success,
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                AppSpacing.radiusMd))));
-                              },
-                              icon: const Icon(Icons.add, size: 18),
-                              label: const Text('Add Plant'),
+                              onPressed: saving
+                                  ? null
+                                  : () async {
+                                      if (!(formKey.currentState?.validate() ??
+                                          false)) {
+                                        return;
+                                      }
+                                      setDialogState(() => saving = true);
+                                      final saved = await _savePlantType(
+                                        name: nameController.text,
+                                        category: selectedCategory,
+                                        monthsToMaturity:
+                                            maturityController.text,
+                                        imageFileName: imageController.text,
+                                        status: selectedStatus,
+                                      );
+                                      if (!context.mounted) return;
+                                      if (saved) {
+                                        Navigator.pop(context);
+                                      } else {
+                                        setDialogState(() => saving = false);
+                                      }
+                                    },
+                              icon: saving
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.add, size: 18),
+                              label: Text(saving ? 'Saving' : 'Add Plant'),
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.success,
                                   foregroundColor: Colors.white,
@@ -1253,6 +1538,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     final nameController = TextEditingController(text: plant['name']);
     final maturityController =
         TextEditingController(text: plant['maturity'].toString());
+    final imageFileName = (plant['imageUrl'] ?? '').toString();
     String selectedCategory = plant['category'];
     String selectedMaturityUnit =
         (plant['maturityUnit'] ?? 'months').toString();
@@ -1283,7 +1569,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(colors: [
                       AppColors.success,
-                      AppColors.success.withOpacity(0.8)
+                      AppColors.success.withValues(alpha: 0.8)
                     ], begin: Alignment.topLeft, end: Alignment.bottomRight),
                     borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(AppSpacing.radiusXl)),
@@ -1293,7 +1579,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                       Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius:
                                   BorderRadius.circular(AppSpacing.radiusMd)),
                           child: const Icon(Icons.edit,
@@ -1306,7 +1592,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                             Text('Edit Plant Type',
                                 style: AppTypography.h6.copyWith(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
+                                    fontWeight: FontWeight.w600)),
                             Text('Update plant information',
                                 style: AppTypography.bodySmall
                                     .copyWith(color: Colors.white70))
@@ -1323,19 +1609,19 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                       color: isDark
-                          ? Colors.white.withOpacity(0.05)
+                          ? Colors.white.withValues(alpha: 0.05)
                           : AppColors.neutral50,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                       border: Border.all(
                           color: isDark
                               ? Colors.white10
-                              : Colors.black.withOpacity(0.08))),
+                              : Colors.black.withValues(alpha: 0.08))),
                   child: Row(
                     children: [
                       Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                              color: AppColors.success.withOpacity(0.1),
+                              color: AppColors.success.withValues(alpha: 0.1),
                               borderRadius:
                                   BorderRadius.circular(AppSpacing.radiusMd)),
                           child: const Icon(Icons.eco,
@@ -1347,12 +1633,12 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                               children: [
                             Text(plant['name'],
                                 style: AppTypography.bodyLarge.copyWith(
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: FontWeight.w500,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary)),
                             Text(
-                                '${plant['category']} • ${_maturityLabel(plant)}',
+                                '${plant['category']} | ${_maturityLabel(plant)}',
                                 style: AppTypography.bodySmall.copyWith(
                                     color: isDark
                                         ? Colors.white60
@@ -1418,7 +1704,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                       color: isDark
-                          ? Colors.white.withOpacity(0.03)
+                          ? Colors.white.withValues(alpha: 0.03)
                           : AppColors.neutral50,
                       borderRadius: const BorderRadius.vertical(
                           bottom: Radius.circular(AppSpacing.radiusXl))),
@@ -1437,7 +1723,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                   vertical: AppSpacing.md,
                                   horizontal: AppSpacing.md),
                               side: BorderSide(
-                                  color: AppColors.error.withOpacity(0.5)),
+                                  color:
+                                      AppColors.error.withValues(alpha: 0.5)),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(
                                       AppSpacing.radiusMd)))),
@@ -1463,7 +1750,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                           child: ElevatedButton.icon(
-                              onPressed: () {
+                              onPressed: () async {
                                 final plantName =
                                     nameController.text.trim().isEmpty
                                         ? plant['name']
@@ -1471,28 +1758,26 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                 final maturity =
                                     int.tryParse(maturityController.text) ??
                                         plant['maturity'];
-                                setState(() {
-                                  plant['name'] = plantName;
-                                  plant['category'] = selectedCategory;
-                                  plant['maturity'] = maturity;
-                                  plant['maturityUnit'] = selectedMaturityUnit;
-                                  plant['status'] = selectedStatus;
-                                  _selectedCategoryFilter = selectedCategory;
-                                });
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Row(children: [
-                                          const Icon(Icons.check_circle,
-                                              color: Colors.white),
-                                          const SizedBox(width: 8),
-                                          Text('$plantName updated!')
-                                        ]),
-                                        backgroundColor: AppColors.success,
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                AppSpacing.radiusMd))));
+                                try {
+                                  await _api.updatePlantType(
+                                    id: plant['id'].toString(),
+                                    name: plantName,
+                                    category: selectedCategory,
+                                    monthsToMaturity: maturity,
+                                    imageFileName: imageFileName,
+                                    status: selectedStatus,
+                                  );
+                                  await _loadPlantTypes();
+                                  if (!context.mounted) return;
+                                  setState(() {
+                                    _selectedCategoryFilter = selectedCategory;
+                                  });
+                                  Navigator.pop(context);
+                                  _showSuccessSnack('$plantName updated.');
+                                } catch (error) {
+                                  if (!context.mounted) return;
+                                  _showErrorSnack(error.toString());
+                                }
                               },
                               icon: const Icon(Icons.save, size: 18),
                               label: const Text('Save'),
@@ -1533,7 +1818,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
+                    color: AppColors.error.withValues(alpha: 0.1),
                     shape: BoxShape.circle),
                 child: const Icon(Icons.delete_forever,
                     color: AppColors.error, size: 40),
@@ -1541,7 +1826,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               const SizedBox(height: AppSpacing.lg),
               Text('Delete Plant Type?',
                   style: AppTypography.h5.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: isDark ? Colors.white : AppColors.textPrimary)),
               const SizedBox(height: AppSpacing.sm),
               Text('Are you sure you want to delete "${plant['name']}"?',
@@ -1555,17 +1840,18 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? Colors.white.withOpacity(0.05)
-                      : AppColors.error.withOpacity(0.05),
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : AppColors.error.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: AppColors.error.withOpacity(0.2)),
+                  border:
+                      Border.all(color: AppColors.error.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.1),
+                          color: AppColors.success.withValues(alpha: 0.1),
                           borderRadius:
                               BorderRadius.circular(AppSpacing.radiusSm)),
                       child: const Icon(Icons.eco,
@@ -1578,13 +1864,13 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                         children: [
                           Text(plant['name'],
                               style: TextStyle(
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                   fontSize: 14,
                                   color: isDark
                                       ? Colors.white
                                       : AppColors.textPrimary)),
                           Text(
-                              '${plant['category']} • ${_maturityLabel(plant)}',
+                              '${plant['category']} | ${_maturityLabel(plant)}',
                               style: TextStyle(
                                   fontSize: 12,
                                   color: isDark
@@ -1600,7 +1886,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                         color: (plant['status'] == 'Active'
                                 ? AppColors.success
                                 : AppColors.warning)
-                            .withOpacity(0.1),
+                            .withValues(alpha: 0.1),
                         borderRadius:
                             BorderRadius.circular(AppSpacing.radiusFull),
                       ),
@@ -1610,7 +1896,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                   ? AppColors.success
                                   : AppColors.warning,
                               fontSize: 11,
-                              fontWeight: FontWeight.w600)),
+                              fontWeight: FontWeight.w500)),
                     ),
                   ],
                 ),
@@ -1620,9 +1906,10 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withOpacity(0.1),
+                  color: AppColors.warning.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                  border: Border.all(
+                      color: AppColors.warning.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -1700,7 +1987,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   // Helper widgets
   Widget _buildFormLabel(String label, bool isDark) => Text(label,
       style: AppTypography.bodyMedium.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w500,
           color: isDark ? Colors.white : AppColors.textPrimary));
 
   Widget _buildTextField(
@@ -1708,7 +1995,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
       required String hint,
       required IconData icon,
       required bool isDark,
-      TextInputType keyboardType = TextInputType.text}) {
+      TextInputType keyboardType = TextInputType.text,
+      FormFieldValidator<String>? validator}) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -1718,13 +2006,14 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
           hintStyle: TextStyle(
               color: isDark
                   ? Colors.white38
-                  : AppColors.textSecondary.withOpacity(0.5)),
+                  : AppColors.textSecondary.withValues(alpha: 0.5)),
           prefixIcon: Icon(icon,
               color: isDark ? Colors.white54 : AppColors.textSecondary,
               size: 20),
           filled: true,
-          fillColor:
-              isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+          fillColor: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : AppColors.neutral50,
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               borderSide: BorderSide(
@@ -1736,8 +2025,11 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
           focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               borderSide: const BorderSide(color: AppColors.success, width: 2)),
+          errorStyle: TextStyle(
+              color: AppColors.error.withValues(alpha: 0.9), fontSize: 12),
           contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md, vertical: AppSpacing.md)),
+      validator: validator,
     );
   }
 
@@ -1804,7 +2096,9 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
       decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : AppColors.neutral50,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
               color: isDark ? Colors.white12 : AppColors.neutral200)),
@@ -1838,11 +2132,14 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
       required List<String> items,
       required IconData icon,
       required bool isDark,
-      required Function(String?) onChanged}) {
+      required ValueChanged<String?>? onChanged,
+      Map<String, String>? labels}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.05)
+              : AppColors.neutral50,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
               color: isDark ? Colors.white12 : AppColors.neutral200)),
@@ -1866,10 +2163,53 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                 : AppColors.textSecondary,
                             size: 20),
                         const SizedBox(width: AppSpacing.md),
-                        Text(item)
+                        Expanded(
+                          child: Text(
+                            labels?[item] ?? item,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
                       ])))
                   .toList(),
               onChanged: onChanged)),
+    );
+  }
+
+  void _showSuccessSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+      ),
+    );
+  }
+
+  void _showErrorSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+      ),
     );
   }
 }

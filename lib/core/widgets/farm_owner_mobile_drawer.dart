@@ -34,7 +34,8 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.md, AppSpacing.md),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, AppSpacing.lg, AppSpacing.md, AppSpacing.md),
               child: Row(
                 children: [
                   Container(
@@ -65,7 +66,8 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                           userName,
                           style: AppTypography.bodyMedium.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -73,7 +75,9 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                         Text(
                           userRole,
                           style: AppTypography.caption.copyWith(
-                            color: isDark ? Colors.white60 : AppColors.textSecondary,
+                            color: isDark
+                                ? Colors.white60
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -82,11 +86,19 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            Divider(height: 1, color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200),
+            Divider(
+                height: 1,
+                color: isDark
+                    ? Colors.white.withOpacity(0.08)
+                    : AppColors.neutral200),
             Expanded(
               child: _buildNavItems(context, isDark),
             ),
-            Divider(height: 1, color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200),
+            Divider(
+                height: 1,
+                color: isDark
+                    ? Colors.white.withOpacity(0.08)
+                    : AppColors.neutral200),
             Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: InkWell(
@@ -102,7 +114,8 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.logout_rounded, size: 16, color: AppColors.error),
+                      const Icon(Icons.logout_rounded,
+                          size: 16, color: AppColors.error),
                       const SizedBox(width: AppSpacing.xs),
                       Text(
                         'Logout',
@@ -124,12 +137,42 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
 
   Widget _buildNavItems(BuildContext context, bool isDark) {
     final items = [
-      {'icon': Icons.dashboard_outlined, 'active': Icons.dashboard_rounded, 'label': 'Dashboard', 'route': '/farm-owner'},
-      {'icon': Icons.agriculture_outlined, 'active': Icons.agriculture_rounded, 'label': 'Farm', 'route': '/farm-owner/farm'},
-      {'icon': Icons.account_balance_wallet_outlined, 'active': Icons.account_balance_wallet_rounded, 'label': 'Digital Wallet', 'route': '/farm-owner/digital-wallet'},
-      {'icon': Icons.analytics_outlined, 'active': Icons.analytics_rounded, 'label': 'Analytics', 'route': '/farm-owner/analytics'},
-      {'icon': Icons.assessment_outlined, 'active': Icons.assessment_rounded, 'label': 'Reports', 'route': '/farm-owner/reports'},
-      {'icon': Icons.settings_outlined, 'active': Icons.settings_rounded, 'label': 'Settings', 'route': '/farm-owner/settings'},
+      {
+        'icon': Icons.dashboard_outlined,
+        'active': Icons.dashboard_rounded,
+        'label': 'Dashboard',
+        'route': '/farm-owner'
+      },
+      {
+        'icon': Icons.agriculture_outlined,
+        'active': Icons.agriculture_rounded,
+        'label': 'Farm',
+        'route': '/farm-owner/farm'
+      },
+      {
+        'icon': Icons.account_balance_wallet_outlined,
+        'active': Icons.account_balance_wallet_rounded,
+        'label': 'Digital Wallet',
+        'route': '/farm-owner/digital-wallet'
+      },
+      {
+        'icon': Icons.analytics_outlined,
+        'active': Icons.analytics_rounded,
+        'label': 'Analytics',
+        'route': '/farm-owner/analytics'
+      },
+      {
+        'icon': Icons.assessment_outlined,
+        'active': Icons.assessment_rounded,
+        'label': 'Reports',
+        'route': '/farm-owner/reports'
+      },
+      {
+        'icon': Icons.settings_outlined,
+        'active': Icons.settings_rounded,
+        'label': 'Settings',
+        'route': '/farm-owner/settings'
+      },
     ];
 
     return ListView.separated(
@@ -139,7 +182,8 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = items[index];
         final isSelected = index == selectedIndex;
-        final icon = isSelected ? item['active'] as IconData : item['icon'] as IconData;
+        final icon =
+            isSelected ? item['active'] as IconData : item['icon'] as IconData;
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -149,7 +193,8 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                 onItemSelected(index);
                 Navigator.pop(context);
                 try {
-                  Navigator.pushReplacementNamed(context, item['route'] as String);
+                  Navigator.pushReplacementNamed(
+                      context, item['route'] as String);
                 } catch (_) {
                   Navigator.pushNamed(context, item['route'] as String);
                 }
@@ -159,10 +204,13 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
             },
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: AppSpacing.sm),
+              padding: const EdgeInsets.symmetric(
+                  vertical: 10, horizontal: AppSpacing.sm),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? (isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral50)
+                    ? (isDark
+                        ? Colors.white.withOpacity(0.08)
+                        : AppColors.neutral50)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
@@ -181,7 +229,8 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                       item['label'] as String,
                       style: AppTypography.bodySmall.copyWith(
                         fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
                         color: isSelected
                             ? AppColors.primary
                             : (isDark ? Colors.white70 : AppColors.textPrimary),

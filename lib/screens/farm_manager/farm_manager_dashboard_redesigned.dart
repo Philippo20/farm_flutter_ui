@@ -7,10 +7,10 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/farm_manager_sidebar.dart';
 import '../../core/widgets/farm_manager_header.dart';
 import '../../core/widgets/farm_manager_mobile_drawer.dart';
-import '../../core/widgets/modern_dashboard_scaffold.dart';
-import '../../core/widgets/weather_time_widget.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Farm Manager Dashboard - Redesigned
 /// Professional layout with sidebar, weather, and compact stats
@@ -22,19 +22,175 @@ class FarmManagerDashboardRedesigned extends ConsumerStatefulWidget {
       _FarmManagerDashboardRedesignedState();
 }
 
-class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDashboardRedesigned> {
+class _FarmManagerDashboardRedesignedState
+    extends ConsumerState<FarmManagerDashboardRedesigned> {
+  final SuperAdminApiService _api = SuperAdminApiService();
   int _selectedNavIndex = 0;
   WeatherInfo? _weatherInfo;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  
+  final List<Map<String, dynamic>> _farms = [];
+  final List<Map<String, dynamic>> _batches = [];
+  final List<Map<String, dynamic>> _inventory = [];
+  final List<Map<String, dynamic>> _sensors = [];
+  final List<Map<String, dynamic>> _deliveries = [];
+  final List<Map<String, dynamic>> _audits = [];
+  bool _isLoadingDashboard = true;
+  String? _dashboardError;
+
   // Content-level navigation state
-  String _currentView = 'dashboard'; // 'dashboard', 'harvest_approval', 'delivery_trigger'
+  String _currentView =
+      'dashboard'; // 'dashboard', 'harvest_approval', 'delivery_trigger'
 
   @override
   void initState() {
     super.initState();
     // Load weather info if needed
     _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    setState(() {
+      _isLoadingDashboard = true;
+      _dashboardError = null;
+    });
+    try {
+      final results = await Future.wait([
+        _api.getFarms(),
+        _api.getBatches(),
+        _api.getInventory(),
+        _api.getSensors(),
+        _api.getFulfillments(),
+        _api.getAudits(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _farms
+          ..clear()
+          ..addAll(results[0]);
+        _batches
+          ..clear()
+          ..addAll(results[1]);
+        _inventory
+          ..clear()
+          ..addAll(results[2]);
+        _sensors
+          ..clear()
+          ..addAll(results[3]);
+        _deliveries
+          ..clear()
+          ..addAll(results[4]);
+        _audits
+          ..clear()
+          ..addAll(results[5]);
+        _isLoadingDashboard = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _dashboardError = error.toString();
+        _isLoadingDashboard = false;
+      });
+    }
+  }
+
+  String _docId(Map<String, dynamic> doc) =>
+      (doc[r'$id'] ?? doc['id'] ?? doc['farm_id'] ?? '').toString();
+
+  String _value(Map<String, dynamic> doc, List<String> keys) {
+    for (final key in keys) {
+      final value = doc[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return '';
+  }
+
+  num _numValue(dynamic value) {
+    if (value is num) return value;
+    return num.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String _status(Map<String, dynamic> doc, List<String> keys) =>
+      _value(doc, keys).toLowerCase().trim();
+
+  DateTime? _dateValue(dynamic value) {
+    if (value is DateTime) return value;
+    return DateTime.tryParse(value?.toString() ?? '');
+  }
+
+  bool _isManagedFarm(Map<String, dynamic> farm) {
+    final user = ref.read(authProvider).user;
+    if (user == null) return true;
+    final managerId = _value(farm, ['farm_manager_id', 'farmManagerId']);
+    final managerName = _value(farm, ['farm_manager_name', 'farmManagerName']);
+    return managerId == user.id ||
+        managerId == user.email ||
+        managerName.toLowerCase() == user.name.toLowerCase();
+  }
+
+  List<Map<String, dynamic>> get _managedFarms =>
+      _farms.where(_isManagedFarm).toList();
+
+  Set<String> get _managedFarmIds =>
+      _managedFarms.map(_docId).where((id) => id.isNotEmpty).toSet();
+
+  Set<String> get _managedFarmNames => _managedFarms
+      .map((farm) => _value(farm, ['name', 'farm_name']))
+      .where((name) => name.isNotEmpty)
+      .toSet();
+
+  bool _matchesManagedFarm(Map<String, dynamic> doc) {
+    if (_managedFarms.isEmpty) return true;
+    final farmId = _value(doc, ['farmID', 'farm_id', 'farmId']);
+    final farmName = _value(doc, ['farm_name', 'farmName']);
+    return _managedFarmIds.contains(farmId) ||
+        _managedFarmNames.contains(farmName);
+  }
+
+  List<Map<String, dynamic>> get _managedBatches =>
+      _batches.where(_matchesManagedFarm).toList();
+
+  List<Map<String, dynamic>> get _managedInventory =>
+      _inventory.where(_matchesManagedFarm).toList();
+
+  List<Map<String, dynamic>> get _managedDeliveries =>
+      _deliveries.where(_matchesManagedFarm).toList();
+
+  bool _isActiveBatch(Map<String, dynamic> batch) {
+    final status = _status(batch, ['production_status', 'status']);
+    return !{'completed', 'delivered', 'cancelled', 'harvested'}
+        .contains(status);
+  }
+
+  bool _isHarvestReady(Map<String, dynamic> batch) {
+    final status = _status(batch, ['production_status', 'status']);
+    if (status.contains('harvest')) return true;
+    final endDate = _dateValue(batch['end_date']);
+    if (endDate == null) return false;
+    return !DateTime.now().isBefore(endDate);
+  }
+
+  bool _isLowStock(Map<String, dynamic> item) {
+    final available = _numValue(
+      item['quantity_available'] ?? item['quantity'] ?? item['stock'],
+    );
+    final reorder = _numValue(item['reorder_level']);
+    return reorder > 0 && available <= reorder;
+  }
+
+  bool _isPendingDelivery(Map<String, dynamic> delivery) {
+    final status = _status(delivery, ['delivery_status', 'status']);
+    return status.isEmpty ||
+        {'pending', 'pending approval', 'scheduled', 'on hold'}
+            .contains(status);
+  }
+
+  String _formatCompact(num value) {
+    if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
+    if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}K';
+    return value.toStringAsFixed(value % 1 == 0 ? 0 : 1);
   }
 
   @override
@@ -49,11 +205,13 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       drawer: isMobile
           ? FarmManagerMobileDrawer(
               selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
               userName: userName,
             )
           : null,
@@ -63,7 +221,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
       floatingActionButton: isMobile
           ? null
           : FloatingActionButton.extended(
-              onPressed: () => Navigator.pushNamed(context, '/batch-generation'),
+              onPressed: () => Navigator.pushNamed(
+                  context, '/farm-manager/batch-generation'),
               backgroundColor: AppColors.primary,
               icon: const Icon(Icons.add),
               label: const Text('Generate Batch'),
@@ -71,7 +230,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail, String userRole) {
+  Widget _buildDesktopLayout(
+      bool isDark, String userName, String userEmail, String userRole) {
     return Row(
       children: [
         // Sidebar
@@ -147,11 +307,19 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
   }
 
   Widget _buildDashboardContent(bool isDark) {
+    if (_isLoadingDashboard) {
+      return const SingleChildScrollView(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: AdminDataSkeleton(rowCount: 6),
+      );
+    }
+    if (_dashboardError != null) {
+      return _buildDashboardError(isDark);
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 600;
-        final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1100;
-        
+
         return SingleChildScrollView(
           padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
           child: Column(
@@ -199,11 +367,53 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
   }
 
   Widget _buildModernStatsRow(bool isDark, bool isMobile) {
+    final totalInventoryKg = _managedInventory.fold<num>(
+      0,
+      (sum, item) =>
+          sum +
+          _numValue(
+              item['quantity_available'] ?? item['quantity'] ?? item['stock']),
+    );
+    final activeBatches = _managedBatches.where(_isActiveBatch).length;
+    final harvestReady = _managedBatches.where(_isHarvestReady).length;
+    final pendingDeliveries =
+        _managedDeliveries.where(_isPendingDelivery).length;
+    final lowStock = _managedInventory.where(_isLowStock).length;
+    final pendingTasks = harvestReady + pendingDeliveries + lowStock;
+    final sensorCount = _sensors.where(_matchesManagedFarm).length;
     final stats = [
-      {'label': 'Total Inventory', 'value': '2,450', 'unit': 'kg', 'icon': Icons.inventory_2_rounded, 'color': const Color(0xFF6366F1), 'change': '+12.5%'},
-      {'label': 'Active Batches', 'value': '18', 'unit': 'batches', 'icon': Icons.layers_rounded, 'color': const Color(0xFF0EA5E9), 'change': '+3'},
-      {'label': 'Pending Tasks', 'value': '7', 'unit': 'tasks', 'icon': Icons.pending_actions_rounded, 'color': const Color(0xFFF59E0B), 'change': '2 urgent'},
-      {'label': 'Harvest Ready', 'value': '5', 'unit': 'batches', 'icon': Icons.agriculture_rounded, 'color': const Color(0xFF10B981), 'change': 'Today'},
+      {
+        'label': 'Total Inventory',
+        'value': _formatCompact(totalInventoryKg),
+        'unit': 'units',
+        'icon': Icons.inventory_2_rounded,
+        'color': const Color(0xFF6366F1),
+        'change': '$sensorCount sensors'
+      },
+      {
+        'label': 'Active Batches',
+        'value': '$activeBatches',
+        'unit': 'batches',
+        'icon': Icons.layers_rounded,
+        'color': const Color(0xFF0EA5E9),
+        'change': '${_managedBatches.length} total'
+      },
+      {
+        'label': 'Pending Tasks',
+        'value': '$pendingTasks',
+        'unit': 'tasks',
+        'icon': Icons.pending_actions_rounded,
+        'color': const Color(0xFFF59E0B),
+        'change': lowStock > 0 ? '$lowStock low stock' : 'Live'
+      },
+      {
+        'label': 'Harvest Ready',
+        'value': '$harvestReady',
+        'unit': 'batches',
+        'icon': Icons.agriculture_rounded,
+        'color': const Color(0xFF10B981),
+        'change': 'Backend'
+      },
     ];
 
     if (isMobile) {
@@ -229,33 +439,39 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     }
 
     return Row(
-      children: stats.map((s) => Expanded(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: _buildModernStatCard(s, isDark, isMobile),
-        ),
-      )).toList(),
+      children: stats
+          .map((s) => Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: _buildModernStatCard(s, isDark, isMobile),
+                ),
+              ))
+          .toList(),
     );
   }
 
-  Widget _buildModernStatCard(Map<String, dynamic> stat, bool isDark, bool isMobile) {
+  Widget _buildModernStatCard(
+      Map<String, dynamic> stat, bool isDark, bool isMobile) {
     final color = stat['color'] as Color;
-    
+
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
+          color:
+              isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
         ),
-        boxShadow: isDark ? null : [
-          BoxShadow(
-            color: color.withOpacity(0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: color.withOpacity(0.08),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,7 +485,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                   color: color.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(stat['icon'] as IconData, size: isMobile ? 20 : 22, color: color),
+                child: Icon(stat['icon'] as IconData,
+                    size: isMobile ? 20 : 22, color: color),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -329,10 +546,38 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
   }
 
   Widget _buildTasksOverview(bool isDark, bool isMobile) {
+    final harvestReady = _managedBatches.where(_isHarvestReady).length;
+    final pendingDeliveries =
+        _managedDeliveries.where(_isPendingDelivery).length;
+    final lowStock = _managedInventory.where(_isLowStock).length;
+    final pendingCount = harvestReady + pendingDeliveries + lowStock;
     final tasks = [
-      {'title': 'Harvest Approval Required', 'subtitle': '5 batches awaiting your approval', 'icon': Icons.check_circle_outline_rounded, 'color': const Color(0xFF10B981), 'badge': '5', 'action': 'harvest_approval'},
-      {'title': 'Pending Deliveries', 'subtitle': '2 scheduled for today', 'icon': Icons.local_shipping_rounded, 'color': const Color(0xFF0EA5E9), 'badge': '2', 'action': 'delivery_trigger'},
-      {'title': 'Inventory Low Stock', 'subtitle': 'Fertilizer needs restock', 'icon': Icons.warning_amber_rounded, 'color': const Color(0xFFF59E0B), 'badge': '!', 'action': 'inventory'},
+      {
+        'title': 'Harvest Approval Required',
+        'subtitle': '$harvestReady batches are ready for harvest review',
+        'icon': Icons.check_circle_outline_rounded,
+        'color': const Color(0xFF10B981),
+        'badge': '$harvestReady',
+        'action': 'harvest_approval'
+      },
+      {
+        'title': 'Pending Deliveries',
+        'subtitle': '$pendingDeliveries delivery records need monitoring',
+        'icon': Icons.local_shipping_rounded,
+        'color': const Color(0xFF0EA5E9),
+        'badge': '$pendingDeliveries',
+        'action': 'delivery_trigger'
+      },
+      {
+        'title': 'Inventory Low Stock',
+        'subtitle': lowStock == 0
+            ? 'No inventory item is below reorder level'
+            : '$lowStock inventory items are below reorder level',
+        'icon': Icons.warning_amber_rounded,
+        'color': const Color(0xFFF59E0B),
+        'badge': lowStock == 0 ? '0' : '!',
+        'action': 'inventory'
+      },
     ];
 
     return Container(
@@ -341,7 +586,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
+          color:
+              isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
         ),
       ),
       child: Column(
@@ -355,7 +601,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                   color: const Color(0xFF6366F1).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.task_alt_rounded, size: 20, color: Color(0xFF6366F1)),
+                child: const Icon(Icons.task_alt_rounded,
+                    size: 20, color: Color(0xFF6366F1)),
               ),
               const SizedBox(width: 12),
               Text(
@@ -368,13 +615,14 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEE2E2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '3 Pending',
+                  '$pendingCount Pending',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -393,7 +641,7 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
 
   Widget _buildTaskItem(Map<String, dynamic> task, bool isDark, bool isMobile) {
     final color = task['color'] as Color;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
@@ -403,13 +651,17 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
             final action = task['action'] as String;
             if (action == 'harvest_approval' || action == 'delivery_trigger') {
               setState(() => _currentView = action);
+            } else if (action == 'inventory') {
+              Navigator.pushNamed(context, '/farm-manager/inventory');
             }
           },
           borderRadius: BorderRadius.circular(14),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.03) : color.withOpacity(0.04),
+              color: isDark
+                  ? Colors.white.withOpacity(0.03)
+                  : color.withOpacity(0.04),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: color.withOpacity(0.15)),
             ),
@@ -434,7 +686,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         style: TextStyle(
                           fontSize: isMobile ? 14 : 15,
                           fontWeight: FontWeight.w600,
-                          color: isDark ? Colors.white : const Color(0xFF0F172A),
+                          color:
+                              isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -442,7 +695,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         task['subtitle'] as String,
                         style: TextStyle(
                           fontSize: isMobile ? 12 : 13,
-                          color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                          color:
+                              isDark ? Colors.white54 : const Color(0xFF64748B),
                         ),
                       ),
                     ],
@@ -474,14 +728,16 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildQuickActionsSection(BuildContext context, bool isDark, bool isMobile) {
+  Widget _buildQuickActionsSection(
+      BuildContext context, bool isDark, bool isMobile) {
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
+          color:
+              isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
         ),
       ),
       child: Column(
@@ -495,7 +751,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                   color: const Color(0xFF10B981).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.flash_on_rounded, size: 20, color: Color(0xFF10B981)),
+                child: const Icon(Icons.flash_on_rounded,
+                    size: 20, color: Color(0xFF10B981)),
               ),
               const SizedBox(width: 12),
               Text(
@@ -516,13 +773,7 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
   }
 
   Widget _buildActivityTimeline(bool isDark, bool isMobile) {
-    final activities = [
-      {'title': 'Batch Approved', 'desc': 'BATCH-155 approved for harvest', 'time': '2 min ago', 'icon': Icons.check_circle_rounded, 'color': const Color(0xFF10B981)},
-      {'title': 'New Request', 'desc': 'Harvest request from Section A', 'time': '15 min ago', 'icon': Icons.add_circle_rounded, 'color': const Color(0xFF6366F1)},
-      {'title': 'Delivery Complete', 'desc': 'Delivered to Warehouse B', 'time': '1 hr ago', 'icon': Icons.local_shipping_rounded, 'color': const Color(0xFF0EA5E9)},
-      {'title': 'Inventory Update', 'desc': '+50kg Tomatoes added', 'time': '2 hrs ago', 'icon': Icons.inventory_rounded, 'color': const Color(0xFFF59E0B)},
-      {'title': 'Budget Approved', 'desc': 'GHS 5,000 request approved', 'time': '3 hrs ago', 'icon': Icons.payments_rounded, 'color': const Color(0xFF10B981)},
-    ];
+    final activities = _dashboardActivities;
 
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
@@ -530,7 +781,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
+          color:
+              isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
         ),
       ),
       child: Column(
@@ -544,7 +796,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                   color: const Color(0xFF0EA5E9).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.timeline_rounded, size: 20, color: Color(0xFF0EA5E9)),
+                child: const Icon(Icons.timeline_rounded,
+                    size: 20, color: Color(0xFF0EA5E9)),
               ),
               const SizedBox(width: 12),
               Text(
@@ -560,27 +813,181 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                 onPressed: () {},
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFF6366F1),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
-                child: const Text('View All', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                child: const Text('View All',
+                    style:
+                        TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          ...activities.asMap().entries.map((entry) {
-            final index = entry.key;
-            final activity = entry.value;
-            final isLast = index == activities.length - 1;
-            return _buildTimelineItem(activity, isDark, isMobile, isLast);
-          }),
+          if (activities.isEmpty)
+            _buildActivityEmptyState(isDark)
+          else
+            ...activities.asMap().entries.map((entry) {
+              final index = entry.key;
+              final activity = entry.value;
+              final isLast = index == activities.length - 1;
+              return _buildTimelineItem(activity, isDark, isMobile, isLast);
+            }),
         ],
       ),
     );
   }
 
-  Widget _buildTimelineItem(Map<String, dynamic> activity, bool isDark, bool isMobile, bool isLast) {
+  List<Map<String, dynamic>> get _dashboardActivities {
+    final recentAudits = _audits.take(5).map((audit) {
+      final collection = _value(audit, ['collection_name']);
+      final action = _value(audit, ['action_type', 'action']);
+      final details = _value(audit, ['action_details', 'details']);
+      return {
+        'title': action.isEmpty ? 'Backend Activity' : action,
+        'desc': details.isEmpty
+            ? (collection.isEmpty ? 'System activity recorded' : collection)
+            : details,
+        'time': _relativeTime(_dateValue(audit['timestamp'])),
+        'icon': _activityIcon(collection, action),
+        'color': _activityColor(collection, action),
+      };
+    }).toList();
+    if (recentAudits.isNotEmpty) return recentAudits;
+
+    final fallback = <Map<String, dynamic>>[];
+    for (final batch in _managedBatches.take(2)) {
+      fallback.add({
+        'title': 'Batch ${_value(batch, ['production_status', 'status'])}',
+        'desc': '${_value(batch, [
+              'batch_no',
+              'batch_id',
+              r'$id'
+            ])} | ${_value(batch, ['plant_name', 'plant_type'])}',
+        'time': _relativeTime(
+            _dateValue(batch['updated_at'] ?? batch['created_at'])),
+        'icon': Icons.layers_rounded,
+        'color': const Color(0xFF0EA5E9),
+      });
+    }
+    for (final item in _managedInventory.take(2)) {
+      fallback.add({
+        'title': 'Inventory Record',
+        'desc': '${_value(item, [
+              'item_name',
+              'name'
+            ])} | ${_numValue(item['quantity_available'] ?? item['quantity'])} ${_value(item, [
+              'unit'
+            ])}',
+        'time': _relativeTime(_dateValue(item['date_added'])),
+        'icon': Icons.inventory_rounded,
+        'color': const Color(0xFFF59E0B),
+      });
+    }
+    return fallback.take(5).toList();
+  }
+
+  String _relativeTime(DateTime? date) {
+    if (date == null) return 'Recently';
+    final diff = DateTime.now().difference(date);
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} hr ago';
+    return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
+  }
+
+  IconData _activityIcon(String collection, String action) {
+    final text = '$collection $action'.toLowerCase();
+    if (text.contains('delivery') || text.contains('fulfillment')) {
+      return Icons.local_shipping_rounded;
+    }
+    if (text.contains('inventory')) return Icons.inventory_rounded;
+    if (text.contains('batch')) return Icons.layers_rounded;
+    if (text.contains('farm')) return Icons.agriculture_rounded;
+    if (text.contains('update')) return Icons.edit_rounded;
+    return Icons.timeline_rounded;
+  }
+
+  Color _activityColor(String collection, String action) {
+    final text = '$collection $action'.toLowerCase();
+    if (text.contains('delete') || text.contains('cancel')) {
+      return const Color(0xFFEF4444);
+    }
+    if (text.contains('delivery') || text.contains('fulfillment')) {
+      return const Color(0xFF0EA5E9);
+    }
+    if (text.contains('inventory')) return const Color(0xFFF59E0B);
+    if (text.contains('batch')) return const Color(0xFF10B981);
+    return const Color(0xFF6366F1);
+  }
+
+  Widget _buildActivityEmptyState(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Text(
+        'No activity has been recorded for this farm manager yet.',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: isDark ? Colors.white60 : AppColors.textSecondary,
+          fontSize: 13,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardError(bool isDark) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(
+            color: isDark ? Colors.white10 : AppColors.neutral200,
+          ),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.cloud_off_rounded,
+                color: AppColors.error, size: 42),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Farm manager dashboard could not be loaded',
+              style: AppTypography.h6.copyWith(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _dashboardError ?? 'Unknown backend error',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white60 : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            FilledButton.icon(
+              onPressed: _loadDashboardData,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimelineItem(
+      Map<String, dynamic> activity, bool isDark, bool isMobile, bool isLast) {
     final color = activity['color'] as Color;
-    
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -601,7 +1008,9 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                 height: 40,
                 margin: const EdgeInsets.symmetric(vertical: 4),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.1) : const Color(0xFFE2E8F0),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.1)
+                      : const Color(0xFFE2E8F0),
                   borderRadius: BorderRadius.circular(1),
                 ),
               ),
@@ -651,17 +1060,103 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
   // ============================================
   Widget _buildHarvestApprovalContent(bool isDark) {
     final pendingHarvests = [
-      {'id': 'H001', 'batch': 'BATCH-156', 'farm': 'Green Valley', 'crop': 'Tomatoes', 'quantity': '250', 'unit': 'kg', 'date': '2026-01-29', 'time': '08:30 AM', 'status': 'Pending', 'quality': 'A', 'moisture': '12', 'caretaker': 'John Doe', 'section': 'Section A', 'expectedYield': '280', 'actualYield': '250', 'notes': 'Ready for harvest, optimal ripeness achieved'},
-      {'id': 'H002', 'batch': 'BATCH-157', 'farm': 'Sunny Acres', 'crop': 'Lettuce', 'quantity': '180', 'unit': 'kg', 'date': '2026-01-29', 'time': '09:15 AM', 'status': 'Pending', 'quality': 'A', 'moisture': '15', 'caretaker': 'Jane Smith', 'section': 'Section B', 'expectedYield': '200', 'actualYield': '180', 'notes': 'Fresh harvest, good leaf quality'},
-      {'id': 'H003', 'batch': 'BATCH-158', 'farm': 'Fresh Farms', 'crop': 'Peppers', 'quantity': '120', 'unit': 'kg', 'date': '2026-01-30', 'time': '07:00 AM', 'status': 'Pending', 'quality': 'B', 'moisture': '10', 'caretaker': 'Mike Brown', 'section': 'Section C', 'expectedYield': '150', 'actualYield': '120', 'notes': 'Some minor blemishes, still marketable'},
-      {'id': 'H004', 'batch': 'BATCH-159', 'farm': 'Green Valley', 'crop': 'Herbs', 'quantity': '45', 'unit': 'kg', 'date': '2026-01-30', 'time': '10:00 AM', 'status': 'Pending', 'quality': 'A', 'moisture': '8', 'caretaker': 'Sarah Lee', 'section': 'Section D', 'expectedYield': '50', 'actualYield': '45', 'notes': 'Aromatic herbs, excellent quality'},
-      {'id': 'H005', 'batch': 'BATCH-160', 'farm': 'Sunny Acres', 'crop': 'Kale', 'quantity': '95', 'unit': 'kg', 'date': '2026-01-31', 'time': '06:45 AM', 'status': 'Pending', 'quality': 'A', 'moisture': '14', 'caretaker': 'Tom Wilson', 'section': 'Section A', 'expectedYield': '100', 'actualYield': '95', 'notes': 'Organic kale, premium quality'},
+      {
+        'id': 'H001',
+        'batch': 'BATCH-156',
+        'farm': 'Green Valley',
+        'crop': 'Tomatoes',
+        'quantity': '250',
+        'unit': 'kg',
+        'date': '2026-01-29',
+        'time': '08:30 AM',
+        'status': 'Pending',
+        'quality': 'A',
+        'moisture': '12',
+        'caretaker': 'John Doe',
+        'section': 'Section A',
+        'expectedYield': '280',
+        'actualYield': '250',
+        'notes': 'Ready for harvest, optimal ripeness achieved'
+      },
+      {
+        'id': 'H002',
+        'batch': 'BATCH-157',
+        'farm': 'Sunny Acres',
+        'crop': 'Lettuce',
+        'quantity': '180',
+        'unit': 'kg',
+        'date': '2026-01-29',
+        'time': '09:15 AM',
+        'status': 'Pending',
+        'quality': 'A',
+        'moisture': '15',
+        'caretaker': 'Jane Smith',
+        'section': 'Section B',
+        'expectedYield': '200',
+        'actualYield': '180',
+        'notes': 'Fresh harvest, good leaf quality'
+      },
+      {
+        'id': 'H003',
+        'batch': 'BATCH-158',
+        'farm': 'Fresh Farms',
+        'crop': 'Peppers',
+        'quantity': '120',
+        'unit': 'kg',
+        'date': '2026-01-30',
+        'time': '07:00 AM',
+        'status': 'Pending',
+        'quality': 'B',
+        'moisture': '10',
+        'caretaker': 'Mike Brown',
+        'section': 'Section C',
+        'expectedYield': '150',
+        'actualYield': '120',
+        'notes': 'Some minor blemishes, still marketable'
+      },
+      {
+        'id': 'H004',
+        'batch': 'BATCH-159',
+        'farm': 'Green Valley',
+        'crop': 'Herbs',
+        'quantity': '45',
+        'unit': 'kg',
+        'date': '2026-01-30',
+        'time': '10:00 AM',
+        'status': 'Pending',
+        'quality': 'A',
+        'moisture': '8',
+        'caretaker': 'Sarah Lee',
+        'section': 'Section D',
+        'expectedYield': '50',
+        'actualYield': '45',
+        'notes': 'Aromatic herbs, excellent quality'
+      },
+      {
+        'id': 'H005',
+        'batch': 'BATCH-160',
+        'farm': 'Sunny Acres',
+        'crop': 'Kale',
+        'quantity': '95',
+        'unit': 'kg',
+        'date': '2026-01-31',
+        'time': '06:45 AM',
+        'status': 'Pending',
+        'quality': 'A',
+        'moisture': '14',
+        'caretaker': 'Tom Wilson',
+        'section': 'Section A',
+        'expectedYield': '100',
+        'actualYield': '95',
+        'notes': 'Organic kale, premium quality'
+      },
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 600;
-        final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 900;
+        final isTablet =
+            constraints.maxWidth >= 600 && constraints.maxWidth < 900;
 
         return SingleChildScrollView(
           padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
@@ -670,17 +1165,22 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
             children: [
               // Header Bar with back button (keeping same header)
               Container(
-                padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
+                padding:
+                    EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.success, AppColors.success.withOpacity(0.8)],
+                    colors: [
+                      AppColors.success,
+                      AppColors.success.withOpacity(0.8)
+                    ],
                   ),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 ),
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () => setState(() => _currentView = 'dashboard'),
+                      onPressed: () =>
+                          setState(() => _currentView = 'dashboard'),
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                       tooltip: 'Back to Dashboard',
                       padding: EdgeInsets.zero,
@@ -691,9 +1191,11 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
                       ),
-                      child: const Icon(Icons.check_circle, color: Colors.white, size: 24),
+                      child: const Icon(Icons.check_circle,
+                          color: Colors.white, size: 24),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
@@ -702,11 +1204,15 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         children: [
                           Text(
                             'Harvest Approval',
-                            style: AppTypography.h5.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: isMobile ? 18 : 20),
+                            style: AppTypography.h5.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: isMobile ? 18 : 20),
                           ),
                           Text(
                             '${pendingHarvests.length} pending approvals',
-                            style: AppTypography.bodySmall.copyWith(color: Colors.white70),
+                            style: AppTypography.bodySmall
+                                .copyWith(color: Colors.white70),
                           ),
                         ],
                       ),
@@ -716,7 +1222,13 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Row(children: [const Icon(Icons.check_circle, color: Colors.white), const SizedBox(width: 8), Text('All ${pendingHarvests.length} harvests approved')]),
+                              content: Row(children: [
+                                const Icon(Icons.check_circle,
+                                    color: Colors.white),
+                                const SizedBox(width: 8),
+                                Text(
+                                    'All ${pendingHarvests.length} harvests approved')
+                              ]),
                               backgroundColor: Colors.white.withOpacity(0.2),
                               behavior: SnackBarBehavior.floating,
                             ),
@@ -727,16 +1239,17 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white.withOpacity(0.2),
                           foregroundColor: Colors.white,
-          ),
-        ),
-      ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
               SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
 
               // Professional Stats Cards Row
-              _buildProfessionalStatsRow(isDark, isMobile, pendingHarvests.length),
+              _buildProfessionalStatsRow(
+                  isDark, isMobile, pendingHarvests.length),
               SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
 
               // Search and Filter Bar
@@ -756,10 +1269,12 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.warning.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusFull),
                     ),
                     child: Text(
                       '${pendingHarvests.length} items',
@@ -776,10 +1291,13 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
 
               // Professional Harvest Cards - Grid on desktop, list on mobile
               if (isMobile)
-                ...pendingHarvests.map((harvest) => _buildProfessionalHarvestCard(harvest, isDark, isMobile, isTablet))
+                ...pendingHarvests.map((harvest) =>
+                    _buildProfessionalHarvestCard(
+                        harvest, isDark, isMobile, isTablet))
               else
-                _buildHarvestCardsGrid(pendingHarvests, isDark, isMobile, isTablet),
-              
+                _buildHarvestCardsGrid(
+                    pendingHarvests, isDark, isMobile, isTablet),
+
               // Mobile Approve All Button
               if (isMobile) ...[
                 const SizedBox(height: AppSpacing.lg),
@@ -787,7 +1305,12 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Row(children: [const Icon(Icons.check_circle, color: Colors.white), const SizedBox(width: 8), Text('All ${pendingHarvests.length} harvests approved')]),
+                        content: Row(children: [
+                          const Icon(Icons.check_circle, color: Colors.white),
+                          const SizedBox(width: 8),
+                          Text(
+                              'All ${pendingHarvests.length} harvests approved')
+                        ]),
                         backgroundColor: AppColors.success,
                         behavior: SnackBarBehavior.floating,
                       ),
@@ -800,7 +1323,9 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     minimumSize: const Size(double.infinity, 52),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd)),
                   ),
                 ),
               ],
@@ -811,12 +1336,37 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildProfessionalStatsRow(bool isDark, bool isMobile, int pendingCount) {
+  Widget _buildProfessionalStatsRow(
+      bool isDark, bool isMobile, int pendingCount) {
     final stats = [
-      {'icon': Icons.pending_actions, 'label': 'Pending', 'value': '$pendingCount', 'color': AppColors.warning, 'trend': '+2 today'},
-      {'icon': Icons.today, 'label': 'Due Today', 'value': '2', 'color': AppColors.info, 'trend': 'On track'},
-      {'icon': Icons.check_circle_outline, 'label': 'Approved', 'value': '18', 'color': AppColors.success, 'trend': 'This week'},
-      {'icon': Icons.inventory_2, 'label': 'Total Yield', 'value': '690 kg', 'color': AppColors.primary, 'trend': '+12% vs last'},
+      {
+        'icon': Icons.pending_actions,
+        'label': 'Pending',
+        'value': '$pendingCount',
+        'color': AppColors.warning,
+        'trend': '+2 today'
+      },
+      {
+        'icon': Icons.today,
+        'label': 'Due Today',
+        'value': '2',
+        'color': AppColors.info,
+        'trend': 'On track'
+      },
+      {
+        'icon': Icons.check_circle_outline,
+        'label': 'Approved',
+        'value': '18',
+        'color': AppColors.success,
+        'trend': 'This week'
+      },
+      {
+        'icon': Icons.inventory_2,
+        'label': 'Total Yield',
+        'value': '690 kg',
+        'color': AppColors.primary,
+        'trend': '+12% vs last'
+      },
     ];
 
     if (isMobile) {
@@ -827,41 +1377,53 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
         mainAxisSpacing: AppSpacing.sm,
         crossAxisSpacing: AppSpacing.sm,
         childAspectRatio: 1.8,
-        children: stats.map((stat) => _buildProfessionalStatCard(stat, isDark, isMobile)).toList(),
+        children: stats
+            .map((stat) => _buildProfessionalStatCard(stat, isDark, isMobile))
+            .toList(),
       );
     }
 
     return Row(
-      children: stats.map((stat) => Expanded(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: _buildProfessionalStatCard(stat, isDark, isMobile),
-        ),
-      )).toList(),
+      children: stats
+          .map((stat) => Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: _buildProfessionalStatCard(stat, isDark, isMobile),
+                ),
+              ))
+          .toList(),
     );
   }
 
-  Widget _buildProfessionalStatCard(Map<String, dynamic> stat, bool isDark, bool isMobile) {
+  Widget _buildProfessionalStatCard(
+      Map<String, dynamic> stat, bool isDark, bool isMobile) {
     final color = stat['color'] as Color;
     return Container(
       padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
-        boxShadow: isDark ? null : [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
-        ],
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2)),
+              ],
       ),
       child: Row(
-      children: [
+        children: [
           Container(
             padding: EdgeInsets.all(isMobile ? 8 : 10),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             ),
-            child: Icon(stat['icon'] as IconData, color: color, size: isMobile ? 18 : 22),
+            child: Icon(stat['icon'] as IconData,
+                color: color, size: isMobile ? 18 : 22),
           ),
           SizedBox(width: isMobile ? AppSpacing.sm : AppSpacing.md),
           Expanded(
@@ -900,103 +1462,142 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
       ),
       child: isMobile
-        ? Column(
-            children: [
-              // Search Field
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search batches, crops, farms...',
-                  hintStyle: TextStyle(color: isDark ? Colors.white38 : AppColors.textSecondary, fontSize: 13),
-                  prefixIcon: Icon(Icons.search, color: isDark ? Colors.white38 : AppColors.textSecondary, size: 20),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    borderSide: BorderSide(color: isDark ? Colors.white10 : AppColors.neutral300),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    borderSide: BorderSide(color: isDark ? Colors.white10 : AppColors.neutral300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    borderSide: const BorderSide(color: AppColors.success),
-                  ),
-                  filled: true,
-                  fillColor: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                  isDense: true,
-                ),
-                style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary, fontSize: 13),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              // Filter Chips Row
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildFilterChip('All', true, isDark),
-                    _buildFilterChip('Today', false, isDark),
-                    _buildFilterChip('A Grade', false, isDark),
-                    _buildFilterChip('B Grade', false, isDark),
-                  ],
-                ),
-              ),
-            ],
-          )
-        : Row(
-            children: [
-              // Search Field
-              Expanded(
-                flex: 2,
-                child: TextField(
+          ? Column(
+              children: [
+                // Search Field
+                TextField(
                   decoration: InputDecoration(
                     hintText: 'Search batches, crops, farms...',
-                    hintStyle: TextStyle(color: isDark ? Colors.white38 : AppColors.textSecondary, fontSize: 13),
-                    prefixIcon: Icon(Icons.search, color: isDark ? Colors.white38 : AppColors.textSecondary, size: 20),
+                    hintStyle: TextStyle(
+                        color:
+                            isDark ? Colors.white38 : AppColors.textSecondary,
+                        fontSize: 13),
+                    prefixIcon: Icon(Icons.search,
+                        color:
+                            isDark ? Colors.white38 : AppColors.textSecondary,
+                        size: 20),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      borderSide: BorderSide(color: isDark ? Colors.white10 : AppColors.neutral300),
+                      borderSide: BorderSide(
+                          color:
+                              isDark ? Colors.white10 : AppColors.neutral300),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      borderSide: BorderSide(color: isDark ? Colors.white10 : AppColors.neutral300),
+                      borderSide: BorderSide(
+                          color:
+                              isDark ? Colors.white10 : AppColors.neutral300),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                       borderSide: const BorderSide(color: AppColors.success),
                     ),
                     filled: true,
-                    fillColor: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                    fillColor: isDark
+                        ? Colors.white.withOpacity(0.03)
+                        : AppColors.neutral50,
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 12),
                     isDense: true,
                   ),
-                  style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary, fontSize: 13),
+                  style: TextStyle(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      fontSize: 13),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              // Filter Chips
-              _buildFilterChip('All', true, isDark),
-              _buildFilterChip('Today', false, isDark),
-              _buildFilterChip('A Grade', false, isDark),
-              _buildFilterChip('B Grade', false, isDark),
-              const SizedBox(width: AppSpacing.sm),
-              // Sort Button
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: isDark ? Colors.white10 : AppColors.neutral300),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                const SizedBox(height: AppSpacing.sm),
+                // Filter Chips Row
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip('All', true, isDark),
+                      _buildFilterChip('Today', false, isDark),
+                      _buildFilterChip('A Grade', false, isDark),
+                      _buildFilterChip('B Grade', false, isDark),
+                    ],
+                  ),
                 ),
-                child: IconButton(
-                  onPressed: () {},
-                  icon: Icon(Icons.sort, color: isDark ? Colors.white54 : AppColors.textSecondary, size: 20),
-                  tooltip: 'Sort',
-                  constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              ],
+            )
+          : Row(
+              children: [
+                // Search Field
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search batches, crops, farms...',
+                      hintStyle: TextStyle(
+                          color:
+                              isDark ? Colors.white38 : AppColors.textSecondary,
+                          fontSize: 13),
+                      prefixIcon: Icon(Icons.search,
+                          color:
+                              isDark ? Colors.white38 : AppColors.textSecondary,
+                          size: 20),
+                      border: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
+                        borderSide: BorderSide(
+                            color:
+                                isDark ? Colors.white10 : AppColors.neutral300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
+                        borderSide: BorderSide(
+                            color:
+                                isDark ? Colors.white10 : AppColors.neutral300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
+                        borderSide: const BorderSide(color: AppColors.success),
+                      ),
+                      filled: true,
+                      fillColor: isDark
+                          ? Colors.white.withOpacity(0.03)
+                          : AppColors.neutral50,
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 12),
+                      isDense: true,
+                    ),
+                    style: TextStyle(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontSize: 13),
+                  ),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: AppSpacing.md),
+                // Filter Chips
+                _buildFilterChip('All', true, isDark),
+                _buildFilterChip('Today', false, isDark),
+                _buildFilterChip('A Grade', false, isDark),
+                _buildFilterChip('B Grade', false, isDark),
+                const SizedBox(width: AppSpacing.sm),
+                // Sort Button
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: isDark ? Colors.white10 : AppColors.neutral300),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                  ),
+                  child: IconButton(
+                    onPressed: () {},
+                    icon: Icon(Icons.sort,
+                        color:
+                            isDark ? Colors.white54 : AppColors.textSecondary,
+                        size: 20),
+                    tooltip: 'Sort',
+                    constraints:
+                        const BoxConstraints(minWidth: 40, minHeight: 40),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
@@ -1004,10 +1605,16 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: FilterChip(
-        label: Text(label, style: TextStyle(fontSize: 12, color: isSelected ? Colors.white : (isDark ? Colors.white70 : AppColors.textSecondary))),
+        label: Text(label,
+            style: TextStyle(
+                fontSize: 12,
+                color: isSelected
+                    ? Colors.white
+                    : (isDark ? Colors.white70 : AppColors.textSecondary))),
         selected: isSelected,
         onSelected: (v) {},
-        backgroundColor: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral100,
+        backgroundColor:
+            isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral100,
         selectedColor: AppColors.success,
         checkmarkColor: Colors.white,
         side: BorderSide.none,
@@ -1018,22 +1625,23 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildHarvestCardsGrid(List<Map<String, String>> harvests, bool isDark, bool isMobile, bool isTablet) {
+  Widget _buildHarvestCardsGrid(List<Map<String, String>> harvests, bool isDark,
+      bool isMobile, bool isTablet) {
     // Create rows of 2 cards each
     final List<Widget> rows = [];
     for (int i = 0; i < harvests.length; i += 2) {
       final List<Widget> rowChildren = [];
-      
+
       // First card
       rowChildren.add(
         Expanded(
           child: _buildCompactHarvestCard(harvests[i], isDark),
         ),
       );
-      
+
       // Add spacing
       rowChildren.add(const SizedBox(width: 16));
-      
+
       // Second card (if exists)
       if (i + 1 < harvests.length) {
         rowChildren.add(
@@ -1045,7 +1653,7 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
         // Empty spacer for odd number of cards
         rowChildren.add(const Expanded(child: SizedBox()));
       }
-      
+
       rows.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
@@ -1056,22 +1664,32 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
         ),
       );
     }
-    
+
     return Column(children: rows);
   }
 
   Widget _buildCompactHarvestCard(Map<String, String> harvest, bool isDark) {
-    final qualityColor = harvest['quality'] == 'A' ? AppColors.success : AppColors.warning;
-    final yieldPercent = (int.parse(harvest['actualYield']!) / int.parse(harvest['expectedYield']!) * 100).round();
-    
+    final qualityColor =
+        harvest['quality'] == 'A' ? AppColors.success : AppColors.warning;
+    final yieldPercent = (int.parse(harvest['actualYield']!) /
+            int.parse(harvest['expectedYield']!) *
+            100)
+        .round();
+
     return Container(
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
-        boxShadow: isDark ? null : [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4)),
-        ],
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4)),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1079,8 +1697,11 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
           // Card Header with Status Strip
           Container(
             decoration: const BoxDecoration(
-              border: Border(left: BorderSide(color: AppColors.warning, width: 4)),
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(AppSpacing.radiusLg), topRight: Radius.circular(AppSpacing.radiusLg)),
+              border:
+                  Border(left: BorderSide(color: AppColors.warning, width: 4)),
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppSpacing.radiusLg),
+                  topRight: Radius.circular(AppSpacing.radiusLg)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -1095,11 +1716,15 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [AppColors.success.withOpacity(0.2), AppColors.success.withOpacity(0.1)],
+                        colors: [
+                          AppColors.success.withOpacity(0.2),
+                          AppColors.success.withOpacity(0.1)
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
-                    child: const Icon(Icons.eco, color: AppColors.success, size: 22),
+                    child: const Icon(Icons.eco,
+                        color: AppColors.success, size: 22),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   // Batch Details
@@ -1115,20 +1740,26 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
-                                  color: isDark ? Colors.white : AppColors.textPrimary,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: qualityColor.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 'Grade ${harvest['quality']}',
-                                style: TextStyle(fontSize: 9, color: qualityColor, fontWeight: FontWeight.w600),
+                                style: TextStyle(
+                                    fontSize: 9,
+                                    color: qualityColor,
+                                    fontWeight: FontWeight.w600),
                               ),
                             ),
                           ],
@@ -1136,7 +1767,11 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         const SizedBox(height: 2),
                         Text(
                           '${harvest['batch']} • ${harvest['farm']}',
-                          style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : AppColors.textSecondary),
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: isDark
+                                  ? Colors.white54
+                                  : AppColors.textSecondary),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -1151,15 +1786,28 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
+              color:
+                  isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
             ),
             child: Row(
               children: [
-                Expanded(child: _buildCompactMetricWithLabel(Icons.scale, 'Quantity', '${harvest['quantity']} ${harvest['unit']}', isDark)),
-                Container(width: 1, height: 36, color: isDark ? Colors.white10 : AppColors.neutral200),
-                Expanded(child: _buildCompactMetricWithLabel(Icons.water_drop, 'Moisture', '${harvest['moisture']}%', isDark)),
-                Container(width: 1, height: 36, color: isDark ? Colors.white10 : AppColors.neutral200),
-                Expanded(child: _buildCompactMetricWithLabel(Icons.calendar_today, 'Harvest Date', harvest['date']!, isDark)),
+                Expanded(
+                    child: _buildCompactMetricWithLabel(Icons.scale, 'Quantity',
+                        '${harvest['quantity']} ${harvest['unit']}', isDark)),
+                Container(
+                    width: 1,
+                    height: 36,
+                    color: isDark ? Colors.white10 : AppColors.neutral200),
+                Expanded(
+                    child: _buildCompactMetricWithLabel(Icons.water_drop,
+                        'Moisture', '${harvest['moisture']}%', isDark)),
+                Container(
+                    width: 1,
+                    height: 36,
+                    color: isDark ? Colors.white10 : AppColors.neutral200),
+                Expanded(
+                    child: _buildCompactMetricWithLabel(Icons.calendar_today,
+                        'Harvest Date', harvest['date']!, isDark)),
               ],
             ),
           ),
@@ -1175,7 +1823,11 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                   children: [
                     Text(
                       'Yield: $yieldPercent%',
-                      style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : AppColors.textSecondary),
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: isDark
+                              ? Colors.white54
+                              : AppColors.textSecondary),
                     ),
                     Row(
                       children: [
@@ -1183,17 +1835,25 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                           radius: 14,
                           backgroundColor: AppColors.primary.withOpacity(0.15),
                           child: Text(
-                            harvest['caretaker']!.split(' ').map((n) => n[0]).take(2).join(),
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary),
+                            harvest['caretaker']!
+                                .split(' ')
+                                .map((n) => n[0])
+                                .take(2)
+                                .join(),
+                            style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary),
                           ),
                         ),
                         const SizedBox(width: 6),
                         Text(
                           harvest['caretaker']!,
                           style: TextStyle(
-                            fontSize: 12, 
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white70 : AppColors.textPrimary,
+                            color:
+                                isDark ? Colors.white70 : AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -1205,8 +1865,11 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                   borderRadius: BorderRadius.circular(3),
                   child: LinearProgressIndicator(
                     value: yieldPercent / 100,
-                    backgroundColor: isDark ? Colors.white10 : AppColors.neutral200,
-                    valueColor: AlwaysStoppedAnimation(yieldPercent >= 90 ? AppColors.success : AppColors.warning),
+                    backgroundColor:
+                        isDark ? Colors.white10 : AppColors.neutral200,
+                    valueColor: AlwaysStoppedAnimation(yieldPercent >= 90
+                        ? AppColors.success
+                        : AppColors.warning),
                     minHeight: 5,
                   ),
                 ),
@@ -1218,7 +1881,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.02) : AppColors.neutral50,
+              color:
+                  isDark ? Colors.white.withOpacity(0.02) : AppColors.neutral50,
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(AppSpacing.radiusLg),
                 bottomRight: Radius.circular(AppSpacing.radiusLg),
@@ -1230,25 +1894,36 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                 Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => _showHarvestDetailsModal(context, harvest, isDark),
+                    onTap: () =>
+                        _showHarvestDetailsModal(context, harvest, isDark),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
-                        border: Border.all(color: isDark ? Colors.white24 : AppColors.neutral300),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        border: Border.all(
+                            color:
+                                isDark ? Colors.white24 : AppColors.neutral300),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.visibility_outlined, size: 16, color: isDark ? Colors.white70 : AppColors.textSecondary),
+                          Icon(Icons.visibility_outlined,
+                              size: 16,
+                              color: isDark
+                                  ? Colors.white70
+                                  : AppColors.textSecondary),
                           const SizedBox(width: 4),
                           Text(
                             'Details',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: isDark ? Colors.white70 : AppColors.textSecondary,
+                              color: isDark
+                                  ? Colors.white70
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -1265,7 +1940,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Row(children: [
-                            const Icon(Icons.cancel, color: Colors.white, size: 16),
+                            const Icon(Icons.cancel,
+                                color: Colors.white, size: 16),
                             const SizedBox(width: 8),
                             Text('${harvest['batch']} rejected'),
                           ]),
@@ -1276,15 +1952,19 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                     },
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.error.withOpacity(0.5)),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        border:
+                            Border.all(color: AppColors.error.withOpacity(0.5)),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.close_rounded, size: 16, color: AppColors.error),
+                          Icon(Icons.close_rounded,
+                              size: 16, color: AppColors.error),
                           const SizedBox(width: 4),
                           Text(
                             'Reject',
@@ -1308,7 +1988,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Row(children: [
-                            const Icon(Icons.check_circle, color: Colors.white, size: 16),
+                            const Icon(Icons.check_circle,
+                                color: Colors.white, size: 16),
                             const SizedBox(width: 8),
                             Text('${harvest['batch']} approved'),
                           ]),
@@ -1319,12 +2000,17 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                     },
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [AppColors.success, AppColors.success.withOpacity(0.85)],
+                          colors: [
+                            AppColors.success,
+                            AppColors.success.withOpacity(0.85)
+                          ],
                         ),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.success.withOpacity(0.3),
@@ -1336,7 +2022,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: const [
-                          Icon(Icons.check_rounded, size: 16, color: Colors.white),
+                          Icon(Icons.check_rounded,
+                              size: 16, color: Colors.white),
                           SizedBox(width: 4),
                           Text(
                             'Approve',
@@ -1363,17 +2050,22 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 12, color: isDark ? Colors.white38 : AppColors.textSecondary),
+        Icon(icon,
+            size: 12, color: isDark ? Colors.white38 : AppColors.textSecondary),
         const SizedBox(width: 4),
         Text(
           value,
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: isDark ? Colors.white70 : AppColors.textPrimary),
+          style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.white70 : AppColors.textPrimary),
         ),
       ],
     );
   }
 
-  Widget _buildCompactMetricWithLabel(IconData icon, String label, String value, bool isDark) {
+  Widget _buildCompactMetricWithLabel(
+      IconData icon, String label, String value, bool isDark) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1381,12 +2073,14 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: isDark ? Colors.white38 : AppColors.textSecondary),
+            Icon(icon,
+                size: 14,
+                color: isDark ? Colors.white38 : AppColors.textSecondary),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 10, 
+                fontSize: 10,
                 color: isDark ? Colors.white38 : AppColors.textSecondary,
               ),
             ),
@@ -1396,8 +2090,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
         Text(
           value,
           style: TextStyle(
-            fontSize: 13, 
-            fontWeight: FontWeight.w600, 
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
           textAlign: TextAlign.center,
@@ -1406,10 +2100,11 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  void _showHarvestDetailsModal(BuildContext context, Map<String, String> harvest, bool isDark) {
+  void _showHarvestDetailsModal(
+      BuildContext context, Map<String, String> harvest, bool isDark) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    
+
     // Extended harvest data with nursery info
     final harvestDetails = {
       ...harvest,
@@ -1463,12 +2158,17 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
             children: [
               // Modal Header
               Container(
-                padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
+                padding:
+                    EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.success, AppColors.success.withOpacity(0.8)],
+                    colors: [
+                      AppColors.success,
+                      AppColors.success.withOpacity(0.8)
+                    ],
                   ),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(AppSpacing.radiusXl)),
                 ),
                 child: Row(
                   children: [
@@ -1476,9 +2176,11 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
                       ),
-                      child: const Icon(Icons.eco, color: Colors.white, size: 28),
+                      child:
+                          const Icon(Icons.eco, color: Colors.white, size: 28),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
@@ -1497,20 +2199,26 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                           Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   harvestDetails['batch']!,
-                                  style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w500),
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500),
                                 ),
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 harvestDetails['farm']!,
-                                style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.8)),
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white.withOpacity(0.8)),
                               ),
                             ],
                           ),
@@ -1528,13 +2236,15 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
               // Modal Content
               Flexible(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
+                  padding:
+                      EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Quick Stats Row
                       _buildQuickStatsRow(harvestDetails, isDark, isMobile),
-                      SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+                      SizedBox(
+                          height: isMobile ? AppSpacing.md : AppSpacing.lg),
 
                       // Seed & Nursery Section
                       _buildDetailSection(
@@ -1542,17 +2252,48 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         Icons.grass,
                         AppColors.success,
                         [
-                          _buildDetailRow('Seed Manufacturer', harvestDetails['seedManufacturer']!, Icons.factory, isDark, isMobile),
-                          _buildDetailRow('Seed Variety', harvestDetails['seedVariety']!, Icons.eco, isDark, isMobile),
-                          _buildDetailRow('Seed Lot Number', harvestDetails['seedLot']!, Icons.numbers, isDark, isMobile),
-                          _buildDetailRow('Nursery Date', harvestDetails['nurseryDate']!, Icons.calendar_today, isDark, isMobile),
-                          _buildDetailRow('Seeds Nursed', harvestDetails['seedsNursed']!, Icons.grain, isDark, isMobile),
-                          _buildDetailRow('Germination Rate', harvestDetails['germinationRate']!, Icons.trending_up, isDark, isMobile),
+                          _buildDetailRow(
+                              'Seed Manufacturer',
+                              harvestDetails['seedManufacturer']!,
+                              Icons.factory,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Seed Variety',
+                              harvestDetails['seedVariety']!,
+                              Icons.eco,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Seed Lot Number',
+                              harvestDetails['seedLot']!,
+                              Icons.numbers,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Nursery Date',
+                              harvestDetails['nurseryDate']!,
+                              Icons.calendar_today,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Seeds Nursed',
+                              harvestDetails['seedsNursed']!,
+                              Icons.grain,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Germination Rate',
+                              harvestDetails['germinationRate']!,
+                              Icons.trending_up,
+                              isDark,
+                              isMobile),
                         ],
                         isDark,
                         isMobile,
                       ),
-                      SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+                      SizedBox(
+                          height: isMobile ? AppSpacing.md : AppSpacing.lg),
 
                       // Transplant Section
                       _buildDetailSection(
@@ -1560,15 +2301,36 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         Icons.move_down,
                         AppColors.info,
                         [
-                          _buildDetailRow('Transplant Date', harvestDetails['transplantDate']!, Icons.calendar_month, isDark, isMobile),
-                          _buildDetailRow('Amount Transplanted', harvestDetails['transplantAmount']!, Icons.format_list_numbered, isDark, isMobile),
-                          _buildDetailRow('Plant Spacing', harvestDetails['plantSpacing']!, Icons.space_bar, isDark, isMobile),
-                          _buildDetailRow('Growth Duration', harvestDetails['growthDuration']!, Icons.timer, isDark, isMobile),
+                          _buildDetailRow(
+                              'Transplant Date',
+                              harvestDetails['transplantDate']!,
+                              Icons.calendar_month,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Amount Transplanted',
+                              harvestDetails['transplantAmount']!,
+                              Icons.format_list_numbered,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Plant Spacing',
+                              harvestDetails['plantSpacing']!,
+                              Icons.space_bar,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Growth Duration',
+                              harvestDetails['growthDuration']!,
+                              Icons.timer,
+                              isDark,
+                              isMobile),
                         ],
                         isDark,
                         isMobile,
                       ),
-                      SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+                      SizedBox(
+                          height: isMobile ? AppSpacing.md : AppSpacing.lg),
 
                       // Harvest Section
                       _buildDetailSection(
@@ -1576,17 +2338,44 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         Icons.agriculture,
                         AppColors.warning,
                         [
-                          _buildDetailRow('Harvest Date', harvestDetails['date']!, Icons.event_available, isDark, isMobile),
-                          _buildDetailRow('Harvest Time', harvestDetails['time']!, Icons.access_time, isDark, isMobile),
-                          _buildDetailRow('Harvested Amount', '${harvestDetails['quantity']} ${harvestDetails['unit']}', Icons.scale, isDark, isMobile),
-                          _buildDetailRow('Harvested Pieces', harvestDetails['harvestPcs']!, Icons.category, isDark, isMobile),
-                          _buildDetailRow('Average Weight', harvestDetails['avgWeight']!, Icons.monitor_weight, isDark, isMobile),
-                          _buildDetailRow('Wastage', harvestDetails['wastage']!, Icons.delete_outline, isDark, isMobile),
+                          _buildDetailRow(
+                              'Harvest Date',
+                              harvestDetails['date']!,
+                              Icons.event_available,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Harvest Time',
+                              harvestDetails['time']!,
+                              Icons.access_time,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Harvested Amount',
+                              '${harvestDetails['quantity']} ${harvestDetails['unit']}',
+                              Icons.scale,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Harvested Pieces',
+                              harvestDetails['harvestPcs']!,
+                              Icons.category,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow(
+                              'Average Weight',
+                              harvestDetails['avgWeight']!,
+                              Icons.monitor_weight,
+                              isDark,
+                              isMobile),
+                          _buildDetailRow('Wastage', harvestDetails['wastage']!,
+                              Icons.delete_outline, isDark, isMobile),
                         ],
                         isDark,
                         isMobile,
                       ),
-                      SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+                      SizedBox(
+                          height: isMobile ? AppSpacing.md : AppSpacing.lg),
 
                       // Caretaker & Notes
                       _buildCaretakerSection(harvestDetails, isDark, isMobile),
@@ -1597,10 +2386,14 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
 
               // Modal Footer
               Container(
-                padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
+                padding:
+                    EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppSpacing.radiusXl)),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.03)
+                      : AppColors.neutral50,
+                  borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(AppSpacing.radiusXl)),
                 ),
                 child: Row(
                   children: [
@@ -1608,11 +2401,17 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                     OutlinedButton.icon(
                       onPressed: () {},
                       icon: Icon(Icons.print, size: isMobile ? 16 : 18),
-                      label: Text('Print', style: TextStyle(fontSize: isMobile ? 12 : 13)),
+                      label: Text('Print',
+                          style: TextStyle(fontSize: isMobile ? 12 : 13)),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: isDark ? Colors.white70 : AppColors.textSecondary,
-                        side: BorderSide(color: isDark ? Colors.white24 : AppColors.neutral300),
-                        padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 10 : 12),
+                        foregroundColor:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
+                        side: BorderSide(
+                            color:
+                                isDark ? Colors.white24 : AppColors.neutral300),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 12 : 16,
+                            vertical: isMobile ? 10 : 12),
                       ),
                     ),
                     const Spacer(),
@@ -1623,7 +2422,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Row(children: [
-                              const Icon(Icons.cancel, color: Colors.white, size: 16),
+                              const Icon(Icons.cancel,
+                                  color: Colors.white, size: 16),
                               const SizedBox(width: 8),
                               Text('${harvestDetails['batch']} rejected'),
                             ]),
@@ -1633,11 +2433,14 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         );
                       },
                       icon: Icon(Icons.close, size: isMobile ? 16 : 18),
-                      label: Text('Reject', style: TextStyle(fontSize: isMobile ? 12 : 13)),
+                      label: Text('Reject',
+                          style: TextStyle(fontSize: isMobile ? 12 : 13)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.error,
                         side: const BorderSide(color: AppColors.error),
-                        padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 10 : 12),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 12 : 16,
+                            vertical: isMobile ? 10 : 12),
                       ),
                     ),
                     SizedBox(width: isMobile ? AppSpacing.sm : AppSpacing.md),
@@ -1648,7 +2451,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Row(children: [
-                              const Icon(Icons.check_circle, color: Colors.white, size: 16),
+                              const Icon(Icons.check_circle,
+                                  color: Colors.white, size: 16),
                               const SizedBox(width: 8),
                               Text('${harvestDetails['batch']} approved'),
                             ]),
@@ -1658,11 +2462,14 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         );
                       },
                       icon: Icon(Icons.check, size: isMobile ? 16 : 18),
-                      label: Text('Approve', style: TextStyle(fontSize: isMobile ? 12 : 13)),
+                      label: Text('Approve',
+                          style: TextStyle(fontSize: isMobile ? 12 : 13)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.success,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20, vertical: isMobile ? 10 : 12),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 16 : 20,
+                            vertical: isMobile ? 10 : 12),
                         elevation: 0,
                       ),
                     ),
@@ -1676,12 +2483,33 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildQuickStatsRow(Map<String, String> harvest, bool isDark, bool isMobile) {
+  Widget _buildQuickStatsRow(
+      Map<String, String> harvest, bool isDark, bool isMobile) {
     final stats = [
-      {'icon': Icons.grain, 'label': 'Seeds Nursed', 'value': harvest['seedsNursed']!, 'color': AppColors.success},
-      {'icon': Icons.move_down, 'label': 'Transplanted', 'value': harvest['transplantAmount']!, 'color': AppColors.info},
-      {'icon': Icons.category, 'label': 'Harvested Pcs', 'value': harvest['harvestPcs']!, 'color': AppColors.warning},
-      {'icon': Icons.trending_up, 'label': 'Germ. Rate', 'value': harvest['germinationRate']!, 'color': AppColors.primary},
+      {
+        'icon': Icons.grain,
+        'label': 'Seeds Nursed',
+        'value': harvest['seedsNursed']!,
+        'color': AppColors.success
+      },
+      {
+        'icon': Icons.move_down,
+        'label': 'Transplanted',
+        'value': harvest['transplantAmount']!,
+        'color': AppColors.info
+      },
+      {
+        'icon': Icons.category,
+        'label': 'Harvested Pcs',
+        'value': harvest['harvestPcs']!,
+        'color': AppColors.warning
+      },
+      {
+        'icon': Icons.trending_up,
+        'label': 'Germ. Rate',
+        'value': harvest['germinationRate']!,
+        'color': AppColors.primary
+      },
     ];
 
     if (isMobile) {
@@ -1692,21 +2520,25 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
         childAspectRatio: 2.2,
-        children: stats.map((s) => _buildQuickStatCard(s, isDark, isMobile)).toList(),
+        children:
+            stats.map((s) => _buildQuickStatCard(s, isDark, isMobile)).toList(),
       );
     }
 
     return Row(
-      children: stats.map((s) => Expanded(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: _buildQuickStatCard(s, isDark, isMobile),
-        ),
-      )).toList(),
+      children: stats
+          .map((s) => Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: _buildQuickStatCard(s, isDark, isMobile),
+                ),
+              ))
+          .toList(),
     );
   }
 
-  Widget _buildQuickStatCard(Map<String, dynamic> stat, bool isDark, bool isMobile) {
+  Widget _buildQuickStatCard(
+      Map<String, dynamic> stat, bool isDark, bool isMobile) {
     final color = stat['color'] as Color;
     return Container(
       padding: EdgeInsets.all(isMobile ? 10 : 12),
@@ -1723,7 +2555,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
               color: color.withOpacity(0.15),
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             ),
-            child: Icon(stat['icon'] as IconData, size: isMobile ? 16 : 18, color: color),
+            child: Icon(stat['icon'] as IconData,
+                size: isMobile ? 16 : 18, color: color),
           ),
           SizedBox(width: isMobile ? 8 : 10),
           Expanded(
@@ -1756,12 +2589,14 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildDetailSection(String title, IconData icon, Color color, List<Widget> children, bool isDark, bool isMobile) {
+  Widget _buildDetailSection(String title, IconData icon, Color color,
+      List<Widget> children, bool isDark, bool isMobile) {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.03) : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1771,7 +2606,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
             padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
             decoration: BoxDecoration(
               color: color.withOpacity(0.08),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusMd)),
+              borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppSpacing.radiusMd)),
             ),
             child: Row(
               children: [
@@ -1792,24 +2628,29 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
           Padding(
             padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
             child: isMobile
-              ? Column(children: children)
-              : Wrap(
-                  spacing: 16,
-                  runSpacing: 8,
-                  children: children.map((c) => SizedBox(width: 200, child: c)).toList(),
-                ),
+                ? Column(children: children)
+                : Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
+                    children: children
+                        .map((c) => SizedBox(width: 200, child: c))
+                        .toList(),
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon, bool isDark, bool isMobile) {
+  Widget _buildDetailRow(
+      String label, String value, IconData icon, bool isDark, bool isMobile) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 14, color: isDark ? Colors.white38 : AppColors.textSecondary),
+          Icon(icon,
+              size: 14,
+              color: isDark ? Colors.white38 : AppColors.textSecondary),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -1839,7 +2680,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildCaretakerSection(Map<String, String> harvest, bool isDark, bool isMobile) {
+  Widget _buildCaretakerSection(
+      Map<String, String> harvest, bool isDark, bool isMobile) {
     return Container(
       padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
       decoration: BoxDecoration(
@@ -1925,27 +2767,43 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildProfessionalHarvestCard(Map<String, String> harvest, bool isDark, bool isMobile, bool isTablet) {
-    final qualityColor = harvest['quality'] == 'A' ? AppColors.success : AppColors.warning;
-    final yieldPercent = (int.parse(harvest['actualYield']!) / int.parse(harvest['expectedYield']!) * 100).round();
-    
+  Widget _buildProfessionalHarvestCard(
+      Map<String, String> harvest, bool isDark, bool isMobile, bool isTablet) {
+    final qualityColor =
+        harvest['quality'] == 'A' ? AppColors.success : AppColors.warning;
+    final yieldPercent = (int.parse(harvest['actualYield']!) /
+            int.parse(harvest['expectedYield']!) *
+            100)
+        .round();
+
     return Container(
-      margin: isMobile ? const EdgeInsets.only(bottom: AppSpacing.md) : EdgeInsets.zero,
+      margin: isMobile
+          ? const EdgeInsets.only(bottom: AppSpacing.md)
+          : EdgeInsets.zero,
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
-        boxShadow: isDark ? null : [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4)),
-        ],
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4)),
+              ],
       ),
       child: Column(
         children: [
           // Card Header with Status Strip
           Container(
             decoration: BoxDecoration(
-              border: Border(left: BorderSide(color: AppColors.warning, width: 4)),
-              borderRadius: const BorderRadius.only(topLeft: Radius.circular(AppSpacing.radiusLg), topRight: Radius.circular(AppSpacing.radiusLg)),
+              border:
+                  Border(left: BorderSide(color: AppColors.warning, width: 4)),
+              borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(AppSpacing.radiusLg),
+                  topRight: Radius.circular(AppSpacing.radiusLg)),
             ),
             child: Padding(
               padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
@@ -1963,11 +2821,16 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [AppColors.success.withOpacity(0.2), AppColors.success.withOpacity(0.1)],
+                            colors: [
+                              AppColors.success.withOpacity(0.2),
+                              AppColors.success.withOpacity(0.1)
+                            ],
                           ),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
                         ),
-                        child: Icon(Icons.eco, color: AppColors.success, size: isMobile ? 24 : 28),
+                        child: Icon(Icons.eco,
+                            color: AppColors.success, size: isMobile ? 24 : 28),
                       ),
                       SizedBox(width: isMobile ? AppSpacing.sm : AppSpacing.md),
                       // Batch Details
@@ -1982,19 +2845,25 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                                   style: TextStyle(
                                     fontSize: isMobile ? 16 : 18,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : AppColors.textPrimary,
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: qualityColor.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
                                     'Grade ${harvest['quality']}',
-                                    style: TextStyle(fontSize: 10, color: qualityColor, fontWeight: FontWeight.w600),
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        color: qualityColor,
+                                        fontWeight: FontWeight.w600),
                                   ),
                                 ),
                               ],
@@ -2002,19 +2871,36 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                             const SizedBox(height: 4),
                             Row(
                               children: [
-                                Icon(Icons.tag, size: 12, color: isDark ? Colors.white38 : AppColors.textSecondary),
+                                Icon(Icons.tag,
+                                    size: 12,
+                                    color: isDark
+                                        ? Colors.white38
+                                        : AppColors.textSecondary),
                                 const SizedBox(width: 4),
                                 Text(
                                   harvest['batch']!,
-                                  style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : AppColors.textSecondary, fontWeight: FontWeight.w500),
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: isDark
+                                          ? Colors.white54
+                                          : AppColors.textSecondary,
+                                      fontWeight: FontWeight.w500),
                                 ),
                                 const SizedBox(width: 12),
-                                Icon(Icons.location_on_outlined, size: 12, color: isDark ? Colors.white38 : AppColors.textSecondary),
+                                Icon(Icons.location_on_outlined,
+                                    size: 12,
+                                    color: isDark
+                                        ? Colors.white38
+                                        : AppColors.textSecondary),
                                 const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
                                     '${harvest['farm']} • ${harvest['section']}',
-                                    style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : AppColors.textSecondary),
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark
+                                            ? Colors.white54
+                                            : AppColors.textSecondary),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
@@ -2025,11 +2911,14 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                       ),
                       // Status Badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: AppColors.warning.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                          border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusFull),
+                          border: Border.all(
+                              color: AppColors.warning.withOpacity(0.3)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -2037,12 +2926,17 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                             Container(
                               width: 6,
                               height: 6,
-                              decoration: const BoxDecoration(color: AppColors.warning, shape: BoxShape.circle),
+                              decoration: const BoxDecoration(
+                                  color: AppColors.warning,
+                                  shape: BoxShape.circle),
                             ),
                             const SizedBox(width: 6),
                             Text(
                               harvest['status']!,
-                              style: const TextStyle(fontSize: 11, color: AppColors.warning, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.warning,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -2056,39 +2950,79 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
 
           // Metrics Section
           Container(
-            padding: EdgeInsets.symmetric(horizontal: isMobile ? AppSpacing.md : AppSpacing.lg, vertical: isMobile ? AppSpacing.sm : AppSpacing.md),
+            padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? AppSpacing.md : AppSpacing.lg,
+                vertical: isMobile ? AppSpacing.sm : AppSpacing.md),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.02) : AppColors.neutral50.withOpacity(0.5),
+              color: isDark
+                  ? Colors.white.withOpacity(0.02)
+                  : AppColors.neutral50.withOpacity(0.5),
             ),
-            child: isMobile 
-              ? Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(child: _buildMetricItem(Icons.scale, 'Quantity', '${harvest['quantity']} ${harvest['unit']}', isDark, isMobile)),
-                        Expanded(child: _buildMetricItem(Icons.water_drop, 'Moisture', '${harvest['moisture']}%', isDark, isMobile)),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      children: [
-                        Expanded(child: _buildMetricItem(Icons.calendar_today, 'Harvest Date', harvest['date']!, isDark, isMobile)),
-                        Expanded(child: _buildMetricItem(Icons.access_time, 'Time', harvest['time']!, isDark, isMobile)),
-                      ],
-                    ),
-                  ],
-                )
-              : Row(
-                  children: [
-                    Expanded(child: _buildMetricItem(Icons.scale, 'Quantity', '${harvest['quantity']} ${harvest['unit']}', isDark, isMobile)),
-                    _buildMetricDivider(isDark),
-                    Expanded(child: _buildMetricItem(Icons.water_drop, 'Moisture', '${harvest['moisture']}%', isDark, isMobile)),
-                    _buildMetricDivider(isDark),
-                    Expanded(child: _buildMetricItem(Icons.calendar_today, 'Harvest Date', harvest['date']!, isDark, isMobile)),
-                    _buildMetricDivider(isDark),
-                    Expanded(child: _buildMetricItem(Icons.access_time, 'Time', harvest['time']!, isDark, isMobile)),
-                  ],
-                ),
+            child: isMobile
+                ? Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                              child: _buildMetricItem(
+                                  Icons.scale,
+                                  'Quantity',
+                                  '${harvest['quantity']} ${harvest['unit']}',
+                                  isDark,
+                                  isMobile)),
+                          Expanded(
+                              child: _buildMetricItem(
+                                  Icons.water_drop,
+                                  'Moisture',
+                                  '${harvest['moisture']}%',
+                                  isDark,
+                                  isMobile)),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Row(
+                        children: [
+                          Expanded(
+                              child: _buildMetricItem(
+                                  Icons.calendar_today,
+                                  'Harvest Date',
+                                  harvest['date']!,
+                                  isDark,
+                                  isMobile)),
+                          Expanded(
+                              child: _buildMetricItem(Icons.access_time, 'Time',
+                                  harvest['time']!, isDark, isMobile)),
+                        ],
+                      ),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                          child: _buildMetricItem(
+                              Icons.scale,
+                              'Quantity',
+                              '${harvest['quantity']} ${harvest['unit']}',
+                              isDark,
+                              isMobile)),
+                      _buildMetricDivider(isDark),
+                      Expanded(
+                          child: _buildMetricItem(Icons.water_drop, 'Moisture',
+                              '${harvest['moisture']}%', isDark, isMobile)),
+                      _buildMetricDivider(isDark),
+                      Expanded(
+                          child: _buildMetricItem(
+                              Icons.calendar_today,
+                              'Harvest Date',
+                              harvest['date']!,
+                              isDark,
+                              isMobile)),
+                      _buildMetricDivider(isDark),
+                      Expanded(
+                          child: _buildMetricItem(Icons.access_time, 'Time',
+                              harvest['time']!, isDark, isMobile)),
+                    ],
+                  ),
           ),
 
           // Yield Progress & Caretaker
@@ -2108,14 +3042,20 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                             children: [
                               Text(
                                 'Yield Achievement',
-                                style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : AppColors.textSecondary),
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark
+                                        ? Colors.white54
+                                        : AppColors.textSecondary),
                               ),
                               Text(
                                 '$yieldPercent%',
                                 style: TextStyle(
-                                  fontSize: 12, 
-                                  fontWeight: FontWeight.bold, 
-                                  color: yieldPercent >= 90 ? AppColors.success : AppColors.warning,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: yieldPercent >= 90
+                                      ? AppColors.success
+                                      : AppColors.warning,
                                 ),
                               ),
                             ],
@@ -2125,15 +3065,24 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                             borderRadius: BorderRadius.circular(4),
                             child: LinearProgressIndicator(
                               value: yieldPercent / 100,
-                              backgroundColor: isDark ? Colors.white10 : AppColors.neutral200,
-                              valueColor: AlwaysStoppedAnimation(yieldPercent >= 90 ? AppColors.success : AppColors.warning),
+                              backgroundColor: isDark
+                                  ? Colors.white10
+                                  : AppColors.neutral200,
+                              valueColor: AlwaysStoppedAnimation(
+                                  yieldPercent >= 90
+                                      ? AppColors.success
+                                      : AppColors.warning),
                               minHeight: 6,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             '${harvest['actualYield']} of ${harvest['expectedYield']} kg expected',
-                            style: TextStyle(fontSize: 10, color: isDark ? Colors.white38 : AppColors.textSecondary),
+                            style: TextStyle(
+                                fontSize: 10,
+                                color: isDark
+                                    ? Colors.white38
+                                    : AppColors.textSecondary),
                           ),
                         ],
                       ),
@@ -2141,10 +3090,14 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                     SizedBox(width: isMobile ? AppSpacing.md : AppSpacing.lg),
                     // Caretaker Info
                     Container(
-                      padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
+                      padding: EdgeInsets.all(
+                          isMobile ? AppSpacing.sm : AppSpacing.md),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral100,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        color: isDark
+                            ? Colors.white.withOpacity(0.03)
+                            : AppColors.neutral100,
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Row(
                         children: [
@@ -2152,8 +3105,15 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                             radius: isMobile ? 14 : 16,
                             backgroundColor: AppColors.primary.withOpacity(0.1),
                             child: Text(
-                              harvest['caretaker']!.split(' ').map((n) => n[0]).take(2).join(),
-                              style: TextStyle(fontSize: isMobile ? 10 : 11, fontWeight: FontWeight.bold, color: AppColors.primary),
+                              harvest['caretaker']!
+                                  .split(' ')
+                                  .map((n) => n[0])
+                                  .take(2)
+                                  .join(),
+                              style: TextStyle(
+                                  fontSize: isMobile ? 10 : 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -2163,14 +3123,20 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                               Text(
                                 harvest['caretaker']!,
                                 style: TextStyle(
-                                  fontSize: isMobile ? 11 : 12, 
-                                  fontWeight: FontWeight.w600, 
-                                  color: isDark ? Colors.white : AppColors.textPrimary,
+                                  fontSize: isMobile ? 11 : 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary,
                                 ),
                               ),
                               Text(
                                 'Caretaker',
-                                style: TextStyle(fontSize: 10, color: isDark ? Colors.white38 : AppColors.textSecondary),
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    color: isDark
+                                        ? Colors.white38
+                                        : AppColors.textSecondary),
                               ),
                             ],
                           ),
@@ -2189,16 +3155,22 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                     decoration: BoxDecoration(
                       color: AppColors.info.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      border: Border.all(color: AppColors.info.withOpacity(0.1)),
+                      border:
+                          Border.all(color: AppColors.info.withOpacity(0.1)),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline, size: 14, color: AppColors.info),
+                        Icon(Icons.info_outline,
+                            size: 14, color: AppColors.info),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             harvest['notes']!,
-                            style: TextStyle(fontSize: 11, color: isDark ? Colors.white70 : AppColors.textSecondary),
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: isDark
+                                    ? Colors.white70
+                                    : AppColors.textSecondary),
                           ),
                         ),
                       ],
@@ -2213,7 +3185,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
           Container(
             padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.02) : AppColors.neutral50,
+              color:
+                  isDark ? Colors.white.withOpacity(0.02) : AppColors.neutral50,
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(AppSpacing.radiusLg),
                 bottomRight: Radius.circular(AppSpacing.radiusLg),
@@ -2225,25 +3198,37 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                 Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => _showHarvestDetailsModal(context, harvest, isDark),
+                    onTap: () =>
+                        _showHarvestDetailsModal(context, harvest, isDark),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 10 : 12),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 12 : 16,
+                          vertical: isMobile ? 10 : 12),
                       decoration: BoxDecoration(
-                        border: Border.all(color: isDark ? Colors.white24 : AppColors.neutral300),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        border: Border.all(
+                            color:
+                                isDark ? Colors.white24 : AppColors.neutral300),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.visibility_outlined, size: isMobile ? 16 : 18, color: isDark ? Colors.white70 : AppColors.textSecondary),
+                          Icon(Icons.visibility_outlined,
+                              size: isMobile ? 16 : 18,
+                              color: isDark
+                                  ? Colors.white70
+                                  : AppColors.textSecondary),
                           const SizedBox(width: 6),
                           Text(
                             'Details',
                             style: TextStyle(
                               fontSize: isMobile ? 12 : 13,
                               fontWeight: FontWeight.w500,
-                              color: isDark ? Colors.white70 : AppColors.textSecondary,
+                              color: isDark
+                                  ? Colors.white70
+                                  : AppColors.textSecondary,
                             ),
                           ),
                         ],
@@ -2260,7 +3245,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Row(children: [
-                            const Icon(Icons.cancel, color: Colors.white, size: 16),
+                            const Icon(Icons.cancel,
+                                color: Colors.white, size: 16),
                             const SizedBox(width: 8),
                             Text('${harvest['batch']} rejected'),
                           ]),
@@ -2271,15 +3257,20 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                     },
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16, vertical: isMobile ? 10 : 12),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 12 : 16,
+                          vertical: isMobile ? 10 : 12),
                       decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.error.withOpacity(0.5)),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        border:
+                            Border.all(color: AppColors.error.withOpacity(0.5)),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.close_rounded, size: isMobile ? 16 : 18, color: AppColors.error),
+                          Icon(Icons.close_rounded,
+                              size: isMobile ? 16 : 18, color: AppColors.error),
                           const SizedBox(width: 6),
                           Text(
                             'Reject',
@@ -2303,7 +3294,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Row(children: [
-                            const Icon(Icons.check_circle, color: Colors.white, size: 16),
+                            const Icon(Icons.check_circle,
+                                color: Colors.white, size: 16),
                             const SizedBox(width: 8),
                             Text('${harvest['batch']} approved'),
                           ]),
@@ -2314,12 +3306,18 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                     },
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20, vertical: isMobile ? 10 : 12),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 16 : 20,
+                          vertical: isMobile ? 10 : 12),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [AppColors.success, AppColors.success.withOpacity(0.85)],
+                          colors: [
+                            AppColors.success,
+                            AppColors.success.withOpacity(0.85)
+                          ],
                         ),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.success.withOpacity(0.3),
@@ -2331,7 +3329,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.check_rounded, size: isMobile ? 16 : 18, color: Colors.white),
+                          Icon(Icons.check_rounded,
+                              size: isMobile ? 16 : 18, color: Colors.white),
                           const SizedBox(width: 6),
                           Text(
                             'Approve',
@@ -2354,25 +3353,30 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildMetricItem(IconData icon, String label, String value, bool isDark, bool isMobile) {
+  Widget _buildMetricItem(
+      IconData icon, String label, String value, bool isDark, bool isMobile) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: isMobile ? 4 : 8),
       child: Row(
         children: [
-          Icon(icon, size: isMobile ? 14 : 16, color: isDark ? Colors.white38 : AppColors.textSecondary),
+          Icon(icon,
+              size: isMobile ? 14 : 16,
+              color: isDark ? Colors.white38 : AppColors.textSecondary),
           const SizedBox(width: 6),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label,
-                style: TextStyle(fontSize: isMobile ? 9 : 10, color: isDark ? Colors.white38 : AppColors.textSecondary),
+                style: TextStyle(
+                    fontSize: isMobile ? 9 : 10,
+                    color: isDark ? Colors.white38 : AppColors.textSecondary),
               ),
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: isMobile ? 12 : 13, 
-                  fontWeight: FontWeight.w600, 
+                  fontSize: isMobile ? 12 : 13,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -2399,7 +3403,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = constraints.maxWidth < 600;
-        final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 900;
+        final isTablet =
+            constraints.maxWidth >= 600 && constraints.maxWidth < 900;
 
         return SingleChildScrollView(
           padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
@@ -2408,7 +3413,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
             children: [
               // Header Bar with back button
               Container(
-                padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
+                padding:
+                    EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [AppColors.info, AppColors.info.withOpacity(0.8)],
@@ -2418,7 +3424,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () => setState(() => _currentView = 'dashboard'),
+                      onPressed: () =>
+                          setState(() => _currentView = 'dashboard'),
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                       tooltip: 'Back to Dashboard',
                       padding: EdgeInsets.zero,
@@ -2429,22 +3436,28 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
                       ),
-                      child: const Icon(Icons.local_shipping, color: Colors.white, size: 24),
+                      child: const Icon(Icons.local_shipping,
+                          color: Colors.white, size: 24),
                     ),
                     const SizedBox(width: AppSpacing.md),
-        Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
                             'Delivery Management',
-                            style: AppTypography.h5.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: isMobile ? 18 : 20),
+                            style: AppTypography.h5.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: isMobile ? 18 : 20),
                           ),
                           Text(
                             'Schedule and manage deliveries',
-                            style: AppTypography.bodySmall.copyWith(color: Colors.white70),
+                            style: AppTypography.bodySmall
+                                .copyWith(color: Colors.white70),
                           ),
                         ],
                       ),
@@ -2453,21 +3466,25 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                 ),
               ),
               SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
-              
+
               // Quick Stats
               Row(
                 children: [
-                  _buildDeliveryStat('Scheduled', '3', AppColors.info, Icons.schedule, isDark, isMobile),
+                  _buildDeliveryStat('Scheduled', '3', AppColors.info,
+                      Icons.schedule, isDark, isMobile),
                   const SizedBox(width: AppSpacing.sm),
-                  _buildDeliveryStat('In Transit', '2', AppColors.warning, Icons.local_shipping, isDark, isMobile),
+                  _buildDeliveryStat('In Transit', '2', AppColors.warning,
+                      Icons.local_shipping, isDark, isMobile),
                   const SizedBox(width: AppSpacing.sm),
-                  _buildDeliveryStat('Delivered', '12', AppColors.success, Icons.check_circle, isDark, isMobile),
+                  _buildDeliveryStat('Delivered', '12', AppColors.success,
+                      Icons.check_circle, isDark, isMobile),
                 ],
               ),
               SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
 
               // Schedule New Delivery Section (move select - must come before round history on mobile)
-              _buildSectionTitle('Schedule New Delivery', Icons.add_circle, isDark, isMobile),
+              _buildSectionTitle(
+                  'Schedule New Delivery', Icons.add_circle, isDark, isMobile),
               const SizedBox(height: AppSpacing.md),
               _buildDeliveryForm(isDark, isMobile),
 
@@ -2475,20 +3492,24 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
 
               if (isMobile) ...[
                 // Mobile: move select (form) before round history - Recent first, then Upcoming
-                _buildSectionTitle('Recent Deliveries', Icons.history, isDark, isMobile),
+                _buildSectionTitle(
+                    'Recent Deliveries', Icons.history, isDark, isMobile),
                 const SizedBox(height: AppSpacing.md),
                 _buildRecentDeliveries(isDark, isMobile),
                 SizedBox(height: AppSpacing.lg),
-                _buildSectionTitle('Upcoming Deliveries', Icons.upcoming, isDark, isMobile),
+                _buildSectionTitle(
+                    'Upcoming Deliveries', Icons.upcoming, isDark, isMobile),
                 const SizedBox(height: AppSpacing.md),
                 _buildUpcomingDeliveries(isDark, isMobile),
               ] else ...[
                 // Desktop: Upcoming first, then Recent
-                _buildSectionTitle('Upcoming Deliveries', Icons.upcoming, isDark, isMobile),
+                _buildSectionTitle(
+                    'Upcoming Deliveries', Icons.upcoming, isDark, isMobile),
                 const SizedBox(height: AppSpacing.md),
                 _buildUpcomingDeliveries(isDark, isMobile),
                 SizedBox(height: AppSpacing.xl),
-                _buildSectionTitle('Recent Deliveries', Icons.history, isDark, isMobile),
+                _buildSectionTitle(
+                    'Recent Deliveries', Icons.history, isDark, isMobile),
                 const SizedBox(height: AppSpacing.md),
                 _buildRecentDeliveries(isDark, isMobile),
               ],
@@ -2499,7 +3520,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildDeliveryStat(String label, String value, Color color, IconData icon, bool isDark, bool isMobile) {
+  Widget _buildDeliveryStat(String label, String value, Color color,
+      IconData icon, bool isDark, bool isMobile) {
     return Expanded(
       child: Container(
         padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
@@ -2519,11 +3541,11 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
           children: [
             Icon(icon, color: color, size: isMobile ? 20 : 24),
             const SizedBox(height: 4),
-                Text(
+            Text(
               value,
               style: TextStyle(
                 fontSize: isMobile ? 18 : 24,
-                    fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.bold,
                 color: color,
               ),
             ),
@@ -2540,7 +3562,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildSectionTitle(String title, IconData icon, bool isDark, bool isMobile) {
+  Widget _buildSectionTitle(
+      String title, IconData icon, bool isDark, bool isMobile) {
     return Row(
       children: [
         Icon(icon, color: AppColors.info, size: isMobile ? 20 : 24),
@@ -2548,7 +3571,7 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
         Text(
           title,
           style: AppTypography.h6.copyWith(
-                    color: isDark ? Colors.white : AppColors.textPrimary,
+            color: isDark ? Colors.white : AppColors.textPrimary,
             fontWeight: FontWeight.bold,
             fontSize: isMobile ? 16 : 18,
           ),
@@ -2558,8 +3581,20 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
   }
 
   Widget _buildDeliveryForm(bool isDark, bool isMobile) {
-    final availableBatches = ['BATCH-156', 'BATCH-157', 'BATCH-158', 'BATCH-159', 'BATCH-160'];
-    final destinations = ['Warehouse A', 'Warehouse B', 'Distribution Center', 'Market Stand', 'Direct Customer'];
+    final availableBatches = [
+      'BATCH-156',
+      'BATCH-157',
+      'BATCH-158',
+      'BATCH-159',
+      'BATCH-160'
+    ];
+    final destinations = [
+      'Warehouse A',
+      'Warehouse B',
+      'Distribution Center',
+      'Market Stand',
+      'Direct Customer'
+    ];
     final vehicles = ['Truck-01', 'Truck-02', 'Van-01', 'Van-02', 'Pickup-01'];
 
     return Container(
@@ -2567,46 +3602,67 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
       ),
       child: Column(
         children: [
           if (isMobile) ...[
             // Mobile: Stack vertically
-            _buildFormField('Select Batch', availableBatches.first, availableBatches, Icons.inventory_2, isDark),
-                const SizedBox(height: AppSpacing.md),
-            _buildFormField('Destination', destinations.first, destinations, Icons.location_on, isDark),
+            _buildFormField('Select Batch', availableBatches.first,
+                availableBatches, Icons.inventory_2, isDark),
             const SizedBox(height: AppSpacing.md),
-            _buildFormField('Assign Vehicle', vehicles.first, vehicles, Icons.local_shipping, isDark),
+            _buildFormField('Destination', destinations.first, destinations,
+                Icons.location_on, isDark),
             const SizedBox(height: AppSpacing.md),
-            _buildDateField('Delivery Date', DateTime.now().add(const Duration(days: 1)), isDark),
+            _buildFormField('Assign Vehicle', vehicles.first, vehicles,
+                Icons.local_shipping, isDark),
+            const SizedBox(height: AppSpacing.md),
+            _buildDateField('Delivery Date',
+                DateTime.now().add(const Duration(days: 1)), isDark),
             const SizedBox(height: AppSpacing.md),
             TextField(
               maxLines: 2,
               decoration: InputDecoration(
                 labelText: 'Delivery Notes (Optional)',
                 hintText: 'Special instructions...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
                 filled: true,
-                fillColor: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+                fillColor: isDark
+                    ? Colors.white.withOpacity(0.05)
+                    : AppColors.neutral50,
               ),
-              style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
+              style: TextStyle(
+                  color: isDark ? Colors.white : AppColors.textPrimary),
             ),
           ] else ...[
             // Desktop: Grid layout
             Row(
               children: [
-                Expanded(child: _buildFormField('Select Batch', availableBatches.first, availableBatches, Icons.inventory_2, isDark)),
+                Expanded(
+                    child: _buildFormField(
+                        'Select Batch',
+                        availableBatches.first,
+                        availableBatches,
+                        Icons.inventory_2,
+                        isDark)),
                 const SizedBox(width: AppSpacing.md),
-                Expanded(child: _buildFormField('Destination', destinations.first, destinations, Icons.location_on, isDark)),
+                Expanded(
+                    child: _buildFormField('Destination', destinations.first,
+                        destinations, Icons.location_on, isDark)),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                Expanded(child: _buildFormField('Assign Vehicle', vehicles.first, vehicles, Icons.local_shipping, isDark)),
+                Expanded(
+                    child: _buildFormField('Assign Vehicle', vehicles.first,
+                        vehicles, Icons.local_shipping, isDark)),
                 const SizedBox(width: AppSpacing.md),
-                Expanded(child: _buildDateField('Delivery Date', DateTime.now().add(const Duration(days: 1)), isDark)),
+                Expanded(
+                    child: _buildDateField('Delivery Date',
+                        DateTime.now().add(const Duration(days: 1)), isDark)),
               ],
             ),
             const SizedBox(height: AppSpacing.md),
@@ -2615,11 +3671,15 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
               decoration: InputDecoration(
                 labelText: 'Delivery Notes (Optional)',
                 hintText: 'Special instructions for delivery...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
                 filled: true,
-                fillColor: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+                fillColor: isDark
+                    ? Colors.white.withOpacity(0.05)
+                    : AppColors.neutral50,
               ),
-              style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
+              style: TextStyle(
+                  color: isDark ? Colors.white : AppColors.textPrimary),
             ),
           ],
           const SizedBox(height: AppSpacing.lg),
@@ -2629,7 +3689,11 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Row(children: [Icon(Icons.check_circle, color: Colors.white), SizedBox(width: 8), Expanded(child: Text('Delivery scheduled successfully!'))]),
+                    content: Row(children: [
+                      Icon(Icons.check_circle, color: Colors.white),
+                      SizedBox(width: 8),
+                      Expanded(child: Text('Delivery scheduled successfully!'))
+                    ]),
                     backgroundColor: AppColors.success,
                     behavior: SnackBarBehavior.floating,
                   ),
@@ -2649,7 +3713,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     );
   }
 
-  Widget _buildFormField(String label, String value, List<String> options, IconData icon, bool isDark) {
+  Widget _buildFormField(String label, String value, List<String> options,
+      IconData icon, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2665,23 +3730,38 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           decoration: BoxDecoration(
-            border: Border.all(color: isDark ? Colors.white24 : AppColors.neutral300),
+            border: Border.all(
+                color: isDark ? Colors.white24 : AppColors.neutral300),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+            color:
+                isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
-              icon: Icon(Icons.arrow_drop_down, color: isDark ? Colors.white54 : AppColors.textSecondary),
+              icon: Icon(Icons.arrow_drop_down,
+                  color: isDark ? Colors.white54 : AppColors.textSecondary),
               dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
-              items: options.map((e) => DropdownMenuItem(value: e, child: Row(
-                children: [
-                  Icon(icon, size: 16, color: isDark ? Colors.white54 : AppColors.textSecondary),
-                  const SizedBox(width: 8),
-                  Text(e, style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary)),
-                ],
-              ))).toList(),
+              items: options
+                  .map((e) => DropdownMenuItem(
+                      value: e,
+                      child: Row(
+                        children: [
+                          Icon(icon,
+                              size: 16,
+                              color: isDark
+                                  ? Colors.white54
+                                  : AppColors.textSecondary),
+                          const SizedBox(width: 8),
+                          Text(e,
+                              style: TextStyle(
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary)),
+                        ],
+                      )))
+                  .toList(),
               onChanged: (v) {},
             ),
           ),
@@ -2716,20 +3796,26 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              border: Border.all(color: isDark ? Colors.white24 : AppColors.neutral300),
+              border: Border.all(
+                  color: isDark ? Colors.white24 : AppColors.neutral300),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+              color:
+                  isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
             ),
             child: Row(
               children: [
-                Icon(Icons.calendar_today, size: 18, color: isDark ? Colors.white54 : AppColors.textSecondary),
+                Icon(Icons.calendar_today,
+                    size: 18,
+                    color: isDark ? Colors.white54 : AppColors.textSecondary),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
                   '${date.day}/${date.month}/${date.year}',
-                  style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
+                  style: TextStyle(
+                      color: isDark ? Colors.white : AppColors.textPrimary),
                 ),
                 const Spacer(),
-                Icon(Icons.arrow_drop_down, color: isDark ? Colors.white54 : AppColors.textSecondary),
+                Icon(Icons.arrow_drop_down,
+                    color: isDark ? Colors.white54 : AppColors.textSecondary),
               ],
             ),
           ),
@@ -2740,35 +3826,72 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
 
   Widget _buildUpcomingDeliveries(bool isDark, bool isMobile) {
     final upcoming = [
-      {'batch': 'BATCH-155', 'dest': 'Warehouse A', 'vehicle': 'Truck-01', 'date': 'Jan 29', 'status': 'Scheduled'},
-      {'batch': 'BATCH-154', 'dest': 'Market Stand', 'vehicle': 'Van-01', 'date': 'Jan 30', 'status': 'Scheduled'},
-      {'batch': 'BATCH-153', 'dest': 'Distribution Center', 'vehicle': 'Truck-02', 'date': 'Jan 31', 'status': 'Scheduled'},
+      {
+        'batch': 'BATCH-155',
+        'dest': 'Warehouse A',
+        'vehicle': 'Truck-01',
+        'date': 'Jan 29',
+        'status': 'Scheduled'
+      },
+      {
+        'batch': 'BATCH-154',
+        'dest': 'Market Stand',
+        'vehicle': 'Van-01',
+        'date': 'Jan 30',
+        'status': 'Scheduled'
+      },
+      {
+        'batch': 'BATCH-153',
+        'dest': 'Distribution Center',
+        'vehicle': 'Truck-02',
+        'date': 'Jan 31',
+        'status': 'Scheduled'
+      },
     ];
 
     return Column(
-      children: upcoming.map((d) => _buildDeliveryCard(d, AppColors.info, isDark, isMobile)).toList(),
+      children: upcoming
+          .map((d) => _buildDeliveryCard(d, AppColors.info, isDark, isMobile))
+          .toList(),
     );
   }
 
   Widget _buildRecentDeliveries(bool isDark, bool isMobile) {
     final recent = [
-      {'batch': 'BATCH-150', 'dest': 'Warehouse B', 'vehicle': 'Van-02', 'date': 'Jan 27', 'status': 'Delivered'},
-      {'batch': 'BATCH-149', 'dest': 'Direct Customer', 'vehicle': 'Pickup-01', 'date': 'Jan 26', 'status': 'Delivered'},
+      {
+        'batch': 'BATCH-150',
+        'dest': 'Warehouse B',
+        'vehicle': 'Van-02',
+        'date': 'Jan 27',
+        'status': 'Delivered'
+      },
+      {
+        'batch': 'BATCH-149',
+        'dest': 'Direct Customer',
+        'vehicle': 'Pickup-01',
+        'date': 'Jan 26',
+        'status': 'Delivered'
+      },
     ];
 
     return Column(
-      children: recent.map((d) => _buildDeliveryCard(d, AppColors.success, isDark, isMobile)).toList(),
+      children: recent
+          .map(
+              (d) => _buildDeliveryCard(d, AppColors.success, isDark, isMobile))
+          .toList(),
     );
   }
 
-  Widget _buildDeliveryCard(Map<String, String> delivery, Color statusColor, bool isDark, bool isMobile) {
+  Widget _buildDeliveryCard(Map<String, String> delivery, Color statusColor,
+      bool isDark, bool isMobile) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
       ),
       child: Row(
         children: [
@@ -2778,7 +3901,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
               color: statusColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             ),
-            child: Icon(Icons.local_shipping, color: statusColor, size: isMobile ? 18 : 20),
+            child: Icon(Icons.local_shipping,
+                color: statusColor, size: isMobile ? 18 : 20),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -2838,11 +3962,36 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
 
   Widget _buildBottomNavigation(bool isDark) {
     final navItems = [
-      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/farm-manager'},
-      {'icon': Icons.agriculture_outlined, 'label': 'Farms', 'index': 1, 'route': '/farm-manager/farms'},
-      {'icon': Icons.inventory_2_outlined, 'label': 'Inventory', 'index': 2, 'route': '/farm-manager/inventory'},
-      {'icon': Icons.local_shipping_outlined, 'label': 'Deliveries', 'index': 3, 'route': '/farm-manager/deliveries'},
-      {'icon': Icons.assessment_outlined, 'label': 'Reports', 'index': 4, 'route': '/farm-manager/reports'},
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Dashboard',
+        'index': 0,
+        'route': '/farm-manager'
+      },
+      {
+        'icon': Icons.agriculture_outlined,
+        'label': 'Farms',
+        'index': 1,
+        'route': '/farm-manager/farms'
+      },
+      {
+        'icon': Icons.inventory_2_outlined,
+        'label': 'Inventory',
+        'index': 2,
+        'route': '/farm-manager/inventory'
+      },
+      {
+        'icon': Icons.local_shipping_outlined,
+        'label': 'Deliveries',
+        'index': 3,
+        'route': '/farm-manager/deliveries'
+      },
+      {
+        'icon': Icons.assessment_outlined,
+        'label': 'Reports',
+        'index': 4,
+        'route': '/farm-manager/reports'
+      },
     ];
 
     return Container(
@@ -2857,7 +4006,9 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
         ],
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
             width: 1,
           ),
         ),
@@ -2898,7 +4049,9 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                           size: 24,
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.5)
+                                  : AppColors.textSecondary),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -2909,7 +4062,9 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                                 : (isDark
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                             fontSize: 11,
                           ),
                           maxLines: 1,
@@ -2933,28 +4088,70 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     final isMobile = screenWidth < 600;
 
     final features = [
-      {'title': 'Inventory', 'icon': Icons.inventory_2_rounded, 'color': const Color(0xFF6366F1), 'route': '/farm-manager/inventory'},
-      {'title': 'Batches', 'icon': Icons.layers_rounded, 'color': const Color(0xFF0EA5E9), 'route': '/farm-manager/batch-generation'},
-      {'title': 'Harvest', 'icon': Icons.agriculture_rounded, 'color': const Color(0xFF10B981), 'action': 'harvest_approval'},
-      {'title': 'Budget', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFFF59E0B), 'route': '/farm-manager/fund-request'},
-      {'title': 'Delivery', 'icon': Icons.local_shipping_rounded, 'color': const Color(0xFF8B5CF6), 'route': '/farm-manager/deliveries'},
-      {'title': 'Reports', 'icon': Icons.bar_chart_rounded, 'color': const Color(0xFFEC4899), 'route': '/farm-manager/reports'},
-      {'title': 'Team', 'icon': Icons.groups_rounded, 'color': const Color(0xFF14B8A6), 'route': '/farm-manager/team'},
-      {'title': 'Settings', 'icon': Icons.settings_rounded, 'color': const Color(0xFF64748B), 'route': null},
+      {
+        'title': 'Inventory',
+        'icon': Icons.inventory_2_rounded,
+        'color': const Color(0xFF6366F1),
+        'route': '/farm-manager/inventory'
+      },
+      {
+        'title': 'Batches',
+        'icon': Icons.layers_rounded,
+        'color': const Color(0xFF0EA5E9),
+        'route': '/farm-manager/batch-generation'
+      },
+      {
+        'title': 'Harvest',
+        'icon': Icons.agriculture_rounded,
+        'color': const Color(0xFF10B981),
+        'action': 'harvest_approval'
+      },
+      {
+        'title': 'Budget',
+        'icon': Icons.account_balance_wallet_rounded,
+        'color': const Color(0xFFF59E0B),
+        'route': '/farm-manager/fund-request'
+      },
+      {
+        'title': 'Delivery',
+        'icon': Icons.local_shipping_rounded,
+        'color': const Color(0xFF8B5CF6),
+        'route': '/farm-manager/deliveries'
+      },
+      {
+        'title': 'Reports',
+        'icon': Icons.bar_chart_rounded,
+        'color': const Color(0xFFEC4899),
+        'route': '/farm-manager/reports'
+      },
+      {
+        'title': 'Team',
+        'icon': Icons.groups_rounded,
+        'color': const Color(0xFF14B8A6),
+        'route': '/farm-manager/team'
+      },
+      {
+        'title': 'Settings',
+        'icon': Icons.settings_rounded,
+        'color': const Color(0xFF64748B),
+        'route': null
+      },
     ];
 
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: features.map((f) => _buildFeatureCard(
-        context,
-        isDark,
-        f['title'] as String,
-        f['icon'] as IconData,
-        f['color'] as Color,
-        f,
-        isMobile,
-      )).toList(),
+      children: features
+          .map((f) => _buildFeatureCard(
+                context,
+                isDark,
+                f['title'] as String,
+                f['icon'] as IconData,
+                f['color'] as Color,
+                f,
+                isMobile,
+              ))
+          .toList(),
     );
   }
 
@@ -2967,7 +4164,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
     Map<String, dynamic> feature,
     bool isMobile,
   ) {
-    final cardWidth = isMobile ? (MediaQuery.of(context).size.width - 56) / 4 : 80.0;
+    final cardWidth =
+        isMobile ? (MediaQuery.of(context).size.width - 56) / 4 : 80.0;
 
     return Material(
       color: Colors.transparent,
@@ -3032,11 +4230,15 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-          insetPadding: EdgeInsets.symmetric(horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl, vertical: AppSpacing.lg),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
+          insetPadding: EdgeInsets.symmetric(
+              horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
+              vertical: AppSpacing.lg),
           child: Container(
             width: isMobile ? double.infinity : 500,
-            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+            constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -3044,27 +4246,42 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [AppColors.warning, AppColors.warning.withOpacity(0.8)]),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
+                    gradient: LinearGradient(colors: [
+                      AppColors.warning,
+                      AppColors.warning.withOpacity(0.8)
+                    ]),
+                    borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppSpacing.radiusXl)),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
-                        child: const Icon(Icons.request_quote, color: Colors.white, size: 24),
+                        decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd)),
+                        child: const Icon(Icons.request_quote,
+                            color: Colors.white, size: 24),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Budget Request', style: AppTypography.h6.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
-                            Text('Request funds for farm operations', style: AppTypography.bodySmall.copyWith(color: Colors.white70)),
+                            Text('Budget Request',
+                                style: AppTypography.h6.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
+                            Text('Request funds for farm operations',
+                                style: AppTypography.bodySmall
+                                    .copyWith(color: Colors.white70)),
                           ],
                         ),
                       ),
-                      IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, color: Colors.white70)),
+                      IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close, color: Colors.white70)),
                     ],
                   ),
                 ),
@@ -3078,13 +4295,29 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         // Farm Selection
                         _buildDialogLabel('Select Farm', isDark),
                         const SizedBox(height: AppSpacing.sm),
-                        _buildDialogDropdown(selectedFarm, ['Green Valley Farm', 'Sunny Acres', 'Fresh Farms'], (v) => setDialogState(() => selectedFarm = v!), isDark),
+                        _buildDialogDropdown(
+                            selectedFarm,
+                            ['Green Valley Farm', 'Sunny Acres', 'Fresh Farms'],
+                            (v) => setDialogState(() => selectedFarm = v!),
+                            isDark),
                         const SizedBox(height: AppSpacing.lg),
 
                         // Category
                         _buildDialogLabel('Budget Category', isDark),
                         const SizedBox(height: AppSpacing.sm),
-                        _buildDialogDropdown(selectedCategory, ['Seeds & Inputs', 'Equipment', 'Labor', 'Maintenance', 'Utilities', 'Transport', 'Other'], (v) => setDialogState(() => selectedCategory = v!), isDark),
+                        _buildDialogDropdown(
+                            selectedCategory,
+                            [
+                              'Seeds & Inputs',
+                              'Equipment',
+                              'Labor',
+                              'Maintenance',
+                              'Utilities',
+                              'Transport',
+                              'Other'
+                            ],
+                            (v) => setDialogState(() => selectedCategory = v!),
+                            isDark),
                         const SizedBox(height: AppSpacing.lg),
 
                         // Amount
@@ -3093,15 +4326,24 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         TextField(
                           controller: amountController,
                           keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
                           decoration: InputDecoration(
                             prefixText: 'GH₵ ',
                             hintText: 'Enter amount',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                            border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppSpacing.radiusMd)),
                             filled: true,
-                            fillColor: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+                            fillColor: isDark
+                                ? Colors.white.withOpacity(0.05)
+                                : AppColors.neutral50,
                           ),
-                          style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
+                          style: TextStyle(
+                              color: isDark
+                                  ? Colors.white
+                                  : AppColors.textPrimary),
                         ),
                         const SizedBox(height: AppSpacing.lg),
 
@@ -3109,23 +4351,56 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         _buildDialogLabel('Priority', isDark),
                         const SizedBox(height: AppSpacing.sm),
                         Row(
-                          children: ['Low', 'Medium', 'High', 'Urgent'].map((p) {
+                          children:
+                              ['Low', 'Medium', 'High', 'Urgent'].map((p) {
                             final isSelected = selectedPriority == p;
-                            final color = p == 'Urgent' ? AppColors.error : p == 'High' ? AppColors.warning : p == 'Medium' ? AppColors.info : AppColors.success;
+                            final color = p == 'Urgent'
+                                ? AppColors.error
+                                : p == 'High'
+                                    ? AppColors.warning
+                                    : p == 'Medium'
+                                        ? AppColors.info
+                                        : AppColors.success;
                             return Expanded(
                               child: Padding(
-                                padding: EdgeInsets.only(right: p != 'Urgent' ? AppSpacing.xs : 0),
+                                padding: EdgeInsets.only(
+                                    right: p != 'Urgent' ? AppSpacing.xs : 0),
                                 child: InkWell(
-                                  onTap: () => setDialogState(() => selectedPriority = p),
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                  onTap: () => setDialogState(
+                                      () => selectedPriority = p),
+                                  borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusSm),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: AppSpacing.sm),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? color.withOpacity(0.2) : (isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50),
-                                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                                      border: Border.all(color: isSelected ? color : (isDark ? Colors.white10 : AppColors.neutral200)),
+                                      color: isSelected
+                                          ? color.withOpacity(0.2)
+                                          : (isDark
+                                              ? Colors.white.withOpacity(0.05)
+                                              : AppColors.neutral50),
+                                      borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusSm),
+                                      border: Border.all(
+                                          color: isSelected
+                                              ? color
+                                              : (isDark
+                                                  ? Colors.white10
+                                                  : AppColors.neutral200)),
                                     ),
-                                    child: Text(p, textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? color : (isDark ? Colors.white70 : AppColors.textSecondary))),
+                                    child: Text(p,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                            color: isSelected
+                                                ? color
+                                                : (isDark
+                                                    ? Colors.white70
+                                                    : AppColors
+                                                        .textSecondary))),
                                   ),
                                 ),
                               ),
@@ -3135,18 +4410,27 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                         const SizedBox(height: AppSpacing.lg),
 
                         // Description
-                        _buildDialogLabel('Description / Justification', isDark),
+                        _buildDialogLabel(
+                            'Description / Justification', isDark),
                         const SizedBox(height: AppSpacing.sm),
                         TextField(
                           controller: descriptionController,
                           maxLines: 3,
                           decoration: InputDecoration(
-                            hintText: 'Provide details about why this budget is needed...',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                            hintText:
+                                'Provide details about why this budget is needed...',
+                            border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppSpacing.radiusMd)),
                             filled: true,
-                            fillColor: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+                            fillColor: isDark
+                                ? Colors.white.withOpacity(0.05)
+                                : AppColors.neutral50,
                           ),
-                          style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
+                          style: TextStyle(
+                              color: isDark
+                                  ? Colors.white
+                                  : AppColors.textPrimary),
                         ),
                         const SizedBox(height: AppSpacing.md),
 
@@ -3155,14 +4439,24 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                           padding: const EdgeInsets.all(AppSpacing.md),
                           decoration: BoxDecoration(
                             color: AppColors.info.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                            border: Border.all(color: AppColors.info.withOpacity(0.3)),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
+                            border: Border.all(
+                                color: AppColors.info.withOpacity(0.3)),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.info_outline, color: AppColors.info, size: 18),
+                              const Icon(Icons.info_outline,
+                                  color: AppColors.info, size: 18),
                               const SizedBox(width: AppSpacing.sm),
-                              Expanded(child: Text('Request will be sent to Admin for approval. You will be notified once approved.', style: TextStyle(fontSize: 11, color: isDark ? Colors.white70 : AppColors.textSecondary))),
+                              Expanded(
+                                  child: Text(
+                                      'Request will be sent to Admin for approval. You will be notified once approved.',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: isDark
+                                              ? Colors.white70
+                                              : AppColors.textSecondary))),
                             ],
                           ),
                         ),
@@ -3174,15 +4468,20 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppSpacing.radiusXl)),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.03)
+                        : AppColors.neutral50,
+                    borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(AppSpacing.radiusXl)),
                   ),
                   child: Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: AppSpacing.md)),
+                          style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.md)),
                           child: const Text('Cancel'),
                         ),
                       ),
@@ -3193,14 +4492,25 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                           onPressed: () {
                             if (amountController.text.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: const Text('Please enter an amount'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+                                SnackBar(
+                                    content:
+                                        const Text('Please enter an amount'),
+                                    backgroundColor: AppColors.error,
+                                    behavior: SnackBarBehavior.floating),
                               );
                               return;
                             }
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Row(children: [const Icon(Icons.check_circle, color: Colors.white), const SizedBox(width: 8), Expanded(child: Text('Budget request of GH₵${amountController.text} submitted for $selectedFarm'))]),
+                                content: Row(children: [
+                                  const Icon(Icons.check_circle,
+                                      color: Colors.white),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                      child: Text(
+                                          'Budget request of GH₵${amountController.text} submitted for $selectedFarm'))
+                                ]),
                                 backgroundColor: AppColors.success,
                                 behavior: SnackBarBehavior.floating,
                                 duration: const Duration(seconds: 4),
@@ -3212,7 +4522,8 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.warning,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                            padding: const EdgeInsets.symmetric(
+                                vertical: AppSpacing.md),
                           ),
                         ),
                       ),
@@ -3229,14 +4540,20 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
 
   // Helper Widgets for Dialogs
   Widget _buildDialogLabel(String label, bool isDark) {
-    return Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isDark ? Colors.white70 : AppColors.textSecondary));
+    return Text(label,
+        style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white70 : AppColors.textSecondary));
   }
 
-  Widget _buildDialogDropdown(String value, List<String> items, Function(String?) onChanged, bool isDark) {
+  Widget _buildDialogDropdown(String value, List<String> items,
+      Function(String?) onChanged, bool isDark) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
-        border: Border.all(color: isDark ? Colors.white24 : AppColors.neutral300),
+        border:
+            Border.all(color: isDark ? Colors.white24 : AppColors.neutral300),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
       ),
@@ -3245,7 +4562,14 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
           value: value,
           isExpanded: true,
           dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
-          items: items.map((item) => DropdownMenuItem(value: item, child: Text(item, style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary)))).toList(),
+          items: items
+              .map((item) => DropdownMenuItem(
+                  value: item,
+                  child: Text(item,
+                      style: TextStyle(
+                          color:
+                              isDark ? Colors.white : AppColors.textPrimary))))
+              .toList(),
           onChanged: onChanged,
         ),
       ),
@@ -3258,8 +4582,15 @@ class _FarmManagerDashboardRedesignedState extends ConsumerState<FarmManagerDash
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 11, color: isDark ? Colors.white54 : AppColors.textSecondary)),
-          Text(value, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: isDark ? Colors.white : AppColors.textPrimary)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? Colors.white54 : AppColors.textSecondary)),
+          Text(value,
+              style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white : AppColors.textPrimary)),
         ],
       ),
     );

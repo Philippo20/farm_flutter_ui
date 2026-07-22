@@ -11,7 +11,8 @@ class AccountantDashboard extends ConsumerStatefulWidget {
   const AccountantDashboard({super.key});
 
   @override
-  ConsumerState<AccountantDashboard> createState() => _AccountantDashboardState();
+  ConsumerState<AccountantDashboard> createState() =>
+      _AccountantDashboardState();
 }
 
 class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
@@ -20,7 +21,8 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
         title: const Text('Accountant'),
         actions: [
@@ -44,7 +46,7 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white,
                       fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -75,18 +77,18 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
               Text(
                 'Financial Operations',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
               _buildFeaturesGrid(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Pending Confirmations
               _buildPendingConfirmations(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Recent Transactions
@@ -128,7 +130,7 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                   'Finance Department',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -140,7 +142,7 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '7 Pending Confirmations • \$125,400 This Month',
+                  '7 Pending Confirmations â€¢ \$125,400 This Month',
                   style: AppTypography.bodySmall.copyWith(
                     color: Colors.white.withOpacity(0.8),
                   ),
@@ -180,12 +182,13 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
         children: [
           Row(
             children: [
-              Icon(Icons.account_balance_wallet, color: Colors.deepOrange, size: 20),
+              Icon(Icons.account_balance_wallet,
+                  color: Colors.deepOrange, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Financial Overview',
                 style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -195,13 +198,16 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
           Row(
             children: [
               Expanded(
-                child: _buildOverviewItem('Total Revenue', '\$125,400', AppColors.success, isDark),
+                child: _buildOverviewItem(
+                    'Total Revenue', '\$125,400', AppColors.success, isDark),
               ),
               Expanded(
-                child: _buildOverviewItem('Expenses', '\$42,800', AppColors.error, isDark),
+                child: _buildOverviewItem(
+                    'Expenses', '\$42,800', AppColors.error, isDark),
               ),
               Expanded(
-                child: _buildOverviewItem('Net Profit', '\$82,600', AppColors.info, isDark),
+                child: _buildOverviewItem(
+                    'Net Profit', '\$82,600', AppColors.info, isDark),
               ),
             ],
           ),
@@ -210,13 +216,14 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
     );
   }
 
-  Widget _buildOverviewItem(String label, String value, Color color, bool isDark) {
+  Widget _buildOverviewItem(
+      String label, String value, Color color, bool isDark) {
     return Column(
       children: [
         Text(
           value,
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
             color: color,
           ),
         ),
@@ -335,7 +342,7 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                 Text(
                   feature.title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                   textAlign: TextAlign.center,
@@ -373,7 +380,7 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white,
                       fontSize: 8,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -394,7 +401,7 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
             Text(
               'Pending Confirmations',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -411,7 +418,7 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                 '7',
                 style: AppTypography.bodySmall.copyWith(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   fontSize: 10,
                 ),
               ),
@@ -478,7 +485,7 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                 Text(
                   title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -499,14 +506,15 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                       ),
                       decoration: BoxDecoration(
                         color: color.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Text(
                         status,
                         style: AppTypography.bodySmall.copyWith(
                           color: color,
                           fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -514,7 +522,8 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                     Text(
                       time,
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark ? Colors.white38 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white38 : AppColors.textSecondary,
                         fontSize: 10,
                       ),
                     ),
@@ -543,7 +552,7 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
             Text(
               'Recent Transactions',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -614,7 +623,9 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              amount.startsWith('-') ? Icons.arrow_upward : Icons.arrow_downward,
+              amount.startsWith('-')
+                  ? Icons.arrow_upward
+                  : Icons.arrow_downward,
               color: color,
               size: 20,
             ),
@@ -627,7 +638,7 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                 Text(
                   title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -648,14 +659,15 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                       ),
                       decoration: BoxDecoration(
                         color: color,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Text(
                         status,
                         style: AppTypography.bodySmall.copyWith(
                           color: Colors.white,
                           fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -663,7 +675,8 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
                     Text(
                       time,
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark ? Colors.white38 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white38 : AppColors.textSecondary,
                         fontSize: 10,
                       ),
                     ),
@@ -675,7 +688,7 @@ class _AccountantDashboardState extends ConsumerState<AccountantDashboard> {
           Text(
             amount,
             style: AppTypography.bodyLarge.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w500,
               color: color,
             ),
           ),

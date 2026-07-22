@@ -18,7 +18,7 @@ class SuperAdminInventoryOverviewScreen extends ConsumerStatefulWidget {
 
 class _SuperAdminInventoryOverviewScreenState
     extends ConsumerState<SuperAdminInventoryOverviewScreen> {
-  int _selectedNavIndex = 9;
+  int _selectedNavIndex = 10;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override

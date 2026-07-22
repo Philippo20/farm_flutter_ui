@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,8 +7,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/modern_admin_header.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../core/widgets/superadmin_sidebar.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Pricing & Packaging Management - Set hub and spoke farm prices.
 class PricingManagementScreen extends ConsumerStatefulWidget {
@@ -20,146 +24,317 @@ class PricingManagementScreen extends ConsumerStatefulWidget {
 class _PricingManagementScreenState
     extends ConsumerState<PricingManagementScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _selectedNavIndex = 5;
-  String _selectedTab = 'pricing';
+  int _selectedNavIndex = 6;
+  String _selectedTab = 'purchase';
   String _selectedFarm = 'all';
+  bool _isLoadingPricing = false;
+  String? _pricingError;
+  final SuperAdminApiService _api = SuperAdminApiService();
 
-  final List<_FarmPriceScope> _farms = const [
-    _FarmPriceScope(
+  final List<_FarmPriceScope> _farms = [
+    const _FarmPriceScope(
       id: 'all',
       name: 'Hub Pricing',
-      subtitle: 'All spoke farm prices sold into the hub',
-      activePrices: '42',
-      avgHubRate: '\$3.42',
+      subtitle: 'All prices sold into the hub',
+      activePrices: '0',
+      avgHubRate: 'GHS 0.00',
       icon: Icons.public_rounded,
       color: AppColors.primary,
       isGlobal: true,
     ),
-    _FarmPriceScope(
-      id: 'green-valley',
-      name: 'Green Valley Spoke Farm',
-      subtitle: 'Leafy greens and herbs supply',
-      activePrices: '14',
-      avgHubRate: '\$2.70',
-      icon: Icons.agriculture_rounded,
-      color: AppColors.success,
-    ),
-    _FarmPriceScope(
-      id: 'north-ridge',
-      name: 'North Ridge Spoke Farm',
-      subtitle: 'Tomatoes, spinach, and seasonal crops',
-      activePrices: '12',
-      avgHubRate: '\$5.95',
-      icon: Icons.terrain_rounded,
-      color: AppColors.info,
-    ),
-    _FarmPriceScope(
-      id: 'sunset-acres',
-      name: 'Sunset Acres Spoke Farm',
-      subtitle: 'Premium herbs and packaged produce',
-      activePrices: '16',
-      avgHubRate: '\$2.10',
-      icon: Icons.wb_sunny_rounded,
-      color: AppColors.warning,
-    ),
   ];
 
-  final List<_PricingItem> _pricingData = const [
-    _PricingItem(
-      id: 'PR-1001',
-      farmId: 'green-valley',
-      farm: 'Green Valley Spoke Farm',
-      plant: 'Lettuce - Romaine',
-      packaging: 'Box - 500g',
-      hubSellingPrice: 2.85,
-      hubBulkPrice: 2.55,
-      status: 'Active',
-      lastUpdated: 'Today, 09:15',
-    ),
-    _PricingItem(
-      id: 'PR-1002',
-      farmId: 'north-ridge',
-      farm: 'North Ridge Spoke Farm',
-      plant: 'Tomato - Cherry',
-      packaging: 'Crate - 1kg',
-      hubSellingPrice: 5.95,
-      hubBulkPrice: 5.35,
-      status: 'Active',
-      lastUpdated: 'Today, 08:45',
-    ),
-    _PricingItem(
-      id: 'PR-1003',
-      farmId: 'sunset-acres',
-      farm: 'Sunset Acres Spoke Farm',
-      plant: 'Basil - Sweet',
-      packaging: 'Bag - 100g',
-      hubSellingPrice: 1.55,
-      hubBulkPrice: 1.35,
-      status: 'Active',
-      lastUpdated: 'Yesterday, 16:20',
-    ),
-    _PricingItem(
-      id: 'PR-1004',
-      farmId: 'green-valley',
-      farm: 'Green Valley Spoke Farm',
-      plant: 'Spinach - Baby',
-      packaging: 'Box - 250g',
-      hubSellingPrice: 2.25,
-      hubBulkPrice: 2.05,
-      status: 'Review',
-      lastUpdated: 'Yesterday, 11:05',
-    ),
-    _PricingItem(
-      id: 'PR-1005',
-      farmId: 'sunset-acres',
-      farm: 'Sunset Acres Spoke Farm',
-      plant: 'Kale - Curly',
-      packaging: 'Bundle - 300g',
-      hubSellingPrice: 2.65,
-      hubBulkPrice: 2.35,
-      status: 'Active',
-      lastUpdated: 'May 16, 2026',
-    ),
-  ];
+  final List<_PricingItem> _pricingData = [];
 
-  final List<_PackagingItem> _packagingData = const [
-    _PackagingItem(
-      id: 'PK-001',
-      type: 'Box',
-      size: '500g',
-      material: 'Cardboard',
-      cost: 0.50,
-      status: 'Active',
-    ),
-    _PackagingItem(
-      id: 'PK-002',
-      type: 'Crate',
-      size: '1kg',
-      material: 'Reusable Plastic',
-      cost: 1.20,
-      status: 'Active',
-    ),
-    _PackagingItem(
-      id: 'PK-003',
-      type: 'Bag',
-      size: '100g',
-      material: 'Biodegradable',
-      cost: 0.15,
-      status: 'Active',
-    ),
-    _PackagingItem(
-      id: 'PK-004',
-      type: 'Bundle Wrap',
-      size: '300g',
-      material: 'Paper Band',
-      cost: 0.22,
-      status: 'Active',
-    ),
-  ];
+  final List<_PackagingItem> _packagingData = [];
+  final List<String> _plantTypeData = [];
+  final List<Map<String, String>> _cropVarietyData = [];
 
   List<_PricingItem> get _visiblePrices {
-    if (_selectedFarm == 'all') return _pricingData;
-    return _pricingData.where((item) => item.farmId == _selectedFarm).toList();
+    final typed = _pricingData
+        .where((item) =>
+            item.pricingType ==
+            (_selectedTab == 'sale' ? 'hub_sale' : 'hub_purchase'))
+        .toList();
+    if (_selectedTab == 'sale' || _selectedFarm == 'all') return typed;
+    return typed.where((item) => item.farmId == _selectedFarm).toList();
+  }
+
+  List<String> get _plantOptions => _uniqueOptions(
+        [
+          ..._plantTypeData,
+          ..._pricingData.map((item) => item.plant),
+        ],
+        fallback: 'Plant Type',
+      );
+
+  List<String> get _packagingOptions => _uniqueOptions(
+        [
+          ..._pricingData.map((item) => item.packaging),
+          ..._packagingData.map((item) => '${item.type} - ${item.size}'),
+        ],
+        fallback: 'Package',
+      );
+
+  List<String> _cropVarietyOptionsForPlant(String plantType) {
+    final active = _cropVarietyData
+        .where((item) => (item['variety'] ?? '').trim().isNotEmpty)
+        .toList();
+    final matched = active
+        .where((item) => _catalogNamesMatch(item['plantType'] ?? '', plantType))
+        .map((item) => item['variety'] ?? '')
+        .toList();
+    return _uniqueOptions(
+      matched.isEmpty ? active.map((item) => item['variety'] ?? '') : matched,
+      fallback: 'Crop Variety',
+    );
+  }
+
+  List<String> _uniqueOptions(
+    Iterable<String> values, {
+    required String fallback,
+  }) {
+    final seen = <String>{};
+    final options = <String>[];
+    for (final value in values) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty || !seen.add(trimmed)) continue;
+      options.add(trimmed);
+    }
+    return options.isEmpty ? [fallback] : options;
+  }
+
+  bool _catalogNamesMatch(String cropName, String plantType) {
+    final cropKey = _catalogKey(cropName);
+    final plantKey = _catalogKey(plantType);
+    if (cropKey.isEmpty || plantKey.isEmpty) return false;
+    return cropKey == plantKey ||
+        cropKey.contains(plantKey) ||
+        plantKey.contains(cropKey);
+  }
+
+  String _catalogKey(String value) {
+    return value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '').trim();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPricingData();
+  }
+
+  Future<void> _loadPricingData() async {
+    setState(() {
+      _isLoadingPricing = true;
+      _pricingError = null;
+      _pricingData.clear();
+      _packagingData.clear();
+      _plantTypeData.clear();
+      _cropVarietyData.clear();
+    });
+
+    try {
+      final results = await Future.wait([
+        _api.getPricing(),
+        _api.getPackages(),
+        _api.getFarms(),
+        _api.getPlantTypes(),
+        _api.getCrops(),
+      ]);
+      if (!mounted) return;
+      final pricing = results[0].map(_mapPricingDocument).toList();
+      final packaging = results[1].map(_mapPackagingDocument).toList();
+      final farms = _buildFarmScopesFromDocuments(results[2], pricing);
+      final plantTypes = results[3]
+          .where((doc) => doc['is_category'] != true)
+          .map((doc) => (doc['name'] ?? '').toString())
+          .where((name) => name.trim().isNotEmpty)
+          .toList();
+      final cropVarieties = results[4]
+          .map((doc) => {
+                'plantType': (doc['crop_name'] ?? '').toString(),
+                'variety': (doc['variety_name'] ?? '').toString(),
+              })
+          .where((doc) => doc['variety']!.trim().isNotEmpty)
+          .toList();
+      setState(() {
+        _pricingData
+          ..clear()
+          ..addAll(pricing);
+        _packagingData
+          ..clear()
+          ..addAll(packaging);
+        _plantTypeData
+          ..clear()
+          ..addAll(plantTypes);
+        _cropVarietyData
+          ..clear()
+          ..addAll(cropVarieties);
+        _farms
+          ..clear()
+          ..addAll(farms);
+        if (!_farms.any((farm) => farm.id == _selectedFarm)) {
+          _selectedFarm = 'all';
+        }
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _pricingError = error.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingPricing = false);
+      }
+    }
+  }
+
+  _PricingItem _mapPricingDocument(Map<String, dynamic> doc) {
+    final farmId = (doc['farm_id'] ?? 'all').toString();
+    final farmName = (doc['farm_name'] ?? '').toString().trim();
+    final packaging = (doc['packaging'] ?? '').toString();
+    final pricingType = (doc['pricing_type'] ??
+            (farmId == 'all' && packaging != 'Raw / Unpackaged'
+                ? 'hub_sale'
+                : 'hub_purchase'))
+        .toString();
+    return _PricingItem(
+      id: (doc[r'$id'] ?? doc['pricing_id'] ?? doc['id'] ?? '').toString(),
+      farmId: farmId.isEmpty ? 'all' : farmId,
+      farm: farmName.isEmpty
+          ? (pricingType == 'hub_sale' ? 'Hub Sales' : 'Hub Pricing')
+          : farmName,
+      pricingType: pricingType,
+      plant: (doc['plant_type'] ?? 'Plant Type').toString(),
+      cropVariety: (doc['crop_variety'] ?? '').toString(),
+      packaging: packaging.isEmpty ? 'Raw / Unpackaged' : packaging,
+      unit: (doc['unit'] ?? 'kg').toString(),
+      hubSellingPrice: _toDouble(doc['regular_price']),
+      hubBulkPrice: _toDouble(doc['bulk_price']),
+      status: _labelFromSnakeCase((doc['status'] ?? 'Active').toString()),
+      lastUpdated: _dateLabel(doc[r'$updatedAt'] ?? doc[r'$createdAt']),
+    );
+  }
+
+  List<_FarmPriceScope> _buildFarmScopesFromDocuments(
+    List<Map<String, dynamic>> farmDocs,
+    List<_PricingItem> prices,
+  ) {
+    final purchasePrices =
+        prices.where((price) => price.pricingType == 'hub_purchase').toList();
+    final scopes = <_FarmPriceScope>[
+      _FarmPriceScope(
+        id: 'all',
+        name: 'Hub Pricing',
+        subtitle: 'Raw produce bought from spoke farms',
+        activePrices: purchasePrices.length.toString(),
+        avgHubRate: _money(_averageRate(purchasePrices)),
+        icon: Icons.public_rounded,
+        color: AppColors.primary,
+        isGlobal: true,
+      ),
+    ];
+
+    final knownFarmIds = <String>{'all'};
+    final palette = <Color>[
+      AppColors.success,
+      AppColors.info,
+      AppColors.warning,
+      AppColors.secondary,
+    ];
+
+    for (var index = 0; index < farmDocs.length; index++) {
+      final doc = farmDocs[index];
+      final id = (doc[r'$id'] ?? doc['farm_id'] ?? doc['id'] ?? '').toString();
+      if (id.isEmpty || knownFarmIds.contains(id)) continue;
+
+      final name = (doc['name'] ?? 'Spoke Farm').toString();
+      final location = (doc['location'] ?? '').toString();
+      final plantType = (doc['plant_type'] ?? '').toString();
+      final tier = (doc['tier_type'] ?? doc['tierType'] ?? '').toString();
+      final farmPrices =
+          purchasePrices.where((price) => price.farmId == id).toList();
+      scopes.add(
+        _FarmPriceScope(
+          id: id,
+          name: name,
+          subtitle: _joinParts([location, plantType, tier], fallback: 'Farm'),
+          activePrices: farmPrices.length.toString(),
+          avgHubRate: _money(_averageRate(farmPrices)),
+          icon: Icons.agriculture_rounded,
+          color: palette[(index) % palette.length],
+        ),
+      );
+      knownFarmIds.add(id);
+    }
+
+    for (final price in purchasePrices) {
+      if (knownFarmIds.contains(price.farmId)) continue;
+      final farmPrices =
+          purchasePrices.where((item) => item.farmId == price.farmId).toList();
+      scopes.add(
+        _FarmPriceScope(
+          id: price.farmId,
+          name: price.farm,
+          subtitle: 'Pricing record farm scope',
+          activePrices: farmPrices.length.toString(),
+          avgHubRate: _money(_averageRate(farmPrices)),
+          icon: Icons.agriculture_rounded,
+          color: palette[scopes.length % palette.length],
+        ),
+      );
+      knownFarmIds.add(price.farmId);
+    }
+
+    return scopes;
+  }
+
+  double _averageRate(List<_PricingItem> prices) {
+    if (prices.isEmpty) return 0;
+    final total = prices.fold<double>(
+      0,
+      (sum, item) => sum + item.hubSellingPrice,
+    );
+    return total / prices.length;
+  }
+
+  String _joinParts(List<String> parts, {required String fallback}) {
+    final cleaned = parts
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+    return cleaned.isEmpty ? fallback : cleaned.join(' | ');
+  }
+
+  _PackagingItem _mapPackagingDocument(Map<String, dynamic> doc) {
+    final weight = doc['weight_capacity'] ?? '';
+    final unit = doc['unit'] ?? '';
+    return _PackagingItem(
+      id: (doc[r'$id'] ?? doc['package_id'] ?? doc['id'] ?? '').toString(),
+      type: (doc['package_name'] ?? 'Package').toString(),
+      size: '$weight$unit',
+      material: (doc['material_used'] ?? '-').toString(),
+      cost: _toDouble(doc['cost_per_unit']),
+      status: _labelFromSnakeCase((doc['status'] ?? 'Active').toString()),
+    );
+  }
+
+  double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  String _labelFromSnakeCase(String value) {
+    return value
+        .replaceAll('_', ' ')
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
+
+  String _dateLabel(dynamic value) {
+    final text = value?.toString() ?? '';
+    if (text.length >= 16) return text.substring(0, 16).replaceFirst('T', ' ');
+    return text.isEmpty ? '-' : text;
   }
 
   @override
@@ -202,7 +377,7 @@ class _PricingManagementScreenState
     return Row(
       children: [
         SuperAdminSidebar(
-          selectedIndex: 5,
+          selectedIndex: 6,
           onItemSelected: (_) {},
           userName: userName,
           userEmail: userEmail,
@@ -254,15 +429,58 @@ class _PricingManagementScreenState
       children: [
         _buildHero(isDark, isMobile),
         const SizedBox(height: AppSpacing.lg),
-        _buildTabs(isDark),
-        const SizedBox(height: AppSpacing.lg),
-        if (_selectedTab == 'pricing') ...[
-          _buildFarmScopes(isDark, isMobile),
+        if (_pricingError != null) ...[
+          _buildSyncStatus(isDark),
           const SizedBox(height: AppSpacing.lg),
-          _buildPricingPanel(isDark, isMobile),
-        ] else
-          _buildPackagingPanel(isDark, isMobile),
+        ],
+        if (_isLoadingPricing && _pricingData.isEmpty && _packagingData.isEmpty)
+          const AdminDataSkeleton()
+        else ...[
+          _buildTabs(isDark),
+          const SizedBox(height: AppSpacing.lg),
+          if (_selectedTab == 'purchase') ...[
+            _buildFarmScopes(isDark, isMobile),
+            const SizedBox(height: AppSpacing.lg),
+            _buildPricingPanel(isDark, isMobile),
+          ] else if (_selectedTab == 'sale')
+            _buildPricingPanel(isDark, isMobile)
+          else
+            _buildPackagingPanel(isDark, isMobile),
+        ],
       ],
+    );
+  }
+
+  Widget _buildSyncStatus(bool isDark) {
+    final hasError = _pricingError != null;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: hasError
+            ? AppColors.error.withValues(alpha: 0.08)
+            : AppColors.info.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: AppColors.error),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'Could not refresh pricing data: $_pricingError',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Refresh pricing',
+            onPressed: _isLoadingPricing ? null : _loadPricingData,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
     );
   }
 
@@ -361,7 +579,7 @@ class _PricingManagementScreenState
                 'Hub and spoke price control',
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white : AppColors.warning,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -372,12 +590,12 @@ class _PricingManagementScreenState
           'Pricing Management',
           style: AppTypography.h4.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: 6),
         Text(
-          'Manage each spoke farm price sold into the hub, including standard and bulk hub purchasing rates.',
+          'Manage raw prices the hub pays spoke farms, then packaged prices the hub sells to offtakers.',
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
             height: 1.5,
@@ -405,10 +623,18 @@ class _PricingManagementScreenState
       child: Column(
         children: [
           _buildMetricLine(
-              'Avg selling price to hub', _money(averageHubSelling), isDark),
+              _selectedTab == 'sale'
+                  ? 'Avg selling price'
+                  : 'Avg raw buying price',
+              _money(averageHubSelling),
+              isDark),
           const SizedBox(height: 10),
           _buildMetricLine(
-              'Avg bulk price to hub', _money(averageHubBulk), isDark),
+              _selectedTab == 'sale'
+                  ? 'Avg bulk selling price'
+                  : 'Avg bulk raw buying price',
+              _money(averageHubBulk),
+              isDark),
           const SizedBox(height: 10),
           _buildMetricLine('Active price records', '$priceCount', isDark),
         ],
@@ -423,7 +649,9 @@ class _PricingManagementScreenState
         ElevatedButton.icon(
           onPressed: () => _showPricingDialog(context, isDark),
           icon: const Icon(Icons.add_rounded, size: 18),
-          label: const Text('Add Price'),
+          label: Text(_selectedTab == 'sale'
+              ? 'Add Hub Sale Price'
+              : 'Add Raw Purchase Price'),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
@@ -458,7 +686,9 @@ class _PricingManagementScreenState
       spacing: AppSpacing.md,
       runSpacing: AppSpacing.sm,
       children: [
-        _buildTab('Pricing', 'pricing', Icons.attach_money_rounded, isDark),
+        _buildTab(
+            'Hub Purchase', 'purchase', Icons.agriculture_rounded, isDark),
+        _buildTab('Hub Sales', 'sale', Icons.storefront_rounded, isDark),
         _buildTab('Packaging', 'packaging', Icons.inventory_2_rounded, isDark),
       ],
     );
@@ -502,7 +732,7 @@ class _PricingManagementScreenState
                 color: isSelected
                     ? Colors.white
                     : (isDark ? Colors.white70 : AppColors.textPrimary),
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
           ],
@@ -582,7 +812,7 @@ class _PricingManagementScreenState
               farm.name,
               style: AppTypography.bodyMedium.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -617,10 +847,13 @@ class _PricingManagementScreenState
 
   Widget _buildPricingPanel(bool isDark, bool isMobile) {
     final prices = _visiblePrices;
-    final scopeName = _farms
-        .firstWhere((farm) => farm.id == _selectedFarm,
-            orElse: () => _farms.first)
-        .name;
+    final isSale = _selectedTab == 'sale';
+    final scopeName = isSale
+        ? 'Packaged products sold to offtakers'
+        : _farms
+            .firstWhere((farm) => farm.id == _selectedFarm,
+                orElse: () => _farms.first)
+            .name;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -632,7 +865,13 @@ class _PricingManagementScreenState
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionHeader('Price Book', scopeName, isDark),
+                    _buildSectionHeader(
+                      isSale
+                          ? 'Hub Sales Price Book'
+                          : 'Raw Purchase Price Book',
+                      scopeName,
+                      isDark,
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     _buildCountPill('${prices.length} prices', isDark),
                   ],
@@ -641,7 +880,11 @@ class _PricingManagementScreenState
                   children: [
                     Expanded(
                         child: _buildSectionHeader(
-                            'Price Book', scopeName, isDark)),
+                            isSale
+                                ? 'Hub Sales Price Book'
+                                : 'Raw Purchase Price Book',
+                            scopeName,
+                            isDark)),
                     _buildCountPill('${prices.length} prices', isDark),
                   ],
                 ),
@@ -656,6 +899,7 @@ class _PricingManagementScreenState
   }
 
   Widget _buildPriceTable(List<_PricingItem> prices, bool isDark) {
+    final isSale = _selectedTab == 'sale';
     return Column(
       children: [
         Container(
@@ -671,10 +915,13 @@ class _PricingManagementScreenState
           ),
           child: Row(
             children: [
-              _buildTableHeader('Product', flex: 3, isDark: isDark),
-              _buildTableHeader('Spoke Farm', flex: 2, isDark: isDark),
-              _buildTableHeader('Sell To Hub', isDark: isDark),
-              _buildTableHeader('Bulk To Hub', isDark: isDark),
+              _buildTableHeader('Crop', flex: 3, isDark: isDark),
+              _buildTableHeader(isSale ? 'Package' : 'Spoke Farm',
+                  flex: 2, isDark: isDark),
+              _buildTableHeader(isSale ? 'Sell To Offtaker' : 'Hub Buys Raw',
+                  isDark: isDark),
+              _buildTableHeader(isSale ? 'Bulk Sale' : 'Bulk Raw Buy',
+                  isDark: isDark),
               _buildTableHeader('Status', isDark: isDark),
               const SizedBox(width: 88),
             ],
@@ -728,11 +975,11 @@ class _PricingManagementScreenState
                         price.plant,
                         style: AppTypography.bodyMedium.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                       Text(
-                        '${price.farm} • ${price.packaging}',
+                        _priceSubtitle(price),
                         style: AppTypography.bodySmall.copyWith(
                           color:
                               isDark ? Colors.white60 : AppColors.textSecondary,
@@ -749,10 +996,10 @@ class _PricingManagementScreenState
           Expanded(
             flex: 2,
             child: Text(
-              price.farm,
+              price.pricingType == 'hub_sale' ? price.packaging : price.farm,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -760,10 +1007,14 @@ class _PricingManagementScreenState
           ),
           Expanded(
               child: _buildPriceValue(
-                  _money(price.hubSellingPrice), AppColors.success, isDark)),
+                  '${_money(price.hubSellingPrice)}/${price.unit}',
+                  AppColors.success,
+                  isDark)),
           Expanded(
               child: _buildPriceValue(
-                  _money(price.hubBulkPrice), AppColors.warning, isDark)),
+                  '${_money(price.hubBulkPrice)}/${price.unit}',
+                  AppColors.warning,
+                  isDark)),
           Expanded(child: _buildPill(price.status, statusColor)),
           SizedBox(
             width: 88,
@@ -818,11 +1069,11 @@ class _PricingManagementScreenState
                       price.plant,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     Text(
-                      '${price.farm} • ${price.packaging}',
+                      _priceSubtitle(price),
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
@@ -839,11 +1090,19 @@ class _PricingManagementScreenState
             children: [
               Expanded(
                   child: _buildSmallMetric(
-                      'Sell To Hub', _money(price.hubSellingPrice), isDark)),
+                      price.pricingType == 'hub_sale'
+                          ? 'Sell To Offtaker'
+                          : 'Hub Buys Raw',
+                      '${_money(price.hubSellingPrice)}/${price.unit}',
+                      isDark)),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                   child: _buildSmallMetric(
-                      'Bulk To Hub', _money(price.hubBulkPrice), isDark)),
+                      price.pricingType == 'hub_sale'
+                          ? 'Bulk Sale'
+                          : 'Bulk Raw Buy',
+                      '${_money(price.hubBulkPrice)}/${price.unit}',
+                      isDark)),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                   child: _buildSmallMetric('Status', price.status, isDark)),
@@ -854,7 +1113,7 @@ class _PricingManagementScreenState
             children: [
               Expanded(
                 child: Text(
-                  '${price.id} • ${price.lastUpdated}',
+                  '${price.id} | ${price.lastUpdated}',
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
@@ -970,11 +1229,11 @@ class _PricingManagementScreenState
                   item.type,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
-                  '${item.size} • ${item.material}',
+                  '${item.size} | ${item.material}',
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
                   ),
@@ -1003,11 +1262,118 @@ class _PricingManagementScreenState
     );
   }
 
+  List<String> _ensureOption(List<String> options, String? value) {
+    final normalized = value?.trim();
+    if (normalized == null ||
+        normalized.isEmpty ||
+        options.contains(normalized)) {
+      return options;
+    }
+    return [normalized, ...options];
+  }
+
+  Future<bool> _savePricing({
+    required _PricingItem? item,
+    required String pricingType,
+    required String farmId,
+    required String plant,
+    required String cropVariety,
+    required String packaging,
+    required String unit,
+    required String hubSellingPriceText,
+    required String hubBulkPriceText,
+    required String status,
+  }) async {
+    final hubSellingPrice = double.tryParse(hubSellingPriceText.trim());
+    final hubBulkPrice = double.tryParse(hubBulkPriceText.trim());
+    if (hubSellingPrice == null || hubBulkPrice == null) {
+      return false;
+    }
+
+    final farm = pricingType == 'hub_sale'
+        ? const _FarmPriceScope(
+            id: 'all',
+            name: 'Hub Sales',
+            subtitle: 'Packaged products sold to offtakers',
+            activePrices: '0',
+            avgHubRate: 'GHS 0.00',
+            icon: Icons.storefront_rounded,
+            color: AppColors.primary,
+            isGlobal: true,
+          )
+        : _farms.firstWhere(
+            (scope) => scope.id == farmId && !scope.isGlobal,
+            orElse: () => _farms.firstWhere(
+              (scope) => !scope.isGlobal,
+              orElse: () => _farms.first,
+            ),
+          );
+    final normalizedPackaging =
+        pricingType == 'hub_purchase' ? 'Raw / Unpackaged' : packaging;
+
+    setState(() {
+      _isLoadingPricing = true;
+      _pricingError = null;
+    });
+
+    try {
+      if (item == null) {
+        await _api.createPricing(
+          pricingType: pricingType,
+          farmId: farm.id,
+          farmName: farm.name,
+          plantType: plant,
+          cropVariety: cropVariety,
+          packaging: normalizedPackaging,
+          unit: unit,
+          regularPrice: hubSellingPrice,
+          bulkPrice: hubBulkPrice,
+          status: status,
+        );
+      } else {
+        await _api.updatePricing(
+          id: item.id,
+          pricingType: pricingType,
+          farmId: farm.id,
+          farmName: farm.name,
+          plantType: plant,
+          cropVariety: cropVariety,
+          packaging: normalizedPackaging,
+          unit: unit,
+          regularPrice: hubSellingPrice,
+          bulkPrice: hubBulkPrice,
+          status: status,
+        );
+      }
+      await _loadPricingData();
+      if (!mounted) return false;
+      _showSnack(
+        item == null
+            ? (pricingType == 'hub_sale'
+                ? 'Hub sale pricing added.'
+                : 'Raw purchase pricing added.')
+            : (pricingType == 'hub_sale'
+                ? 'Hub sale pricing updated.'
+                : 'Raw purchase pricing updated.'),
+      );
+      return true;
+    } catch (error) {
+      if (!mounted) return false;
+      setState(() {
+        _pricingError = error.toString();
+        _isLoadingPricing = false;
+      });
+      _showErrorSnack(error.toString());
+      return false;
+    }
+  }
+
   void _showPricingDialog(
     BuildContext context,
     bool isDark, {
     _PricingItem? item,
   }) {
+    final formKey = GlobalKey<FormState>();
     final isMobile = MediaQuery.of(context).size.width < 600;
     final hubSellingController = TextEditingController(
       text: item?.hubSellingPrice.toStringAsFixed(2) ?? '',
@@ -1015,10 +1381,32 @@ class _PricingManagementScreenState
     final hubBulkController = TextEditingController(
       text: item?.hubBulkPrice.toStringAsFixed(2) ?? '',
     );
-    String selectedFarm = item?.farmId ?? 'green-valley';
-    String selectedPlant = item?.plant ?? 'Lettuce - Romaine';
-    String selectedPackaging = item?.packaging ?? 'Box - 500g';
+    final pricingType = item?.pricingType ??
+        (_selectedTab == 'sale' ? 'hub_sale' : 'hub_purchase');
+    final isSalePricing = pricingType == 'hub_sale';
+    final farmOptions = _farms.where((farm) => !farm.isGlobal).toList();
+    final dropdownFarmOptions = farmOptions.isEmpty ? _farms : farmOptions;
+    final plantOptions = _ensureOption(_plantOptions, item?.plant);
+    final initialPlant = item?.plant ?? plantOptions.first;
+    final initialVarietyOptions = _ensureOption(
+      _cropVarietyOptionsForPlant(initialPlant),
+      item?.cropVariety,
+    );
+    final packagingOptions = _ensureOption(_packagingOptions, item?.packaging);
+    String selectedFarm = item?.farmId ??
+        (dropdownFarmOptions.isNotEmpty ? dropdownFarmOptions.first.id : 'all');
+    if (!dropdownFarmOptions.any((farm) => farm.id == selectedFarm)) {
+      selectedFarm =
+          dropdownFarmOptions.isNotEmpty ? dropdownFarmOptions.first.id : 'all';
+    }
+    String selectedPlant = initialPlant;
+    String selectedCropVariety = item?.cropVariety.trim().isNotEmpty == true
+        ? item!.cropVariety
+        : initialVarietyOptions.first;
+    String selectedPackaging = item?.packaging ?? packagingOptions.first;
+    String selectedUnit = item?.unit ?? 'kg';
     String selectedStatus = item?.status ?? 'Active';
+    var saving = false;
 
     showDialog(
       context: context,
@@ -1038,126 +1426,206 @@ class _PricingManagementScreenState
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildDialogHeader(
-                  item == null ? 'Add Pricing' : 'Edit Pricing',
-                  'Set spoke farm selling prices to the hub',
-                  Icons.price_change_rounded,
-                  AppColors.warning,
+                  item == null
+                      ? (isSalePricing
+                          ? 'Add Hub Sale Price'
+                          : 'Add Raw Purchase Price')
+                      : (isSalePricing
+                          ? 'Edit Hub Sale Price'
+                          : 'Edit Raw Purchase Price'),
+                  isSalePricing
+                      ? 'Set packaged prices the Hub sells to offtakers'
+                      : 'Set raw crop prices the Hub pays spoke farms',
+                  isSalePricing
+                      ? Icons.storefront_rounded
+                      : Icons.agriculture_rounded,
+                  isSalePricing ? AppColors.primary : AppColors.warning,
                 ),
                 Flexible(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildFormLabel('Spoke Farm', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(
-                          value: selectedFarm,
-                          items: _farms
-                              .where((farm) => !farm.isGlobal)
-                              .map((farm) => farm.id)
-                              .toList(),
-                          labels: {
-                            for (final farm in _farms) farm.id: farm.name,
-                          },
-                          icon: Icons.agriculture_rounded,
-                          isDark: isDark,
-                          onChanged: (value) =>
-                              setDialogState(() => selectedFarm = value!),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Plant Type', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(
-                          value: selectedPlant,
-                          items: const [
-                            'Lettuce - Romaine',
-                            'Tomato - Cherry',
-                            'Basil - Sweet',
-                            'Spinach - Baby',
-                            'Kale - Curly',
+                    child: Form(
+                      key: formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!isSalePricing) ...[
+                            _buildFormLabel('Spoke Farm', isDark),
+                            const SizedBox(height: AppSpacing.sm),
+                            _buildDropdownField(
+                              value: selectedFarm,
+                              items: dropdownFarmOptions
+                                  .where((farm) => !farm.isGlobal)
+                                  .map((farm) => farm.id)
+                                  .toList(),
+                              labels: {
+                                for (final farm in _farms) farm.id: farm.name,
+                              },
+                              icon: Icons.agriculture_rounded,
+                              isDark: isDark,
+                              onChanged: saving
+                                  ? null
+                                  : (value) => setDialogState(
+                                      () => selectedFarm = value!),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
                           ],
-                          icon: Icons.eco_rounded,
-                          isDark: isDark,
-                          onChanged: (value) =>
-                              setDialogState(() => selectedPlant = value!),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Packaging', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(
-                          value: selectedPackaging,
-                          items: const [
-                            'Box - 500g',
-                            'Crate - 1kg',
-                            'Bag - 100g',
-                            'Box - 250g',
-                            'Bundle - 300g',
-                          ],
-                          icon: Icons.inventory_2_rounded,
-                          isDark: isDark,
-                          onChanged: (value) =>
-                              setDialogState(() => selectedPackaging = value!),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        if (isMobile)
-                          Column(
-                            children: [
-                              _buildPriceInput(
-                                  'Selling Price To Hub (\$)',
-                                  hubSellingController,
-                                  Icons.sell_rounded,
-                                  isDark),
-                              const SizedBox(height: AppSpacing.lg),
-                              _buildPriceInput(
-                                  'Bulk Selling Price To Hub (\$)',
-                                  hubBulkController,
-                                  Icons.local_offer_rounded,
-                                  isDark),
-                            ],
-                          )
-                        else
-                          Row(
-                            children: [
-                              Expanded(
-                                  child: _buildPriceInput(
-                                      'Selling Price To Hub (\$)',
-                                      hubSellingController,
-                                      Icons.sell_rounded,
-                                      isDark)),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                  child: _buildPriceInput(
-                                      'Bulk Selling Price To Hub (\$)',
-                                      hubBulkController,
-                                      Icons.local_offer_rounded,
-                                      isDark)),
-                            ],
+                          _buildFormLabel('Plant Type', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildDropdownField(
+                            value: selectedPlant,
+                            items: plantOptions,
+                            icon: Icons.eco_rounded,
+                            isDark: isDark,
+                            onChanged: saving
+                                ? null
+                                : (value) => setDialogState(() {
+                                      selectedPlant = value!;
+                                      selectedCropVariety =
+                                          _cropVarietyOptionsForPlant(
+                                                  selectedPlant)
+                                              .first;
+                                    }),
                           ),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Status', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(
-                          value: selectedStatus,
-                          items: const ['Active', 'Review', 'Inactive'],
-                          icon: Icons.verified_rounded,
-                          isDark: isDark,
-                          onChanged: (value) =>
-                              setDialogState(() => selectedStatus = value!),
-                        ),
-                      ],
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Crop Variety', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildDropdownField(
+                            value: selectedCropVariety,
+                            items: _ensureOption(
+                              _cropVarietyOptionsForPlant(selectedPlant),
+                              selectedCropVariety,
+                            ),
+                            icon: Icons.grass_rounded,
+                            isDark: isDark,
+                            onChanged: saving
+                                ? null
+                                : (value) => setDialogState(
+                                    () => selectedCropVariety = value!),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          if (isSalePricing) ...[
+                            _buildFormLabel('Packaging', isDark),
+                            const SizedBox(height: AppSpacing.sm),
+                            _buildDropdownField(
+                              value: selectedPackaging,
+                              items: packagingOptions,
+                              icon: Icons.inventory_2_rounded,
+                              isDark: isDark,
+                              onChanged: saving
+                                  ? null
+                                  : (value) => setDialogState(
+                                      () => selectedPackaging = value!),
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                          ],
+                          _buildFormLabel('Unit', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildDropdownField(
+                            value: selectedUnit,
+                            items: const ['kg', 'g', 'crate', 'box', 'bunch'],
+                            icon: Icons.scale_rounded,
+                            isDark: isDark,
+                            onChanged: saving
+                                ? null
+                                : (value) =>
+                                    setDialogState(() => selectedUnit = value!),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          if (isMobile)
+                            Column(
+                              children: [
+                                _buildPriceInput(
+                                    isSalePricing
+                                        ? 'Selling Price To Offtaker (GHS)'
+                                        : 'Raw Buying Price From Farm (GHS)',
+                                    hubSellingController,
+                                    Icons.sell_rounded,
+                                    isDark,
+                                    validator: _priceValidator),
+                                const SizedBox(height: AppSpacing.lg),
+                                _buildPriceInput(
+                                    isSalePricing
+                                        ? 'Bulk Selling Price To Offtaker (GHS)'
+                                        : 'Bulk Raw Buying Price From Farm (GHS)',
+                                    hubBulkController,
+                                    Icons.local_offer_rounded,
+                                    isDark,
+                                    validator: _priceValidator),
+                              ],
+                            )
+                          else
+                            Row(
+                              children: [
+                                Expanded(
+                                    child: _buildPriceInput(
+                                        isSalePricing
+                                            ? 'Selling Price To Offtaker (GHS)'
+                                            : 'Raw Buying Price From Farm (GHS)',
+                                        hubSellingController,
+                                        Icons.sell_rounded,
+                                        isDark,
+                                        validator: _priceValidator)),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                    child: _buildPriceInput(
+                                        isSalePricing
+                                            ? 'Bulk Selling Price To Offtaker (GHS)'
+                                            : 'Bulk Raw Buying Price From Farm (GHS)',
+                                        hubBulkController,
+                                        Icons.local_offer_rounded,
+                                        isDark,
+                                        validator: _priceValidator)),
+                              ],
+                            ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Status', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildDropdownField(
+                            value: selectedStatus,
+                            items: const ['Active', 'Review', 'Inactive'],
+                            icon: Icons.verified_rounded,
+                            isDark: isDark,
+                            onChanged: saving
+                                ? null
+                                : (value) => setDialogState(
+                                    () => selectedStatus = value!),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
                 _buildDialogActions(
                   isDark,
                   primaryLabel: item == null ? 'Add Pricing' : 'Save Changes',
-                  primaryColor: AppColors.primary,
-                  onPrimary: () {
-                    Navigator.pop(context);
-                    _showSnack(item == null
-                        ? 'Spoke farm hub pricing added.'
-                        : 'Spoke farm hub pricing updated.');
+                  primaryColor:
+                      isSalePricing ? AppColors.primary : AppColors.warning,
+                  isSaving: saving,
+                  onPrimary: () async {
+                    if (!(formKey.currentState?.validate() ?? false)) {
+                      return;
+                    }
+                    setDialogState(() => saving = true);
+                    final saved = await _savePricing(
+                      item: item,
+                      pricingType: pricingType,
+                      farmId: selectedFarm,
+                      plant: selectedPlant,
+                      cropVariety: selectedCropVariety,
+                      packaging: selectedPackaging,
+                      unit: selectedUnit,
+                      hubSellingPriceText: hubSellingController.text,
+                      hubBulkPriceText: hubBulkController.text,
+                      status: selectedStatus,
+                    );
+                    if (!context.mounted) return;
+                    if (saved) {
+                      Navigator.pop(context);
+                    } else {
+                      setDialogState(() => saving = false);
+                    }
                   },
                 ),
               ],
@@ -1172,8 +1640,9 @@ class _PricingManagementScreenState
     String label,
     TextEditingController controller,
     IconData icon,
-    bool isDark,
-  ) {
+    bool isDark, {
+    FormFieldValidator<String>? validator,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1185,9 +1654,18 @@ class _PricingManagementScreenState
           icon: icon,
           isDark: isDark,
           keyboardType: TextInputType.number,
+          validator: validator,
         ),
       ],
     );
+  }
+
+  String? _priceValidator(String? value) {
+    final text = (value ?? '').trim();
+    if (text.isEmpty) return 'Add a price when ready.';
+    final parsed = double.tryParse(text);
+    if (parsed == null || parsed < 0) return 'Use a valid amount.';
+    return null;
   }
 
   void _showPackagingDialog(
@@ -1267,7 +1745,7 @@ class _PricingManagementScreenState
                               setDialogState(() => selectedMaterial = value!),
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        _buildPriceInput('Cost (\$)', costController,
+                        _buildPriceInput('Cost (GHS)', costController,
                             Icons.attach_money_rounded, isDark),
                         const SizedBox(height: AppSpacing.lg),
                         _buildFormLabel('Status', isDark),
@@ -1312,10 +1790,31 @@ class _PricingManagementScreenState
       context,
       isDark,
       title: 'Delete Pricing?',
-      message:
-          'Delete ${item.plant} hub pricing from ${item.farm}? This removes the selling price to hub and bulk selling price to hub.',
-      onDelete: () => _showSnack('Pricing deleted.'),
+      message: item.pricingType == 'hub_sale'
+          ? 'Delete ${item.plant} packaged sale pricing for ${item.packaging}?'
+          : 'Delete ${item.plant} raw purchase pricing from ${item.farm}?',
+      onDelete: () => _deletePricing(item),
     );
+  }
+
+  Future<void> _deletePricing(_PricingItem item) async {
+    setState(() {
+      _isLoadingPricing = true;
+      _pricingError = null;
+    });
+    try {
+      await _api.deletePricing(item.id);
+      await _loadPricingData();
+      if (!mounted) return;
+      _showSnack('Pricing deleted.');
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _pricingError = error.toString();
+        _isLoadingPricing = false;
+      });
+      _showErrorSnack(error.toString());
+    }
   }
 
   void _showDeletePackagingDialog(
@@ -1369,7 +1868,7 @@ class _PricingManagementScreenState
               Text(
                 title,
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -1457,7 +1956,7 @@ class _PricingManagementScreenState
                   title,
                   style: AppTypography.h6.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
@@ -1481,7 +1980,8 @@ class _PricingManagementScreenState
     bool isDark, {
     required String primaryLabel,
     required Color primaryColor,
-    required VoidCallback onPrimary,
+    required FutureOr<void> Function() onPrimary,
+    bool isSaving = false,
   }) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -1496,7 +1996,7 @@ class _PricingManagementScreenState
         children: [
           Expanded(
             child: OutlinedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: isSaving ? null : () => Navigator.pop(context),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 side: BorderSide(
@@ -1518,9 +2018,18 @@ class _PricingManagementScreenState
           Expanded(
             flex: 2,
             child: ElevatedButton.icon(
-              onPressed: onPrimary,
-              icon: const Icon(Icons.save_rounded, size: 18),
-              label: Text(primaryLabel),
+              onPressed: isSaving ? null : () => onPrimary(),
+              icon: isSaving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.save_rounded, size: 18),
+              label: Text(isSaving ? 'Saving...' : primaryLabel),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
@@ -1544,7 +2053,7 @@ class _PricingManagementScreenState
           title,
           style: AppTypography.h6.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: 4),
@@ -1583,7 +2092,7 @@ class _PricingManagementScreenState
           value,
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -1615,7 +2124,7 @@ class _PricingManagementScreenState
             value,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1630,7 +2139,7 @@ class _PricingManagementScreenState
       value,
       style: AppTypography.bodyMedium.copyWith(
         color: color,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w500,
       ),
     );
   }
@@ -1649,7 +2158,7 @@ class _PricingManagementScreenState
           text,
           style: AppTypography.bodySmall.copyWith(
             color: color,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
             fontSize: 11,
           ),
           maxLines: 1,
@@ -1672,7 +2181,7 @@ class _PricingManagementScreenState
         text,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white : AppColors.primary,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -1689,7 +2198,7 @@ class _PricingManagementScreenState
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w500,
           letterSpacing: 0.2,
         ),
       ),
@@ -1718,7 +2227,7 @@ class _PricingManagementScreenState
   Widget _buildFormLabel(String label, bool isDark) => Text(
         label,
         style: AppTypography.bodyMedium.copyWith(
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
           color: isDark ? Colors.white : AppColors.textPrimary,
         ),
       );
@@ -1729,6 +2238,7 @@ class _PricingManagementScreenState
     required IconData icon,
     required bool isDark,
     TextInputType keyboardType = TextInputType.text,
+    FormFieldValidator<String>? validator,
   }) {
     return TextFormField(
       controller: controller,
@@ -1770,6 +2280,7 @@ class _PricingManagementScreenState
           vertical: AppSpacing.md,
         ),
       ),
+      validator: validator,
     );
   }
 
@@ -1778,9 +2289,12 @@ class _PricingManagementScreenState
     required List<String> items,
     required IconData icon,
     required bool isDark,
-    required ValueChanged<String?> onChanged,
+    required ValueChanged<String?>? onChanged,
     Map<String, String>? labels,
   }) {
+    final normalizedItems = _uniqueOptions(items, fallback: value);
+    final normalizedValue =
+        normalizedItems.contains(value) ? value : normalizedItems.first;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
@@ -1793,7 +2307,7 @@ class _PricingManagementScreenState
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: value,
+          value: normalizedValue,
           isExpanded: true,
           icon: Icon(
             Icons.keyboard_arrow_down_rounded,
@@ -1804,7 +2318,7 @@ class _PricingManagementScreenState
             color: isDark ? Colors.white : AppColors.textPrimary,
             fontSize: 14,
           ),
-          items: items
+          items: normalizedItems
               .map(
                 (item) => DropdownMenuItem(
                   value: item,
@@ -1829,7 +2343,17 @@ class _PricingManagementScreenState
     );
   }
 
-  String _money(double value) => '\$${value.toStringAsFixed(2)}';
+  String _money(double value) => 'GHS ${value.toStringAsFixed(2)}';
+
+  String _priceSubtitle(_PricingItem price) {
+    final variety = price.cropVariety.trim().isEmpty
+        ? ''
+        : ' | ${price.cropVariety.trim()}';
+    if (price.pricingType == 'hub_sale') {
+      return '${price.packaging}$variety';
+    }
+    return '${price.farm}$variety | Raw';
+  }
 
   void _showSnack(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1849,6 +2373,25 @@ class _PricingManagementScreenState
       ),
     );
   }
+
+  void _showErrorSnack(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+      ),
+    );
+  }
 }
 
 class _PricingItem {
@@ -1856,8 +2399,11 @@ class _PricingItem {
     required this.id,
     required this.farmId,
     required this.farm,
+    required this.pricingType,
     required this.plant,
+    required this.cropVariety,
     required this.packaging,
+    required this.unit,
     required this.hubSellingPrice,
     required this.hubBulkPrice,
     required this.status,
@@ -1867,8 +2413,11 @@ class _PricingItem {
   final String id;
   final String farmId;
   final String farm;
+  final String pricingType;
   final String plant;
+  final String cropVariety;
   final String packaging;
+  final String unit;
   final double hubSellingPrice;
   final double hubBulkPrice;
   final String status;

@@ -42,7 +42,9 @@ class TechnicianMobileBottomNav extends StatelessWidget {
   ];
 
   Color _inactiveColor(bool isDark) {
-    return isDark ? AppColors.textOnDark.withOpacity(0.74) : AppColors.textSecondary;
+    return isDark
+        ? AppColors.textOnDark.withOpacity(0.74)
+        : AppColors.textSecondary;
   }
 
   Future<void> _handleTap(BuildContext context, int index) async {
@@ -78,7 +80,9 @@ class TechnicianMobileBottomNav extends StatelessWidget {
         ],
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
           ),
         ),
       ),
@@ -91,7 +95,8 @@ class TechnicianMobileBottomNav extends StatelessWidget {
               final index = entry.key;
               final item = entry.value;
               final isSelected = selectedIndex == index;
-              final color = isSelected ? AppColors.primary : _inactiveColor(isDark);
+              final color =
+                  isSelected ? AppColors.primary : _inactiveColor(isDark);
 
               return Expanded(
                 child: Material(
@@ -99,18 +104,22 @@ class TechnicianMobileBottomNav extends StatelessWidget {
                   child: InkWell(
                     onTap: () => _handleTap(context, index),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 8),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppColors.primary.withOpacity(isDark ? 0.16 : 0.10)
+                                  ? AppColors.primary
+                                      .withOpacity(isDark ? 0.16 : 0.10)
                                   : Colors.transparent,
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusFull),
                             ),
                             child: Icon(
                               item['icon'] as IconData,
@@ -126,7 +135,9 @@ class TechnicianMobileBottomNav extends StatelessWidget {
                             style: AppTypography.caption.copyWith(
                               color: color,
                               fontSize: 11,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                             ),
                           ),
                         ],

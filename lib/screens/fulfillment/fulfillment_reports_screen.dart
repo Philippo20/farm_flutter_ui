@@ -10,7 +10,8 @@ class FulfillmentReportsScreen extends StatelessWidget {
   static const _reports = [
     {
       'title': 'Daily Intake',
-      'subtitle': 'Inbound loads, received weight, dock timing, and acceptance status.',
+      'subtitle':
+          'Inbound loads, received weight, dock timing, and acceptance status.',
       'metric': '826 kg',
       'trend': '+12% vs yesterday',
       'status': 'Ready',
@@ -19,7 +20,8 @@ class FulfillmentReportsScreen extends StatelessWidget {
     },
     {
       'title': 'Packaging Throughput',
-      'subtitle': 'Line output, pack velocity, active batches, and cycle-time variance.',
+      'subtitle':
+          'Line output, pack velocity, active batches, and cycle-time variance.',
       'metric': '526/hr',
       'trend': '3 active lines',
       'status': 'Live',
@@ -28,7 +30,8 @@ class FulfillmentReportsScreen extends StatelessWidget {
     },
     {
       'title': 'Yield Variance',
-      'subtitle': 'Waste, shrinkage, sellable recovery, and crop-level loss trends.',
+      'subtitle':
+          'Waste, shrinkage, sellable recovery, and crop-level loss trends.',
       'metric': '3.5%',
       'trend': '29 kg waste',
       'status': 'Review',
@@ -37,7 +40,8 @@ class FulfillmentReportsScreen extends StatelessWidget {
     },
     {
       'title': 'Materials Risk',
-      'subtitle': 'Packaging inventory coverage, low-stock items, and reorder exposure.',
+      'subtitle':
+          'Packaging inventory coverage, low-stock items, and reorder exposure.',
       'metric': '1 risk',
       'trend': 'Labels below threshold',
       'status': 'Action',
@@ -117,7 +121,7 @@ class FulfillmentReportsScreen extends StatelessWidget {
             'Operational Reports',
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -177,7 +181,7 @@ class FulfillmentReportsScreen extends StatelessWidget {
             'Fulfillment Reports',
             style: AppTypography.h4.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               fontSize: isMobile ? 24 : 28,
             ),
           ),
@@ -349,7 +353,7 @@ class _ReportKpi extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -357,7 +361,7 @@ class _ReportKpi extends StatelessWidget {
                   value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -448,7 +452,7 @@ class _ReportCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -471,9 +475,8 @@ class _ReportCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withOpacity(0.04)
-                  : AppColors.neutral50,
+              color:
+                  isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               border: Border.all(
                 color: isDark ? Colors.white10 : AppColors.neutral200,
@@ -540,7 +543,7 @@ class _ReportMetric extends StatelessWidget {
           label,
           style: AppTypography.caption.copyWith(
             color: isDark ? Colors.white60 : AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -550,7 +553,7 @@ class _ReportMetric extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -595,7 +598,7 @@ class _PanelTitle extends StatelessWidget {
                 title,
                 style: AppTypography.bodyLarge.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 2),
@@ -657,7 +660,7 @@ class _ExportRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -720,7 +723,7 @@ class _InsightRow extends StatelessWidget {
                   title,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -730,7 +733,7 @@ class _InsightRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -767,7 +770,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );

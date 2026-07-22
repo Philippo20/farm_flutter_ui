@@ -1,4 +1,3 @@
-
 /// Route Guard
 /// Handles route-level access control based on user roles
 class RouteGuard {
@@ -16,7 +15,8 @@ class RouteGuard {
     '/superadmin/backup': ['super_admin'],
     '/superadmin/inventory': ['super_admin'],
     '/superadmin/deliveries': ['super_admin'],
-    
+    '/superadmin/crop-varieties': ['super_admin'],
+
     // Admin routes
     '/dashboard': ['admin'],
     '/users': ['admin'],
@@ -26,58 +26,59 @@ class RouteGuard {
     '/settings': ['admin'],
     '/inventory-admin': ['admin'],
     '/deliveries-admin': ['admin'],
-    
+    '/crop-varieties': ['admin'],
+
     // Farm Manager routes
     '/farm-manager': ['farm_manager'],
     '/inventory': ['farm_manager'],
     '/batch-generation': ['farm_manager'],
     '/fund-request': ['farm_manager'],
-    
+
     // Farm Owner routes
     '/owner_dashboard': ['farm_owner'],
     '/wallet': ['farm_owner'],
     '/withdraw': ['farm_owner'],
     '/owner-analytics': ['farm_owner'],
-    
+
     // Caretaker routes
     '/caretaker_dashboard': ['caretaker'],
     '/record-entry': ['caretaker'],
     '/input-confirmation': ['caretaker'],
     '/caretaker-chat': ['caretaker'],
-    
+
     // Technician routes
     '/technician_dashboard': ['technician'],
     '/report-issue': ['technician'],
     '/maintenance': ['technician'],
     '/request-items': ['technician'],
-    
+
     // Fulfillment routes
     '/fulfillment_dashboard': ['fulfillment_manager'],
     '/confirm-harvest': ['fulfillment_manager'],
     '/materials-inventory': ['fulfillment_manager'],
     '/yield-loss': ['fulfillment_manager'],
-    
+
     // Packaging routes
     '/packaging_dashboard': ['packaging_supervisor'],
     '/package-record': ['packaging_supervisor'],
     '/waste-tracking': ['packaging_supervisor'],
-    
+
     // Quality routes
     '/quality_dashboard': ['quality_assurance'],
     '/quality-inspection': ['quality_assurance'],
     '/reject-batch': ['quality_assurance'],
     '/approve-sales': ['quality_assurance'],
-    
+
     // Sales Manager routes
     '/sales_dashboard': ['sales_manager'],
     '/offtaker-management': ['sales_manager'],
     '/sales-performance': ['sales_manager'],
-    
+
     // Sales Personnel routes
     '/sales_personnel_dashboard': ['sales_personnel'],
     '/record-delivery': ['sales_personnel'],
     '/pipeline': ['sales_personnel'],
-    
+
     // Accountant routes
     '/accountant_dashboard': ['accountant'],
     '/confirm-transaction': ['accountant'],
@@ -94,7 +95,7 @@ class RouteGuard {
 
     // Get allowed roles for route
     final allowedRoles = _routeRoles[route];
-    
+
     // If route has no specific roles, allow access
     if (allowedRoles == null || allowedRoles.isEmpty) {
       return true;

@@ -23,7 +23,7 @@ class DemoAccounts {
   // Super Admin - Full system access
   static const superAdmin = DemoAccount(
     email: 'superadmin@farmestates.com',
-    password: 'super123',
+    password: 'FarmDemo#2026Super',
     role: 'super_admin',
     displayName: 'Super Admin',
     description: 'Full system access',
@@ -33,7 +33,7 @@ class DemoAccounts {
   // Admin - System management
   static const admin = DemoAccount(
     email: 'admin@farmestates.com',
-    password: 'admin123',
+    password: 'FarmDemo#2026Admin',
     role: 'admin',
     displayName: 'Admin',
     description: 'System management',
@@ -43,7 +43,7 @@ class DemoAccounts {
   // Farm Manager - Inventory, monitoring, batch generation
   static const farmManager = DemoAccount(
     email: 'manager@farmestates.com',
-    password: 'manager123',
+    password: 'FarmDemo#2026Manager',
     role: 'farm_manager',
     displayName: 'Farm Manager',
     description: 'Inventory & farm monitoring',
@@ -53,7 +53,7 @@ class DemoAccounts {
   // Farm Owner - Financial & yield monitoring
   static const farmOwner = DemoAccount(
     email: 'owner@farmestates.com',
-    password: 'owner123',
+    password: 'FarmDemo#2026Owner',
     role: 'farm_owner',
     displayName: 'Farm Owner',
     description: 'Financial & yield monitoring',
@@ -63,7 +63,7 @@ class DemoAccounts {
   // Caretaker - Daily farm operations & records
   static const caretaker = DemoAccount(
     email: 'caretaker@farmestates.com',
-    password: 'care123',
+    password: 'FarmDemo#2026Caretaker',
     role: 'caretaker',
     displayName: 'Caretaker',
     description: 'Daily operations & records',
@@ -73,7 +73,7 @@ class DemoAccounts {
   // Technician - Maintenance & technical issues
   static const technician = DemoAccount(
     email: 'technician@farmestates.com',
-    password: 'tech123',
+    password: 'FarmDemo#2026Tech',
     role: 'technician',
     displayName: 'Technician',
     description: 'Maintenance & repairs',
@@ -83,7 +83,7 @@ class DemoAccounts {
   // Fulfillment Manager - Harvest receiving & packaging coordination
   static const fulfillmentManager = DemoAccount(
     email: 'fulfillment@farmestates.com',
-    password: 'fulfill123',
+    password: 'FarmDemo#2026Fulfill',
     role: 'fulfillment_manager',
     displayName: 'Fulfillment Manager',
     description: 'Harvest & packaging coordination',
@@ -93,7 +93,7 @@ class DemoAccounts {
   // Packaging Supervisor - Packaging operations & waste tracking
   static const packagingSupervisor = DemoAccount(
     email: 'packaging@farmestates.com',
-    password: 'pack123',
+    password: 'FarmDemo#2026Pack',
     role: 'packaging_supervisor',
     displayName: 'Packaging Supervisor',
     description: 'Packaging & waste tracking',
@@ -103,7 +103,7 @@ class DemoAccounts {
   // Quality Assurance - Quality inspection & approval
   static const qualityAssurance = DemoAccount(
     email: 'quality@farmestates.com',
-    password: 'quality123',
+    password: 'FarmDemo#2026Quality',
     role: 'quality_assurance',
     displayName: 'Quality Assurance',
     description: 'Quality inspection & approval',
@@ -113,7 +113,7 @@ class DemoAccounts {
   // Sales Manager - Sales tracking & off-taker management
   static const salesManager = DemoAccount(
     email: 'sales@farmestates.com',
-    password: 'sales123',
+    password: 'FarmDemo#2026Sales',
     role: 'sales_manager',
     displayName: 'Sales Manager',
     description: 'Sales & off-taker management',
@@ -123,7 +123,7 @@ class DemoAccounts {
   // Sales Personnel - Product delivery & new off-takers
   static const salesPersonnel = DemoAccount(
     email: 'salesperson@farmestates.com',
-    password: 'seller123',
+    password: 'FarmDemo#2026Seller',
     role: 'sales_personnel',
     displayName: 'Sales Personnel',
     description: 'Product delivery & sales',
@@ -133,7 +133,7 @@ class DemoAccounts {
   // Accountant - Financial transactions & reporting
   static const accountant = DemoAccount(
     email: 'accountant@farmestates.com',
-    password: 'account123',
+    password: 'FarmDemo#2026Account',
     role: 'accountant',
     displayName: 'Accountant',
     description: 'Financial transactions & reports',

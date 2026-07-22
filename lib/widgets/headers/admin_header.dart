@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
+import '../../core/widgets/notification_center.dart';
 
 class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onMenuPressed;
@@ -75,7 +76,7 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
                 Text(
                   "${_greeting()}, $adminName",
                   style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     fontSize: isVerySmall ? 16 : 18,
                     color: isDark ? Colors.white : AppColors.darkBackground,
                     letterSpacing: 0.2,
@@ -138,7 +139,7 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
                       Text(
                         "${_greeting()}, $adminName",
                         style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
                           fontSize: isVerySmall ? 16 : 20,
                           color:
                               isDark ? Colors.white : AppColors.darkBackground,
@@ -194,11 +195,7 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
                   onPressed: onToggleDarkMode,
                 ),
                 const SizedBox(width: 8),
-                _buildActionButton(
-                  icon: Icons.notifications_none_outlined,
-                  tooltip: "Notifications",
-                  onPressed: () {},
-                ),
+                const NotificationCenter(),
                 const SizedBox(width: 8),
                 _buildUserAvatar(context),
               ],
@@ -327,7 +324,7 @@ class _HeaderDropdown extends StatelessWidget {
             onToggleDarkMode?.call();
             break;
           case 1:
-            // Notification action
+            showNotificationDialog(context);
             break;
           case 2:
             // Profile action

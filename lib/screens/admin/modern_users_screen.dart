@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/widgets/modern_admin_sidebar.dart';
 import '../../core/widgets/modern_admin_header.dart';
+import '../../core/widgets/modern_admin_sidebar.dart';
+import '../../core/widgets/skeleton_loader.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
-/// Modern Users Management Screen with clean table design
 class ModernUsersScreen extends ConsumerStatefulWidget {
   const ModernUsersScreen({super.key});
 
@@ -15,226 +18,229 @@ class ModernUsersScreen extends ConsumerStatefulWidget {
 }
 
 class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
+  final SuperAdminApiService _api = SuperAdminApiService();
+  final List<Map<String, dynamic>> _users = [];
+
   String _searchQuery = '';
   String _selectedRole = 'All';
   String _selectedStatus = 'All';
+  bool _isLoading = true;
+  String? _loadError;
 
-  final List<Map<String, dynamic>> _users = [
-    {
-      'id': '001',
-      'name': 'John Smith',
-      'email': 'john@farm.com',
-      'role': 'Admin',
-      'status': 'Active',
-      'farms': 'Northern, Southern',
-      'lastActive': '2 hours ago',
-      'avatar': 'JS'
-    },
-    {
-      'id': '002',
-      'name': 'Sarah Johnson',
-      'email': 'sarah@farm.com',
-      'role': 'Owner',
-      'status': 'Active',
-      'farms': 'Eastern',
-      'lastActive': '30 mins ago',
-      'avatar': 'SJ'
-    },
-    {
-      'id': '003',
-      'name': 'Mike Davis',
-      'email': 'mike@farm.com',
-      'role': 'Caretaker',
-      'status': 'Active',
-      'farms': 'Western',
-      'lastActive': '1 day ago',
-      'avatar': 'MD'
-    },
-    {
-      'id': '004',
-      'name': 'Emily Chen',
-      'email': 'emily@farm.com',
-      'role': 'Caretaker',
-      'status': 'Inactive',
-      'farms': 'Northern',
-      'lastActive': '5 days ago',
-      'avatar': 'EC'
-    },
-    {
-      'id': '005',
-      'name': 'Robert Wilson',
-      'email': 'robert@farm.com',
-      'role': 'Owner',
-      'status': 'Active',
-      'farms': 'Southern, Western',
-      'lastActive': 'Online',
-      'avatar': 'RW'
-    },
+  static const List<String> _roleOptions = [
+    'Admin',
+    'Farm Manager',
+    'Owner',
+    'Caretaker',
+    'Technician',
+    'Fulfillment Manager',
+    'Packaging Supervisor',
+    'Quality Officer',
+    'Sales Manager',
+    'Sales Person',
+    'Accountant',
+    'Driver',
+  ];
+
+  static const List<String> _statusOptions = [
+    'Active',
+    'Pending',
+    'Suspended',
   ];
 
   @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: isMobile ? _buildMobileLayout(isDark) : _buildDesktopLayout(isDark),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
-    );
+  void initState() {
+    super.initState();
+    _loadUsers();
   }
 
-  Widget _buildDesktopLayout(bool isDark) {
-    return Row(
-      children: [
-        // Sidebar
-        ModernAdminSidebar(selectedIndex: 1, onItemSelected: (_) {}),
+  Future<void> _loadUsers() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
 
-        // Main Content
-        Expanded(
-          child: Column(
-            children: [
-              // Header
-              ModernAdminHeader(
-                  userName: 'Admin',
-                  onNotificationTap: () {},
-                  onProfileTap: () {}),
+    try {
+      final users = await _api.getUsers();
+      if (!mounted) return;
+      setState(() {
+        _users
+          ..clear()
+          ..addAll(users.map(_mapUserDocument));
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loadError = error.toString());
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
-              // Content
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title & Add Button
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('User Management',
-                                  style: AppTypography.h4.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: isDark
-                                          ? Colors.white
-                                          : AppColors.textPrimary)),
-                              const SizedBox(height: 4),
-                              Text('Manage users, roles, and permissions',
-                                  style: AppTypography.bodyMedium.copyWith(
-                                      color: isDark
-                                          ? Colors.white70
-                                          : AppColors.textSecondary)),
-                            ],
-                          ),
-                          ElevatedButton.icon(
-                            onPressed: () =>
-                                _showAddUserDialog(context, isDark),
-                            icon: const Icon(Icons.person_add, size: 20),
-                            label: const Text('Add User'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.lg,
-                                  vertical: AppSpacing.md),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusMd)),
-                            ),
-                          ),
-                        ],
-                      ),
+  Map<String, dynamic> _mapUserDocument(Map<String, dynamic> doc) {
+    final role = _roleLabel(doc['role']);
+    final name = _text(doc['name'], fallback: 'Unnamed User');
+    final email = _text(doc['email']);
+    return {
+      'id': _text(doc[r'$id'] ?? doc['user_id'] ?? doc['id']),
+      'name': name,
+      'email': email,
+      'role': role,
+      'roleValue': _roleValue(role),
+      'status': _statusLabel(doc['status']),
+      'department': _text(
+        doc['department'],
+        fallback: _departmentForRole(role),
+      ),
+      'address': _text(doc['address']),
+      'phone': _text(doc['phone']),
+      'password': _text(doc['password']),
+      'joined': _dateLabel(doc[r'$createdAt'] ?? doc['created_at']),
+      'lastActive': _dateLabel(doc[r'$updatedAt'] ?? doc['updated_at']),
+      'avatar': _initials(name),
+    };
+  }
 
-                      const SizedBox(height: AppSpacing.xl),
+  String _text(dynamic value, {String fallback = ''}) {
+    final text = value?.toString().trim() ?? '';
+    return text.isEmpty ? fallback : text;
+  }
 
-                      // Stats Cards
-                      _buildStatsCards(isDark),
+  String _roleLabel(dynamic value) {
+    final raw = value?.toString().trim() ?? '';
+    switch (raw.toLowerCase()) {
+      case 'superadmin':
+      case 'super_admin':
+        return 'Super Admin';
+      case 'admin':
+        return 'Admin';
+      case 'farm_manager':
+        return 'Farm Manager';
+      case 'farm_owner':
+      case 'owner':
+        return 'Owner';
+      case 'caretaker':
+        return 'Caretaker';
+      case 'technicians':
+      case 'technician':
+        return 'Technician';
+      case 'fulfillment_manager':
+        return 'Fulfillment Manager';
+      case 'packaging_supervisor':
+        return 'Packaging Supervisor';
+      case 'quality_officer':
+      case 'quality_assurance':
+        return 'Quality Officer';
+      case 'sales_manager':
+        return 'Sales Manager';
+      case 'sales_person':
+      case 'sales_personnel':
+        return 'Sales Person';
+      case 'accountant':
+        return 'Accountant';
+      case 'driver':
+        return 'Driver';
+      default:
+        final label = _labelFromSnakeCase(raw);
+        return label.isEmpty ? 'Caretaker' : label;
+    }
+  }
 
-                      const SizedBox(height: AppSpacing.xl),
+  String _roleValue(String label) {
+    switch (label) {
+      case 'Super Admin':
+        return 'superadmin';
+      case 'Admin':
+        return 'admin';
+      case 'Farm Manager':
+        return 'farm_manager';
+      case 'Owner':
+        return 'farm_owner';
+      case 'Caretaker':
+        return 'caretaker';
+      case 'Technician':
+        return 'technician';
+      case 'Fulfillment Manager':
+        return 'fulfillment_manager';
+      case 'Packaging Supervisor':
+        return 'packaging_supervisor';
+      case 'Quality Officer':
+        return 'quality_officer';
+      case 'Sales Manager':
+        return 'sales_manager';
+      case 'Sales Person':
+        return 'sales_person';
+      case 'Accountant':
+        return 'accountant';
+      case 'Driver':
+        return 'driver';
+      default:
+        return label.toLowerCase().replaceAll(' ', '_');
+    }
+  }
 
-                      // Table Controls
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.surfaceDark : Colors.white,
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusLg),
-                          border: Border.all(
-                              color: isDark
-                                  ? Colors.white10
-                                  : Colors.black.withOpacity(0.08)),
-                        ),
-                        child: Row(
-                          children: [
-                            // Search
-                            Expanded(
-                              flex: 2,
-                              child: TextField(
-                                onChanged: (value) =>
-                                    setState(() => _searchQuery = value),
-                                decoration: InputDecoration(
-                                  hintText: 'Search users...',
-                                  prefixIcon: const Icon(Icons.search),
-                                  filled: true,
-                                  fillColor: isDark
-                                      ? Colors.white10
-                                      : AppColors.neutral100,
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusMd),
-                                      borderSide: BorderSide.none),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: AppSpacing.md),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            // Role Filter
-                            _buildDropdown(
-                                'Role',
-                                _selectedRole,
-                                ['All', 'Admin', 'Owner', 'Caretaker'],
-                                (v) => setState(() => _selectedRole = v!),
-                                isDark),
-                            const SizedBox(width: AppSpacing.md),
-                            // Status Filter
-                            _buildDropdown(
-                                'Status',
-                                _selectedStatus,
-                                ['All', 'Active', 'Inactive'],
-                                (v) => setState(() => _selectedStatus = v!),
-                                isDark),
-                          ],
-                        ),
-                      ),
+  String _statusLabel(dynamic value) {
+    final status = _labelFromSnakeCase(value?.toString() ?? '');
+    if (status == 'Inactive') return 'Suspended';
+    return status.isEmpty ? 'Active' : status;
+  }
 
-                      const SizedBox(height: AppSpacing.lg),
+  String _labelFromSnakeCase(String value) {
+    return value
+        .replaceAll('_', ' ')
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+  }
 
-                      _buildUsersTable(_filteredUsers, isDark),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+  String _departmentForRole(String role) {
+    final normalized = role.toLowerCase();
+    if (normalized.contains('admin')) return 'Administration';
+    if (normalized.contains('sales')) return 'Sales';
+    if (normalized.contains('driver')) return 'Logistics';
+    if (normalized.contains('accountant')) return 'Finance';
+    if (normalized.contains('packaging')) return 'Packaging';
+    if (normalized.contains('quality')) return 'Quality Assurance';
+    if (normalized.contains('fulfillment')) return 'Fulfillment';
+    if (normalized.contains('technician')) return 'IoT Operations';
+    return 'Farm Operations';
+  }
+
+  String _dateLabel(dynamic value) {
+    final text = value?.toString() ?? '';
+    if (text.isEmpty) return '-';
+    final date = DateTime.tryParse(text);
+    if (date == null) return text.length > 10 ? text.substring(0, 10) : text;
+    return '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
+  }
+
+  String _initials(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return 'U';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
   }
 
   List<Map<String, dynamic>> get _filteredUsers {
+    final query = _searchQuery.trim().toLowerCase();
     return _users.where((user) {
-      final name = (user['name'] as String).toLowerCase();
-      final email = (user['email'] as String).toLowerCase();
-      final query = _searchQuery.toLowerCase();
-      if (query.isNotEmpty && !name.contains(query) && !email.contains(query)) {
+      final haystack = [
+        user['name'],
+        user['email'],
+        user['role'],
+        user['department'],
+        user['phone'],
+      ].join(' ').toLowerCase();
+      if (query.isNotEmpty && !haystack.contains(query)) return false;
+      if (_selectedRole != 'All' && user['role'] != _selectedRole) {
         return false;
       }
-      if (_selectedRole != 'All' && user['role'] != _selectedRole) return false;
       if (_selectedStatus != 'All' && user['status'] != _selectedStatus) {
         return false;
       }
@@ -242,448 +248,197 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     }).toList();
   }
 
-  Widget _buildMobileLayout(bool isDark) {
+  List<String> get _roleFilterItems {
+    final roles = _users.map((u) => u['role'].toString()).toSet().toList()
+      ..sort();
+    return ['All', ...roles];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 700;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final user = ref.watch(currentUserProvider);
+    final userName = user?.name ?? 'Admin';
+    final userEmail = user?.email ?? '';
+
+    return Scaffold(
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      body: isMobile
+          ? _buildMobileLayout(isDark, userName)
+          : _buildDesktopLayout(isDark, userName, userEmail),
+      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+    );
+  }
+
+  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail) {
+    return Row(
+      children: [
+        ModernAdminSidebar(
+          selectedIndex: 1,
+          onItemSelected: (_) {},
+          userName: userName,
+          userEmail: userEmail,
+          userRole: 'Administrator',
+        ),
+        Expanded(
+          child: Column(
+            children: [
+              ModernAdminHeader(
+                userName: userName.split(' ').first,
+                onNotificationTap: () {},
+                onProfileTap: () {},
+              ),
+              Expanded(child: _buildContent(isDark, AppSpacing.xl, false)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout(bool isDark, String userName) {
     return Column(
       children: [
-        // Header
         ModernAdminHeader(
-            userName: 'Admin', onNotificationTap: () {}, onProfileTap: () {}),
+          userName: userName.split(' ').first,
+          onNotificationTap: () {},
+          onProfileTap: () {},
+        ),
+        Expanded(child: _buildContent(isDark, AppSpacing.md, true)),
+      ],
+    );
+  }
 
-        // Content
+  Widget _buildContent(bool isDark, double padding, bool isMobile) {
+    if (_isLoading) {
+      return SingleChildScrollView(
+        padding: EdgeInsets.all(padding),
+        child: const AdminDataSkeleton(rowCount: 6),
+      );
+    }
+
+    if (_loadError != null) {
+      return _buildErrorState(isDark, padding);
+    }
+
+    final filteredUsers = _filteredUsers;
+    return RefreshIndicator(
+      onRefresh: _loadUsers,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTitleRow(isDark, isMobile),
+            const SizedBox(height: AppSpacing.xl),
+            isMobile
+                ? _buildMobileStatsCards(isDark)
+                : _buildStatsCards(isDark),
+            const SizedBox(height: AppSpacing.xl),
+            _buildControls(isDark, isMobile),
+            const SizedBox(height: AppSpacing.lg),
+            if (isMobile)
+              _buildMobileUsersList(filteredUsers, isDark)
+            else
+              _buildUsersTable(filteredUsers, isDark),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(bool isDark, double padding) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(padding),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(
+            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
+          ),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.cloud_off, color: AppColors.error, size: 42),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Unable to load users',
+              style: AppTypography.h6.copyWith(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _loadError ?? 'Please try again.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            ElevatedButton.icon(
+              onPressed: _loadUsers,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTitleRow(bool isDark, bool isMobile) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title & Add Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('User Management',
-                              style: AppTypography.h5.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: isDark
-                                      ? Colors.white
-                                      : AppColors.textPrimary)),
-                          const SizedBox(height: 4),
-                          Text('Manage users, roles, and permissions',
-                              style: AppTypography.bodySmall.copyWith(
-                                  color: isDark
-                                      ? Colors.white70
-                                      : AppColors.textSecondary)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    ElevatedButton.icon(
-                      onPressed: () => _showAddUserDialog(context, isDark),
-                      icon: const Icon(Icons.person_add, size: 18),
-                      label: const Text('Add'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-                        shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusMd)),
-                      ),
-                    ),
-                  ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'User Management',
+                style:
+                    (isMobile ? AppTypography.h5 : AppTypography.h4).copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                // Stats Cards
-                _buildMobileStatsCards(isDark),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                // Table Controls
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.surfaceDark : Colors.white,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                    border: Border.all(
-                        color: isDark
-                            ? Colors.white10
-                            : Colors.black.withOpacity(0.08)),
-                  ),
-                  child: Column(
-                    children: [
-                      // Search
-                      TextField(
-                        onChanged: (value) =>
-                            setState(() => _searchQuery = value),
-                        decoration: InputDecoration(
-                          hintText: 'Search users...',
-                          prefixIcon: const Icon(Icons.search),
-                          filled: true,
-                          fillColor:
-                              isDark ? Colors.white10 : AppColors.neutral100,
-                          border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd),
-                              borderSide: BorderSide.none),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      // Filters Row
-                      Row(
-                        children: [
-                          Expanded(
-                              child: _buildDropdown(
-                                  'Role',
-                                  _selectedRole,
-                                  ['All', 'Admin', 'Owner', 'Caretaker'],
-                                  (v) => setState(() => _selectedRole = v!),
-                                  isDark)),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                              child: _buildDropdown(
-                                  'Status',
-                                  _selectedStatus,
-                                  ['All', 'Active', 'Inactive'],
-                                  (v) => setState(() => _selectedStatus = v!),
-                                  isDark)),
-                        ],
-                      ),
-                    ],
-                  ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Manage backend users, roles, and account status',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: isDark ? Colors.white70 : AppColors.textSecondary,
                 ),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                // Users List (Mobile optimized)
-                ..._users.where((user) {
-                  if (_searchQuery.isNotEmpty &&
-                      !user['name']
-                          .toLowerCase()
-                          .contains(_searchQuery.toLowerCase())) {
-                    return false;
-                  }
-                  if (_selectedRole != 'All' && user['role'] != _selectedRole) {
-                    return false;
-                  }
-                  if (_selectedStatus != 'All' &&
-                      user['status'] != _selectedStatus) {
-                    return false;
-                  }
-                  return true;
-                }).map((user) => _buildMobileUserCard(user, isDark)),
-              ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        ElevatedButton.icon(
+          onPressed: () => _showAddUserDialog(context, isDark),
+          icon: Icon(Icons.person_add, size: isMobile ? 18 : 20),
+          label: Text(isMobile ? 'Add' : 'Add User'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? AppSpacing.md : AppSpacing.lg,
+              vertical: isMobile ? AppSpacing.sm : AppSpacing.md,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildMobileStatsCards(bool isDark) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: AppSpacing.sm,
-      crossAxisSpacing: AppSpacing.sm,
-      childAspectRatio: 2.5,
-      children: [
-        _buildStatCard(
-          title: 'Total Users',
-          value: '${_users.length}',
-          change: '+12%',
-          isPositive: true,
-          icon: Icons.people_rounded,
-          color: AppColors.primary,
-          isDark: isDark,
-        ),
-        _buildStatCard(
-          title: 'Active Users',
-          value: '${_users.where((u) => u['status'] == 'Active').length}',
-          change: '+5%',
-          isPositive: true,
-          icon: Icons.check_circle_rounded,
-          color: AppColors.success,
-          isDark: isDark,
-        ),
-        _buildStatCard(
-          title: 'Caretakers',
-          value: '${_users.where((u) => u['role'] == 'Caretaker').length}',
-          change: '+8%',
-          isPositive: true,
-          icon: Icons.agriculture_rounded,
-          color: AppColors.info,
-          isDark: isDark,
-        ),
-        _buildStatCard(
-          title: 'Owners',
-          value: '${_users.where((u) => u['role'] == 'Owner').length}',
-          change: '+3%',
-          isPositive: true,
-          icon: Icons.business_rounded,
-          color: AppColors.warning,
-          isDark: isDark,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMobileUserCard(Map<String, dynamic> user, bool isDark) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    shape: BoxShape.circle),
-                child: Center(
-                    child: Text(user['avatar'],
-                        style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14))),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(user['name'],
-                        style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary)),
-                    Text(user['email'],
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? Colors.white60
-                                : AppColors.textSecondary)),
-                  ],
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                      onPressed: () =>
-                          _showEditUserDialog(context, user, isDark),
-                      icon: const Icon(Icons.edit_outlined),
-                      iconSize: 18,
-                      color: AppColors.primary),
-                  IconButton(
-                      onPressed: () =>
-                          _showDeleteUserDialog(context, user, isDark),
-                      icon: const Icon(Icons.delete_outline),
-                      iconSize: 18,
-                      color: AppColors.error),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getRoleColor(user['role']).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                ),
-                child: Text(user['role'],
-                    style: TextStyle(
-                        color: _getRoleColor(user['role']),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600)),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Row(
-                children: [
-                  Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                          color: user['status'] == 'Active'
-                              ? AppColors.success
-                              : AppColors.error,
-                          shape: BoxShape.circle)),
-                  const SizedBox(width: 4),
-                  Text(user['status'],
-                      style: TextStyle(
-                          color: user['status'] == 'Active'
-                              ? AppColors.success
-                              : AppColors.error,
-                          fontSize: 11)),
-                ],
-              ),
-              const Spacer(),
-              Text(user['lastActive'],
-                  style: TextStyle(
-                      fontSize: 11,
-                      color:
-                          isDark ? Colors.white70 : AppColors.textSecondary)),
-            ],
-          ),
-          if (user['farms'].toString().isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text('Farms: ${user['farms']}',
-                style: TextStyle(
-                    fontSize: 11,
-                    color: isDark ? Colors.white70 : AppColors.textSecondary)),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigation(bool isDark) {
-    final navItems = [
-      {
-        'icon': Icons.dashboard_outlined,
-        'label': 'Dashboard',
-        'index': 0,
-        'route': '/dashboard'
-      },
-      {
-        'icon': Icons.people_outline,
-        'label': 'Users',
-        'index': 1,
-        'route': '/users'
-      },
-      {
-        'icon': Icons.agriculture_outlined,
-        'label': 'Farms',
-        'index': 2,
-        'route': '/farms'
-      },
-      {
-        'icon': Icons.sensors_outlined,
-        'label': 'Sensors',
-        'index': 3,
-        'route': '/sensors'
-      },
-      {
-        'icon': Icons.analytics_outlined,
-        'label': 'Analytics',
-        'index': 4,
-        'route': '/analytics'
-      },
-      {
-        'icon': Icons.settings_outlined,
-        'label': 'Settings',
-        'index': 5,
-        'route': '/settings'
-      },
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-        border: Border(
-          top: BorderSide(
-            color: isDark
-                ? Colors.white.withOpacity(0.08)
-                : Colors.black.withOpacity(0.08),
-            width: 1,
-          ),
-        ),
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          height: 70,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: navItems.take(5).map((item) {
-              final index = item['index'] as int;
-              final route = item['route'] as String;
-              final isSelected = index == 1; // Users screen is index 1
-
-              return Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      if (index != 1) {
-                        // Navigate to the route
-                        try {
-                          Navigator.pushReplacementNamed(context, route);
-                        } catch (e) {
-                          // If route doesn't exist, try pushNamed as fallback
-                          try {
-                            Navigator.pushNamed(context, route);
-                          } catch (e2) {
-                            debugPrint('Navigation error: $e2');
-                          }
-                        }
-                      }
-                    },
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          item['icon'] as IconData,
-                          size: 24,
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark
-                                  ? Colors.white.withOpacity(0.5)
-                                  : AppColors.textSecondary),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item['label'] as String,
-                          style: AppTypography.caption.copyWith(
-                            color: isSelected
-                                ? AppColors.primary
-                                : (isDark
-                                    ? Colors.white.withOpacity(0.5)
-                                    : AppColors.textSecondary),
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
     );
   }
 
@@ -695,52 +450,62 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       mainAxisSpacing: AppSpacing.sm,
       crossAxisSpacing: AppSpacing.sm,
       childAspectRatio: 3.5,
-      children: [
-        _buildStatCard(
-          title: 'Total Users',
-          value: '${_users.length}',
-          change: '+12%',
-          isPositive: true,
-          icon: Icons.people_rounded,
-          color: AppColors.primary,
-          isDark: isDark,
-        ),
-        _buildStatCard(
-          title: 'Active Users',
-          value: '${_users.where((u) => u['status'] == 'Active').length}',
-          change: '+5%',
-          isPositive: true,
-          icon: Icons.check_circle_rounded,
-          color: AppColors.success,
-          isDark: isDark,
-        ),
-        _buildStatCard(
-          title: 'Caretakers',
-          value: '${_users.where((u) => u['role'] == 'Caretaker').length}',
-          change: '+8%',
-          isPositive: true,
-          icon: Icons.agriculture_rounded,
-          color: AppColors.info,
-          isDark: isDark,
-        ),
-        _buildStatCard(
-          title: 'Owners',
-          value: '${_users.where((u) => u['role'] == 'Owner').length}',
-          change: '+3%',
-          isPositive: true,
-          icon: Icons.business_rounded,
-          color: AppColors.warning,
-          isDark: isDark,
-        ),
-      ],
+      children: _statCards(isDark),
     );
+  }
+
+  Widget _buildMobileStatsCards(bool isDark) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: AppSpacing.sm,
+      crossAxisSpacing: AppSpacing.sm,
+      childAspectRatio: 2.5,
+      children: _statCards(isDark),
+    );
+  }
+
+  List<Widget> _statCards(bool isDark) {
+    final activeCount = _users.where((u) => u['status'] == 'Active').length;
+    final pendingCount = _users.where((u) => u['status'] == 'Pending').length;
+    final suspendedCount =
+        _users.where((u) => u['status'] == 'Suspended').length;
+    return [
+      _buildStatCard(
+        title: 'Total Users',
+        value: '${_users.length}',
+        icon: Icons.people_rounded,
+        color: AppColors.primary,
+        isDark: isDark,
+      ),
+      _buildStatCard(
+        title: 'Active',
+        value: '$activeCount',
+        icon: Icons.check_circle_rounded,
+        color: AppColors.success,
+        isDark: isDark,
+      ),
+      _buildStatCard(
+        title: 'Pending',
+        value: '$pendingCount',
+        icon: Icons.pending_actions_rounded,
+        color: AppColors.warning,
+        isDark: isDark,
+      ),
+      _buildStatCard(
+        title: 'Suspended',
+        value: '$suspendedCount',
+        icon: Icons.block_rounded,
+        color: AppColors.error,
+        isDark: isDark,
+      ),
+    ];
   }
 
   Widget _buildStatCard({
     required String title,
     required String value,
-    required String change,
-    required bool isPositive,
     required IconData icon,
     required Color color,
     required bool isDark,
@@ -750,123 +515,233 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       color: color.withOpacity(0.15),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        side: BorderSide(
-          color: color.withOpacity(0.3),
-          width: 1.5,
-        ),
+        side: BorderSide(color: color.withOpacity(0.3), width: 1.5),
       ),
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Icon with colored background
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(isDark ? 0.15 : 0.9),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 18,
-                ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(isDark ? 0.15 : 0.9),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
-
-              const SizedBox(width: AppSpacing.sm),
-
-              // Title and Value
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        title,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: color.withOpacity(0.8),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 10,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: color.withOpacity(0.8),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 10,
                     ),
-                    const SizedBox(height: 1),
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          value,
-                          style: AppTypography.h6.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                            letterSpacing: -0.5,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: AppSpacing.xs),
-
-              // Trend Badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(isDark ? 0.15 : 0.9),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  border: Border.all(
-                    color: isPositive ? AppColors.success : AppColors.error,
-                    width: 1,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                      size: 10,
-                      color: isPositive ? AppColors.success : AppColors.error,
+                  const SizedBox(height: 1),
+                  Text(
+                    value,
+                    style: AppTypography.h6.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                      fontSize: 18,
                     ),
-                    const SizedBox(width: 2),
-                    Text(
-                      change,
-                      style: AppTypography.bodySmall.copyWith(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: isPositive ? AppColors.success : AppColors.error,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  Widget _buildControls(bool isDark, bool isMobile) {
+    final roleItems = _roleFilterItems;
+    if (!roleItems.contains(_selectedRole)) _selectedRole = 'All';
+    if (!['All', ..._statusOptions].contains(_selectedStatus)) {
+      _selectedStatus = 'All';
+    }
+
+    return Container(
+      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
+        ),
+      ),
+      child: isMobile
+          ? Column(
+              children: [
+                _buildSearchField(isDark),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDropdown(
+                        'Role',
+                        _selectedRole,
+                        roleItems,
+                        (v) => setState(() => _selectedRole = v!),
+                        isDark,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _buildDropdown(
+                        'Status',
+                        _selectedStatus,
+                        ['All', ..._statusOptions],
+                        (v) => setState(() => _selectedStatus = v!),
+                        isDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(flex: 2, child: _buildSearchField(isDark)),
+                const SizedBox(width: AppSpacing.md),
+                _buildDropdown(
+                  'Role',
+                  _selectedRole,
+                  roleItems,
+                  (v) => setState(() => _selectedRole = v!),
+                  isDark,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                _buildDropdown(
+                  'Status',
+                  _selectedStatus,
+                  ['All', ..._statusOptions],
+                  (v) => setState(() => _selectedStatus = v!),
+                  isDark,
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildSearchField(bool isDark) {
+    return TextField(
+      onChanged: (value) => setState(() => _searchQuery = value),
+      decoration: InputDecoration(
+        hintText: 'Search users...',
+        prefixIcon: const Icon(Icons.search),
+        filled: true,
+        fillColor: isDark ? Colors.white10 : AppColors.neutral100,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      ),
+    );
+  }
+
+  Widget _buildMobileUsersList(
+    List<Map<String, dynamic>> filteredUsers,
+    bool isDark,
+  ) {
+    if (filteredUsers.isEmpty) return _buildEmptyState(isDark);
+    return Column(
+      children: filteredUsers
+          .map((user) => _buildMobileUserCard(user, isDark))
+          .toList(),
+    );
+  }
+
+  Widget _buildMobileUserCard(Map<String, dynamic> user, bool isDark) {
+    final roleColor = _getRoleColor(user['role']);
+    final statusColor = _getStatusColor(user['status']);
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _buildAvatar(user, roleColor, 40),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user['name'],
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      user['email'],
+                      style: TextStyle(
+                        fontSize: 12,
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              _buildUserActionButtons(user, isDark),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(child: _buildBadge(user['role'], roleColor)),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(child: _buildBadge(user['status'], statusColor)),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            '${user['department']} - Joined ${user['joined']}',
+            style: TextStyle(
+              fontSize: 11,
+              color: isDark ? Colors.white70 : AppColors.textSecondary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildUsersTable(
-      List<Map<String, dynamic>> filteredUsers, bool isDark) {
+    List<Map<String, dynamic>> filteredUsers,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -887,7 +762,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 child: Text(
                   'All Users',
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -898,15 +773,12 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.18),
-                  ),
                 ),
                 child: Text(
                   '${filteredUsers.length} records',
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.primary,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -915,7 +787,10 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
           const SizedBox(height: AppSpacing.lg),
           _buildUserTableHeader(isDark),
           const SizedBox(height: AppSpacing.sm),
-          ...filteredUsers.map((user) => _buildUserRow(user, isDark)),
+          if (filteredUsers.isEmpty)
+            _buildEmptyState(isDark)
+          else
+            ...filteredUsers.map((user) => _buildUserRow(user, isDark)),
         ],
       ),
     );
@@ -931,47 +806,36 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
         color:
             isDark ? Colors.white.withValues(alpha: 0.04) : AppColors.neutral50,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.10)
-              : Colors.black.withValues(alpha: 0.04),
-        ),
       ),
       child: Row(
         children: [
           _buildTableHeader('User', flex: 3, isDark: isDark),
-          _buildTableHeader('Role', isDark: isDark),
-          _buildTableHeader('Farms', flex: 2, isDark: isDark),
+          _buildTableHeader('Role', flex: 2, isDark: isDark),
+          _buildTableHeader('Department', flex: 2, isDark: isDark),
           _buildTableHeader('Status', isDark: isDark),
-          _buildTableHeader('Last Active', isDark: isDark),
+          _buildTableHeader('Joined', isDark: isDark),
           const SizedBox(width: 88),
         ],
       ),
     );
   }
 
-  Widget _buildTableHeader(
-    String label, {
-    int flex = 1,
-    required bool isDark,
-  }) {
+  Widget _buildTableHeader(String label, {int flex = 1, required bool isDark}) {
     return Expanded(
       flex: flex,
       child: Text(
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.2,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
   }
 
   Widget _buildUserRow(Map<String, dynamic> user, bool isDark) {
-    final roleColor = _getRoleColor(user['role'] as String);
-    final statusColor = _getStatusColor(user['status'] as String);
-
+    final roleColor = _getRoleColor(user['role']);
+    final statusColor = _getStatusColor(user['status']);
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.symmetric(
@@ -983,11 +847,6 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
             ? Colors.white.withValues(alpha: 0.025)
             : AppColors.neutral50,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.black.withValues(alpha: 0.035),
-        ),
       ),
       child: Row(
         children: [
@@ -995,51 +854,28 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
             flex: 3,
             child: Row(
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        roleColor.withValues(alpha: 0.95),
-                        roleColor.withValues(alpha: 0.68),
-                      ],
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      user['avatar'] as String,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ),
+                _buildAvatar(user, roleColor, 40),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user['name'] as String,
+                        user['name'],
                         style: AppTypography.bodyMedium.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '#${user['id']}  •  ${user['email']}',
+                        '#${user['id']} - ${user['email']}',
                         style: AppTypography.bodySmall.copyWith(
                           color: isDark
                               ? Colors.white.withValues(alpha: 0.62)
                               : AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1050,26 +886,24 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
               ],
             ),
           ),
-          Expanded(child: _buildBadge(user['role'] as String, roleColor)),
+          Expanded(flex: 2, child: _buildBadge(user['role'], roleColor)),
           Expanded(
             flex: 2,
             child: Text(
-              user['farms'] as String,
+              user['department'],
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          Expanded(child: _buildBadge(user['status'] as String, statusColor)),
+          Expanded(child: _buildBadge(user['status'], statusColor)),
           Expanded(
             child: Text(
-              user['lastActive'] as String,
+              user['joined'],
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1077,6 +911,32 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
           ),
           _buildUserActionButtons(user, isDark),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(Map<String, dynamic> user, Color color, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.95),
+            color.withValues(alpha: 0.68),
+          ],
+        ),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          user['avatar'],
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
+          ),
+        ),
       ),
     );
   }
@@ -1093,14 +953,34 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
         ),
         child: Text(
           text,
-          style: TextStyle(
-            color: color,
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-          ),
+          style: TextStyle(color: color, fontSize: 11),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Column(
+        children: [
+          Icon(
+            Icons.people_outline,
+            color: isDark ? Colors.white38 : AppColors.textSecondary,
+            size: 40,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'No users found',
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? Colors.white70 : AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1147,8 +1027,13 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     );
   }
 
-  Widget _buildDropdown(String label, String value, List<String> items,
-      Function(String?) onChanged, bool isDark) {
+  Widget _buildDropdown(
+    String label,
+    String value,
+    List<String> items,
+    Function(String?) onChanged,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
@@ -1156,7 +1041,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       ),
       child: DropdownButton<String>(
-        value: value,
+        value: items.contains(value) ? value : items.first,
         items: items
             .map((item) => DropdownMenuItem(value: item, child: Text(item)))
             .toList(),
@@ -1170,11 +1055,16 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
   Color _getRoleColor(String role) {
     switch (role) {
       case 'Admin':
+      case 'Super Admin':
         return AppColors.error;
       case 'Owner':
+      case 'Farm Manager':
         return AppColors.primary;
       case 'Caretaker':
+      case 'Technician':
         return AppColors.info;
+      case 'Driver':
+        return AppColors.warning;
       default:
         return AppColors.textSecondary;
     }
@@ -1184,770 +1074,865 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     switch (status) {
       case 'Active':
         return AppColors.success;
-      case 'Inactive':
+      case 'Suspended':
         return AppColors.error;
       default:
         return AppColors.warning;
     }
   }
 
-  // ============ MODAL DIALOGS ============
+  Widget _buildBottomNavigation(bool isDark) {
+    final navItems = [
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Dashboard',
+        'index': 0,
+        'route': '/dashboard',
+      },
+      {
+        'icon': Icons.people_outline,
+        'label': 'Users',
+        'index': 1,
+        'route': '/users',
+      },
+      {
+        'icon': Icons.agriculture_outlined,
+        'label': 'Farms',
+        'index': 2,
+        'route': '/farms',
+      },
+      {
+        'icon': Icons.sensors_outlined,
+        'label': 'Sensors',
+        'index': 3,
+        'route': '/sensors',
+      },
+      {
+        'icon': Icons.analytics_outlined,
+        'label': 'Analytics',
+        'index': 4,
+        'route': '/analytics',
+      },
+    ];
 
-  void _showAddUserDialog(BuildContext context, bool isDark) {
-    final nameController = TextEditingController();
-    final emailController = TextEditingController();
-    String selectedRole = 'Caretaker';
-    String selectedFarm = 'Northern Farm';
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-          insetPadding: EdgeInsets.symmetric(
-              horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
-              vertical: AppSpacing.xl),
-          child: Container(
-            width: isMobile ? double.infinity : 480,
-            constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.85),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [
-                      AppColors.primary,
-                      AppColors.primary.withOpacity(0.8)
-                    ], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(AppSpacing.radiusXl)),
-                  ),
-                  child: Row(
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: SizedBox(
+          height: 70,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: navItems.map((item) {
+              final index = item['index'] as int;
+              final route = item['route'] as String;
+              final isSelected = index == 1;
+              return Expanded(
+                child: InkWell(
+                  onTap: () {
+                    if (!isSelected) {
+                      Navigator.pushReplacementNamed(context, route);
+                    }
+                  },
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd)),
-                          child: const Icon(Icons.person_add,
-                              color: Colors.white, size: 24)),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                            Text('Add New User',
-                                style: AppTypography.h6.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
-                            Text('Create a new team member account',
-                                style: AppTypography.bodySmall
-                                    .copyWith(color: Colors.white70))
-                          ])),
-                      IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close, color: Colors.white70)),
+                      Icon(
+                        item['icon'] as IconData,
+                        size: 24,
+                        color: isSelected
+                            ? AppColors.primary
+                            : (isDark
+                                ? Colors.white.withOpacity(0.5)
+                                : AppColors.textSecondary),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        item['label'] as String,
+                        style: AppTypography.caption.copyWith(
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.5)
+                                  : AppColors.textSecondary),
+                          fontWeight:
+                              isSelected ? FontWeight.w500 : FontWeight.normal,
+                          fontSize: 11,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
-                // Form
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildFormLabel('Full Name', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildFormTextField(
-                            controller: nameController,
-                            hint: 'e.g., John Smith',
-                            icon: Icons.person,
-                            isDark: isDark),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Email Address', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildFormTextField(
-                            controller: emailController,
-                            hint: 'e.g., john@farm.com',
-                            icon: Icons.email,
-                            isDark: isDark),
-                        const SizedBox(height: AppSpacing.lg),
-                        if (!isMobile)
-                          Row(children: [
-                            Expanded(
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                  _buildFormLabel('Role', isDark),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  _buildFormDropdown(
-                                      value: selectedRole,
-                                      items: ['Admin', 'Owner', 'Caretaker'],
-                                      icon: Icons.badge,
-                                      isDark: isDark,
-                                      onChanged: (v) => setDialogState(
-                                          () => selectedRole = v!))
-                                ])),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                  _buildFormLabel('Assign Farm', isDark),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  _buildFormDropdown(
-                                      value: selectedFarm,
-                                      items: [
-                                        'Northern Farm',
-                                        'Southern Farm',
-                                        'Eastern Farm',
-                                        'Western Farm'
-                                      ],
-                                      icon: Icons.agriculture,
-                                      isDark: isDark,
-                                      onChanged: (v) => setDialogState(
-                                          () => selectedFarm = v!))
-                                ])),
-                          ])
-                        else ...[
-                          _buildFormLabel('Role', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildFormDropdown(
-                              value: selectedRole,
-                              items: ['Admin', 'Owner', 'Caretaker'],
-                              icon: Icons.badge,
-                              isDark: isDark,
-                              onChanged: (v) =>
-                                  setDialogState(() => selectedRole = v!)),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Assign Farm', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildFormDropdown(
-                              value: selectedFarm,
-                              items: [
-                                'Northern Farm',
-                                'Southern Farm',
-                                'Eastern Farm',
-                                'Western Farm'
-                              ],
-                              icon: Icons.agriculture,
-                              isDark: isDark,
-                              onChanged: (v) =>
-                                  setDialogState(() => selectedFarm = v!)),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                // Actions
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.03)
-                          : AppColors.neutral50,
-                      borderRadius: const BorderRadius.vertical(
-                          bottom: Radius.circular(AppSpacing.radiusXl))),
-                  child: Row(
-                    children: [
-                      Expanded(
-                          child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: AppSpacing.md),
-                                  side: BorderSide(
-                                      color: isDark
-                                          ? Colors.white24
-                                          : AppColors.neutral300),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusMd))),
-                              child: Text('Cancel',
-                                  style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white70
-                                          : AppColors.textSecondary)))),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                          flex: 2,
-                          child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Row(children: [
-                                          const Icon(Icons.check_circle,
-                                              color: Colors.white),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                              '${nameController.text.isEmpty ? "User" : nameController.text} added!')
-                                        ]),
-                                        backgroundColor: AppColors.success,
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                AppSpacing.radiusMd))));
-                              },
-                              icon: const Icon(Icons.person_add, size: 18),
-                              label: const Text('Add User'),
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: AppSpacing.md),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusMd))))),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              );
+            }).toList(),
           ),
         ),
       ),
     );
   }
 
+  Future<void> _createUser({
+    required String name,
+    required String email,
+    required String password,
+    required String phone,
+    required String address,
+    required String role,
+    required String department,
+    required String status,
+  }) async {
+    await _api.createUser(
+      name: name,
+      email: email,
+      password: password,
+      address: address,
+      role: _roleValue(role),
+      phone: phone,
+      department: department,
+      status: status,
+    );
+    await _loadUsers();
+  }
+
+  Future<void> _updateUser({
+    required Map<String, dynamic> user,
+    required String name,
+    required String email,
+    required String password,
+    required String phone,
+    required String address,
+    required String role,
+    required String department,
+    required String status,
+  }) async {
+    await _api.updateUser(
+      id: user['id'].toString(),
+      name: name,
+      email: email,
+      password: password,
+      address: address,
+      role: _roleValue(role),
+      phone: phone,
+      department: department,
+      status: status,
+    );
+    await _loadUsers();
+  }
+
+  void _showAddUserDialog(BuildContext context, bool isDark) {
+    _showUserFormDialog(context: context, isDark: isDark);
+  }
+
   void _showEditUserDialog(
-      BuildContext context, Map<String, dynamic> user, bool isDark) {
-    final nameController = TextEditingController(text: user['name']);
-    final emailController = TextEditingController(text: user['email']);
-    String selectedRole = user['role'];
-    String selectedStatus = user['status'];
+    BuildContext context,
+    Map<String, dynamic> user,
+    bool isDark,
+  ) {
+    _showUserFormDialog(context: context, isDark: isDark, user: user);
+  }
+
+  void _showUserFormDialog({
+    required BuildContext context,
+    required bool isDark,
+    Map<String, dynamic>? user,
+  }) {
+    final isEdit = user != null;
+    final nameController =
+        TextEditingController(text: isEdit ? user['name'] : '');
+    final emailController =
+        TextEditingController(text: isEdit ? user['email'] : '');
+    final passwordController = TextEditingController(
+      text: isEdit ? _text(user['password'], fallback: 'FarmDemo#2026New') : '',
+    );
+    final phoneController =
+        TextEditingController(text: isEdit ? user['phone'] : '');
+    final addressController =
+        TextEditingController(text: isEdit ? user['address'] : '');
+    String selectedRole = isEdit ? user['role'] : 'Caretaker';
+    String selectedStatus = isEdit ? user['status'] : 'Pending';
+    String? errorText;
+    bool isSaving = false;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-          insetPadding: EdgeInsets.symmetric(
+      barrierDismissible: !isSaving,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          final department = _departmentForRole(selectedRole);
+          Future<void> save() async {
+            final name = nameController.text.trim();
+            final email = emailController.text.trim();
+            final password = passwordController.text.trim();
+            final phone = phoneController.text.trim();
+            final address = addressController.text.trim();
+
+            if (name.isEmpty || email.isEmpty || password.isEmpty) {
+              setDialogState(
+                () => errorText = 'Name, email, and password are required.',
+              );
+              return;
+            }
+            if (!email.contains('@')) {
+              setDialogState(() => errorText = 'Enter a valid email address.');
+              return;
+            }
+
+            final navigator = Navigator.of(dialogContext);
+            final messenger = ScaffoldMessenger.of(context);
+            setDialogState(() {
+              isSaving = true;
+              errorText = null;
+            });
+            try {
+              if (isEdit) {
+                await _updateUser(
+                  user: user,
+                  name: name,
+                  email: email,
+                  password: password,
+                  phone: phone.isEmpty ? '+233000000000' : phone,
+                  address: address.isEmpty ? 'Farm Estates' : address,
+                  role: selectedRole,
+                  department: department,
+                  status: selectedStatus,
+                );
+              } else {
+                await _createUser(
+                  name: name,
+                  email: email,
+                  password: password,
+                  phone: phone.isEmpty ? '+233000000000' : phone,
+                  address: address.isEmpty ? 'Farm Estates' : address,
+                  role: selectedRole,
+                  department: department,
+                  status: selectedStatus,
+                );
+              }
+              if (!mounted || !dialogContext.mounted) return;
+              navigator.pop();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    isEdit
+                        ? '$name updated successfully.'
+                        : '$name created successfully.',
+                  ),
+                  backgroundColor: AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            } catch (error) {
+              if (!mounted) return;
+              setDialogState(() {
+                isSaving = false;
+                errorText = error.toString();
+              });
+            }
+          }
+
+          return Dialog(
+            backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            ),
+            insetPadding: EdgeInsets.symmetric(
               horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
-              vertical: AppSpacing.xl),
-          child: Container(
-            width: isMobile ? double.infinity : 480,
-            constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.9),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [
-                      AppColors.info,
-                      AppColors.info.withOpacity(0.8)
-                    ], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(AppSpacing.radiusXl)),
+              vertical: AppSpacing.xl,
+            ),
+            child: Container(
+              width: isMobile ? double.infinity : 560,
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.9,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildModalHeader(
+                    isDark: isDark,
+                    icon: isEdit ? Icons.edit : Icons.person_add,
+                    title: isEdit ? 'Edit User' : 'Add New User',
+                    subtitle: isEdit
+                        ? 'Update backend account details'
+                        : 'Create a backend user account',
+                    color: isEdit ? AppColors.info : AppColors.primary,
+                    onClose:
+                        isSaving ? null : () => Navigator.pop(dialogContext),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd)),
-                          child: const Icon(Icons.edit,
-                              color: Colors.white, size: 24)),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                            Text('Edit User',
-                                style: AppTypography.h6.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
-                            Text('Update user details',
-                                style: AppTypography.bodySmall
-                                    .copyWith(color: Colors.white70))
-                          ])),
-                      IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close, color: Colors.white70)),
-                    ],
-                  ),
-                ),
-                // User Preview Card
-                Container(
-                  margin: const EdgeInsets.all(AppSpacing.lg),
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.05)
-                        : AppColors.info.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    border: Border.all(color: AppColors.info.withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                          radius: 24,
-                          backgroundColor:
-                              _getRoleColor(user['role']).withOpacity(0.2),
-                          child: Text(user['avatar'],
-                              style: TextStyle(
-                                  color: _getRoleColor(user['role']),
-                                  fontWeight: FontWeight.bold))),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                            Text(user['name'],
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: isDark
-                                        ? Colors.white
-                                        : AppColors.textPrimary)),
-                            Text(user['email'],
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color: isDark
-                                        ? Colors.white60
-                                        : AppColors.textSecondary)),
-                          ])),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                            color: _getRoleColor(user['role']).withOpacity(0.1),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusFull)),
-                        child: Text(user['role'],
-                            style: TextStyle(
-                                color: _getRoleColor(user['role']),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600)),
-                      ),
-                    ],
-                  ),
-                ),
-                // Form
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildFormLabel('Full Name', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildFormTextField(
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (errorText != null) ...[
+                            _buildModalError(errorText!, isDark),
+                            const SizedBox(height: AppSpacing.lg),
+                          ],
+                          _buildFormLabel('Full Name', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildFormTextField(
                             controller: nameController,
-                            hint: 'Full name',
+                            hint: 'e.g., John Smith',
                             icon: Icons.person,
-                            isDark: isDark),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Email Address', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildFormTextField(
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Email Address', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildFormTextField(
                             controller: emailController,
-                            hint: 'Email',
+                            hint: 'e.g., user@farm.com',
                             icon: Icons.email,
-                            isDark: isDark),
-                        const SizedBox(height: AppSpacing.lg),
-                        if (!isMobile)
-                          Row(children: [
-                            Expanded(
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Password', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildFormTextField(
+                            controller: passwordController,
+                            hint: 'Temporary password',
+                            icon: Icons.lock,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          Row(
+                            children: [
+                              Expanded(
                                 child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                  _buildFormLabel('Role', isDark),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  _buildFormDropdown(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildFormLabel('Role', isDark),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    _buildFormDropdown(
                                       value: selectedRole,
-                                      items: ['Admin', 'Owner', 'Caretaker'],
+                                      items: _roleOptions,
                                       icon: Icons.badge,
                                       isDark: isDark,
-                                      onChanged: (v) => setDialogState(
-                                          () => selectedRole = v!))
-                                ])),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
+                                      onChanged: isSaving
+                                          ? null
+                                          : (v) => setDialogState(
+                                                () => selectedRole = v!,
+                                              ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
                                 child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                  _buildFormLabel('Status', isDark),
-                                  const SizedBox(height: AppSpacing.sm),
-                                  _buildFormDropdown(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildFormLabel('Status', isDark),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    _buildFormDropdown(
                                       value: selectedStatus,
-                                      items: ['Active', 'Inactive', 'Pending'],
+                                      items: _statusOptions,
                                       icon: Icons.toggle_on,
                                       isDark: isDark,
-                                      onChanged: (v) => setDialogState(
-                                          () => selectedStatus = v!))
-                                ])),
-                          ])
-                        else ...[
-                          _buildFormLabel('Role', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildFormDropdown(
-                              value: selectedRole,
-                              items: ['Admin', 'Owner', 'Caretaker'],
-                              icon: Icons.badge,
-                              isDark: isDark,
-                              onChanged: (v) =>
-                                  setDialogState(() => selectedRole = v!)),
+                                      onChanged: isSaving
+                                          ? null
+                                          : (v) => setDialogState(
+                                                () => selectedStatus = v!,
+                                              ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Status', isDark),
+                          _buildFormLabel('Phone', isDark),
                           const SizedBox(height: AppSpacing.sm),
-                          _buildFormDropdown(
-                              value: selectedStatus,
-                              items: ['Active', 'Inactive', 'Pending'],
-                              icon: Icons.toggle_on,
-                              isDark: isDark,
-                              onChanged: (v) =>
-                                  setDialogState(() => selectedStatus = v!)),
+                          _buildFormTextField(
+                            controller: phoneController,
+                            hint: '+233...',
+                            icon: Icons.phone,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Address', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildFormTextField(
+                            controller: addressController,
+                            hint: 'Farm Estates',
+                            icon: Icons.location_on,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildReadOnlyField(
+                            label: 'Department',
+                            value: department,
+                            isDark: isDark,
+                          ),
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                // Actions
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.03)
-                          : AppColors.neutral50,
-                      borderRadius: const BorderRadius.vertical(
-                          bottom: Radius.circular(AppSpacing.radiusXl))),
-                  child: Row(
-                    children: [
-                      OutlinedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _showDeleteUserDialog(context, user, isDark);
-                          },
-                          style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: AppSpacing.md,
-                                  horizontal: AppSpacing.md),
-                              side: const BorderSide(color: AppColors.error),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusMd))),
-                          child: const Icon(Icons.delete_outline,
-                              color: AppColors.error, size: 20)),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                          child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: AppSpacing.md),
-                                  side: BorderSide(
-                                      color: isDark
-                                          ? Colors.white24
-                                          : AppColors.neutral300),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusMd))),
-                              child: Text('Cancel',
-                                  style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white70
-                                          : AppColors.textSecondary)))),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                          flex: 2,
-                          child: ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Row(children: [
-                                          const Icon(Icons.check_circle,
-                                              color: Colors.white),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                              '${nameController.text} updated!')
-                                        ]),
-                                        backgroundColor: AppColors.success,
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                AppSpacing.radiusMd))));
-                              },
-                              icon: const Icon(Icons.save, size: 18),
-                              label: const Text('Save'),
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.info,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: AppSpacing.md),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusMd))))),
-                    ],
+                  _buildModalActions(
+                    isDark: isDark,
+                    isSaving: isSaving,
+                    primaryLabel: isEdit ? 'Save Changes' : 'Add User',
+                    primaryIcon: isEdit ? Icons.save : Icons.person_add,
+                    onCancel: () => Navigator.pop(dialogContext),
+                    onSave: save,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 
   void _showDeleteUserDialog(
-      BuildContext context, Map<String, dynamic> user, bool isDark) {
+    BuildContext context,
+    Map<String, dynamic> user,
+    bool isDark,
+  ) {
+    bool isDeleting = false;
+    String? errorText;
+
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-        child: Container(
-          width: 400,
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
-                      shape: BoxShape.circle),
-                  child: const Icon(Icons.person_off,
-                      color: AppColors.error, size: 40)),
-              const SizedBox(height: AppSpacing.lg),
-              Text('Delete User?',
-                  style: AppTypography.h5.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : AppColors.textPrimary)),
-              const SizedBox(height: AppSpacing.sm),
-              Text('Are you sure you want to delete "${user['name']}"?',
-                  style: AppTypography.bodyMedium.copyWith(
-                      color: isDark ? Colors.white70 : AppColors.textSecondary),
-                  textAlign: TextAlign.center),
-              const SizedBox(height: AppSpacing.md),
-              // User Preview
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.05)
-                        : AppColors.error.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    border:
-                        Border.all(color: AppColors.error.withOpacity(0.2))),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                        radius: 20,
-                        backgroundColor:
-                            _getRoleColor(user['role']).withOpacity(0.2),
-                        child: Text(user['avatar'],
-                            style: TextStyle(
-                                color: _getRoleColor(user['role']),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12))),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                          Text(user['name'],
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                  color: isDark
-                                      ? Colors.white
-                                      : AppColors.textPrimary)),
-                          Text(user['email'],
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: isDark
-                                      ? Colors.white60
-                                      : AppColors.textSecondary)),
-                        ])),
-                  ],
+      barrierDismissible: !isDeleting,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          Future<void> deleteUser() async {
+            final navigator = Navigator.of(dialogContext);
+            final messenger = ScaffoldMessenger.of(context);
+            setDialogState(() {
+              isDeleting = true;
+              errorText = null;
+            });
+            try {
+              await _api.deleteUser(user['id'].toString());
+              await _loadUsers();
+              if (!mounted || !dialogContext.mounted) return;
+              navigator.pop();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text('${user['name']} deleted.'),
+                  backgroundColor: AppColors.error,
+                  behavior: SnackBarBehavior.floating,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    border:
-                        Border.all(color: AppColors.warning.withOpacity(0.3))),
-                child: Row(
-                  children: [
-                    const Icon(Icons.warning_amber,
-                        color: AppColors.warning, size: 20),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                        child: Text(
-                            'This action cannot be undone. All user data will be permanently removed.',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: isDark
-                                    ? Colors.white70
-                                    : AppColors.textSecondary))),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Row(
+              );
+            } catch (error) {
+              if (!mounted) return;
+              setDialogState(() {
+                isDeleting = false;
+                errorText = error.toString();
+              });
+            }
+          }
+
+          return Dialog(
+            backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            ),
+            child: Container(
+              width: 420,
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                      child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: AppSpacing.md),
-                              side: BorderSide(
-                                  color: isDark
-                                      ? Colors.white24
-                                      : AppColors.neutral300),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusMd))),
-                          child: Text('Cancel',
-                              style: TextStyle(
-                                  color: isDark
-                                      ? Colors.white70
-                                      : AppColors.textSecondary)))),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                      child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                content: Row(children: [
-                                  const Icon(Icons.delete, color: Colors.white),
-                                  const SizedBox(width: 8),
-                                  Text('${user['name']} deleted')
-                                ]),
-                                backgroundColor: AppColors.error,
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusMd))));
-                          },
-                          icon: const Icon(Icons.delete, size: 18),
-                          label: const Text('Delete'),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: isDeleting
+                        ? const SizedBox(
+                            width: 34,
+                            height: 34,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: AppColors.error,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.person_off,
+                            color: AppColors.error,
+                            size: 40,
+                          ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    'Delete User?',
+                    style: AppTypography.h5.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'Are you sure you want to delete "${user['name']}"?',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: isDark ? Colors.white70 : AppColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    _buildModalError(errorText!, isDark),
+                  ],
+                  const SizedBox(height: AppSpacing.xl),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed:
+                              isDeleting ? null : () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: isDeleting ? null : deleteUser,
+                          icon: isDeleting
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.delete, size: 18),
+                          label: Text(isDeleting ? 'Deleting...' : 'Delete'),
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.error,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: AppSpacing.md),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusMd))))),
+                            backgroundColor: AppColors.error,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  // Helper Widgets
-  Widget _buildFormLabel(String label, bool isDark) => Text(label,
-      style: AppTypography.bodyMedium.copyWith(
-          fontWeight: FontWeight.w600,
-          color: isDark ? Colors.white : AppColors.textPrimary));
+  Widget _buildModalHeader({
+    required bool isDark,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback? onClose,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withOpacity(0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusXl),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.h6.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onClose,
+            icon: const Icon(Icons.close, color: Colors.white70),
+          ),
+        ],
+      ),
+    );
+  }
 
-  Widget _buildFormTextField(
-      {required TextEditingController controller,
-      required String hint,
-      required IconData icon,
-      required bool isDark}) {
+  Widget _buildModalActions({
+    required bool isDark,
+    required bool isSaving,
+    required String primaryLabel,
+    required IconData primaryIcon,
+    required VoidCallback onCancel,
+    required VoidCallback onSave,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(AppSpacing.radiusXl),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: isSaving ? null : onCancel,
+              child: const Text('Cancel'),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            flex: 2,
+            child: ElevatedButton.icon(
+              onPressed: isSaving ? null : onSave,
+              icon: isSaving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(primaryIcon, size: 18),
+              label: Text(isSaving ? 'Saving...' : primaryLabel),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModalError(String message, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.error.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.error.withOpacity(0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormLabel(String label, bool isDark) {
+    return Text(
+      label,
+      style: AppTypography.bodyMedium.copyWith(
+        fontWeight: FontWeight.w500,
+        color: isDark ? Colors.white : AppColors.textPrimary,
+      ),
+    );
+  }
+
+  Widget _buildFormTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    required bool isDark,
+  }) {
     return TextFormField(
       controller: controller,
       style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-            color: isDark
-                ? Colors.white38
-                : AppColors.textSecondary.withOpacity(0.5)),
-        prefixIcon: Icon(icon,
-            color: isDark ? Colors.white54 : AppColors.textSecondary, size: 20),
+          color: isDark
+              ? Colors.white38
+              : AppColors.textSecondary.withOpacity(0.5),
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: isDark ? Colors.white54 : AppColors.textSecondary,
+          size: 20,
+        ),
         filled: true,
         fillColor:
             isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            borderSide: BorderSide(
-                color: isDark ? Colors.white12 : AppColors.neutral200)),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderSide: BorderSide(
+            color: isDark ? Colors.white12 : AppColors.neutral200,
+          ),
+        ),
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            borderSide: BorderSide(
-                color: isDark ? Colors.white12 : AppColors.neutral200)),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderSide: BorderSide(
+            color: isDark ? Colors.white12 : AppColors.neutral200,
+          ),
+        ),
         focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
         contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md, vertical: AppSpacing.md),
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
       ),
     );
   }
 
-  Widget _buildFormDropdown(
-      {required String value,
-      required List<String> items,
-      required IconData icon,
-      required bool isDark,
-      required Function(String?) onChanged}) {
+  Widget _buildFormDropdown({
+    required String value,
+    required List<String> items,
+    required IconData icon,
+    required bool isDark,
+    required Function(String?)? onChanged,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(
-              color: isDark ? Colors.white12 : AppColors.neutral200)),
+        color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white12 : AppColors.neutral200,
+        ),
+      ),
       child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-              value: value,
-              isExpanded: true,
-              icon: Icon(Icons.keyboard_arrow_down,
-                  color: isDark ? Colors.white54 : AppColors.textSecondary),
-              dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
-              style: TextStyle(
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: 14),
-              items: items
-                  .map((item) => DropdownMenuItem(
-                      value: item,
-                      child: Row(children: [
-                        Icon(icon,
-                            color: isDark
-                                ? Colors.white54
-                                : AppColors.textSecondary,
-                            size: 20),
-                        const SizedBox(width: AppSpacing.md),
-                        Text(item)
-                      ])))
-                  .toList(),
-              onChanged: onChanged)),
+        child: DropdownButton<String>(
+          value: items.contains(value) ? value : items.first,
+          isExpanded: true,
+          icon: Icon(
+            Icons.keyboard_arrow_down,
+            color: isDark ? Colors.white54 : AppColors.textSecondary,
+          ),
+          dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+          style: TextStyle(
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            fontSize: 14,
+          ),
+          items: items
+              .map(
+                (item) => DropdownMenuItem(
+                  value: item,
+                  child: Row(
+                    children: [
+                      Icon(
+                        icon,
+                        color:
+                            isDark ? Colors.white54 : AppColors.textSecondary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Text(
+                          item,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyField({
+    required String label,
+    required String value,
+    required bool isDark,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white12 : AppColors.neutral200,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.apartment,
+            size: 20,
+            color: isDark ? Colors.white54 : AppColors.textSecondary,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white54 : AppColors.textSecondary,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

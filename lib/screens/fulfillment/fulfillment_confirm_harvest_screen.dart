@@ -87,7 +87,7 @@ class FulfillmentConfirmHarvestScreen extends StatelessWidget {
             'Harvest Intake Queue',
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -116,7 +116,7 @@ class FulfillmentConfirmHarvestScreen extends StatelessWidget {
             'Confirm Harvest Intake',
             style: AppTypography.h4.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               fontSize: isMobile ? 24 : 28,
             ),
           ),
@@ -334,9 +334,8 @@ class FulfillmentConfirmHarvestScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.white.withOpacity(0.04)
-                  : AppColors.neutral50,
+              color:
+                  isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               border: Border.all(
                 color: isDark ? Colors.white10 : AppColors.neutral200,
@@ -380,7 +379,7 @@ class FulfillmentConfirmHarvestScreen extends StatelessWidget {
                     _statusMessage(request['status']!),
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white70 : AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
@@ -461,7 +460,7 @@ class FulfillmentConfirmHarvestScreen extends StatelessWidget {
                 request['crop']!,
                 style: AppTypography.h6.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 4),
@@ -545,7 +544,7 @@ class _FulfillmentStatCard extends StatelessWidget {
             title,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -553,7 +552,7 @@ class _FulfillmentStatCard extends StatelessWidget {
             value,
             style: AppTypography.h5.copyWith(
               color: color,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -592,7 +591,7 @@ class _MetaPill extends StatelessWidget {
             label,
             style: AppTypography.caption.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 2),
@@ -600,7 +599,7 @@ class _MetaPill extends StatelessWidget {
             value,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -662,7 +661,7 @@ class _MetricBlock extends StatelessWidget {
                   label,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -675,7 +674,7 @@ class _MetricBlock extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.h6.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -708,7 +707,7 @@ class _StatusBadge extends StatelessWidget {
         label,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );

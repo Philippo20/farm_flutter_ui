@@ -66,14 +66,15 @@ class ModernScaffold extends StatelessWidget {
           )
         : null;
 
-    final bottomNavigation = showNavigation && navigationItems.isNotEmpty && isMobile
-        ? AdminSidebar(
-            selectedIndex: selectedNavigationIndex,
-            onItemSelected: handleNavigation,
-            isDark: isDark,
-            isMobile: true,
-          )
-        : null;
+    final bottomNavigation =
+        showNavigation && navigationItems.isNotEmpty && isMobile
+            ? AdminSidebar(
+                selectedIndex: selectedNavigationIndex,
+                onItemSelected: handleNavigation,
+                isDark: isDark,
+                isMobile: true,
+              )
+            : null;
 
     return Scaffold(
       appBar: ModernHeader(

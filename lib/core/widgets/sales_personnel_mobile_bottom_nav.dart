@@ -149,7 +149,7 @@ class SalesPersonnelMobileBottomNav extends StatelessWidget {
                               color: color,
                               fontSize: 11,
                               fontWeight: isSelected
-                                  ? FontWeight.w700
+                                  ? FontWeight.w500
                                   : FontWeight.w500,
                             ),
                           ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -6,6 +6,7 @@ import '../theme/app_spacing.dart';
 import '../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
 import 'weather_info_chip.dart';
+import 'notification_center.dart';
 
 /// Modern farm owner header with greeting, weather, notifications, and theme toggle
 class FarmOwnerHeader extends ConsumerWidget {
@@ -71,7 +72,9 @@ class FarmOwnerHeader extends ConsumerWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
       ),
-      child: isMobile ? _buildMobileLayout(isDark, ref) : _buildDesktopLayout(isDark, ref),
+      child: isMobile
+          ? _buildMobileLayout(isDark, ref)
+          : _buildDesktopLayout(isDark, ref),
     );
   }
 
@@ -107,11 +110,6 @@ class FarmOwnerHeader extends ConsumerWidget {
                       letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    ' 👋',
-                    style: TextStyle(fontSize: 28),
-                  ),
                 ],
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -120,14 +118,18 @@ class FarmOwnerHeader extends ConsumerWidget {
                   Icon(
                     Icons.calendar_today_outlined,
                     size: 16,
-                    color: isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.5)
+                        : AppColors.textSecondary,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     _getFormattedDate(),
                     style: AppTypography.bodyLarge.copyWith(
                       fontSize: 14,
-                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.7)
+                          : AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.2,
                     ),
@@ -159,7 +161,8 @@ class FarmOwnerHeader extends ConsumerWidget {
 
             // Theme Toggle
             _buildActionButton(
-              icon: isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              icon:
+                  isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
               tooltip: isDark ? 'Light Mode' : 'Dark Mode',
               isDark: isDark,
               onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
@@ -168,13 +171,7 @@ class FarmOwnerHeader extends ConsumerWidget {
             const SizedBox(width: AppSpacing.sm),
 
             // Notifications
-            _buildActionButton(
-              icon: Icons.notifications_outlined,
-              tooltip: 'Notifications',
-              isDark: isDark,
-              onPressed: onNotificationTap,
-              badge: 3,
-            ),
+            const NotificationCenter(),
 
             const SizedBox(width: AppSpacing.sm),
 
@@ -211,11 +208,6 @@ class FarmOwnerHeader extends ConsumerWidget {
                           color: isDark ? Colors.white : AppColors.textPrimary,
                           letterSpacing: -0.3,
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '👋',
-                        style: TextStyle(fontSize: 20),
                       ),
                     ],
                   ),
@@ -276,19 +268,16 @@ class FarmOwnerHeader extends ConsumerWidget {
                   const SizedBox(width: AppSpacing.xs),
                 ],
                 _buildMobileActionButton(
-                  icon: isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                  icon: isDark
+                      ? Icons.light_mode_outlined
+                      : Icons.dark_mode_outlined,
                   tooltip: isDark ? 'Light Mode' : 'Dark Mode',
                   isDark: isDark,
-                  onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
+                  onPressed: () =>
+                      ref.read(themeProvider.notifier).toggleTheme(),
                 ),
                 const SizedBox(width: AppSpacing.xs),
-                _buildMobileActionButton(
-                  icon: Icons.notifications_outlined,
-                  tooltip: 'Notifications',
-                  isDark: isDark,
-                  onPressed: onNotificationTap,
-                  badge: 3,
-                ),
+                const NotificationCenter(),
                 const SizedBox(width: AppSpacing.xs),
                 _buildMobileProfileButton(isDark, ref),
               ],
@@ -305,10 +294,14 @@ class FarmOwnerHeader extends ConsumerWidget {
             vertical: AppSpacing.xs,
           ),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.02),
+            color: isDark
+                ? Colors.white.withOpacity(0.05)
+                : Colors.black.withOpacity(0.02),
             borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
             border: Border.all(
-              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.04),
+              color: isDark
+                  ? Colors.white.withOpacity(0.08)
+                  : Colors.black.withOpacity(0.04),
               width: 1,
             ),
           ),
@@ -317,7 +310,9 @@ class FarmOwnerHeader extends ConsumerWidget {
               Icon(
                 Icons.calendar_today_outlined,
                 size: 14,
-                color: isDark ? Colors.white.withOpacity(0.6) : AppColors.textSecondary,
+                color: isDark
+                    ? Colors.white.withOpacity(0.6)
+                    : AppColors.textSecondary,
               ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
@@ -325,7 +320,9 @@ class FarmOwnerHeader extends ConsumerWidget {
                   _getFormattedDate(),
                   style: AppTypography.bodyMedium.copyWith(
                     fontSize: 12,
-                    color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.7)
+                        : AppColors.textSecondary,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.1,
                   ),
@@ -373,14 +370,18 @@ class FarmOwnerHeader extends ConsumerWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.12) : Colors.black.withOpacity(0.08),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.12)
+                        : Colors.black.withOpacity(0.08),
                     width: 1,
                   ),
                 ),
                 child: Icon(
                   icon,
                   size: 20,
-                  color: isDark ? Colors.white.withOpacity(0.95) : AppColors.textPrimary,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.95)
+                      : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -451,7 +452,9 @@ class FarmOwnerHeader extends ConsumerWidget {
                   ],
                 ),
                 border: Border.all(
-                  color: isDark ? Colors.white.withOpacity(0.12) : Colors.black.withOpacity(0.08),
+                  color: isDark
+                      ? Colors.white.withOpacity(0.12)
+                      : Colors.black.withOpacity(0.08),
                   width: 1,
                 ),
                 boxShadow: [
@@ -512,19 +515,24 @@ class FarmOwnerHeader extends ConsumerWidget {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (dialogContext) {
-                  final isDarkDialog = Theme.of(context).brightness == Brightness.dark;
+                  final isDarkDialog =
+                      Theme.of(context).brightness == Brightness.dark;
                   return AlertDialog(
-                    backgroundColor: isDarkDialog ? AppColors.surfaceDark : Colors.white,
+                    backgroundColor:
+                        isDarkDialog ? AppColors.surfaceDark : Colors.white,
                     title: Text(
                       'Logout',
                       style: TextStyle(
-                        color: isDarkDialog ? Colors.white : AppColors.textPrimary,
+                        color:
+                            isDarkDialog ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
                     content: Text(
                       'Are you sure you want to logout?',
                       style: TextStyle(
-                        color: isDarkDialog ? Colors.white70 : AppColors.textSecondary,
+                        color: isDarkDialog
+                            ? Colors.white70
+                            : AppColors.textSecondary,
                       ),
                     ),
                     actions: [
@@ -533,7 +541,9 @@ class FarmOwnerHeader extends ConsumerWidget {
                         child: Text(
                           'Cancel',
                           style: TextStyle(
-                            color: isDarkDialog ? Colors.white70 : AppColors.textPrimary,
+                            color: isDarkDialog
+                                ? Colors.white70
+                                : AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -552,7 +562,8 @@ class FarmOwnerHeader extends ConsumerWidget {
               if (confirmed == true && context.mounted) {
                 await ref.read(authProvider.notifier).logout();
                 if (context.mounted) {
-                  Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/login', (route) => false);
                 }
               }
             } else if (value == 'settings') {
@@ -590,14 +601,18 @@ class FarmOwnerHeader extends ConsumerWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.06),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.black.withOpacity(0.06),
                     width: 1,
                   ),
                 ),
                 child: Icon(
                   icon,
                   size: 22,
-                  color: isDark ? Colors.white.withOpacity(0.95) : AppColors.textPrimary,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.95)
+                      : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -679,19 +694,24 @@ class FarmOwnerHeader extends ConsumerWidget {
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (dialogContext) {
-                  final isDarkDialog = Theme.of(context).brightness == Brightness.dark;
+                  final isDarkDialog =
+                      Theme.of(context).brightness == Brightness.dark;
                   return AlertDialog(
-                    backgroundColor: isDarkDialog ? AppColors.surfaceDark : Colors.white,
+                    backgroundColor:
+                        isDarkDialog ? AppColors.surfaceDark : Colors.white,
                     title: Text(
                       'Logout',
                       style: TextStyle(
-                        color: isDarkDialog ? Colors.white : AppColors.textPrimary,
+                        color:
+                            isDarkDialog ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
                     content: Text(
                       'Are you sure you want to logout?',
                       style: TextStyle(
-                        color: isDarkDialog ? Colors.white70 : AppColors.textSecondary,
+                        color: isDarkDialog
+                            ? Colors.white70
+                            : AppColors.textSecondary,
                       ),
                     ),
                     actions: [
@@ -700,7 +720,9 @@ class FarmOwnerHeader extends ConsumerWidget {
                         child: Text(
                           'Cancel',
                           style: TextStyle(
-                            color: isDarkDialog ? Colors.white70 : AppColors.textPrimary,
+                            color: isDarkDialog
+                                ? Colors.white70
+                                : AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -721,7 +743,8 @@ class FarmOwnerHeader extends ConsumerWidget {
                 await ref.read(authProvider.notifier).logout();
                 // Navigate to login
                 if (context.mounted) {
-                  Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                  Navigator.of(context)
+                      .pushNamedAndRemoveUntil('/login', (route) => false);
                 }
               }
             } else if (value == 'settings') {
@@ -744,7 +767,9 @@ class FarmOwnerHeader extends ConsumerWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                   border: Border.all(
-                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.06),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.black.withOpacity(0.06),
                     width: 1,
                   ),
                 ),
@@ -796,7 +821,9 @@ class FarmOwnerHeader extends ConsumerWidget {
                     Icon(
                       Icons.keyboard_arrow_down_rounded,
                       size: 20,
-                      color: isDark ? Colors.white.withOpacity(0.7) : AppColors.textSecondary,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.7)
+                          : AppColors.textSecondary,
                     ),
                   ],
                 ),
@@ -818,12 +845,16 @@ class FarmOwnerHeader extends ConsumerWidget {
         color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.15) : AppColors.primary.withOpacity(0.2),
+          color: isDark
+              ? Colors.white.withOpacity(0.15)
+              : AppColors.primary.withOpacity(0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withOpacity(0.2) : AppColors.primary.withOpacity(0.05),
+            color: isDark
+                ? Colors.black.withOpacity(0.2)
+                : AppColors.primary.withOpacity(0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

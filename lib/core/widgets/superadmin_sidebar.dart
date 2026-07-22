@@ -56,6 +56,12 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
       route: '/superadmin/farms',
     ),
     _NavItem(
+      icon: Icons.grass_outlined,
+      activeIcon: Icons.grass_rounded,
+      label: 'Crop Varieties',
+      route: '/superadmin/crop-varieties',
+    ),
+    _NavItem(
       icon: Icons.eco_outlined,
       activeIcon: Icons.eco_rounded,
       label: 'Plant Types',
@@ -108,6 +114,12 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
       activeIcon: Icons.sensors_rounded,
       label: 'Sensors',
       route: '/superadmin/sensors',
+    ),
+    _NavItem(
+      icon: Icons.analytics_outlined,
+      activeIcon: Icons.analytics_rounded,
+      label: 'Analytics',
+      route: '/superadmin/analytics',
     ),
   ];
 
@@ -297,7 +309,7 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                                   color: isDark
                                       ? Colors.white.withOpacity(0.7)
                                       : AppColors.textSecondary,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                   letterSpacing: 0.2,
                                 ),
                             overflow: TextOverflow.ellipsis,
@@ -579,7 +591,7 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                   style: AppTypography.bodyMedium.copyWith(
                     fontSize: 18,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -594,7 +606,7 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                     widget.userName,
                     style: AppTypography.bodyMedium.copyWith(
                       fontSize: 15,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                     maxLines: 1,
@@ -608,7 +620,7 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                       color: isDark
                           ? Colors.white.withOpacity(0.7)
                           : AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -676,7 +688,7 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                           style: AppTypography.bodyMedium.copyWith(
                             fontSize: 13,
                             color: AppColors.error,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -740,7 +752,7 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
               'Logout',
               style: AppTypography.bodyMedium.copyWith(
                 color: Colors.white,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -784,6 +796,12 @@ class SuperAdminDrawer extends StatelessWidget {
           activeIcon: Icons.agriculture_rounded,
           label: 'Farm Management',
           route: '/superadmin/farms',
+        ),
+        _NavItem(
+          icon: Icons.grass_outlined,
+          activeIcon: Icons.grass_rounded,
+          label: 'Crop Varieties',
+          route: '/superadmin/crop-varieties',
         ),
         _NavItem(
           icon: Icons.eco_outlined,
@@ -838,6 +856,12 @@ class SuperAdminDrawer extends StatelessWidget {
           activeIcon: Icons.sensors_rounded,
           label: 'Sensors',
           route: '/superadmin/sensors',
+        ),
+        _NavItem(
+          icon: Icons.analytics_outlined,
+          activeIcon: Icons.analytics_rounded,
+          label: 'Analytics',
+          route: '/superadmin/analytics',
         ),
       ];
 
@@ -915,7 +939,7 @@ class SuperAdminDrawer extends StatelessWidget {
                     userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
                     style: AppTypography.h4.copyWith(
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -929,7 +953,7 @@ class SuperAdminDrawer extends StatelessWidget {
                       userName,
                       style: AppTypography.h6.copyWith(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1054,7 +1078,7 @@ class SuperAdminDrawer extends StatelessWidget {
                 style: AppTypography.bodyMedium.copyWith(
                   fontSize: 18,
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -1069,7 +1093,7 @@ class SuperAdminDrawer extends StatelessWidget {
                   userName,
                   style: AppTypography.bodyMedium.copyWith(
                     fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                   maxLines: 1,
@@ -1130,7 +1154,7 @@ class SuperAdminDrawer extends StatelessWidget {
                   style: AppTypography.bodyMedium.copyWith(
                     fontSize: 15,
                     color: AppColors.error,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -1192,7 +1216,7 @@ class SuperAdminDrawer extends StatelessWidget {
               'Logout',
               style: AppTypography.bodyMedium.copyWith(
                 color: Colors.white,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),

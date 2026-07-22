@@ -11,8 +11,6 @@ class AdminUserStatCard extends StatelessWidget {
   final bool isPositive;
   final bool isDark;
 
-
- 
   const AdminUserStatCard({
     super.key,
     required this.title,
@@ -38,7 +36,9 @@ class AdminUserStatCard extends StatelessWidget {
       colors: [
         accentColor.withOpacity(isDark ? 0.30 : 0.20),
         accentColor.withOpacity(isDark ? 0.09 : 0.08),
-        isDark ? Colors.black.withOpacity(0.18) : Colors.white.withOpacity(0.11),
+        isDark
+            ? Colors.black.withOpacity(0.18)
+            : Colors.white.withOpacity(0.11),
       ],
     );
 
@@ -80,14 +80,14 @@ class AdminUserStatCard extends StatelessWidget {
                 // More icon (three dots)
                 Icon(isPositive ? Icons.trending_up : Icons.trending_down,
                     size: 15, color: isPositive ? Colors.green : Colors.red),
-                    const SizedBox(width: 4),
+                const SizedBox(width: 4),
                 Text(
-                     change,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isPositive ? Colors.green : Colors.red,
-                        ),
+                  change,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: isPositive ? Colors.green : Colors.red,
+                  ),
                 ),
               ],
             ),
@@ -101,7 +101,7 @@ class AdminUserStatCard extends StatelessWidget {
                   value,
                   style: GoogleFonts.poppins(
                     fontSize: 28,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : Colors.black,
                     height: 1.2,
                   ),

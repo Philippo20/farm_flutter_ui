@@ -52,7 +52,8 @@ class _FarmsScreenState extends State<FarmsScreen> {
       size: '12.5 acres',
       status: 'Active',
       lastActivity: '2 hours ago',
-      imageUrl: "https://iqrorwxhniriml5q.ldycdn.com/cloud/omBppKiiRmiSorrimjlli/206822878926538318.jpg",
+      imageUrl:
+          "https://iqrorwxhniriml5q.ldycdn.com/cloud/omBppKiiRmiSorrimjlli/206822878926538318.jpg",
     ),
     Farm(
       id: '2',
@@ -61,7 +62,8 @@ class _FarmsScreenState extends State<FarmsScreen> {
       size: '8.2 acres',
       status: 'Active',
       lastActivity: '5 hours ago',
-      imageUrl: "https://image.made-in-china.com/2f0j00fbjqYJURHtcn/Affordable-Agriculture-Polycarbonate-Greenhouse-with-Hydroponic-Growing-System-for-Mushrooms-Vegetables-Fruits-Flowers-Lettuce-and-Peppers.jpg",
+      imageUrl:
+          "https://image.made-in-china.com/2f0j00fbjqYJURHtcn/Affordable-Agriculture-Polycarbonate-Greenhouse-with-Hydroponic-Growing-System-for-Mushrooms-Vegetables-Fruits-Flowers-Lettuce-and-Peppers.jpg",
     ),
     Farm(
       id: '3',
@@ -79,7 +81,8 @@ class _FarmsScreenState extends State<FarmsScreen> {
       size: '6.8 acres',
       status: 'Active',
       lastActivity: '30 minutes ago',
-      imageUrl: "https://media.istockphoto.com/id/483721777/photo/tomatoes.jpg?s=612x612&w=0&k=20&c=Z6GqFTtOzvAKYjOAbr8knRLnn3UcEkRbkPTvzGhfF58=",
+      imageUrl:
+          "https://media.istockphoto.com/id/483721777/photo/tomatoes.jpg?s=612x612&w=0&k=20&c=Z6GqFTtOzvAKYjOAbr8knRLnn3UcEkRbkPTvzGhfF58=",
     ),
   ];
 
@@ -198,7 +201,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
             'Farm Management',
             style: GoogleFonts.poppins(
               fontSize: isMobile ? 24 : 28,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
               color: textColor,
               letterSpacing: 0.3,
             ),
@@ -219,7 +222,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
               borderRadius: BorderRadius.circular(14),
             ),
             textStyle: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w500,
               fontSize: isMobile ? 14 : 15,
               letterSpacing: 0.2,
             ),
@@ -310,7 +313,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
                       change,
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         color: isPositive ? Colors.green : Colors.red,
                       ),
                     ),
@@ -335,7 +338,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
             value,
             style: GoogleFonts.poppins(
               fontSize: 24,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w500,
               color: isDark ? Colors.white : Colors.black,
             ),
           ),
@@ -476,7 +479,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
                 farm.name,
                 style: GoogleFonts.poppins(
                   fontSize: 18,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w500,
                   color: textColor,
                 ),
                 maxLines: 1,
@@ -514,7 +517,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
                       farm.status,
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         color: statusColor,
                       ),
                     ),
@@ -524,7 +527,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
                     farm.size,
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: textColor,
                     ),
                   ),
@@ -592,7 +595,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
                           'Add New Farm',
                           style: GoogleFonts.poppins(
                             fontSize: 20,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             color: Colors.white,
                           ),
                         ),
@@ -873,819 +876,946 @@ class _FarmsScreenState extends State<FarmsScreen> {
   //end of add farm
 
   // start of farm details
- void _showFarmDetailsModal(Farm farm) {
-  showDialog(
-    context: context,
-    builder: (dialogContext) {
-      final cardColor = isDark ? Colors.grey[900] : Colors.white;
-      final textColor = isDark ? Colors.white : Colors.black;
-      final secondaryTextColor = isDark ? Colors.grey[400] : Colors.grey[600];
-      final primaryColor = AppColors.primary;
-      final borderColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+  void _showFarmDetailsModal(Farm farm) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        final cardColor = isDark ? Colors.grey[900] : Colors.white;
+        final textColor = isDark ? Colors.white : Colors.black;
+        final secondaryTextColor = isDark ? Colors.grey[400] : Colors.grey[600];
+        final primaryColor = AppColors.primary;
+        final borderColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
 
-      final leftTabController = TabController(length: 2, vsync: Navigator.of(dialogContext));
-      final rightTabController = TabController(length: 2, vsync: Navigator.of(dialogContext));
+        final leftTabController =
+            TabController(length: 2, vsync: Navigator.of(dialogContext));
+        final rightTabController =
+            TabController(length: 2, vsync: Navigator.of(dialogContext));
 
-      return Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(20),
-        child: Container(
-          constraints: const BoxConstraints(
-            maxWidth: 1000,
-            maxHeight: 700,
-          ),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: borderColor, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 10,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Header
-              Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[850] : Colors.grey[100],
-                  border: Border(bottom: BorderSide(color: borderColor)),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(20),
+          child: Container(
+            constraints: const BoxConstraints(
+              maxWidth: 1000,
+              maxHeight: 700,
+            ),
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: borderColor, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 10,
+                  spreadRadius: 2,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text(
-                      'Farm Details',
+              ],
+            ),
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[850] : Colors.grey[100],
+                    border: Border(bottom: BorderSide(color: borderColor)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Text(
+                        'Farm Details',
+                        style: GoogleFonts.roboto(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: textColor,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: Icon(Icons.close,
+                            size: 20, color: secondaryTextColor),
+                        onPressed: () => Navigator.pop(dialogContext),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Main Content
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// LEFT PANEL
+                      Container(
+                        width: 300,
+                        decoration: BoxDecoration(
+                          border: Border(right: BorderSide(color: borderColor)),
+                        ),
+                        child: Column(
+                          children: [
+                            // Farm Image
+                            Container(
+                              height: 180,
+                              width: double.infinity,
+                              color:
+                                  isDark ? Colors.grey[800] : Colors.grey[200],
+                              child: farm.imageUrl.isNotEmpty
+                                  ? Image.network(farm.imageUrl,
+                                      fit: BoxFit.cover)
+                                  : Icon(Icons.agriculture,
+                                      size: 60, color: secondaryTextColor),
+                            ),
+
+                            // Left Tabs
+                            Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                border: Border(
+                                    bottom: BorderSide(color: borderColor)),
+                              ),
+                              child: TabBar(
+                                controller: leftTabController,
+                                indicatorColor: primaryColor,
+                                labelColor: primaryColor,
+                                unselectedLabelColor: secondaryTextColor,
+                                labelStyle: GoogleFonts.roboto(
+                                    fontSize: 14, fontWeight: FontWeight.w500),
+                                tabs: const [
+                                  Tab(text: 'Overview'),
+                                  Tab(text: 'Production'),
+                                ],
+                              ),
+                            ),
+
+                            // Left Tab Content
+                            Expanded(
+                              child: TabBarView(
+                                controller: leftTabController,
+                                children: [
+                                  _buildClassicOverview(
+                                      farm, textColor, secondaryTextColor!),
+                                  _buildClassicProduction(
+                                      textColor, secondaryTextColor),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      /// RIGHT PANEL
+                      Expanded(
+                        child: Column(
+                          children: [
+                            // Right Tabs
+                            Container(
+                              height: 40,
+                              decoration: BoxDecoration(
+                                border: Border(
+                                    bottom: BorderSide(color: borderColor)),
+                              ),
+                              child: TabBar(
+                                controller: rightTabController,
+                                indicatorColor: primaryColor,
+                                labelColor: primaryColor,
+                                unselectedLabelColor: secondaryTextColor,
+                                labelStyle: GoogleFonts.roboto(
+                                    fontSize: 14, fontWeight: FontWeight.w500),
+                                tabs: const [
+                                  Tab(text: 'Performance'),
+                                  Tab(text: 'Energy'),
+                                ],
+                              ),
+                            ),
+
+                            // Right Tab Content
+                            Expanded(
+                              child: TabBarView(
+                                controller: rightTabController,
+                                children: [
+                                  _buildClassicPerformance(
+                                      textColor, secondaryTextColor),
+                                  _buildClassicEnergy(
+                                      textColor, secondaryTextColor),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Footer
+                Container(
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[850] : Colors.grey[100],
+                    border: Border(top: BorderSide(color: borderColor)),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.roboto(
+                            color: secondaryTextColor,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Save functionality
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 8),
+                        ),
+                        child: Text(
+                          'Save Changes',
+                          style: GoogleFonts.roboto(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildClassicOverview(
+      Farm farm, Color textColor, Color secondaryTextColor) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Farm Information',
+            style: GoogleFonts.roboto(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildClassicDetailRow(
+            label: "Farm Name",
+            value: farm.name,
+            icon: Icons.business,
+            textColor: textColor,
+            secondaryColor: secondaryTextColor,
+          ),
+          const Divider(height: 24),
+          _buildClassicDetailRow(
+            label: "Owner",
+            value: "Farm Estates",
+            icon: Icons.account_circle_sharp,
+            textColor: textColor,
+            secondaryColor: secondaryTextColor,
+          ),
+          const Divider(height: 24),
+          _buildClassicDetailRow(
+            label: "Assigned Manager",
+            value: "Farm Estates",
+            icon: Icons.man,
+            textColor: textColor,
+            secondaryColor: secondaryTextColor,
+          ),
+          const Divider(height: 24),
+          _buildClassicDetailRow(
+            label: "Assigned Care Taker",
+            value: "Farm Estates",
+            icon: Icons.person,
+            textColor: textColor,
+            secondaryColor: secondaryTextColor,
+          ),
+          const Divider(height: 24),
+          _buildClassicDetailRow(
+            label: "Location",
+            value: farm.location,
+            icon: Icons.location_on,
+            textColor: textColor,
+            secondaryColor: secondaryTextColor,
+          ),
+          const Divider(height: 24),
+          _buildClassicDetailRow(
+            label: "Status",
+            value: farm.status,
+            icon: Icons.info,
+            textColor: textColor,
+            secondaryColor: secondaryTextColor,
+          ),
+          const Divider(height: 24),
+          _buildClassicDetailRow(
+            label: "Last Activity",
+            value: farm.lastActivity,
+            icon: Icons.update,
+            textColor: textColor,
+            secondaryColor: secondaryTextColor,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClassicProduction(Color textColor, Color secondaryTextColor) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Production Metrics',
+            style: GoogleFonts.roboto(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildClassicDetailRow(
+            label: "Current Yield",
+            value: "245 kWh",
+            icon: Icons.assessment,
+            textColor: textColor,
+            secondaryColor: secondaryTextColor,
+          ),
+          const Divider(height: 24),
+          _buildClassicDetailRow(
+            label: "Monthly Average",
+            value: "7,350 kWh",
+            icon: Icons.show_chart,
+            textColor: textColor,
+            secondaryColor: secondaryTextColor,
+          ),
+          const Divider(height: 24),
+          _buildClassicDetailRow(
+            label: "Efficiency",
+            value: "92%",
+            icon: Icons.bar_chart,
+            textColor: textColor,
+            secondaryColor: secondaryTextColor,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClassicPerformance(Color textColor, Color secondaryTextColor) {
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Date Range Selector
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Performance Dashboard',
                       style: GoogleFonts.roboto(
                         fontSize: 18,
                         fontWeight: FontWeight.w500,
                         color: textColor,
                       ),
                     ),
-                    const Spacer(),
-                    IconButton(
-                      icon: Icon(Icons.close, size: 20, color: secondaryTextColor),
-                      onPressed: () => Navigator.pop(dialogContext),
+                  ),
+                  TextButton.icon(
+                    onPressed: () async {
+                      final DateTimeRange? picked = await showDateRangePicker(
+                        context: context,
+                        initialDateRange: _dateRange,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: ColorScheme.light(
+                                primary: AppColors.primary,
+                                onPrimary: Colors.white,
+                                surface: Theme.of(context).cardColor,
+                                onSurface: textColor,
+                              ),
+                              dialogBackgroundColor:
+                                  Theme.of(context).cardColor,
+                            ),
+                            child: child!,
+                          );
+                        },
+                      );
+                      if (picked != null) {
+                        setState(() => _dateRange = picked);
+                      }
+                    },
+                    icon: Icon(Icons.calendar_today,
+                        size: 16, color: secondaryTextColor),
+                    label: Text(
+                      '${DateFormat('MMM d').format(_dateRange.start)} - ${DateFormat('MMM d, y').format(_dateRange.end)}',
+                      style: GoogleFonts.roboto(
+                        fontSize: 14,
+                        color: secondaryTextColor,
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Performance Metrics Grid
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                childAspectRatio: 2.5,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                children: [
+                  _buildMetricCard(
+                    title: "Crop Yield",
+                    value: "12.5 t/ha",
+                    icon: Icons.grass,
+                    trend: Icons.trending_up,
+                    trendColor: Colors.green,
+                    textColor: textColor,
+                    secondaryColor: secondaryTextColor,
+                  ),
+                  _buildMetricCard(
+                    title: "Water Usage",
+                    value: "3,200 L/day",
+                    icon: Icons.water_drop,
+                    trend: Icons.trending_down,
+                    trendColor: Colors.red,
+                    textColor: textColor,
+                    secondaryColor: secondaryTextColor,
+                  ),
+                  _buildMetricCard(
+                    title: "Soil Quality",
+                    value: "8.2/10",
+                    icon: Icons.terrain,
+                    trend: Icons.trending_flat,
+                    trendColor: Colors.orange,
+                    textColor: textColor,
+                    secondaryColor: secondaryTextColor,
+                  ),
+                  _buildMetricCard(
+                    title: "Pest Control",
+                    value: "95%",
+                    icon: Icons.bug_report,
+                    trend: Icons.trending_up,
+                    trendColor: Colors.green,
+                    textColor: textColor,
+                    secondaryColor: secondaryTextColor,
+                  ),
+                ],
               ),
 
-              // Main Content
-              Expanded(
-                child: Row(
+              const SizedBox(height: 24),
+              // Yield Trend Chart
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border:
+                      Border.all(color: secondaryTextColor.withOpacity(0.2)),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// LEFT PANEL
-                    Container(
-                      width: 300,
-                      decoration: BoxDecoration(
-                        border: Border(right: BorderSide(color: borderColor)),
-                      ),
-                      child: Column(
-                        children: [
-                          // Farm Image
-                          Container(
-                            height: 180,
-                            width: double.infinity,
-                            color: isDark ? Colors.grey[800] : Colors.grey[200],
-                            child: farm.imageUrl.isNotEmpty
-                                ? Image.network(farm.imageUrl, fit: BoxFit.cover)
-                                : Icon(Icons.agriculture, size: 60, color: secondaryTextColor),
-                          ),
-
-                          // Left Tabs
-                          Container(
-                            height: 40,
-                            decoration: BoxDecoration(
-                              border: Border(bottom: BorderSide(color: borderColor)),
-                            ),
-                            child: TabBar(
-                              controller: leftTabController,
-                              indicatorColor: primaryColor,
-                              labelColor: primaryColor,
-                              unselectedLabelColor: secondaryTextColor,
-                              labelStyle: GoogleFonts.roboto(fontSize: 14, fontWeight: FontWeight.w500),
-                              tabs: const [
-                                Tab(text: 'Overview'),
-                                Tab(text: 'Production'),
-                              ],
-                            ),
-                          ),
-
-                          // Left Tab Content
-                          Expanded(
-                            child: TabBarView(
-                              controller: leftTabController,
-                              children: [
-                                _buildClassicOverview(farm, textColor, secondaryTextColor!),
-                                _buildClassicProduction(textColor, secondaryTextColor),
-                              ],
-                            ),
-                          ),
-                        ],
+                    Text(
+                      'Crop Yield Trend',
+                      style: GoogleFonts.roboto(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: textColor,
                       ),
                     ),
-
-                    /// RIGHT PANEL
-                    Expanded(
-                      child: Column(
-                        children: [
-                          // Right Tabs
-                          Container(
-                            height: 40,
-                            decoration: BoxDecoration(
-                              border: Border(bottom: BorderSide(color: borderColor)),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 200,
+                      child: LineChart(
+                        LineChartData(
+                          gridData: FlGridData(show: false),
+                          titlesData: FlTitlesData(
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  final date = _dateRange.start
+                                      .add(Duration(days: value.toInt()));
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: Text(
+                                      DateFormat('MMM d').format(date),
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 10,
+                                        color: secondaryTextColor,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                reservedSize: 30,
+                              ),
                             ),
-                            child: TabBar(
-                              controller: rightTabController,
-                              indicatorColor: primaryColor,
-                              labelColor: primaryColor,
-                              unselectedLabelColor: secondaryTextColor,
-                              labelStyle: GoogleFonts.roboto(fontSize: 14, fontWeight: FontWeight.w500),
-                              tabs: const [
-                                Tab(text: 'Performance'),
-                                Tab(text: 'Energy'),
-                              ],
-                            ),
-                          ),
-
-                          // Right Tab Content
-                          Expanded(
-                            child: TabBarView(
-                              controller: rightTabController,
-                              children: [
-                                _buildClassicPerformance(textColor, secondaryTextColor),
-                                _buildClassicEnergy(textColor, secondaryTextColor),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Footer
-              Container(
-                height: 60,
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[850] : Colors.grey[100],
-                  border: Border(top: BorderSide(color: borderColor)),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      child: Text(
-                        'Cancel',
-                        style: GoogleFonts.roboto(
-                          color: secondaryTextColor,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Save functionality
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                      ),
-                      child: Text(
-                        'Save Changes',
-                        style: GoogleFonts.roboto(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
-
-Widget _buildClassicOverview(Farm farm, Color textColor, Color secondaryTextColor) {
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Farm Information',
-          style: GoogleFonts.roboto(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildClassicDetailRow(
-          label: "Farm Name",
-          value: farm.name,
-          icon: Icons.business,
-          textColor: textColor,
-          secondaryColor: secondaryTextColor,
-        ),
-        const Divider(height: 24),
-        _buildClassicDetailRow(
-          label: "Owner",
-          value: "Farm Estates",
-          icon: Icons.account_circle_sharp,
-          textColor: textColor,
-          secondaryColor: secondaryTextColor,
-        ),
-        const Divider(height: 24),
-        _buildClassicDetailRow(
-          label: "Assigned Manager",
-          value: "Farm Estates",
-          icon: Icons.man,
-          textColor: textColor,
-          secondaryColor: secondaryTextColor,
-        ),
-         const Divider(height: 24),
-        _buildClassicDetailRow(
-          label: "Assigned Care Taker",
-          value: "Farm Estates",
-          icon: Icons.person,
-          textColor: textColor,
-          secondaryColor: secondaryTextColor,
-        ),
-        const Divider(height: 24),
-        _buildClassicDetailRow(
-          label: "Location",
-          value: farm.location,
-          icon: Icons.location_on,
-          textColor: textColor,
-          secondaryColor: secondaryTextColor,
-        ),
-        const Divider(height: 24),
-        _buildClassicDetailRow(
-          label: "Status",
-          value: farm.status,
-          icon: Icons.info,
-          textColor: textColor,
-          secondaryColor: secondaryTextColor,
-        ),
-        const Divider(height: 24),
-        _buildClassicDetailRow(
-          label: "Last Activity",
-          value: farm.lastActivity,
-          icon: Icons.update,
-          textColor: textColor,
-          secondaryColor: secondaryTextColor,
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildClassicProduction(Color textColor, Color secondaryTextColor) {
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Production Metrics',
-          style: GoogleFonts.roboto(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _buildClassicDetailRow(
-          label: "Current Yield",
-          value: "245 kWh",
-          icon: Icons.assessment,
-          textColor: textColor,
-          secondaryColor: secondaryTextColor,
-        ),
-        const Divider(height: 24),
-        _buildClassicDetailRow(
-          label: "Monthly Average",
-          value: "7,350 kWh",
-          icon: Icons.show_chart,
-          textColor: textColor,
-          secondaryColor: secondaryTextColor,
-        ),
-        const Divider(height: 24),
-        _buildClassicDetailRow(
-          label: "Efficiency",
-          value: "92%",
-          icon: Icons.bar_chart,
-          textColor: textColor,
-          secondaryColor: secondaryTextColor,
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildClassicPerformance(Color textColor, Color secondaryTextColor) {
-  return StatefulBuilder(
-    builder: (context, setState) {
-      return SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Date Range Selector
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Performance Dashboard',
-                    style: GoogleFonts.roboto(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: textColor,
-                    ),
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () async {
-                    final DateTimeRange? picked = await showDateRangePicker(
-                      context: context,
-                      initialDateRange: _dateRange,
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime.now(),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: AppColors.primary,
-                              onPrimary: Colors.white,
-                              surface: Theme.of(context).cardColor,
-                              onSurface: textColor,
-                            ),
-                            dialogBackgroundColor: Theme.of(context).cardColor,
-                          ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (picked != null) {
-                      setState(() => _dateRange = picked);
-                    }
-                  },
-                  icon: Icon(Icons.calendar_today, size: 16, color: secondaryTextColor),
-                  label: Text(
-                    '${DateFormat('MMM d').format(_dateRange.start)} - ${DateFormat('MMM d, y').format(_dateRange.end)}',
-                    style: GoogleFonts.roboto(
-                      fontSize: 14,
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            
-            // Performance Metrics Grid
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              childAspectRatio: 2.5,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              children: [
-                _buildMetricCard(
-                  title: "Crop Yield",
-                  value: "12.5 t/ha",
-                  icon: Icons.grass,
-                  trend: Icons.trending_up,
-                  trendColor: Colors.green,
-                  textColor: textColor,
-                  secondaryColor: secondaryTextColor,
-                ),
-                _buildMetricCard(
-                  title: "Water Usage",
-                  value: "3,200 L/day",
-                  icon: Icons.water_drop,
-                  trend: Icons.trending_down,
-                  trendColor: Colors.red,
-                  textColor: textColor,
-                  secondaryColor: secondaryTextColor,
-                ),
-                _buildMetricCard(
-                  title: "Soil Quality",
-                  value: "8.2/10",
-                  icon: Icons.terrain,
-                  trend: Icons.trending_flat,
-                  trendColor: Colors.orange,
-                  textColor: textColor,
-                  secondaryColor: secondaryTextColor,
-                ),
-                _buildMetricCard(
-                  title: "Pest Control",
-                  value: "95%",
-                  icon: Icons.bug_report,
-                  trend: Icons.trending_up,
-                  trendColor: Colors.green,
-                  textColor: textColor,
-                  secondaryColor: secondaryTextColor,
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 24),
-            // Yield Trend Chart
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: secondaryTextColor.withOpacity(0.2)),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Crop Yield Trend',
-                    style: GoogleFonts.roboto(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: textColor,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 200,
-                    child: LineChart(
-                      LineChartData(
-                        gridData: FlGridData(show: false),
-                        titlesData: FlTitlesData(
-                          bottomTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (value, meta) {
-                                final date = _dateRange.start.add(Duration(days: value.toInt()));
-                                return Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: Text(
-                                    DateFormat('MMM d').format(date),
+                            leftTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  return Text(
+                                    '${value.toInt()} t/ha',
                                     style: GoogleFonts.roboto(
                                       fontSize: 10,
                                       color: secondaryTextColor,
                                     ),
-                                  ),
-                                );
-                              },
-                              reservedSize: 30,
+                                  );
+                                },
+                                reservedSize: 40,
+                              ),
+                            ),
+                            rightTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            topTitles: AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
                             ),
                           ),
-                          leftTitles: AxisTitles(
-                            sideTitles: SideTitles(
-                              showTitles: true,
-                              getTitlesWidget: (value, meta) {
-                                return Text(
-                                  '${value.toInt()} t/ha',
-                                  style: GoogleFonts.roboto(
-                                    fontSize: 10,
-                                    color: secondaryTextColor,
-                                  ),
-                                );
-                              },
-                              reservedSize: 40,
+                          borderData: FlBorderData(
+                            show: true,
+                            border: Border.all(
+                              color: secondaryTextColor.withOpacity(0.2),
                             ),
                           ),
-                          rightTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
-                          topTitles: AxisTitles(
-                            sideTitles: SideTitles(showTitles: false),
-                          ),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: _generatePerformanceData(),
+                              isCurved: true,
+                              color: AppColors.primary,
+                              barWidth: 2,
+                              isStrokeCapRound: true,
+                              dotData: FlDotData(show: false),
+                              belowBarData: BarAreaData(
+                                show: true,
+                                color: AppColors.primary.withOpacity(0.1),
+                              ),
+                            ),
+                          ],
+                          minX: 0,
+                          maxX: _dateRange.end
+                              .difference(_dateRange.start)
+                              .inDays
+                              .toDouble(),
+                          minY: 0,
+                          maxY: 20,
                         ),
-                        borderData: FlBorderData(
-                          show: true,
-                          border: Border.all(
-                            color: secondaryTextColor.withOpacity(0.2),
-                          ),
-                        ),
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: _generatePerformanceData(),
-                            isCurved: true,
-                            color: AppColors.primary,
-                            barWidth: 2,
-                            isStrokeCapRound: true,
-                            dotData: FlDotData(show: false),
-                            belowBarData: BarAreaData(
-                              show: true,
-                              color: AppColors.primary.withOpacity(0.1),
-                            ),
-                          ),
-                        ],
-                        minX: 0,
-                        maxX: _dateRange.end.difference(_dateRange.start).inDays.toDouble(),
-                        minY: 0,
-                        maxY: 20,
                       ),
                     ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+              Text(
+                'Recent Activities',
+                style: GoogleFonts.roboto(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: textColor,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Activity Timeline
+              Column(
+                children: [
+                  _buildActivityItem(
+                    icon: Icons.water,
+                    title: "Irrigation Completed",
+                    time: "Today, 10:30 AM",
+                    secondaryColor: secondaryTextColor,
+                  ),
+                  _buildActivityItem(
+                    icon: Icons.agriculture,
+                    title: "Fertilizer Applied",
+                    time: "Yesterday, 3:45 PM",
+                    secondaryColor: secondaryTextColor,
+                  ),
+                  _buildActivityItem(
+                    icon: Icons.pest_control,
+                    title: "Pest Control Spray",
+                    time: "2 days ago",
+                    secondaryColor: secondaryTextColor,
                   ),
                 ],
               ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+// Add this to your state class
+  DateTimeRange _dateRange = DateTimeRange(
+    start: DateTime.now().subtract(const Duration(days: 30)),
+    end: DateTime.now(),
+  );
+
+  List<FlSpot> _generatePerformanceData() {
+    final days = _dateRange.end.difference(_dateRange.start).inDays;
+    return List.generate(days, (index) {
+      final day = _dateRange.start.add(Duration(days: index));
+      final progress = index / days;
+      // Simulate some variation in the data
+      final value = 10 + 5 * sin(progress * 2 * pi) + Random().nextDouble() * 3;
+      return FlSpot(index.toDouble(), value);
+    });
+  }
+
+  Widget _buildClassicEnergy(Color textColor, Color secondaryTextColor) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Energy Overview',
+            style: GoogleFonts.roboto(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: textColor,
             ),
-            
-            const SizedBox(height: 24),
-            Text(
-              'Recent Activities',
-              style: GoogleFonts.roboto(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: textColor,
-              ),
+          ),
+          const SizedBox(height: 16),
+
+          // Energy Summary
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: secondaryTextColor.withOpacity(0.2)),
+              borderRadius: BorderRadius.circular(4),
             ),
-            const SizedBox(height: 8),
-            
-            // Activity Timeline
-            Column(
+            child: Column(
               children: [
-                _buildActivityItem(
-                  icon: Icons.water,
-                  title: "Irrigation Completed",
-                  time: "Today, 10:30 AM",
-                  secondaryColor: secondaryTextColor,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "Current Power Generation",
+                      style: GoogleFonts.roboto(
+                        fontSize: 14,
+                        color: secondaryTextColor,
+                      ),
+                    ),
+                    Text(
+                      "24.5 kW",
+                      style: GoogleFonts.roboto(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: textColor,
+                      ),
+                    ),
+                  ],
                 ),
-                _buildActivityItem(
-                  icon: Icons.agriculture,
-                  title: "Fertilizer Applied",
-                  time: "Yesterday, 3:45 PM",
-                  secondaryColor: secondaryTextColor,
+                const SizedBox(height: 12),
+                LinearProgressIndicator(
+                  value: 0.82,
+                  backgroundColor: secondaryTextColor.withOpacity(0.1),
+                  color: Colors.green,
+                  minHeight: 8,
                 ),
-                _buildActivityItem(
-                  icon: Icons.pest_control,
-                  title: "Pest Control Spray",
-                  time: "2 days ago",
-                  secondaryColor: secondaryTextColor,
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "82% of capacity",
+                      style: GoogleFonts.roboto(
+                        fontSize: 12,
+                        color: secondaryTextColor,
+                      ),
+                    ),
+                    Text(
+                      "Max: 30 kW",
+                      style: GoogleFonts.roboto(
+                        fontSize: 12,
+                        color: secondaryTextColor,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      );
-    },
-  );
-}
+          ),
 
-// Add this to your state class
-DateTimeRange _dateRange = DateTimeRange(
-  start: DateTime.now().subtract(const Duration(days: 30)),
-  end: DateTime.now(),
-);
-
-List<FlSpot> _generatePerformanceData() {
-  final days = _dateRange.end.difference(_dateRange.start).inDays;
-  return List.generate(days, (index) {
-    final day = _dateRange.start.add(Duration(days: index));
-    final progress = index / days;
-    // Simulate some variation in the data
-    final value = 10 + 5 * sin(progress * 2 * pi) + Random().nextDouble() * 3;
-    return FlSpot(index.toDouble(), value);
-  });
-}
-
-Widget _buildClassicEnergy(Color textColor, Color secondaryTextColor) {
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Energy Overview',
-          style: GoogleFonts.roboto(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 16),
-        
-        // Energy Summary
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border.all(color: secondaryTextColor.withOpacity(0.2)),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Current Power Generation",
-                    style: GoogleFonts.roboto(
-                      fontSize: 14,
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                  Text(
-                    "24.5 kW",
-                    style: GoogleFonts.roboto(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              LinearProgressIndicator(
-                value: 0.82,
-                backgroundColor: secondaryTextColor.withOpacity(0.1),
-                color: Colors.green,
-                minHeight: 8,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "82% of capacity",
-                    style: GoogleFonts.roboto(
-                      fontSize: 12,
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                  Text(
-                    "Max: 30 kW",
-                    style: GoogleFonts.roboto(
-                      fontSize: 12,
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        
-        const SizedBox(height: 24),
-        Text(
-          'Energy Sources',
-          style: GoogleFonts.roboto(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 8),
-        
-        // Energy Sources
-        Column(
-          children: [
-            _buildEnergySourceItem(
-              icon: Icons.solar_power,
-              source: "Solar Panels",
-              percentage: "65%",
-              value: "15.9 kW",
-              color: Colors.amber,
-              textColor: textColor,
-              secondaryColor: secondaryTextColor,
-            ),
-            _buildEnergySourceItem(
-              icon: Icons.wind_power,
-              source: "Wind Turbine",
-              percentage: "25%",
-              value: "6.1 kW",
-              color: Colors.blue,
-              textColor: textColor,
-              secondaryColor: secondaryTextColor,
-            ),
-            _buildEnergySourceItem(
-              icon: Icons.battery_charging_full,
-              source: "Battery Storage",
-              percentage: "10%",
-              value: "2.5 kW",
-              color: Colors.green,
-              textColor: textColor,
-              secondaryColor: secondaryTextColor,
-            ),
-          ],
-        ),
-        
-        const SizedBox(height: 24),
-        Text(
-          'Daily Energy Production',
-          style: GoogleFonts.roboto(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(height: 8),
-        
-        // Energy Chart Placeholder
-        Container(
-          height: 200,
-          decoration: BoxDecoration(
-            border: Border.all(color: secondaryTextColor.withOpacity(0.2)),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            "Energy Production Chart",
+          const SizedBox(height: 24),
+          Text(
+            'Energy Sources',
             style: GoogleFonts.roboto(
-              color: secondaryTextColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: textColor,
             ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+          const SizedBox(height: 8),
 
-Widget _buildMetricCard({
-  required String title,
-  required String value,
-  required IconData icon,
-  required IconData trend,
-  required Color trendColor,
-  required Color textColor,
-  required Color secondaryColor,
-}) {
-  return Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      border: Border.all(color: secondaryColor.withOpacity(0.2)),
-      borderRadius: BorderRadius.circular(4),
-    ),
-    child: Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: secondaryColor.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 20, color: textColor),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // Energy Sources
+          Column(
             children: [
-              Text(
-                title,
-                style: GoogleFonts.roboto(
-                  fontSize: 13,
-                  color: secondaryColor,
-                ),
+              _buildEnergySourceItem(
+                icon: Icons.solar_power,
+                source: "Solar Panels",
+                percentage: "65%",
+                value: "15.9 kW",
+                color: Colors.amber,
+                textColor: textColor,
+                secondaryColor: secondaryTextColor,
               ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(
-                    value,
-                    style: GoogleFonts.roboto(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(trend, size: 20, color: trendColor),
-                ],
+              _buildEnergySourceItem(
+                icon: Icons.wind_power,
+                source: "Wind Turbine",
+                percentage: "25%",
+                value: "6.1 kW",
+                color: Colors.blue,
+                textColor: textColor,
+                secondaryColor: secondaryTextColor,
+              ),
+              _buildEnergySourceItem(
+                icon: Icons.battery_charging_full,
+                source: "Battery Storage",
+                percentage: "10%",
+                value: "2.5 kW",
+                color: Colors.green,
+                textColor: textColor,
+                secondaryColor: secondaryTextColor,
               ),
             ],
           ),
-        ),
-      ],
-    ),
-  );
-}
 
-Widget _buildActivityItem({
-  required IconData icon,
-  required String title,
-  required String time,
-  required Color secondaryColor,
-}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Row(
+          const SizedBox(height: 24),
+          Text(
+            'Daily Energy Production',
+            style: GoogleFonts.roboto(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Energy Chart Placeholder
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              border: Border.all(color: secondaryTextColor.withOpacity(0.2)),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              "Energy Production Chart",
+              style: GoogleFonts.roboto(
+                color: secondaryTextColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required IconData trend,
+    required Color trendColor,
+    required Color textColor,
+    required Color secondaryColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: secondaryColor.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: secondaryColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: textColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.roboto(
+                    fontSize: 13,
+                    color: secondaryColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      value,
+                      style: GoogleFonts.roboto(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(trend, size: 20, color: trendColor),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivityItem({
+    required IconData icon,
+    required String title,
+    required String time,
+    required Color secondaryColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: secondaryColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.roboto(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: secondaryColor,
+                  ),
+                ),
+                Text(
+                  time,
+                  style: GoogleFonts.roboto(
+                    fontSize: 12,
+                    color: secondaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEnergySourceItem({
+    required IconData icon,
+    required String source,
+    required String percentage,
+    required String value,
+    required Color color,
+    required Color textColor,
+    required Color secondaryColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  source,
+                  style: GoogleFonts.roboto(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                  value: double.parse(percentage.replaceAll('%', '')) / 100,
+                  backgroundColor: secondaryColor.withOpacity(0.1),
+                  color: color,
+                  minHeight: 4,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            value,
+            style: GoogleFonts.roboto(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            percentage,
+            style: GoogleFonts.roboto(
+              fontSize: 14,
+              color: secondaryColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClassicDetailRow({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color textColor,
+    required Color secondaryColor,
+  }) {
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 20, color: secondaryColor),
@@ -1695,137 +1825,30 @@ Widget _buildActivityItem({
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
+                label,
                 style: GoogleFonts.roboto(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
                   color: secondaryColor,
                 ),
               ),
+              const SizedBox(height: 4),
               Text(
-                time,
+                value,
                 style: GoogleFonts.roboto(
-                  fontSize: 12,
-                  color: secondaryColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildEnergySourceItem({
-  required IconData icon,
-  required String source,
-  required String percentage,
-  required String value,
-  required Color color,
-  required Color textColor,
-  required Color secondaryColor,
-}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 20, color: color),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                source,
-                style: GoogleFonts.roboto(
-                  fontSize: 14,
+                  fontSize: 15,
                   fontWeight: FontWeight.w500,
                   color: textColor,
                 ),
               ),
-              const SizedBox(height: 4),
-              LinearProgressIndicator(
-                value: double.parse(percentage.replaceAll('%', '')) / 100,
-                backgroundColor: secondaryColor.withOpacity(0.1),
-                color: color,
-                minHeight: 4,
-              ),
             ],
           ),
         ),
-        const SizedBox(width: 12),
-        Text(
-          value,
-          style: GoogleFonts.roboto(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: textColor,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          percentage,
-          style: GoogleFonts.roboto(
-            fontSize: 14,
-            color: secondaryColor,
-          ),
-        ),
       ],
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildClassicDetailRow({
-  required String label,
-  required String value,
-  required IconData icon,
-  required Color textColor,
-  required Color secondaryColor,
-}) {
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Icon(icon, size: 20, color: secondaryColor),
-      const SizedBox(width: 12),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.roboto(
-                fontSize: 13,
-                color: secondaryColor,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: GoogleFonts.roboto(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: textColor,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ],
-  );
+  void _showEditFarmDialog(Farm farm) {
+    // Similar to add farm dialog but with pre-filled values
+    // Implement edit functionality here
+  }
 }
-
-
-void _showEditFarmDialog(Farm farm) {
-  // Similar to add farm dialog but with pre-filled values
-  // Implement edit functionality here
-}
-}
-
