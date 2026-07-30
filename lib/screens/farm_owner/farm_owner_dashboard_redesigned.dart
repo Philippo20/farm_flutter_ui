@@ -7,9 +7,10 @@ import '../../core/widgets/farm_owner_sidebar.dart';
 import '../../core/widgets/farm_owner_header.dart';
 import '../../core/widgets/farm_owner_mobile_drawer.dart';
 import '../../core/widgets/modern_dashboard_scaffold.dart';
-import '../../core/widgets/weather_time_widget.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Farm Owner Dashboard - Redesigned
 /// Financial focus with digital wallet
@@ -17,19 +18,168 @@ class FarmOwnerDashboardRedesigned extends ConsumerStatefulWidget {
   const FarmOwnerDashboardRedesigned({super.key});
 
   @override
-  ConsumerState<FarmOwnerDashboardRedesigned> createState() => _FarmOwnerDashboardRedesignedState();
+  ConsumerState<FarmOwnerDashboardRedesigned> createState() =>
+      _FarmOwnerDashboardRedesignedState();
 }
 
-class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboardRedesigned> {
+class _FarmOwnerDashboardRedesignedState
+    extends ConsumerState<FarmOwnerDashboardRedesigned> {
+  final SuperAdminApiService _api = SuperAdminApiService();
   int _selectedNavIndex = 0;
   WeatherInfo? _weatherInfo;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final List<Map<String, dynamic>> _farms = [];
+  final List<Map<String, dynamic>> _batches = [];
+  final List<Map<String, dynamic>> _sales = [];
+  final List<Map<String, dynamic>> _sensors = [];
+  final List<Map<String, dynamic>> _fundRequests = [];
+  bool _isLoadingDashboard = true;
+  String? _dashboardError;
 
   @override
   void initState() {
     super.initState();
     // Load weather info if needed
     _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    setState(() {
+      _isLoadingDashboard = true;
+      _dashboardError = null;
+    });
+    try {
+      final results = await Future.wait([
+        _api.getFarms(),
+        _api.getBatches(),
+        _api.getSales(),
+        _api.getSensors(),
+        _api.getFundRequests(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _farms
+          ..clear()
+          ..addAll(results[0]);
+        _batches
+          ..clear()
+          ..addAll(results[1]);
+        _sales
+          ..clear()
+          ..addAll(results[2]);
+        _sensors
+          ..clear()
+          ..addAll(results[3]);
+        _fundRequests
+          ..clear()
+          ..addAll(results[4]);
+        _isLoadingDashboard = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _dashboardError = error.toString();
+        _isLoadingDashboard = false;
+      });
+    }
+  }
+
+  String _docId(Map<String, dynamic> doc) =>
+      (doc[r'$id'] ?? doc['id'] ?? doc['farm_id'] ?? '').toString();
+
+  String _value(Map<String, dynamic> doc, List<String> keys,
+      {String fallback = ''}) {
+    for (final key in keys) {
+      final value = doc[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return fallback;
+  }
+
+  String _normalise(dynamic value) =>
+      value?.toString().trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ') ??
+      '';
+
+  num _numValue(dynamic value) {
+    if (value is num) return value;
+    return num.tryParse(value?.toString().replaceAll(',', '') ?? '') ?? 0;
+  }
+
+  DateTime? _dateValue(dynamic value) {
+    if (value is DateTime) return value;
+    return DateTime.tryParse(value?.toString() ?? '');
+  }
+
+  bool _isOwnerFarm(Map<String, dynamic> farm) {
+    final user = ref.read(authProvider).user;
+    if (user == null) return true;
+    final ownerTokens = {
+      _normalise(user.id),
+      _normalise(user.email),
+      _normalise(user.name),
+    }..removeWhere((token) => token.isEmpty);
+    final farmOwnerTokens = {
+      _normalise(_value(farm, ['ownerID', 'owner_id', 'ownerId'])),
+      _normalise(_value(farm, ['owner_name', 'ownerName'])),
+      _normalise(_value(farm, ['owner_email', 'ownerEmail'])),
+    }..removeWhere((token) => token.isEmpty || token == 'unassigned');
+    return farmOwnerTokens.any(ownerTokens.contains);
+  }
+
+  List<Map<String, dynamic>> get _ownerFarms =>
+      _farms.where(_isOwnerFarm).toList();
+
+  Set<String> get _ownerFarmIds =>
+      _ownerFarms.map(_docId).where((id) => id.isNotEmpty).toSet();
+
+  Set<String> get _ownerFarmNames => _ownerFarms
+      .map((farm) => _value(farm, ['name', 'farm_name']))
+      .where((name) => name.isNotEmpty)
+      .map(_normalise)
+      .toSet();
+
+  bool _matchesOwnerFarm(Map<String, dynamic> doc) {
+    final ids = _ownerFarmIds;
+    final names = _ownerFarmNames;
+    final farmId = _value(doc, ['farm_id', 'farmID', 'farmId']);
+    final farmName = _value(doc, ['farm_name', 'farmName']);
+    return (farmId.isNotEmpty && ids.contains(farmId)) ||
+        (farmName.isNotEmpty && names.contains(_normalise(farmName)));
+  }
+
+  List<Map<String, dynamic>> get _ownerBatches =>
+      _batches.where(_matchesOwnerFarm).toList();
+
+  List<Map<String, dynamic>> get _ownerSales =>
+      _sales.where(_matchesOwnerFarm).toList();
+
+  List<Map<String, dynamic>> get _ownerSensors =>
+      _sensors.where(_matchesOwnerFarm).toList();
+
+  List<Map<String, dynamic>> get _ownerFundRequests =>
+      _fundRequests.where(_matchesOwnerFarm).toList();
+
+  String _formatMoney(num value) {
+    final fixed = value.toStringAsFixed(2);
+    final parts = fixed.split('.');
+    final whole = parts.first.replaceAllMapped(
+      RegExp(r'\B(?=(\d{3})+(?!\d))'),
+      (_) => ',',
+    );
+    return 'GHS $whole.${parts.last}';
+  }
+
+  String _relativeTime(DateTime? date) {
+    if (date == null) return 'Recently';
+    final diff = DateTime.now().difference(date.toLocal());
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
+    if (diff.inHours < 24) return '${diff.inHours} hrs ago';
+    if (diff.inDays == 1) return 'Yesterday';
+    return '${diff.inDays} days ago';
   }
 
   @override
@@ -44,11 +194,13 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       drawer: isMobile
           ? FarmOwnerMobileDrawer(
               selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
               userName: userName,
             )
           : null,
@@ -63,14 +215,17 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
               icon: const Icon(Icons.add),
               label: const Text('Wallet Action'),
             ),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          : null,
     );
   }
 
-  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail, String userRole) {
+  Widget _buildDesktopLayout(
+      bool isDark, String userName, String userEmail, String userRole) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isTablet = screenWidth < 1200 && screenWidth >= 600;
-    
+
     return Row(
       children: [
         // Sidebar
@@ -102,7 +257,8 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
               // Content
               Expanded(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(isTablet ? AppSpacing.md : AppSpacing.lg),
+                  padding:
+                      EdgeInsets.all(isTablet ? AppSpacing.md : AppSpacing.lg),
                   child: _buildDashboardContent(isDark, isTablet),
                 ),
               ),
@@ -148,6 +304,14 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
   }
 
   Widget _buildDashboardContent(bool isDark, bool isMobile) {
+    if (_isLoadingDashboard) {
+      return const AdminDataSkeleton(rowCount: 4, showStats: true);
+    }
+
+    if (_dashboardError != null) {
+      return _buildDashboardError(isDark);
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -176,39 +340,106 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
     );
   }
 
+  Widget _buildDashboardError(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppColors.neutral200,
+        ),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.cloud_off_rounded, color: AppColors.error, size: 42),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Unable to load dashboard data',
+            style: AppTypography.h4.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            _dashboardError ?? '',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white60 : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ElevatedButton.icon(
+            onPressed: _loadDashboardData,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildModernStatsRow(bool isDark, bool isMobile) {
+    final revenue = _ownerSales.fold<num>(
+      0,
+      (sum, sale) =>
+          sum + _numValue(sale['total_amount'] ?? sale['amount'] ?? 0),
+    );
+    final thisMonth = DateTime(DateTime.now().year, DateTime.now().month);
+    final monthlyRevenue = _ownerSales.where((sale) {
+      final date = _dateValue(sale['created_at'] ?? sale[r'$createdAt']);
+      return date != null &&
+          DateTime(date.year, date.month).isAtSameMomentAs(thisMonth);
+    }).fold<num>(
+      0,
+      (sum, sale) =>
+          sum + _numValue(sale['total_amount'] ?? sale['amount'] ?? 0),
+    );
+    final pendingRequests = _ownerFundRequests
+        .where((request) =>
+            _value(request, ['status']).toLowerCase().trim() == 'pending')
+        .length;
+    final activeFarms = _ownerFarms
+        .where((farm) => _value(farm, ['status']).toLowerCase() == 'active')
+        .length;
+
     final stats = [
       {
-        'label': 'Wallet Balance',
-        'value': '\$48,500',
-        'unit': 'USD',
+        'label': 'Total Revenue',
+        'value': _formatMoney(revenue),
+        'unit': 'earned',
         'icon': Icons.account_balance_wallet_rounded,
         'color': const Color(0xFF6366F1),
-        'change': '+12%',
+        'change': '${_ownerSales.length} sales',
       },
       {
         'label': 'Monthly Revenue',
-        'value': '\$12,300',
-        'unit': 'USD',
+        'value': _formatMoney(monthlyRevenue),
+        'unit': 'this month',
         'icon': Icons.trending_up_rounded,
         'color': const Color(0xFF10B981),
-        'change': '+8%',
+        'change': _ownerSales.isEmpty ? 'No sales' : 'Live',
       },
       {
-        'label': 'Pending Withdrawals',
-        'value': '3',
+        'label': 'Pending Requests',
+        'value': '$pendingRequests',
         'unit': 'requests',
         'icon': Icons.pending_actions_rounded,
         'color': const Color(0xFFF59E0B),
-        'change': '2 today',
+        'change': '${_ownerFundRequests.length} total',
       },
       {
         'label': 'Active Farms',
-        'value': '5',
+        'value': '$activeFarms',
         'unit': 'farms',
         'icon': Icons.agriculture_rounded,
         'color': const Color(0xFF0EA5E9),
-        'change': 'Stable',
+        'change': '${_ownerFarms.length} owned',
       },
     ];
 
@@ -245,7 +476,8 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
     );
   }
 
-  Widget _buildModernStatCard(Map<String, dynamic> stat, bool isDark, bool isMobile) {
+  Widget _buildModernStatCard(
+      Map<String, dynamic> stat, bool isDark, bool isMobile) {
     final color = stat['color'] as Color;
 
     return Container(
@@ -254,7 +486,8 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
+          color:
+              isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
         ),
         boxShadow: isDark
             ? null
@@ -278,7 +511,8 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
                   color: color.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(stat['icon'] as IconData, size: isMobile ? 20 : 22, color: color),
+                child: Icon(stat['icon'] as IconData,
+                    size: isMobile ? 20 : 22, color: color),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -301,13 +535,19 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                stat['value'] as String,
-                style: TextStyle(
-                  fontSize: isMobile ? 26 : 32,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                  height: 1,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    stat['value'] as String,
+                    style: TextStyle(
+                      fontSize: isMobile ? 24 : 30,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
+                      height: 1,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 4),
@@ -344,7 +584,8 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
+          color:
+              isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
         ),
       ),
       child: Column(
@@ -358,7 +599,8 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
                   color: const Color(0xFF10B981).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.flash_on_rounded, size: 20, color: Color(0xFF10B981)),
+                child: const Icon(Icons.flash_on_rounded,
+                    size: 20, color: Color(0xFF10B981)),
               ),
               const SizedBox(width: 12),
               Text(
@@ -379,12 +621,7 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
   }
 
   Widget _buildActivityTimeline(bool isDark, bool isMobile) {
-    final activities = [
-      {'title': 'Withdrawal Approved', 'desc': 'Request #WD-204 processed', 'time': '12 min ago', 'icon': Icons.check_circle_rounded, 'color': const Color(0xFF10B981)},
-      {'title': 'New Revenue', 'desc': '\$4,500 credited to wallet', 'time': '2 hrs ago', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFF6366F1)},
-      {'title': 'Report Generated', 'desc': 'January performance report', 'time': 'Yesterday', 'icon': Icons.assessment_rounded, 'color': const Color(0xFF0EA5E9)},
-      {'title': 'Payout Scheduled', 'desc': 'Next payout on Friday', 'time': '2 days ago', 'icon': Icons.calendar_today_rounded, 'color': const Color(0xFFF59E0B)},
-    ];
+    final activities = _ownerActivities;
 
     return Container(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
@@ -392,7 +629,8 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
+          color:
+              isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
         ),
       ),
       child: Column(
@@ -406,7 +644,8 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
                   color: const Color(0xFF6366F1).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.timeline_rounded, size: 20, color: Color(0xFF6366F1)),
+                child: const Icon(Icons.timeline_rounded,
+                    size: 20, color: Color(0xFF6366F1)),
               ),
               const SizedBox(width: 12),
               Text(
@@ -420,10 +659,77 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
             ],
           ),
           const SizedBox(height: 20),
-          ...activities.map((a) => _buildActivityItem(a, isDark)),
+          if (activities.isEmpty)
+            Text(
+              'No recent farm activity yet.',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white60 : AppColors.textSecondary,
+              ),
+            )
+          else
+            ...activities.map((a) => _buildActivityItem(a, isDark)),
         ],
       ),
     );
+  }
+
+  List<Map<String, dynamic>> get _ownerActivities {
+    final activities = <Map<String, dynamic>>[];
+    for (final sale in _ownerSales) {
+      final amount = _numValue(sale['total_amount'] ?? sale['amount']);
+      activities.add({
+        'title': 'Farm Revenue Recorded',
+        'desc': '${_formatMoney(amount)} from ${_value(sale, [
+              'farm_name'
+            ], fallback: 'owned farm')}',
+        'time': _relativeTime(
+            _dateValue(sale['created_at'] ?? sale[r'$createdAt'])),
+        'sortDate': _dateValue(sale['created_at'] ?? sale[r'$createdAt']) ??
+            DateTime.fromMillisecondsSinceEpoch(0),
+        'icon': Icons.account_balance_wallet_rounded,
+        'color': const Color(0xFF6366F1),
+      });
+    }
+    for (final request in _ownerFundRequests) {
+      final status = _value(request, ['status']);
+      activities.add({
+        'title': 'Fund Request ${status.isEmpty ? 'Updated' : status}',
+        'desc':
+            '${_formatMoney(_numValue(request['amount']))} for ${_value(request, [
+                  'farm_name'
+                ], fallback: 'owned farm')}',
+        'time': _relativeTime(_dateValue(request['updated_at'] ??
+            request['request_date'] ??
+            request[r'$updatedAt'])),
+        'sortDate': _dateValue(request['updated_at'] ??
+                request['request_date'] ??
+                request[r'$updatedAt']) ??
+            DateTime.fromMillisecondsSinceEpoch(0),
+        'icon': Icons.pending_actions_rounded,
+        'color': status.toLowerCase() == 'approved'
+            ? const Color(0xFF10B981)
+            : const Color(0xFFF59E0B),
+      });
+    }
+    for (final batch in _ownerBatches) {
+      final status = _value(batch, ['production_status']);
+      activities.add({
+        'title': 'Batch ${status.isEmpty ? 'Updated' : status}',
+        'desc': '${_value(batch, [
+              'batch_code',
+              'batch_id'
+            ], fallback: 'Batch')} at ${_value(batch, ['farm_name'], fallback: 'owned farm')}',
+        'time': _relativeTime(
+            _dateValue(batch['updated_at'] ?? batch['created_at'])),
+        'sortDate': _dateValue(batch['updated_at'] ?? batch['created_at']) ??
+            DateTime.fromMillisecondsSinceEpoch(0),
+        'icon': Icons.inventory_2_rounded,
+        'color': const Color(0xFF0EA5E9),
+      });
+    }
+    activities.sort((a, b) =>
+        (b['sortDate'] as DateTime).compareTo(a['sortDate'] as DateTime));
+    return activities.take(5).toList();
   }
 
   Widget _buildActivityItem(Map<String, dynamic> activity, bool isDark) {
@@ -524,7 +830,9 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
         ],
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
             width: 1,
           ),
         ),
@@ -562,7 +870,8 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
                       decoration: BoxDecoration(
                         border: isSelected
                             ? Border(
-                                top: BorderSide(color: AppColors.primary, width: 2),
+                                top: BorderSide(
+                                    color: AppColors.primary, width: 2),
                               )
                             : null,
                       ),
@@ -574,7 +883,9 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
                             size: 22,
                             color: isSelected
                                 ? AppColors.primary
-                                : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                                : (isDark
+                                    ? Colors.white.withOpacity(0.5)
+                                    : AppColors.textSecondary),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -585,7 +896,9 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
                                   : (isDark
                                       ? Colors.white.withOpacity(0.5)
                                       : AppColors.textSecondary),
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                               fontSize: 11,
                             ),
                             maxLines: 1,
@@ -604,11 +917,11 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
     );
   }
 
-  Widget _buildStatsSection(BuildContext context) {
+  Widget buildStatsSectionLegacy(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth < 1200 && screenWidth >= 600;
-    
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = isMobile ? 2 : (isTablet ? 2 : 4);
@@ -664,6 +977,14 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth < 1200 && screenWidth >= 600;
+    final totalRevenue = _ownerSales.fold<num>(
+      0,
+      (sum, sale) =>
+          sum + _numValue(sale['total_amount'] ?? sale['amount'] ?? 0),
+    );
+    final activeSensors = _ownerSensors
+        .where((sensor) => _value(sensor, ['status']).toLowerCase() == 'online')
+        .length;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -684,7 +1005,7 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
               'Digital Wallet',
               Icons.account_balance_wallet_outlined,
               AppColors.primary,
-              '\$48,500 available',
+              '${_formatMoney(totalRevenue)} tracked',
               () => _navigateTo('/farm-owner/digital-wallet', navIndex: 2),
               isMobile: isMobile,
               isTablet: isTablet,
@@ -695,7 +1016,7 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
               'Wallet Actions',
               Icons.payments_outlined,
               AppColors.success,
-              'Manage payouts',
+              '${_ownerFundRequests.length} requests',
               () => _navigateTo('/farm-owner/wallet-actions'),
               isMobile: isMobile,
               isTablet: isTablet,
@@ -706,7 +1027,7 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
               'Analytics',
               Icons.analytics,
               AppColors.info,
-              'View performance',
+              '${_ownerBatches.length} batches',
               () => _navigateTo('/farm-owner/analytics', navIndex: 3),
               isMobile: isMobile,
               isTablet: isTablet,
@@ -728,7 +1049,7 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
               'Farm Performance',
               Icons.trending_up,
               AppColors.primary,
-              '5 farms tracked',
+              '${_ownerFarms.length} farms • $activeSensors sensors online',
               () => _navigateTo('/farm-owner/farm', navIndex: 1),
               isMobile: isMobile,
               isTablet: isTablet,
@@ -765,7 +1086,9 @@ class _FarmOwnerDashboardRedesignedState extends ConsumerState<FarmOwnerDashboar
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: EdgeInsets.all(isMobile ? AppSpacing.sm : (isTablet ? AppSpacing.sm : AppSpacing.md)),
+        padding: EdgeInsets.all(isMobile
+            ? AppSpacing.sm
+            : (isTablet ? AppSpacing.sm : AppSpacing.md)),
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.circular(16),

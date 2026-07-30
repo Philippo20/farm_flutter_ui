@@ -254,7 +254,9 @@ class _InventoryManagementScreenState
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(
               isDark, userName, userEmail, userRole, isTablet),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          : null,
       floatingActionButton: isMobile
           ? null
           : PermissionGate(
@@ -299,8 +301,7 @@ class _InventoryManagementScreenState
                   controller: _scrollController,
                   slivers: [
                     if (_isLoading || _errorMessage != null)
-                      SliverFillRemaining(
-                        hasScrollBody: false,
+                      SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.all(AppSpacing.xl),
                           child: _isLoading
@@ -354,8 +355,7 @@ class _InventoryManagementScreenState
           child: CustomScrollView(
             slivers: [
               if (_isLoading || _errorMessage != null)
-                SliverFillRemaining(
-                  hasScrollBody: false,
+                SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     child: _isLoading

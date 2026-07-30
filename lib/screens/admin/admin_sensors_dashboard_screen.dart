@@ -153,12 +153,14 @@ class _SensorsScreenState extends State<SensorsScreen> {
         ),
       ),
       bottomNavigationBar: isMobile
-          ? AdminSidebar(
-              selectedIndex: selectedIndex,
-              onItemSelected: (idx) => setState(() => selectedIndex = idx),
-              isDark: isDark,
-              isMobile: true,
-            )
+          ? SafeArea(
+              top: false,
+              child: AdminSidebar(
+                selectedIndex: selectedIndex,
+                onItemSelected: (idx) => setState(() => selectedIndex = idx),
+                isDark: isDark,
+                isMobile: true,
+              ))
           : null,
     );
   }

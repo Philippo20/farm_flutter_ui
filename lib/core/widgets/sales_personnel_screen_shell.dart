@@ -80,10 +80,12 @@ class SalesPersonnelScreenShell extends ConsumerWidget {
               ],
             ),
       bottomNavigationBar: isMobile
-          ? SalesPersonnelMobileBottomNav(
-              selectedIndex: selectedIndex,
-              onItemSelected: (_) {},
-            )
+          ? SafeArea(
+              top: false,
+              child: SalesPersonnelMobileBottomNav(
+                selectedIndex: selectedIndex,
+                onItemSelected: (_) {},
+              ))
           : null,
     );
   }

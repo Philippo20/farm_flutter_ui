@@ -1,14 +1,126 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/notification/notification_model.dart';
+import '../../services/superadmin_api_service.dart';
 
 class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
-  NotificationNotifier() : super(_generateMockNotifications());
+  NotificationNotifier() : super(const []);
+
+  final SuperAdminApiService _api = SuperAdminApiService();
+
+  Future<void> refreshFromBackend({String? recipientId}) async {
+    final results = await Future.wait([
+      _api.getAlerts(),
+      if (recipientId != null && recipientId.trim().isNotEmpty)
+        _api.getNotifications(recipientId),
+    ]);
+    final alerts = results.first;
+    final notifications =
+        results.length > 1 ? results[1] : <Map<String, dynamic>>[];
+    final readIds = {
+      for (final notification in state)
+        if (notification.isRead) notification.id,
+    };
+    final mappedAlerts = alerts
+        .map((alert) => _fromAlert(alert, readIds.contains(_alertId(alert))))
+        .whereType<NotificationModel>();
+    final mappedNotifications = notifications
+        .map((notification) => _fromNotification(
+            notification, readIds.contains(_notificationId(notification))))
+        .whereType<NotificationModel>();
+    state = [...mappedAlerts, ...mappedNotifications]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  NotificationModel? _fromNotification(
+      Map<String, dynamic> notification, bool isRead) {
+    final id = _notificationId(notification);
+    final title = (notification['title'] ?? '').toString().trim();
+    final message = (notification['message'] ?? '').toString().trim();
+    if (id.isEmpty || title.isEmpty || message.isEmpty) return null;
+    final createdAt = DateTime.tryParse(
+          (notification['created_at'] ?? notification[r'$createdAt'] ?? '')
+              .toString(),
+        ) ??
+        DateTime.now();
+    return NotificationModel(
+      id: id,
+      title: title,
+      message: message,
+      type: NotificationType.fromString(
+          (notification['type'] ?? 'system').toString()),
+      priority: NotificationPriority.fromString(
+          (notification['priority'] ?? 'normal').toString()),
+      createdAt: createdAt,
+      isRead: isRead || notification['is_read'] == true,
+      metadata: {
+        'relatedTaskId': notification['related_task_id'] ?? '',
+      },
+    );
+  }
+
+  NotificationModel? _fromAlert(Map<String, dynamic> alert, bool isRead) {
+    final id = _alertId(alert);
+    final message = (alert['message'] ?? '').toString().trim();
+    if (id.isEmpty || message.isEmpty) return null;
+
+    final severity = (alert['severity'] ?? 'medium').toString().toLowerCase();
+    final sensor = (alert['sensorType'] ?? 'system').toString();
+    final timestamp = DateTime.tryParse(
+          (alert['timestamp'] ?? alert[r'$createdAt'] ?? '').toString(),
+        ) ??
+        DateTime.now();
+    final type = sensor.toLowerCase() == 'system'
+        ? NotificationType.system
+        : NotificationType.issue;
+    final priority = severity == 'high'
+        ? NotificationPriority.high
+        : severity == 'low'
+            ? NotificationPriority.low
+            : NotificationPriority.normal;
+
+    return NotificationModel(
+      id: id,
+      title: sensor.toLowerCase() == 'system'
+          ? 'System alert'
+          : '${_titleCase(sensor)} sensor alert',
+      message: message,
+      type: type,
+      priority: priority,
+      createdAt: timestamp,
+      isRead: isRead,
+      metadata: {
+        'severity': severity,
+        'resolved': alert['resolved'] == true,
+        'farmId': alert['farmID'] ?? '',
+      },
+    );
+  }
+
+  String _alertId(Map<String, dynamic> alert) =>
+      (alert[r'$id'] ?? alert['id'] ?? alert['alert_id'] ?? '').toString();
+
+  String _notificationId(Map<String, dynamic> notification) =>
+      (notification[r'$id'] ??
+              notification['id'] ??
+              notification['notification_id'] ??
+              '')
+          .toString();
+
+  String _titleCase(String value) => value
+      .replaceAll('_', ' ')
+      .split(' ')
+      .where((part) => part.isNotEmpty)
+      .map((part) =>
+          '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
+      .join(' ');
 
   void addNotification(NotificationModel notification) {
     state = [notification, ...state];
   }
 
-  void markAsRead(String id) {
+  void markAsRead(String id, {String? recipientId}) {
     state = [
       for (final notification in state)
         if (notification.id == id)
@@ -16,12 +128,36 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
         else
           notification,
     ];
+    final resolvedRecipientId = recipientId;
+    if (resolvedRecipientId != null && resolvedRecipientId.trim().isNotEmpty) {
+      unawaited(_persistRead(id));
+    }
   }
 
-  void markAllAsRead() {
+  Future<void> _persistRead(String id) async {
+    try {
+      await _api.markNotificationAsRead(id);
+    } catch (_) {
+      // Keep the optimistic state; the next refresh will retry from the UI.
+    }
+  }
+
+  void markAllAsRead({String? recipientId}) {
     state = [
       for (final notification in state) notification.copyWith(isRead: true),
     ];
+    final resolvedRecipientId = recipientId;
+    if (resolvedRecipientId != null && resolvedRecipientId.trim().isNotEmpty) {
+      unawaited(_persistAllRead(resolvedRecipientId));
+    }
+  }
+
+  Future<void> _persistAllRead(String recipientId) async {
+    try {
+      await _api.markAllNotificationsAsRead(recipientId);
+    } catch (_) {
+      // Keep the optimistic state; the next refresh will retry from the UI.
+    }
   }
 
   void removeNotification(String id) {
@@ -33,58 +169,6 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
   }
 
   int get unreadCount => state.where((n) => !n.isRead).length;
-
-  /// Generate mock notifications
-  static List<NotificationModel> _generateMockNotifications() {
-    final now = DateTime.now();
-    return [
-      NotificationModel(
-        id: '1',
-        title: 'Batch Ready for Harvest',
-        message: 'Batch LE-20241101-20241201 is ready for harvesting',
-        type: NotificationType.harvest,
-        priority: NotificationPriority.high,
-        createdAt: now.subtract(const Duration(hours: 2)),
-        isRead: false,
-      ),
-      NotificationModel(
-        id: '2',
-        title: 'Low Inventory Alert',
-        message: 'Lettuce Seeds stock is below minimum level (8kg)',
-        type: NotificationType.inventory,
-        priority: NotificationPriority.urgent,
-        createdAt: now.subtract(const Duration(hours: 5)),
-        isRead: false,
-      ),
-      NotificationModel(
-        id: '3',
-        title: 'Maintenance Scheduled',
-        message: 'Irrigation system maintenance scheduled for tomorrow',
-        type: NotificationType.maintenance,
-        priority: NotificationPriority.normal,
-        createdAt: now.subtract(const Duration(days: 1)),
-        isRead: true,
-      ),
-      NotificationModel(
-        id: '4',
-        title: 'Technical Issue Reported',
-        message: 'pH sensor malfunction in Farm A - Section 2',
-        type: NotificationType.issue,
-        priority: NotificationPriority.high,
-        createdAt: now.subtract(const Duration(days: 1, hours: 3)),
-        isRead: true,
-      ),
-      NotificationModel(
-        id: '5',
-        title: 'New Batch Created',
-        message: 'Batch TO-20241215-20250114 has been created',
-        type: NotificationType.batch,
-        priority: NotificationPriority.normal,
-        createdAt: now.subtract(const Duration(days: 2)),
-        isRead: true,
-      ),
-    ];
-  }
 }
 
 final notificationProvider =

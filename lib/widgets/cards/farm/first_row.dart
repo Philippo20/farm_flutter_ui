@@ -141,27 +141,36 @@ class _FirstRowState extends State<FirstRow> {
 
           // Time and date
           Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Date & Time",
                     style: GoogleFonts.poppins(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: widget.isDark ? Colors.white : Colors.black)),
-                Text(
-                  time,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    color: widget.isDark ? Colors.grey[400] : Colors.grey[600],
-                  ),
-                ),
-                Text(
-                  date,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    color: widget.isDark ? Colors.grey[400] : Colors.grey[600],
-                  ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 2,
+                  children: [
+                    Text(
+                      time,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color:
+                            widget.isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                    Text(
+                      date,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color:
+                            widget.isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -461,59 +470,87 @@ class _FirstRowState extends State<FirstRow> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TabBar(
-              labelColor: isDark ? Colors.greenAccent : Colors.green[800],
-              unselectedLabelColor: isDark ? Colors.white70 : Colors.black54,
-              indicatorColor: isDark ? Colors.greenAccent : Colors.green[800],
-              indicatorWeight: 5,
-              tabs: [
-                Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.lightbulb_outline),
-                      SizedBox(width: 6),
-                      Text("Lights", style: TextStyle(fontSize: 15)),
-                    ],
-                  ),
+            LayoutBuilder(builder: (context, constraints) {
+              final compactTabs = constraints.maxWidth < 330;
+              return TabBar(
+                labelColor: isDark ? Colors.greenAccent : Colors.green[800],
+                unselectedLabelColor: isDark ? Colors.white70 : Colors.black54,
+                indicatorColor: isDark ? Colors.greenAccent : Colors.green[800],
+                indicatorWeight: 5,
+                labelPadding: EdgeInsets.symmetric(
+                  horizontal: compactTabs ? 4 : 8,
                 ),
-                Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.water),
-                      SizedBox(width: 6),
-                      Text("Pumps", style: TextStyle(fontSize: 15)),
-                    ],
+                tabs: [
+                  _equipmentTab(
+                    icon: Icons.lightbulb_outline,
+                    label: 'Lights',
+                    compact: compactTabs,
                   ),
-                ),
-                Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.science_outlined),
-                      SizedBox(width: 6),
-                      Text("pH / Air", style: TextStyle(fontSize: 15)),
-                    ],
+                  _equipmentTab(
+                    icon: Icons.water,
+                    label: 'Pumps',
+                    compact: compactTabs,
                   ),
-                ),
-              ],
-            ),
+                  _equipmentTab(
+                    icon: Icons.science_outlined,
+                    label: 'pH / Air',
+                    compact: compactTabs,
+                  ),
+                ],
+              );
+            }),
 
             const SizedBox(height: 12),
 
             // Tab Content
-            SizedBox(
-                height: 200,
+            LayoutBuilder(builder: (context, constraints) {
+              final compactContent = constraints.maxWidth < 340;
+              return SizedBox(
+                height: compactContent ? 280 : 210,
                 child: TabBarView(
                   children: [
-                    _tabCardContentLights(isDark),
-                    _tabCardContentPumps(isDark),
-                    _tabCardContentPhAir(isDark),
+                    SingleChildScrollView(child: _tabCardContentLights(isDark)),
+                    SingleChildScrollView(child: _tabCardContentPumps(isDark)),
+                    SingleChildScrollView(child: _tabCardContentPhAir(isDark)),
                   ],
-                )),
+                ),
+              );
+            }),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _equipmentTab({
+    required IconData icon,
+    required String label,
+    required bool compact,
+  }) {
+    if (compact) {
+      return Tab(
+        icon: Tooltip(
+          message: label,
+          child: Icon(icon, size: 20),
+        ),
+      );
+    }
+
+    return Tab(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -533,14 +570,11 @@ class _FirstRowState extends State<FirstRow> {
             ),
           ),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _lightStatusCard("E RACK", true, isDark),
-            _lightStatusCard("F RACK", false, isDark),
-            _lightStatusCard("P RACK", true, isDark),
-          ],
-        ),
+        _equipmentCardRow([
+          _lightStatusCard("E RACK", true, isDark),
+          _lightStatusCard("F RACK", false, isDark),
+          _lightStatusCard("P RACK", true, isDark),
+        ]),
       ],
     );
   }
@@ -560,14 +594,11 @@ class _FirstRowState extends State<FirstRow> {
             ),
           ),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _pumpStatusCard("Water Pump", true, isDark),
-            _pumpStatusCard("Air Pump", false, isDark),
-            _pumpStatusCard("Nut Pump", true, isDark),
-          ],
-        ),
+        _equipmentCardRow([
+          _pumpStatusCard("Water Pump", true, isDark),
+          _pumpStatusCard("Air Pump", false, isDark),
+          _pumpStatusCard("Nut Pump", true, isDark),
+        ]),
       ],
     );
   }
@@ -587,23 +618,35 @@ class _FirstRowState extends State<FirstRow> {
             ),
           ),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _phAirStatusCard("pH Up", true, Icons.arrow_upward, isDark),
-            _phAirStatusCard("pH Down", false, Icons.arrow_downward, isDark),
-            _phAirStatusCard("Air Condition", true, Icons.air, isDark),
-          ],
-        ),
+        _equipmentCardRow([
+          _phAirStatusCard("pH Up", true, Icons.arrow_upward, isDark),
+          _phAirStatusCard("pH Down", false, Icons.arrow_downward, isDark),
+          _phAirStatusCard("Air Condition", true, Icons.air, isDark),
+        ]),
       ],
     );
+  }
+
+  Widget _equipmentCardRow(List<Widget> children) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final gap = constraints.maxWidth < 340 ? 8.0 : 10.0;
+      final columns = constraints.maxWidth >= 340 ? 3 : 2;
+      final cardWidth =
+          (constraints.maxWidth - ((columns - 1) * gap)) / columns;
+      return Wrap(
+        spacing: gap,
+        runSpacing: gap,
+        children: children
+            .map((child) => SizedBox(width: cardWidth, child: child))
+            .toList(),
+      );
+    });
   }
 
   /// TAB MORE FEATURES
   /// LIGHTS, PUMPS, PH/AIR
   Widget _lightStatusCard(String name, bool isActive, bool isDark) {
     return Container(
-      width: 100,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[850] : Colors.grey[100],
@@ -628,6 +671,9 @@ class _FirstRowState extends State<FirstRow> {
           const SizedBox(height: 8),
           Text(
             name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -637,6 +683,9 @@ class _FirstRowState extends State<FirstRow> {
           const SizedBox(height: 4),
           Text(
             isActive ? "ACTIVE" : "NOT ACTIVE",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -653,7 +702,6 @@ class _FirstRowState extends State<FirstRow> {
 //pump
   Widget _pumpStatusCard(String name, bool isActive, bool isDark) {
     return Container(
-      width: 110,
       padding: const EdgeInsets.fromLTRB(5, 10, 5, 5),
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[850] : Colors.grey[100],
@@ -678,6 +726,8 @@ class _FirstRowState extends State<FirstRow> {
           const SizedBox(height: 8),
           Text(
             name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
@@ -688,6 +738,9 @@ class _FirstRowState extends State<FirstRow> {
           const SizedBox(height: 4),
           Text(
             isActive ? "ACTIVE" : "NOT ACTIVE",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -705,7 +758,6 @@ class _FirstRowState extends State<FirstRow> {
   Widget _phAirStatusCard(
       String name, bool isActive, IconData icon, bool isDark) {
     return Container(
-      width: 110,
       padding: const EdgeInsets.fromLTRB(5, 10, 5, 5),
       decoration: BoxDecoration(
         color: isDark ? Colors.grey[850] : Colors.grey[100],
@@ -730,6 +782,8 @@ class _FirstRowState extends State<FirstRow> {
           const SizedBox(height: 8),
           Text(
             name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 14,
@@ -740,6 +794,9 @@ class _FirstRowState extends State<FirstRow> {
           const SizedBox(height: 4),
           Text(
             isActive ? "ACTIVE" : "NOT ACTIVE",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w500,

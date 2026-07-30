@@ -573,7 +573,9 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
       body: isMobile ? _buildMobileLayout(isDark) : _buildDesktopLayout(isDark),
       bottomNavigationBar: widget.isFarmManager
           ? null
-          : (isMobile ? _buildBottomNavigation(isDark) : null),
+          : (isMobile
+              ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+              : null),
     );
   }
 

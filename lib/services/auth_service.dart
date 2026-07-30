@@ -52,6 +52,25 @@ class AuthService {
   /// Check if current user is caretaker
   bool get isCaretaker => _currentUser?.isCaretaker ?? false;
 
+  /// Update local session details after the backend profile has been saved.
+  Future<UserModel?> updateCurrentUserProfile({
+    required String name,
+    required String email,
+    required String address,
+  }) async {
+    final user = _currentUser;
+    if (user == null) return null;
+
+    _currentUser = user.copyWith(
+      name: name,
+      email: email,
+      address: address,
+      updatedAt: DateTime.now(),
+    );
+    await _saveSession();
+    return _currentUser;
+  }
+
   /// Initialize auth service and restore session
   Future<void> initialize() async {
     try {

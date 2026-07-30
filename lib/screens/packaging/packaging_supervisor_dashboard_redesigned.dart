@@ -108,7 +108,9 @@ class _PackagingSupervisorDashboardRedesignedState
               label: const Text('Record Package'),
             )
           : null,
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          : null,
     );
   }
 

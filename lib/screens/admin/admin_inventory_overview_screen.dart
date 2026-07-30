@@ -41,7 +41,9 @@ class _AdminInventoryOverviewScreenState
               userEmail: userEmail,
               firstName: firstName,
             ),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          : null,
     );
   }
 

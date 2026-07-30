@@ -113,7 +113,9 @@ class _QualityAssuranceDashboardRedesignedState
               label: const Text('New Inspection'),
             )
           : null,
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          : null,
     );
   }
 

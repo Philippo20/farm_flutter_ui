@@ -63,11 +63,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Color _secondaryTextColor(bool isDark) {
-    return isDark ? AppColors.textOnDark.withOpacity(0.82) : AppColors.textSecondary;
+    return isDark
+        ? AppColors.textOnDark.withOpacity(0.82)
+        : AppColors.textSecondary;
   }
 
   Color _inactiveNavColor(bool isDark) {
-    return isDark ? AppColors.textOnDark.withOpacity(0.75) : AppColors.textSecondary;
+    return isDark
+        ? AppColors.textOnDark.withOpacity(0.75)
+        : AppColors.textSecondary;
   }
 
   @override
@@ -81,20 +85,25 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final userRole = 'Caretaker';
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
       bottomNavigationBar: isMobile
-          ? CaretakerMobileBottomNav(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
-            )
+          ? SafeArea(
+              top: false,
+              child: CaretakerMobileBottomNav(
+                selectedIndex: _selectedNavIndex,
+                onItemSelected: (index) =>
+                    setState(() => _selectedNavIndex = index),
+              ))
           : null,
     );
   }
 
-  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail, String userRole) {
+  Widget _buildDesktopLayout(
+      bool isDark, String userName, String userEmail, String userRole) {
     return Row(
       children: [
         CaretakerSidebar(
@@ -200,7 +209,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _focusedDate = DateTime(_focusedDate.year, _focusedDate.month - 1);
+                        _focusedDate =
+                            DateTime(_focusedDate.year, _focusedDate.month - 1);
                       });
                     },
                   ),
@@ -229,7 +239,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     ),
                     onPressed: () {
                       setState(() {
-                        _focusedDate = DateTime(_focusedDate.year, _focusedDate.month + 1);
+                        _focusedDate =
+                            DateTime(_focusedDate.year, _focusedDate.month + 1);
                       });
                     },
                   ),
@@ -247,7 +258,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   Widget _buildCalendarGrid(bool isDark) {
     final firstDayOfMonth = DateTime(_focusedDate.year, _focusedDate.month, 1);
-    final lastDayOfMonth = DateTime(_focusedDate.year, _focusedDate.month + 1, 0);
+    final lastDayOfMonth =
+        DateTime(_focusedDate.year, _focusedDate.month + 1, 0);
     final firstDayWeekday = firstDayOfMonth.weekday;
     final daysInMonth = lastDayOfMonth.day;
 
@@ -279,7 +291,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ...List.generate(6, (weekIndex) {
           return Row(
             children: List.generate(7, (dayIndex) {
-              final dayNumber = (weekIndex * 7) + dayIndex - firstDayWeekday + 2;
+              final dayNumber =
+                  (weekIndex * 7) + dayIndex - firstDayWeekday + 2;
               final isCurrentMonth = dayNumber > 0 && dayNumber <= daysInMonth;
               final dayDate = isCurrentMonth
                   ? DateTime(_focusedDate.year, _focusedDate.month, dayNumber)
@@ -329,8 +342,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           style: AppTypography.bodySmall.copyWith(
                             color: isSelected
                                 ? Colors.white
-                                : (isDark ? Colors.white : AppColors.textPrimary),
-                            fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
+                                : (isDark
+                                    ? Colors.white
+                                    : AppColors.textPrimary),
+                            fontWeight: isSelected || isToday
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                             fontSize: isMobile ? 12 : 14,
                           ),
                         ),
@@ -411,7 +428,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
+                  padding:
+                      EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -438,7 +456,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               event['title'] as String,
                               style: AppTypography.bodyMedium.copyWith(
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? Colors.white : AppColors.textPrimary,
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
                                 fontSize: isMobile ? 13 : 14,
                               ),
                             ),
@@ -509,7 +529,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ],
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
             width: 1,
           ),
         ),
@@ -559,7 +581,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             color: isSelected
                                 ? AppColors.primary
                                 : _inactiveNavColor(isDark),
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                             fontSize: 11,
                           ),
                           maxLines: 1,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -28,219 +30,19 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
   String _selectedFilter = 'All';
   final _scrollController = ScrollController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  Map<String, dynamic>? _selectedFarm;
 
-  // ── Mock Farms Data ─────────────────────────────────────────────────────
+  // ── Backend data cache ─────────────────────────────────────────────────
 
-  final List<Map<String, dynamic>> _farms = [
-    {
-      'id': 'FARM-001',
-      'name': 'Green Valley Farm',
-      'location': 'Accra, Greater Accra',
-      'size': '25 acres',
-      'type': 'Vegetable Farm',
-      'status': 'Active',
-      'crops': ['Lettuce', 'Spinach', 'Tomatoes', 'Peppers'],
-      'activeBatches': 8,
-      'totalHarvest': '2,450 kg',
-      'revenue': 'GH₵ 45,200',
-      'progress': 0.78,
-      'image': 'green_valley',
-      'team': [
-        {
-          'name': 'Kwame Asante',
-          'role': 'Lead Caretaker',
-          'avatar': 'KA',
-          'status': 'Active',
-          'progress': 0.92,
-          'tasks': 12,
-          'completed': 11,
-          'phone': '+233 24 567 8901',
-          'email': 'kwame@farmestates.com',
-          'joinedDate': 'Jan 2024',
-          'specialty': 'Crop Management'
-        },
-        {
-          'name': 'Ama Mensah',
-          'role': 'Irrigation Specialist',
-          'avatar': 'AM',
-          'status': 'Active',
-          'progress': 0.85,
-          'tasks': 8,
-          'completed': 7,
-          'phone': '+233 20 345 6789',
-          'email': 'ama@farmestates.com',
-          'joinedDate': 'Mar 2024',
-          'specialty': 'Water Systems'
-        },
-        {
-          'name': 'Kofi Boateng',
-          'role': 'Technician',
-          'avatar': 'KB',
-          'status': 'Active',
-          'progress': 0.70,
-          'tasks': 10,
-          'completed': 7,
-          'phone': '+233 27 890 1234',
-          'email': 'kofi@farmestates.com',
-          'joinedDate': 'Feb 2024',
-          'specialty': 'Equipment Maintenance'
-        },
-        {
-          'name': 'Efua Darko',
-          'role': 'Harvester',
-          'avatar': 'ED',
-          'status': 'On Leave',
-          'progress': 0.60,
-          'tasks': 6,
-          'completed': 4,
-          'phone': '+233 55 123 4567',
-          'email': 'efua@farmestates.com',
-          'joinedDate': 'May 2024',
-          'specialty': 'Harvest Operations'
-        },
-      ],
-    },
-    {
-      'id': 'FARM-002',
-      'name': 'Sunrise Acres',
-      'location': 'Kumasi, Ashanti Region',
-      'size': '40 acres',
-      'type': 'Mixed Farming',
-      'status': 'Active',
-      'crops': ['Maize', 'Cassava', 'Yam', 'Plantain'],
-      'activeBatches': 12,
-      'totalHarvest': '5,800 kg',
-      'revenue': 'GH₵ 78,500',
-      'progress': 0.65,
-      'image': 'sunrise_acres',
-      'team': [
-        {
-          'name': 'Yaw Owusu',
-          'role': 'Lead Caretaker',
-          'avatar': 'YO',
-          'status': 'Active',
-          'progress': 0.88,
-          'tasks': 15,
-          'completed': 13,
-          'phone': '+233 24 111 2222',
-          'email': 'yaw@farmestates.com',
-          'joinedDate': 'Dec 2023',
-          'specialty': 'Soil Management'
-        },
-        {
-          'name': 'Abena Frimpong',
-          'role': 'Pest Control Specialist',
-          'avatar': 'AF',
-          'status': 'Active',
-          'progress': 0.75,
-          'tasks': 9,
-          'completed': 7,
-          'phone': '+233 20 333 4444',
-          'email': 'abena@farmestates.com',
-          'joinedDate': 'Apr 2024',
-          'specialty': 'Pest Management'
-        },
-        {
-          'name': 'Nana Agyei',
-          'role': 'Field Supervisor',
-          'avatar': 'NA',
-          'status': 'Active',
-          'progress': 0.82,
-          'tasks': 11,
-          'completed': 9,
-          'phone': '+233 55 555 6666',
-          'email': 'nana@farmestates.com',
-          'joinedDate': 'Jan 2024',
-          'specialty': 'Field Operations'
-        },
-        {
-          'name': 'Akua Sarpong',
-          'role': 'Technician',
-          'avatar': 'AS',
-          'status': 'Active',
-          'progress': 0.68,
-          'tasks': 7,
-          'completed': 5,
-          'phone': '+233 27 777 8888',
-          'email': 'akua@farmestates.com',
-          'joinedDate': 'Jun 2024',
-          'specialty': 'Equipment Repair'
-        },
-        {
-          'name': 'Kwesi Appiah',
-          'role': 'Harvester',
-          'avatar': 'KAP',
-          'status': 'Active',
-          'progress': 0.90,
-          'tasks': 14,
-          'completed': 13,
-          'phone': '+233 24 999 0000',
-          'email': 'kwesi@farmestates.com',
-          'joinedDate': 'Feb 2024',
-          'specialty': 'Harvest & Packaging'
-        },
-      ],
-    },
-    {
-      'id': 'FARM-003',
-      'name': 'Golden Harvest Farm',
-      'location': 'Tamale, Northern Region',
-      'size': '60 acres',
-      'type': 'Grain Farm',
-      'status': 'Seasonal',
-      'crops': ['Rice', 'Millet', 'Sorghum'],
-      'activeBatches': 5,
-      'totalHarvest': '8,200 kg',
-      'revenue': 'GH₵ 52,000',
-      'progress': 0.45,
-      'image': 'golden_harvest',
-      'team': [
-        {
-          'name': 'Ibrahim Mahama',
-          'role': 'Lead Caretaker',
-          'avatar': 'IM',
-          'status': 'Active',
-          'progress': 0.80,
-          'tasks': 10,
-          'completed': 8,
-          'phone': '+233 20 222 3333',
-          'email': 'ibrahim@farmestates.com',
-          'joinedDate': 'Mar 2024',
-          'specialty': 'Rice Cultivation'
-        },
-        {
-          'name': 'Fatima Alhassan',
-          'role': 'Irrigation Specialist',
-          'avatar': 'FA',
-          'status': 'Active',
-          'progress': 0.72,
-          'tasks': 8,
-          'completed': 6,
-          'phone': '+233 24 444 5555',
-          'email': 'fatima@farmestates.com',
-          'joinedDate': 'Apr 2024',
-          'specialty': 'Canal Systems'
-        },
-        {
-          'name': 'Salifu Bamba',
-          'role': 'Harvester',
-          'avatar': 'SB',
-          'status': 'Inactive',
-          'progress': 0.30,
-          'tasks': 4,
-          'completed': 1,
-          'phone': '+233 27 666 7777',
-          'email': 'salifu@farmestates.com',
-          'joinedDate': 'May 2024',
-          'specialty': 'Grain Processing'
-        },
-      ],
-    },
-  ];
+  final List<Map<String, dynamic>> _farms = [];
   final List<Map<String, dynamic>> _users = [];
   final List<Map<String, dynamic>> _batches = [];
   final List<Map<String, dynamic>> _inventory = [];
   final List<Map<String, dynamic>> _sensors = [];
+  final List<Map<String, dynamic>> _sales = [];
+  final List<Map<String, dynamic>> _tasks = [];
+  final Set<String> _updatingTaskIds = {};
+  final Set<String> _deletingTaskIds = {};
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -262,6 +64,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
         _api.getBatches(),
         _api.getInventory(),
         _api.getSensors(),
+        _api.getSales(),
+        _api.getFarmTasks(),
       ]);
       if (!mounted) return;
       setState(() {
@@ -277,9 +81,22 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
         _sensors
           ..clear()
           ..addAll(results[4]);
+        _sales
+          ..clear()
+          ..addAll(results[5]);
+        _tasks
+          ..clear()
+          ..addAll(results[6]);
         _farms
           ..clear()
           ..addAll(results[0].where(_isAssignedToCurrentManager).map(_mapFarm));
+        if (_selectedFarm != null) {
+          final selectedId = _selectedFarm!['id']?.toString() ?? '';
+          _selectedFarm = _farms.cast<Map<String, dynamic>?>().firstWhere(
+                (farm) => farm?['id']?.toString() == selectedId,
+                orElse: () => null,
+              );
+        }
         _isLoading = false;
       });
     } catch (error) {
@@ -294,6 +111,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
   String _docId(Map<String, dynamic> doc) =>
       (doc[r'$id'] ?? doc['id'] ?? doc['farm_id'] ?? '').toString();
 
+  String _taskDocId(Map<String, dynamic> task) =>
+      (task[r'$id'] ?? task['id'] ?? '').toString();
+
   String _value(Map<String, dynamic> doc, List<String> keys,
       {String fallback = ''}) {
     for (final key in keys) {
@@ -305,6 +125,34 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
     return fallback;
   }
 
+  String _normaliseKey(dynamic value) =>
+      value?.toString().trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ') ??
+      '';
+
+  void _addIdentityToken(Set<String> tokens, dynamic value) {
+    final token = _normaliseKey(value);
+    if (token.isNotEmpty && token != 'unassigned' && token != 'system') {
+      tokens.add(token);
+    }
+  }
+
+  void _addFarmAssignmentToken(Set<String> tokens, dynamic value) {
+    if (value is Iterable) {
+      for (final item in value) {
+        _addFarmAssignmentToken(tokens, item);
+      }
+      return;
+    }
+    if (value is Map<String, dynamic>) {
+      _addIdentityToken(tokens, _docId(value));
+      _addIdentityToken(tokens, value['id']);
+      _addIdentityToken(tokens, value['email']);
+      _addIdentityToken(tokens, value['name']);
+      return;
+    }
+    _addIdentityToken(tokens, value);
+  }
+
   num _numValue(dynamic value) {
     if (value is num) return value;
     return num.tryParse(value?.toString() ?? '') ?? 0;
@@ -313,12 +161,64 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
   bool _isAssignedToCurrentManager(Map<String, dynamic> farm) {
     final user = ref.read(authProvider).user;
     if (user == null) return true;
-    final farmManagerId = _value(farm, ['farm_manager_id', 'farmManagerId']);
-    final farmManagerName =
-        _value(farm, ['farm_manager_name', 'farmManagerName']);
-    return farmManagerId == user.id ||
-        farmManagerId == user.email ||
-        farmManagerName.toLowerCase() == user.name.toLowerCase();
+    final identityTokens = <String>{};
+    _addIdentityToken(identityTokens, user.id);
+    _addIdentityToken(identityTokens, user.email);
+    _addIdentityToken(identityTokens, user.name);
+    _addIdentityToken(identityTokens, user.farmId);
+
+    for (final backendUser in _users) {
+      final backendTokens = <String>{};
+      _addIdentityToken(backendTokens, _docId(backendUser));
+      _addIdentityToken(backendTokens, backendUser['id']);
+      _addIdentityToken(backendTokens, backendUser['email']);
+      _addIdentityToken(backendTokens, backendUser['name']);
+      if (backendTokens.intersection(identityTokens).isNotEmpty) {
+        identityTokens.addAll(backendTokens);
+      }
+    }
+
+    final assignmentTokens = <String>{};
+    _addFarmAssignmentToken(assignmentTokens, _docId(farm));
+    _addFarmAssignmentToken(assignmentTokens, farm['farmID']);
+    _addFarmAssignmentToken(assignmentTokens, farm['farm_id']);
+    for (final key in [
+      'farm_manager_id',
+      'farmManagerId',
+      'farmManagerID',
+      'farm_manager',
+      'farmManager',
+      'farm_manager_email',
+      'farmManagerEmail',
+      'farm_manager_name',
+      'farmManagerName',
+      'assigned_manager_id',
+      'assignedManagerId',
+      'assignedManagerID',
+      'assignedManagers',
+      'manager_ids',
+      'managerIds',
+      'managerIDs',
+    ]) {
+      _addFarmAssignmentToken(assignmentTokens, farm[key]);
+    }
+
+    return assignmentTokens.intersection(identityTokens).isNotEmpty;
+  }
+
+  void _openFarmDetails(Map<String, dynamic> farm) {
+    setState(() => _selectedFarm = farm);
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  void _closeFarmDetails() {
+    setState(() => _selectedFarm = null);
   }
 
   bool _matchesFarm(Map<String, dynamic> doc, Map<String, dynamic> farm) {
@@ -347,6 +247,33 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
     return null;
   }
 
+  List<Map<String, dynamic>> _tasksForFarm(Map<String, dynamic> farm) =>
+      _tasks.where((task) => _matchesFarm(task, farm)).toList();
+
+  List<Map<String, dynamic>> _tasksForMember(
+    Map<String, dynamic> farm,
+    String memberRef,
+  ) {
+    final user = _findUser(memberRef);
+    final refs = <String>{memberRef};
+    if (user != null) {
+      refs.addAll([
+        _docId(user),
+        user['id']?.toString() ?? '',
+        user['email']?.toString() ?? '',
+        user['name']?.toString() ?? '',
+      ]);
+    }
+    final tokens = refs.map(_normaliseKey).where((token) => token.isNotEmpty);
+    return _tasksForFarm(farm).where((task) {
+      final assignee = [
+        task['assigned_to_id'],
+        task['assigned_to_name'],
+      ].map(_normaliseKey);
+      return assignee.any(tokens.contains);
+    }).toList();
+  }
+
   Map<String, dynamic> _teamMember(
     Map<String, dynamic> farm,
     List<String> keys,
@@ -354,6 +281,11 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
   ) {
     final userRef = _value(farm, keys);
     final user = _findUser(userRef);
+    final memberTasks = _tasksForMember(farm, userRef);
+    final completedTasks = memberTasks
+        .where((task) =>
+            _value(task, ['status']).toLowerCase().trim() == 'completed')
+        .length;
     final name = user == null
         ? (userRef.isEmpty || userRef == 'Unassigned' ? 'Unassigned' : userRef)
         : _value(user, ['name'], fallback: userRef);
@@ -371,10 +303,12 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
       'role': role,
       'avatar': initials.isEmpty ? '--' : initials,
       'status': status,
-      'tasks': 0,
-      'completed': 0,
-      'progress': 0.0,
-      'hasTaskData': false,
+      'id': user == null ? userRef : _docId(user),
+      'tasks': memberTasks.length,
+      'completed': completedTasks,
+      'progress':
+          memberTasks.isEmpty ? 0.0 : completedTasks / memberTasks.length,
+      'hasTaskData': memberTasks.isNotEmpty,
       'phone': user == null ? '' : _value(user, ['phone', 'phone_number']),
       'email': user == null ? '' : _value(user, ['email']),
       'joinedDate': user == null
@@ -444,6 +378,18 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
     final date = DateTime.tryParse(value);
     if (date == null) return 'N/A';
     return '${date.month}/${date.year}';
+  }
+
+  String _formatTaskDate(String value, {String fallback = 'No due date'}) {
+    final date = DateTime.tryParse(value);
+    if (date == null) return fallback;
+    return DateFormat('MMM d, yyyy').format(date.toLocal());
+  }
+
+  String _formatTaskDateTime(String value, {String fallback = 'N/A'}) {
+    final date = DateTime.tryParse(value);
+    if (date == null) return fallback;
+    return DateFormat('MMM d, yyyy • h:mm a').format(date.toLocal());
   }
 
   List<Map<String, dynamic>> get _filteredFarms {
@@ -548,7 +494,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             child: _buildContent(isDark, true),
           ),
         ),
-        _buildBottomNavigation(isDark),
+        SafeArea(top: false, child: _buildBottomNavigation(isDark)),
       ],
     );
   }
@@ -561,6 +507,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
     }
     if (_errorMessage != null) {
       return _buildErrorState(isDark);
+    }
+    if (_selectedFarm != null) {
+      return _buildFarmDetailsPage(_selectedFarm!, isDark);
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -761,181 +710,180 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
   Widget _buildFarmsSection(bool isDark, bool isMobile) {
     final filtered = _filteredFarms;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color:
-                isDark ? Colors.white.withOpacity(0.06) : AppColors.neutral200),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2))
-              ],
-      ),
-      child: Column(
-        children: [
-          // Header
-          Padding(
-            padding: EdgeInsets.all(isMobile ? 14 : 20),
-            child: Column(
-              children: [
-                if (isMobile)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(isMobile ? 14 : 18),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withOpacity(0.06)
+                  : AppColors.neutral200,
+            ),
+            boxShadow: isDark
+                ? null
+                : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Flex(
+                direction: isMobile ? Axis.vertical : Axis.horizontal,
+                crossAxisAlignment: isMobile
+                    ? CrossAxisAlignment.start
+                    : CrossAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.10),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.agriculture_rounded,
+                            size: 22, color: AppColors.primary),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(Icons.agriculture_rounded,
-                                size: 18, color: AppColors.primary),
-                          ),
-                          const SizedBox(width: 10),
                           Text(
                             'Farms Overview',
                             style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: isDark
-                                    ? Colors.white
-                                    : AppColors.textPrimary),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
+                              fontSize: isMobile ? 16 : 18,
+                              fontWeight: FontWeight.w700,
+                              color:
+                                  isDark ? Colors.white : AppColors.textPrimary,
                             ),
-                            child: Text('${filtered.length}',
-                                style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.primary)),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Showing ${filtered.length} assigned farms',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: isDark
+                                  ? Colors.white54
+                                  : AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: ['All', 'Active', 'Seasonal']
-                            .map((f) => _filterChip(f, isDark))
-                            .toList(),
-                      ),
-                    ],
-                  )
-                else
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(Icons.agriculture_rounded,
-                            size: 18, color: AppColors.primary),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'Farms Overview',
-                        style: GoogleFonts.inter(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text('${filtered.length}',
-                            style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primary)),
-                      ),
-                      const Spacer(),
-                      ...['All', 'Active', 'Seasonal'].map((f) => Padding(
-                            padding: const EdgeInsets.only(left: 6),
-                            child: _filterChip(f, isDark),
-                          )),
                     ],
                   ),
-                const SizedBox(height: 12),
-                // Search
-                TextField(
-                  onChanged: (v) => setState(() => _searchQuery = v),
-                  style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: isDark ? Colors.white : AppColors.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: 'Search farms...',
-                    hintStyle: GoogleFonts.inter(
-                        fontSize: 13,
-                        color:
-                            isDark ? Colors.white38 : AppColors.textSecondary),
-                    prefixIcon: Icon(Icons.search,
-                        size: 20,
-                        color:
-                            isDark ? Colors.white38 : AppColors.textSecondary),
-                    filled: true,
-                    fillColor: isDark
-                        ? Colors.white.withOpacity(0.05)
-                        : AppColors.neutral50,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.06)
-                                : AppColors.neutral200)),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(
-                            color: AppColors.primary.withOpacity(0.5))),
+                  if (!isMobile) const Spacer(),
+                  if (isMobile) const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: ['All', 'Active', 'Seasonal']
+                        .map((f) => _filterChip(f, isDark))
+                        .toList(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                onChanged: (v) => setState(() => _searchQuery = v),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Search farms by name, location, crop or team...',
+                  hintStyle: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: isDark ? Colors.white38 : AppColors.textSecondary,
+                  ),
+                  prefixIcon: Icon(Icons.search_rounded,
+                      size: 20,
+                      color: isDark ? Colors.white38 : AppColors.textSecondary),
+                  filled: true,
+                  fillColor: isDark
+                      ? Colors.white.withOpacity(0.05)
+                      : AppColors.neutral50,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.06)
+                          : AppColors.neutral200,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: AppColors.primary.withOpacity(0.5),
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-
-          if (filtered.isEmpty)
-            _buildEmptyState(isDark)
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filtered.length,
-              separatorBuilder: (_, __) => Divider(
-                  height: 1,
+        ),
+        const SizedBox(height: 14),
+        if (filtered.isEmpty)
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.06)
+                    : AppColors.neutral200,
+              ),
+            ),
+            child: _buildEmptyState(isDark),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: filtered.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (_, i) => Container(
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.surfaceDark : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
                   color: isDark
                       ? Colors.white.withOpacity(0.06)
-                      : AppColors.neutral200),
-              itemBuilder: (_, i) =>
-                  _buildFarmCard(filtered[i], isDark, isMobile),
+                      : AppColors.neutral200,
+                ),
+                boxShadow: isDark
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.035),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: _buildFarmDataCard(filtered[i], isDark, isMobile),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
@@ -997,7 +945,582 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
 
   // ── Farm Card ───────────────────────────────────────────────────────────
 
-  Widget _buildFarmCard(Map<String, dynamic> farm, bool isDark, bool isMobile) {
+  Widget _buildFarmDataCard(
+      Map<String, dynamic> farm, bool isDark, bool isMobile) {
+    final team = (farm['team'] as List<Map<String, dynamic>>?) ?? [];
+    final crops = (farm['crops'] as List<String>?) ?? [];
+    final rawProgress = farm['progress'];
+    final progress = rawProgress is num
+        ? rawProgress.toDouble().clamp(0.0, 1.0).toDouble()
+        : 0.0;
+    final status = farm['status']?.toString() ?? 'Pending';
+    final statusColor = status.toLowerCase() == 'active'
+        ? AppColors.success
+        : AppColors.warning;
+    final visibleCrops = crops.take(4).toList();
+    final hiddenCropCount = crops.length - visibleCrops.length;
+
+    return Material(
+      color: Colors.transparent,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: InkWell(
+          onTap: () => _openFarmDetails(farm),
+          child: Padding(
+            padding: EdgeInsets.all(isMobile ? 14 : 18),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 680;
+                final metricWidth = compact
+                    ? (constraints.maxWidth - 10) / 2
+                    : (constraints.maxWidth - 30) / 4;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 4,
+                          height: isMobile ? 58 : 64,
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Container(
+                          width: isMobile ? 44 : 50,
+                          height: isMobile ? 44 : 50,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.10),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppColors.primary.withOpacity(0.16),
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.agriculture_rounded,
+                            color: AppColors.primary,
+                            size: isMobile ? 22 : 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    farm['name']?.toString() ?? '',
+                                    style: GoogleFonts.inter(
+                                      fontSize: isMobile ? 16 : 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark
+                                          ? Colors.white
+                                          : AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  _buildFarmStatusPill(
+                                      status, statusColor, isDark),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 14,
+                                runSpacing: 6,
+                                children: [
+                                  _buildFarmMeta(
+                                    Icons.location_on_outlined,
+                                    farm['location']?.toString() ??
+                                        'No location',
+                                    isDark,
+                                  ),
+                                  _buildFarmMeta(
+                                    Icons.straighten_outlined,
+                                    farm['size']?.toString() ?? 'Size pending',
+                                    isDark,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!compact) ...[
+                          const SizedBox(width: 12),
+                          _buildFarmDetailsButton(isDark),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        SizedBox(
+                          width: metricWidth,
+                          child: _buildFarmRecordMetric(
+                            icon: Icons.layers_rounded,
+                            label: 'Active Batches',
+                            value: '${farm['activeBatches'] ?? 0}',
+                            color: AppColors.info,
+                            isDark: isDark,
+                          ),
+                        ),
+                        SizedBox(
+                          width: metricWidth,
+                          child: _buildFarmRecordMetric(
+                            icon: Icons.scale_rounded,
+                            label: 'Total Harvest',
+                            value: farm['totalHarvest']?.toString() ?? '0 kg',
+                            color: AppColors.success,
+                            isDark: isDark,
+                          ),
+                        ),
+                        SizedBox(
+                          width: metricWidth,
+                          child: _buildFarmRecordMetric(
+                            icon: Icons.sensors_rounded,
+                            label: 'Sensors',
+                            value: '${farm['sensorCount'] ?? 0}',
+                            color: AppColors.warning,
+                            isDark: isDark,
+                          ),
+                        ),
+                        SizedBox(
+                          width: metricWidth,
+                          child: _buildFarmRecordMetric(
+                            icon: Icons.groups_rounded,
+                            label: 'Assigned Team',
+                            value: '${team.length}',
+                            color: AppColors.primary,
+                            isDark: isDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Text(
+                          'Operational progress',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: isDark
+                                ? Colors.white60
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${(progress * 100).round()}%',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 7,
+                        backgroundColor: isDark
+                            ? Colors.white.withOpacity(0.08)
+                            : AppColors.neutral200,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.035)
+                            : AppColors.neutral50,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.05)
+                              : AppColors.neutral200,
+                        ),
+                      ),
+                      child: compact
+                          ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildFarmCropSummary(
+                                  visibleCrops,
+                                  hiddenCropCount,
+                                  isDark,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildFarmTeamSummary(team, isDark),
+                                const SizedBox(height: 12),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: _buildFarmDetailsButton(isDark),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                Expanded(
+                                  child: _buildFarmCropSummary(
+                                    visibleCrops,
+                                    hiddenCropCount,
+                                    isDark,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: _buildFarmTeamSummary(team, isDark),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFarmMeta(IconData icon, String label, bool isDark) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 14,
+          color: isDark ? Colors.white38 : AppColors.textSecondary,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: isDark ? Colors.white54 : AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFarmStatusPill(String status, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(isDark ? 0.14 : 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withOpacity(0.24)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            status,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFarmDetailsButton(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(isDark ? 0.14 : 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.primary.withOpacity(0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'View details',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Icon(Icons.arrow_forward_rounded, size: 16, color: AppColors.primary),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFarmRecordMetric({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+    required bool isDark,
+  }) {
+    return Container(
+      height: 74,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(isDark ? 0.12 : 0.07),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withOpacity(0.16)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withOpacity(isDark ? 0.18 : 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: isDark ? Colors.white54 : AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFarmCropSummary(
+    List<String> crops,
+    int hiddenCropCount,
+    bool isDark,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFarmSummaryLabel(Icons.grass_rounded, 'Crop varieties', isDark),
+        const SizedBox(height: 10),
+        crops.isEmpty
+            ? Text(
+                'No crop varieties assigned',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: isDark ? Colors.white38 : AppColors.textSecondary,
+                ),
+              )
+            : Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  ...crops.map((crop) => _buildFarmCropTag(crop, isDark)),
+                  if (hiddenCropCount > 0)
+                    _buildFarmCropTag('+$hiddenCropCount more', isDark),
+                ],
+              ),
+      ],
+    );
+  }
+
+  Widget _buildFarmTeamSummary(List<Map<String, dynamic>> team, bool isDark) {
+    final visibleTeam = team.take(4).toList();
+    final teamNames = team
+        .take(2)
+        .map((member) => member['name']?.toString() ?? '')
+        .where((name) => name.isNotEmpty)
+        .join(', ');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFarmSummaryLabel(Icons.groups_rounded, 'Assigned team', isDark),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            _buildFarmTeamAvatars(visibleTeam, isDark),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                team.isEmpty
+                    ? 'No team assigned'
+                    : '$teamNames${team.length > 2 ? ' +${team.length - 2} more' : ''}',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white70 : AppColors.textPrimary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFarmSummaryLabel(IconData icon, String label, bool isDark) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 15,
+          color: isDark ? Colors.white38 : AppColors.textSecondary,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white60 : AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFarmCropTag(String label, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.06) : Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.07) : AppColors.neutral200,
+        ),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: isDark ? Colors.white70 : AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFarmTeamAvatars(List<Map<String, dynamic>> team, bool isDark) {
+    if (team.isEmpty) {
+      return Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.06) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color:
+                isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
+          ),
+        ),
+        child: Icon(
+          Icons.person_add_alt_1_rounded,
+          size: 18,
+          color: isDark ? Colors.white38 : AppColors.textSecondary,
+        ),
+      );
+    }
+
+    return SizedBox(
+      width: 34.0 + ((team.length - 1) * 22.0),
+      height: 36,
+      child: Stack(
+        children: [
+          for (var i = 0; i < team.length; i++)
+            Positioned(
+              left: i * 22.0,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark ? AppColors.surfaceDark : Colors.white,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    team[i]['avatar']?.toString().isNotEmpty == true
+                        ? team[i]['avatar'].toString()
+                        : _initialsForName(team[i]['name']?.toString() ?? ''),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _initialsForName(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+    if (parts.isEmpty) return 'NA';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
+        .toUpperCase();
+  }
+
+  Widget buildFarmCardLegacy(
+      Map<String, dynamic> farm, bool isDark, bool isMobile) {
     final team = (farm['team'] as List<Map<String, dynamic>>?) ?? [];
     final crops = (farm['crops'] as List<String>?) ?? [];
     final progress = (farm['progress'] as double?) ?? 0.0;
@@ -1007,7 +1530,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _showFarmDetails(farm, isDark, isMobile),
+        onTap: () => _openFarmDetails(farm),
         child: Padding(
           padding: EdgeInsets.all(isMobile ? 14 : 20),
           child: Column(
@@ -1316,7 +1839,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                     Align(
                       alignment: Alignment.centerRight,
                       child: GestureDetector(
-                        onTap: () => _showFarmDetails(farm, isDark, isMobile),
+                        onTap: () => _openFarmDetails(farm),
                         child: Text('View All',
                             style: GoogleFonts.inter(
                                 fontSize: 11,
@@ -1356,7 +1879,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                     ),
                     const Spacer(),
                     GestureDetector(
-                      onTap: () => _showFarmDetails(farm, isDark, isMobile),
+                      onTap: () => _openFarmDetails(farm),
                       child: Text('View All',
                           style: GoogleFonts.inter(
                               fontSize: 11,
@@ -1592,487 +2115,2204 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
     return '${(progress * 100).round()}%';
   }
 
-  void _showFarmDetails(Map<String, dynamic> farm, bool isDark, bool isMobile) {
-    final team = (farm['team'] as List<Map<String, dynamic>>?) ?? [];
-    final crops = (farm['crops'] as List<String>?) ?? [];
-    final progress = (farm['progress'] as double?) ?? 0.0;
+  List<Map<String, dynamic>> _batchesForFarm(Map<String, dynamic> farm) =>
+      _batches.where((batch) => _matchesFarm(batch, farm)).toList();
+
+  int _batchStatusStep(String status) {
+    switch (status.toLowerCase()) {
+      case 'planted':
+        return 1;
+      case 'growing':
+        return 2;
+      case 'harvested':
+        return 3;
+      case 'delivered':
+        return 4;
+      case 'completed':
+        return 5;
+      default:
+        return 0;
+    }
+  }
+
+  Map<String, dynamic> _productionStatsForFarm(Map<String, dynamic> farm) {
+    final batches = _batchesForFarm(farm);
+    final total = batches.length;
+    final completed = batches
+        .where((batch) =>
+            (batch['production_status'] ?? '').toString() == 'Completed')
+        .length;
+    final active = batches
+        .where((batch) => !['Completed', 'Delivered']
+            .contains((batch['production_status'] ?? '').toString()))
+        .length;
+    final harvestedHeads = batches.fold<num>(
+      0,
+      (sum, batch) => sum + _numValue(batch['total_harvested']),
+    );
+    final transplantedHeads = batches.fold<num>(
+      0,
+      (sum, batch) => sum + _numValue(batch['total_transplanted']),
+    );
+    final lossHeads =
+        (transplantedHeads - harvestedHeads).clamp(0, double.infinity);
+    final lossRate = transplantedHeads <= 0
+        ? 0.0
+        : lossHeads.toDouble() / transplantedHeads.toDouble();
+    final totalWeightKg = batches.fold<num>(
+      0,
+      (sum, batch) => sum + _numValue(batch['total_weight_kg']),
+    );
+    final progress = total == 0
+        ? 0.0
+        : batches.fold<double>(
+              0,
+              (sum, batch) =>
+                  sum +
+                  (_batchStatusStep(
+                        (batch['production_status'] ?? '').toString(),
+                      ) /
+                      5),
+            ) /
+            total;
+    return {
+      'total': total,
+      'active': active,
+      'completed': completed,
+      'harvestedHeads': harvestedHeads,
+      'transplantedHeads': transplantedHeads,
+      'lossHeads': lossHeads,
+      'lossRate': lossRate.clamp(0.0, 1.0),
+      'totalWeightKg': totalWeightKg,
+      'progress': progress.clamp(0.0, 1.0),
+    };
+  }
+
+  List<Map<String, dynamic>> _salesForFarm(Map<String, dynamic> farm) {
+    final batchKeys = <String>{};
+    for (final batch in _batchesForFarm(farm)) {
+      for (final key in [r'$id', 'batch_id', 'batch_no', 'batch_number']) {
+        final value = batch[key]?.toString() ?? '';
+        if (value.isNotEmpty) batchKeys.add(value);
+      }
+    }
+    return _sales.where((sale) {
+      final batchId =
+          (sale['batch_id'] ?? sale['batch_number'] ?? '').toString().trim();
+      return batchKeys.contains(batchId);
+    }).toList();
+  }
+
+  _RevenueStats _revenueStatsForFarm(Map<String, dynamic> farm) {
+    final sales = _salesForFarm(farm);
+    final totalRevenue = sales.fold<double>(
+      0,
+      (sum, sale) => sum + _numValue(sale['total_amount']).toDouble(),
+    );
+    final paidRevenue =
+        sales.where((sale) => sale['paid'] == true).fold<double>(
+              0,
+              (sum, sale) => sum + _numValue(sale['total_amount']).toDouble(),
+            );
+    final delivered = sales
+        .where((sale) => (sale['status'] ?? '').toString() == 'Delivered')
+        .length;
+    final pointsByDate = <DateTime, double>{};
+    for (final sale in sales) {
+      final rawDate =
+          (sale['payment_date'] ?? sale['delivered_at'] ?? '').toString();
+      final parsed = DateTime.tryParse(rawDate);
+      final date = parsed == null
+          ? DateTime.now()
+          : DateTime(parsed.year, parsed.month, parsed.day);
+      pointsByDate[date] = (pointsByDate[date] ?? 0) +
+          _numValue(sale['total_amount']).toDouble();
+    }
+    final points = pointsByDate.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    final chartPoints = points
+        .map((entry) => _RevenuePoint(entry.key, entry.value))
+        .take(12)
+        .toList();
+    final paidRatio = totalRevenue <= 0 ? 0.0 : paidRevenue / totalRevenue;
+    return _RevenueStats(
+      totalRevenue: totalRevenue,
+      paidRevenue: paidRevenue,
+      deliveredSales: delivered,
+      totalSales: sales.length,
+      paidRatio: paidRatio.clamp(0.0, 1.0),
+      points: chartPoints,
+    );
+  }
+
+  Widget _buildFarmDetailsPage(Map<String, dynamic> farm, bool isDark) {
     final statusColor =
         farm['status'] == 'Active' ? AppColors.success : AppColors.warning;
-    final sensorApiKey = farm['sensorApiKey']?.toString() ?? '';
+    final stats = _productionStatsForFarm(farm);
+    final revenueStats = _revenueStatsForFarm(farm);
 
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        insetPadding:
-            EdgeInsets.symmetric(horizontal: isMobile ? 12 : 40, vertical: 24),
-        child: Container(
-          width: isMobile ? double.infinity : 650,
-          constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.88),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 900;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextButton.icon(
+              onPressed: _closeFarmDetails,
+              icon: const Icon(Icons.arrow_back_rounded, size: 18),
+              label: const Text('Back to farms'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                padding: EdgeInsets.zero,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildFarmDetailsHero(farm, statusColor, isDark),
+            const SizedBox(height: AppSpacing.lg),
+            _buildFarmDetailsMetrics(farm, stats, isDark),
+            const SizedBox(height: AppSpacing.lg),
+            if (isWide)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 5,
+                    child: Column(
+                      children: [
+                        _buildProductionProfilePanel(farm, isDark),
+                        const SizedBox(height: AppSpacing.lg),
+                        _buildDetailsTeamPanel(farm, isDark),
+                        const SizedBox(height: AppSpacing.lg),
+                        _buildDetailsRevenuePanel(revenueStats, isDark),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    flex: 4,
+                    child: _buildDetailsYieldPanel(farm, stats, isDark),
+                  ),
+                ],
+              )
+            else ...[
+              _buildProductionProfilePanel(farm, isDark),
+              const SizedBox(height: AppSpacing.lg),
+              _buildDetailsTeamPanel(farm, isDark),
+              const SizedBox(height: AppSpacing.lg),
+              _buildDetailsRevenuePanel(revenueStats, isDark),
+              const SizedBox(height: AppSpacing.lg),
+              _buildDetailsYieldPanel(farm, stats, isDark),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFarmDetailsHero(
+    Map<String, dynamic> farm,
+    Color statusColor,
+    bool isDark,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.10)
+              : Colors.black.withOpacity(0.06),
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isNarrow = constraints.maxWidth < 620;
+          final title = Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Container(
-                padding: const EdgeInsets.all(20),
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [AppColors.primary, AppColors.primaryDark]),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(20)),
+                  color: statusColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 ),
-                child: Row(
+                child: Icon(Icons.agriculture_rounded,
+                    color: statusColor, size: 34),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12)),
-                      child: const Icon(Icons.agriculture_rounded,
-                          color: Colors.white, size: 24),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.xs,
+                      children: [
+                        _buildFarmBadge(farm['status']?.toString() ?? 'Active',
+                            statusColor),
+                        _buildFarmBadge(farm['type']?.toString() ?? 'Farm',
+                            AppColors.primary),
+                      ],
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(farm['name'] ?? '',
-                              style: GoogleFonts.inter(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white)),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on_outlined,
-                                  size: 13, color: Colors.white70),
-                              const SizedBox(width: 4),
-                              Text(farm['location'] ?? '',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12, color: Colors.white70)),
-                            ],
-                          ),
-                        ],
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      farm['name']?.toString() ?? 'Farm',
+                      style: AppTypography.h4.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.circle, color: statusColor)),
-                          const SizedBox(width: 5),
-                          Text(farm['status'] ?? '',
-                              style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white)),
-                        ],
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      farm['location']?.toString() ?? 'Location not set',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white70),
-                        onPressed: () => Navigator.pop(ctx)),
                   ],
                 ),
               ),
-
-              // Body
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Farm Info Grid
-                      _sectionTitle('Farm Information',
-                          Icons.info_outline_rounded, isDark),
-                      const SizedBox(height: 12),
-                      _detailGrid([
-                        {'label': 'Farm ID', 'value': farm['id'] ?? ''},
-                        {'label': 'Type', 'value': farm['type'] ?? ''},
-                        {'label': 'Size', 'value': farm['size'] ?? ''},
-                        {
-                          'label': 'Active Batches',
-                          'value': '${farm['activeBatches']}'
-                        },
-                        {
-                          'label': 'Total Harvest',
-                          'value': farm['totalHarvest'] ?? ''
-                        },
-                        {
-                          'label': 'Sensors',
-                          'value': '${farm['sensorCount'] ?? 0}'
-                        },
-                        {
-                          'label': 'Sensor API Key',
-                          'value': sensorApiKey.isEmpty
-                              ? 'Not generated'
-                              : sensorApiKey
-                        },
-                      ], isDark, isMobile),
-
-                      const SizedBox(height: 16),
-
-                      // Progress
-                      _sectionTitle('Overall Progress',
-                          Icons.trending_up_rounded, isDark),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(5),
-                              child: LinearProgressIndicator(
-                                value: progress,
-                                minHeight: 10,
-                                backgroundColor: isDark
-                                    ? Colors.white.withOpacity(0.08)
-                                    : AppColors.neutral200,
-                                valueColor:
-                                    AlwaysStoppedAnimation(AppColors.primary),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text('${(progress * 100).toInt()}%',
-                              style: GoogleFonts.inter(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.primary)),
-                        ],
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Crops
-                      _sectionTitle(
-                          'Crops (${crops.length})', Icons.eco_rounded, isDark),
-                      const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: crops
-                            .map((c) => Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14, vertical: 7),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.08),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                        color:
-                                            AppColors.primary.withOpacity(0.2)),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.eco_rounded,
-                                          size: 14, color: AppColors.primary),
-                                      const SizedBox(width: 6),
-                                      Text(c,
-                                          style: GoogleFonts.inter(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.primary)),
-                                    ],
-                                  ),
-                                ))
-                            .toList(),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Team Section
-                      _sectionTitle('Team Members (${team.length})',
-                          Icons.groups_rounded, isDark),
-                      const SizedBox(height: 12),
-
-                      ...team.map(
-                          (m) => _buildDetailTeamCard(m, isDark, isMobile)),
-                    ],
-                  ),
-                ),
-              ),
             ],
-          ),
+          );
+          final apiKeyButton = OutlinedButton.icon(
+            onPressed: () {
+              final apiKey = farm['sensorApiKey']?.toString() ?? '';
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(apiKey.isEmpty
+                      ? 'No farm sensor API key configured.'
+                      : 'Farm sensor API key available from farm setup.'),
+                ),
+              );
+            },
+            icon: const Icon(Icons.vpn_key_rounded, size: 18),
+            label: const Text('API Key'),
+          );
+          final actions = Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            alignment: WrapAlignment.end,
+            children: [apiKeyButton],
+          );
+
+          if (isNarrow) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                title,
+                const SizedBox(height: AppSpacing.md),
+                Align(alignment: Alignment.centerRight, child: actions),
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: title),
+              const SizedBox(width: AppSpacing.md),
+              actions,
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFarmBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        border: Border.all(color: color.withOpacity(0.18)),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.caption.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
   }
 
-  Widget _sectionTitle(String title, IconData icon, bool isDark) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: AppColors.primary),
-        const SizedBox(width: 8),
-        Text(title,
-            style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white : AppColors.textPrimary)),
-      ],
-    );
-  }
-
-  Widget _detailGrid(
-      List<Map<String, String>> items, bool isDark, bool isMobile) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 10,
-      children: items.map((item) {
-        return SizedBox(
-          width: isMobile ? (MediaQuery.of(context).size.width - 100) / 2 : 180,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(item['label'] ?? '',
-                  style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                      color: isDark ? Colors.white38 : AppColors.textSecondary,
-                      letterSpacing: 0.5)),
-              const SizedBox(height: 3),
-              Text(item['value'] ?? '',
-                  style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : AppColors.textPrimary)),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  // ── Detail Team Card (inside dialog) ────────────────────────────────────
-
-  Widget _buildDetailTeamCard(
-      Map<String, dynamic> member, bool isDark, bool isMobile) {
-    final memberStatus = member['status'] as String? ?? 'Active';
-    final memberColor = memberStatus == 'Active'
-        ? AppColors.success
-        : memberStatus == 'On Leave'
-            ? AppColors.warning
-            : AppColors.neutral500;
-    final progress = _taskProgress(member);
-    final hasTaskData = _hasTaskData(member);
-    final tasks = member['tasks'] as int? ?? 0;
-    final completed = member['completed'] as int? ?? 0;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color:
-                isDark ? Colors.white.withOpacity(0.06) : AppColors.neutral200),
+  Widget _buildFarmDetailsMetrics(
+    Map<String, dynamic> farm,
+    Map<String, dynamic> stats,
+    bool isDark,
+  ) {
+    final metrics = [
+      (
+        'Batches Done',
+        '${stats['completed']}/${stats['total']}',
+        Icons.task_alt_rounded,
+        AppColors.success
       ),
-      child: Column(
+      (
+        'Yield Weight',
+        '${(stats['totalWeightKg'] as num).toStringAsFixed(1)} kg',
+        Icons.scale_rounded,
+        AppColors.warning
+      ),
+      (
+        'Active Batches',
+        '${stats['active']}',
+        Icons.loop_rounded,
+        AppColors.info
+      ),
+      (
+        'Sensors',
+        '${farm['sensorCount'] ?? 0}',
+        Icons.sensors_rounded,
+        AppColors.primary
+      ),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth < 680 ? 2 : 4;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: metrics.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: AppSpacing.md,
+            mainAxisSpacing: AppSpacing.md,
+            mainAxisExtent: 112,
+          ),
+          itemBuilder: (_, index) {
+            final metric = metrics[index];
+            return _buildDetailMetricCard(
+              label: metric.$1,
+              value: metric.$2,
+              icon: metric.$3,
+              color: metric.$4,
+              isDark: isDark,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailMetricCard({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: color.withOpacity(isDark ? 0.14 : 0.09),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: color.withOpacity(0.20)),
+      ),
+      child: Row(
         children: [
-          // Top row: Avatar + name + status
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [memberColor.withOpacity(0.7), memberColor]),
-                  borderRadius: BorderRadius.circular(12),
+          Icon(icon, color: color, size: 24),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: AppTypography.h6
+                      .copyWith(color: color, fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                child: Center(
-                    child: Text(member['avatar'] ?? '',
-                        style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white))),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(member['name'] ?? '',
-                        style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary)),
-                    const SizedBox(height: 2),
-                    Text(member['role'] ?? '',
-                        style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: isDark
-                                ? Colors.white54
-                                : AppColors.textSecondary)),
-                  ],
+                Text(
+                  label,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white70 : AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: memberColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: memberColor.withOpacity(0.3)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                            shape: BoxShape.circle, color: memberColor)),
-                    const SizedBox(width: 5),
-                    Text(memberStatus,
-                        style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: memberColor)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Info chips
-          Row(
-            children: [
-              _memberInfoChip(Icons.work_outline_rounded,
-                  member['specialty'] ?? '', isDark),
-              const SizedBox(width: 8),
-              _memberInfoChip(Icons.calendar_month_rounded,
-                  'Since ${member['joinedDate'] ?? ''}', isDark),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // Tasks + progress
-          Row(
-            children: [
-              Text('Tasks: ',
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color:
-                          isDark ? Colors.white38 : AppColors.textSecondary)),
-              Text(hasTaskData ? '$completed/$tasks completed' : 'No task data',
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : AppColors.textPrimary)),
-              const Spacer(),
-              Text(_taskProgressLabel(member),
-                  style: GoogleFonts.inter(
-                      fontSize: hasTaskData ? 12 : 10,
-                      fontWeight: FontWeight.w700,
-                      color: hasTaskData
-                          ? _progressColor(progress)
-                          : (isDark
-                              ? Colors.white38
-                              : AppColors.textSecondary))),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 5,
-              backgroundColor: isDark
-                  ? Colors.white.withOpacity(0.08)
-                  : AppColors.neutral200,
-              valueColor: AlwaysStoppedAnimation(
-                hasTaskData
-                    ? _progressColor(progress)
-                    : (isDark ? Colors.white24 : AppColors.neutral300),
-              ),
+              ],
             ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Contact row
-          Row(
-            children: [
-              Icon(Icons.phone_outlined,
-                  size: 13,
-                  color: isDark ? Colors.white38 : AppColors.textSecondary),
-              const SizedBox(width: 4),
-              Text(member['phone'] ?? '',
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
-                      color:
-                          isDark ? Colors.white54 : AppColors.textSecondary)),
-              const Spacer(),
-              Icon(Icons.email_outlined,
-                  size: 13,
-                  color: isDark ? Colors.white38 : AppColors.textSecondary),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(member['email'] ?? '',
-                    style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color:
-                            isDark ? Colors.white54 : AppColors.textSecondary),
-                    overflow: TextOverflow.ellipsis),
-              ),
-            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _memberInfoChip(IconData icon, String label, bool isDark) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.04) : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.06)
-                  : AppColors.neutral200),
+  Widget _buildDetailsSection({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required bool isDark,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withOpacity(0.10)
+              : Colors.black.withOpacity(0.06),
         ),
-        child: Row(
-          children: [
-            Icon(icon,
-                size: 13,
-                color: isDark ? Colors.white38 : AppColors.textSecondary),
-            const SizedBox(width: 5),
-            Flexible(
-                child: Text(label,
-                    style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.h6.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySmall.copyWith(
                         color:
-                            isDark ? Colors.white54 : AppColors.textSecondary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis)),
-          ],
+                            isDark ? Colors.white60 : AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductionProfilePanel(Map<String, dynamic> farm, bool isDark) {
+    return _buildDetailsSection(
+      title: 'Production Profile',
+      subtitle: 'Crop, variety, farm status, and sensor setup',
+      icon: Icons.eco_rounded,
+      color: AppColors.success,
+      isDark: isDark,
+      child: Column(
+        children: [
+          _buildDetailTile('Plant Type', farm['type']?.toString() ?? 'Farm',
+              Icons.eco_outlined, isDark),
+          _buildDetailTile(
+              'Crop Varieties',
+              ((farm['crops'] as List?) ?? []).join(', '),
+              Icons.grass_outlined,
+              isDark),
+          _buildDetailTile('Farm ID', farm['id']?.toString() ?? '',
+              Icons.tag_outlined, isDark),
+          _buildDetailTile(
+              'Sensor API Key',
+              (farm['sensorApiKey']?.toString().isEmpty ?? true)
+                  ? 'Not configured'
+                  : 'Configured',
+              Icons.vpn_key_outlined,
+              isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailTile(
+      String label, String value, IconData icon, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.035) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Icon(icon,
+              size: 18,
+              color: isDark ? Colors.white54 : AppColors.textSecondary),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white60 : AppColors.textSecondary,
+              ),
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value.isEmpty ? 'N/A' : value,
+              textAlign: TextAlign.end,
+              style: AppTypography.bodyMedium.copyWith(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailsTeamPanel(Map<String, dynamic> farm, bool isDark) {
+    final team = (farm['team'] as List<Map<String, dynamic>>?) ?? [];
+    return _buildDetailsSection(
+      title: 'Assigned Team',
+      subtitle: 'Operational team assigned to this farm',
+      icon: Icons.groups_rounded,
+      color: AppColors.primary,
+      isDark: isDark,
+      child: team.isEmpty
+          ? Text(
+              'No assigned team members yet.',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white60 : AppColors.textSecondary,
+              ),
+            )
+          : Column(
+              children: team
+                  .map((member) => _buildCompactTeamTile(member, isDark))
+                  .toList(),
+            ),
+    );
+  }
+
+  Widget _buildCompactTeamTile(Map<String, dynamic> member, bool isDark) {
+    final status = member['status']?.toString() ?? 'Active';
+    final color = status == 'Active' ? AppColors.success : AppColors.warning;
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.035) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: color.withOpacity(0.12),
+            child: Text(
+              member['avatar']?.toString() ?? '',
+              style: AppTypography.caption
+                  .copyWith(color: color, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  member['name']?.toString() ?? '',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  member['role']?.toString() ?? '',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white60 : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildFarmBadge(status, color),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailsYieldPanel(
+    Map<String, dynamic> farm,
+    Map<String, dynamic> stats,
+    bool isDark,
+  ) {
+    final total = stats['total'] as int;
+    final active = stats['active'] as int;
+    final completed = stats['completed'] as int;
+    final harvestedHeads = stats['harvestedHeads'] as num;
+    final lossHeads = stats['lossHeads'] as num;
+    final lossRate = stats['lossRate'] as double;
+    final totalWeightKg = stats['totalWeightKg'] as num;
+    final progress = stats['progress'] as double;
+    final farmTasks = _tasksForFarm(farm);
+    final pendingTasks = farmTasks
+        .where((task) =>
+            _value(task, ['status']).toLowerCase().trim() != 'completed')
+        .length;
+    final items = [
+      ('Total Batches', '$total', Icons.all_inbox_rounded, AppColors.primary),
+      ('Active Batches', '$active', Icons.loop_rounded, AppColors.info),
+      ('Completed', '$completed', Icons.task_alt_rounded, AppColors.success),
+      (
+        'Harvested Heads',
+        harvestedHeads.toStringAsFixed(0),
+        Icons.grass_rounded,
+        AppColors.success
+      ),
+      (
+        'Yield Weight',
+        '${totalWeightKg.toStringAsFixed(1)} kg',
+        Icons.scale_rounded,
+        AppColors.warning
+      ),
+      (
+        'Loss Heads',
+        lossHeads.toStringAsFixed(0),
+        Icons.trending_down_rounded,
+        AppColors.error
+      ),
+      (
+        'Loss Rate',
+        '${(lossRate * 100).toStringAsFixed(1)}%',
+        Icons.report_problem_rounded,
+        AppColors.error
+      ),
+    ];
+    return _buildDetailsSection(
+      title: 'Yield & Batch Progress',
+      subtitle: 'Production progress from backend batch records',
+      icon: Icons.insights_rounded,
+      color: AppColors.warning,
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Overall batch progress',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                '${(progress * 100).round()}%',
+                style: AppTypography.h6.copyWith(
+                    color: AppColors.warning, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 10,
+              backgroundColor: isDark ? Colors.white12 : AppColors.neutral200,
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(AppColors.warning),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final twoColumns = constraints.maxWidth >= 420;
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: items.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: twoColumns ? 2 : 1,
+                  crossAxisSpacing: AppSpacing.md,
+                  mainAxisSpacing: AppSpacing.md,
+                  mainAxisExtent: 128,
+                ),
+                itemBuilder: (_, index) {
+                  final item = items[index];
+                  return _buildDetailMetricCard(
+                    label: item.$1,
+                    value: item.$2,
+                    icon: item.$3,
+                    color: item.$4,
+                    isDark: isDark,
+                  );
+                },
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _buildFarmTasksBlock(
+            farm: farm,
+            tasks: farmTasks,
+            pendingTasks: pendingTasks,
+            isDark: isDark,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFarmTasksBlock({
+    required Map<String, dynamic> farm,
+    required List<Map<String, dynamic>> tasks,
+    required int pendingTasks,
+    required bool isDark,
+  }) {
+    final completedTasks = tasks.length - pendingTasks;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.035) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: const Icon(Icons.assignment_turned_in_rounded,
+                    color: AppColors.primary, size: 20),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Farm Tasks',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '$pendingTasks pending • $completedTasks completed',
+                      style: AppTypography.bodySmall.copyWith(
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () => _showAssignTaskDialog(farm, isDark),
+                icon: const Icon(Icons.add_task_rounded, size: 18),
+                label: const Text('Assign Task'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (tasks.isEmpty)
+            Text(
+              'No tasks assigned to this farm yet.',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white60 : AppColors.textSecondary,
+              ),
+            )
+          else
+            ...tasks
+                .take(4)
+                .map((task) => _buildFarmTaskTile(task, isDark))
+                .toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFarmTaskTile(Map<String, dynamic> task, bool isDark) {
+    const taskStatuses = [
+      'Not Started',
+      'Started',
+      'Pending',
+      'In Progress',
+      'Completed',
+      'Cancelled',
+    ];
+    final taskId = _taskDocId(task);
+    final status = _value(task, ['status'], fallback: 'Pending');
+    final priority = _value(task, ['priority'], fallback: 'Medium');
+    final statusColor = _taskStatusColor(status);
+    final priorityColor = priority == 'High'
+        ? AppColors.error
+        : priority == 'Low'
+            ? AppColors.info
+            : AppColors.warning;
+    final isUpdating = _updatingTaskIds.contains(taskId);
+    final isDeleting = _deletingTaskIds.contains(taskId);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _showFarmTaskDetailsDialog(task, isDark),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.035) : Colors.white,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.task_alt_rounded, color: statusColor, size: 20),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _value(task, ['title'], fallback: 'Untitled task'),
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'Assigned to ${_value(task, [
+                            'assigned_to_name'
+                          ], fallback: 'Team member')}',
+                      style: AppTypography.bodySmall.copyWith(
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (_value(task, ['description']).isNotEmpty ||
+                        _value(task, ['manager_comment']).isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.notes_rounded,
+                            size: 13,
+                            color: isDark
+                                ? Colors.white38
+                                : AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _value(task, ['manager_comment']).isNotEmpty
+                                ? 'Manager comment added'
+                                : 'Task note available',
+                            style: AppTypography.caption.copyWith(
+                              color: isDark
+                                  ? Colors.white54
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _buildFarmBadge(priority, priorityColor),
+              const SizedBox(width: AppSpacing.xs),
+              PopupMenuButton<String>(
+                enabled: taskId.isNotEmpty && !isUpdating && !isDeleting,
+                tooltip: 'Change task status',
+                onSelected: (value) => _updateFarmTaskStatus(task, value),
+                itemBuilder: (context) => taskStatuses
+                    .map(
+                      (value) => PopupMenuItem<String>(
+                        value: value,
+                        child: Row(
+                          children: [
+                            Icon(
+                              value == status
+                                  ? Icons.radio_button_checked_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              size: 16,
+                              color: _taskStatusColor(value),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(value),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(),
+                child: isUpdating
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : _buildTaskStatusDropdownBadge(status, statusColor),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              IconButton(
+                tooltip: 'Delete task',
+                onPressed: taskId.isEmpty || isUpdating || isDeleting
+                    ? null
+                    : () => _confirmDeleteFarmTask(task, isDark),
+                icon: isDeleting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.delete_outline_rounded),
+                color: AppColors.error,
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // ── Member Details Dialog ───────────────────────────────────────────────
+  Color _taskStatusColor(String status) {
+    switch (status.toLowerCase().trim()) {
+      case 'completed':
+        return AppColors.success;
+      case 'in progress':
+      case 'started':
+        return AppColors.info;
+      case 'cancelled':
+        return AppColors.error;
+      case 'not started':
+        return AppColors.neutral500;
+      case 'pending':
+      default:
+        return AppColors.warning;
+    }
+  }
+
+  Widget _buildTaskStatusDropdownBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        border: Border.all(color: color.withOpacity(0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: AppTypography.caption.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(Icons.keyboard_arrow_down_rounded, size: 15, color: color),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _updateFarmTaskStatus(
+      Map<String, dynamic> task, String status) async {
+    final taskId = _taskDocId(task);
+    if (taskId.isEmpty) return;
+    final currentStatus = _value(task, ['status'], fallback: 'Pending');
+    if (currentStatus == status) return;
+
+    setState(() => _updatingTaskIds.add(taskId));
+    try {
+      await _api.updateFarmTask(
+        id: taskId,
+        data: _farmTaskPayload(task, status: status),
+      );
+      await _loadFarms();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Task marked as $status')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update task: $error')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _updatingTaskIds.remove(taskId));
+      }
+    }
+  }
+
+  Map<String, dynamic> _farmTaskPayload(
+    Map<String, dynamic> task, {
+    required String status,
+    String? managerComment,
+  }) {
+    return {
+      'farm_id': _value(task, ['farm_id']),
+      'farm_name': _value(task, ['farm_name']),
+      'title': _value(task, ['title'], fallback: 'Untitled task'),
+      'description': _value(task, ['description']),
+      'manager_comment': managerComment ?? _value(task, ['manager_comment']),
+      'assigned_to_id': _value(task, ['assigned_to_id']),
+      'assigned_to_name':
+          _value(task, ['assigned_to_name'], fallback: 'Team member'),
+      'assigned_by_id': _value(task, ['assigned_by_id']),
+      'assigned_by_name':
+          _value(task, ['assigned_by_name'], fallback: 'Farm Manager'),
+      'priority': _value(task, ['priority'], fallback: 'Medium'),
+      'status': status,
+      if (_value(task, ['due_date']).isNotEmpty)
+        'due_date': _value(task, ['due_date']),
+    };
+  }
+
+  void _showFarmTaskDetailsDialog(Map<String, dynamic> task, bool isDark) {
+    final commentController = TextEditingController(
+      text: _value(task, ['manager_comment']),
+    );
+    final status = _value(task, ['status'], fallback: 'Pending');
+    final statusColor = _taskStatusColor(status);
+    final priority = _value(task, ['priority'], fallback: 'Medium');
+    final priorityColor = priority == 'High'
+        ? AppColors.error
+        : priority == 'Low'
+            ? AppColors.info
+            : AppColors.warning;
+    String? modalError;
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final notes = _value(task, ['description']);
+          final dueDate = _formatTaskDate(
+            _value(task, ['due_date']),
+            fallback: 'No due date',
+          );
+          final createdAt = _formatTaskDateTime(
+            _value(task, ['created_at', r'$createdAt']),
+          );
+          final updatedAt = _formatTaskDateTime(
+            _value(task, ['updated_at', r'$updatedAt']),
+          );
+          final assignedBy =
+              _value(task, ['assigned_by_name'], fallback: 'Farm Manager');
+
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.xl,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.surfaceDark : Colors.white,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.16),
+                      blurRadius: 24,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.035)
+                            : AppColors.neutral50,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(AppSpacing.radiusXl),
+                        ),
+                        border: Border(
+                          bottom: BorderSide(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.08)
+                                : AppColors.neutral200,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.12),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusLg),
+                              border: Border.all(
+                                  color: statusColor.withOpacity(0.2)),
+                            ),
+                            child: Icon(Icons.assignment_turned_in_rounded,
+                                color: statusColor, size: 26),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Task Review',
+                                  style: AppTypography.caption.copyWith(
+                                    color: isDark
+                                        ? Colors.white54
+                                        : AppColors.textSecondary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _value(task, ['title'],
+                                      fallback: 'Untitled task'),
+                                  style: AppTypography.h4.copyWith(
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Wrap(
+                                  spacing: AppSpacing.xs,
+                                  runSpacing: AppSpacing.xs,
+                                  children: [
+                                    _buildFarmBadge(status, statusColor),
+                                    _buildFarmBadge(priority, priorityColor),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Close',
+                            onPressed: isSaving
+                                ? null
+                                : () => Navigator.of(dialogContext).pop(),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          AppSpacing.lg,
+                          AppSpacing.lg,
+                          AppSpacing.lg,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final compact = constraints.maxWidth < 520;
+                                final tiles = [
+                                  _buildTaskDetailInfoTile(
+                                    'Assigned To',
+                                    _value(task, ['assigned_to_name'],
+                                        fallback: 'Team member'),
+                                    Icons.person_outline_rounded,
+                                    isDark,
+                                  ),
+                                  _buildTaskDetailInfoTile(
+                                    'Assigned By',
+                                    assignedBy,
+                                    Icons.supervisor_account_rounded,
+                                    isDark,
+                                  ),
+                                  _buildTaskDetailInfoTile(
+                                    'Due Date',
+                                    dueDate,
+                                    Icons.event_available_rounded,
+                                    isDark,
+                                  ),
+                                  _buildTaskDetailInfoTile(
+                                    'Task ID',
+                                    _value(task, ['task_id'],
+                                        fallback: _taskDocId(task)),
+                                    Icons.tag_rounded,
+                                    isDark,
+                                  ),
+                                  _buildTaskDetailInfoTile(
+                                    'Created',
+                                    createdAt,
+                                    Icons.schedule_rounded,
+                                    isDark,
+                                  ),
+                                  _buildTaskDetailInfoTile(
+                                    'Last Updated',
+                                    updatedAt,
+                                    Icons.update_rounded,
+                                    isDark,
+                                  ),
+                                ];
+                                if (compact) {
+                                  return Column(
+                                    children: tiles
+                                        .map(
+                                          (tile) => Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom: AppSpacing.sm),
+                                            child: tile,
+                                          ),
+                                        )
+                                        .toList(),
+                                  );
+                                }
+                                return Wrap(
+                                  spacing: AppSpacing.sm,
+                                  runSpacing: AppSpacing.sm,
+                                  children: tiles
+                                      .map(
+                                        (tile) => SizedBox(
+                                          width: (constraints.maxWidth -
+                                                  AppSpacing.sm) /
+                                              2,
+                                          child: tile,
+                                        ),
+                                      )
+                                      .toList(),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildTaskModalSection(
+                              title: 'Task Instructions',
+                              subtitle:
+                                  'Original note provided when this task was assigned.',
+                              icon: Icons.notes_rounded,
+                              isDark: isDark,
+                              child: Text(
+                                notes.isEmpty
+                                    ? 'No task instructions were added.'
+                                    : notes,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: notes.isEmpty
+                                      ? (isDark
+                                          ? Colors.white38
+                                          : AppColors.textSecondary)
+                                      : (isDark
+                                          ? Colors.white70
+                                          : AppColors.textPrimary),
+                                  height: 1.45,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildTaskModalSection(
+                              title: 'Manager Response',
+                              subtitle:
+                                  'Add feedback, clarification, or completion notes for this task.',
+                              icon: Icons.reply_rounded,
+                              isDark: isDark,
+                              child: TextField(
+                                controller: commentController,
+                                maxLines: 5,
+                                minLines: 4,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary,
+                                  height: 1.4,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText:
+                                      'Write the manager response here...',
+                                  filled: true,
+                                  fillColor: isDark
+                                      ? Colors.white.withOpacity(0.04)
+                                      : Colors.white,
+                                  contentPadding:
+                                      const EdgeInsets.all(AppSpacing.md),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd),
+                                    borderSide: BorderSide(
+                                      color: isDark
+                                          ? Colors.white12
+                                          : AppColors.neutral300,
+                                    ),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd),
+                                    borderSide: BorderSide(
+                                      color: isDark
+                                          ? Colors.white12
+                                          : AppColors.neutral300,
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd),
+                                    borderSide: const BorderSide(
+                                        color: AppColors.primary),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            if (modalError != null) ...[
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                modalError!,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: isSaving
+                                  ? null
+                                  : () => Navigator.of(dialogContext).pop(),
+                              child: const Text('Close'),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: isSaving
+                                  ? null
+                                  : () async {
+                                      setDialogState(() {
+                                        modalError = null;
+                                        isSaving = true;
+                                      });
+                                      try {
+                                        await _api.updateFarmTask(
+                                          id: _taskDocId(task),
+                                          data: _farmTaskPayload(
+                                            task,
+                                            status: status,
+                                            managerComment:
+                                                commentController.text.trim(),
+                                          ),
+                                        );
+                                        if (!dialogContext.mounted) return;
+                                        Navigator.of(dialogContext).pop();
+                                        await _loadFarms();
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(this.context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Task comment saved'),
+                                          ),
+                                        );
+                                      } catch (error) {
+                                        setDialogState(() {
+                                          modalError = error.toString();
+                                          isSaving = false;
+                                        });
+                                      }
+                                    },
+                              icon: isSaving
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.reply_rounded, size: 18),
+                              label:
+                                  Text(isSaving ? 'Saving...' : 'Save Reply'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.md,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    ).whenComplete(commentController.dispose);
+  }
+
+  Widget _buildTaskModalSection({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isDark,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.035) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Icon(icon, size: 18, color: AppColors.primary),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySmall.copyWith(
+                        color:
+                            isDark ? Colors.white54 : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTaskDetailInfoTile(
+    String label,
+    String value,
+    IconData icon,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon,
+              size: 18,
+              color: isDark ? Colors.white54 : AppColors.textSecondary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.caption.copyWith(
+                    color: isDark ? Colors.white54 : AppColors.textSecondary,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteFarmTask(
+      Map<String, dynamic> task, bool isDark) async {
+    final taskId = _taskDocId(task);
+    if (taskId.isEmpty) return;
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        title: Text(
+          'Delete Task',
+          style: AppTypography.h4.copyWith(
+            color: isDark ? Colors.white : AppColors.textPrimary,
+          ),
+        ),
+        content: Text(
+          'Delete "${_value(task, [
+                'title'
+              ], fallback: 'this task')}"? This cannot be undone.',
+          style: AppTypography.bodyMedium.copyWith(
+            color: isDark ? Colors.white70 : AppColors.textSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            icon: const Icon(Icons.delete_outline_rounded, size: 18),
+            label: const Text('Delete'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+    if (shouldDelete != true) return;
+
+    setState(() => _deletingTaskIds.add(taskId));
+    try {
+      await _api.deleteFarmTask(taskId);
+      await _loadFarms();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Task deleted successfully')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete task: $error')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _deletingTaskIds.remove(taskId));
+      }
+    }
+  }
+
+  void _showAssignTaskDialog(Map<String, dynamic> farm, bool isDark) {
+    final team = (farm['team'] as List<Map<String, dynamic>>? ?? [])
+        .where((member) => member['name'] != 'Unassigned')
+        .toList();
+    if (team.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Assign team members to this farm before creating tasks.'),
+        ),
+      );
+      return;
+    }
+
+    final authUser = ref.read(authProvider).user;
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    String selectedMemberId = team.first['id']?.toString() ?? '';
+    String selectedPriority = 'Medium';
+    DateTime? dueDate;
+    String? modalError;
+    bool isSaving = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final selectedMember = team.firstWhere(
+            (member) => member['id']?.toString() == selectedMemberId,
+            orElse: () => team.first,
+          );
+          final dueDateLabel = dueDate == null
+              ? 'Select date'
+              : '${dueDate!.year}-${dueDate!.month.toString().padLeft(2, '0')}-${dueDate!.day.toString().padLeft(2, '0')}';
+          final fieldStyle = AppTypography.bodyMedium.copyWith(
+            color: isDark ? Colors.white : AppColors.textPrimary,
+          );
+          final inputDecoration = InputDecoration(
+            filled: true,
+            fillColor: isDark ? Colors.white.withOpacity(0.04) : Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderSide: BorderSide(
+                color: isDark ? Colors.white12 : AppColors.neutral300,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderSide: BorderSide(
+                color: isDark ? Colors.white12 : AppColors.neutral300,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderSide: const BorderSide(color: AppColors.primary),
+            ),
+            labelStyle: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white60 : AppColors.textSecondary,
+            ),
+            hintStyle: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white38 : AppColors.textSecondary,
+            ),
+          );
+
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.xl,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 540,
+                maxHeight: MediaQuery.of(context).size.height * 0.88,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary,
+                          AppColors.primary.withOpacity(0.78),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppSpacing.radiusXl),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.18),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
+                          ),
+                          child: const Icon(Icons.add_task_rounded,
+                              color: Colors.white, size: 22),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Assign Farm Task',
+                                style: AppTypography.h6.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                farm['name']?.toString() ?? 'Selected farm',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: Colors.white.withOpacity(0.76),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: isSaving
+                              ? null
+                              : () => Navigator.of(dialogContext).pop(),
+                          icon: const Icon(Icons.close_rounded,
+                              color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                    child: Container(
+                      width: double.infinity,
+                      color: isDark ? AppColors.surfaceDark : Colors.white,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(AppSpacing.xl),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              controller: titleController,
+                              style: fieldStyle,
+                              decoration: inputDecoration.copyWith(
+                                labelText: 'Task title',
+                                hintText: 'e.g. Inspect irrigation line',
+                                prefixIcon: const Icon(Icons.task_alt_rounded),
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            DropdownButtonFormField<String>(
+                              initialValue: selectedMemberId,
+                              decoration: inputDecoration.copyWith(
+                                labelText: 'Assign to',
+                                prefixIcon:
+                                    const Icon(Icons.person_outline_rounded),
+                              ),
+                              dropdownColor:
+                                  isDark ? AppColors.surfaceDark : Colors.white,
+                              style: fieldStyle,
+                              items: team
+                                  .map((member) => DropdownMenuItem<String>(
+                                        value: member['id']?.toString() ?? '',
+                                        child: Text(
+                                          "${member['name']} - ${member['role']}",
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ))
+                                  .toList(),
+                              onChanged: isSaving
+                                  ? null
+                                  : (value) => setDialogState(
+                                      () => selectedMemberId = value!),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: DropdownButtonFormField<String>(
+                                    initialValue: selectedPriority,
+                                    decoration: inputDecoration.copyWith(
+                                      labelText: 'Priority',
+                                      prefixIcon: const Icon(
+                                          Icons.flag_circle_outlined),
+                                    ),
+                                    dropdownColor: isDark
+                                        ? AppColors.surfaceDark
+                                        : Colors.white,
+                                    style: fieldStyle,
+                                    items: ['High', 'Medium', 'Low']
+                                        .map((priority) =>
+                                            DropdownMenuItem<String>(
+                                              value: priority,
+                                              child: Text(priority),
+                                            ))
+                                        .toList(),
+                                    onChanged: isSaving
+                                        ? null
+                                        : (value) => setDialogState(
+                                            () => selectedPriority = value!),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd),
+                                    onTap: isSaving
+                                        ? null
+                                        : () async {
+                                            final picked = await showDatePicker(
+                                              context: context,
+                                              firstDate: DateTime.now(),
+                                              lastDate: DateTime.now().add(
+                                                const Duration(days: 365),
+                                              ),
+                                              initialDate:
+                                                  dueDate ?? DateTime.now(),
+                                            );
+                                            if (picked != null) {
+                                              setDialogState(
+                                                  () => dueDate = picked);
+                                            }
+                                          },
+                                    child: InputDecorator(
+                                      decoration: inputDecoration.copyWith(
+                                        labelText: 'Due date',
+                                        prefixIcon:
+                                            const Icon(Icons.event_rounded),
+                                      ),
+                                      child: Text(
+                                        dueDateLabel,
+                                        style: fieldStyle,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            TextField(
+                              controller: descriptionController,
+                              style: fieldStyle,
+                              minLines: 3,
+                              maxLines: 5,
+                              decoration: inputDecoration.copyWith(
+                                labelText: 'Notes',
+                                hintText: 'Optional task instructions',
+                                alignLabelWithHint: true,
+                              ),
+                            ),
+                            if (modalError != null) ...[
+                              const SizedBox(height: AppSpacing.md),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(AppSpacing.md),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusMd),
+                                  border: Border.all(
+                                    color: AppColors.error.withOpacity(0.18),
+                                  ),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.error_outline_rounded,
+                                        size: 18, color: AppColors.error),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    Expanded(
+                                      child: Text(
+                                        modalError!,
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: AppColors.error,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.surfaceDark : Colors.white,
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(AppSpacing.radiusXl),
+                      ),
+                      border: Border(
+                        top: BorderSide(
+                          color: isDark ? Colors.white10 : AppColors.neutral200,
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: isSaving
+                                ? null
+                                : () => Navigator.of(dialogContext).pop(),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSpacing.md,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppSpacing.radiusMd),
+                              ),
+                            ),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: isSaving
+                                ? null
+                                : () async {
+                                    final title = titleController.text.trim();
+                                    if (title.isEmpty) {
+                                      setDialogState(() => modalError =
+                                          'Task title is required.');
+                                      return;
+                                    }
+                                    setDialogState(() {
+                                      modalError = null;
+                                      isSaving = true;
+                                    });
+                                    try {
+                                      await _api.createFarmTask(data: {
+                                        'farm_id': farm['id'] ?? '',
+                                        'farm_name': farm['name'] ?? '',
+                                        'title': title,
+                                        'description':
+                                            descriptionController.text.trim(),
+                                        'assigned_to_id': selectedMemberId,
+                                        'assigned_to_name':
+                                            selectedMember['name'] ?? '',
+                                        'assigned_by_id': authUser?.id ?? '',
+                                        'assigned_by_name':
+                                            authUser?.name ?? 'Farm Manager',
+                                        'priority': selectedPriority,
+                                        if (dueDate != null)
+                                          'due_date':
+                                              dueDate!.toIso8601String(),
+                                      });
+                                      if (!dialogContext.mounted) return;
+                                      Navigator.of(dialogContext).pop();
+                                      await _loadFarms();
+                                      if (!mounted) return;
+                                      ScaffoldMessenger.of(this.context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                              'Task assigned successfully'),
+                                        ),
+                                      );
+                                    } catch (error) {
+                                      setDialogState(() {
+                                        modalError = error.toString();
+                                        isSaving = false;
+                                      });
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSpacing.md,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppSpacing.radiusMd),
+                              ),
+                            ),
+                            icon: isSaving
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(Icons.add_task_rounded, size: 18),
+                            label:
+                                Text(isSaving ? 'Assigning...' : 'Assign Task'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildDetailsRevenuePanel(_RevenueStats stats, bool isDark) {
+    return _buildDetailsSection(
+      title: 'Revenue Performance',
+      subtitle: 'Sales revenue and payment progress from backend records',
+      icon: Icons.trending_up_rounded,
+      color: AppColors.primary,
+      isDark: isDark,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildRevenueMetricTile(
+                    'Total Revenue',
+                    'GHS ${stats.totalRevenue.toStringAsFixed(2)}',
+                    Icons.payments_rounded,
+                    AppColors.primary,
+                    isDark),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: _buildRevenueMetricTile(
+                    'Paid Revenue',
+                    'GHS ${stats.paidRevenue.toStringAsFixed(2)}',
+                    Icons.verified_rounded,
+                    AppColors.success,
+                    isDark),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Payment progress',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                '${(stats.paidRatio * 100).round()}%',
+                style: AppTypography.h6.copyWith(
+                    color: AppColors.success, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            child: LinearProgressIndicator(
+              value: stats.paidRatio,
+              minHeight: 10,
+              backgroundColor: isDark ? Colors.white12 : AppColors.neutral200,
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(AppColors.success),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            height: 220,
+            child: _FarmRevenueAreaChart(points: stats.points, isDark: isDark),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            '${stats.deliveredSales}/${stats.totalSales} sales delivered',
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white60 : AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRevenueMetricTile(
+      String label, String value, IconData icon, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: color.withOpacity(isDark ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: color.withOpacity(0.16)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  label,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white60 : AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showMemberDetails(Map<String, dynamic> member, bool isDark) {
     final memberStatus = member['status'] as String? ?? 'Active';
@@ -2497,6 +4737,157 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             }).toList(),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _RevenueStats {
+  const _RevenueStats({
+    required this.totalRevenue,
+    required this.paidRevenue,
+    required this.deliveredSales,
+    required this.totalSales,
+    required this.paidRatio,
+    required this.points,
+  });
+
+  final double totalRevenue;
+  final double paidRevenue;
+  final int deliveredSales;
+  final int totalSales;
+  final double paidRatio;
+  final List<_RevenuePoint> points;
+}
+
+class _RevenuePoint {
+  const _RevenuePoint(this.date, this.value);
+
+  final DateTime date;
+  final double value;
+}
+
+class _FarmRevenueAreaChart extends StatelessWidget {
+  const _FarmRevenueAreaChart({
+    required this.points,
+    required this.isDark,
+  });
+
+  final List<_RevenuePoint> points;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    if (points.isEmpty) {
+      return Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.035) : AppColors.neutral50,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        child: Text(
+          'No revenue data yet',
+          style: AppTypography.bodySmall.copyWith(
+            color: isDark ? Colors.white60 : AppColors.textSecondary,
+          ),
+        ),
+      );
+    }
+
+    final maxValue =
+        points.map((point) => point.value).reduce((a, b) => a > b ? a : b);
+    final safeMax = maxValue <= 0 ? 1.0 : maxValue * 1.2;
+    final spots = points
+        .asMap()
+        .entries
+        .map((entry) => FlSpot(entry.key.toDouble(), entry.value.value))
+        .toList();
+
+    return LineChart(
+      LineChartData(
+        minY: 0,
+        maxY: safeMax,
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          getDrawingHorizontalLine: (_) => FlLine(
+            color: isDark ? Colors.white10 : AppColors.neutral200,
+            strokeWidth: 1,
+          ),
+        ),
+        titlesData: FlTitlesData(
+          leftTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 28,
+              interval:
+                  points.length <= 1 ? 1 : (points.length / 3).ceilToDouble(),
+              getTitlesWidget: (value, meta) {
+                final index = value.round();
+                if (index < 0 || index >= points.length) {
+                  return const SizedBox.shrink();
+                }
+                final date = points[index].date;
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '${date.month}/${date.day}',
+                    style: AppTypography.caption.copyWith(
+                      color: isDark ? Colors.white54 : AppColors.textSecondary,
+                      fontSize: 10,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        borderData: FlBorderData(show: false),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) =>
+                isDark ? AppColors.surfaceDark : Colors.white,
+            getTooltipItems: (touchedSpots) => touchedSpots.map((spot) {
+              return LineTooltipItem(
+                'GHS ${spot.y.toStringAsFixed(1)}',
+                AppTypography.caption.copyWith(
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        lineBarsData: [
+          LineChartBarData(
+            spots: spots,
+            isCurved: true,
+            color: AppColors.primary,
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: FlDotData(show: points.length <= 8),
+            belowBarData: BarAreaData(
+              show: true,
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.primary.withOpacity(0.22),
+                  AppColors.primary.withOpacity(0.02),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

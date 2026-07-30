@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -7,6 +7,7 @@ import '../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
 import 'weather_info_chip.dart';
 import 'notification_center.dart';
+import 'adaptive_logout_confirmation.dart';
 
 /// Modern caretaker header with greeting, weather, notifications, and theme toggle
 class CaretakerHeader extends ConsumerWidget {
@@ -62,17 +63,21 @@ class CaretakerHeader extends ConsumerWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? AppSpacing.md : AppSpacing.xl,
-        vertical: AppSpacing.lg,
+    return SafeArea(
+      top: isMobile,
+      bottom: false,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? AppSpacing.md : AppSpacing.xl,
+          vertical: AppSpacing.lg,
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
+        ),
+        child: isMobile
+            ? _buildMobileLayout(isDark, ref)
+            : _buildDesktopLayout(isDark, ref),
       ),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
-      ),
-      child: isMobile
-          ? _buildMobileLayout(isDark, ref)
-          : _buildDesktopLayout(isDark, ref),
     );
   }
 
@@ -419,6 +424,7 @@ class CaretakerHeader extends ConsumerWidget {
             'CT';
 
         return PopupMenuButton<String>(
+          key: const ValueKey('caretaker-mobile-profile-menu'),
           offset: const Offset(0, 50),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -503,47 +509,7 @@ class CaretakerHeader extends ConsumerWidget {
             if (value == 'logout') {
               final dialogIsDark =
                   Theme.of(context).brightness == Brightness.dark;
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (dialogContext) => AlertDialog(
-                  backgroundColor:
-                      dialogIsDark ? AppColors.surfaceDark : Colors.white,
-                  title: Text(
-                    'Logout',
-                    style: TextStyle(
-                      color:
-                          dialogIsDark ? Colors.white : AppColors.textPrimary,
-                    ),
-                  ),
-                  content: Text(
-                    'Are you sure you want to logout?',
-                    style: TextStyle(
-                      color:
-                          dialogIsDark ? Colors.white : AppColors.textSecondary,
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext, false),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          color: dialogIsDark
-                              ? Colors.white
-                              : AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogContext, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
-                      ),
-                      child: const Text('Logout'),
-                    ),
-                  ],
-                ),
-              );
+              final confirmed = await showAdaptiveLogoutConfirmation(context);
 
               if (confirmed == true && context.mounted) {
                 await ref.read(authProvider.notifier).logout();
@@ -637,6 +603,7 @@ class CaretakerHeader extends ConsumerWidget {
     return Consumer(
       builder: (context, ref, child) {
         return PopupMenuButton<String>(
+          key: const ValueKey('caretaker-desktop-profile-menu'),
           offset: const Offset(0, 50),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -678,47 +645,7 @@ class CaretakerHeader extends ConsumerWidget {
             if (value == 'logout') {
               final dialogIsDark =
                   Theme.of(context).brightness == Brightness.dark;
-              final confirmed = await showDialog<bool>(
-                context: context,
-                builder: (dialogContext) => AlertDialog(
-                  backgroundColor:
-                      dialogIsDark ? AppColors.surfaceDark : Colors.white,
-                  title: Text(
-                    'Logout',
-                    style: TextStyle(
-                      color:
-                          dialogIsDark ? Colors.white : AppColors.textPrimary,
-                    ),
-                  ),
-                  content: Text(
-                    'Are you sure you want to logout?',
-                    style: TextStyle(
-                      color:
-                          dialogIsDark ? Colors.white : AppColors.textSecondary,
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(dialogContext, false),
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          color: dialogIsDark
-                              ? Colors.white
-                              : AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(dialogContext, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.error,
-                      ),
-                      child: const Text('Logout'),
-                    ),
-                  ],
-                ),
-              );
+              final confirmed = await showAdaptiveLogoutConfirmation(context);
 
               if (confirmed == true && context.mounted) {
                 // Perform logout

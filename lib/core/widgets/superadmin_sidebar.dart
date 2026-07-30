@@ -3,6 +3,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import 'sidebar_collapse_state.dart';
+import 'adaptive_logout_confirmation.dart';
 
 /// Super Admin Sidebar - Styled like Modern Admin Sidebar
 /// Expanded width: 220px, Collapsed width: 70px
@@ -700,65 +701,11 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
     );
   }
 
-  void _showLogoutDialog() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Logout',
-          style: AppTypography.titleMedium.copyWith(
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : AppColors.textPrimary,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to logout?',
-          style: AppTypography.bodyMedium.copyWith(
-            color: isDark ? Colors.white70 : AppColors.textSecondary,
-          ),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        ),
-        backgroundColor: Theme.of(context).cardColor,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancel',
-              style: AppTypography.bodyMedium.copyWith(
-                color: isDark ? Colors.white : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Add logout logic here
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.md,
-              ),
-            ),
-            child: Text(
-              'Logout',
-              style: AppTypography.bodyMedium.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  Future<void> _showLogoutDialog() async {
+    final confirmed = await showAdaptiveLogoutConfirmation(context);
+    if (!confirmed) return;
+
+    // Existing sidebar logout flow only dismissed the confirmation.
   }
 }
 
@@ -1165,64 +1112,11 @@ class SuperAdminDrawer extends StatelessWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context, bool isDark) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Logout',
-          style: AppTypography.titleMedium.copyWith(
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : AppColors.textPrimary,
-          ),
-        ),
-        content: Text(
-          'Are you sure you want to logout?',
-          style: AppTypography.bodyMedium.copyWith(
-            color: isDark ? Colors.white70 : AppColors.textSecondary,
-          ),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        ),
-        backgroundColor: Theme.of(context).cardColor,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancel',
-              style: AppTypography.bodyMedium.copyWith(
-                color: isDark ? Colors.white : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Add logout logic here
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.md,
-              ),
-            ),
-            child: Text(
-              'Logout',
-              style: AppTypography.bodyMedium.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  Future<void> _showLogoutDialog(BuildContext context, bool isDark) async {
+    final confirmed = await showAdaptiveLogoutConfirmation(context);
+    if (!confirmed) return;
+
+    // Existing sidebar logout flow only dismissed the confirmation.
   }
 }
 

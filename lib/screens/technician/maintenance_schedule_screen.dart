@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +12,8 @@ import '../../core/widgets/technician_mobile_bottom_nav.dart';
 import '../../core/widgets/technician_sidebar.dart';
 import '../../core/widgets/technician_header.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/widgets/skeleton_loader.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Maintenance Schedule Screen
 /// View and manage maintenance schedules and technical issues
@@ -17,25 +21,79 @@ class MaintenanceScheduleScreen extends ConsumerStatefulWidget {
   const MaintenanceScheduleScreen({super.key});
 
   @override
-  ConsumerState<MaintenanceScheduleScreen> createState() => _MaintenanceScheduleScreenState();
+  ConsumerState<MaintenanceScheduleScreen> createState() =>
+      _MaintenanceScheduleScreenState();
 }
 
-class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleScreen> with SingleTickerProviderStateMixin {
+class _MaintenanceScheduleScreenState
+    extends ConsumerState<MaintenanceScheduleScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _selectedFilter = 'All';
   int _selectedNavIndex = 2;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final SuperAdminApiService _api = SuperAdminApiService();
+  Timer? _refreshTimer;
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<Map<String, dynamic>> _tasks = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadMaintenanceData();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadMaintenanceData(silent: true),
+    );
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _refreshTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _loadMaintenanceData({bool silent = false}) async {
+    if (!silent && mounted) setState(() => _isLoading = true);
+    try {
+      final tasks = await _api.getFarmTasks();
+      if (!mounted) return;
+      final user = ref.read(currentUserProvider);
+      final assignedFarmIds =
+          user?.farmId == null ? <String>{} : {user!.farmId!};
+      setState(() {
+        _tasks = tasks.where((task) {
+          final assignedTo = _value(task, ['assigned_to_id', 'technician_id']);
+          final farmId = _value(task, ['farm_id', 'farmId', 'farmID']);
+          final assignedToUser = assignedTo.isEmpty || assignedTo == user?.id;
+          final assignedFarm = assignedFarmIds.isEmpty ||
+              farmId.isEmpty ||
+              assignedFarmIds.contains(farmId);
+          return assignedToUser && assignedFarm;
+        }).toList();
+        _isLoading = false;
+        _errorMessage = null;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = error.toString();
+      });
+    }
+  }
+
+  String _value(Map<String, dynamic> data, List<String> keys,
+      [String fallback = '']) {
+    for (final key in keys) {
+      final value = data[key];
+      if (value != null && value.toString().trim().isNotEmpty)
+        return value.toString();
+    }
+    return fallback;
   }
 
   @override
@@ -50,7 +108,8 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       drawer: isMobile
           ? _buildMobileDrawer(isDark, userName, userEmail, userRole)
           : null,
@@ -58,10 +117,13 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
       bottomNavigationBar: isMobile
-          ? TechnicianMobileBottomNav(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
-            )
+          ? SafeArea(
+              top: false,
+              child: TechnicianMobileBottomNav(
+                selectedIndex: _selectedNavIndex,
+                onItemSelected: (index) =>
+                    setState(() => _selectedNavIndex = index),
+              ))
           : null,
       floatingActionButton: PermissionGate(
         permission: Permission.scheduleMaintenace,
@@ -76,7 +138,8 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
     );
   }
 
-  Widget _buildMobileDrawer(bool isDark, String userName, String userEmail, String userRole) {
+  Widget _buildMobileDrawer(
+      bool isDark, String userName, String userEmail, String userRole) {
     return Drawer(
       backgroundColor: isDark ? AppColors.surfaceDark : AppColors.neutral100,
       child: SafeArea(
@@ -102,7 +165,8 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                     child: Center(
                       child: Text(
                         userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
-                        style: AppTypography.h5.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: AppTypography.h5.copyWith(
+                            color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -113,13 +177,15 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                       children: [
                         Text(
                           userName,
-                          style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: AppTypography.bodyLarge.copyWith(
+                              color: Colors.white, fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           userRole,
-                          style: AppTypography.bodySmall.copyWith(color: Colors.white.withOpacity(0.8)),
+                          style: AppTypography.bodySmall
+                              .copyWith(color: Colors.white.withOpacity(0.8)),
                         ),
                       ],
                     ),
@@ -132,11 +198,16 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  _buildDrawerItem(Icons.dashboard_outlined, 'Dashboard', 0, '/technician_dashboard', isDark),
-                  _buildDrawerItem(Icons.sensors_outlined, 'Sensors', 1, '/sensor-management', isDark),
-                  _buildDrawerItem(Icons.build_outlined, 'Maintenance', 2, '/maintenance-schedule', isDark),
-                  _buildDrawerItem(Icons.history_outlined, 'Repair History', 3, '/repair-history', isDark),
-                  _buildDrawerItem(Icons.settings_outlined, 'Settings', 4, '/technician-settings', isDark),
+                  _buildDrawerItem(Icons.dashboard_outlined, 'Dashboard', 0,
+                      '/technician_dashboard', isDark),
+                  _buildDrawerItem(Icons.sensors_outlined, 'Sensors', 1,
+                      '/sensor-management', isDark),
+                  _buildDrawerItem(Icons.build_outlined, 'Maintenance', 2,
+                      '/maintenance-schedule', isDark),
+                  _buildDrawerItem(Icons.history_outlined, 'Repair History', 3,
+                      '/repair-history', isDark),
+                  _buildDrawerItem(Icons.settings_outlined, 'Settings', 4,
+                      '/technician-settings', isDark),
                 ],
               ),
             ),
@@ -146,18 +217,23 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
     );
   }
 
-  Widget _buildDrawerItem(IconData icon, String label, int index, String route, bool isDark) {
+  Widget _buildDrawerItem(
+      IconData icon, String label, int index, String route, bool isDark) {
     final isSelected = index == _selectedNavIndex;
     return ListTile(
       leading: Icon(
         icon,
-        color: isSelected ? AppColors.primary : (isDark ? Colors.white70 : AppColors.textSecondary),
+        color: isSelected
+            ? AppColors.primary
+            : (isDark ? Colors.white70 : AppColors.textSecondary),
       ),
       title: Text(
         label,
         style: AppTypography.bodyMedium.copyWith(
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          color: isSelected ? AppColors.primary : (isDark ? Colors.white : AppColors.textPrimary),
+          color: isSelected
+              ? AppColors.primary
+              : (isDark ? Colors.white : AppColors.textPrimary),
         ),
       ),
       selected: isSelected,
@@ -177,7 +253,8 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
     );
   }
 
-  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail, String userRole) {
+  Widget _buildDesktopLayout(
+      bool isDark, String userName, String userEmail, String userRole) {
     return Row(
       children: [
         TechnicianSidebar(
@@ -294,11 +371,36 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
 
   Widget _buildBottomNavigation(bool isDark) {
     final navItems = [
-      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/technician_dashboard'},
-      {'icon': Icons.sensors_outlined, 'label': 'Sensors', 'index': 1, 'route': '/sensor-management'},
-      {'icon': Icons.build_outlined, 'label': 'Maintain', 'index': 2, 'route': '/maintenance-schedule'},
-      {'icon': Icons.history_outlined, 'label': 'History', 'index': 3, 'route': '/repair-history'},
-      {'icon': Icons.settings_outlined, 'label': 'Settings', 'index': 4, 'route': '/technician-settings'},
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Dashboard',
+        'index': 0,
+        'route': '/technician_dashboard'
+      },
+      {
+        'icon': Icons.sensors_outlined,
+        'label': 'Sensors',
+        'index': 1,
+        'route': '/sensor-management'
+      },
+      {
+        'icon': Icons.build_outlined,
+        'label': 'Maintain',
+        'index': 2,
+        'route': '/maintenance-schedule'
+      },
+      {
+        'icon': Icons.history_outlined,
+        'label': 'History',
+        'index': 3,
+        'route': '/repair-history'
+      },
+      {
+        'icon': Icons.settings_outlined,
+        'label': 'Settings',
+        'index': 4,
+        'route': '/technician-settings'
+      },
     ];
 
     return Container(
@@ -313,7 +415,8 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
         ],
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral100,
+            color:
+                isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral100,
             width: 1,
           ),
         ),
@@ -334,7 +437,8 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                       if (_selectedNavIndex != index) {
                         setState(() => _selectedNavIndex = index);
                         try {
-                          Navigator.pushReplacementNamed(context, item['route'] as String);
+                          Navigator.pushReplacementNamed(
+                              context, item['route'] as String);
                         } catch (e) {
                           debugPrint('Navigation error: $e');
                         }
@@ -344,7 +448,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                       duration: const Duration(milliseconds: 200),
                       decoration: BoxDecoration(
                         border: isSelected
-                            ? Border(top: BorderSide(color: AppColors.primary, width: 2))
+                            ? Border(
+                                top: BorderSide(
+                                    color: AppColors.primary, width: 2))
                             : null,
                       ),
                       child: Column(
@@ -355,7 +461,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                             size: 22,
                             color: isSelected
                                 ? AppColors.primary
-                                : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                                : (isDark
+                                    ? Colors.white.withOpacity(0.5)
+                                    : AppColors.textSecondary),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -363,8 +471,12 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                             style: AppTypography.caption.copyWith(
                               color: isSelected
                                   ? AppColors.primary
-                                  : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                  : (isDark
+                                      ? Colors.white.withOpacity(0.5)
+                                      : AppColors.textSecondary),
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                               fontSize: 10,
                             ),
                             maxLines: 1,
@@ -386,12 +498,26 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
   Widget _buildMaintenanceTab(bool isDark) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
-    
+
+    if (_isLoading) {
+      return const Center(child: AdminDataSkeleton(rowCount: 5));
+    }
+    if (_errorMessage != null) {
+      return Center(
+        child: ElevatedButton.icon(
+          onPressed: _loadMaintenanceData,
+          icon: const Icon(Icons.refresh),
+          label: const Text('Retry loading maintenance'),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       child: Column(
         children: [
           _buildStatsOverview(isDark, isMobile, isMaintenanceTab: true),
-          _buildFilterChips(isDark, ['All', 'Scheduled', 'In Progress', 'Completed', 'Overdue']),
+          _buildFilterChips(isDark,
+              ['All', 'Scheduled', 'In Progress', 'Completed', 'Overdue']),
           _buildMaintenanceList(isDark),
         ],
       ),
@@ -401,31 +527,83 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
   Widget _buildIssuesTab(bool isDark) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
-    
+
     return SingleChildScrollView(
       child: Column(
         children: [
           _buildStatsOverview(isDark, isMobile, isMaintenanceTab: false),
-          _buildFilterChips(isDark, ['All', 'Critical', 'High', 'Medium', 'Low']),
+          _buildFilterChips(
+              isDark, ['All', 'Critical', 'High', 'Medium', 'Low']),
           _buildIssuesList(isDark),
         ],
       ),
     );
   }
 
-  Widget _buildStatsOverview(bool isDark, bool isMobile, {required bool isMaintenanceTab}) {
+  Widget _buildStatsOverview(bool isDark, bool isMobile,
+      {required bool isMaintenanceTab}) {
+    final statusCount = (String status) => _tasks.where((task) {
+          return _value(task, ['status']).toLowerCase() == status.toLowerCase();
+        }).length;
+    final overdueCount = _tasks.where((task) {
+      final due =
+          DateTime.tryParse(_value(task, ['due_date', 'scheduled_date']));
+      return due != null &&
+          due.isBefore(DateTime.now()) &&
+          _value(task, ['status']).toLowerCase() != 'completed';
+    }).length;
     final stats = isMaintenanceTab
         ? [
-            {'title': 'Scheduled', 'value': '5', 'icon': Icons.schedule, 'color': AppColors.primary},
-            {'title': 'In Progress', 'value': '2', 'icon': Icons.engineering, 'color': AppColors.warning},
-            {'title': 'Completed', 'value': '12', 'icon': Icons.check_circle, 'color': AppColors.success},
-            {'title': 'Overdue', 'value': '1', 'icon': Icons.warning, 'color': AppColors.error},
+            {
+              'title': 'Scheduled',
+              'value': '${statusCount('Pending') + statusCount('Not Started')}',
+              'icon': Icons.schedule,
+              'color': AppColors.primary
+            },
+            {
+              'title': 'In Progress',
+              'value': '${statusCount('In Progress') + statusCount('Started')}',
+              'icon': Icons.engineering,
+              'color': AppColors.warning
+            },
+            {
+              'title': 'Completed',
+              'value': '${statusCount('Completed')}',
+              'icon': Icons.check_circle,
+              'color': AppColors.success
+            },
+            {
+              'title': 'Overdue',
+              'value': '$overdueCount',
+              'icon': Icons.warning,
+              'color': AppColors.error
+            },
           ]
         : [
-            {'title': 'Critical', 'value': '1', 'icon': Icons.error, 'color': AppColors.error},
-            {'title': 'High', 'value': '3', 'icon': Icons.priority_high, 'color': AppColors.warning},
-            {'title': 'Medium', 'value': '5', 'icon': Icons.info, 'color': AppColors.info},
-            {'title': 'Resolved', 'value': '18', 'icon': Icons.check_circle, 'color': AppColors.success},
+            {
+              'title': 'Critical',
+              'value': '1',
+              'icon': Icons.error,
+              'color': AppColors.error
+            },
+            {
+              'title': 'High',
+              'value': '3',
+              'icon': Icons.priority_high,
+              'color': AppColors.warning
+            },
+            {
+              'title': 'Medium',
+              'value': '5',
+              'icon': Icons.info,
+              'color': AppColors.info
+            },
+            {
+              'title': 'Resolved',
+              'value': '18',
+              'icon': Icons.check_circle,
+              'color': AppColors.success
+            },
           ];
 
     return Container(
@@ -438,7 +616,8 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildOperationsHero(isDark, isMobile, isMaintenanceTab: isMaintenanceTab),
+          _buildOperationsHero(isDark, isMobile,
+              isMaintenanceTab: isMaintenanceTab),
           SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
           GridView.builder(
             shrinkWrap: true,
@@ -467,13 +646,20 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
     );
   }
 
-  Widget _buildOperationsHero(bool isDark, bool isMobile, {required bool isMaintenanceTab}) {
-    final title = isMaintenanceTab ? 'Maintenance Command Center' : 'Issue Response Queue';
+  Widget _buildOperationsHero(bool isDark, bool isMobile,
+      {required bool isMaintenanceTab}) {
+    final title = isMaintenanceTab
+        ? 'Maintenance Command Center'
+        : 'Issue Response Queue';
     final subtitle = isMaintenanceTab
         ? 'Track scheduled work, active repairs, and overdue equipment tasks across farms.'
         : 'Prioritize faults, field incidents, and production risks before they escalate.';
     final accent = isMaintenanceTab ? AppColors.primary : AppColors.error;
-    final badge = isMaintenanceTab ? '20 active tasks' : '9 open incidents';
+    final badge = isMaintenanceTab
+        ? '${_tasks.where((task) => _value(task, [
+                  'status'
+                ]).toLowerCase() != 'completed').length} active tasks'
+        : 'Backend issue queue';
 
     return Container(
       width: double.infinity,
@@ -635,56 +821,37 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
 
   Widget _buildMaintenanceList(bool isDark) {
     final isMobile = MediaQuery.of(context).size.width < 768;
-    final maintenanceItems = [
-      {
-        'id': '1',
-        'type': 'Preventive',
-        'equipment': 'Water Pump System',
-        'farm': 'Green Valley',
-        'scheduledDate': DateTime.now().add(const Duration(days: 2)),
-        'status': 'Scheduled',
-        'priority': 'Medium',
-        'assignedTo': 'John Tech',
-        'estimatedDuration': 120,
-        'tasks': ['Check motor', 'Replace filters', 'Test flow rate'],
-      },
-      {
-        'id': '2',
-        'type': 'Corrective',
-        'equipment': 'pH Sensor Array',
-        'farm': 'Sunny Acres',
-        'scheduledDate': DateTime.now(),
-        'status': 'In Progress',
-        'priority': 'High',
-        'assignedTo': 'Sarah Tech',
-        'estimatedDuration': 90,
-        'tasks': ['Calibrate sensors', 'Replace faulty unit'],
-      },
-      {
-        'id': '3',
-        'type': 'Inspection',
-        'equipment': 'HVAC System',
-        'farm': 'Fresh Farms',
-        'scheduledDate': DateTime.now().subtract(const Duration(days: 1)),
-        'status': 'Overdue',
-        'priority': 'Critical',
-        'assignedTo': 'Mike Tech',
-        'estimatedDuration': 60,
-        'tasks': ['Inspect ducts', 'Check thermostat', 'Clean filters'],
-      },
-      {
-        'id': '4',
-        'type': 'Calibration',
-        'equipment': 'EC Meters',
-        'farm': 'Urban Greens',
-        'scheduledDate': DateTime.now().subtract(const Duration(days: 3)),
-        'status': 'Completed',
-        'priority': 'Low',
-        'assignedTo': 'John Tech',
-        'estimatedDuration': 45,
-        'tasks': ['Calibrate all meters', 'Document readings'],
-      },
-    ];
+    final maintenanceItems = _tasks.map((task) {
+      final due = DateTime.tryParse(
+          _value(task, ['due_date', 'scheduled_date', 'created_at']));
+      final rawStatus = _value(task, ['status'], 'Pending');
+      final displayStatus = rawStatus.toLowerCase() == 'pending' ||
+              rawStatus.toLowerCase() == 'not started'
+          ? 'Scheduled'
+          : rawStatus.toLowerCase() == 'started'
+              ? 'In Progress'
+              : rawStatus;
+      final isOverdue = due != null &&
+          due.isBefore(DateTime.now()) &&
+          rawStatus.toLowerCase() != 'completed';
+      return <String, dynamic>{
+        'id': _value(task, [r'$id', 'id', 'task_id']),
+        'type': 'Maintenance',
+        'equipment': _value(task, ['title', 'task'], 'Maintenance task'),
+        'farm': _value(task, ['farm_name', 'farmName'], 'Assigned farm'),
+        'scheduledDate': due ?? DateTime.now(),
+        'status': isOverdue ? 'Overdue' : displayStatus,
+        'priority': _value(task, ['priority'], 'Medium'),
+        'assignedTo': _value(task, ['assigned_to_name'], 'Assigned technician'),
+        'estimatedDuration': 0,
+        'tasks': <String>[
+          _value(task, ['description'], 'Review and complete maintenance task')
+        ],
+        'backendTask': task,
+      };
+    }).where((item) {
+      return _selectedFilter == 'All' || item['status'] == _selectedFilter;
+    }).toList();
 
     return GridView.builder(
       padding: EdgeInsets.fromLTRB(
@@ -712,7 +879,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
           decoration: BoxDecoration(
             color: isDark ? AppColors.surfaceDark : Colors.white,
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
+            border: Border.all(
+                color:
+                    isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(isDark ? 0.14 : 0.04),
@@ -743,10 +912,13 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                          border: Border.all(color: statusColor.withOpacity(0.18)),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                          border:
+                              Border.all(color: statusColor.withOpacity(0.18)),
                         ),
-                        child: Icon(Icons.build_rounded, color: statusColor, size: 24),
+                        child: Icon(Icons.build_rounded,
+                            color: statusColor, size: 24),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
@@ -758,7 +930,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                               style: AppTypography.bodyLarge.copyWith(
                                 fontWeight: FontWeight.w700,
                                 fontSize: isMobile ? 14 : 15,
-                                color: isDark ? Colors.white : AppColors.textPrimary,
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
                               ),
                             ),
                             Text(
@@ -766,17 +940,21 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                               style: TextStyle(
                                 fontFamily: 'Roboto',
                                 fontSize: 11,
-                                color: isDark ? Colors.white60 : AppColors.textSecondary,
+                                color: isDark
+                                    ? Colors.white60
+                                    : AppColors.textSecondary,
                               ),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: statusColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusFull),
                         ),
                         child: Text(
                           item['status'] as String,
@@ -791,34 +969,48 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                   const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
-                      Icon(Icons.calendar_today, size: 14, color: isDark ? Colors.white60 : AppColors.textSecondary),
+                      Icon(Icons.calendar_today,
+                          size: 14,
+                          color: isDark
+                              ? Colors.white60
+                              : AppColors.textSecondary),
                       const SizedBox(width: 4),
                       Text(
-                        DateFormat('MMM d, yyyy').format(item['scheduledDate'] as DateTime),
+                        DateFormat('MMM d, yyyy')
+                            .format(item['scheduledDate'] as DateTime),
                         style: TextStyle(
                           fontFamily: 'Roboto',
                           fontSize: 11,
-                          color: isDark ? Colors.white60 : AppColors.textSecondary,
+                          color:
+                              isDark ? Colors.white60 : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.md),
-                      Icon(Icons.access_time, size: 14, color: isDark ? Colors.white60 : AppColors.textSecondary),
+                      Icon(Icons.access_time,
+                          size: 14,
+                          color: isDark
+                              ? Colors.white60
+                              : AppColors.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         '${item['estimatedDuration']} min',
                         style: TextStyle(
                           fontFamily: 'Roboto',
                           fontSize: 11,
-                          color: isDark ? Colors.white60 : AppColors.textSecondary,
+                          color:
+                              isDark ? Colors.white60 : AppColors.textSecondary,
                         ),
                       ),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: priorityColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                          border: Border.all(color: priorityColor.withOpacity(0.3)),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusFull),
+                          border:
+                              Border.all(color: priorityColor.withOpacity(0.3)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -842,7 +1034,11 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
-                      Icon(Icons.person, size: 14, color: isDark ? Colors.white60 : AppColors.textSecondary),
+                      Icon(Icons.person,
+                          size: 14,
+                          color: isDark
+                              ? Colors.white60
+                              : AppColors.textSecondary),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -850,7 +1046,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                           style: TextStyle(
                             fontFamily: 'Roboto',
                             fontSize: 11,
-                            color: isDark ? Colors.white60 : AppColors.textSecondary,
+                            color: isDark
+                                ? Colors.white60
+                                : AppColors.textSecondary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -975,9 +1173,11 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
                         ),
-                        child: Icon(Icons.warning_amber_rounded, color: severityColor, size: 24),
+                        child: Icon(Icons.warning_amber_rounded,
+                            color: severityColor, size: 24),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
@@ -989,7 +1189,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                               style: AppTypography.bodyLarge.copyWith(
                                 fontWeight: FontWeight.w700,
                                 fontSize: isMobile ? 14 : 15,
-                                color: isDark ? Colors.white : AppColors.textPrimary,
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
                               ),
                             ),
                             Text(
@@ -997,17 +1199,21 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                               style: TextStyle(
                                 fontFamily: 'Roboto',
                                 fontSize: 11,
-                                color: isDark ? Colors.white60 : AppColors.textSecondary,
+                                color: isDark
+                                    ? Colors.white60
+                                    : AppColors.textSecondary,
                               ),
                             ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: severityColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusFull),
                         ),
                         child: Text(
                           issue['severity'] as String,
@@ -1023,10 +1229,12 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: statusColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusFull),
                         ),
                         child: Text(
                           issue['status'] as String,
@@ -1039,15 +1247,18 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                       if (issue['affectsProduction'] as bool) ...[
                         const SizedBox(width: AppSpacing.sm),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppColors.error.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusFull),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.production_quantity_limits, size: 10, color: AppColors.error),
+                              Icon(Icons.production_quantity_limits,
+                                  size: 10, color: AppColors.error),
                               SizedBox(width: 2),
                               Text(
                                 'Affects Production',
@@ -1067,7 +1278,11 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
-                      Icon(Icons.person, size: 14, color: isDark ? Colors.white60 : AppColors.textSecondary),
+                      Icon(Icons.person,
+                          size: 14,
+                          color: isDark
+                              ? Colors.white60
+                              : AppColors.textSecondary),
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
@@ -1075,21 +1290,28 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                           style: TextStyle(
                             fontFamily: 'Roboto',
                             fontSize: 11,
-                            color: isDark ? Colors.white60 : AppColors.textSecondary,
+                            color: isDark
+                                ? Colors.white60
+                                : AppColors.textSecondary,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      Icon(Icons.access_time, size: 14, color: isDark ? Colors.white60 : AppColors.textSecondary),
+                      Icon(Icons.access_time,
+                          size: 14,
+                          color: isDark
+                              ? Colors.white60
+                              : AppColors.textSecondary),
                       const SizedBox(width: 4),
                       Text(
                         _getTimeAgo(issue['reportedAt'] as DateTime),
                         style: TextStyle(
                           fontFamily: 'Roboto',
                           fontSize: 11,
-                          color: isDark ? Colors.white60 : AppColors.textSecondary,
+                          color:
+                              isDark ? Colors.white60 : AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -1179,7 +1401,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(_tabController.index == 0 ? 'Schedule Maintenance' : 'Report Issue'),
+        title: Text(_tabController.index == 0
+            ? 'Schedule Maintenance'
+            : 'Report Issue'),
         content: const Text('Form will be implemented here.'),
         actions: [
           TextButton(
@@ -1190,7 +1414,10 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
             onPressed: () {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(_tabController.index == 0 ? 'Maintenance scheduled' : 'Issue reported')),
+                SnackBar(
+                    content: Text(_tabController.index == 0
+                        ? 'Maintenance scheduled'
+                        : 'Issue reported')),
               );
             },
             child: const Text('Submit'),
@@ -1228,8 +1455,12 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                     accent: _getStatusColor(item['status'] as String),
                     isDark: isDark,
                     badges: [
-                      _buildDetailBadge(item['status'] as String, _getStatusColor(item['status'] as String), isDark),
-                      _buildDetailBadge(item['priority'] as String, _getPriorityColor(item['priority'] as String), isDark),
+                      _buildDetailBadge(item['status'] as String,
+                          _getStatusColor(item['status'] as String), isDark),
+                      _buildDetailBadge(
+                          item['priority'] as String,
+                          _getPriorityColor(item['priority'] as String),
+                          isDark),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -1237,9 +1468,14 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                     isDark,
                     [
                       _DetailField('Assigned To', item['assignedTo'] as String),
-                      _DetailField('Duration', '${item['estimatedDuration']} min'),
-                      _DetailField('Scheduled Date', DateFormat('MMM d, yyyy').format(item['scheduledDate'] as DateTime)),
-                      _DetailField('Task Count', '${(item['tasks'] as List).length} items'),
+                      _DetailField(
+                          'Duration', '${item['estimatedDuration']} min'),
+                      _DetailField(
+                          'Scheduled Date',
+                          DateFormat('MMM d, yyyy')
+                              .format(item['scheduledDate'] as DateTime)),
+                      _DetailField('Task Count',
+                          '${(item['tasks'] as List).length} items'),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -1313,20 +1549,30 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                     accent: _getSeverityColor(issue['severity'] as String),
                     isDark: isDark,
                     badges: [
-                      _buildDetailBadge(issue['severity'] as String, _getSeverityColor(issue['severity'] as String), isDark),
-                      _buildDetailBadge(issue['status'] as String, _getIssueStatusColor(issue['status'] as String), isDark),
+                      _buildDetailBadge(
+                          issue['severity'] as String,
+                          _getSeverityColor(issue['severity'] as String),
+                          isDark),
+                      _buildDetailBadge(
+                          issue['status'] as String,
+                          _getIssueStatusColor(issue['status'] as String),
+                          isDark),
                       if (issue['affectsProduction'] as bool)
-                        _buildDetailBadge('Affects Production', AppColors.error, isDark),
+                        _buildDetailBadge(
+                            'Affects Production', AppColors.error, isDark),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   _buildDetailInfoGrid(
                     isDark,
                     [
-                      _DetailField('Reported By', issue['reportedBy'] as String),
-                      _DetailField('Reported', _getTimeAgo(issue['reportedAt'] as DateTime)),
+                      _DetailField(
+                          'Reported By', issue['reportedBy'] as String),
+                      _DetailField('Reported',
+                          _getTimeAgo(issue['reportedAt'] as DateTime)),
                       _DetailField('Farm', issue['farm'] as String),
-                      _DetailField('Production Impact', (issue['affectsProduction'] as bool) ? 'Yes' : 'No'),
+                      _DetailField('Production Impact',
+                          (issue['affectsProduction'] as bool) ? 'Yes' : 'No'),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -1334,7 +1580,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                     width: double.infinity,
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.04)
+                          : AppColors.neutral50,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     ),
                     child: Column(
@@ -1343,7 +1591,8 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                         Text(
                           'Response Guidance',
                           style: AppTypography.bodyMedium.copyWith(
-                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -1353,7 +1602,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                               ? 'This incident affects production. Escalate immediately and dispatch a technician on-site.'
                               : 'This incident can be handled in the normal response queue without immediate production shutdown.',
                           style: AppTypography.bodySmall.copyWith(
-                            color: isDark ? Colors.white70 : AppColors.textSecondary,
+                            color: isDark
+                                ? Colors.white70
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -1372,7 +1623,8 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(Icons.assignment_turned_in_outlined, size: 18),
+                          icon: const Icon(Icons.assignment_turned_in_outlined,
+                              size: 18),
                           label: const Text('Acknowledge'),
                         ),
                       ),
@@ -1465,7 +1717,9 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
               child: Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.04)
+                      : AppColors.neutral50,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   border: Border.all(
                     color: isDark ? Colors.white10 : AppColors.neutral200,
@@ -1477,7 +1731,8 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
                     Text(
                       field.label,
                       style: AppTypography.caption.copyWith(
-                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1550,7 +1805,8 @@ class _MaintenanceScheduleScreenState extends ConsumerState<MaintenanceScheduleS
               Text('Assigned to: ${item['assignedTo']}'),
               Text('Duration: ${item['estimatedDuration']} min'),
               const SizedBox(height: AppSpacing.sm),
-              const Text('Tasks:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Tasks:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               ...(item['tasks'] as List).map((task) => Text('• $task')),
             ],
           ),

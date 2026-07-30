@@ -9,21 +9,20 @@ import '../../widgets/cards/caretaker/owner_stat_card.dart';
 import '../../widgets/cards/caretaker/owner_production_widget.dart';
 import '../../widgets/cards/caretaker/owner_energy_widget.dart';
 
-
 class CaretakerDashboardScreen extends StatefulWidget {
   const CaretakerDashboardScreen({super.key});
 
   @override
-  State<CaretakerDashboardScreen> createState() => _CaretakerDashboardScreenState();
+  State<CaretakerDashboardScreen> createState() =>
+      _CaretakerDashboardScreenState();
 }
 
 class _CaretakerDashboardScreenState extends State<CaretakerDashboardScreen> {
   bool isDark = false;
   int selectedIndex = 0;
-  
 
   final GlobalKey filterPillKey = GlobalKey();
-  
+
   @override
   void initState() {
     super.initState();
@@ -73,7 +72,6 @@ class _CaretakerDashboardScreenState extends State<CaretakerDashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            
                             const SizedBox(height: 12),
                             Text(
                               "Dashboard Overview",
@@ -115,7 +113,6 @@ class _CaretakerDashboardScreenState extends State<CaretakerDashboardScreen> {
                                             ),
                                           ),
                                           const SizedBox(width: 16),
-                                          
                                           const SizedBox(width: 16),
                                           Expanded(
                                             child: OwnerStatCard(
@@ -185,8 +182,8 @@ class _CaretakerDashboardScreenState extends State<CaretakerDashboardScreen> {
                                     children: [
                                       Expanded(
                                         flex: 3,
-                                        child:
-                                            OwnerProductionWidget(isDark: isDark),
+                                        child: OwnerProductionWidget(
+                                            isDark: isDark),
                                       ),
                                       const SizedBox(width: 20),
                                       Expanded(
@@ -212,12 +209,14 @@ class _CaretakerDashboardScreenState extends State<CaretakerDashboardScreen> {
         ),
       ),
       bottomNavigationBar: isMobile
-          ? CaretakerSidebar(
-              selectedIndex: selectedIndex,
-              onItemSelected: (idx) => setState(() => selectedIndex = idx),
-              isDark: isDark,
-              isMobile: true,
-            )
+          ? SafeArea(
+              top: false,
+              child: CaretakerSidebar(
+                selectedIndex: selectedIndex,
+                onItemSelected: (idx) => setState(() => selectedIndex = idx),
+                isDark: isDark,
+                isMobile: true,
+              ))
           : null,
     );
   }

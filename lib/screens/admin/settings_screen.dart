@@ -123,8 +123,10 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
         ),
       ),
       // AdminSidebar for mobile (bottom navigation bar)
-      bottomNavigationBar:
-          isMobile ? _buildMobileSidebar(selectedIndex, isDark) : null,
+      bottomNavigationBar: isMobile
+          ? SafeArea(
+              top: false, child: _buildMobileSidebar(selectedIndex, isDark))
+          : null,
     );
   }
 

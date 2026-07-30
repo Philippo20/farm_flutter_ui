@@ -80,10 +80,12 @@ class AccountantScreenShell extends ConsumerWidget {
               ],
             ),
       bottomNavigationBar: isMobile
-          ? AccountantMobileBottomNav(
-              selectedIndex: selectedIndex,
-              onItemSelected: (_) {},
-            )
+          ? SafeArea(
+              top: false,
+              child: AccountantMobileBottomNav(
+                selectedIndex: selectedIndex,
+                onItemSelected: (_) {},
+              ))
           : null,
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -9,8 +11,9 @@ import '../../core/widgets/technician_sidebar.dart';
 import '../../core/widgets/technician_header.dart';
 import '../../core/widgets/weather_time_widget.dart';
 import '../../core/widgets/weather_info_chip.dart';
-import '../../widgets/alert_summary_card.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/widgets/skeleton_loader.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Technician Dashboard - Redesigned
 /// Maintenance and technical support
@@ -22,15 +25,100 @@ class TechnicianDashboardRedesigned extends ConsumerStatefulWidget {
       _TechnicianDashboardRedesignedState();
 }
 
-class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashboardRedesigned> {
+class _TechnicianDashboardRedesignedState
+    extends ConsumerState<TechnicianDashboardRedesigned> {
   int _selectedNavIndex = 0;
   WeatherInfo? _weatherInfo;
+  final SuperAdminApiService _api = SuperAdminApiService();
+  Timer? _refreshTimer;
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<Map<String, dynamic>> _alerts = [];
+  List<Map<String, dynamic>> _tasks = [];
+  List<Map<String, dynamic>> _sensors = [];
 
   @override
   void initState() {
     super.initState();
-    // Load weather info if needed
-    _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    _loadDashboardData();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadDashboardData(silent: true),
+    );
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadDashboardData({bool silent = false}) async {
+    if (!silent && mounted) setState(() => _isLoading = true);
+    try {
+      final results = await Future.wait([
+        _api.getAlerts(),
+        _api.getFarmTasks(),
+        _api.getSensors(),
+      ]);
+      if (!mounted) return;
+      final user = ref.read(currentUserProvider);
+      final farmIds = user?.farmId == null ? <String>{} : {user!.farmId!};
+      final userId = user?.id ?? '';
+      bool belongsToTechnician(Map<String, dynamic> item) {
+        final assignedTo = _value(item, ['assigned_to_id', 'technician_id']);
+        final farmId = _value(item, ['farm_id', 'farmId']);
+        if (assignedTo.isNotEmpty) return assignedTo == userId;
+        if (farmIds.isNotEmpty && farmId.isNotEmpty) {
+          return farmIds.contains(farmId);
+        }
+        return true;
+      }
+
+      setState(() {
+        _alerts = results[0].where(belongsToTechnician).toList();
+        _tasks = results[1].where(belongsToTechnician).toList();
+        _sensors = results[2].where(belongsToTechnician).toList();
+        _isLoading = false;
+        _errorMessage = null;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = error.toString();
+      });
+    }
+  }
+
+  String _value(Map<String, dynamic> data, List<String> keys,
+      [String fallback = '']) {
+    for (final key in keys) {
+      final value = data[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return fallback;
+  }
+
+  bool _isResolved(Map<String, dynamic> alert) {
+    return alert['resolved'] == true ||
+        _value(alert, ['status']).toLowerCase() == 'resolved';
+  }
+
+  bool _isOnline(Map<String, dynamic> sensor) {
+    final status = _value(sensor, ['status']).toLowerCase();
+    return status == 'online' || status == 'active' || status == 'operational';
+  }
+
+  bool _isToday(String value) {
+    final date = DateTime.tryParse(value);
+    final now = DateTime.now();
+    return date != null &&
+        date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
 
   @override
@@ -44,7 +132,8 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
     final userRole = 'Technician';
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
@@ -57,15 +146,19 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
             )
           : null,
       bottomNavigationBar: isMobile
-          ? TechnicianMobileBottomNav(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
-            )
+          ? SafeArea(
+              top: false,
+              child: TechnicianMobileBottomNav(
+                selectedIndex: _selectedNavIndex,
+                onItemSelected: (index) =>
+                    setState(() => _selectedNavIndex = index),
+              ))
           : null,
     );
   }
 
-  Widget _buildDesktopLayout(bool isDark, String userName, String userEmail, String userRole) {
+  Widget _buildDesktopLayout(
+      bool isDark, String userName, String userEmail, String userRole) {
     return Row(
       children: [
         // Sidebar
@@ -98,58 +191,63 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Weather & Time Widget
-                      const WeatherTimeWidget(),
+                  child: _isLoading
+                      ? const Center(child: AdminDataSkeleton(rowCount: 5))
+                      : _errorMessage != null
+                          ? _buildErrorState(isDark)
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Weather & Time Widget
+                                const WeatherTimeWidget(),
 
-                      const SizedBox(height: AppSpacing.lg),
+                                const SizedBox(height: AppSpacing.lg),
 
-                      // Compact Stats Section
-                      _buildStatsSection(context),
+                                // Compact Stats Section
+                                _buildStatsSection(context),
 
-                      const SizedBox(height: AppSpacing.xl),
+                                const SizedBox(height: AppSpacing.xl),
 
-                      // Alert Summary
-                      const AlertSummaryCard(
-                        showRecentAlerts: true,
-                        maxRecentAlerts: 2,
-                      ),
+                                // Alert Summary
+                                _buildAlertSummary(isDark),
 
-                      const SizedBox(height: AppSpacing.xl),
+                                const SizedBox(height: AppSpacing.xl),
 
-                      // Section Title
-                      Text(
-                        'Farm Asset Monitoring',
-                        style: AppTypography.h5.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                      ),
+                                // Section Title
+                                Text(
+                                  'Farm Asset Monitoring',
+                                  style: AppTypography.h5.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                                  ),
+                                ),
 
-                      const SizedBox(height: AppSpacing.md),
+                                const SizedBox(height: AppSpacing.md),
 
-                      // Asset Monitoring Grid
-                      _buildAssetMonitoringGrid(context),
+                                // Asset Monitoring Grid
+                                _buildAssetMonitoringGrid(context),
 
-                      const SizedBox(height: AppSpacing.xl),
+                                const SizedBox(height: AppSpacing.xl),
 
-                      // Section Title
-                      Text(
-                        'Maintenance Tasks',
-                        style: AppTypography.h5.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                      ),
+                                // Section Title
+                                Text(
+                                  'Maintenance Tasks',
+                                  style: AppTypography.h5.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                                  ),
+                                ),
 
-                      const SizedBox(height: AppSpacing.md),
+                                const SizedBox(height: AppSpacing.md),
 
-                      // Features Grid
-                      _buildFeaturesGrid(context),
-                    ],
-                  ),
+                                // Features Grid
+                                _buildFeaturesGrid(context),
+                              ],
+                            ),
                 ),
               ),
             ],
@@ -172,60 +270,63 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Weather & Time Widget
-                const WeatherTimeWidget(),
+            child: _isLoading
+                ? const Center(child: AdminDataSkeleton(rowCount: 5))
+                : _errorMessage != null
+                    ? _buildErrorState(isDark)
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Weather & Time Widget
+                          const WeatherTimeWidget(),
 
-                const SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.md),
 
-                // Compact Stats Section
-                _buildStatsSection(context),
+                          // Compact Stats Section
+                          _buildStatsSection(context),
 
-                const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.lg),
 
-                // Alert Summary
-                const AlertSummaryCard(
-                  showRecentAlerts: true,
-                  maxRecentAlerts: 2,
-                ),
+                          // Alert Summary
+                          _buildAlertSummary(isDark),
 
-                const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.lg),
 
-                // Section Title
-                Text(
-                  'Farm Asset Monitoring',
-                  style: AppTypography.h5.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
+                          // Section Title
+                          Text(
+                            'Farm Asset Monitoring',
+                            style: AppTypography.h5.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color:
+                                  isDark ? Colors.white : AppColors.textPrimary,
+                            ),
+                          ),
 
-                const SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.md),
 
-                // Asset Monitoring Grid
-                _buildAssetMonitoringGrid(context),
+                          // Asset Monitoring Grid
+                          _buildAssetMonitoringGrid(context),
 
-                const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.lg),
 
-                // Section Title
-                Text(
-                  'Maintenance Tasks',
-                  style: AppTypography.h5.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
+                          // Section Title
+                          Text(
+                            'Maintenance Tasks',
+                            style: AppTypography.h5.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color:
+                                  isDark ? Colors.white : AppColors.textPrimary,
+                            ),
+                          ),
 
-                const SizedBox(height: AppSpacing.md),
+                          const SizedBox(height: AppSpacing.md),
 
-                // Features Grid
-                _buildFeaturesGrid(context),
-              ],
-            ),
+                          // Features Grid
+                          _buildFeaturesGrid(context),
+                        ],
+                      ),
           ),
         ),
       ],
@@ -278,7 +379,9 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
         ],
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
             width: 1,
           ),
         ),
@@ -319,7 +422,9 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
                           size: 24,
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.5)
+                                  : AppColors.textSecondary),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -330,7 +435,9 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
                                 : (isDark
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                             fontSize: 11,
                           ),
                           maxLines: 1,
@@ -348,7 +455,129 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
     );
   }
 
+  Widget _buildErrorState(bool isDark) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off_outlined,
+                size: 42,
+                color: isDark ? Colors.white54 : AppColors.textSecondary),
+            const SizedBox(height: AppSpacing.md),
+            Text('Unable to load technician dashboard',
+                style: AppTypography.h6.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary)),
+            const SizedBox(height: AppSpacing.sm),
+            Text(_errorMessage ?? 'Please try again.',
+                textAlign: TextAlign.center),
+            const SizedBox(height: AppSpacing.md),
+            ElevatedButton.icon(
+              onPressed: _loadDashboardData,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlertSummary(bool isDark) {
+    final active = _alerts.where((alert) => !_isResolved(alert)).toList();
+    final critical = active
+        .where((alert) {
+          final severity =
+              _value(alert, ['severity', 'priority']).toLowerCase();
+          return severity == 'critical' || severity == 'high';
+        })
+        .take(3)
+        .toList();
+    final countBySeverity = (String severity) => active
+        .where((alert) =>
+            _value(alert, ['severity', 'priority']).toLowerCase() == severity)
+        .length;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Icon(Icons.notifications_active_outlined,
+                color: AppColors.info),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+                child: Text('System Alerts',
+                    style: AppTypography.h6.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ))),
+            Text('${active.length} active',
+                style: AppTypography.bodySmall.copyWith(
+                  color: isDark ? Colors.white60 : AppColors.textSecondary,
+                )),
+          ]),
+          const SizedBox(height: AppSpacing.md),
+          Row(children: [
+            _alertMetric('Critical', '${countBySeverity('critical')}',
+                AppColors.error, isDark),
+            _alertMetric('Warning', '${countBySeverity('warning')}',
+                AppColors.warning, isDark),
+            _alertMetric(
+                'Info', '${countBySeverity('info')}', AppColors.info, isDark),
+          ]),
+          if (critical.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            ...critical.map((alert) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                  child: Text(
+                    _value(alert, ['message', 'title'], 'Technical alert'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white70 : AppColors.textSecondary,
+                    ),
+                  ),
+                )),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _alertMetric(String label, String value, Color color, bool isDark) {
+    return Expanded(
+      child: Row(children: [
+        Icon(Icons.circle, size: 8, color: color),
+        const SizedBox(width: 6),
+        Text('$label $value',
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white70 : AppColors.textSecondary,
+            )),
+      ]),
+    );
+  }
+
   Widget _buildStatsSection(BuildContext context) {
+    final openIssues = _alerts.where((alert) => !_isResolved(alert)).length;
+    final resolvedToday = _alerts.where((alert) {
+      return _isResolved(alert) &&
+          _isToday(_value(alert, ['updated_at', r'$updatedAt']));
+    }).length;
+    final dueToday = _tasks
+        .where((task) =>
+            _isToday(_value(task, ['due_date', 'scheduled_date'])) &&
+            _value(task, ['status']).toLowerCase() != 'completed')
+        .length;
+    final onlineSensors = _sensors.where(_isOnline).length;
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
@@ -363,33 +592,29 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
           children: [
             CompactStatCard(
               title: 'Open Issues',
-              value: '5 Issues',
+              value: '$openIssues',
               icon: Icons.warning_amber,
               color: AppColors.error,
-              trend: '-2',
-              isPositive: true,
             ),
             CompactStatCard(
               title: 'Resolved Today',
-              value: '24 Fixed',
+              value: '$resolvedToday',
               icon: Icons.check_circle,
               color: AppColors.success,
-              trend: '+8',
-              isPositive: true,
             ),
             CompactStatCard(
               title: 'Maintenance Due',
-              value: '3 Tasks',
+              value: '$dueToday',
               icon: Icons.build,
               color: AppColors.warning,
             ),
             CompactStatCard(
               title: 'System Status',
-              value: '95%',
+              value: _sensors.isEmpty
+                  ? '0%'
+                  : '${(onlineSensors * 100 / _sensors.length).round()}%',
               icon: Icons.speed,
               color: AppColors.primary,
-              trend: '+2%',
-              isPositive: true,
             ),
           ],
         );
@@ -407,6 +632,46 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
         // Adjust aspect ratio for mobile to prevent overflow
         final childAspectRatio = isMobile ? 1.4 : 1.2;
+        final grouped = <String, List<Map<String, dynamic>>>{};
+        for (final sensor in _sensors) {
+          final type =
+              _value(sensor, ['sensor_type', 'type', 'category'], 'Sensors');
+          grouped.putIfAbsent(type, () => []).add(sensor);
+        }
+        final cards = grouped.entries.take(4).map((entry) {
+          final online = entry.value.where(_isOnline).length;
+          final color = online == entry.value.length && entry.value.isNotEmpty
+              ? AppColors.success
+              : online > 0
+                  ? AppColors.warning
+                  : AppColors.textSecondary;
+          return _buildAssetCard(
+            context,
+            isDark,
+            entry.key,
+            Icons.sensors,
+            color,
+            '$online/${entry.value.length} Online',
+            online == entry.value.length && entry.value.isNotEmpty
+                ? 'All operational'
+                : 'Needs attention',
+            () => Navigator.pushNamed(context, '/sensor-management'),
+            isMobile,
+          );
+        }).toList();
+        if (cards.isEmpty) {
+          cards.add(_buildAssetCard(
+            context,
+            isDark,
+            'Sensors',
+            Icons.sensors,
+            AppColors.textSecondary,
+            '0 connected',
+            'No sensors assigned',
+            () => Navigator.pushNamed(context, '/sensor-management'),
+            isMobile,
+          ));
+        }
 
         return GridView.count(
           crossAxisCount: crossAxisCount,
@@ -415,32 +680,22 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
           mainAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          children: [
-            _buildAssetCard(context, isDark, 'Pumps', Icons.water_drop, AppColors.info, '8 Active',
-                '2 Need service', () {}, isMobile),
-            _buildAssetCard(context, isDark, 'Fans', Icons.air, AppColors.primary, '12 Active',
-                'All operational', () {}, isMobile),
-            _buildAssetCard(
-              context,
-              isDark,
-              'Sensors',
-              Icons.sensors,
-              AppColors.success,
-              '10 Active',
-              'Manage all sensors',
-                () => Navigator.pushNamed(context, '/sensor-management'),
-              isMobile,
-            ),
-            _buildAssetCard(context, isDark, 'Air Condition', Icons.ac_unit, AppColors.warning,
-                '6 Active', '1 Maintenance', () {}, isMobile),
-          ],
+          children: cards,
         );
       },
     );
   }
 
-  Widget _buildAssetCard(BuildContext context, bool isDark, String title, IconData icon,
-      Color color, String status, String subtitle, VoidCallback onTap, bool isMobile) {
+  Widget _buildAssetCard(
+      BuildContext context,
+      bool isDark,
+      String title,
+      IconData icon,
+      Color color,
+      String status,
+      String subtitle,
+      VoidCallback onTap,
+      bool isMobile) {
     // Check if this card has an action (not empty callback)
     final hasAction = title == 'Sensors'; // Only Sensors card has navigation
 
@@ -453,7 +708,9 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           border: Border.all(
-            color: hasAction ? color.withOpacity(0.3) : (isDark ? Colors.white10 : Colors.black12),
+            color: hasAction
+                ? color.withOpacity(0.3)
+                : (isDark ? Colors.white10 : Colors.black12),
             width: hasAction ? 2 : 1,
           ),
         ),
@@ -465,8 +722,10 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               clipBehavior: Clip.none,
               children: [
                 Container(
-                  padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
-                  decoration: BoxDecoration(color: color.withOpacity(0.12), shape: BoxShape.circle),
+                  padding:
+                      EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
+                  decoration: BoxDecoration(
+                      color: color.withOpacity(0.12), shape: BoxShape.circle),
                   child: Icon(icon, size: isMobile ? 28 : 32, color: color),
                 ),
                 if (hasAction)
@@ -527,7 +786,8 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
                       subtitle,
                       textAlign: TextAlign.center,
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
                         fontSize: isMobile ? 9 : 10,
                       ),
                       maxLines: 1,
@@ -576,8 +836,8 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               'Report Issue',
               Icons.report_problem,
               AppColors.error,
-              '5 open issues',
-               () => Navigator.pushNamed(context, '/maintenance-schedule'),
+              '${_alerts.where((alert) => !_isResolved(alert)).length} open issues',
+              () => Navigator.pushNamed(context, '/maintenance-schedule'),
               isMobile,
             ),
             _buildFeatureCard(
@@ -587,7 +847,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               Icons.lightbulb_outline,
               AppColors.warning,
               'Knowledge base',
-               () => Navigator.pushNamed(context, '/maintenance-schedule'),
+              () => Navigator.pushNamed(context, '/maintenance-schedule'),
               isMobile,
             ),
             _buildFeatureCard(
@@ -596,8 +856,11 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               'Schedule Maintenance',
               Icons.event,
               AppColors.info,
-              '3 tasks due',
-               () => Navigator.pushNamed(context, '/maintenance-schedule'),
+              '${_tasks.where((task) => _isToday(_value(task, [
+                        'due_date',
+                        'scheduled_date'
+                      ]))).length} tasks due',
+              () => Navigator.pushNamed(context, '/maintenance-schedule'),
               isMobile,
             ),
             _buildFeatureCard(
@@ -607,7 +870,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               Icons.shopping_cart,
               AppColors.primary,
               'Order supplies',
-               () => Navigator.pushNamed(context, '/maintenance-schedule'),
+              () => Navigator.pushNamed(context, '/maintenance-schedule'),
               isMobile,
             ),
             _buildFeatureCard(
@@ -626,7 +889,7 @@ class _TechnicianDashboardRedesignedState extends ConsumerState<TechnicianDashbo
               'System Status',
               Icons.monitor_heart,
               AppColors.info,
-              '95% operational',
+              '${_sensors.isEmpty ? 0 : (_sensors.where(_isOnline).length * 100 / _sensors.length).round()}% operational',
               () {},
               isMobile,
             ),

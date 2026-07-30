@@ -162,7 +162,9 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
       body: isMobile
           ? _buildMobileLayout(isDark, themeMode, userName)
           : _buildDesktopLayout(isDark, themeMode, userName),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          : null,
     );
   }
 

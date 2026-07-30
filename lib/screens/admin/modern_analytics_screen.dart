@@ -406,7 +406,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
           ? _buildMobileLayout(isDark, firstName)
           : _buildDesktopLayout(isDark, firstName, userName, userEmail),
       bottomNavigationBar: !widget.isSuperAdmin && isMobile
-          ? _buildBottomNavigation(isDark)
+          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
           : null,
     );
   }

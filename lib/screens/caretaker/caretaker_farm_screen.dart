@@ -149,12 +149,14 @@ class _caretakerFarmsScreenState extends State<CaretakerFarmScreen> {
         ),
       ),
       bottomNavigationBar: isMobile
-          ? CaretakerSidebar(
-              selectedIndex: selectedIndex,
-              onItemSelected: (idx) => setState(() => selectedIndex = idx),
-              isDark: isDark,
-              isMobile: true,
-            )
+          ? SafeArea(
+              top: false,
+              child: CaretakerSidebar(
+                selectedIndex: selectedIndex,
+                onItemSelected: (idx) => setState(() => selectedIndex = idx),
+                isDark: isDark,
+                isMobile: true,
+              ))
           : null,
     );
   }

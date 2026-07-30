@@ -290,7 +290,7 @@ class _FarmManagerDashboardRedesignedState
         ),
 
         // Bottom Navigation (only show on dashboard view)
-        if (_currentView == 'dashboard') _buildBottomNavigation(isDark),
+        SafeArea(top: false, child: _buildBottomNavigation(isDark)),
       ],
     );
   }

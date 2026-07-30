@@ -115,12 +115,14 @@ class _SalesManagerDashboardRedesignedState
             )
           : null,
       bottomNavigationBar: isMobile
-          ? SalesManagerMobileBottomNav(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) {
-                setState(() => _selectedNavIndex = index);
-              },
-            )
+          ? SafeArea(
+              top: false,
+              child: SalesManagerMobileBottomNav(
+                selectedIndex: _selectedNavIndex,
+                onItemSelected: (index) {
+                  setState(() => _selectedNavIndex = index);
+                },
+              ))
           : null,
     );
   }

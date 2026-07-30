@@ -64,7 +64,7 @@ class _OwnerFarmsSettingsScreenState extends State<OwnerFarmsSettingsScreen> {
                             FarmInfoCard(isDark: isDark),
                             SizedBox(height: 16),
                             _TabCard(isDark: isDark),
-                             SizedBox(height: 16),
+                            SizedBox(height: 16),
                           ],
                         ),
                       ),
@@ -77,12 +77,14 @@ class _OwnerFarmsSettingsScreenState extends State<OwnerFarmsSettingsScreen> {
         ),
       ),
       bottomNavigationBar: isMobile
-          ? OwnerSidebar(
-              selectedIndex: selectedIndex,
-              onItemSelected: (idx) => setState(() => selectedIndex = idx),
-              isDark: isDark,
-              isMobile: true,
-            )
+          ? SafeArea(
+              top: false,
+              child: OwnerSidebar(
+                selectedIndex: selectedIndex,
+                onItemSelected: (idx) => setState(() => selectedIndex = idx),
+                isDark: isDark,
+                isMobile: true,
+              ))
           : null,
     );
   }
@@ -148,7 +150,8 @@ class FarmInfoCard extends StatelessWidget {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
                 child: Image.asset(
                   'images/farm.jpg',
                   height: imageHeight,
@@ -159,7 +162,8 @@ class FarmInfoCard extends StatelessWidget {
               Container(
                 height: imageHeight,
                 decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(20)),
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -194,7 +198,8 @@ class FarmInfoCard extends StatelessWidget {
                 // Location
                 Row(
                   children: [
-                    const Icon(Icons.location_on, size: 18, color: Colors.green),
+                    const Icon(Icons.location_on,
+                        size: 18, color: Colors.green),
                     const SizedBox(width: 8),
                     Text(
                       "Central Region, Ghana",
@@ -238,7 +243,8 @@ class FarmInfoCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: 0.65,
                     minHeight: 8,
-                    backgroundColor: isDark ? Colors.white10 : Colors.grey.shade300,
+                    backgroundColor:
+                        isDark ? Colors.white10 : Colors.grey.shade300,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       isDark ? Colors.greenAccent : Colors.green,
                     ),
@@ -270,7 +276,8 @@ class FarmInfoCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusTag({required IconData icon, required String label, required Color color}) {
+  Widget _buildStatusTag(
+      {required IconData icon, required String label, required Color color}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -349,7 +356,8 @@ class _TabCardState extends State<_TabCard> {
                   onTap: () => setState(() => selectedIndex = index),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
                     decoration: BoxDecoration(
                       color: isSelected ? activeBg : Colors.transparent,
                       borderRadius: BorderRadius.circular(30),
@@ -419,7 +427,8 @@ class _TabCardState extends State<_TabCard> {
             LinearProgressIndicator(
               value: 0.65,
               minHeight: 8,
-              backgroundColor: widget.isDark ? Colors.white10 : Colors.grey[200],
+              backgroundColor:
+                  widget.isDark ? Colors.white10 : Colors.grey[200],
               valueColor: AlwaysStoppedAnimation<Color>(
                 widget.isDark ? Colors.greenAccent : Colors.green,
               ),
@@ -431,428 +440,452 @@ class _TabCardState extends State<_TabCard> {
   }
 
   Widget _buildUserSettingsContent() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      // User Profile Card - Enhanced
-      Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        color: widget.isDark ? Colors.grey[800] : Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Profile Header with Avatar
-              Row(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: widget.isDark ? Colors.greenAccent : Colors.green,
-                        width: 2,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // User Profile Card - Enhanced
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          color: widget.isDark ? Colors.grey[800] : Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Profile Header with Avatar
+                Row(
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color:
+                              widget.isDark ? Colors.greenAccent : Colors.green,
+                          width: 2,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 28,
+                        backgroundImage: AssetImage("owner/owner.png"),
                       ),
                     ),
-                    child: CircleAvatar(
-                      radius: 28,
-                      backgroundImage: AssetImage("owner/owner.png"),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "John Doe",
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: widget.isDark ? Colors.white : Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: widget.isDark ? Colors.green[900] : Colors.green[100],
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            "Farm Owner",
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "John Doe",
                             style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: widget.isDark ? Colors.greenAccent : Colors.green[800],
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  widget.isDark ? Colors.white : Colors.black,
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: widget.isDark
+                                  ? Colors.green[900]
+                                  : Colors.green[100],
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              "Farm Owner",
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: widget.isDark
+                                    ? Colors.greenAccent
+                                    : Colors.green[800],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.edit,
+                    IconButton(
+                      icon: Icon(
+                        Icons.edit,
+                        color:
+                            widget.isDark ? Colors.greenAccent : Colors.green,
+                      ),
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // Profile Details
+                _buildProfileDetailItem(
+                    Icons.email, "Email", "john@greenvalley.com"),
+                const SizedBox(height: 12),
+                _buildProfileDetailItem(
+                    Icons.phone, "Phone", "+233 24 765 4321"),
+                const SizedBox(height: 12),
+                _buildProfileDetailItem(
+                    Icons.calendar_today, "Member Since", "Jan 2020"),
+                const SizedBox(height: 12),
+                _buildProfileDetailItem(
+                    Icons.login, "Last Login", "Today, 10:30 AM"),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Permissions Card - Enhanced
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          color: widget.isDark ? Colors.grey[800] : Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.security,
+                      size: 24,
                       color: widget.isDark ? Colors.greenAccent : Colors.green,
                     ),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // Profile Details
-              _buildProfileDetailItem(Icons.email, "Email", "john@greenvalley.com"),
-              const SizedBox(height: 12),
-              _buildProfileDetailItem(Icons.phone, "Phone", "+233 24 765 4321"),
-              const SizedBox(height: 12),
-              _buildProfileDetailItem(Icons.calendar_today, "Member Since", "Jan 2020"),
-              const SizedBox(height: 12),
-              _buildProfileDetailItem(Icons.login, "Last Login", "Today, 10:30 AM"),
-            ],
+                    const SizedBox(width: 12),
+                    Text(
+                      "Access Permissions",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: widget.isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildPermissionItem("Access Level", "Administrator",
+                    Icons.admin_panel_settings),
+                const SizedBox(height: 12),
+                _buildPermissionItem(
+                    "Farm Access", "Full Control", Icons.agriculture),
+                const SizedBox(height: 12),
+                _buildPermissionItem(
+                    "Data Access", "Read/Write", Icons.data_usage),
+                const SizedBox(height: 12),
+                _buildPermissionItem(
+                    "User Management", "Add/Remove Users", Icons.people_alt),
+              ],
+            ),
           ),
         ),
-      ),
-      const SizedBox(height: 20),
+        const SizedBox(height: 20),
 
-      // Permissions Card - Enhanced
-      Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        color: widget.isDark ? Colors.grey[800] : Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.security,
-                    size: 24,
-                    color: widget.isDark ? Colors.greenAccent : Colors.green,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Access Permissions",
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: widget.isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _buildPermissionItem("Access Level", "Administrator", Icons.admin_panel_settings),
-              const SizedBox(height: 12),
-              _buildPermissionItem("Farm Access", "Full Control", Icons.agriculture),
-              const SizedBox(height: 12),
-              _buildPermissionItem("Data Access", "Read/Write", Icons.data_usage),
-              const SizedBox(height: 12),
-              _buildPermissionItem("User Management", "Add/Remove Users", Icons.people_alt),
-            ],
+        // Caretakers Card - Enhanced
+        Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-        ),
-      ),
-      const SizedBox(height: 20),
-
-      // Caretakers Card - Enhanced
-      Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        color: widget.isDark ? Colors.grey[800] : Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.people,
-                    size: 24,
-                    color: widget.isDark ? Colors.greenAccent : Colors.green,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    "Assigned Caretakers",
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: widget.isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: Icon(
-                      Icons.add_circle,
+          color: widget.isDark ? Colors.grey[800] : Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.people,
+                      size: 24,
                       color: widget.isDark ? Colors.greenAccent : Colors.green,
                     ),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              _buildCaretakerCard(
-                name: "Kwame Mensah",
-                role: "Senior Caretaker",
-                phone: "+233 24 123 4567",
-                email: "kwame@greenvalley.com",
-                image: "caretakers/kwame.jpg",
-                status: "Active",
-                lastActive: "2 hours ago",
-              ),
-             
-            ],
+                    const SizedBox(width: 12),
+                    Text(
+                      "Assigned Caretakers",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: widget.isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: Icon(
+                        Icons.add_circle,
+                        color:
+                            widget.isDark ? Colors.greenAccent : Colors.green,
+                      ),
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildCaretakerCard(
+                  name: "Kwame Mensah",
+                  role: "Senior Caretaker",
+                  phone: "+233 24 123 4567",
+                  email: "kwame@greenvalley.com",
+                  image: "caretakers/kwame.jpg",
+                  status: "Active",
+                  lastActive: "2 hours ago",
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
 // Helper Widgets for the Enhanced Design
-Widget _buildProfileDetailItem(IconData icon, String label, String value) {
-  return Row(
-    children: [
-      Icon(
-        icon,
-        size: 20,
-        color: widget.isDark ? Colors.white70 : Colors.grey[600],
-      ),
-      const SizedBox(width: 12),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: widget.isDark ? Colors.white60 : Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: widget.isDark ? Colors.white : Colors.black,
-            ),
-          ),
-        ],
-      ),
-    ],
-  );
-}
-
-Widget _buildPermissionItem(String title, String value, IconData icon) {
-  return Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: widget.isDark ? Colors.grey[700] : Colors.grey[100],
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
+  Widget _buildProfileDetailItem(IconData icon, String label, String value) {
+    return Row(
       children: [
         Icon(
           icon,
           size: 20,
-          color: widget.isDark ? Colors.greenAccent : Colors.green,
+          color: widget.isDark ? Colors.white70 : Colors.grey[600],
         ),
         const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: widget.isDark ? Colors.white70 : Colors.grey[600],
-                ),
-              ),
-              Text(
-                value,
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: widget.isDark ? Colors.white : Colors.black,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Icon(
-          Icons.chevron_right,
-          color: widget.isDark ? Colors.white60 : Colors.grey[500],
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildCaretakerCard({
-  required String name,
-  required String role,
-  required String phone,
-  required String email,
-  required String image,
-  required String status,
-  required String lastActive,
-}) {
-  return Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: widget.isDark ? Colors.grey[700] : Colors.grey[50],
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: widget.isDark ? Colors.white60 : Colors.grey[300]!,
-      ),
-    ),
-    child: Column(
-      children: [
-        Row(
-          children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundImage: AssetImage(image),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: widget.isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  Text(
-                    role,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: widget.isDark ? Colors.white70 : Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: status == "Active"
-                    ? (widget.isDark ? Colors.green[900] : Colors.green[50])
-                    : (widget.isDark ? Colors.orange[900] : Colors.orange[50]),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: status == "Active"
-                      ? (widget.isDark ? Colors.greenAccent : Colors.green)
-                      : (widget.isDark ? Colors.orangeAccent : Colors.orange),
-                ),
-              ),
-              child: Text(
-                status,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: status == "Active"
-                      ? (widget.isDark ? Colors.greenAccent : Colors.green[800])
-                      : (widget.isDark ? Colors.orangeAccent : Colors.orange[800]),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildContactInfoItem(Icons.phone, phone),
-            ),
-            Expanded(
-              child: _buildContactInfoItem(Icons.email, email),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Divider(
-          color: widget.isDark ? Colors.grey[600] : Colors.grey[200],
-          height: 1,
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Last active: $lastActive",
+              label,
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 color: widget.isDark ? Colors.white60 : Colors.grey[600],
               ),
             ),
-            Row(
-              children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.message,
-                    size: 20,
-                    color: widget.isDark ? Colors.greenAccent : Colors.green,
-                  ),
-                  onPressed: () {},
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.call,
-                    size: 20,
-                    color: widget.isDark ? Colors.blueAccent : Colors.blue,
-                  ),
-                  onPressed: () {},
-                ),
-              ],
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: widget.isDark ? Colors.white : Colors.black,
+              ),
             ),
           ],
         ),
       ],
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildContactInfoItem(IconData icon, String text) {
-  return Row(
-    children: [
-      Icon(
-        icon,
-        size: 16,
-        color: widget.isDark ? Colors.white70 : Colors.grey[600],
+  Widget _buildPermissionItem(String title, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: widget.isDark ? Colors.grey[700] : Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
       ),
-      const SizedBox(width: 8),
-      Expanded(
-        child: Text(
-          text,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            color: widget.isDark ? Colors.white70 : Colors.grey[600],
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: widget.isDark ? Colors.greenAccent : Colors.green,
           ),
-          overflow: TextOverflow.ellipsis,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: widget.isDark ? Colors.white70 : Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: widget.isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.chevron_right,
+            color: widget.isDark ? Colors.white60 : Colors.grey[500],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCaretakerCard({
+    required String name,
+    required String role,
+    required String phone,
+    required String email,
+    required String image,
+    required String status,
+    required String lastActive,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: widget.isDark ? Colors.grey[700] : Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: widget.isDark ? Colors.white60 : Colors.grey[300]!,
         ),
       ),
-    ],
-  );
-}
+      child: Column(
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundImage: AssetImage(image),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: widget.isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    Text(
+                      role,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color:
+                            widget.isDark ? Colors.white70 : Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: status == "Active"
+                      ? (widget.isDark ? Colors.green[900] : Colors.green[50])
+                      : (widget.isDark
+                          ? Colors.orange[900]
+                          : Colors.orange[50]),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: status == "Active"
+                        ? (widget.isDark ? Colors.greenAccent : Colors.green)
+                        : (widget.isDark ? Colors.orangeAccent : Colors.orange),
+                  ),
+                ),
+                child: Text(
+                  status,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: status == "Active"
+                        ? (widget.isDark
+                            ? Colors.greenAccent
+                            : Colors.green[800])
+                        : (widget.isDark
+                            ? Colors.orangeAccent
+                            : Colors.orange[800]),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildContactInfoItem(Icons.phone, phone),
+              ),
+              Expanded(
+                child: _buildContactInfoItem(Icons.email, email),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Divider(
+            color: widget.isDark ? Colors.grey[600] : Colors.grey[200],
+            height: 1,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Last active: $lastActive",
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: widget.isDark ? Colors.white60 : Colors.grey[600],
+                ),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.message,
+                      size: 20,
+                      color: widget.isDark ? Colors.greenAccent : Colors.green,
+                    ),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.call,
+                      size: 20,
+                      color: widget.isDark ? Colors.blueAccent : Colors.blue,
+                    ),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactInfoItem(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: widget.isDark ? Colors.white70 : Colors.grey[600],
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: widget.isDark ? Colors.white70 : Colors.grey[600],
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildDataSettingsContent() {
     return Column(
@@ -1135,6 +1168,3 @@ Widget _buildContactInfoItem(IconData icon, String text) {
     );
   }
 }
-
-  
-

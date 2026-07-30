@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -6,9 +8,10 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/technician_header.dart';
 import '../../core/widgets/technician_mobile_bottom_nav.dart';
 import '../../core/widgets/technician_sidebar.dart';
-import '../../data/mock_farm_data.dart';
 import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/widgets/skeleton_loader.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Sensor Management Screen for Technicians
 /// Allows viewing, calibrating, and managing all farm sensors
@@ -20,11 +23,156 @@ class SensorManagementScreen extends ConsumerStatefulWidget {
       _SensorManagementScreenState();
 }
 
-class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen> {
+class _SensorManagementScreenState
+    extends ConsumerState<SensorManagementScreen> {
   int _selectedNavIndex = 1;
   String _selectedType = 'All';
   String _selectedStatus = 'All';
   String _searchQuery = '';
+  String _selectedFarmId = 'All';
+  final SuperAdminApiService _api = SuperAdminApiService();
+  Timer? _refreshTimer;
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<Map<String, dynamic>> _backendSensors = [];
+  List<Map<String, dynamic>> _farms = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSensorData();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _loadSensorData(silent: true),
+    );
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadSensorData({bool silent = false}) async {
+    if (!silent && mounted) setState(() => _isLoading = true);
+    try {
+      final results = await Future.wait([
+        _api.getSensors(),
+        _api.getFarms(),
+        _api.getUsers(),
+      ]);
+      if (!mounted) return;
+      final user = ref.read(currentUserProvider);
+      Map<String, dynamic>? userRecord;
+      for (final item in results[2]) {
+        if (_value(item, ['id', r'$id']) == user?.id ||
+            _value(item, ['email']) == user?.email) {
+          userRecord = item;
+          break;
+        }
+      }
+      final assignedFarmIds = <String>{};
+      final assignedValues = userRecord?['assignedFarmIds'] ??
+          userRecord?['assigned_farm_ids'] ??
+          userRecord?['assigned_farms'];
+      if (assignedValues is List) {
+        assignedFarmIds.addAll(assignedValues.map((value) => value.toString()));
+      }
+      if (assignedFarmIds.isEmpty && user?.farmId != null) {
+        assignedFarmIds.add(user!.farmId!);
+      }
+      bool assigned(Map<String, dynamic> item) {
+        final farmId = _value(item, ['farm_id', 'farmId', 'farmID']);
+        return assignedFarmIds.isEmpty ||
+            farmId.isEmpty ||
+            assignedFarmIds.contains(farmId);
+      }
+
+      setState(() {
+        _backendSensors = results[0].where(assigned).toList();
+        _farms = results[1].where((farm) {
+          final id = _value(farm, ['id', r'$id']);
+          return assignedFarmIds.isEmpty || assignedFarmIds.contains(id);
+        }).toList();
+        _isLoading = false;
+        _errorMessage = null;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = error.toString();
+      });
+    }
+  }
+
+  String _value(Map<String, dynamic> data, List<String> keys,
+      [String fallback = '']) {
+    for (final key in keys) {
+      final value = data[key];
+      if (value != null && value.toString().trim().isNotEmpty)
+        return value.toString();
+    }
+    return fallback;
+  }
+
+  List<Map<String, dynamic>> _mappedSensors() {
+    return _backendSensors.map((sensor) {
+      final status = _value(sensor, ['status'], 'offline').toLowerCase();
+      final normalizedStatus =
+          status == 'online' || status == 'active' || status == 'operational'
+              ? 'normal'
+              : status == 'warning'
+                  ? 'warning'
+                  : status == 'alert'
+                      ? 'alert'
+                      : 'offline';
+      final type = _value(sensor,
+              ['sensor_type', 'sensortype', 'type', 'category'], 'sensor')
+          .toLowerCase();
+      final value = sensor['latest_value'] ??
+          sensor['value'] ??
+          sensor['reading'] ??
+          '--';
+      final farmId = _value(sensor, ['farm_id', 'farmId', 'farmID']);
+      final farm = _farms.cast<Map<String, dynamic>?>().firstWhere(
+            (item) => item != null && _value(item, ['id', r'$id']) == farmId,
+            orElse: () => null,
+          );
+      final farmName = farm == null
+          ? _value(sensor, ['farm_name'], 'Assigned farm')
+          : _value(farm, ['name', 'farm_name'], 'Assigned farm');
+      final last = DateTime.tryParse(
+              _value(sensor, ['last_seen_at', 'updated_at', r'$updatedAt'])) ??
+          DateTime.now();
+      final color = normalizedStatus == 'normal'
+          ? AppColors.success
+          : normalizedStatus == 'warning'
+              ? AppColors.warning
+              : normalizedStatus == 'alert'
+                  ? AppColors.error
+                  : AppColors.textSecondary;
+      return {
+        'id': _value(
+            sensor, ['serial_number', 'serialNumber', 'id', r'$id'], 'Sensor'),
+        'name':
+            _value(sensor, ['name', 'sensor_name', 'serial_number'], 'Sensor'),
+        'type': type,
+        'status': normalizedStatus,
+        'color': color,
+        'icon': Icons.sensors,
+        'value': value,
+        'unit': _value(sensor, ['unit', 'measurement_unit']),
+        'location': farmName,
+        'farmId': farmId,
+        'farmName': farmName,
+        'lastReading': last,
+        'lastCalibrated': DateTime.tryParse(
+                _value(sensor, ['last_maintenance_date', 'created_at'])) ??
+            last,
+      };
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,38 +183,117 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
     final authState = ref.watch(authProvider);
     final userName = authState.user?.name ?? 'Technician';
     final userEmail = authState.user?.email ?? 'technician@farmestates.com';
-    final sensors = MockFarmData.getAllSensors();
+    final sensors = _mappedSensors();
 
     // Filter sensors
     final filteredSensors = sensors.where((sensor) {
-      if (_selectedType != 'All' && sensor['type'] != _selectedType) return false;
-      if (_selectedStatus != 'All' && sensor['status'] != _selectedStatus) return false;
-      if (_searchQuery.isNotEmpty && 
-          !sensor['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase())) {
+      if (_selectedFarmId != 'All' && sensor['farmId'] != _selectedFarmId) {
+        return false;
+      }
+      if (_selectedType != 'All' && sensor['type'] != _selectedType)
+        return false;
+      if (_selectedStatus != 'All' && sensor['status'] != _selectedStatus)
+        return false;
+      if (_searchQuery.isNotEmpty &&
+          !sensor['name']
+              .toString()
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase())) {
         return false;
       }
       return true;
     }).toList();
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: isMobile
-          ? _buildMobileLayout(isDark, userName, isTablet, sensors, filteredSensors)
-          : _buildDesktopLayout(
-              isDark,
-              userName,
-              userEmail,
-              isTablet,
-              sensors,
-              filteredSensors,
-            ),
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      body: _isLoading
+          ? _buildLoadingShell(isDark, isMobile, userName, userEmail)
+          : _errorMessage != null
+              ? _buildErrorShell(isDark, isMobile, userName, userEmail)
+              : isMobile
+                  ? _buildMobileLayout(
+                      isDark, userName, isTablet, sensors, filteredSensors)
+                  : _buildDesktopLayout(
+                      isDark,
+                      userName,
+                      userEmail,
+                      isTablet,
+                      sensors,
+                      filteredSensors,
+                    ),
       bottomNavigationBar: isMobile
-          ? TechnicianMobileBottomNav(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
-            )
+          ? SafeArea(
+              top: false,
+              child: TechnicianMobileBottomNav(
+                selectedIndex: _selectedNavIndex,
+                onItemSelected: (index) =>
+                    setState(() => _selectedNavIndex = index),
+              ))
           : null,
     );
+  }
+
+  Widget _buildLoadingShell(
+      bool isDark, bool isMobile, String userName, String userEmail) {
+    final content = const Center(child: AdminDataSkeleton(rowCount: 5));
+    if (isMobile) {
+      return Column(children: [
+        TechnicianHeader(userName: userName, onNotificationTap: () {}),
+        Expanded(child: content),
+      ]);
+    }
+    return Row(children: [
+      TechnicianSidebar(
+        selectedIndex: _selectedNavIndex,
+        onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+        userName: userName,
+        userEmail: userEmail,
+        userRole: 'Technician',
+      ),
+      Expanded(
+          child: Column(children: [
+        TechnicianHeader(userName: userName, onNotificationTap: () {}),
+        Expanded(child: content),
+      ])),
+    ]);
+  }
+
+  Widget _buildErrorShell(
+      bool isDark, bool isMobile, String userName, String userEmail) {
+    final content = Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+      const Icon(Icons.cloud_off_outlined, size: 42),
+      const SizedBox(height: AppSpacing.md),
+      Text('Unable to load sensors', style: AppTypography.h6),
+      const SizedBox(height: AppSpacing.sm),
+      Text(_errorMessage ?? 'Please try again.'),
+      const SizedBox(height: AppSpacing.md),
+      ElevatedButton.icon(
+          onPressed: _loadSensorData,
+          icon: const Icon(Icons.refresh),
+          label: const Text('Try again')),
+    ]));
+    if (isMobile) {
+      return Column(children: [
+        TechnicianHeader(userName: userName, onNotificationTap: () {}),
+        Expanded(child: content),
+      ]);
+    }
+    return Row(children: [
+      TechnicianSidebar(
+        selectedIndex: _selectedNavIndex,
+        onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+        userName: userName,
+        userEmail: userEmail,
+        userRole: 'Technician',
+      ),
+      Expanded(
+          child: Column(children: [
+        TechnicianHeader(userName: userName, onNotificationTap: () {}),
+        Expanded(child: content),
+      ])),
+    ]);
   }
 
   Widget _buildDesktopLayout(
@@ -90,7 +317,9 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
           child: Column(
             children: [
               TechnicianHeader(userName: userName, onNotificationTap: () {}),
-              Expanded(child: _buildPageBody(isDark, false, isTablet, sensors, filteredSensors)),
+              Expanded(
+                  child: _buildPageBody(
+                      isDark, false, isTablet, sensors, filteredSensors)),
             ],
           ),
         ),
@@ -108,7 +337,9 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
     return Column(
       children: [
         TechnicianHeader(userName: userName, onNotificationTap: () {}),
-        Expanded(child: _buildPageBody(isDark, true, isTablet, sensors, filteredSensors)),
+        Expanded(
+            child: _buildPageBody(
+                isDark, true, isTablet, sensors, filteredSensors)),
       ],
     );
   }
@@ -121,152 +352,151 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
     List<dynamic> filteredSensors,
   ) {
     return Column(
-        children: [
-          Container(
-            padding: EdgeInsets.fromLTRB(
-              isMobile ? AppSpacing.md : AppSpacing.lg,
-              isMobile ? AppSpacing.md : AppSpacing.lg,
-              isMobile ? AppSpacing.md : AppSpacing.lg,
-              AppSpacing.sm,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Sensor Management',
-                    style: AppTypography.h5.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontSize: isMobile ? 18 : 20,
-                    ),
+      children: [
+        Container(
+          padding: EdgeInsets.fromLTRB(
+            isMobile ? AppSpacing.md : AppSpacing.lg,
+            isMobile ? AppSpacing.md : AppSpacing.lg,
+            isMobile ? AppSpacing.md : AppSpacing.lg,
+            AppSpacing.sm,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Sensor Management',
+                  style: AppTypography.h5.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontSize: isMobile ? 18 : 20,
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.refresh),
-                  onPressed: () => setState(() {}),
-                  tooltip: 'Refresh Sensors',
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline),
-                  onPressed: () => _showAddSensorDialog(context, isDark),
-                  tooltip: 'Add Sensor',
-                ),
-              ],
-            ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: _loadSensorData,
+                tooltip: 'Refresh Sensors',
+              ),
+            ],
           ),
-          Expanded(
-            child: CustomScrollView(
-              slivers: [
+        ),
+        Expanded(
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    isMobile ? AppSpacing.md : AppSpacing.lg,
+                    AppSpacing.xs,
+                    isMobile ? AppSpacing.md : AppSpacing.lg,
+                    0,
+                  ),
+                  child: _buildFilterPanel(isDark, isMobile),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(
+                    isMobile ? AppSpacing.md : AppSpacing.lg,
+                    AppSpacing.md,
+                    isMobile ? AppSpacing.md : AppSpacing.lg,
+                    AppSpacing.sm,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          '${filteredSensors.length} Sensors',
+                          style: AppTypography.bodyLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
+                            fontSize: isMobile ? 15 : 16,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Flexible(
+                        child: Text(
+                          '${sensors.where((s) => s['status'] == 'normal').length} Active',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w600,
+                            fontSize: isMobile ? 13 : 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (filteredSensors.isEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(
                       isMobile ? AppSpacing.md : AppSpacing.lg,
-                      AppSpacing.xs,
-                      isMobile ? AppSpacing.md : AppSpacing.lg,
-                      0,
-                    ),
-                    child: _buildFilterPanel(isDark, isMobile),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Container(
-                    padding: EdgeInsets.fromLTRB(
-                      isMobile ? AppSpacing.md : AppSpacing.lg,
-                      AppSpacing.md,
-                      isMobile ? AppSpacing.md : AppSpacing.lg,
-                      AppSpacing.sm,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            '${filteredSensors.length} Sensors',
-                            style: AppTypography.bodyLarge.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? Colors.white : AppColors.textPrimary,
-                              fontSize: isMobile ? 15 : 16,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Flexible(
-                          child: Text(
-                            '${sensors.where((s) => s['status'] == 'normal').length} Active',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w600,
-                              fontSize: isMobile ? 13 : 14,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                if (filteredSensors.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        isMobile ? AppSpacing.md : AppSpacing.lg,
-                        AppSpacing.sm,
-                        isMobile ? AppSpacing.md : AppSpacing.lg,
-                        AppSpacing.lg,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.surfaceDark : Colors.white,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                          border: Border.all(
-                            color: isDark ? Colors.white10 : AppColors.neutral200,
-                          ),
-                        ),
-                        child: Text(
-                          'No sensors match the current filters.',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: isDark ? Colors.white70 : AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  SliverPadding(
-                    padding: EdgeInsets.fromLTRB(
-                      isMobile ? AppSpacing.md : AppSpacing.lg,
                       AppSpacing.sm,
                       isMobile ? AppSpacing.md : AppSpacing.lg,
-                      isMobile ? AppSpacing.md : AppSpacing.lg,
+                      AppSpacing.lg,
                     ),
-                    sliver: SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
-                        mainAxisExtent: isMobile ? 330 : (isTablet ? 368 : 356),
-                        crossAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
-                        mainAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.surfaceDark : Colors.white,
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusLg),
+                        border: Border.all(
+                          color: isDark ? Colors.white10 : AppColors.neutral200,
+                        ),
                       ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          return _buildSensorCard(
-                            filteredSensors[index],
-                            isDark,
-                            isMobile: isMobile,
-                            isTablet: isTablet,
-                          );
-                        },
-                        childCount: filteredSensors.length,
+                      child: Text(
+                        'No sensors match the current filters.',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color:
+                              isDark ? Colors.white70 : AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ),
-              ],
-            ),
+                )
+              else
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    isMobile ? AppSpacing.md : AppSpacing.lg,
+                    AppSpacing.sm,
+                    isMobile ? AppSpacing.md : AppSpacing.lg,
+                    isMobile ? AppSpacing.md : AppSpacing.lg,
+                  ),
+                  sliver: SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
+                      mainAxisExtent: isMobile ? 330 : (isTablet ? 368 : 356),
+                      crossAxisSpacing:
+                          isMobile ? AppSpacing.sm : AppSpacing.md,
+                      mainAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return _buildSensorCard(
+                          filteredSensors[index],
+                          isDark,
+                          isMobile: isMobile,
+                          isTablet: isTablet,
+                        );
+                      },
+                      childCount: filteredSensors.length,
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ],
-      );
+        ),
+      ],
+    );
   }
 
   Widget _buildFilterPanel(bool isDark, bool isMobile) {
@@ -278,6 +508,7 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
     final activeFilterCount = [
       if (_selectedType != 'All') _selectedType,
       if (_selectedStatus != 'All') _selectedStatus,
+      if (_selectedFarmId != 'All') _selectedFarmId,
       if (_searchQuery.trim().isNotEmpty) 'Search',
     ].length;
 
@@ -318,7 +549,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                     Text(
                       'Refine the sensor list by name, device type, or operating status.',
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark ? Colors.white70 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -326,7 +558,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
               ),
               if (activeFilterCount > 0)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withOpacity(isDark ? 0.18 : 0.10),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
@@ -368,7 +601,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                       onPressed: () => setState(() => _searchQuery = ''),
                       icon: Icon(
                         Icons.close_rounded,
-                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
                         size: 18,
                       ),
                     )
@@ -393,7 +627,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                 ),
               ),
               filled: true,
-              fillColor: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+              fillColor:
+                  isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
                 vertical: isMobile ? 14 : 16,
@@ -405,9 +640,33 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
               ? Column(
                   children: [
                     _buildFilterDropdown(
+                      'Farm',
+                      _selectedFarmId,
+                      [
+                        'All',
+                        ..._farms
+                            .map((farm) => _value(farm, ['id', r'$id']))
+                            .where((id) => id.isNotEmpty),
+                      ],
+                      (value) =>
+                          setState(() => _selectedFarmId = value ?? 'All'),
+                      isDark,
+                      isMobile: true,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _buildFilterDropdown(
                       'Sensor Type',
                       _selectedType,
-                      ['All', 'temperature', 'humidity', 'ph', 'ec', 'tds', 'co2', 'distance'],
+                      [
+                        'All',
+                        'temperature',
+                        'humidity',
+                        'ph',
+                        'ec',
+                        'tds',
+                        'co2',
+                        'distance'
+                      ],
                       (value) => setState(() => _selectedType = value!),
                       isDark,
                       isMobile: true,
@@ -428,9 +687,34 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                   children: [
                     Expanded(
                       child: _buildFilterDropdown(
+                        'Farm',
+                        _selectedFarmId,
+                        [
+                          'All',
+                          ..._farms
+                              .map((farm) => _value(farm, ['id', r'$id']))
+                              .where((id) => id.isNotEmpty),
+                        ],
+                        (value) =>
+                            setState(() => _selectedFarmId = value ?? 'All'),
+                        isDark,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: _buildFilterDropdown(
                         'Sensor Type',
                         _selectedType,
-                        ['All', 'temperature', 'humidity', 'ph', 'ec', 'tds', 'co2', 'distance'],
+                        [
+                          'All',
+                          'temperature',
+                          'humidity',
+                          'ph',
+                          'ec',
+                          'tds',
+                          'co2',
+                          'distance'
+                        ],
                         (value) => setState(() => _selectedType = value!),
                         isDark,
                       ),
@@ -452,12 +736,14 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
     );
   }
 
-  Widget _buildSensorCard(Map<String, dynamic> sensor, bool isDark, {bool isMobile = false, bool isTablet = false}) {
+  Widget _buildSensorCard(Map<String, dynamic> sensor, bool isDark,
+      {bool isMobile = false, bool isTablet = false}) {
     final color = sensor['color'] as Color;
     final status = sensor['status'] as String;
     final statusColor = _sensorStatusColor(status);
     final lastCalibrated = sensor['lastCalibrated'] as DateTime;
-    final daysSinceCalibration = DateTime.now().difference(lastCalibrated).inDays;
+    final daysSinceCalibration =
+        DateTime.now().difference(lastCalibrated).inDays;
     final verticalGap = isMobile ? 6.0 : AppSpacing.sm;
     final sectionGap = isMobile ? 8.0 : AppSpacing.md;
 
@@ -513,7 +799,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                           sensor['name'],
                           style: AppTypography.bodyMedium.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
                             fontSize: isMobile ? 12 : 14,
                           ),
                           maxLines: 1,
@@ -533,7 +820,9 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                                 child: Text(
                                   _formatSensorType(sensor['type'] as String),
                                   style: AppTypography.caption.copyWith(
-                                    color: isDark ? Colors.white60 : AppColors.textSecondary,
+                                    color: isDark
+                                        ? Colors.white60
+                                        : AppColors.textSecondary,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -563,7 +852,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                       ],
                     ),
                   ),
-                  _buildStatusBadge(status, isDark, isMobile: isMobile, isTablet: isTablet),
+                  _buildStatusBadge(status, isDark,
+                      isMobile: isMobile, isTablet: isTablet),
                 ],
               ),
               SizedBox(height: sectionGap),
@@ -617,7 +907,9 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                               Text(
                                 'Current reading',
                                 style: AppTypography.caption.copyWith(
-                                  color: isDark ? Colors.white70 : AppColors.textSecondary,
+                                  color: isDark
+                                      ? Colors.white70
+                                      : AppColors.textSecondary,
                                   fontWeight: FontWeight.w600,
                                   fontSize: isMobile ? 9 : 11,
                                 ),
@@ -634,7 +926,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                                   style: AppTypography.h4.copyWith(
                                     fontWeight: FontWeight.w800,
                                     color: color,
-                                    fontSize: isMobile ? 20 : (isTablet ? 24 : 26),
+                                    fontSize:
+                                        isMobile ? 20 : (isTablet ? 24 : 26),
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -668,7 +961,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                         ),
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(isDark ? 0.16 : 0.03),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
                         ),
                         child: Text(
                           'LIVE',
@@ -696,7 +990,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                     child: Text(
                       sensor['location'],
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
                         fontSize: isMobile ? 9 : 11,
                       ),
                       maxLines: 1,
@@ -730,7 +1025,9 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                 decoration: BoxDecoration(
                   border: Border(
                     top: BorderSide(
-                      color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
+                      color: isDark
+                          ? Colors.white10
+                          : Colors.black.withOpacity(0.06),
                     ),
                   ),
                 ),
@@ -746,7 +1043,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                             style: TextStyle(fontSize: 11),
                           ),
                           style: FilledButton.styleFrom(
-                            foregroundColor: isDark ? Colors.white : AppColors.textPrimary,
+                            foregroundColor:
+                                isDark ? Colors.white : AppColors.textPrimary,
                             backgroundColor: isDark
                                 ? Colors.white.withOpacity(0.08)
                                 : AppColors.neutral100,
@@ -755,7 +1053,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                               horizontal: AppSpacing.xs,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusMd),
                             ),
                           ),
                         ),
@@ -773,7 +1072,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusMd),
                             ),
                           ),
                           child: const Icon(Icons.tune, size: 16),
@@ -793,12 +1093,14 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                             side: BorderSide(color: color.withOpacity(0.7)),
                             padding: EdgeInsets.symmetric(
                               vertical: isMobile ? 7 : 8,
-                              horizontal: isMobile ? AppSpacing.xs : AppSpacing.sm,
+                              horizontal:
+                                  isMobile ? AppSpacing.xs : AppSpacing.sm,
                             ),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusMd),
                             ),
                           ),
                         ),
@@ -807,22 +1109,26 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                       Expanded(
                         child: FilledButton.tonalIcon(
                           onPressed: () => _showSensorDetails(sensor, isDark),
-                          icon: Icon(Icons.memory_rounded, size: isMobile ? 14 : 16),
+                          icon: Icon(Icons.memory_rounded,
+                              size: isMobile ? 14 : 16),
                           label: Text(
                             'Inspect',
                             style: TextStyle(fontSize: isMobile ? 11 : 12),
                           ),
                           style: FilledButton.styleFrom(
-                            foregroundColor: isDark ? Colors.white : AppColors.textPrimary,
+                            foregroundColor:
+                                isDark ? Colors.white : AppColors.textPrimary,
                             backgroundColor: isDark
                                 ? Colors.white.withOpacity(0.08)
                                 : AppColors.neutral100,
                             padding: EdgeInsets.symmetric(
                               vertical: isMobile ? 7 : 8,
-                              horizontal: isMobile ? AppSpacing.xs : AppSpacing.sm,
+                              horizontal:
+                                  isMobile ? AppSpacing.xs : AppSpacing.sm,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusMd),
                             ),
                           ),
                         ),
@@ -880,7 +1186,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
     );
   }
 
-  Widget _buildStatusBadge(String status, bool isDark, {bool isMobile = false, bool isTablet = false}) {
+  Widget _buildStatusBadge(String status, bool isDark,
+      {bool isMobile = false, bool isTablet = false}) {
     final color = _sensorStatusColor(status);
 
     return Container(
@@ -980,7 +1287,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
             horizontal: isMobile ? AppSpacing.sm : AppSpacing.md,
           ),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+            color:
+                isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             border: Border.all(
               color: isDark ? Colors.white10 : AppColors.neutral200,
@@ -993,7 +1301,13 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                   (item) => DropdownMenuItem(
                     value: item,
                     child: Text(
-                      item,
+                      _farms.any((farm) => _value(farm, ['id', r'$id']) == item)
+                          ? _value(
+                              _farms.firstWhere((farm) =>
+                                  _value(farm, ['id', r'$id']) == item),
+                              ['name', 'farm_name'],
+                              item)
+                          : item,
                       style: TextStyle(
                         color: isDark ? Colors.white : AppColors.textPrimary,
                         fontSize: isMobile ? 12 : 13,
@@ -1029,7 +1343,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
     final accent = sensor['color'] as Color? ?? Colors.teal;
     final statusColor = _sensorStatusColor(sensor['status'] as String);
     final lastCalibrated = sensor['lastCalibrated'] as DateTime;
-    final daysSinceCalibration = DateTime.now().difference(lastCalibrated).inDays;
+    final daysSinceCalibration =
+        DateTime.now().difference(lastCalibrated).inDays;
     final isCalibrationDue = daysSinceCalibration >= 14;
 
     showDialog(
@@ -1063,7 +1378,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                   const SizedBox(height: AppSpacing.md),
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.md),
+                    padding: EdgeInsets.all(
+                        isMobile ? AppSpacing.md : AppSpacing.md),
                     decoration: BoxDecoration(
                       color: isDark
                           ? Colors.white.withOpacity(0.04)
@@ -1081,7 +1397,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                           height: isMobile ? 44 : 52,
                           decoration: BoxDecoration(
                             color: accent.withOpacity(isDark ? 0.22 : 0.12),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
                           ),
                           child: Icon(
                             sensor['icon'] as IconData,
@@ -1097,7 +1414,9 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                               Text(
                                 'Current Reading',
                                 style: AppTypography.bodySmall.copyWith(
-                                  color: isDark ? Colors.white70 : AppColors.textSecondary,
+                                  color: isDark
+                                      ? Colors.white70
+                                      : AppColors.textSecondary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -1105,7 +1424,9 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                               Text(
                                 '${sensor['value']} ${sensor['unit']}',
                                 style: AppTypography.h4.copyWith(
-                                  color: isDark ? Colors.white : AppColors.textPrimary,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary,
                                   fontWeight: FontWeight.w700,
                                   height: 1,
                                 ),
@@ -1114,7 +1435,9 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                               Text(
                                 'Last calibrated ${DateFormat('MMM dd, yyyy').format(lastCalibrated)}',
                                 style: AppTypography.bodySmall.copyWith(
-                                  color: isDark ? Colors.white70 : AppColors.textSecondary,
+                                  color: isDark
+                                      ? Colors.white70
+                                      : AppColors.textSecondary,
                                 ),
                               ),
                             ],
@@ -1128,10 +1451,14 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                     isDark,
                     [
                       _SensorDetailField('Sensor ID', sensor['id'] as String),
-                      _SensorDetailField('Type', _formatSensorType(sensor['type'] as String)),
-                      _SensorDetailField('Location', sensor['location'] as String),
-                      _SensorDetailField('Status', (sensor['status'] as String).toUpperCase()),
-                      _SensorDetailField('Calibration Age', '$daysSinceCalibration days ago'),
+                      _SensorDetailField(
+                          'Type', _formatSensorType(sensor['type'] as String)),
+                      _SensorDetailField(
+                          'Location', sensor['location'] as String),
+                      _SensorDetailField(
+                          'Status', (sensor['status'] as String).toUpperCase()),
+                      _SensorDetailField(
+                          'Calibration Age', '$daysSinceCalibration days ago'),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -1139,7 +1466,9 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                     width: double.infinity,
                     padding: const EdgeInsets.all(AppSpacing.sm),
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.04)
+                          : AppColors.neutral50,
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                       border: Border.all(
                         color: isDark ? Colors.white10 : AppColors.neutral200,
@@ -1151,7 +1480,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                         Text(
                           'Technician Notes',
                           style: AppTypography.bodyMedium.copyWith(
-                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -1162,7 +1492,9 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                             isCalibrationDue: isCalibrationDue,
                           ),
                           style: AppTypography.bodySmall.copyWith(
-                            color: isDark ? Colors.white70 : AppColors.textSecondary,
+                            color: isDark
+                                ? Colors.white70
+                                : AppColors.textSecondary,
                             height: 1.3,
                           ),
                         ),
@@ -1176,7 +1508,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                         child: FilledButton.tonal(
                           onPressed: () => Navigator.pop(context),
                           style: FilledButton.styleFrom(
-                            foregroundColor: isDark ? Colors.white : AppColors.textPrimary,
+                            foregroundColor:
+                                isDark ? Colors.white : AppColors.textPrimary,
                             backgroundColor: isDark
                                 ? Colors.white.withOpacity(0.08)
                                 : AppColors.neutral100,
@@ -1273,7 +1606,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                     Text(
                       '${sensor['id']} | ${sensor['location']}',
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark ? Colors.white70 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
                         height: 1.4,
                       ),
                     ),
@@ -1338,7 +1672,9 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
               child: Container(
                 padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+                  color: isDark
+                      ? Colors.white.withOpacity(0.04)
+                      : AppColors.neutral50,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   border: Border.all(
                     color: isDark ? Colors.white10 : AppColors.neutral200,
@@ -1350,7 +1686,8 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
                     Text(
                       field.label,
                       style: AppTypography.caption.copyWith(
-                        color: isDark ? Colors.white60 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1403,7 +1740,7 @@ class _SensorManagementScreenState extends ConsumerState<SensorManagementScreen>
   void _showAddSensorDialog(BuildContext context, bool isDark) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

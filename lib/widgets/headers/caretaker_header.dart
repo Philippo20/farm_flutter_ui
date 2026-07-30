@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
+import '../../core/widgets/adaptive_logout_confirmation.dart';
 import '../../core/widgets/notification_center.dart';
 import '../dialogs/user_profile_popup.dart'; // Import the new popup
 import '../../screens/caretaker/care_taker_settings.dart';
@@ -378,89 +379,11 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
   }
 
 // Logout Confirmation (updated)
-  void _showLogoutConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: isDark ? Colors.grey[900] : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 350,
-              minWidth: 280,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.logout_rounded,
-                    size: 48,
-                    color: Colors.redAccent,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Logout",
-                    style: GoogleFonts.poppins(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Are you sure you want to logout?",
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: isDark ? Colors.white70 : Colors.grey[600],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text(
-                          "Cancel",
-                          style: GoogleFonts.poppins(
-                            color: isDark ? Colors.white70 : Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          // Perform actual logout logic
-                          _performLogout(context);
-                        },
-                        child: const Text("Logout"),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+  Future<void> _showLogoutConfirmation(BuildContext context) async {
+    final confirmed = await showAdaptiveLogoutConfirmation(context);
+    if (confirmed && context.mounted) {
+      _performLogout(context);
+    }
   }
 
   void _performLogout(BuildContext context) {
@@ -490,12 +413,15 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmall = screenWidth < 600;
     final isVerySmall = screenWidth < 400;
+    final statusBarHeight = isSmall ? MediaQuery.of(context).padding.top : 0.0;
 
     return Container(
-      height: isSmall ? 150 : preferredSize.height,
-      padding: EdgeInsets.symmetric(
-        horizontal: isSmall ? 16 : 24,
-        vertical: 8,
+      height: isSmall ? 150 + statusBarHeight : preferredSize.height,
+      padding: EdgeInsets.only(
+        left: isSmall ? 16 : 24,
+        right: isSmall ? 16 : 24,
+        top: 8 + statusBarHeight,
+        bottom: 8,
       ),
       decoration: BoxDecoration(
         color: Colors.transparent,

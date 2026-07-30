@@ -7,8 +7,11 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/farm_manager_sidebar.dart';
 import '../../core/widgets/farm_manager_header.dart';
 import '../../core/widgets/farm_manager_mobile_drawer.dart';
+import '../../core/widgets/adaptive_logout_confirmation.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Farm Manager Settings Screen
 /// Personal preferences, notifications, farm defaults, and account settings
@@ -22,9 +25,15 @@ class FarmManagerSettingsScreen extends ConsumerStatefulWidget {
 
 class _FarmManagerSettingsScreenState
     extends ConsumerState<FarmManagerSettingsScreen> {
+  final SuperAdminApiService _api = SuperAdminApiService();
   int _selectedNavIndex = 8;
   final _scrollController = ScrollController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final List<Map<String, dynamic>> _farms = [];
+  Map<String, dynamic> _systemConfig = {};
+  bool _isLoading = true;
+  bool _isSaving = false;
+  String? _errorMessage;
 
   // ── Settings State ──────────────────────────────────────────────────────
 
@@ -39,8 +48,8 @@ class _FarmManagerSettingsScreenState
   bool _smsNotifications = false;
 
   // Farm Defaults
-  String _defaultFarm = 'Green Valley Farm';
-  String _currency = 'GH₵ (Ghana Cedis)';
+  String _defaultFarm = 'All Farms';
+  String _currency = 'GHS (Ghana Cedi)';
   String _weightUnit = 'Kilograms (kg)';
   String _dateFormat = 'DD/MM/YYYY';
 
@@ -53,6 +62,147 @@ class _FarmManagerSettingsScreenState
   bool _compactView = false;
   bool _showWeather = true;
   bool _showQuickActions = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  String _value(Map<String, dynamic> doc, List<String> keys,
+      {String fallback = ''}) {
+    for (final key in keys) {
+      final value = doc[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString();
+      }
+    }
+    return fallback;
+  }
+
+  bool _boolValue(Map<String, dynamic> doc, String key, bool fallback) {
+    final value = doc[key];
+    if (value is bool) return value;
+    if (value is String) return value.toLowerCase() == 'true';
+    return fallback;
+  }
+
+  bool _isCurrentManagerFarm(Map<String, dynamic> farm) {
+    final user = ref.read(authProvider).user;
+    if (user == null) return true;
+    final manager = _value(farm, ['farm_manager_id', 'farmManagerId']);
+    return manager.isEmpty ||
+        manager == 'Unassigned' ||
+        manager == user.id ||
+        manager == user.email ||
+        manager == user.name;
+  }
+
+  List<String> get _farmOptions {
+    final names = _farms
+        .where(_isCurrentManagerFarm)
+        .map((farm) => _value(farm, ['name', 'farm_name'], fallback: 'Farm'))
+        .where((name) => name.trim().isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+    return ['All Farms', ...names];
+  }
+
+  String _currencyLabel(String code) {
+    switch (code) {
+      case 'USD':
+        return 'USD (US Dollar)';
+      case 'EUR':
+        return 'EUR (Euro)';
+      case 'GBP':
+        return 'GBP (British Pound)';
+      case 'GHS':
+      default:
+        return 'GHS (Ghana Cedi)';
+    }
+  }
+
+  String _currencyCode(String label) => label.split(' ').first;
+
+  int get _sessionTimeoutMinutes {
+    final value = _systemConfig['session_timeout'];
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? '30') ?? 30;
+  }
+
+  void _applySystemConfig(Map<String, dynamic> config) {
+    _systemConfig = Map<String, dynamic>.from(config);
+    _emailNotifications =
+        _boolValue(config, 'email_notifications', _emailNotifications);
+    _smsNotifications =
+        _boolValue(config, 'sms_notifications', _smsNotifications);
+    _twoFactorAuth = _boolValue(config, 'two_factor_auth', _twoFactorAuth);
+    _sessionTimeout = _sessionTimeoutMinutes > 0;
+    _currency = _currencyLabel(
+      _value(config, ['currency_code'], fallback: 'GHS'),
+    );
+  }
+
+  Future<void> _loadSettings() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final config = await _api.getSystemConfig();
+      final farms = await _api.getFarms();
+      if (!mounted) return;
+      setState(() {
+        _applySystemConfig(config);
+        _farms
+          ..clear()
+          ..addAll(farms);
+        if (!_farmOptions.contains(_defaultFarm)) {
+          _defaultFarm = _farmOptions.first;
+        }
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = error.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveSystemConfig(Map<String, dynamic> patch) async {
+    final user = ref.read(authProvider).user;
+    setState(() => _isSaving = true);
+    try {
+      final updated = await _api.updateSystemConfig({
+        ..._systemConfig,
+        ...patch,
+        'updated_by': user?.id ?? user?.email ?? 'farm_manager',
+      });
+      if (!mounted) return;
+      setState(() {
+        _applySystemConfig(updated);
+        _isSaving = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Settings saved'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not save settings: $error'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -73,7 +223,8 @@ class _FarmManagerSettingsScreenState
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       drawer: isMobile
           ? FarmManagerMobileDrawer(
               selectedIndex: _selectedNavIndex,
@@ -87,7 +238,8 @@ class _FarmManagerSettingsScreenState
     );
   }
 
-  Widget _buildDesktopLayout(bool isDark, String userName, ThemeMode themeMode) {
+  Widget _buildDesktopLayout(
+      bool isDark, String userName, ThemeMode themeMode) {
     final authState = ref.watch(authProvider);
     return Row(
       children: [
@@ -130,7 +282,7 @@ class _FarmManagerSettingsScreenState
             child: _buildContent(isDark, true, themeMode),
           ),
         ),
-        _buildBottomNavigation(isDark),
+        SafeArea(top: false, child: _buildBottomNavigation(isDark)),
       ],
     );
   }
@@ -138,12 +290,17 @@ class _FarmManagerSettingsScreenState
   // ── Content ─────────────────────────────────────────────────────────────
 
   Widget _buildContent(bool isDark, bool isMobile, ThemeMode themeMode) {
+    if (_isLoading) {
+      return const AdminDataSkeleton(rowCount: 6);
+    }
+    if (_errorMessage != null) {
+      return _buildErrorState(isDark);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPageHeader(isDark, isMobile),
         SizedBox(height: isMobile ? 16 : 24),
-
         if (isMobile) ...[
           _buildProfileSection(isDark, isMobile),
           const SizedBox(height: 16),
@@ -223,7 +380,63 @@ class _FarmManagerSettingsScreenState
             ],
           ),
         ),
+        if (_isSaving) ...[
+          const SizedBox(width: 12),
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildErrorState(bool isDark) {
+    return Center(
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 520),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color:
+                isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off_rounded,
+                size: 42, color: AppColors.error),
+            const SizedBox(height: 12),
+            Text(
+              'Unable to load settings',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _errorMessage ?? '',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: isDark ? Colors.white54 : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _loadSettings,
+              icon: const Icon(Icons.refresh_rounded, size: 16),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -295,7 +508,8 @@ class _FarmManagerSettingsScreenState
                       email,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        color: isDark ? Colors.white54 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white54 : AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -338,9 +552,12 @@ class _FarmManagerSettingsScreenState
                   icon: const Icon(Icons.edit_outlined, size: 16),
                   label: const Text('Edit Profile'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: isDark ? Colors.white70 : AppColors.textPrimary,
+                    foregroundColor:
+                        isDark ? Colors.white70 : AppColors.textPrimary,
                     side: BorderSide(
-                      color: isDark ? Colors.white.withOpacity(0.12) : AppColors.neutral300,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.12)
+                          : AppColors.neutral300,
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -363,9 +580,12 @@ class _FarmManagerSettingsScreenState
                   icon: const Icon(Icons.lock_outline, size: 16),
                   label: const Text('Password'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: isDark ? Colors.white70 : AppColors.textPrimary,
+                    foregroundColor:
+                        isDark ? Colors.white70 : AppColors.textPrimary,
                     side: BorderSide(
-                      color: isDark ? Colors.white.withOpacity(0.12) : AppColors.neutral300,
+                      color: isDark
+                          ? Colors.white.withOpacity(0.12)
+                          : AppColors.neutral300,
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -383,7 +603,8 @@ class _FarmManagerSettingsScreenState
 
   // ── Appearance Section ──────────────────────────────────────────────────
 
-  Widget _buildAppearanceSection(bool isDark, bool isMobile, ThemeMode themeMode) {
+  Widget _buildAppearanceSection(
+      bool isDark, bool isMobile, ThemeMode themeMode) {
     return _sectionCard(
       isDark: isDark,
       child: Column(
@@ -407,7 +628,8 @@ class _FarmManagerSettingsScreenState
                 icon: Icons.light_mode_rounded,
                 isSelected: themeMode == ThemeMode.light,
                 isDark: isDark,
-                onTap: () => ref.read(themeProvider.notifier).setTheme(ThemeMode.light),
+                onTap: () =>
+                    ref.read(themeProvider.notifier).setTheme(ThemeMode.light),
               ),
               const SizedBox(width: 10),
               _themeOption(
@@ -415,7 +637,8 @@ class _FarmManagerSettingsScreenState
                 icon: Icons.dark_mode_rounded,
                 isSelected: themeMode == ThemeMode.dark,
                 isDark: isDark,
-                onTap: () => ref.read(themeProvider.notifier).setTheme(ThemeMode.dark),
+                onTap: () =>
+                    ref.read(themeProvider.notifier).setTheme(ThemeMode.dark),
               ),
               const SizedBox(width: 10),
               _themeOption(
@@ -423,7 +646,8 @@ class _FarmManagerSettingsScreenState
                 icon: Icons.settings_brightness_rounded,
                 isSelected: themeMode == ThemeMode.system,
                 isDark: isDark,
-                onTap: () => ref.read(themeProvider.notifier).setTheme(ThemeMode.system),
+                onTap: () =>
+                    ref.read(themeProvider.notifier).setTheme(ThemeMode.system),
               ),
             ],
           ),
@@ -448,12 +672,16 @@ class _FarmManagerSettingsScreenState
           decoration: BoxDecoration(
             color: isSelected
                 ? AppColors.primary.withOpacity(0.1)
-                : (isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50),
+                : (isDark
+                    ? Colors.white.withOpacity(0.04)
+                    : AppColors.neutral50),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
                   ? AppColors.primary
-                  : (isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200),
+                  : (isDark
+                      ? Colors.white.withOpacity(0.08)
+                      : AppColors.neutral200),
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -497,33 +725,51 @@ class _FarmManagerSettingsScreenState
           _dropdownSetting(
             label: 'Default Farm',
             value: _defaultFarm,
-            options: ['Green Valley Farm', 'Sunrise Acres', 'Golden Harvest Farm'],
+            options: _farmOptions,
             isDark: isDark,
-            onChanged: (v) => setState(() => _defaultFarm = v!),
+            onChanged: (v) {
+              if (v != null) setState(() => _defaultFarm = v);
+            },
           ),
           const SizedBox(height: 14),
           _dropdownSetting(
             label: 'Currency',
             value: _currency,
-            options: ['GH₵ (Ghana Cedis)', 'USD (\$)', 'EUR (€)', 'GBP (£)'],
+            options: const [
+              'GHS (Ghana Cedi)',
+              'USD (US Dollar)',
+              'EUR (Euro)',
+              'GBP (British Pound)',
+            ],
             isDark: isDark,
-            onChanged: (v) => setState(() => _currency = v!),
+            onChanged: (v) {
+              if (v == null) return;
+              setState(() => _currency = v);
+              _saveSystemConfig({
+                'currency_code': _currencyCode(v),
+                'currency_symbol': _currencyCode(v),
+              });
+            },
           ),
           const SizedBox(height: 14),
           _dropdownSetting(
             label: 'Weight Unit',
             value: _weightUnit,
-            options: ['Kilograms (kg)', 'Pounds (lbs)', 'Tonnes (t)'],
+            options: const ['Kilograms (kg)', 'Pounds (lbs)', 'Tonnes (t)'],
             isDark: isDark,
-            onChanged: (v) => setState(() => _weightUnit = v!),
+            onChanged: (v) {
+              if (v != null) setState(() => _weightUnit = v);
+            },
           ),
           const SizedBox(height: 14),
           _dropdownSetting(
             label: 'Date Format',
             value: _dateFormat,
-            options: ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'],
+            options: const ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'],
             isDark: isDark,
-            onChanged: (v) => setState(() => _dateFormat = v!),
+            onChanged: (v) {
+              if (v != null) setState(() => _dateFormat = v);
+            },
           ),
         ],
       ),
@@ -552,10 +798,13 @@ class _FarmManagerSettingsScreenState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+            color:
+                isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
+              color: isDark
+                  ? Colors.white.withOpacity(0.08)
+                  : AppColors.neutral200,
             ),
           ),
           child: DropdownButtonHideUnderline(
@@ -593,7 +842,6 @@ class _FarmManagerSettingsScreenState
         children: [
           _sectionHeader('Notifications', Icons.notifications_rounded, isDark),
           const SizedBox(height: 12),
-
           Text(
             'ALERT TYPES',
             style: GoogleFonts.inter(
@@ -604,16 +852,47 @@ class _FarmManagerSettingsScreenState
             ),
           ),
           const SizedBox(height: 8),
-          _switchTile('Batch Status Alerts', 'Get notified when batch status changes', Icons.layers_rounded, _batchAlerts, (v) => setState(() => _batchAlerts = v), isDark),
-          _switchTile('Harvest Reminders', 'Reminders for upcoming harvest dates', Icons.agriculture_rounded, _harvestReminders, (v) => setState(() => _harvestReminders = v), isDark),
-          _switchTile('Delivery Updates', 'Track delivery status in real-time', Icons.local_shipping_rounded, _deliveryUpdates, (v) => setState(() => _deliveryUpdates = v), isDark),
-          _switchTile('Fund Request Updates', 'Notifications for fund request approvals', Icons.payments_rounded, _fundRequestUpdates, (v) => setState(() => _fundRequestUpdates = v), isDark),
-          _switchTile('Team Updates', 'Activity from your team members', Icons.groups_rounded, _teamUpdates, (v) => setState(() => _teamUpdates = v), isDark),
-
+          _switchTile(
+              'Batch Status Alerts',
+              'Get notified when batch status changes',
+              Icons.layers_rounded,
+              _batchAlerts,
+              (v) => setState(() => _batchAlerts = v),
+              isDark),
+          _switchTile(
+              'Harvest Reminders',
+              'Reminders for upcoming harvest dates',
+              Icons.agriculture_rounded,
+              _harvestReminders,
+              (v) => setState(() => _harvestReminders = v),
+              isDark),
+          _switchTile(
+              'Delivery Updates',
+              'Track delivery status in real-time',
+              Icons.local_shipping_rounded,
+              _deliveryUpdates,
+              (v) => setState(() => _deliveryUpdates = v),
+              isDark),
+          _switchTile(
+              'Fund Request Updates',
+              'Notifications for fund request approvals',
+              Icons.payments_rounded,
+              _fundRequestUpdates,
+              (v) => setState(() => _fundRequestUpdates = v),
+              isDark),
+          _switchTile(
+              'Team Updates',
+              'Activity from your team members',
+              Icons.groups_rounded,
+              _teamUpdates,
+              (v) => setState(() => _teamUpdates = v),
+              isDark),
           const SizedBox(height: 16),
-          Divider(color: isDark ? Colors.white.withOpacity(0.06) : AppColors.neutral200),
+          Divider(
+              color: isDark
+                  ? Colors.white.withOpacity(0.06)
+                  : AppColors.neutral200),
           const SizedBox(height: 12),
-
           Text(
             'CHANNELS',
             style: GoogleFonts.inter(
@@ -624,9 +903,23 @@ class _FarmManagerSettingsScreenState
             ),
           ),
           const SizedBox(height: 8),
-          _switchTile('Email', 'Receive notifications via email', Icons.email_rounded, _emailNotifications, (v) => setState(() => _emailNotifications = v), isDark),
-          _switchTile('Push Notifications', 'Mobile push notifications', Icons.phone_android_rounded, _pushNotifications, (v) => setState(() => _pushNotifications = v), isDark),
-          _switchTile('SMS', 'Text message alerts for critical events', Icons.sms_rounded, _smsNotifications, (v) => setState(() => _smsNotifications = v), isDark),
+          _switchTile('Email', 'Receive notifications via email',
+              Icons.email_rounded, _emailNotifications, (v) {
+            setState(() => _emailNotifications = v);
+            _saveSystemConfig({'email_notifications': v});
+          }, isDark),
+          _switchTile(
+              'Push Notifications',
+              'Mobile push notifications',
+              Icons.phone_android_rounded,
+              _pushNotifications,
+              (v) => setState(() => _pushNotifications = v),
+              isDark),
+          _switchTile('SMS', 'Text message alerts for critical events',
+              Icons.sms_rounded, _smsNotifications, (v) {
+            setState(() => _smsNotifications = v);
+            _saveSystemConfig({'sms_notifications': v});
+          }, isDark),
         ],
       ),
     );
@@ -640,11 +933,30 @@ class _FarmManagerSettingsScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader('Dashboard Display', Icons.dashboard_customize_rounded, isDark),
+          _sectionHeader(
+              'Dashboard Display', Icons.dashboard_customize_rounded, isDark),
           const SizedBox(height: 12),
-          _switchTile('Compact View', 'Use compact layout for tables and lists', Icons.view_compact_rounded, _compactView, (v) => setState(() => _compactView = v), isDark),
-          _switchTile('Show Weather', 'Display weather information on dashboard', Icons.cloud_rounded, _showWeather, (v) => setState(() => _showWeather = v), isDark),
-          _switchTile('Quick Actions', 'Show quick action cards on dashboard', Icons.flash_on_rounded, _showQuickActions, (v) => setState(() => _showQuickActions = v), isDark),
+          _switchTile(
+              'Compact View',
+              'Use compact layout for tables and lists',
+              Icons.view_compact_rounded,
+              _compactView,
+              (v) => setState(() => _compactView = v),
+              isDark),
+          _switchTile(
+              'Show Weather',
+              'Display weather information on dashboard',
+              Icons.cloud_rounded,
+              _showWeather,
+              (v) => setState(() => _showWeather = v),
+              isDark),
+          _switchTile(
+              'Quick Actions',
+              'Show quick action cards on dashboard',
+              Icons.flash_on_rounded,
+              _showQuickActions,
+              (v) => setState(() => _showQuickActions = v),
+              isDark),
         ],
       ),
     );
@@ -660,9 +972,29 @@ class _FarmManagerSettingsScreenState
         children: [
           _sectionHeader('Security', Icons.shield_rounded, isDark),
           const SizedBox(height: 12),
-          _switchTile('Two-Factor Authentication', 'Add an extra layer of security', Icons.security_rounded, _twoFactorAuth, (v) => setState(() => _twoFactorAuth = v), isDark),
-          _switchTile('Biometric Login', 'Use fingerprint or face ID to login', Icons.fingerprint_rounded, _biometricLogin, (v) => setState(() => _biometricLogin = v), isDark),
-          _switchTile('Session Timeout', 'Auto logout after 30 min of inactivity', Icons.timer_rounded, _sessionTimeout, (v) => setState(() => _sessionTimeout = v), isDark),
+          _switchTile(
+              'Two-Factor Authentication',
+              'Add an extra layer of security',
+              Icons.security_rounded,
+              _twoFactorAuth, (v) {
+            setState(() => _twoFactorAuth = v);
+            _saveSystemConfig({'two_factor_auth': v});
+          }, isDark),
+          _switchTile(
+              'Biometric Login',
+              'Use fingerprint or face ID to login',
+              Icons.fingerprint_rounded,
+              _biometricLogin,
+              (v) => setState(() => _biometricLogin = v),
+              isDark),
+          _switchTile(
+              'Session Timeout',
+              'Auto logout after $_sessionTimeoutMinutes min of inactivity',
+              Icons.timer_rounded,
+              _sessionTimeout, (v) {
+            setState(() => _sessionTimeout = v);
+            _saveSystemConfig({'session_timeout': v ? 30 : 1440});
+          }, isDark),
         ],
       ),
     );
@@ -677,7 +1009,8 @@ class _FarmManagerSettingsScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader('Danger Zone', Icons.warning_amber_rounded, isDark, color: AppColors.error),
+          _sectionHeader('Danger Zone', Icons.warning_amber_rounded, isDark,
+              color: AppColors.error),
           const SizedBox(height: 12),
           Text(
             'These actions are irreversible. Please proceed with caution.',
@@ -699,16 +1032,21 @@ class _FarmManagerSettingsScreenState
                     () {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: const Text('Cache cleared successfully'), backgroundColor: AppColors.success),
+                        SnackBar(
+                            content: const Text('Cache cleared successfully'),
+                            backgroundColor: AppColors.success),
                       );
                     },
                   ),
-                  icon: Icon(Icons.cached_rounded, size: 16, color: AppColors.warning),
-                  label: Text('Clear Cache', style: TextStyle(color: AppColors.warning)),
+                  icon: Icon(Icons.cached_rounded,
+                      size: 16, color: AppColors.warning),
+                  label: Text('Clear Cache',
+                      style: TextStyle(color: AppColors.warning)),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: AppColors.warning.withOpacity(0.4)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ),
@@ -724,16 +1062,20 @@ class _FarmManagerSettingsScreenState
                       Navigator.pop(context);
                       await ref.read(authProvider.notifier).logout();
                       if (mounted) {
-                        Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                            '/login', (route) => false);
                       }
                     },
                   ),
-                  icon: Icon(Icons.logout_rounded, size: 16, color: AppColors.error),
-                  label: Text('Logout', style: TextStyle(color: AppColors.error)),
+                  icon: Icon(Icons.logout_rounded,
+                      size: 16, color: AppColors.error),
+                  label:
+                      Text('Logout', style: TextStyle(color: AppColors.error)),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: AppColors.error.withOpacity(0.4)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ),
@@ -744,7 +1086,24 @@ class _FarmManagerSettingsScreenState
     );
   }
 
-  void _showConfirmDialog(String title, String message, IconData icon, Color color, VoidCallback onConfirm) {
+  Future<void> _showConfirmDialog(
+    String title,
+    String message,
+    IconData icon,
+    Color color,
+    VoidCallback onConfirm,
+  ) async {
+    if (title == 'Logout') {
+      final confirmed = await showAdaptiveLogoutConfirmation(
+        context,
+        message: message,
+      );
+      if (confirmed) {
+        onConfirm();
+      }
+      return;
+    }
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
@@ -789,10 +1148,15 @@ class _FarmManagerSettingsScreenState
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(ctx),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: isDark ? Colors.white70 : AppColors.textSecondary,
-                        side: BorderSide(color: isDark ? Colors.white.withOpacity(0.12) : AppColors.neutral300),
+                        foregroundColor:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
+                        side: BorderSide(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.12)
+                                : AppColors.neutral300),
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                       ),
                       child: const Text('Cancel'),
                     ),
@@ -805,7 +1169,8 @@ class _FarmManagerSettingsScreenState
                         backgroundColor: color,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                       ),
                       child: Text('Confirm'),
                     ),
@@ -821,24 +1186,32 @@ class _FarmManagerSettingsScreenState
 
   // ── Shared Widgets ──────────────────────────────────────────────────────
 
-  Widget _sectionCard({required bool isDark, required Widget child, Color? borderColor}) {
+  Widget _sectionCard(
+      {required bool isDark, required Widget child, Color? borderColor}) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: borderColor ?? (isDark ? Colors.white.withOpacity(0.06) : AppColors.neutral200),
+          color: borderColor ??
+              (isDark ? Colors.white.withOpacity(0.06) : AppColors.neutral200),
         ),
         boxShadow: isDark
             ? null
-            : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+            : [
+                BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2))
+              ],
       ),
       child: child,
     );
   }
 
-  Widget _sectionHeader(String title, IconData icon, bool isDark, {Color? color}) {
+  Widget _sectionHeader(String title, IconData icon, bool isDark,
+      {Color? color}) {
     final c = color ?? AppColors.primary;
     return Row(
       children: [
@@ -885,10 +1258,14 @@ class _FarmManagerSettingsScreenState
                 Container(
                   padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral100,
+                    color: isDark
+                        ? Colors.white.withOpacity(0.05)
+                        : AppColors.neutral100,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, size: 16, color: isDark ? Colors.white54 : AppColors.textSecondary),
+                  child: Icon(icon,
+                      size: 16,
+                      color: isDark ? Colors.white54 : AppColors.textSecondary),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -907,7 +1284,8 @@ class _FarmManagerSettingsScreenState
                         subtitle,
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          color: isDark ? Colors.white38 : AppColors.textSecondary,
+                          color:
+                              isDark ? Colors.white38 : AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -930,18 +1308,59 @@ class _FarmManagerSettingsScreenState
 
   Widget _buildBottomNavigation(bool isDark) {
     final navItems = [
-      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/farm-manager'},
-      {'icon': Icons.agriculture_outlined, 'label': 'Farms', 'index': 1, 'route': '/farm-manager/farms'},
-      {'icon': Icons.inventory_2_outlined, 'label': 'Inventory', 'index': 2, 'route': '/farm-manager/inventory'},
-      {'icon': Icons.local_shipping_outlined, 'label': 'Deliveries', 'index': 3, 'route': '/farm-manager/deliveries'},
-      {'icon': Icons.assessment_outlined, 'label': 'Reports', 'index': 4, 'route': '/farm-manager/reports'},
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Dashboard',
+        'index': 0,
+        'route': '/farm-manager'
+      },
+      {
+        'icon': Icons.agriculture_outlined,
+        'label': 'Farms',
+        'index': 1,
+        'route': '/farm-manager/farms'
+      },
+      {
+        'icon': Icons.inventory_2_outlined,
+        'label': 'Inventory',
+        'index': 2,
+        'route': '/farm-manager/inventory'
+      },
+      {
+        'icon': Icons.local_shipping_outlined,
+        'label': 'Deliveries',
+        'index': 3,
+        'route': '/farm-manager/deliveries'
+      },
+      {
+        'icon': Icons.assessment_outlined,
+        'label': 'Reports',
+        'index': 4,
+        'route': '/farm-manager/reports'
+      },
+      {
+        'icon': Icons.settings_outlined,
+        'label': 'Settings',
+        'index': 8,
+        'route': '/farm-manager/settings'
+      },
     ];
 
     return Container(
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.3 : 0.1), blurRadius: 10, offset: const Offset(0, -2))],
-        border: Border(top: BorderSide(color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08), width: 1)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2))
+        ],
+        border: Border(
+            top: BorderSide(
+                color: isDark
+                    ? Colors.white.withOpacity(0.08)
+                    : Colors.black.withOpacity(0.08),
+                width: 1)),
       ),
       child: SafeArea(
         child: SizedBox(
@@ -951,17 +1370,20 @@ class _FarmManagerSettingsScreenState
             children: navItems.map((item) {
               final index = item['index'] as int;
               final route = item['route'] as String;
-              const isSelected = false; // Settings is not in bottom nav
+              final isSelected = index == _selectedNavIndex;
 
               return Expanded(
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                      try {
-                        Navigator.pushReplacementNamed(context, route);
-                      } catch (e) {
-                        Navigator.pushNamed(context, route);
+                      if (_selectedNavIndex != index) {
+                        setState(() => _selectedNavIndex = index);
+                        try {
+                          Navigator.pushReplacementNamed(context, route);
+                        } catch (e) {
+                          Navigator.pushNamed(context, route);
+                        }
                       }
                     },
                     child: Column(
@@ -970,14 +1392,24 @@ class _FarmManagerSettingsScreenState
                         Icon(
                           item['icon'] as IconData,
                           size: 24,
-                          color: isSelected ? AppColors.primary : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.5)
+                                  : AppColors.textSecondary),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           item['label'] as String,
                           style: AppTypography.caption.copyWith(
-                            color: isSelected ? AppColors.primary : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            color: isSelected
+                                ? AppColors.primary
+                                : (isDark
+                                    ? Colors.white.withOpacity(0.5)
+                                    : AppColors.textSecondary),
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                             fontSize: 11,
                           ),
                           maxLines: 1,

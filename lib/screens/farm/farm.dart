@@ -149,12 +149,14 @@ class _farmsDashboardScreenState extends State<FarmsDashboardScreen> {
         ),
       ),
       bottomNavigationBar: isMobile
-          ? OwnerSidebar(
-              selectedIndex: selectedIndex,
-              onItemSelected: (idx) => setState(() => selectedIndex = idx),
-              isDark: isDark,
-              isMobile: true,
-            )
+          ? SafeArea(
+              top: false,
+              child: OwnerSidebar(
+                selectedIndex: selectedIndex,
+                onItemSelected: (idx) => setState(() => selectedIndex = idx),
+                isDark: isDark,
+                isMobile: true,
+              ))
           : null,
     );
   }

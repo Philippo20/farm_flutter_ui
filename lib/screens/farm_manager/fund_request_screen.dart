@@ -6,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/farm_manager_sidebar.dart';
 import '../../core/widgets/farm_manager_header.dart';
 import '../../core/widgets/farm_manager_mobile_drawer.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/superadmin_api_service.dart';
 
@@ -320,7 +321,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          : null,
       floatingActionButton: isMobile
           ? FloatingActionButton(
               onPressed: () => _showCreateRequestDialog(context),
@@ -439,52 +442,7 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
       );
     }
 
-    return Column(
-      children: [
-        _buildStatsSkeleton(isDark, isMobile),
-        SizedBox(height: isMobile ? 16 : 24),
-        Container(
-          height: 220,
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.06)
-                  : Colors.black.withOpacity(0.06),
-            ),
-          ),
-          child: Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsSkeleton(bool isDark, bool isMobile) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: isMobile ? 2 : 4,
-      crossAxisSpacing: isMobile ? 10 : 14,
-      mainAxisSpacing: isMobile ? 10 : 14,
-      childAspectRatio: isMobile ? 2.4 : 2.8,
-      children: List.generate(
-        4,
-        (_) => Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.06)
-                  : Colors.black.withOpacity(0.06),
-            ),
-          ),
-        ),
-      ),
-    );
+    return const AdminDataSkeleton(rowCount: 6);
   }
 
   // ══════════════════════════════════════════════════════════════════════

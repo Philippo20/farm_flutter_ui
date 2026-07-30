@@ -101,6 +101,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
     return await _authService.validateSession();
   }
 
+  /// Refresh local auth state after the profile is updated in the backend.
+  Future<void> updateCurrentUserProfile({
+    required String name,
+    required String email,
+    required String address,
+  }) async {
+    final updatedUser = await _authService.updateCurrentUserProfile(
+      name: name,
+      email: email,
+      address: address,
+    );
+    if (updatedUser != null) {
+      state = state.copyWith(user: updatedUser);
+    }
+  }
+
   /// Get activity logs (admin only)
   Future<List<String>> getActivityLogs() async {
     if (!_authService.isAdmin) return [];

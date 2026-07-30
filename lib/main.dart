@@ -40,7 +40,6 @@ import 'screens/farm_owner/wallet_actions_screen.dart';
 import 'screens/farm_owner/analytics_screen.dart';
 import 'screens/farm_owner/reports_screen.dart' as farm_owner;
 import 'screens/farm_owner/settings_screen.dart';
-import 'screens/technician/technician_dashboard_new.dart';
 import 'screens/technician/technician_dashboard_redesigned.dart';
 import 'screens/technician/sensor_management_screen.dart';
 import 'screens/technician/maintenance_schedule_screen.dart';

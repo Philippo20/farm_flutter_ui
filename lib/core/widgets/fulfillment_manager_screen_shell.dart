@@ -76,10 +76,12 @@ class FulfillmentManagerScreenShell extends ConsumerWidget {
               ],
             ),
       bottomNavigationBar: isMobile
-          ? FulfillmentManagerMobileBottomNav(
-              selectedIndex: selectedIndex,
-              onItemSelected: (_) {},
-            )
+          ? SafeArea(
+              top: false,
+              child: FulfillmentManagerMobileBottomNav(
+                selectedIndex: selectedIndex,
+                onItemSelected: (_) {},
+              ))
           : null,
     );
   }

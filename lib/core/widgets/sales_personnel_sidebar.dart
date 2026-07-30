@@ -3,6 +3,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import 'sidebar_collapse_state.dart';
+import 'adaptive_logout_confirmation.dart';
 
 /// Modern collapsible sidebar for sales personnel dashboard
 class SalesPersonnelSidebar extends StatefulWidget {
@@ -544,68 +545,11 @@ class _SalesPersonnelSidebarState extends State<SalesPersonnelSidebar>
     );
   }
 
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        final titleColor = isDark ? Colors.white : AppColors.textPrimary;
-        final bodyColor =
-            isDark ? Colors.white.withOpacity(0.78) : AppColors.textSecondary;
+  Future<void> _showLogoutDialog() async {
+    final confirmed = await showAdaptiveLogoutConfirmation(context);
+    if (!confirmed) return;
 
-        return AlertDialog(
-          title: Text(
-            'Logout',
-            style: AppTypography.titleMedium.copyWith(
-              fontWeight: FontWeight.w600,
-              color: titleColor,
-            ),
-          ),
-          content: Text(
-            'Are you sure you want to logout?',
-            style: AppTypography.bodyMedium.copyWith(color: bodyColor),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          ),
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Cancel',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: bodyColor,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.md,
-                ),
-              ),
-              child: Text(
-                'Logout',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+    // Existing sidebar logout flow only dismissed the confirmation.
   }
 }
 

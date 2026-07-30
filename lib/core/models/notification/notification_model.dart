@@ -100,6 +100,7 @@ class NotificationModel {
 
 /// Notification Type
 enum NotificationType {
+  task('task', 'Task Update'),
   batch('batch', 'Batch Update'),
   harvest('harvest', 'Harvest Alert'),
   maintenance('maintenance', 'Maintenance'),

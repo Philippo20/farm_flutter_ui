@@ -4,14 +4,46 @@ import 'package:fl_chart/fl_chart.dart'; // Add to pubspec.yaml
 
 class ThirdRow extends StatefulWidget {
   final bool isDark;
+  final Map<String, int> sensorCounts;
+  final Map<String, int> activeSensorCounts;
 
-  const ThirdRow({super.key, required this.isDark});
+  const ThirdRow({
+    super.key,
+    required this.isDark,
+    this.sensorCounts = const {},
+    this.activeSensorCounts = const {},
+  });
 
   @override
   State<ThirdRow> createState() => _ThirdRowState();
 }
 
 class _ThirdRowState extends State<ThirdRow> {
+  LineTouchData _boundedTouchData(bool isDark) {
+    return LineTouchData(
+      touchTooltipData: LineTouchTooltipData(
+        fitInsideHorizontally: true,
+        fitInsideVertically: true,
+        tooltipMargin: 8,
+        tooltipPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        maxContentWidth: 72,
+        getTooltipColor: (_) => isDark ? Colors.grey[900]! : Colors.white,
+        getTooltipItems: (spots) => spots
+            .map(
+              (spot) => LineTooltipItem(
+                spot.y.toStringAsFixed(1),
+                GoogleFonts.poppins(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final phData = [
@@ -107,31 +139,52 @@ class _ThirdRowState extends State<ThirdRow> {
   }
 
   Widget _buildSensorIndicatorsCard() {
+    final tdsCount = widget.sensorCounts['tds'] ?? 0;
+    final ecCount = widget.sensorCounts['ec'] ?? 0;
+    final phCount = widget.sensorCounts['ph'] ?? 0;
+    final co2Count = widget.sensorCounts['co2'] ?? 0;
+    final activeTds = (widget.activeSensorCounts['tds'] ?? 0) > 0;
+    final activeEc = (widget.activeSensorCounts['ec'] ?? 0) > 0;
+    final activePh = (widget.activeSensorCounts['ph'] ?? 0) > 0;
+    final activeCo2 = (widget.activeSensorCounts['co2'] ?? 0) > 0;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildSensorCard(
           icon: Icons.science,
           label: 'TDS',
-          status: 'ACTIVE',
+          status:
+              tdsCount == 0 ? 'NO SENSOR' : (activeTds ? 'ACTIVE' : 'OFFLINE'),
+          count: tdsCount,
+          isActive: activeTds,
           color: Colors.blue,
         ),
         _buildSensorCard(
           icon: Icons.bubble_chart,
           label: 'EC',
-          status: 'ACTIVE',
+          status:
+              ecCount == 0 ? 'NO SENSOR' : (activeEc ? 'ACTIVE' : 'OFFLINE'),
+          count: ecCount,
+          isActive: activeEc,
           color: Colors.purple,
         ),
         _buildSensorCard(
           icon: Icons.opacity,
           label: 'PH',
-          status: 'ACTIVE',
+          status:
+              phCount == 0 ? 'NO SENSOR' : (activePh ? 'ACTIVE' : 'OFFLINE'),
+          count: phCount,
+          isActive: activePh,
           color: Colors.orange,
         ),
         _buildSensorCard(
           icon: Icons.cloud_outlined,
           label: 'CO₂',
-          status: 'ACTIVE',
+          status:
+              co2Count == 0 ? 'NO SENSOR' : (activeCo2 ? 'ACTIVE' : 'OFFLINE'),
+          count: co2Count,
+          isActive: activeCo2,
           color: Colors.teal,
         ),
       ],
@@ -142,8 +195,18 @@ class _ThirdRowState extends State<ThirdRow> {
     required IconData icon,
     required String label,
     required String status,
+    required int count,
+    required bool isActive,
     required Color color,
   }) {
+    final isOnline = count > 0 && isActive;
+    final effectiveColor = isOnline ? color : Colors.grey;
+    final statusColor = count == 0
+        ? Colors.grey
+        : (isActive
+            ? (widget.isDark ? Colors.greenAccent : Colors.green)
+            : Colors.red);
+
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -162,17 +225,30 @@ class _ThirdRowState extends State<ThirdRow> {
           ),
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color.withOpacity(0.2),
-                ),
-                child: Icon(icon, color: color, size: 24),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: effectiveColor.withOpacity(isOnline ? 0.2 : 0.12),
+                    ),
+                    child: Icon(icon, color: effectiveColor, size: 24),
+                  ),
+                  Positioned(
+                    right: -8,
+                    top: -8,
+                    child: _sensorCountBadge(count, isOnline),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               Text(
                 label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -182,16 +258,44 @@ class _ThirdRowState extends State<ThirdRow> {
               const SizedBox(height: 6),
               Text(
                 status,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: status == "ACTIVE"
-                      ? (widget.isDark ? Colors.greenAccent : Colors.green)
-                      : Colors.red,
+                  color: statusColor,
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sensorCountBadge(int count, bool isOnline) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: isOnline
+            ? (widget.isDark ? Colors.greenAccent : Colors.green)
+            : Colors.grey,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: widget.isDark ? Colors.grey[850]! : Colors.grey[100]!,
+          width: 2,
+        ),
+      ),
+      child: Text(
+        count.toString(),
+        textAlign: TextAlign.center,
+        style: GoogleFonts.poppins(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+          height: 1,
         ),
       ),
     );
@@ -315,7 +419,7 @@ class _ThirdRowState extends State<ThirdRow> {
     required List<String> timeLabels,
   }) {
     return Container(
-      height: 280,
+      height: 292,
       width: double.infinity,
       // padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -367,6 +471,7 @@ class _ThirdRowState extends State<ThirdRow> {
               width: double.infinity,
               child: LineChart(
                 LineChartData(
+                  lineTouchData: _boundedTouchData(isDark),
                   gridData: FlGridData(
                     show: true,
                     drawVerticalLine: false,
@@ -515,12 +620,13 @@ class _ThirdRowState extends State<ThirdRow> {
 
           // Line Chart
           Padding(
-            padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+            padding: const EdgeInsets.fromLTRB(10, 0, 12, 0),
             child: SizedBox(
               height: 80,
               width: double.infinity,
               child: LineChart(
                 LineChartData(
+                  lineTouchData: _boundedTouchData(isDark),
                   gridData: FlGridData(show: false),
                   titlesData: FlTitlesData(show: false),
                   borderData: FlBorderData(show: false),

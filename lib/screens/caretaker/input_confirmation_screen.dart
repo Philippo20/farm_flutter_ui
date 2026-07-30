@@ -6,7 +6,9 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/caretaker_sidebar.dart';
 import '../../core/widgets/caretaker_header.dart';
 import '../../core/widgets/caretaker_mobile_bottom_nav.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Input Confirmation Screen for Caretaker
 /// Confirm receipt and usage of farm inputs
@@ -22,50 +24,84 @@ class _InputConfirmationScreenState
     extends ConsumerState<InputConfirmationScreen> {
   int _selectedNavIndex = 2;
   String _selectedFilter = 'All';
-  String _selectedStatus = 'Pending';
+  String _selectedStatus = 'All';
+  bool _isLoading = true;
+  String? _errorMessage;
+  final SuperAdminApiService _api = SuperAdminApiService();
+  final Set<String> _updatingIds = <String>{};
 
-  final List<Map<String, dynamic>> _inputRequests = [
-    {
-      'id': 'INP001',
-      'item': 'Organic Fertilizer',
-      'quantity': '50 kg',
-      'requestedBy': 'Farm Manager',
-      'requestDate': '2024-01-10',
-      'status': 'Pending',
-      'icon': Icons.eco,
-      'color': AppColors.success,
-    },
-    {
-      'id': 'INP002',
-      'item': 'pH Adjuster',
-      'quantity': '10 L',
-      'requestedBy': 'Farm Manager',
-      'requestDate': '2024-01-12',
-      'status': 'Received',
-      'icon': Icons.science,
-      'color': AppColors.info,
-    },
-    {
-      'id': 'INP003',
-      'item': 'Seeds - Lettuce',
-      'quantity': '500 pcs',
-      'requestedBy': 'Farm Manager',
-      'requestDate': '2024-01-08',
-      'status': 'Confirmed',
-      'icon': Icons.agriculture,
-      'color': AppColors.primary,
-    },
-    {
-      'id': 'INP004',
-      'item': 'Nutrient Solution',
-      'quantity': '25 L',
-      'requestedBy': 'Farm Manager',
-      'requestDate': '2024-01-15',
-      'status': 'Pending',
-      'icon': Icons.water_drop,
-      'color': AppColors.warning,
-    },
-  ];
+  final List<Map<String, dynamic>> _inputRequests = <Map<String, dynamic>>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInputRequests();
+  }
+
+  Future<void> _loadInputRequests() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
+    try {
+      final user = ref.read(authProvider).user;
+      final documents = await _api.getInputConfirmations(caretakerId: user?.id);
+      final mapped = documents.map(_mapInputRequest).toList();
+      if (!mounted) return;
+      setState(() {
+        _inputRequests
+          ..clear()
+          ..addAll(mapped);
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = error.toString();
+      });
+    }
+  }
+
+  Map<String, dynamic> _mapInputRequest(Map<String, dynamic> document) {
+    final item = (document['item'] ?? 'Farm input').toString();
+    final status = (document['status'] ?? 'Pending').toString();
+    final requestedAt = (document['requested_at'] ??
+            document['created_at'] ??
+            document[r'$createdAt'] ??
+            '')
+        .toString();
+    return {
+      'documentId': (document[r'$id'] ?? document['id'] ?? '').toString(),
+      'id': (document['input_id'] ?? document[r'$id'] ?? '').toString(),
+      'item': item,
+      'quantity': (document['quantity'] ?? '').toString(),
+      'requestedBy':
+          (document['requested_by_name'] ?? 'Farm Manager').toString(),
+      'requestDate': requestedAt,
+      'status': status,
+      'farmName': (document['farm_name'] ?? '').toString(),
+      'icon': _inputIcon(item),
+      'color': _getStatusColor(status),
+    };
+  }
+
+  IconData _inputIcon(String item) {
+    final value = item.toLowerCase();
+    if (value.contains('seed')) return Icons.grass_rounded;
+    if (value.contains('water') || value.contains('nutrient')) {
+      return Icons.water_drop_rounded;
+    }
+    if (value.contains('fertil') || value.contains('compost')) {
+      return Icons.eco_rounded;
+    }
+    if (value.contains('chemical') || value.contains('ph')) {
+      return Icons.science_rounded;
+    }
+    return Icons.inventory_2_rounded;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,10 +119,13 @@ class _InputConfirmationScreenState
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile
-          ? CaretakerMobileBottomNav(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
-            )
+          ? SafeArea(
+              top: false,
+              child: CaretakerMobileBottomNav(
+                selectedIndex: _selectedNavIndex,
+                onItemSelected: (index) =>
+                    setState(() => _selectedNavIndex = index),
+              ))
           : null,
     );
   }
@@ -113,16 +152,7 @@ class _InputConfirmationScreenState
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1080),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(isDark),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFilters(isDark),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildInputRequestsList(isDark),
-                      ],
-                    ),
+                    child: _buildContent(isDark, AppSpacing.lg),
                   ),
                 ),
               ),
@@ -143,19 +173,72 @@ class _InputConfirmationScreenState
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(isDark),
-                const SizedBox(height: AppSpacing.md),
-                _buildFilters(isDark),
-                const SizedBox(height: AppSpacing.md),
-                _buildInputRequestsList(isDark),
-              ],
-            ),
+            child: _buildContent(isDark, AppSpacing.md),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildContent(bool isDark, double spacing) {
+    if (_isLoading) {
+      return const AdminDataSkeleton(rowCount: 4, showStats: true);
+    }
+    if (_errorMessage != null) {
+      return _buildErrorState(isDark);
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeader(isDark),
+        SizedBox(height: spacing),
+        _buildFilters(isDark),
+        SizedBox(height: spacing),
+        _buildInputRequestsList(isDark),
+      ],
+    );
+  }
+
+  Widget _buildErrorState(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppColors.neutral200,
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.cloud_off_rounded,
+              size: 36,
+              color: isDark ? Colors.white54 : AppColors.textSecondary),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Unable to load input confirmations',
+            style: AppTypography.bodyMedium.copyWith(
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _errorMessage ?? 'Please try again.',
+            textAlign: TextAlign.center,
+            style: AppTypography.caption.copyWith(
+              color: isDark ? Colors.white60 : AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ElevatedButton.icon(
+            onPressed: _loadInputRequests,
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            label: const Text('Try again'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -567,8 +650,9 @@ class _InputConfirmationScreenState
     if (status == 'Received') {
       return [
         ElevatedButton.icon(
-          onPressed: () =>
-              _updateRequestStatus(request['id'] as String, 'Confirmed'),
+          onPressed: _updatingIds.contains(_documentId(request))
+              ? null
+              : () => _updateRequestStatus(request, 'Confirmed'),
           icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
           label: const Text('Confirm'),
           style: ElevatedButton.styleFrom(
@@ -582,8 +666,9 @@ class _InputConfirmationScreenState
 
     return [
       OutlinedButton.icon(
-        onPressed: () =>
-            _updateRequestStatus(request['id'] as String, 'Received'),
+        onPressed: _updatingIds.contains(_documentId(request))
+            ? null
+            : () => _updateRequestStatus(request, 'Received'),
         icon: const Icon(Icons.inventory_2_outlined, size: 16),
         label: const Text('Mark Received'),
         style: OutlinedButton.styleFrom(
@@ -595,8 +680,9 @@ class _InputConfirmationScreenState
         ),
       ),
       ElevatedButton.icon(
-        onPressed: () =>
-            _updateRequestStatus(request['id'] as String, 'Confirmed'),
+        onPressed: _updatingIds.contains(_documentId(request))
+            ? null
+            : () => _updateRequestStatus(request, 'Confirmed'),
         icon: const Icon(Icons.check_rounded, size: 16),
         label: const Text('Confirm'),
         style: ElevatedButton.styleFrom(
@@ -643,14 +729,42 @@ class _InputConfirmationScreenState
     );
   }
 
-  void _updateRequestStatus(String id, String newStatus) {
-    final index = _inputRequests.indexWhere((request) => request['id'] == id);
-    if (index == -1) return;
+  String _documentId(Map<String, dynamic> request) =>
+      (request['documentId'] ?? request['id'] ?? '').toString();
 
-    setState(() {
-      _inputRequests[index]['status'] = newStatus;
-      _inputRequests[index]['color'] = _getStatusColor(newStatus);
-    });
+  Future<void> _updateRequestStatus(
+      Map<String, dynamic> request, String newStatus) async {
+    final id = _documentId(request);
+    if (id.isEmpty || _updatingIds.contains(id)) return;
+    final user = ref.read(authProvider).user;
+    setState(() => _updatingIds.add(id));
+    try {
+      await _api.updateInputConfirmationStatus(
+        id: id,
+        status: newStatus,
+        caretakerId: user?.id ?? '',
+        caretakerName: user?.name ?? 'Caretaker',
+      );
+      final index =
+          _inputRequests.indexWhere((item) => _documentId(item) == id);
+      if (!mounted) return;
+      if (index != -1) {
+        setState(() {
+          _inputRequests[index]['status'] = newStatus;
+          _inputRequests[index]['color'] = _getStatusColor(newStatus);
+        });
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Input marked $newStatus.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to update input: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _updatingIds.remove(id));
+    }
   }
 
   void _handleBack() {

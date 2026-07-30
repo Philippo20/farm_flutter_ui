@@ -12,7 +12,8 @@ class WalletActionsScreen extends ConsumerStatefulWidget {
   const WalletActionsScreen({super.key});
 
   @override
-  ConsumerState<WalletActionsScreen> createState() => _WalletActionsScreenState();
+  ConsumerState<WalletActionsScreen> createState() =>
+      _WalletActionsScreenState();
 }
 
 class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
@@ -29,7 +30,8 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       drawer: isMobile
           ? FarmOwnerMobileDrawer(
               selectedIndex: _selectedNavIndex,
@@ -40,7 +42,9 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          : null,
     );
   }
 
@@ -163,7 +167,9 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
           color: isDark ? AppColors.surfaceDark : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : const Color(0xFFE2E8F0),
           ),
         ),
         child: Row(
@@ -219,11 +225,36 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
 
   Widget _buildBottomNavigation(bool isDark) {
     final navItems = [
-      {'icon': Icons.dashboard_outlined, 'label': 'Dashboard', 'index': 0, 'route': '/farm-owner'},
-      {'icon': Icons.agriculture_outlined, 'label': 'Farm', 'index': 1, 'route': '/farm-owner/farm'},
-      {'icon': Icons.account_balance_wallet_outlined, 'label': 'Wallet', 'index': 2, 'route': '/farm-owner/digital-wallet'},
-      {'icon': Icons.analytics_outlined, 'label': 'Analytics', 'index': 3, 'route': '/farm-owner/analytics'},
-      {'icon': Icons.assessment_outlined, 'label': 'Reports', 'index': 4, 'route': '/farm-owner/reports'},
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Dashboard',
+        'index': 0,
+        'route': '/farm-owner'
+      },
+      {
+        'icon': Icons.agriculture_outlined,
+        'label': 'Farm',
+        'index': 1,
+        'route': '/farm-owner/farm'
+      },
+      {
+        'icon': Icons.account_balance_wallet_outlined,
+        'label': 'Wallet',
+        'index': 2,
+        'route': '/farm-owner/digital-wallet'
+      },
+      {
+        'icon': Icons.analytics_outlined,
+        'label': 'Analytics',
+        'index': 3,
+        'route': '/farm-owner/analytics'
+      },
+      {
+        'icon': Icons.assessment_outlined,
+        'label': 'Reports',
+        'index': 4,
+        'route': '/farm-owner/reports'
+      },
     ];
 
     return Container(
@@ -231,7 +262,9 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
         color: isDark ? AppColors.surfaceDark : Colors.white,
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.08),
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
           ),
         ),
       ),
@@ -259,7 +292,9 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
                         size: 22,
                         color: selected
                             ? AppColors.primary
-                            : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
+                            : (isDark
+                                ? Colors.white.withOpacity(0.5)
+                                : AppColors.textSecondary),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -267,8 +302,11 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
                         style: AppTypography.caption.copyWith(
                           color: selected
                               ? AppColors.primary
-                              : (isDark ? Colors.white.withOpacity(0.5) : AppColors.textSecondary),
-                          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.5)
+                                  : AppColors.textSecondary),
+                          fontWeight:
+                              selected ? FontWeight.w600 : FontWeight.normal,
                         ),
                       ),
                     ],

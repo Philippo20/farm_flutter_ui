@@ -12,7 +12,8 @@ class RepairHistoryScreen extends ConsumerStatefulWidget {
   const RepairHistoryScreen({super.key});
 
   @override
-  ConsumerState<RepairHistoryScreen> createState() => _RepairHistoryScreenState();
+  ConsumerState<RepairHistoryScreen> createState() =>
+      _RepairHistoryScreenState();
 }
 
 class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
@@ -71,15 +72,19 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
     final userEmail = authState.user?.email ?? 'technician@farmestates.com';
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile
-          ? TechnicianMobileBottomNav(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
-            )
+          ? SafeArea(
+              top: false,
+              child: TechnicianMobileBottomNav(
+                selectedIndex: _selectedNavIndex,
+                onItemSelected: (index) =>
+                    setState(() => _selectedNavIndex = index),
+              ))
           : null,
     );
   }
@@ -197,7 +202,8 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
     );
   }
 
-  Widget _buildMetricChip(String label, String value, Color color, bool isDark) {
+  Widget _buildMetricChip(
+      String label, String value, Color color, bool isDark) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -279,7 +285,8 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                   color: color.withOpacity(0.14),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                child: Icon(Icons.build_circle_outlined, color: color, size: 20),
+                child:
+                    Icon(Icons.build_circle_outlined, color: color, size: 20),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -297,14 +304,16 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                     Text(
                       repair['issue'] as String,
                       style: AppTypography.bodySmall.copyWith(
-                        color: isDark ? Colors.white70 : AppColors.textSecondary,
+                        color:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.14),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
@@ -325,7 +334,8 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
             runSpacing: AppSpacing.sm,
             children: [
               _buildDetail('Date', repair['date'] as String, isDark),
-              _buildDetail('Technician', repair['technician'] as String, isDark),
+              _buildDetail(
+                  'Technician', repair['technician'] as String, isDark),
               _buildDetail('Priority', repair['priority'] as String, isDark),
               _buildDetail('Cost', repair['cost'] as String, isDark),
             ],

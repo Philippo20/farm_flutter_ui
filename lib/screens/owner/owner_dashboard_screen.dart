@@ -18,11 +18,8 @@ class OwnerDashboardScreen extends StatefulWidget {
 class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   bool isDark = false;
   int selectedIndex = 0;
-  
 
   final GlobalKey filterPillKey = GlobalKey();
-
-  
 
   @override
   void initState() {
@@ -73,7 +70,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            
                             const SizedBox(height: 12),
                             Text(
                               "Dashboard Overview",
@@ -194,8 +190,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                                     children: [
                                       Expanded(
                                         flex: 3,
-                                        child:
-                                            OwnerProductionWidget(isDark: isDark),
+                                        child: OwnerProductionWidget(
+                                            isDark: isDark),
                                       ),
                                       const SizedBox(width: 20),
                                       Expanded(
@@ -221,12 +217,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         ),
       ),
       bottomNavigationBar: isMobile
-          ? OwnerSidebar(
-              selectedIndex: selectedIndex,
-              onItemSelected: (idx) => setState(() => selectedIndex = idx),
-              isDark: isDark,
-              isMobile: true,
-            )
+          ? SafeArea(
+              top: false,
+              child: OwnerSidebar(
+                selectedIndex: selectedIndex,
+                onItemSelected: (idx) => setState(() => selectedIndex = idx),
+                isDark: isDark,
+                isMobile: true,
+              ))
           : null,
     );
   }

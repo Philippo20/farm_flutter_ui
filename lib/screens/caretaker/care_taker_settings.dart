@@ -8,7 +8,9 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/caretaker_header.dart';
 import '../../core/widgets/caretaker_mobile_bottom_nav.dart';
 import '../../core/widgets/caretaker_sidebar.dart';
+import '../../core/widgets/adaptive_logout_confirmation.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Settings screen for caretaker workflows.
 /// Preferences are stored locally on the device using SharedPreferences.
@@ -41,11 +43,14 @@ class _CareTakerSettingsScreenState
   String _shiftStart = '06:00 AM';
   String _reminderLeadTime = '30 minutes';
   String _defaultLandingPage = 'Dashboard';
+  final SuperAdminApiService _api = SuperAdminApiService();
+  bool _settingsSyncing = false;
 
   @override
   void initState() {
     super.initState();
     _loadPreferences();
+    _loadBackendSettings();
   }
 
   Future<void> _loadPreferences() async {
@@ -70,6 +75,79 @@ class _CareTakerSettingsScreenState
       _defaultLandingPage =
           prefs.getString(_prefKey('defaultLandingPage')) ?? 'Dashboard';
     });
+  }
+
+  Future<void> _loadBackendSettings() async {
+    final userId = ref.read(authProvider).user?.id;
+    if (userId == null || userId.isEmpty) return;
+    try {
+      final settings = await _api.getCaretakerSettings(userId);
+      if (!mounted) return;
+      setState(() {
+        _taskReminders = settings['task_reminders'] as bool? ?? _taskReminders;
+        _anomalyAlerts = settings['anomaly_alerts'] as bool? ?? _anomalyAlerts;
+        _weatherWarnings =
+            settings['weather_warnings'] as bool? ?? _weatherWarnings;
+        _chatNotifications =
+            settings['chat_notifications'] as bool? ?? _chatNotifications;
+        _emailSummaries =
+            settings['email_summaries'] as bool? ?? _emailSummaries;
+        _soundAlerts = settings['sound_alerts'] as bool? ?? _soundAlerts;
+        _offlineMode = settings['offline_mode'] as bool? ?? _offlineMode;
+        _autoSyncRecords =
+            settings['auto_sync_records'] as bool? ?? _autoSyncRecords;
+        _compactCards = settings['compact_cards'] as bool? ?? _compactCards;
+        _biometricLock = settings['biometric_lock'] as bool? ?? _biometricLock;
+        _shiftStart = settings['shift_start'] as String? ?? _shiftStart;
+        _reminderLeadTime =
+            settings['reminder_lead_time'] as String? ?? _reminderLeadTime;
+        _defaultLandingPage =
+            settings['default_landing_page'] as String? ?? _defaultLandingPage;
+      });
+      final theme = settings['theme_mode']?.toString();
+      if (theme == 'light') {
+        ref.read(themeProvider.notifier).setTheme(ThemeMode.light);
+      } else if (theme == 'dark') {
+        ref.read(themeProvider.notifier).setTheme(ThemeMode.dark);
+      }
+    } catch (error) {
+      if (mounted) {
+        _showMessage('Using local settings until sync is available.');
+      }
+    }
+  }
+
+  Map<String, dynamic> _settingsPayload() => {
+        'task_reminders': _taskReminders,
+        'anomaly_alerts': _anomalyAlerts,
+        'weather_warnings': _weatherWarnings,
+        'chat_notifications': _chatNotifications,
+        'email_summaries': _emailSummaries,
+        'sound_alerts': _soundAlerts,
+        'offline_mode': _offlineMode,
+        'auto_sync_records': _autoSyncRecords,
+        'compact_cards': _compactCards,
+        'biometric_lock': _biometricLock,
+        'shift_start': _shiftStart,
+        'reminder_lead_time': _reminderLeadTime,
+        'default_landing_page': _defaultLandingPage,
+        'theme_mode': ref.read(themeProvider).name,
+      };
+
+  Future<void> _persistSettings() async {
+    final userId = ref.read(authProvider).user?.id;
+    if (userId == null || userId.isEmpty) return;
+    if (mounted) setState(() => _settingsSyncing = true);
+    try {
+      await _api.updateCaretakerSettings(
+        userId: userId,
+        settings: _settingsPayload(),
+      );
+    } catch (_) {
+      if (mounted) _showMessage('Saved on this device. Backend sync failed.');
+    } finally {
+      if (mounted) setState(() => _settingsSyncing = false);
+    }
   }
 
   String _prefKey(String key) => '$_prefPrefix.$key';
@@ -125,7 +203,8 @@ class _CareTakerSettingsScreenState
       _defaultLandingPage = 'Dashboard';
     });
 
-    _showMessage('Caretaker preferences reset on this device.');
+    await _persistSettings();
+    _showMessage('Caretaker preferences reset and synced.');
   }
 
   Color _primaryTextColor(bool isDark) {
@@ -133,48 +212,26 @@ class _CareTakerSettingsScreenState
   }
 
   Color _secondaryTextColor(bool isDark) {
-    return isDark ? AppColors.textOnDark.withOpacity(0.82) : AppColors.textSecondary;
+    return isDark
+        ? AppColors.textOnDark.withOpacity(0.82)
+        : AppColors.textSecondary;
   }
 
   Color _inactiveNavColor(bool isDark) {
-    return isDark ? AppColors.textOnDark.withOpacity(0.75) : AppColors.textSecondary;
+    return isDark
+        ? AppColors.textOnDark.withOpacity(0.75)
+        : AppColors.textSecondary;
   }
 
   Future<void> _confirmLogout(bool isDark) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        title: Text(
-          'Sign out',
-          style: AppTypography.h6.copyWith(color: _primaryTextColor(isDark)),
-        ),
-        content: Text(
-          'End the current caretaker session on this device?',
-          style: AppTypography.bodySmall.copyWith(
-            color: isDark ? Colors.white : AppColors.textSecondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(
-              'Cancel',
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark ? Colors.white : AppColors.textSecondary,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Sign out'),
-          ),
-        ],
-      ),
+    final confirmed = await showAdaptiveLogoutConfirmation(
+      context,
+      title: 'Sign out',
+      message: 'End the current caretaker session on this device?',
+      confirmLabel: 'Sign out',
     );
 
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     await ref.read(authProvider.notifier).logout();
     if (!mounted) return;
@@ -200,6 +257,7 @@ class _CareTakerSettingsScreenState
   ) async {
     setState(updater);
     await _saveBool(key, value);
+    await _persistSettings();
   }
 
   Future<void> _setStringPreference(
@@ -209,6 +267,292 @@ class _CareTakerSettingsScreenState
   ) async {
     setState(updater);
     await _saveString(key, value);
+    await _persistSettings();
+  }
+
+  Future<void> _setTheme(ThemeMode mode) async {
+    ref.read(themeProvider.notifier).setTheme(mode);
+    await _saveString('themeMode', mode.name);
+    await _persistSettings();
+  }
+
+  Widget _settingsModal({
+    required BuildContext modalContext,
+    required Widget title,
+    required Widget content,
+    required List<Widget> actions,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surface = isDark ? AppColors.darkCard : AppColors.card;
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(20),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520, maxHeight: 680),
+        child: Container(
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: DefaultTextStyle(
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                            child: title,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Close',
+                          icon: const Icon(Icons.close, color: Colors.white),
+                          onPressed: () => Navigator.pop(modalContext, false),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                  child: content,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: actions,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _editProfile() async {
+    final user = ref.read(authProvider).user;
+    if (user == null) return;
+    final nameController = TextEditingController(text: user.name);
+    final emailController = TextEditingController(text: user.email);
+    final addressController = TextEditingController(text: user.address);
+    final formKey = GlobalKey<FormState>();
+    final shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => _settingsModal(
+        modalContext: dialogContext,
+        title: const Text('Edit profile'),
+        content: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Full name'),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Enter your name'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  validator: (value) => value == null || !value.contains('@')
+                      ? 'Enter a valid email'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: addressController,
+                  decoration: const InputDecoration(labelText: 'Address'),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.pop(dialogContext, true);
+              }
+            },
+            child: const Text('Save changes'),
+          ),
+        ],
+      ),
+    );
+    if (shouldSave != true || !mounted) {
+      nameController.dispose();
+      emailController.dispose();
+      addressController.dispose();
+      return;
+    }
+    try {
+      await _api.updateUserProfile(
+        id: user.id,
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        address: addressController.text.trim(),
+      );
+      await ref.read(authProvider.notifier).updateCurrentUserProfile(
+            name: nameController.text.trim(),
+            email: emailController.text.trim(),
+            address: addressController.text.trim(),
+          );
+      _showMessage('Profile updated successfully.');
+    } catch (error) {
+      _showMessage('Unable to update profile: $error');
+    } finally {
+      nameController.dispose();
+      emailController.dispose();
+      addressController.dispose();
+    }
+  }
+
+  Future<void> _changePassword() async {
+    final userId = ref.read(authProvider).user?.id;
+    if (userId == null || userId.isEmpty) return;
+    final passwordController = TextEditingController();
+    final confirmController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => _settingsModal(
+        modalContext: dialogContext,
+        title: const Text('Change password'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'New password'),
+                validator: (value) => value == null || value.length < 8
+                    ? 'Use at least 8 characters'
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: confirmController,
+                obscureText: true,
+                decoration:
+                    const InputDecoration(labelText: 'Confirm password'),
+                validator: (value) => value != passwordController.text
+                    ? 'Passwords do not match'
+                    : null,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.pop(dialogContext, true);
+              }
+            },
+            child: const Text('Update password'),
+          ),
+        ],
+      ),
+    );
+    if (shouldSave != true || !mounted) {
+      passwordController.dispose();
+      confirmController.dispose();
+      return;
+    }
+    try {
+      await _api.updateUserPassword(
+        id: userId,
+        password: passwordController.text,
+      );
+      _showMessage('Password updated successfully.');
+    } catch (error) {
+      _showMessage('Unable to update password: $error');
+    } finally {
+      passwordController.dispose();
+      confirmController.dispose();
+    }
+  }
+
+  void _showHelpCenter() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => _settingsModal(
+        modalContext: dialogContext,
+        title: const Text('Caretaker help center'),
+        content: const SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Input confirmations',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              SizedBox(height: 4),
+              Text(
+                  'Review assigned inputs and update them as Received or Confirmed.'),
+              SizedBox(height: 14),
+              Text('Records and tasks',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              SizedBox(height: 4),
+              Text(
+                  'Use the task and record screens to keep farm activity current. Changes are synced to the backend.'),
+              SizedBox(height: 14),
+              Text('Connectivity',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              SizedBox(height: 4),
+              Text(
+                  'Keep Auto-sync enabled so saved work is sent when connectivity returns.'),
+            ],
+          ),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _navigateTo(String route, int index) async {
@@ -244,10 +588,13 @@ class _CareTakerSettingsScreenState
           ? _buildMobileLayout(isDark, userName, userEmail, themeMode)
           : _buildDesktopLayout(isDark, userName, userEmail, themeMode),
       bottomNavigationBar: isMobile
-          ? CaretakerMobileBottomNav(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
-            )
+          ? SafeArea(
+              top: false,
+              child: CaretakerMobileBottomNav(
+                selectedIndex: _selectedNavIndex,
+                onItemSelected: (index) =>
+                    setState(() => _selectedNavIndex = index),
+              ))
           : null,
     );
   }
@@ -277,7 +624,8 @@ class _CareTakerSettingsScreenState
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: _buildContent(isDark, false, userName, userEmail, themeMode),
+                  child: _buildContent(
+                      isDark, false, userName, userEmail, themeMode),
                 ),
               ),
             ],
@@ -428,12 +776,16 @@ class _CareTakerSettingsScreenState
               Icon(
                 Icons.verified_user_outlined,
                 size: 16,
-                color: isDark ? Colors.white.withOpacity(0.9) : AppColors.primaryDark,
+                color: isDark
+                    ? Colors.white.withOpacity(0.9)
+                    : AppColors.primaryDark,
               ),
               const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
-                  'Changes save locally on this device immediately.',
+                  _settingsSyncing
+                      ? 'Saving changes to your caretaker profile...'
+                      : 'Changes sync to your caretaker profile automatically.',
                   style: AppTypography.bodySmall.copyWith(
                     color: _secondaryTextColor(isDark),
                   ),
@@ -513,7 +865,8 @@ class _CareTakerSettingsScreenState
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.info.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusFull),
                       ),
                       child: Text(
                         'Caretaker role',
@@ -547,9 +900,7 @@ class _CareTakerSettingsScreenState
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () => _showMessage(
-                    'Profile editing is not connected to backend data yet.',
-                  ),
+                  onPressed: _editProfile,
                   icon: const Icon(Icons.edit_outlined, size: 18),
                   label: const Text('Edit Profile'),
                   style: OutlinedButton.styleFrom(
@@ -566,9 +917,7 @@ class _CareTakerSettingsScreenState
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _showMessage(
-                    'Password management is not wired to authentication yet.',
-                  ),
+                  onPressed: _changePassword,
                   icon: const Icon(Icons.lock_outline_rounded, size: 18),
                   label: const Text('Security'),
                   style: ElevatedButton.styleFrom(
@@ -604,7 +953,7 @@ class _CareTakerSettingsScreenState
             subtitle: 'Higher contrast for bright environments',
             icon: Icons.light_mode_outlined,
             isSelected: themeMode == ThemeMode.light,
-            onTap: () => ref.read(themeProvider.notifier).setTheme(ThemeMode.light),
+            onTap: () => _setTheme(ThemeMode.light),
           ),
           const SizedBox(height: AppSpacing.sm),
           _buildThemeOption(
@@ -613,7 +962,7 @@ class _CareTakerSettingsScreenState
             subtitle: 'Reduce glare during night or indoor monitoring',
             icon: Icons.dark_mode_outlined,
             isSelected: themeMode == ThemeMode.dark,
-            onTap: () => ref.read(themeProvider.notifier).setTheme(ThemeMode.dark),
+            onTap: () => _setTheme(ThemeMode.dark),
           ),
           const SizedBox(height: AppSpacing.md),
           _buildSwitchTile(
@@ -872,7 +1221,7 @@ class _CareTakerSettingsScreenState
             icon: Icons.help_outline_rounded,
             title: 'Help center',
             subtitle: 'Get guidance for records, alerts, and reporting',
-            onTap: () => _showMessage('Help center is not wired into this build yet.'),
+            onTap: _showHelpCenter,
           ),
           const SizedBox(height: AppSpacing.sm),
           _buildActionTile(
@@ -1014,7 +1363,9 @@ class _CareTakerSettingsScreenState
           border: Border.all(
             color: isSelected
                 ? AppColors.primary.withOpacity(0.5)
-                : (isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200),
+                : (isDark
+                    ? Colors.white.withOpacity(0.08)
+                    : AppColors.neutral200),
           ),
         ),
         child: Row(
@@ -1030,7 +1381,9 @@ class _CareTakerSettingsScreenState
               child: Icon(
                 icon,
                 size: 20,
-                color: isSelected ? AppColors.primary : _secondaryTextColor(isDark),
+                color: isSelected
+                    ? AppColors.primary
+                    : _secondaryTextColor(isDark),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
@@ -1057,7 +1410,8 @@ class _CareTakerSettingsScreenState
             ),
             Icon(
               isSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
-              color: isSelected ? AppColors.primary : _secondaryTextColor(isDark),
+              color:
+                  isSelected ? AppColors.primary : _secondaryTextColor(isDark),
             ),
           ],
         ),
@@ -1153,7 +1507,8 @@ class _CareTakerSettingsScreenState
           dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
           decoration: InputDecoration(
             filled: true,
-            fillColor: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
+            fillColor:
+                isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
               vertical: 14,
@@ -1318,7 +1673,8 @@ class _CareTakerSettingsScreenState
         ],
         border: Border(
           top: BorderSide(
-            color: isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral200,
+            color:
+                isDark ? Colors.white.withOpacity(0.1) : AppColors.neutral200,
           ),
         ),
       ),
@@ -1339,14 +1695,17 @@ class _CareTakerSettingsScreenState
                       Icon(
                         item['icon'] as IconData,
                         size: 24,
-                        color: isSelected ? AppColors.primary : _inactiveNavColor(isDark),
+                        color: isSelected
+                            ? AppColors.primary
+                            : _inactiveNavColor(isDark),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         item['label'] as String,
                         style: AppTypography.caption.copyWith(
-                          color:
-                              isSelected ? AppColors.primary : _inactiveNavColor(isDark),
+                          color: isSelected
+                              ? AppColors.primary
+                              : _inactiveNavColor(isDark),
                           fontWeight:
                               isSelected ? FontWeight.w600 : FontWeight.normal,
                           fontSize: 11,

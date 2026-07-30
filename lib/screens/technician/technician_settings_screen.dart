@@ -65,15 +65,19 @@ class _TechnicianSettingsScreenState
     final userEmail = authState.user?.email ?? 'technician@farmestates.com';
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, userName, themeMode)
           : _buildDesktopLayout(isDark, userName, userEmail, themeMode),
       bottomNavigationBar: isMobile
-          ? TechnicianMobileBottomNav(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) => setState(() => _selectedNavIndex = index),
-            )
+          ? SafeArea(
+              top: false,
+              child: TechnicianMobileBottomNav(
+                selectedIndex: _selectedNavIndex,
+                onItemSelected: (index) =>
+                    setState(() => _selectedNavIndex = index),
+              ))
           : null,
     );
   }
@@ -160,7 +164,8 @@ class _TechnicianSettingsScreenState
                 isDark,
                 'Light mode',
                 themeMode == ThemeMode.light,
-                () => ref.read(themeProvider.notifier).setTheme(ThemeMode.light),
+                () =>
+                    ref.read(themeProvider.notifier).setTheme(ThemeMode.light),
               ),
               const SizedBox(height: AppSpacing.sm),
               _buildThemeTile(
@@ -178,14 +183,16 @@ class _TechnicianSettingsScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionTitle('Alerts', Icons.notifications_outlined, isDark),
+              _buildSectionTitle(
+                  'Alerts', Icons.notifications_outlined, isDark),
               const SizedBox(height: AppSpacing.md),
               _buildSwitchTile(
                 isDark,
                 'Push alerts',
                 'Show device and maintenance alerts immediately',
                 _pushAlerts,
-                (value) => _setBool('pushAlerts', value, () => _pushAlerts = value),
+                (value) =>
+                    _setBool('pushAlerts', value, () => _pushAlerts = value),
               ),
               const SizedBox(height: AppSpacing.sm),
               _buildSwitchTile(
@@ -193,7 +200,8 @@ class _TechnicianSettingsScreenState
                 'SMS alerts',
                 'Receive field alerts by text when offline',
                 _smsAlerts,
-                (value) => _setBool('smsAlerts', value, () => _smsAlerts = value),
+                (value) =>
+                    _setBool('smsAlerts', value, () => _smsAlerts = value),
               ),
               const SizedBox(height: AppSpacing.sm),
               _buildSwitchTile(
@@ -216,15 +224,16 @@ class _TechnicianSettingsScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionTitle('Device', Icons.phone_android_outlined, isDark),
+              _buildSectionTitle(
+                  'Device', Icons.phone_android_outlined, isDark),
               const SizedBox(height: AppSpacing.md),
               _buildSwitchTile(
                 isDark,
                 'Offline drafts',
                 'Keep issue reports and inspections until sync returns',
                 _offlineDrafts,
-                (value) =>
-                    _setBool('offlineDrafts', value, () => _offlineDrafts = value),
+                (value) => _setBool(
+                    'offlineDrafts', value, () => _offlineDrafts = value),
               ),
               const SizedBox(height: AppSpacing.sm),
               _buildSwitchTile(

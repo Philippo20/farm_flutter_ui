@@ -24,7 +24,51 @@ class SuperAdminApiService {
   Future<List<Map<String, dynamic>>> getPackages() => _getDocuments('/package');
   Future<List<Map<String, dynamic>>> getPricing() => _getDocuments('/pricing');
   Future<List<Map<String, dynamic>>> getSales() => _getDocuments('/sales');
+  Future<List<Map<String, dynamic>>> getWallet() => _getDocuments('/wallet');
   Future<List<Map<String, dynamic>>> getAudits() => _getDocuments('/audits');
+  Future<List<Map<String, dynamic>>> getAlerts() => _getDocuments('/alerts');
+  Future<
+      List<
+          Map<String,
+              dynamic>>> getNotifications(String recipientId) => _getDocuments(
+      '/notifications?recipient_id=${Uri.encodeQueryComponent(recipientId)}');
+
+  Future<void> markNotificationAsRead(String notificationId) async {
+    final response = await _client
+        .patch(
+          Uri.parse(
+              '$baseUrl/notifications/${Uri.encodeComponent(notificationId)}/read'),
+        )
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback:
+              'Failed to mark notification as read (${response.statusCode})',
+        ),
+      );
+    }
+  }
+
+  Future<void> markAllNotificationsAsRead(String recipientId) async {
+    final response = await _client
+        .patch(
+          Uri.parse(
+              '$baseUrl/notifications/read-all?recipient_id=${Uri.encodeQueryComponent(recipientId)}'),
+        )
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback:
+              'Failed to mark notifications as read (${response.statusCode})',
+        ),
+      );
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getInventory() =>
       _getDocuments('/inventory');
   Future<List<Map<String, dynamic>>> getInventoryMovements() =>
@@ -34,9 +78,79 @@ class SuperAdminApiService {
   Future<List<Map<String, dynamic>>> getSensors() => _getDocuments('/sensors');
   Future<List<Map<String, dynamic>>> getFundRequests() =>
       _getDocuments('/fund-requests');
+  Future<List<Map<String, dynamic>>> getFarmTasks() =>
+      _getDocuments('/farm-tasks');
+  Future<List<Map<String, dynamic>>> getFarmRecords() =>
+      _getDocuments('/farm-records');
+  Future<List<Map<String, dynamic>>> getInputConfirmations({
+    String? caretakerId,
+    String? farmId,
+  }) {
+    final query = <String>[];
+    if (caretakerId != null && caretakerId.isNotEmpty) {
+      query.add('caretaker_id=${Uri.encodeQueryComponent(caretakerId)}');
+    }
+    if (farmId != null && farmId.isNotEmpty) {
+      query.add('farm_id=${Uri.encodeQueryComponent(farmId)}');
+    }
+    final suffix = query.isEmpty ? '' : '?${query.join('&')}';
+    return _getDocuments('/input-confirmations$suffix');
+  }
+
+  Future<Map<String, dynamic>> getCaretakerSettings(String userId) async {
+    final response = await _client
+        .get(Uri.parse(
+            '$baseUrl/caretaker-settings?user_id=${Uri.encodeQueryComponent(userId)}'))
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback:
+              'Failed to load caretaker settings (${response.statusCode})',
+        ),
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic> || decoded['settings'] is! Map) {
+      throw const SuperAdminApiException('Invalid caretaker settings response');
+    }
+    return Map<String, dynamic>.from(decoded['settings'] as Map);
+  }
+
+  Future<Map<String, dynamic>> updateCaretakerSettings({
+    required String userId,
+    required Map<String, dynamic> settings,
+  }) async {
+    final response = await _client
+        .put(
+          Uri.parse(
+              '$baseUrl/caretaker-settings/${Uri.encodeComponent(userId)}'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(settings),
+        )
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback:
+              'Failed to save caretaker settings (${response.statusCode})',
+        ),
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic> || decoded['settings'] is! Map) {
+      throw const SuperAdminApiException(
+          'Invalid caretaker settings save response');
+    }
+    return Map<String, dynamic>.from(decoded['settings'] as Map);
+  }
 
   Future<List<Map<String, dynamic>>> getSensorReadings(String serialNumber) =>
       _getDocuments('/sensors/${Uri.encodeComponent(serialNumber)}/readings');
+  Future<List<Map<String, dynamic>>> getSensorReadingsAll() =>
+      _getDocuments('/sensor-readings');
 
   Future<Map<String, dynamic>> createFundRequest({
     required Map<String, dynamic> data,
@@ -64,6 +178,198 @@ class SuperAdminApiService {
           'Invalid fund request create response');
     }
     return decoded;
+  }
+
+  Future<Map<String, dynamic>> createWalletWithdrawal({
+    required Map<String, dynamic> data,
+  }) async {
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl/wallet/withdrawals'),
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: data.map((key, value) => MapEntry(key, value.toString())),
+        )
+        .withApiTimeout();
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback:
+              'Failed to submit withdrawal request (${response.statusCode})',
+        ),
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid withdrawal request response');
+    }
+    if (decoded['error'] is String) {
+      throw SuperAdminApiException(decoded['error'].toString());
+    }
+    return decoded;
+  }
+
+  Future<Map<String, dynamic>> createWalletBankAccount({
+    required Map<String, dynamic> data,
+  }) async {
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl/wallet/bank-accounts'),
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: data.map((key, value) => MapEntry(key, value.toString())),
+        )
+        .withApiTimeout();
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to add payout account (${response.statusCode})',
+        ),
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid payout account response');
+    }
+    if (decoded['error'] is String) {
+      throw SuperAdminApiException(decoded['error'].toString());
+    }
+    return decoded;
+  }
+
+  Future<Map<String, dynamic>> createFarmTask({
+    required Map<String, dynamic> data,
+  }) async {
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl/farm-tasks/info'),
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: data.map((key, value) => MapEntry(key, value.toString())),
+        )
+        .withApiTimeout();
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to assign farm task (${response.statusCode})',
+        ),
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid farm task create response');
+    }
+    return decoded;
+  }
+
+  Future<Map<String, dynamic>> createFarmRecord({
+    required Map<String, dynamic> data,
+  }) async {
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl/farm-records/info'),
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: data.map((key, value) => MapEntry(key, value.toString())),
+        )
+        .withApiTimeout();
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to submit farm record (${response.statusCode})',
+        ),
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid farm record create response');
+    }
+    return decoded;
+  }
+
+  Future<Map<String, dynamic>> updateInputConfirmationStatus({
+    required String id,
+    required String status,
+    required String caretakerId,
+    required String caretakerName,
+  }) async {
+    final response = await _client.patch(
+      Uri.parse(
+          '$baseUrl/input-confirmations/${Uri.encodeComponent(id)}/status'),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {
+        'status': status,
+        'caretaker_id': caretakerId,
+        'caretaker_name': caretakerName,
+      },
+    ).withApiTimeout();
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback:
+              'Failed to update input confirmation (${response.statusCode})',
+        ),
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException(
+          'Invalid input confirmation update response');
+    }
+    return decoded;
+  }
+
+  Future<Map<String, dynamic>> updateFarmTask({
+    required String id,
+    required Map<String, dynamic> data,
+  }) async {
+    final response = await _client
+        .put(
+          Uri.parse('$baseUrl/farm-tasks/${Uri.encodeComponent(id)}'),
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: data.map((key, value) => MapEntry(key, value.toString())),
+        )
+        .withApiTimeout();
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to update farm task (${response.statusCode})',
+        ),
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid farm task update response');
+    }
+    return decoded;
+  }
+
+  Future<void> deleteFarmTask(String id) async {
+    final response = await _client
+        .delete(Uri.parse('$baseUrl/farm-tasks/${Uri.encodeComponent(id)}'))
+        .withApiTimeout();
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to delete farm task (${response.statusCode})',
+        ),
+      );
+    }
   }
 
   Future<Map<String, dynamic>> updateFundRequest({
@@ -253,7 +559,10 @@ class SuperAdminApiService {
         'driver_name': value(data['driver_name'], 'Unassigned'),
         'vehicle': value(data['vehicle'], 'Pending'),
         'destination': value(data['destination'], 'Sales Hub'),
+        'address': value(data['address'], ''),
+        'scheduled_date': dateValue(data['scheduled_date']),
         'eta': value(data['eta'], ''),
+        'temperature': value(data['temperature'], 'N/A'),
         'priority': value(data['priority'], 'Medium'),
         'delivery_note': value(data['delivery_note'], ''),
       },
@@ -319,7 +628,10 @@ class SuperAdminApiService {
         'driver_name': value(data['driver_name'], 'Unassigned'),
         'vehicle': value(data['vehicle'], 'Pending'),
         'destination': value(data['destination'], 'Sales Hub'),
+        'address': value(data['address'], ''),
+        'scheduled_date': dateValue(data['scheduled_date']),
         'eta': value(data['eta'], ''),
+        'temperature': value(data['temperature'], 'N/A'),
         'priority': value(data['priority'], 'Medium'),
         'delivery_note': value(data['delivery_note'], ''),
       },
@@ -800,6 +1112,47 @@ class SuperAdminApiService {
       throw const SuperAdminApiException('Invalid update response');
     }
     return decoded;
+  }
+
+  Future<Map<String, dynamic>> updateUserProfile({
+    required String id,
+    required String name,
+    required String email,
+    required String address,
+  }) async {
+    final response = await _client.patch(
+      Uri.parse('$baseUrl/users/${Uri.encodeComponent(id)}/profile'),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {'name': name, 'email': email, 'address': address},
+    ).withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(response.body,
+            fallback: 'Failed to update profile (${response.statusCode})'),
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid profile update response');
+    }
+    return decoded;
+  }
+
+  Future<void> updateUserPassword({
+    required String id,
+    required String password,
+  }) async {
+    final response = await _client.patch(
+      Uri.parse('$baseUrl/users/${Uri.encodeComponent(id)}/password'),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {'password': password},
+    ).withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(response.body,
+            fallback: 'Failed to update password (${response.statusCode})'),
+      );
+    }
   }
 
   Future<Map<String, dynamic>> createUser({

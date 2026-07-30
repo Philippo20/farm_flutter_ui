@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 import '../../core/widgets/notification_center.dart';
@@ -37,12 +37,15 @@ class OwnerHeader extends StatelessWidget implements PreferredSizeWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmall = screenWidth < 600;
     final isVerySmall = screenWidth < 400;
+    final statusBarHeight = isSmall ? MediaQuery.of(context).padding.top : 0.0;
 
     return Container(
-      height: isSmall ? 150 : preferredSize.height,
-      padding: EdgeInsets.symmetric(
-        horizontal: isSmall ? 16 : 24,
-        vertical: 8,
+      height: isSmall ? 150 + statusBarHeight : preferredSize.height,
+      padding: EdgeInsets.only(
+        left: isSmall ? 16 : 24,
+        right: isSmall ? 16 : 24,
+        top: 8 + statusBarHeight,
+        bottom: 8,
       ),
       decoration: BoxDecoration(
         color: Colors.transparent,

@@ -21,6 +21,8 @@ class SensorOverviewPanel extends StatelessWidget {
   double _v(String key, [double fallback = 0]) =>
       (sensorData[key]?['value'] ?? fallback).toDouble();
 
+  bool _has(String key) => sensorData[key]?['hasSensor'] == true;
+
   List<double> _mockSpark(double base, double range) =>
       List.generate(24, (i) => base + range * (0.5 - (i % 7) / 14));
 
@@ -39,9 +41,8 @@ class SensorOverviewPanel extends StatelessWidget {
 
       return Container(
         decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withOpacity(0.03)
-              : const Color(0xFFFAFAFA),
+          color:
+              isDark ? Colors.white.withOpacity(0.03) : const Color(0xFFFAFAFA),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isDark
@@ -229,56 +230,60 @@ class SensorOverviewPanel extends StatelessWidget {
       mainAxisSpacing: gap,
       childAspectRatio: ratio,
       children: [
-        SensorGaugeCard(
-          label: 'Temperature',
-          currentValue: _v('temperature', 25.5),
-          unit: '°C',
-          minValue: 10,
-          maxValue: 45,
-          optimalMin: 20,
-          optimalMax: 30,
-          accentColor: Colors.deepOrange,
-          icon: Icons.thermostat_outlined,
-          trendText: '+0.5',
-          trendUp: true,
-        ),
-        SensorGaugeCard(
-          label: 'Humidity',
-          currentValue: _v('humidity', 65),
-          unit: '%',
-          minValue: 0,
-          maxValue: 100,
-          optimalMin: 50,
-          optimalMax: 80,
-          accentColor: Colors.blue,
-          icon: Icons.water_drop_outlined,
-          trendText: '-2',
-          trendUp: false,
-        ),
-        SensorGaugeCard(
-          label: 'pH Level',
-          currentValue: _v('ph', 6.5),
-          unit: 'pH',
-          minValue: 0,
-          maxValue: 14,
-          optimalMin: 5.5,
-          optimalMax: 7.5,
-          accentColor: const Color(0xFF66BB6A),
-          icon: Icons.science_outlined,
-        ),
-        SensorGaugeCard(
-          label: 'EC Level',
-          currentValue: _v('ec', 1.8),
-          unit: 'mS/cm',
-          minValue: 0,
-          maxValue: 5,
-          optimalMin: 1.2,
-          optimalMax: 2.5,
-          accentColor: const Color(0xFF7E57C2),
-          icon: Icons.bolt_outlined,
-          trendText: '+0.1',
-          trendUp: true,
-        ),
+        if (_has('temperature'))
+          SensorGaugeCard(
+            label: 'Temperature',
+            currentValue: _v('temperature', 25.5),
+            unit: '°C',
+            minValue: 10,
+            maxValue: 45,
+            optimalMin: 20,
+            optimalMax: 30,
+            accentColor: Colors.deepOrange,
+            icon: Icons.thermostat_outlined,
+            trendText: '+0.5',
+            trendUp: true,
+          ),
+        if (_has('humidity'))
+          SensorGaugeCard(
+            label: 'Humidity',
+            currentValue: _v('humidity', 65),
+            unit: '%',
+            minValue: 0,
+            maxValue: 100,
+            optimalMin: 50,
+            optimalMax: 80,
+            accentColor: Colors.blue,
+            icon: Icons.water_drop_outlined,
+            trendText: '-2',
+            trendUp: false,
+          ),
+        if (_has('ph'))
+          SensorGaugeCard(
+            label: 'pH Level',
+            currentValue: _v('ph', 6.5),
+            unit: 'pH',
+            minValue: 0,
+            maxValue: 14,
+            optimalMin: 5.5,
+            optimalMax: 7.5,
+            accentColor: const Color(0xFF66BB6A),
+            icon: Icons.science_outlined,
+          ),
+        if (_has('ec'))
+          SensorGaugeCard(
+            label: 'EC Level',
+            currentValue: _v('ec', 1.8),
+            unit: 'mS/cm',
+            minValue: 0,
+            maxValue: 5,
+            optimalMin: 1.2,
+            optimalMax: 2.5,
+            accentColor: const Color(0xFF7E57C2),
+            icon: Icons.bolt_outlined,
+            trendText: '+0.1',
+            trendUp: true,
+          ),
       ],
     );
   }
@@ -310,54 +315,106 @@ class SensorOverviewPanel extends StatelessWidget {
           mainAxisSpacing: gap,
           childAspectRatio: ratio,
           children: [
-            LiveSensorCard(
-              name: 'CO\u2082 Level',
-              value: '${_v('co2', 850).toInt()}',
-              unit: 'ppm',
-              icon: Icons.cloud_outlined,
-              color: Colors.teal,
-              sparkData: _mockSpark(850, 80),
-              status: 'Normal',
-              trend: '+12',
-              trendUp: true,
-              lastUpdated:
-                  DateTime.now().subtract(const Duration(seconds: 30)),
-            ),
-            LiveSensorCard(
-              name: 'Light',
-              value: '${(_v('light', 45000) / 1000).toStringAsFixed(1)}k',
-              unit: 'lux',
-              icon: Icons.wb_sunny_outlined,
-              color: Colors.amber.shade700,
-              sparkData: _mockSpark(45, 8),
-              status: 'Optimal',
-              lastUpdated:
-                  DateTime.now().subtract(const Duration(minutes: 1)),
-            ),
-            LiveSensorCard(
-              name: 'Water Temp',
-              value: _v('waterTemp', 22.5).toStringAsFixed(1),
-              unit: '°C',
-              icon: Icons.waves_outlined,
-              color: Colors.cyan,
-              sparkData: _mockSpark(22.5, 3),
-              status: 'Normal',
-              trend: '-0.3',
-              trendUp: false,
-              lastUpdated:
-                  DateTime.now().subtract(const Duration(seconds: 45)),
-            ),
-            LiveSensorCard(
-              name: 'TDS',
-              value: '${_v('tds', 620).toInt()}',
-              unit: 'ppm',
-              icon: Icons.opacity_outlined,
-              color: Colors.indigo,
-              sparkData: _mockSpark(620, 40),
-              status: 'Normal',
-              lastUpdated:
-                  DateTime.now().subtract(const Duration(minutes: 2)),
-            ),
+            if (_has('co2'))
+              LiveSensorCard(
+                name: 'CO\u2082 Level',
+                value: '${_v('co2', 850).toInt()}',
+                unit: 'ppm',
+                icon: Icons.cloud_outlined,
+                color: Colors.teal,
+                sparkData: _mockSpark(850, 80),
+                status: 'Normal',
+                trend: '+12',
+                trendUp: true,
+                lastUpdated:
+                    DateTime.now().subtract(const Duration(seconds: 30)),
+              ),
+            if (_has('light'))
+              LiveSensorCard(
+                name: 'Light',
+                value: '${(_v('light', 45000) / 1000).toStringAsFixed(1)}k',
+                unit: 'lux',
+                icon: Icons.wb_sunny_outlined,
+                color: Colors.amber.shade700,
+                sparkData: _mockSpark(45, 8),
+                status: 'Optimal',
+                lastUpdated:
+                    DateTime.now().subtract(const Duration(minutes: 1)),
+              ),
+            if (_has('waterTemp'))
+              LiveSensorCard(
+                name: 'Water Temp',
+                value: _v('waterTemp', 22.5).toStringAsFixed(1),
+                unit: '°C',
+                icon: Icons.waves_outlined,
+                color: Colors.cyan,
+                sparkData: _mockSpark(22.5, 3),
+                status: 'Normal',
+                trend: '-0.3',
+                trendUp: false,
+                lastUpdated:
+                    DateTime.now().subtract(const Duration(seconds: 45)),
+              ),
+            if (_has('waterLevel'))
+              LiveSensorCard(
+                name: 'Water Level',
+                value: _v('waterLevel', 0).toStringAsFixed(1),
+                unit: '%',
+                icon: Icons.water_outlined,
+                color: Colors.lightBlue,
+                sparkData: _mockSpark(_v('waterLevel', 0), 8),
+                status: 'Normal',
+                lastUpdated:
+                    DateTime.now().subtract(const Duration(seconds: 30)),
+              ),
+            if (_has('electricityCurrent'))
+              LiveSensorCard(
+                name: 'Current',
+                value: _v('electricityCurrent', 0).toStringAsFixed(1),
+                unit: 'A',
+                icon: Icons.electrical_services_outlined,
+                color: Colors.orange,
+                sparkData: _mockSpark(_v('electricityCurrent', 0), 2),
+                status: 'Normal',
+                lastUpdated:
+                    DateTime.now().subtract(const Duration(seconds: 30)),
+              ),
+            if (_has('electricityVoltage'))
+              LiveSensorCard(
+                name: 'Voltage',
+                value: _v('electricityVoltage', 0).toStringAsFixed(1),
+                unit: 'V',
+                icon: Icons.bolt_outlined,
+                color: Colors.deepPurple,
+                sparkData: _mockSpark(_v('electricityVoltage', 0), 12),
+                status: 'Normal',
+                lastUpdated:
+                    DateTime.now().subtract(const Duration(seconds: 30)),
+              ),
+            if (_has('electricityWattage'))
+              LiveSensorCard(
+                name: 'Power',
+                value: _v('electricityWattage', 0).toStringAsFixed(1),
+                unit: 'W',
+                icon: Icons.power_outlined,
+                color: Colors.redAccent,
+                sparkData: _mockSpark(_v('electricityWattage', 0), 30),
+                status: 'Normal',
+                lastUpdated:
+                    DateTime.now().subtract(const Duration(seconds: 30)),
+              ),
+            if (_has('tds'))
+              LiveSensorCard(
+                name: 'TDS',
+                value: '${_v('tds', 620).toInt()}',
+                unit: 'ppm',
+                icon: Icons.opacity_outlined,
+                color: Colors.indigo,
+                sparkData: _mockSpark(620, 40),
+                status: 'Normal',
+                lastUpdated:
+                    DateTime.now().subtract(const Duration(minutes: 2)),
+              ),
           ],
         ),
       ],

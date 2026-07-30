@@ -5,6 +5,7 @@ import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import '../../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
+import 'adaptive_logout_confirmation.dart';
 import 'notification_center.dart';
 
 /// Modern Dashboard Scaffold
@@ -457,30 +458,14 @@ class _ModernDashboardScaffoldState
     return name.substring(0, 1).toUpperCase();
   }
 
-  void _handleLogout() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(authProvider.notifier).logout();
-              Navigator.of(context).pushReplacementNamed('/login');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
+  Future<void> _handleLogout() async {
+    final confirmed = await showAdaptiveLogoutConfirmation(context);
+    if (!confirmed || !mounted) return;
+
+    await ref.read(authProvider.notifier).logout();
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/login');
+    }
   }
 }
 

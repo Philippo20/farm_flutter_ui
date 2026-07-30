@@ -116,12 +116,14 @@ class _FulfillmentManagerDashboardRedesignedState
             )
           : null,
       bottomNavigationBar: isMobile
-          ? FulfillmentManagerMobileBottomNav(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) {
-                setState(() => _selectedNavIndex = index);
-              },
-            )
+          ? SafeArea(
+              top: false,
+              child: FulfillmentManagerMobileBottomNav(
+                selectedIndex: _selectedNavIndex,
+                onItemSelected: (index) {
+                  setState(() => _selectedNavIndex = index);
+                },
+              ))
           : null,
     );
   }

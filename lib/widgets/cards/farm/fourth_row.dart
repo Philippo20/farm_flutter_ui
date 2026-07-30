@@ -200,55 +200,47 @@ class _FourthRowState extends State<FourthRow> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TabBar(
-              labelColor: isDark ? Colors.greenAccent : Colors.green[800],
-              unselectedLabelColor: isDark ? Colors.white70 : Colors.black54,
-              indicatorColor: isDark ? Colors.greenAccent : Colors.green[800],
-              indicatorWeight: 5,
-              tabs: [
-                Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.electrical_services),
-                      SizedBox(width: 6),
-                      Text("Grid", style: TextStyle(fontSize: 15)),
-                    ],
-                  ),
+            LayoutBuilder(builder: (context, constraints) {
+              final compactTabs = constraints.maxWidth < 330;
+              return TabBar(
+                labelColor: isDark ? Colors.greenAccent : Colors.green[800],
+                unselectedLabelColor: isDark ? Colors.white70 : Colors.black54,
+                indicatorColor: isDark ? Colors.greenAccent : Colors.green[800],
+                indicatorWeight: 5,
+                labelPadding: EdgeInsets.symmetric(
+                  horizontal: compactTabs ? 4 : 8,
                 ),
-                Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.sunny),
-                      SizedBox(width: 6),
-                      Text("Solar", style: TextStyle(fontSize: 15)),
-                    ],
+                tabs: [
+                  _energyTab(
+                    icon: Icons.electrical_services,
+                    label: 'Grid',
+                    compact: compactTabs,
                   ),
-                ),
-                Tab(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.battery_full),
-                      SizedBox(width: 6),
-                      Text("Battery", style: TextStyle(fontSize: 15)),
-                    ],
+                  _energyTab(
+                    icon: Icons.sunny,
+                    label: 'Solar',
+                    compact: compactTabs,
                   ),
-                ),
-              ],
-            ),
+                  _energyTab(
+                    icon: Icons.battery_full,
+                    label: 'Battery',
+                    compact: compactTabs,
+                  ),
+                ],
+              );
+            }),
 
             const SizedBox(height: 12),
 
             // Tab Content
             SizedBox(
-                height: 300,
+                height: 312,
                 child: TabBarView(
                   children: [
-                    _tabCardContentGrid(isDark),
-                    _tabCardContentSolar(isDark),
-                    _tabCardContentBattery(isDark),
+                    SingleChildScrollView(child: _tabCardContentGrid(isDark)),
+                    SingleChildScrollView(child: _tabCardContentSolar(isDark)),
+                    SingleChildScrollView(
+                        child: _tabCardContentBattery(isDark)),
                   ],
                 )),
           ],
@@ -257,264 +249,294 @@ class _FourthRowState extends State<FourthRow> {
     );
   }
 
- Widget _tabCardContentGrid(bool isDark) {
-  final textColor = isDark ? Colors.white70 : Colors.black87;
+  Widget _energyTab({
+    required IconData icon,
+    required String label,
+    required bool compact,
+  }) {
+    if (compact) {
+      return Tab(
+        icon: Tooltip(
+          message: label,
+          child: Icon(icon, size: 20),
+        ),
+      );
+    }
 
-  final parameters = [
-    {
-      "icon": Icons.receipt_long,
-      "label": "Bill",
-      "value": "GHS 120.45",
-    },
-    {
-      "icon": Icons.flash_on,
-      "label": "Voltage",
-      "value": "220 V",
-    },
-    {
-      "icon": Icons.electrical_services,
-      "label": "Current",
-      "value": "10 A",
-    },
-    {
-      "icon": Icons.bolt,
-      "label": "Power",
-      "value": "2.2 kW",
-    },
-    {
-      "icon": Icons.energy_savings_leaf,
-      "label": "Energy",
-      "value": "15 kWh",
-    },
-  ];
+    return Tab(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: Text(
-          "Grid Supply",
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: textColor,
+  Widget _tabCardContentGrid(bool isDark) {
+    final textColor = isDark ? Colors.white70 : Colors.black87;
+
+    final parameters = [
+      {
+        "icon": Icons.receipt_long,
+        "label": "Bill",
+        "value": "GHS 120.45",
+      },
+      {
+        "icon": Icons.flash_on,
+        "label": "Voltage",
+        "value": "220 V",
+      },
+      {
+        "icon": Icons.electrical_services,
+        "label": "Current",
+        "value": "10 A",
+      },
+      {
+        "icon": Icons.bolt,
+        "label": "Power",
+        "value": "2.2 kW",
+      },
+      {
+        "icon": Icons.energy_savings_leaf,
+        "label": "Energy",
+        "value": "15 kWh",
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: Text(
+            "Grid Supply",
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
           ),
         ),
-      ),
-      ...parameters.map((param) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[850] : Colors.grey[100],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                Icon(param["icon"] as IconData,
-                    size: 20,
-                    color: isDark ? Colors.greenAccent : Colors.green),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    param["label"] as String,
+        ...parameters.map((param) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[850] : Colors.grey[100],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(param["icon"] as IconData,
+                      size: 20,
+                      color: isDark ? Colors.greenAccent : Colors.green),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      param["label"] as String,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    param["value"] as String,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
+                      fontWeight: FontWeight.w500,
                       color: textColor,
                     ),
                   ),
-                ),
-                Text(
-                  param["value"] as String,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: textColor,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      }),
-    ],
-  );
-}
+          );
+        }),
+      ],
+    );
+  }
 
+  Widget _tabCardContentSolar(bool isDark) {
+    final textColor = isDark ? Colors.white70 : Colors.black87;
 
- Widget _tabCardContentSolar(bool isDark) {
-  final textColor = isDark ? Colors.white70 : Colors.black87;
+    final parameters = [
+      {
+        "icon": Icons.attach_money,
+        "label": "Money Saved",
+        "value": "₵156.00",
+      },
+      {
+        "icon": Icons.flash_on,
+        "label": "Voltage",
+        "value": "48 V",
+      },
+      {
+        "icon": Icons.electrical_services,
+        "label": "Current",
+        "value": "15 A",
+      },
+      {
+        "icon": Icons.bolt,
+        "label": "Power",
+        "value": "720 W",
+      },
+      {
+        "icon": Icons.energy_savings_leaf,
+        "label": "Energy",
+        "value": "12.4 kWh",
+      },
+    ];
 
-  final parameters = [
-    {
-      "icon": Icons.attach_money,
-      "label": "Money Saved",
-      "value": "₵156.00",
-    },
-    {
-      "icon": Icons.flash_on,
-      "label": "Voltage",
-      "value": "48 V",
-    },
-    {
-      "icon": Icons.electrical_services,
-      "label": "Current",
-      "value": "15 A",
-    },
-    {
-      "icon": Icons.bolt,
-      "label": "Power",
-      "value": "720 W",
-    },
-    {
-      "icon": Icons.energy_savings_leaf,
-      "label": "Energy",
-      "value": "12.4 kWh",
-    },
-  ];
-
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.only(bottom: 8.0),
-        child: Text(
-          "Solar Supply",
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: textColor,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: Text(
+            "Solar Supply",
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
           ),
         ),
-      ),
-      ...parameters.map((param) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[850] : Colors.grey[100],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                Icon(param["icon"] as IconData,
-                    size: 20,
-                    color: isDark ? Colors.orangeAccent : Colors.orange),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    param["label"] as String,
+        ...parameters.map((param) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[850] : Colors.grey[100],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(param["icon"] as IconData,
+                      size: 20,
+                      color: isDark ? Colors.orangeAccent : Colors.orange),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      param["label"] as String,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    param["value"] as String,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
+                      fontWeight: FontWeight.w500,
                       color: textColor,
                     ),
                   ),
-                ),
-                Text(
-                  param["value"] as String,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: textColor,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      }),
-    ],
-  );
-}
+          );
+        }),
+      ],
+    );
+  }
 
+  Widget _tabCardContentBattery(bool isDark) {
+    final textColor = isDark ? Colors.white70 : Colors.black87;
 
- Widget _tabCardContentBattery(bool isDark) {
-  final textColor = isDark ? Colors.white70 : Colors.black87;
+    final parameters = [
+      {
+        "icon": Icons.flash_on,
+        "label": "Voltage",
+        "value": "24 V",
+      },
+      {
+        "icon": Icons.battery_charging_full,
+        "label": "Current",
+        "value": "10 A",
+      },
+      {
+        "icon": Icons.bolt,
+        "label": "Power",
+        "value": "240 W",
+      },
+      {
+        "icon": Icons.battery_full,
+        "label": "Charge Level",
+        "value": "85%",
+      },
+      {
+        "icon": Icons.health_and_safety,
+        "label": "Health",
+        "value": "Good",
+      },
+    ];
 
-  final parameters = [
-    {
-      "icon": Icons.flash_on,
-      "label": "Voltage",
-      "value": "24 V",
-    },
-    {
-      "icon": Icons.battery_charging_full,
-      "label": "Current",
-      "value": "10 A",
-    },
-    {
-      "icon": Icons.bolt,
-      "label": "Power",
-      "value": "240 W",
-    },
-    {
-      "icon": Icons.battery_full,
-      "label": "Charge Level",
-      "value": "85%",
-    },
-    {
-      "icon": Icons.health_and_safety,
-      "label": "Health",
-      "value": "Good",
-    },
-  ];
-
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: Text(
-          "Battery Supply",
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: textColor,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: Text(
+            "Battery Supply",
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
           ),
         ),
-      ),
-      ...parameters.map((param) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.grey[850] : Colors.grey[100],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                Icon(param["icon"] as IconData,
-                    size: 20,
-                    color: isDark ? Colors.cyanAccent : Colors.cyan[700]),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    param["label"] as String,
+        ...parameters.map((param) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[850] : Colors.grey[100],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Icon(param["icon"] as IconData,
+                      size: 20,
+                      color: isDark ? Colors.cyanAccent : Colors.cyan[700]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      param["label"] as String,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: textColor,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    param["value"] as String,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
+                      fontWeight: FontWeight.w500,
                       color: textColor,
                     ),
                   ),
-                ),
-                Text(
-                  param["value"] as String,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: textColor,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      }),
-    ],
-  );
-}
-
+          );
+        }),
+      ],
+    );
+  }
 }

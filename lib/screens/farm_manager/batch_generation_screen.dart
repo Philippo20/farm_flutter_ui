@@ -2361,7 +2361,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       body: isMobile
           ? _buildMobileLayout(isDark, userName, batches)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole, batches),
-      bottomNavigationBar: isMobile ? _buildBottomNavigation(isDark) : null,
+      bottomNavigationBar: isMobile
+          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          : null,
     );
   }
 
