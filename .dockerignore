@@ -1,0 +1,11 @@
+.git
+.dart_tool
+build
+android/.gradle
+android/.kotlin
+ios/Pods
+windows/flutter/ephemeral
+macos/Pods
+linux/flutter/ephemeral
+.env
+*.log

@@ -37,6 +37,7 @@ class _MaintenanceScheduleScreenState
   bool _isLoading = true;
   String? _errorMessage;
   List<Map<String, dynamic>> _tasks = [];
+  List<Map<String, dynamic>> _alerts = [];
 
   @override
   void initState() {
@@ -59,13 +60,16 @@ class _MaintenanceScheduleScreenState
   Future<void> _loadMaintenanceData({bool silent = false}) async {
     if (!silent && mounted) setState(() => _isLoading = true);
     try {
-      final tasks = await _api.getFarmTasks();
+      final results = await Future.wait([
+        _api.getFarmTasks(),
+        _api.getAlerts(),
+      ]);
       if (!mounted) return;
       final user = ref.read(currentUserProvider);
       final assignedFarmIds =
           user?.farmId == null ? <String>{} : {user!.farmId!};
       setState(() {
-        _tasks = tasks.where((task) {
+        _tasks = results[0].where((task) {
           final assignedTo = _value(task, ['assigned_to_id', 'technician_id']);
           final farmId = _value(task, ['farm_id', 'farmId', 'farmID']);
           final assignedToUser = assignedTo.isEmpty || assignedTo == user?.id;
@@ -73,6 +77,12 @@ class _MaintenanceScheduleScreenState
               farmId.isEmpty ||
               assignedFarmIds.contains(farmId);
           return assignedToUser && assignedFarm;
+        }).toList();
+        _alerts = results[1].where((alert) {
+          final farmId = _value(alert, ['farm_id', 'farmId', 'farmID']);
+          return assignedFarmIds.isEmpty ||
+              farmId.isEmpty ||
+              assignedFarmIds.contains(farmId);
         }).toList();
         _isLoading = false;
         _errorMessage = null;
@@ -528,6 +538,19 @@ class _MaintenanceScheduleScreenState
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
 
+    if (_isLoading) {
+      return const Center(child: AdminDataSkeleton(rowCount: 5));
+    }
+    if (_errorMessage != null) {
+      return Center(
+        child: ElevatedButton.icon(
+          onPressed: _loadMaintenanceData,
+          icon: const Icon(Icons.refresh),
+          label: const Text('Retry loading issues'),
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -582,25 +605,36 @@ class _MaintenanceScheduleScreenState
         : [
             {
               'title': 'Critical',
-              'value': '1',
+              'value': '${_alerts.where((alert) => _value(alert, [
+                        'severity',
+                        'priority'
+                      ]).toLowerCase() == 'critical').length}',
               'icon': Icons.error,
               'color': AppColors.error
             },
             {
               'title': 'High',
-              'value': '3',
+              'value': '${_alerts.where((alert) => _value(alert, [
+                        'severity',
+                        'priority'
+                      ]).toLowerCase() == 'high').length}',
               'icon': Icons.priority_high,
               'color': AppColors.warning
             },
             {
               'title': 'Medium',
-              'value': '5',
+              'value': '${_alerts.where((alert) => _value(alert, [
+                        'severity',
+                        'priority'
+                      ]).toLowerCase() == 'medium').length}',
               'icon': Icons.info,
               'color': AppColors.info
             },
             {
               'title': 'Resolved',
-              'value': '18',
+              'value': '${_alerts.where((alert) => _value(alert, [
+                        'status'
+                      ]).toLowerCase() == 'resolved').length}',
               'icon': Icons.check_circle,
               'color': AppColors.success
             },
@@ -1076,41 +1110,31 @@ class _MaintenanceScheduleScreenState
 
   Widget _buildIssuesList(bool isDark) {
     final isMobile = MediaQuery.of(context).size.width < 768;
-    final issues = [
-      {
-        'id': '1',
-        'title': 'Water pump malfunction',
-        'category': 'Plumbing',
-        'severity': 'Critical',
-        'status': 'Reported',
-        'farm': 'Green Valley',
-        'reportedBy': 'Jane Caretaker',
-        'reportedAt': DateTime.now().subtract(const Duration(minutes: 30)),
-        'affectsProduction': true,
-      },
-      {
-        'id': '2',
-        'title': 'pH sensor not responding',
-        'category': 'Sensors',
-        'severity': 'High',
-        'status': 'Acknowledged',
-        'farm': 'Sunny Acres',
-        'reportedBy': 'Bob Caretaker',
-        'reportedAt': DateTime.now().subtract(const Duration(hours: 2)),
-        'affectsProduction': false,
-      },
-      {
-        'id': '3',
-        'title': 'LED light flickering',
-        'category': 'Lighting',
-        'severity': 'Medium',
-        'status': 'In Progress',
-        'farm': 'Fresh Farms',
-        'reportedBy': 'Alice Caretaker',
-        'reportedAt': DateTime.now().subtract(const Duration(hours: 4)),
-        'affectsProduction': false,
-      },
-    ];
+    final issues = _alerts
+        .where((alert) => _value(alert, ['status']).toLowerCase() != 'resolved')
+        .map((alert) {
+      final priority = _value(alert, ['severity', 'priority'], 'Medium');
+      final reportedAt = DateTime.tryParse(
+          _value(alert, ['timestamp', 'created_at', r'$createdAt']));
+      return <String, dynamic>{
+        'id': _value(alert, [r'$id', 'id']),
+        'title': _value(alert, ['message', 'title'], 'Technical issue'),
+        'category': _value(
+            alert, ['sensorType', 'sensor_type', 'category'], 'Technical'),
+        'severity': priority,
+        'status': _value(alert, ['status'], 'Reported'),
+        'farm': _value(alert, ['farm_name', 'farmName'], 'Assigned farm'),
+        'reportedBy':
+            _value(alert, ['reported_by_name', 'created_by_name'], 'System'),
+        'reportedAt': reportedAt ?? DateTime.now(),
+        'affectsProduction': priority.toLowerCase() == 'high' ||
+            priority.toLowerCase() == 'critical',
+      };
+    }).where((issue) {
+      return _selectedFilter == 'All' ||
+          issue['severity'].toString().toLowerCase() ==
+              _selectedFilter.toLowerCase();
+    }).toList();
 
     return GridView.builder(
       padding: EdgeInsets.fromLTRB(
