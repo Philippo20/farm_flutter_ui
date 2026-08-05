@@ -173,7 +173,8 @@ class _FulfillmentReportsScreenState extends State<FulfillmentReportsScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isMobile = MediaQuery.of(context).size.width < 600;
-    final exceptions = _reports.where((item) => item['status'] == 'Action').length;
+    final exceptions =
+        _reports.where((item) => item['status'] == 'Action').length;
 
     return FulfillmentManagerScreenShell(
       selectedIndex: 5,
@@ -191,25 +192,25 @@ class _FulfillmentReportsScreenState extends State<FulfillmentReportsScreen> {
             Wrap(
               spacing: AppSpacing.md,
               runSpacing: AppSpacing.md,
-            children: [
-              _ReportKpi(
-                title: 'Reports ready',
-                value: '${_reports.length}',
-                subtitle: 'Backend-derived reports',
+              children: [
+                _ReportKpi(
+                  title: 'Reports ready',
+                  value: '${_reports.length}',
+                  subtitle: 'Backend-derived reports',
                   icon: Icons.fact_check_outlined,
                   color: AppColors.primary,
                 ),
-              _ReportKpi(
-                title: 'Export queue',
-                value: '${_exports.length}',
-                subtitle: 'Backend export records',
+                _ReportKpi(
+                  title: 'Export queue',
+                  value: '${_exports.length}',
+                  subtitle: 'Backend export records',
                   icon: Icons.file_download_outlined,
                   color: AppColors.success,
                 ),
-              _ReportKpi(
-                title: 'Exceptions',
-                value: '$exceptions',
-                subtitle: 'Backend risk records',
+                _ReportKpi(
+                  title: 'Exceptions',
+                  value: '$exceptions',
+                  subtitle: 'Backend risk records',
                   icon: Icons.report_problem_outlined,
                   color: AppColors.warning,
                 ),
@@ -357,21 +358,21 @@ class _FulfillmentReportsScreenState extends State<FulfillmentReportsScreen> {
             isDark: isDark,
           ),
           const SizedBox(height: AppSpacing.md),
-          const _InsightRow(
+          _InsightRow(
             title: 'Strongest area',
-            value: 'Packaging throughput is stable across 3 lines.',
+            value: '${_reports.length} backend report streams are available.',
             color: AppColors.success,
           ),
           const SizedBox(height: AppSpacing.sm),
-          const _InsightRow(
+          _InsightRow(
             title: 'Watch item',
-            value: 'Barcode labels are below safe coverage.',
+            value: 'Material risk is calculated from inventory thresholds.',
             color: AppColors.warning,
           ),
           const SizedBox(height: AppSpacing.sm),
-          const _InsightRow(
+          _InsightRow(
             title: 'Next action',
-            value: 'Review yield exceptions before dispatch close.',
+            value: 'Review backend records requiring operational attention.',
             color: AppColors.error,
           ),
         ],

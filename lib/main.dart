@@ -208,8 +208,19 @@ class MyApp extends ConsumerWidget {
         // Fulfillment Chain (PHASE 3 - REDESIGNED)
         '/fulfillment-manager-dashboard': (context) =>
             const FulfillmentManagerDashboardRedesigned(),
+        '/fulfillment_manager_dashboard': (context) =>
+            const FulfillmentManagerDashboardRedesigned(),
         '/fulfillment_dashboard': (context) =>
             const FulfillmentManagerDashboardRedesigned(),
+        '/fulfillment/harvest': (context) =>
+            const FulfillmentConfirmHarvestScreen(),
+        '/fulfillment/packaging': (context) =>
+            const FulfillmentPackagingScreen(),
+        '/fulfillment/yield-loss': (context) =>
+            const FulfillmentYieldCalculatorScreen(),
+        '/fulfillment/inventory': (context) =>
+            const FulfillmentMaterialsScreen(),
+        '/fulfillment/reports': (context) => const FulfillmentReportsScreen(),
         '/fulfillment-confirm': (context) =>
             const FulfillmentConfirmHarvestScreen(),
         '/confirm-harvest': (context) =>

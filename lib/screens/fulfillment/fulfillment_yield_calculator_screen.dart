@@ -57,6 +57,27 @@ class _FulfillmentYieldCalculatorScreenState
   static double _number(dynamic value) =>
       double.tryParse(value?.toString() ?? '') ?? 0;
 
+  double get _receivedTotal => _breakdown.fold<double>(
+        0,
+        (sum, item) =>
+            sum + _number(item['received'].toString().replaceAll(' kg', '')),
+      );
+
+  double get _packedTotal => _breakdown.fold<double>(
+        0,
+        (sum, item) =>
+            sum + _number(item['packed'].toString().replaceAll(' kg', '')),
+      );
+
+  double get _wasteTotal => _breakdown.fold<double>(
+        0,
+        (sum, item) =>
+            sum + _number(item['waste'].toString().replaceAll(' kg', '')),
+      );
+
+  double get _lossRate =>
+      _receivedTotal <= 0 ? 0 : _wasteTotal / _receivedTotal * 100;
+
   /* Backend fulfillment records replace the former demo breakdown.
   static const _breakdown = [
     {
@@ -97,11 +118,17 @@ class _FulfillmentYieldCalculatorScreenState
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isMobile = MediaQuery.of(context).size.width < 600;
     final totalReceived = _breakdown.fold<double>(
-        0, (sum, item) => sum + _number(item['received'].toString().replaceAll(' kg', '')));
+        0,
+        (sum, item) =>
+            sum + _number(item['received'].toString().replaceAll(' kg', '')));
     final totalPackaged = _breakdown.fold<double>(
-        0, (sum, item) => sum + _number(item['packed'].toString().replaceAll(' kg', '')));
+        0,
+        (sum, item) =>
+            sum + _number(item['packed'].toString().replaceAll(' kg', '')));
     final totalWaste = _breakdown.fold<double>(
-        0, (sum, item) => sum + _number(item['waste'].toString().replaceAll(' kg', '')));
+        0,
+        (sum, item) =>
+            sum + _number(item['waste'].toString().replaceAll(' kg', '')));
     final lossRate = totalReceived <= 0 ? 0 : totalWaste / totalReceived * 100;
 
     return FulfillmentManagerScreenShell(
@@ -120,32 +147,32 @@ class _FulfillmentYieldCalculatorScreenState
             Wrap(
               spacing: AppSpacing.md,
               runSpacing: AppSpacing.md,
-            children: [
-              _YieldKpi(
-                label: 'Total received',
-                value: '${totalReceived.toStringAsFixed(1)} kg',
+              children: [
+                _YieldKpi(
+                  label: 'Total received',
+                  value: '${totalReceived.toStringAsFixed(1)} kg',
                   subtitle: 'Harvest intake',
                   icon: Icons.input_outlined,
                   color: AppColors.primary,
                 ),
-              _YieldKpi(
-                label: 'Packaged',
-                value: '${totalPackaged.toStringAsFixed(1)} kg',
+                _YieldKpi(
+                  label: 'Packaged',
+                  value: '${totalPackaged.toStringAsFixed(1)} kg',
                   subtitle: 'Sellable output',
                   icon: Icons.inventory_2_outlined,
                   color: AppColors.success,
                 ),
-              _YieldKpi(
-                label: 'Waste',
-                value: '${totalWaste.toStringAsFixed(1)} kg',
+                _YieldKpi(
+                  label: 'Waste',
+                  value: '${totalWaste.toStringAsFixed(1)} kg',
                   subtitle: 'Trim and rejects',
                   icon: Icons.delete_sweep_outlined,
                   color: AppColors.warning,
                 ),
-              _YieldKpi(
-                label: 'Loss rate',
-                value: '${lossRate.toStringAsFixed(1)}%',
-                subtitle: 'Backend average',
+                _YieldKpi(
+                  label: 'Loss rate',
+                  value: '${lossRate.toStringAsFixed(1)}%',
+                  subtitle: 'Backend average',
                   icon: Icons.trending_down_outlined,
                   color: AppColors.error,
                 ),
@@ -265,7 +292,7 @@ class _FulfillmentYieldCalculatorScreenState
               Expanded(
                 child: _CalculatorField(
                   label: 'Received',
-                  value: '420 kg',
+                  value: '${_receivedTotal.toStringAsFixed(1)} kg',
                   color: AppColors.primary,
                 ),
               ),
@@ -273,7 +300,7 @@ class _FulfillmentYieldCalculatorScreenState
               Expanded(
                 child: _CalculatorField(
                   label: 'Packed',
-                  value: '404 kg',
+                  value: '${_packedTotal.toStringAsFixed(1)} kg',
                   color: AppColors.success,
                 ),
               ),
@@ -285,7 +312,7 @@ class _FulfillmentYieldCalculatorScreenState
               Expanded(
                 child: _CalculatorField(
                   label: 'Waste',
-                  value: '16 kg',
+                  value: '${_wasteTotal.toStringAsFixed(1)} kg',
                   color: AppColors.warning,
                 ),
               ),
@@ -293,7 +320,7 @@ class _FulfillmentYieldCalculatorScreenState
               Expanded(
                 child: _CalculatorField(
                   label: 'Loss',
-                  value: '3.8%',
+                  value: '${_lossRate.toStringAsFixed(1)}%',
                   color: AppColors.error,
                 ),
               ),
@@ -311,7 +338,7 @@ class _FulfillmentYieldCalculatorScreenState
               ),
             ),
             child: Text(
-              'Calculated recovery: 96.2% sellable output for LTC-24019.',
+              'Calculated recovery: ${_receivedTotal <= 0 ? 0 : (_packedTotal / _receivedTotal * 100).toStringAsFixed(1)}% sellable output from backend records.',
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
                 fontWeight: FontWeight.w500,
