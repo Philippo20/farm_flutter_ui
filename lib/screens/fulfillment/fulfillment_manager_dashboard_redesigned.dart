@@ -8,6 +8,7 @@ import '../../core/widgets/fulfillment_manager_mobile_bottom_nav.dart';
 import '../../core/widgets/fulfillment_manager_sidebar.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/fulfillment_data_service.dart';
 
 /// Fulfillment Manager Dashboard - Redesigned
 /// Command center for intake, packaging, yield, materials, and reporting.
@@ -23,8 +24,14 @@ class _FulfillmentManagerDashboardRedesignedState
     extends ConsumerState<FulfillmentManagerDashboardRedesigned> {
   int _selectedNavIndex = 0;
   WeatherInfo? _weatherInfo;
+  bool _isLoading = true;
+  String? _errorMessage;
+  int _pendingHarvest = 0;
+  double _receivedTodayKg = 0;
+  double _yieldLossKg = 0;
+  double _materialCoverage = 0;
 
-  static const _pipeline = [
+  List<Map<String, dynamic>> _pipeline = [
     {
       'title': 'Harvest Intake',
       'subtitle': '7 loads pending dock confirmation',
@@ -63,7 +70,7 @@ class _FulfillmentManagerDashboardRedesignedState
     },
   ];
 
-  static const _activity = [
+  List<Map<String, dynamic>> _activity = [
     {
       'title': 'LTC-24019 moved to packaging',
       'subtitle': 'Dock 02 confirmed 420 kg romaine lettuce',
@@ -87,7 +94,145 @@ class _FulfillmentManagerDashboardRedesignedState
   @override
   void initState() {
     super.initState();
-    _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final snapshot = await FulfillmentDataService().load();
+      final fulfillments = snapshot.fulfillments;
+      final inventory = snapshot.inventory;
+      final today = DateTime.now();
+      double receivedToday = 0;
+      double wasteToday = 0;
+      for (final item in fulfillments) {
+        final received = DateTime.tryParse(
+          item['received_date_time']?.toString() ?? '',
+        );
+        if (received != null &&
+            received.year == today.year &&
+            received.month == today.month &&
+            received.day == today.day) {
+          receivedToday += _number(item['total_weight']);
+          wasteToday += _number(item['packaging_waste_weight']);
+        }
+      }
+      final tracked = inventory.where((item) {
+        final quantity = _number(item['quantity'] ?? item['stock']);
+        return quantity > 0;
+      }).length;
+      final lowStock = inventory.where((item) {
+        final quantity = _number(item['quantity'] ?? item['stock']);
+        final reorder = _number(item['reorder_level'] ?? item['minimum_stock']);
+        return quantity <= reorder;
+      }).length;
+      if (!mounted) return;
+      setState(() {
+        _pendingHarvest = fulfillments.where((item) {
+          final status = item['status']?.toString().toLowerCase();
+          return status == 'received' || status == 'pending';
+        }).length;
+        _receivedTodayKg = receivedToday;
+        _yieldLossKg = wasteToday;
+        _materialCoverage = inventory.isEmpty
+            ? 0
+            : ((tracked - lowStock) / inventory.length * 100).clamp(0, 100);
+        _pipeline = _buildPipeline(fulfillments, inventory);
+        _activity = _buildActivity(fulfillments);
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = error.toString();
+        _pipeline = [];
+        _activity = [];
+      });
+    }
+  }
+
+  static double _number(dynamic value) {
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  List<Map<String, dynamic>> _buildPipeline(
+    List<Map<String, dynamic>> fulfillments,
+    List<Map<String, dynamic>> inventory,
+  ) {
+    final packaging = fulfillments.where((item) {
+      final status = item['status']?.toString().toLowerCase();
+      return status == 'packaging';
+    }).length;
+    final packaged = fulfillments.where((item) {
+      final status = item['status']?.toString().toLowerCase();
+      return status == 'packaged' ||
+          status == 'sent to sales' ||
+          status == 'completed';
+    }).length;
+    final lowStock = inventory
+        .where((item) =>
+            _number(item['quantity'] ?? item['stock']) <=
+            _number(item['reorder_level'] ?? item['minimum_stock']))
+        .length;
+    return [
+      {
+        ..._pipelineTemplate('Harvest Intake', Icons.fact_check_outlined,
+            AppColors.warning, '/fulfillment-confirm'),
+        'subtitle': '$_pendingHarvest loads awaiting confirmation',
+        'metric': '$_pendingHarvest loads'
+      },
+      {
+        ..._pipelineTemplate(
+            'Packaging Lines',
+            Icons.precision_manufacturing_outlined,
+            AppColors.success,
+            '/fulfillment-packaging'),
+        'subtitle': '$packaging active fulfillment records',
+        'metric': '$packaging active'
+      },
+      {
+        ..._pipelineTemplate('Yield Control', Icons.analytics_outlined,
+            AppColors.primary, '/fulfillment-yield'),
+        'subtitle': '$packaged completed or packaged records',
+        'metric': '$packaged records'
+      },
+      {
+        ..._pipelineTemplate('Materials', Icons.inventory_2_outlined,
+            AppColors.error, '/fulfillment-materials'),
+        'subtitle': '${inventory.length} tracked stock items',
+        'metric': '$lowStock at risk'
+      },
+    ];
+  }
+
+  Map<String, dynamic> _pipelineTemplate(
+          String title, IconData icon, Color color, String route) =>
+      {
+        'title': title,
+        'subtitle': '',
+        'metric': '0',
+        'status': '',
+        'route': route,
+        'icon': icon,
+        'color': color,
+      };
+
+  List<Map<String, dynamic>> _buildActivity(
+      List<Map<String, dynamic>> records) {
+    return records
+        .take(3)
+        .map((item) => {
+              'title':
+                  '${item['batch_number'] ?? 'Fulfillment record'} updated',
+              'subtitle':
+                  '${item['farm_name'] ?? 'Farm'} • ${item['status'] ?? 'Unknown status'}',
+              'time': item['packaging_date_time'] ??
+                  item['received_date_time'] ??
+                  '',
+              'color': AppColors.primary,
+            })
+        .toList();
   }
 
   @override
@@ -185,6 +330,17 @@ class _FulfillmentManagerDashboardRedesignedState
   }
 
   Widget _buildDashboardContent(bool isDark, bool isMobile) {
+    if (_isLoading) {
+      return const Center(
+          child: Padding(
+        padding: EdgeInsets.all(AppSpacing.xxl),
+        child: CircularProgressIndicator(),
+      ));
+    }
+    if (_errorMessage != null) {
+      return Text('Unable to load fulfillment data. Pull to retry.',
+          style: AppTypography.bodyMedium.copyWith(color: AppColors.error));
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -193,32 +349,32 @@ class _FulfillmentManagerDashboardRedesignedState
         Wrap(
           spacing: AppSpacing.md,
           runSpacing: AppSpacing.md,
-          children: const [
+          children: [
             _FulfillmentKpi(
               title: 'Pending harvest',
-              value: '7',
+              value: '$_pendingHarvest',
               subtitle: 'Loads waiting',
               icon: Icons.pending_actions_outlined,
               color: AppColors.warning,
             ),
             _FulfillmentKpi(
               title: 'Received today',
-              value: '826 kg',
-              subtitle: '+12% vs yesterday',
+              value: '${_receivedTodayKg.toStringAsFixed(1)} kg',
+              subtitle: 'From backend intake records',
               icon: Icons.move_to_inbox_outlined,
               color: AppColors.success,
             ),
             _FulfillmentKpi(
               title: 'Yield loss',
-              value: '3.5%',
-              subtitle: '29 kg waste',
+              value: '${_yieldLossKg.toStringAsFixed(1)} kg',
+              subtitle: 'Recorded packaging waste',
               icon: Icons.trending_down_outlined,
               color: AppColors.error,
             ),
             _FulfillmentKpi(
               title: 'Material coverage',
-              value: '85%',
-              subtitle: '1 SKU at risk',
+              value: '${_materialCoverage.toStringAsFixed(0)}%',
+              subtitle: 'Based on tracked stock',
               icon: Icons.inventory_2_outlined,
               color: AppColors.primary,
             ),
@@ -296,13 +452,13 @@ class _FulfillmentManagerDashboardRedesignedState
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
-            children: const [
+            children: [
               _HeroChip(
-                  label: '3 dock lanes active', icon: Icons.warehouse_outlined),
+                  label: '$_pendingHarvest pending intake', icon: Icons.warehouse_outlined),
               _HeroChip(
-                  label: '4 reports ready', icon: Icons.assessment_outlined),
+                  label: '${_activity.length} recent records', icon: Icons.assessment_outlined),
               _HeroChip(
-                  label: '1 material risk', icon: Icons.warning_amber_outlined),
+                  label: '${_pipeline.isEmpty ? 0 : _pipeline.length} live workflow areas', icon: Icons.warning_amber_outlined),
             ],
           ),
         ],
@@ -368,10 +524,10 @@ class _FulfillmentManagerDashboardRedesignedState
       icon: Icons.bolt_outlined,
       color: AppColors.warning,
       child: Column(
-        children: const [
+        children: [
           _ActionTile(
             title: 'Confirm harvest intake',
-            subtitle: 'Review 7 pending loads',
+            subtitle: 'Review $_pendingHarvest pending loads',
             icon: Icons.fact_check_outlined,
             color: AppColors.warning,
             route: '/fulfillment-confirm',
@@ -379,7 +535,7 @@ class _FulfillmentManagerDashboardRedesignedState
           SizedBox(height: AppSpacing.sm),
           _ActionTile(
             title: 'Coordinate packaging',
-            subtitle: 'Balance 3 active lines',
+            subtitle: 'Open backend packaging records',
             icon: Icons.precision_manufacturing_outlined,
             color: AppColors.success,
             route: '/fulfillment-packaging',
@@ -576,7 +732,7 @@ class _ResponsiveGrid extends StatelessWidget {
 }
 
 class _PipelineCard extends StatelessWidget {
-  final Map<String, Object> item;
+  final Map<String, dynamic> item;
 
   const _PipelineCard({required this.item});
 
@@ -718,7 +874,7 @@ class _ActionTile extends StatelessWidget {
 }
 
 class _ActivityRow extends StatelessWidget {
-  final Map<String, Object> activity;
+  final Map<String, dynamic> activity;
 
   const _ActivityRow({required this.activity});
 

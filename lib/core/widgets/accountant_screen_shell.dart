@@ -7,6 +7,7 @@ import 'accountant_header.dart';
 import 'accountant_mobile_bottom_nav.dart';
 import 'accountant_sidebar.dart';
 import 'weather_info_chip.dart';
+import 'role_mobile_navigation.dart';
 
 class AccountantScreenShell extends ConsumerWidget {
   final int selectedIndex;
@@ -26,8 +27,20 @@ class AccountantScreenShell extends ConsumerWidget {
     final userName = authState.user?.name ?? 'Accountant';
     final userEmail = authState.user?.email ?? 'accountant@farmestates.com';
     const weatherInfo = WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    final scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
+      key: scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Accountant',
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+              items: accountantNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -37,6 +50,7 @@ class AccountantScreenShell extends ConsumerWidget {
                   userName: userName,
                   weatherInfo: weatherInfo,
                   onNotificationTap: () {},
+                  onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -80,12 +94,10 @@ class AccountantScreenShell extends ConsumerWidget {
               ],
             ),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: AccountantMobileBottomNav(
-                selectedIndex: selectedIndex,
-                onItemSelected: (_) {},
-              ))
+          ? AccountantMobileBottomNav(
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+            )
           : null,
     );
   }

@@ -16,30 +16,35 @@ class SalesPersonnelMobileBottomNav extends StatelessWidget {
   static const List<Map<String, dynamic>> _navItems = [
     {
       'icon': Icons.dashboard_outlined,
+      'activeIcon': Icons.dashboard_rounded,
       'label': 'Home',
       'index': 0,
       'route': '/sales-personnel-dashboard',
     },
     {
       'icon': Icons.local_shipping_outlined,
+      'activeIcon': Icons.local_shipping_rounded,
       'label': 'Deliver',
       'index': 1,
       'route': '/sales-personnel-record-delivery',
     },
     {
       'icon': Icons.timeline_outlined,
+      'activeIcon': Icons.timeline_rounded,
       'label': 'Pipeline',
       'index': 2,
       'route': '/sales-personnel-pipeline',
     },
     {
       'icon': Icons.payments_outlined,
+      'activeIcon': Icons.payments_rounded,
       'label': 'Sales',
       'index': 3,
       'route': '/sales-personnel-sales',
     },
     {
       'icon': Icons.assessment_outlined,
+      'activeIcon': Icons.assessment_rounded,
       'label': 'Reports',
       'index': 5,
       'route': '/sales-personnel-reports',
@@ -135,7 +140,9 @@ class SalesPersonnelMobileBottomNav extends StatelessWidget {
                                   BorderRadius.circular(AppSpacing.radiusFull),
                             ),
                             child: Icon(
-                              item['icon'] as IconData,
+                              isSelected
+                                  ? item['activeIcon'] as IconData
+                                  : item['icon'] as IconData,
                               size: 22,
                               color: color,
                             ),

@@ -53,6 +53,12 @@ class _SuperAdminInventoryOverviewScreenState
               userEmail: userEmail,
               firstName: firstName,
             ),
+      bottomNavigationBar: isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 10,
+              onItemSelected: (_) {},
+            )
+          : null,
     );
   }
 

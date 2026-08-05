@@ -3,10 +3,63 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/fulfillment_manager_screen_shell.dart';
+import '../../services/fulfillment_data_service.dart';
 
-class FulfillmentMaterialsScreen extends StatelessWidget {
+class FulfillmentMaterialsScreen extends StatefulWidget {
   const FulfillmentMaterialsScreen({super.key});
 
+  @override
+  State<FulfillmentMaterialsScreen> createState() =>
+      _FulfillmentMaterialsScreenState();
+}
+
+class _FulfillmentMaterialsScreenState
+    extends State<FulfillmentMaterialsScreen> {
+  List<Map<String, dynamic>> _inventory = [];
+  List<Map<String, dynamic>> _requests = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInventory();
+  }
+
+  Future<void> _loadInventory() async {
+    try {
+      final records = (await FulfillmentDataService().load()).inventory;
+      final items = records.map((item) {
+        final stock = item['quantity'] ?? item['stock'] ?? 0;
+        final threshold = item['reorder_level'] ?? item['minimum_stock'] ?? 0;
+        final low = _number(stock) <= _number(threshold);
+        return <String, dynamic>{
+          'item': item['name'] ?? item['item_name'] ?? 'Unnamed item',
+          'sku': item['sku'] ?? item['item_code'] ?? 'No SKU',
+          'stock': stock.toString(),
+          'unit': item['unit'] ?? 'units',
+          'status': low ? 'Low stock' : 'Healthy',
+          'coverage': 'Not recorded',
+          'assigned': item['farm_name'] ?? 'Unassigned',
+          'reorder': threshold.toString(),
+          'color': low ? AppColors.error : AppColors.success,
+        };
+      }).toList();
+      if (!mounted) return;
+      setState(() {
+        _inventory = items;
+        _requests = [];
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  static double _number(dynamic value) =>
+      double.tryParse(value?.toString() ?? '') ?? 0;
+
+  /* Backend inventory records replace the former demo collections.
   static const _inventory = [
     {
       'item': 'Retail boxes',
@@ -80,6 +133,7 @@ class FulfillmentMaterialsScreen extends StatelessWidget {
       'color': AppColors.primary,
     },
   ];
+  */
 
   @override
   Widget build(BuildContext context) {
@@ -92,46 +146,54 @@ class FulfillmentMaterialsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHero(isDark, isMobile),
-          const SizedBox(height: AppSpacing.lg),
-          Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.md,
-            children: const [
-              _MaterialsKpi(
-                title: 'Tracked SKUs',
-                value: '4',
-                subtitle: 'Packaging inventory',
-                icon: Icons.inventory_2_outlined,
-                color: AppColors.primary,
-              ),
-              _MaterialsKpi(
-                title: 'Low stock',
-                value: '1',
-                subtitle: 'Labels below threshold',
-                icon: Icons.warning_amber_outlined,
-                color: AppColors.error,
-              ),
-              _MaterialsKpi(
-                title: 'Open requests',
-                value: '3',
-                subtitle: 'Replenishment active',
-                icon: Icons.local_shipping_outlined,
-                color: AppColors.warning,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            'Materials Inventory',
-            style: AppTypography.h5.copyWith(
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            const SizedBox(height: AppSpacing.lg),
+            Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+              children: [
+                _MaterialsKpi(
+                  title: 'Tracked SKUs',
+                  value: '${_inventory.length}',
+                  subtitle: 'Packaging inventory',
+                  icon: Icons.inventory_2_outlined,
+                  color: AppColors.primary,
+                ),
+                _MaterialsKpi(
+                  title: 'Low stock',
+                  value:
+                      '${_inventory.where((item) => item['status'] == 'Low stock').length}',
+                  subtitle: 'Backend threshold checks',
+                  icon: Icons.warning_amber_outlined,
+                  color: AppColors.error,
+                ),
+                _MaterialsKpi(
+                  title: 'Open requests',
+                  value: '${_requests.length}',
+                  subtitle: 'Backend requests',
+                  icon: Icons.local_shipping_outlined,
+                  color: AppColors.warning,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildInventoryGrid(context, isDark),
-          const SizedBox(height: AppSpacing.xl),
-          _buildRequestsPanel(isDark),
+            const SizedBox(height: AppSpacing.xl),
+            Text(
+              'Materials Inventory',
+              style: AppTypography.h5.copyWith(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildInventoryGrid(context, isDark),
+            const SizedBox(height: AppSpacing.xl),
+            _buildRequestsPanel(isDark),
+          ],
         ],
       ),
     );
@@ -203,7 +265,7 @@ class FulfillmentMaterialsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInventoryCard(bool isDark, Map<String, Object> item) {
+  Widget _buildInventoryCard(bool isDark, Map<String, dynamic> item) {
     final color = item['color']! as Color;
 
     return Container(
@@ -582,7 +644,7 @@ class _InfoPill extends StatelessWidget {
 }
 
 class _RequestRow extends StatelessWidget {
-  final Map<String, Object> request;
+  final Map<String, dynamic> request;
 
   const _RequestRow({required this.request});
 

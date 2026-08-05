@@ -14,6 +14,7 @@ class PackagingSupervisorHeader extends ConsumerWidget {
   final String userName;
   final WeatherInfo? weatherInfo;
   final VoidCallback? onNotificationTap;
+  final VoidCallback? onMenuTap;
   final VoidCallback? onProfileTap;
   final List<String>? farms;
   final String? selectedFarm;
@@ -24,6 +25,7 @@ class PackagingSupervisorHeader extends ConsumerWidget {
     required this.userName,
     this.weatherInfo,
     this.onNotificationTap,
+    this.onMenuTap,
     this.onProfileTap,
     this.farms,
     this.selectedFarm,
@@ -194,6 +196,12 @@ class PackagingSupervisorHeader extends ConsumerWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (onMenuTap != null)
+              IconButton(
+                onPressed: onMenuTap,
+                icon: const Icon(Icons.menu_rounded),
+                tooltip: 'Open navigation',
+              ),
             // Left Section: Greeting and User Name
             Expanded(
               child: Column(

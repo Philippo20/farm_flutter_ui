@@ -73,11 +73,13 @@ class AdminDataSkeleton extends StatelessWidget {
   const AdminDataSkeleton({
     this.rowCount = 6,
     this.showStats = true,
+    this.compact = false,
     super.key,
   });
 
   final int rowCount;
   final bool showStats;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -96,19 +98,19 @@ class AdminDataSkeleton extends StatelessWidget {
                   itemCount: columns,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: columns,
-                    crossAxisSpacing: AppSpacing.md,
-                    mainAxisSpacing: AppSpacing.md,
+                    crossAxisSpacing: compact ? AppSpacing.sm : AppSpacing.md,
+                    mainAxisSpacing: compact ? AppSpacing.sm : AppSpacing.md,
                     childAspectRatio: constraints.maxWidth < 640 ? 2 : 2.5,
                   ),
                   itemBuilder: (_, __) => _SkeletonStat(isDark: isDark),
                 );
               },
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: compact ? AppSpacing.sm : AppSpacing.lg),
           ],
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: EdgeInsets.all(compact ? AppSpacing.md : AppSpacing.lg),
             decoration: BoxDecoration(
               color: isDark ? AppColors.surfaceDark : Colors.white,
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),

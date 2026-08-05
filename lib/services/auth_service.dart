@@ -25,7 +25,7 @@ class AuthService {
   static const String _keySessionId = 'auth_session_id';
   static const String _apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://127.0.0.1:8000',
+    defaultValue: 'https://api-5u45d.ondigitalocean.app',
   );
 
   // Current user's dashboard route (set during login)

@@ -342,6 +342,12 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               firstName,
               filteredLogs,
             ),
+      bottomNavigationBar: isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 7,
+              onItemSelected: (_) {},
+            )
+          : null,
     );
   }
 
@@ -683,13 +689,14 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
 
   Widget _buildScopeCard(_AuditScope scope, bool isDark) {
     final isSelected = _selectedScope == scope.id;
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
 
     return InkWell(
       onTap: () => setState(() => _selectedScope = scope.id),
       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
         decoration: BoxDecoration(
           color: isSelected
               ? scope.color.withValues(alpha: isDark ? 0.2 : 0.12)
@@ -717,18 +724,19 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: EdgeInsets.all(isMobile ? 8 : 10),
                   decoration: BoxDecoration(
                     color: scope.color.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   ),
-                  child: Icon(scope.icon, color: scope.color, size: 22),
+                  child: Icon(scope.icon,
+                      color: scope.color, size: isMobile ? 20 : 22),
                 ),
                 const Spacer(),
                 _buildPill(scope.isGlobal ? 'Global' : 'Farm', scope.color),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
             Text(
               scope.name,
               style: AppTypography.bodyLarge.copyWith(

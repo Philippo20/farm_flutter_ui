@@ -16,26 +16,31 @@ class TechnicianMobileBottomNav extends StatelessWidget {
   static const List<Map<String, dynamic>> _navItems = [
     {
       'icon': Icons.dashboard_outlined,
+      'activeIcon': Icons.dashboard_rounded,
       'label': 'Dashboard',
       'route': '/technician_dashboard',
     },
     {
       'icon': Icons.sensors_outlined,
+      'activeIcon': Icons.sensors_rounded,
       'label': 'Sensors',
       'route': '/sensor-management',
     },
     {
       'icon': Icons.build_outlined,
+      'activeIcon': Icons.build_rounded,
       'label': 'Maintain',
       'route': '/maintenance-schedule',
     },
     {
       'icon': Icons.history_outlined,
+      'activeIcon': Icons.history_rounded,
       'label': 'History',
       'route': '/repair-history',
     },
     {
       'icon': Icons.settings_outlined,
+      'activeIcon': Icons.settings_rounded,
       'label': 'Settings',
       'route': '/technician-settings',
     },
@@ -122,7 +127,9 @@ class TechnicianMobileBottomNav extends StatelessWidget {
                                   BorderRadius.circular(AppSpacing.radiusFull),
                             ),
                             child: Icon(
-                              item['icon'] as IconData,
+                              isSelected
+                                  ? item['activeIcon'] as IconData
+                                  : item['icon'] as IconData,
                               size: 22,
                               color: color,
                             ),

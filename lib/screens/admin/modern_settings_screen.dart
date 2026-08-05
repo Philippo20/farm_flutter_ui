@@ -157,13 +157,22 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
     final userName = user?.name ?? 'Admin';
 
     return Scaffold(
+      drawer: isMobile
+          ? AdminDrawer(
+              selectedIndex: 5,
+              onItemSelected: (_) {},
+              userName: userName,
+              userEmail: user?.email ?? '',
+              userRole: 'Administrator',
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, themeMode, userName)
           : _buildDesktopLayout(isDark, themeMode, userName),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? AdminMobileBottomNav(selectedIndex: 5, onItemSelected: (_) {})
           : null,
     );
   }

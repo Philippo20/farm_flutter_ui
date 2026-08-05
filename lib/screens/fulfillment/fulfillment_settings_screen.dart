@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/fulfillment_manager_screen_shell.dart';
+import '../../services/superadmin_api_service.dart';
 
 class FulfillmentSettingsScreen extends ConsumerStatefulWidget {
   const FulfillmentSettingsScreen({super.key});
@@ -17,11 +17,10 @@ class FulfillmentSettingsScreen extends ConsumerStatefulWidget {
 
 class _FulfillmentSettingsScreenState
     extends ConsumerState<FulfillmentSettingsScreen> {
-  static const _prefix = 'fulfillment_settings';
-
   bool _pushAlerts = true;
   bool _dockEscalations = true;
   bool _autoReorderDrafts = false;
+  final _api = SuperAdminApiService();
 
   @override
   void initState() {
@@ -30,20 +29,36 @@ class _FulfillmentSettingsScreenState
   }
 
   Future<void> _loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-
-    setState(() {
-      _pushAlerts = prefs.getBool('$_prefix.pushAlerts') ?? true;
-      _dockEscalations = prefs.getBool('$_prefix.dockEscalations') ?? true;
-      _autoReorderDrafts = prefs.getBool('$_prefix.autoReorderDrafts') ?? false;
-    });
+    try {
+      final config = await _api.getSystemConfig();
+      if (!mounted) return;
+      setState(() {
+        _pushAlerts = config['fulfillment_push_alerts'] as bool? ?? true;
+        _dockEscalations =
+            config['fulfillment_dock_escalations'] as bool? ?? true;
+        _autoReorderDrafts =
+            config['fulfillment_auto_reorder_drafts'] as bool? ?? false;
+      });
+    } catch (_) {
+      // Keep the controls usable when the API is temporarily unavailable.
+    }
   }
 
   Future<void> _setBool(String key, bool value, VoidCallback updater) async {
     setState(updater);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('$_prefix.$key', value);
+    final configKey = switch (key) {
+      'pushAlerts' => 'fulfillment_push_alerts',
+      'dockEscalations' => 'fulfillment_dock_escalations',
+      _ => 'fulfillment_auto_reorder_drafts',
+    };
+    try {
+      await _api.updateSystemConfig({configKey: value, 'updated_by': 'fulfillment_manager'});
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save fulfillment setting')),
+      );
+    }
   }
 
   @override

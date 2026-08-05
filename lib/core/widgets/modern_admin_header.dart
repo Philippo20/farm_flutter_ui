@@ -71,13 +71,13 @@ class ModernAdminHeader extends ConsumerWidget {
       child: Container(
         padding: EdgeInsets.symmetric(
           horizontal: isMobile ? AppSpacing.md : AppSpacing.xl,
-          vertical: AppSpacing.lg,
+          vertical: isMobile ? AppSpacing.sm : AppSpacing.lg,
         ),
         decoration: BoxDecoration(
           color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
         ),
         child: isMobile
-            ? _buildMobileLayout(isDark, ref)
+            ? _buildMobileLayout(context, isDark, ref)
             : _buildDesktopLayout(isDark, ref),
       ),
     );
@@ -188,7 +188,11 @@ class ModernAdminHeader extends ConsumerWidget {
     );
   }
 
-  Widget _buildMobileLayout(bool isDark, WidgetRef ref) {
+  Widget _buildMobileLayout(
+    BuildContext context,
+    bool isDark,
+    WidgetRef ref,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -197,14 +201,15 @@ class ModernAdminHeader extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Menu Button
-            if (onMenuTap != null)
+            if (onMenuTap != null || Scaffold.maybeOf(context) != null)
               _buildMobileActionButton(
                 icon: Icons.menu_rounded,
                 tooltip: 'Menu',
                 isDark: isDark,
-                onPressed: onMenuTap,
+                onPressed: onMenuTap ?? () => Scaffold.of(context).openDrawer(),
               ),
-            if (onMenuTap != null) const SizedBox(width: AppSpacing.xs),
+            if (onMenuTap != null || Scaffold.maybeOf(context) != null)
+              const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

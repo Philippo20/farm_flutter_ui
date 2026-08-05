@@ -542,7 +542,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmOwnerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }
@@ -626,10 +630,18 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         _buildHeader(isDark),
         SizedBox(height: gap),
         _buildFarmDetailsCard(isDark),
-        SizedBox(height: gap),
-        _buildPerformanceCards(isDark),
-        SizedBox(height: gap),
-        _buildChartsSection(isDark),
+        Transform.translate(
+          offset: Offset(0, isMobile ? -76 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: gap),
+              _buildPerformanceCards(isDark),
+              SizedBox(height: gap),
+              _buildChartsSection(isDark),
+            ],
+          ),
+        ),
       ],
     );
   }

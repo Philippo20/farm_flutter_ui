@@ -6,6 +6,7 @@ import '../theme/app_spacing.dart';
 import 'fulfillment_manager_header.dart';
 import 'fulfillment_manager_mobile_bottom_nav.dart';
 import 'fulfillment_manager_sidebar.dart';
+import 'role_mobile_navigation.dart';
 
 class FulfillmentManagerScreenShell extends ConsumerWidget {
   final int selectedIndex;
@@ -24,8 +25,20 @@ class FulfillmentManagerScreenShell extends ConsumerWidget {
     final authState = ref.watch(authProvider);
     final userName = authState.user?.name ?? 'Fulfillment Manager';
     final userEmail = authState.user?.email ?? 'fulfillment@farmestates.com';
+    final scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
+      key: scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Fulfillment Manager',
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+              items: fulfillmentNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -34,6 +47,7 @@ class FulfillmentManagerScreenShell extends ConsumerWidget {
                 FulfillmentManagerHeader(
                   userName: userName,
                   onNotificationTap: () {},
+                  onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -76,12 +90,10 @@ class FulfillmentManagerScreenShell extends ConsumerWidget {
               ],
             ),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: FulfillmentManagerMobileBottomNav(
-                selectedIndex: selectedIndex,
-                onItemSelected: (_) {},
-              ))
+          ? FulfillmentManagerMobileBottomNav(
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+            )
           : null,
     );
   }

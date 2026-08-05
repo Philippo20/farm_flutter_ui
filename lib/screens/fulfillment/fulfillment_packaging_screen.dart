@@ -3,11 +3,74 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/fulfillment_manager_screen_shell.dart';
+import '../../services/fulfillment_data_service.dart';
 
-class FulfillmentPackagingScreen extends StatelessWidget {
+class FulfillmentPackagingScreen extends StatefulWidget {
   const FulfillmentPackagingScreen({super.key});
 
-  static const _stations = [
+  @override
+  State<FulfillmentPackagingScreen> createState() =>
+      _FulfillmentPackagingScreenState();
+}
+
+class _FulfillmentPackagingScreenState
+    extends State<FulfillmentPackagingScreen> {
+  List<Map<String, dynamic>> _stations = [];
+  List<Map<String, dynamic>> _queue = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPackagingData();
+  }
+
+  Future<void> _loadPackagingData() async {
+    try {
+      final records = (await FulfillmentDataService().load()).fulfillments;
+      final stations = records.asMap().entries.map((entry) {
+        final item = entry.value;
+        final total = _number(item['total_weight']);
+        final packaged = _number(item['total_packaged_weight']);
+        return <String, dynamic>{
+          'name': 'Line ${String.fromCharCode(65 + entry.key)}',
+          'batch': item['batch_number'] ?? 'Unassigned batch',
+          'crop': item['plant_type'] ?? 'Unspecified crop',
+          'packaging': item['packaging_type'] ?? 'Not assigned',
+          'progress': total <= 0 ? 0.0 : (packaged / total).clamp(0.0, 1.0),
+          'operator': item['packaging_supervisor_id'] ?? 'Unassigned',
+          'status': item['status'] ?? 'Unknown',
+          'throughput': 'Not recorded',
+          'eta': item['eta'] ?? 'Not scheduled',
+          'materials': 'Not recorded',
+        };
+      }).toList();
+      final queue = records
+          .map((item) => <String, dynamic>{
+                'batch': item['batch_number'] ?? 'Unassigned batch',
+                'crop': item['plant_type'] ?? 'Unspecified crop',
+                'packaging': item['packaging_type'] ?? 'Not assigned',
+                'status': item['status'] ?? 'Unknown',
+                'priority': item['priority'] ?? 'Medium',
+                'line': 'Unassigned',
+              })
+          .toList();
+      if (!mounted) return;
+      setState(() {
+        _stations = stations;
+        _queue = queue;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  static double _number(dynamic value) =>
+      double.tryParse(value?.toString() ?? '') ?? 0;
+
+  /* Backend-driven station records replace the former demo collection.
     {
       'name': 'Line A',
       'batch': 'LTC-24019',
@@ -71,7 +134,7 @@ class FulfillmentPackagingScreen extends StatelessWidget {
       'priority': 'Low',
       'line': 'Line C',
     },
-  ];
+  */
 
   @override
   Widget build(BuildContext context) {
@@ -84,46 +147,53 @@ class FulfillmentPackagingScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHero(isDark, isMobile),
-          const SizedBox(height: AppSpacing.lg),
-          Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.md,
-            children: const [
-              _PackagingStatCard(
-                title: 'Active lines',
-                value: '3',
-                subtitle: '2 running, 1 staging',
-                icon: Icons.precision_manufacturing_outlined,
-                color: AppColors.primary,
-              ),
-              _PackagingStatCard(
-                title: 'Output rate',
-                value: '526/hr',
-                subtitle: 'Current pack velocity',
-                icon: Icons.speed_outlined,
-                color: AppColors.success,
-              ),
-              _PackagingStatCard(
-                title: 'Material risk',
-                value: '1',
-                subtitle: 'Line B labels low',
-                icon: Icons.inventory_2_outlined,
-                color: AppColors.warning,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            'Packaging Lines',
-            style: AppTypography.h5.copyWith(
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            const SizedBox(height: AppSpacing.lg),
+            Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+              children: [
+                _PackagingStatCard(
+                  title: 'Active lines',
+                  value: '${_stations.length}',
+                  subtitle: 'Backend fulfillment records',
+                  icon: Icons.precision_manufacturing_outlined,
+                  color: AppColors.primary,
+                ),
+                _PackagingStatCard(
+                  title: 'Output rate',
+                  value: 'N/A',
+                  subtitle: 'No throughput field recorded',
+                  icon: Icons.speed_outlined,
+                  color: AppColors.success,
+                ),
+                _PackagingStatCard(
+                  title: 'Material risk',
+                  value: 'N/A',
+                  subtitle: 'No material status recorded',
+                  icon: Icons.inventory_2_outlined,
+                  color: AppColors.warning,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildStationGrid(context, isDark),
-          const SizedBox(height: AppSpacing.xl),
-          _buildQueuePanel(isDark),
+            const SizedBox(height: AppSpacing.xl),
+            Text(
+              'Packaging Lines',
+              style: AppTypography.h5.copyWith(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildStationGrid(context, isDark),
+            const SizedBox(height: AppSpacing.xl),
+            _buildQueuePanel(isDark),
+          ],
         ],
       ),
     );
@@ -195,7 +265,7 @@ class FulfillmentPackagingScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStationCard(bool isDark, Map<String, Object> station) {
+  Widget _buildStationCard(bool isDark, Map<String, dynamic> station) {
     final progress = station['progress'] as double;
     final status = station['status'] as String;
     final statusColor = _statusColor(status);
@@ -661,7 +731,7 @@ class _InfoPill extends StatelessWidget {
 }
 
 class _QueueRow extends StatelessWidget {
-  final Map<String, String> item;
+  final Map<String, dynamic> item;
 
   const _QueueRow({required this.item});
 

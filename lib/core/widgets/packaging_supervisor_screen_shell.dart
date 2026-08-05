@@ -6,6 +6,7 @@ import '../theme/app_spacing.dart';
 import 'packaging_supervisor_header.dart';
 import 'packaging_supervisor_sidebar.dart';
 import 'weather_info_chip.dart';
+import 'role_mobile_navigation.dart';
 
 class PackagingSupervisorScreenShell extends ConsumerWidget {
   final int selectedIndex;
@@ -25,8 +26,20 @@ class PackagingSupervisorScreenShell extends ConsumerWidget {
     final userName = authState.user?.name ?? 'Packaging Supervisor';
     final userEmail = authState.user?.email ?? 'packaging@farmestates.com';
     const weatherInfo = WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    final scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
+      key: scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Packaging Supervisor',
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+              items: packagingNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -36,6 +49,7 @@ class PackagingSupervisorScreenShell extends ConsumerWidget {
                   userName: userName,
                   weatherInfo: weatherInfo,
                   onNotificationTap: () {},
+                  onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -78,6 +92,13 @@ class PackagingSupervisorScreenShell extends ConsumerWidget {
                 ),
               ],
             ),
+      bottomNavigationBar: isMobile
+          ? RoleMobileBottomNav(
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+              items: packagingNavigationItems,
+            )
+          : null,
     );
   }
 }

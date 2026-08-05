@@ -330,6 +330,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               firstName: firstName,
               isTablet: isTablet,
             ),
+      bottomNavigationBar: isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 1,
+              onItemSelected: (_) {},
+            )
+          : null,
     );
   }
 

@@ -25,6 +25,7 @@ class RecordEntryScreen extends ConsumerStatefulWidget {
 
 class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   final SuperAdminApiService _api = SuperAdminApiService();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
   int _selectedNavIndex = 1;
   int _selectedRecordTab = 0;
@@ -220,19 +221,27 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     final userRole = 'Caretaker';
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      drawer: isMobile
+          ? CaretakerMobileDrawer(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+              userName: userName,
+              userEmail: userEmail,
+            )
+          : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: CaretakerMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) =>
-                    setState(() => _selectedNavIndex = index),
-              ))
+          ? CaretakerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }

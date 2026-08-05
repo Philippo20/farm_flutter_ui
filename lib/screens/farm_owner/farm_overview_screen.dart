@@ -358,7 +358,11 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmOwnerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }
@@ -403,12 +407,18 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
       children: [
         FarmOwnerHeader(
           userName: userName,
+          mobileBottomPadding: 0,
           onNotificationTap: () {},
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              20,
+              AppSpacing.md,
+              AppSpacing.md,
+            ),
             child: _buildContent(isDark, true),
           ),
         ),
@@ -428,16 +438,27 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeader(isDark),
-        SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
-        _buildMonitoringCards(isDark),
-        SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
-        _buildTabBar(isDark),
-        SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
-        if (_selectedTab == 0) ...[
-          _buildOverviewTab(isDark, isTabletOrMobile),
-        ] else ...[
-          _buildIotDashboard(isDark, isTabletOrMobile),
-        ],
+        Transform.translate(
+          offset: Offset(0, isTabletOrMobile ? -64 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                  height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
+              _buildMonitoringCards(isDark),
+              SizedBox(
+                  height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
+              _buildTabBar(isDark),
+              SizedBox(
+                  height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
+              if (_selectedTab == 0) ...[
+                _buildOverviewTab(isDark, isTabletOrMobile),
+              ] else ...[
+                _buildIotDashboard(isDark, isTabletOrMobile),
+              ],
+            ],
+          ),
+        ),
       ],
     );
   }

@@ -43,7 +43,11 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmOwnerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }

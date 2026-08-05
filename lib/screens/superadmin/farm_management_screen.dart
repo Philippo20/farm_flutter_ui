@@ -512,6 +512,12 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
               firstName: firstName,
               isTablet: isTablet,
             ),
+      bottomNavigationBar: isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 2,
+              onItemSelected: (_) {},
+            )
+          : null,
     );
   }
 
@@ -604,7 +610,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeaderSection(isDark, isCompact),
-        SizedBox(height: sectionSpacing),
+        SizedBox(height: isMobile ? 0 : sectionSpacing),
         _buildStats(
           isDark,
           crossAxisCount: statsColumns,
@@ -1615,6 +1621,57 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
     Color statusColor,
     bool isDark,
   ) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final identity = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            _buildHeaderBadge(farm['status'], statusColor),
+            _buildHeaderBadge(farm['tier'], AppColors.primary),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          farm['name'],
+          style: AppTypography.h4.copyWith(
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          farm['location'],
+          style: AppTypography.bodyMedium.copyWith(
+            color: isDark ? Colors.white70 : AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+    final actions = Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        OutlinedButton.icon(
+          onPressed: () => _showFarmSensorKeyDialog(context, farm, isDark),
+          icon: const Icon(Icons.vpn_key_rounded, size: 18),
+          label: const Text('API Key'),
+        ),
+        ElevatedButton.icon(
+          onPressed: () => _showEditFarmDialog(context, farm, isDark),
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: const Text('Edit Farm'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ],
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.xl),
@@ -1640,77 +1697,51 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                ),
-                child: Icon(Icons.agriculture_rounded,
-                    color: statusColor, size: 34),
-              ),
-              const SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.xs,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        _buildHeaderBadge(farm['status'], statusColor),
-                        _buildHeaderBadge(farm['tier'], AppColors.primary),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      farm['name'],
-                      style: AppTypography.h4.copyWith(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      farm['location'],
-                      style: AppTypography.bodyMedium.copyWith(
-                        color:
-                            isDark ? Colors.white70 : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Wrap(
-                spacing: AppSpacing.sm,
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: () => _showFarmSensorKeyDialog(
-                      context,
-                      farm,
-                      isDark,
-                    ),
-                    icon: const Icon(Icons.vpn_key_rounded, size: 18),
-                    label: const Text('API Key'),
+          if (isMobile) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () => _showEditFarmDialog(context, farm, isDark),
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: const Text('Edit Farm'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                    ),
+                  child: Icon(
+                    Icons.agriculture_rounded,
+                    color: statusColor,
+                    size: 34,
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(child: identity),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            actions,
+          ] else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  ),
+                  child: Icon(
+                    Icons.agriculture_rounded,
+                    color: statusColor,
+                    size: 34,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(child: identity),
+                actions,
+              ],
+            ),
         ],
       ),
     );

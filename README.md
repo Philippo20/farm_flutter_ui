@@ -25,7 +25,7 @@ cd farm_flutter_ui
 flutter pub get
 ```
 
-Configure the API base URL using the project environment configuration. For local web development use `http://127.0.0.1:8000`; for Android Emulator use `http://10.0.2.2:8000`.
+The production Android build uses `https://api-5u45d.ondigitalocean.app` by default. Override the value for local development with `--dart-define=API_BASE_URL=...`. Use `http://127.0.0.1:8000` for local web development and `http://10.0.2.2:8000` for an Android Emulator.
 
 Run the application:
 
@@ -36,7 +36,7 @@ flutter run
 Run the web build:
 
 ```powershell
-flutter build web --release --dart-define=API_BASE_URL=https://api.farmestates.farm
+flutter build web --release --dart-define=API_BASE_URL=https://api-5u45d.ondigitalocean.app
 ```
 
 Do not commit `.env` files, API keys, Appwrite keys, or other credentials.

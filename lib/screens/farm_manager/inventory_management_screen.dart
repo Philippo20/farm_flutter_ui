@@ -255,7 +255,10 @@ class _InventoryManagementScreenState
           : _buildDesktopLayout(
               isDark, userName, userEmail, userRole, isTablet),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmManagerMobileBottomNav(
+              selectedIndex: 2,
+              onItemSelected: (_) {},
+            )
           : null,
       floatingActionButton: isMobile
           ? null
@@ -367,7 +370,12 @@ class _InventoryManagementScreenState
                 // Search and Filter Section
                 SliverToBoxAdapter(
                   child: Container(
-                    padding: const EdgeInsets.all(AppSpacing.md),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      0,
+                    ),
                     color: isDark
                         ? AppColors.backgroundDark
                         : AppColors.backgroundLight,
@@ -658,12 +666,15 @@ class _InventoryManagementScreenState
           sum + ((item['quantity'] as double) * (item['unitCost'] as double)),
     );
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
+      padding: const EdgeInsets.only(
+        left: AppSpacing.md,
+        right: AppSpacing.md,
+        top: AppSpacing.md,
+        bottom: AppSpacing.sm,
       ),
       child: GridView.count(
         shrinkWrap: true,
+        padding: EdgeInsets.zero,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.sm,

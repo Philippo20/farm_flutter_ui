@@ -252,6 +252,12 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
       body: isMobile
           ? _buildMobileLayout(isDark, firstName)
           : _buildDesktopLayout(isDark, userName, userEmail, firstName),
+      bottomNavigationBar: isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 4,
+              onItemSelected: (_) {},
+            )
+          : null,
     );
   }
 

@@ -11,6 +11,7 @@ import '../../core/models/user/user_permissions.dart';
 import '../../core/widgets/technician_mobile_bottom_nav.dart';
 import '../../core/widgets/technician_sidebar.dart';
 import '../../core/widgets/technician_header.dart';
+import '../../core/widgets/role_mobile_navigation.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/widgets/skeleton_loader.dart';
 import '../../services/superadmin_api_service.dart';
@@ -121,19 +122,24 @@ class _MaintenanceScheduleScreenState
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       drawer: isMobile
-          ? _buildMobileDrawer(isDark, userName, userEmail, userRole)
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: userRole,
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (_) {},
+              items: technicianNavigationItems,
+            )
           : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: TechnicianMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) =>
-                    setState(() => _selectedNavIndex = index),
-              ))
+          ? TechnicianMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
       floatingActionButton: PermissionGate(
         permission: Permission.scheduleMaintenace,
@@ -510,7 +516,9 @@ class _MaintenanceScheduleScreenState
     final isMobile = screenWidth < 768;
 
     if (_isLoading) {
-      return const Center(child: AdminDataSkeleton(rowCount: 5));
+      return Center(
+        child: AdminDataSkeleton(rowCount: 5, compact: isMobile),
+      );
     }
     if (_errorMessage != null) {
       return Center(
@@ -539,7 +547,9 @@ class _MaintenanceScheduleScreenState
     final isMobile = screenWidth < 768;
 
     if (_isLoading) {
-      return const Center(child: AdminDataSkeleton(rowCount: 5));
+      return Center(
+        child: AdminDataSkeleton(rowCount: 5, compact: isMobile),
+      );
     }
     if (_errorMessage != null) {
       return Center(

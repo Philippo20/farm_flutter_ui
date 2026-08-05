@@ -6,6 +6,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/technician_header.dart';
 import '../../core/widgets/technician_mobile_bottom_nav.dart';
 import '../../core/widgets/technician_sidebar.dart';
+import '../../core/widgets/role_mobile_navigation.dart';
 import '../../providers/auth_provider.dart';
 
 class RepairHistoryScreen extends ConsumerStatefulWidget {
@@ -18,6 +19,7 @@ class RepairHistoryScreen extends ConsumerStatefulWidget {
 
 class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
   int _selectedNavIndex = 3;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String _selectedFilter = 'All';
 
   final List<Map<String, dynamic>> _repairs = [
@@ -72,19 +74,28 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
     final userEmail = authState.user?.email ?? 'technician@farmestates.com';
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Technician',
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (_) {},
+              items: technicianNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: TechnicianMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) =>
-                    setState(() => _selectedNavIndex = index),
-              ))
+          ? TechnicianMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }
@@ -119,7 +130,11 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
   Widget _buildMobileLayout(bool isDark, String userName) {
     return Column(
       children: [
-        TechnicianHeader(userName: userName, onNotificationTap: () {}),
+        TechnicianHeader(
+          userName: userName,
+          onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(

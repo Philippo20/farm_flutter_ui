@@ -322,7 +322,10 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmManagerMobileBottomNav(
+              selectedIndex: 5,
+              onItemSelected: (_) {},
+            )
           : null,
       floatingActionButton: isMobile
           ? FloatingActionButton(
@@ -383,7 +386,7 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPageHeader(isDark, isMobile),
-        SizedBox(height: isMobile ? 16 : 24),
+        SizedBox(height: isMobile ? 0 : 24),
         if (_isLoading || _loadError != null) ...[
           _buildLoadingOrError(isDark, isMobile),
           SizedBox(height: isMobile ? 16 : 24),

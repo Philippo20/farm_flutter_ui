@@ -401,13 +401,29 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
               userEmail: userEmail,
               userRole: 'Super Administrator',
             )
-          : null,
+          : !widget.isSuperAdmin && isMobile
+              ? AdminDrawer(
+                  selectedIndex: 4,
+                  onItemSelected: (_) {},
+                  userName: userName,
+                  userEmail: userEmail,
+                  userRole: 'Administrator',
+                )
+              : null,
       body: isMobile
           ? _buildMobileLayout(isDark, firstName)
           : _buildDesktopLayout(isDark, firstName, userName, userEmail),
-      bottomNavigationBar: !widget.isSuperAdmin && isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
-          : null,
+      bottomNavigationBar: widget.isSuperAdmin && isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 13,
+              onItemSelected: (_) {},
+            )
+          : !widget.isSuperAdmin && isMobile
+              ? AdminMobileBottomNav(
+                  selectedIndex: 4,
+                  onItemSelected: (_) {},
+                )
+              : null,
     );
   }
 
@@ -491,7 +507,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
       children: [
         _buildHero(isDark, isMobile),
         const SizedBox(height: AppSpacing.lg),
-        _buildScopeControls(isDark),
+        _buildScopeControls(isDark, isMobile),
         const SizedBox(height: AppSpacing.lg),
         _buildKpiGrid(isDark),
         const SizedBox(height: AppSpacing.lg),
@@ -727,51 +743,73 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
     );
   }
 
-  Widget _buildScopeControls(bool isDark) {
+  Widget _buildScopeControls(bool isDark, bool isMobile) {
+    final scopeDropdown = _dropdown(
+      label: 'Analytics Scope',
+      value: _selectedFarm,
+      items: _farmNames.isEmpty ? const ['All Farms'] : _farmNames,
+      isDark: isDark,
+      width: isMobile ? double.infinity : null,
+      onChanged: (value) => setState(() => _selectedFarm = value!),
+    );
+    final periodDropdown = _dropdown(
+      label: 'Period',
+      value: _selectedPeriod,
+      items: const [
+        'Last 7 Days',
+        'Last 30 Days',
+        'Last 90 Days',
+        'This Year',
+      ],
+      isDark: isDark,
+      width: isMobile ? double.infinity : null,
+      onChanged: (value) => setState(() => _selectedPeriod = value!),
+    );
+    final scopeChip = _ScopeChip(
+      icon: Icons.storage_rounded,
+      label: '${_farms.length} farms from backend',
+      color: AppColors.info,
+    );
+    final controlChip = _ScopeChip(
+      icon: widget.isSuperAdmin
+          ? Icons.admin_panel_settings_rounded
+          : Icons.manage_accounts_rounded,
+      label: widget.isSuperAdmin
+          ? 'Full platform controls'
+          : 'Operational controls',
+      color: widget.isSuperAdmin ? AppColors.error : AppColors.primary,
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: _cardDecoration(isDark),
-      child: Wrap(
-        spacing: AppSpacing.md,
-        runSpacing: AppSpacing.md,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          _dropdown(
-            label: 'Analytics Scope',
-            value: _selectedFarm,
-            items: _farmNames.isEmpty ? const ['All Farms'] : _farmNames,
-            isDark: isDark,
-            onChanged: (value) => setState(() => _selectedFarm = value!),
-          ),
-          _dropdown(
-            label: 'Period',
-            value: _selectedPeriod,
-            items: const [
-              'Last 7 Days',
-              'Last 30 Days',
-              'Last 90 Days',
-              'This Year',
-            ],
-            isDark: isDark,
-            onChanged: (value) => setState(() => _selectedPeriod = value!),
-          ),
-          _ScopeChip(
-            icon: Icons.storage_rounded,
-            label: '${_farms.length} farms from backend',
-            color: AppColors.info,
-          ),
-          _ScopeChip(
-            icon: widget.isSuperAdmin
-                ? Icons.admin_panel_settings_rounded
-                : Icons.manage_accounts_rounded,
-            label: widget.isSuperAdmin
-                ? 'Full platform controls'
-                : 'Operational controls',
-            color: widget.isSuperAdmin ? AppColors.error : AppColors.primary,
-          ),
-        ],
-      ),
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                scopeDropdown,
+                const SizedBox(height: AppSpacing.md),
+                periodDropdown,
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children: [scopeChip, controlChip],
+                ),
+              ],
+            )
+          : Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                scopeDropdown,
+                periodDropdown,
+                scopeChip,
+                controlChip,
+              ],
+            ),
     );
   }
 
@@ -780,11 +818,12 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
     required String value,
     required List<String> items,
     required bool isDark,
+    double? width,
     required ValueChanged<String?> onChanged,
   }) {
     final safeValue = items.contains(value) ? value : items.first;
     return SizedBox(
-      width: 230,
+      width: width ?? 230,
       child: DropdownButtonFormField<String>(
         initialValue: safeValue,
         items: items

@@ -7,6 +7,7 @@ import 'sales_manager_header.dart';
 import 'sales_manager_mobile_bottom_nav.dart';
 import 'sales_manager_sidebar.dart';
 import 'weather_info_chip.dart';
+import 'role_mobile_navigation.dart';
 
 class SalesManagerScreenShell extends ConsumerWidget {
   final int selectedIndex;
@@ -26,8 +27,20 @@ class SalesManagerScreenShell extends ConsumerWidget {
     final userName = authState.user?.name ?? 'Sales Manager';
     final userEmail = authState.user?.email ?? 'sales@farmestates.com';
     const weatherInfo = WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    final scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
+      key: scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Sales Manager',
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+              items: salesManagerNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -37,6 +50,7 @@ class SalesManagerScreenShell extends ConsumerWidget {
                   userName: userName,
                   weatherInfo: weatherInfo,
                   onNotificationTap: () {},
+                  onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -80,12 +94,10 @@ class SalesManagerScreenShell extends ConsumerWidget {
               ],
             ),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: SalesManagerMobileBottomNav(
-                selectedIndex: selectedIndex,
-                onItemSelected: (_) {},
-              ))
+          ? SalesManagerMobileBottomNav(
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+            )
           : null,
     );
   }

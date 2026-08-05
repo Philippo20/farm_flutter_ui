@@ -24,6 +24,7 @@ class CareTakerSettingsScreen extends ConsumerStatefulWidget {
 
 class _CareTakerSettingsScreenState
     extends ConsumerState<CareTakerSettingsScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   static const _prefPrefix = 'caretaker_settings';
 
   int _selectedNavIndex = 5;
@@ -582,19 +583,27 @@ class _CareTakerSettingsScreenState
     final userEmail = authState.user?.email ?? 'caretaker@farmestates.com';
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      drawer: isMobile
+          ? CaretakerMobileDrawer(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+              userName: userName,
+              userEmail: userEmail,
+            )
+          : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName, userEmail, themeMode)
           : _buildDesktopLayout(isDark, userName, userEmail, themeMode),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: CaretakerMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) =>
-                    setState(() => _selectedNavIndex = index),
-              ))
+          ? CaretakerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }

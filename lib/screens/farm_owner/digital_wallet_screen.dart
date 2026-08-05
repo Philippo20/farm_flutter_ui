@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -414,7 +415,11 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmOwnerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }
@@ -492,7 +497,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
         _buildWalletBalanceCard(isDark),
         SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
         _buildStatsCards(isDark),
-        SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
+        SizedBox(height: isTabletOrMobile ? AppSpacing.sm : AppSpacing.lg),
         _buildTransactionsSection(isDark),
       ],
     );
@@ -556,7 +561,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
           width: isMobile ? double.infinity : null,
           constraints: isMobile ? null : const BoxConstraints(maxWidth: 500),
           padding: EdgeInsets.all(isMobile
-              ? AppSpacing.md
+              ? AppSpacing.sm
               : (isTablet ? AppSpacing.lg : AppSpacing.xl)),
           decoration: BoxDecoration(
             color: isDark ? AppColors.surfaceDark : Colors.white,
@@ -614,7 +619,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
+              SizedBox(height: isMobile ? AppSpacing.xs : AppSpacing.md),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -691,7 +696,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                   ),
                 ],
               ),
-              SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
+              SizedBox(height: isMobile ? AppSpacing.xs : AppSpacing.md),
               Align(
                 alignment: Alignment.centerLeft,
                 child: OutlinedButton.icon(
@@ -755,10 +760,11 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = isMobile ? 1 : (isTablet ? 2 : 3);
-        final childAspectRatio = isMobile ? 3.0 : (isTablet ? 2.8 : 2.5);
+        final childAspectRatio = isMobile ? 3.4 : (isTablet ? 2.8 : 2.5);
 
         return GridView.count(
           shrinkWrap: true,
+          padding: EdgeInsets.zero,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: crossAxisCount,
           childAspectRatio: childAspectRatio,
@@ -1302,683 +1308,710 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
     _accountNameController.clear();
     _accountNumberController.clear();
 
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              final isMobileMoney = payoutMethod == 'Mobile Money';
-              return Container(
-                constraints: const BoxConstraints(maxWidth: 520),
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.surfaceDark : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.08)
-                        : const Color(0xFFE2E8F0),
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    final isAndroid =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+    Widget buildContent(BuildContext dialogContext) {
+      return StatefulBuilder(
+        builder: (context, setModalState) {
+          final isMobileMoney = payoutMethod == 'Mobile Money';
+          return Container(
+            constraints: const BoxConstraints(maxWidth: 520),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.08)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Add Payout Account',
-                          style: AppTypography.h6.copyWith(
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: isSubmitting
-                              ? null
-                              : () => Navigator.pop(dialogContext),
-                          icon: Icon(
-                            Icons.close_rounded,
-                            color: isDark
-                                ? Colors.white70
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white10 : AppColors.neutral100,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.08)
-                              : const Color(0xFFE2E8F0),
-                        ),
+                    Text(
+                      'Add Payout Account',
+                      style: AppTypography.h6.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
                       ),
-                      child: Row(
-                        children: ['Bank', 'Mobile Money'].map((method) {
-                          final selected = payoutMethod == method;
-                          return Expanded(
-                            child: InkWell(
-                              onTap: isSubmitting
-                                  ? null
-                                  : () {
-                                      setModalState(() {
-                                        payoutMethod = method;
-                                        if (method == 'Mobile Money') {
-                                          selectedMobileMoneyNetwork = 'MTN';
-                                          _bankNameController.text =
-                                              selectedMobileMoneyNetwork;
-                                        } else {
-                                          _bankNameController.clear();
-                                        }
-                                        modalError = null;
-                                      });
-                                    },
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: isSubmitting
+                          ? null
+                          : () => Navigator.pop(dialogContext),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white10 : AppColors.neutral100,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.08)
+                          : const Color(0xFFE2E8F0),
+                    ),
+                  ),
+                  child: Row(
+                    children: ['Bank', 'Mobile Money'].map((method) {
+                      final selected = payoutMethod == method;
+                      return Expanded(
+                        child: InkWell(
+                          onTap: isSubmitting
+                              ? null
+                              : () {
+                                  setModalState(() {
+                                    payoutMethod = method;
+                                    if (method == 'Mobile Money') {
+                                      selectedMobileMoneyNetwork = 'MTN';
+                                      _bankNameController.text =
+                                          selectedMobileMoneyNetwork;
+                                    } else {
+                                      _bankNameController.clear();
+                                    }
+                                    modalError = null;
+                                  });
+                                },
+                          borderRadius: BorderRadius.circular(10),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 160),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selected
+                                  ? AppColors.primary
+                                  : Colors.transparent,
                               borderRadius: BorderRadius.circular(10),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 160),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 8,
-                                ),
-                                decoration: BoxDecoration(
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  method == 'Bank'
+                                      ? Icons.account_balance_rounded
+                                      : Icons.phone_android_rounded,
+                                  size: 16,
                                   color: selected
-                                      ? AppColors.primary
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(10),
+                                      ? Colors.white
+                                      : (isDark
+                                          ? Colors.white70
+                                          : AppColors.textSecondary),
                                 ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      method == 'Bank'
-                                          ? Icons.account_balance_rounded
-                                          : Icons.phone_android_rounded,
-                                      size: 16,
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    method,
+                                    style: AppTypography.bodySmall.copyWith(
                                       color: selected
                                           ? Colors.white
                                           : (isDark
                                               ? Colors.white70
                                               : AppColors.textSecondary),
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                    const SizedBox(width: 6),
-                                    Flexible(
-                                      child: Text(
-                                        method,
-                                        style: AppTypography.bodySmall.copyWith(
-                                          color: selected
-                                              ? Colors.white
-                                              : (isDark
-                                                  ? Colors.white70
-                                                  : AppColors.textSecondary),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ),
-                          );
-                        }).toList(),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                if (isMobileMoney)
+                  DropdownButtonFormField<String>(
+                    value: selectedMobileMoneyNetwork,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                    dropdownColor:
+                        isDark ? AppColors.surfaceDark : Colors.white,
+                    decoration:
+                        _walletInputDecoration('Mobile Money Network', isDark),
+                    items: const ['MTN', 'AIRTELTIGO', 'TELECEL']
+                        .map(
+                          (network) => DropdownMenuItem(
+                            value: network,
+                            child: Text(network),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: isSubmitting
+                        ? null
+                        : (value) {
+                            if (value == null) return;
+                            setModalState(() {
+                              selectedMobileMoneyNetwork = value;
+                              _bankNameController.text = value;
+                              modalError = null;
+                            });
+                          },
+                  )
+                else
+                  TextField(
+                    controller: _bankNameController,
+                    textInputAction: TextInputAction.next,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                    decoration: _walletInputDecoration('Bank Name', isDark),
+                  ),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _accountNameController,
+                  textInputAction: TextInputAction.next,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                  decoration: _walletInputDecoration(
+                    isMobileMoney ? 'Mobile Money Name' : 'Account Name',
+                    isDark,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _accountNumberController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                  decoration: _walletInputDecoration(
+                    isMobileMoney ? 'Mobile Money Number' : 'Account Number',
+                    isDark,
+                  ),
+                ),
+                if (modalError != null) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildModalError(modalError!, isDark),
+                ],
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: isSubmitting
+                          ? null
+                          : () => Navigator.pop(dialogContext),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color:
+                              isDark ? Colors.white70 : AppColors.textSecondary,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    if (isMobileMoney)
-                      DropdownButtonFormField<String>(
-                        value: selectedMobileMoneyNetwork,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                        dropdownColor:
-                            isDark ? AppColors.surfaceDark : Colors.white,
-                        decoration: _walletInputDecoration(
-                            'Mobile Money Network', isDark),
-                        items: const ['MTN', 'AIRTELTIGO', 'TELECEL']
-                            .map(
-                              (network) => DropdownMenuItem(
-                                value: network,
-                                child: Text(network),
+                    const SizedBox(width: 8),
+                    ElevatedButton.icon(
+                      onPressed: isSubmitting
+                          ? null
+                          : () async {
+                              final accountProvider =
+                                  _bankNameController.text.trim();
+                              final accountName =
+                                  _accountNameController.text.trim();
+                              final accountNumber =
+                                  _accountNumberController.text.trim();
+                              if (accountProvider.isEmpty) {
+                                setModalState(() => modalError = isMobileMoney
+                                    ? 'Enter the mobile money network.'
+                                    : 'Enter the bank name.');
+                                return;
+                              }
+                              if (accountName.isEmpty) {
+                                setModalState(() => modalError = isMobileMoney
+                                    ? 'Enter the mobile money name.'
+                                    : 'Enter the account name.');
+                                return;
+                              }
+                              if (accountNumber.length < 6) {
+                                setModalState(() => modalError = isMobileMoney
+                                    ? 'Enter a valid mobile money number.'
+                                    : 'Enter a valid account number.');
+                                return;
+                              }
+
+                              final user = ref.read(authProvider).user;
+                              setModalState(() {
+                                isSubmitting = true;
+                                modalError = null;
+                              });
+                              try {
+                                await _api.createWalletBankAccount(data: {
+                                  'user_id': user?.id ?? '',
+                                  'user_name': user?.name ?? 'Farm Owner',
+                                  'payout_method': payoutMethod,
+                                  'bank_name': accountProvider,
+                                  'account_name': accountName,
+                                  'account_number': accountNumber,
+                                  'currency': 'GHS',
+                                });
+                                final suffix = accountNumber.length > 4
+                                    ? accountNumber
+                                        .substring(accountNumber.length - 4)
+                                    : accountNumber;
+                                if (!mounted) return;
+                                setState(() {
+                                  _selectedWithdrawBank =
+                                      '$payoutMethod: $accountProvider - ****$suffix';
+                                });
+                                if (!dialogContext.mounted) return;
+                                Navigator.of(dialogContext).pop();
+                                await _loadWalletData(showLoading: false);
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(this.context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Payout account added'),
+                                  ),
+                                );
+                              } catch (error) {
+                                setModalState(() {
+                                  isSubmitting = false;
+                                  modalError = error.toString();
+                                });
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: isSubmitting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
                               ),
                             )
-                            .toList(),
-                        onChanged: isSubmitting
-                            ? null
-                            : (value) {
-                                if (value == null) return;
-                                setModalState(() {
-                                  selectedMobileMoneyNetwork = value;
-                                  _bankNameController.text = value;
-                                  modalError = null;
-                                });
-                              },
-                      )
-                    else
-                      TextField(
-                        controller: _bankNameController,
-                        textInputAction: TextInputAction.next,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                        decoration: _walletInputDecoration('Bank Name', isDark),
-                      ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      controller: _accountNameController,
-                      textInputAction: TextInputAction.next,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                      ),
-                      decoration: _walletInputDecoration(
-                        isMobileMoney ? 'Mobile Money Name' : 'Account Name',
-                        isDark,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      controller: _accountNumberController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                      ),
-                      decoration: _walletInputDecoration(
-                        isMobileMoney
-                            ? 'Mobile Money Number'
-                            : 'Account Number',
-                        isDark,
-                      ),
-                    ),
-                    if (modalError != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      _buildModalError(modalError!, isDark),
-                    ],
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: isSubmitting
-                              ? null
-                              : () => Navigator.pop(dialogContext),
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                              color: isDark
-                                  ? Colors.white70
-                                  : AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton.icon(
-                          onPressed: isSubmitting
-                              ? null
-                              : () async {
-                                  final accountProvider =
-                                      _bankNameController.text.trim();
-                                  final accountName =
-                                      _accountNameController.text.trim();
-                                  final accountNumber =
-                                      _accountNumberController.text.trim();
-                                  if (accountProvider.isEmpty) {
-                                    setModalState(() => modalError =
-                                        isMobileMoney
-                                            ? 'Enter the mobile money network.'
-                                            : 'Enter the bank name.');
-                                    return;
-                                  }
-                                  if (accountName.isEmpty) {
-                                    setModalState(() => modalError =
-                                        isMobileMoney
-                                            ? 'Enter the mobile money name.'
-                                            : 'Enter the account name.');
-                                    return;
-                                  }
-                                  if (accountNumber.length < 6) {
-                                    setModalState(() => modalError = isMobileMoney
-                                        ? 'Enter a valid mobile money number.'
-                                        : 'Enter a valid account number.');
-                                    return;
-                                  }
-
-                                  final user = ref.read(authProvider).user;
-                                  setModalState(() {
-                                    isSubmitting = true;
-                                    modalError = null;
-                                  });
-                                  try {
-                                    await _api.createWalletBankAccount(data: {
-                                      'user_id': user?.id ?? '',
-                                      'user_name': user?.name ?? 'Farm Owner',
-                                      'payout_method': payoutMethod,
-                                      'bank_name': accountProvider,
-                                      'account_name': accountName,
-                                      'account_number': accountNumber,
-                                      'currency': 'GHS',
-                                    });
-                                    final suffix = accountNumber.length > 4
-                                        ? accountNumber
-                                            .substring(accountNumber.length - 4)
-                                        : accountNumber;
-                                    if (!mounted) return;
-                                    setState(() {
-                                      _selectedWithdrawBank =
-                                          '$payoutMethod: $accountProvider - ****$suffix';
-                                    });
-                                    if (!dialogContext.mounted) return;
-                                    Navigator.of(dialogContext).pop();
-                                    await _loadWalletData(showLoading: false);
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(this.context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Payout account added'),
-                                      ),
-                                    );
-                                  } catch (error) {
-                                    setModalState(() {
-                                      isSubmitting = false;
-                                      modalError = error.toString();
-                                    });
-                                  }
-                                },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                          icon: isSubmitting
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.add_card_rounded, size: 18),
-                          label: Text(isSubmitting ? 'Saving' : 'Save Account'),
-                        ),
-                      ],
+                          : const Icon(Icons.add_card_rounded, size: 18),
+                      label: Text(isSubmitting ? 'Saving' : 'Save Account'),
                     ),
                   ],
                 ),
-              );
-            },
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    if (isAndroid) {
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (sheetContext) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
           ),
-        );
-      },
-    );
+          child: SingleChildScrollView(
+            child: buildContent(sheetContext),
+          ),
+        ),
+      );
+    } else {
+      showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (dialogContext) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+          child: buildContent(dialogContext),
+        ),
+      );
+    }
   }
 
   void _showWithdrawFundsModal(bool isDark) {
     const fee = 3.5;
     var isSubmitting = false;
     String? modalError;
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-          child: StatefulBuilder(
-            builder: (context, setModalState) {
-              final payoutAccounts = _savedPayoutAccounts;
-              final selectedBank = payoutAccounts
-                      .contains(_selectedWithdrawBank)
-                  ? _selectedWithdrawBank
-                  : (payoutAccounts.isNotEmpty ? payoutAccounts.first : null);
-              if (selectedBank != null &&
-                  selectedBank != _selectedWithdrawBank) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) {
-                    setState(() => _selectedWithdrawBank = selectedBank);
-                  }
-                });
-              }
-              final amount =
-                  double.tryParse(_withdrawAmountController.text.trim()) ?? 0;
-              final netAmount =
-                  (amount - fee).clamp(0.0, double.infinity).toDouble();
-              final availableBalance = _walletBalance.toDouble();
-              return Container(
-                constraints: const BoxConstraints(maxWidth: 520),
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.surfaceDark : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.08)
-                        : const Color(0xFFE2E8F0),
-                  ),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Withdraw From Wallet',
-                          style: AppTypography.h6.copyWith(
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () => Navigator.pop(dialogContext),
-                          icon: Icon(
-                            Icons.close_rounded,
-                            color: isDark
-                                ? Colors.white70
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Available: ${_formatMoney(availableBalance)}',
-                      style: AppTypography.caption.copyWith(
-                        color:
-                            isDark ? Colors.white60 : AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    if (payoutAccounts.isEmpty)
-                      _buildNoPayoutAccountState(
-                        isDark,
-                        onAdd: () {
-                          Navigator.pop(dialogContext);
-                          _showAddPayoutAccountModal(isDark);
-                        },
-                      )
-                    else
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: selectedBank,
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: isDark
-                                    ? Colors.white
-                                    : AppColors.textPrimary,
-                              ),
-                              dropdownColor:
-                                  isDark ? AppColors.surfaceDark : Colors.white,
-                              decoration: _walletInputDecoration(
-                                  'Bank Account', isDark),
-                              items: payoutAccounts
-                                  .map(
-                                    (bank) => DropdownMenuItem(
-                                      value: bank,
-                                      child: Text(bank),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) {
-                                if (value == null) return;
-                                setState(() => _selectedWithdrawBank = value);
-                                setModalState(() {});
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          IconButton.filledTonal(
-                            tooltip: 'Add payout account',
-                            onPressed: () {
-                              Navigator.pop(dialogContext);
-                              _showAddPayoutAccountModal(isDark);
-                            },
-                            icon: const Icon(Icons.add_card_rounded),
-                          ),
-                        ],
-                      ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      controller: _withdrawAmountController,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                      ),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d*\.?\d{0,2}$')),
-                      ],
-                      onChanged: (_) => setModalState(() {}),
-                      decoration: InputDecoration(
-                        labelText: 'Amount',
-                        labelStyle: AppTypography.bodySmall.copyWith(
-                          color:
-                              isDark ? Colors.white70 : AppColors.textSecondary,
-                        ),
-                        prefixText: 'GHS ',
-                        prefixStyle: AppTypography.bodyMedium.copyWith(
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                        ),
-                        filled: true,
-                        fillColor:
-                            isDark ? Colors.white10 : AppColors.neutral100,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [500, 1000, 2500, 5000].map((quick) {
-                        return InkWell(
-                          onTap: () {
-                            _withdrawAmountController.text = quick.toString();
-                            setModalState(() {});
-                          },
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? Colors.white.withOpacity(0.04)
-                                  : const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isDark
-                                    ? Colors.white.withOpacity(0.08)
-                                    : const Color(0xFFE2E8F0),
-                              ),
-                            ),
-                            child: Text('GHS $quick',
-                                style: AppTypography.caption),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextField(
-                      controller: _withdrawNoteController,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                      ),
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        labelText: 'Note (Optional)',
-                        labelStyle: AppTypography.bodySmall.copyWith(
-                          color:
-                              isDark ? Colors.white70 : AppColors.textSecondary,
-                        ),
-                        filled: true,
-                        fillColor:
-                            isDark ? Colors.white10 : AppColors.neutral100,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.03)
-                            : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isDark
-                              ? Colors.white.withOpacity(0.08)
-                              : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          _buildDetailRow(
-                              'Requested', _formatMoney(amount), isDark, null),
-                          _buildDetailRow(
-                              'Fee', _formatMoney(fee), isDark, null),
-                          _buildDetailRow('Net Payout', _formatMoney(netAmount),
-                              isDark, AppColors.primary),
-                        ],
-                      ),
-                    ),
-                    if (modalError != null) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      _buildModalError(modalError!, isDark),
-                    ],
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(dialogContext),
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                                color: isDark
-                                    ? Colors.white70
-                                    : AppColors.textSecondary),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: isSubmitting
-                              ? null
-                              : () async {
-                                  final submitAmount = double.tryParse(
-                                      _withdrawAmountController.text.trim());
-                                  if (submitAmount == null ||
-                                      submitAmount <= 0) {
-                                    setModalState(() =>
-                                        modalError = 'Enter a valid amount.');
-                                    return;
-                                  }
-                                  if (submitAmount > availableBalance) {
-                                    setModalState(() => modalError =
-                                        'Amount exceeds available balance.');
-                                    return;
-                                  }
-                                  if (_ownerFarms.isEmpty) {
-                                    setModalState(() => modalError =
-                                        'No owned farm is linked to this account.');
-                                    return;
-                                  }
-                                  if (selectedBank == null) {
-                                    setModalState(() => modalError =
-                                        'Add a payout account before withdrawing.');
-                                    return;
-                                  }
+    final isAndroid =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
-                                  final user = ref.read(authProvider).user;
-                                  final farm = _ownerFarms.first;
-                                  setModalState(() {
-                                    isSubmitting = true;
-                                    modalError = null;
-                                  });
-                                  try {
-                                    await _api.createWalletWithdrawal(data: {
-                                      'user_id': user?.id ?? '',
-                                      'user_name': user?.name ?? 'Farm Owner',
-                                      'farm_id': _docId(farm),
-                                      'farm_name': _value(
-                                        farm,
-                                        ['name', 'farm_name'],
-                                        fallback: 'Owned farm',
-                                      ),
-                                      'amount': submitAmount.toStringAsFixed(2),
-                                      'bank_account': selectedBank,
-                                      'note':
-                                          _withdrawNoteController.text.trim(),
-                                      'currency': 'GHS',
-                                    });
-                                    if (!mounted) return;
-                                    setState(() => _selectedFilter = 'All');
-                                    _withdrawAmountController.clear();
-                                    _withdrawNoteController.clear();
-                                    if (!dialogContext.mounted) return;
-                                    Navigator.of(dialogContext).pop();
-                                    await _loadWalletData(showLoading: false);
-                                    if (!mounted) return;
-                                    ScaffoldMessenger.of(this.context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                            'Withdrawal request submitted'),
-                                      ),
-                                    );
-                                  } catch (error) {
-                                    setModalState(() {
-                                      isSubmitting = false;
-                                      modalError = error.toString();
-                                    });
-                                  }
-                                },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: isSubmitting
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text('Submit'),
-                        ),
-                      ],
+    Widget buildContent(BuildContext dialogContext) {
+      return StatefulBuilder(
+        builder: (context, setModalState) {
+          final payoutAccounts = _savedPayoutAccounts;
+          final selectedBank = payoutAccounts.contains(_selectedWithdrawBank)
+              ? _selectedWithdrawBank
+              : (payoutAccounts.isNotEmpty ? payoutAccounts.first : null);
+          if (selectedBank != null && selectedBank != _selectedWithdrawBank) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() => _selectedWithdrawBank = selectedBank);
+              }
+            });
+          }
+          final amount =
+              double.tryParse(_withdrawAmountController.text.trim()) ?? 0;
+          final netAmount =
+              (amount - fee).clamp(0.0, double.infinity).toDouble();
+          final availableBalance = _walletBalance.toDouble();
+          return Container(
+            constraints: const BoxConstraints(maxWidth: 520),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withOpacity(0.08)
+                    : const Color(0xFFE2E8F0),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Withdraw From Wallet',
+                      style: AppTypography.h6.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
-              );
-            },
+                const SizedBox(height: 4),
+                Text(
+                  'Available: ${_formatMoney(availableBalance)}',
+                  style: AppTypography.caption.copyWith(
+                    color: isDark ? Colors.white60 : AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                if (payoutAccounts.isEmpty)
+                  _buildNoPayoutAccountState(
+                    isDark,
+                    onAdd: () {
+                      Navigator.pop(dialogContext);
+                      _showAddPayoutAccountModal(isDark);
+                    },
+                  )
+                else
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value: selectedBank,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
+                          ),
+                          dropdownColor:
+                              isDark ? AppColors.surfaceDark : Colors.white,
+                          decoration:
+                              _walletInputDecoration('Bank Account', isDark),
+                          items: payoutAccounts
+                              .map(
+                                (bank) => DropdownMenuItem(
+                                  value: bank,
+                                  child: Text(bank),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() => _selectedWithdrawBank = value);
+                            setModalState(() {});
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.filledTonal(
+                        tooltip: 'Add payout account',
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          _showAddPayoutAccountModal(isDark);
+                        },
+                        icon: const Icon(Icons.add_card_rounded),
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _withdrawAmountController,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d*\.?\d{0,2}$')),
+                  ],
+                  onChanged: (_) => setModalState(() {}),
+                  decoration: InputDecoration(
+                    labelText: 'Amount',
+                    labelStyle: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white70 : AppColors.textSecondary,
+                    ),
+                    prefixText: 'GHS ',
+                    prefixStyle: AppTypography.bodyMedium.copyWith(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                    filled: true,
+                    fillColor: isDark ? Colors.white10 : AppColors.neutral100,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [500, 1000, 2500, 5000].map((quick) {
+                    return InkWell(
+                      onTap: () {
+                        _withdrawAmountController.text = quick.toString();
+                        setModalState(() {});
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.04)
+                              : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.white.withOpacity(0.08)
+                                : const Color(0xFFE2E8F0),
+                          ),
+                        ),
+                        child: Text('GHS $quick', style: AppTypography.caption),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _withdrawNoteController,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    labelText: 'Note (Optional)',
+                    labelStyle: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white70 : AppColors.textSecondary,
+                    ),
+                    filled: true,
+                    fillColor: isDark ? Colors.white10 : AppColors.neutral100,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.03)
+                        : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.08)
+                          : const Color(0xFFE2E8F0),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildDetailRow(
+                          'Requested', _formatMoney(amount), isDark, null),
+                      _buildDetailRow('Fee', _formatMoney(fee), isDark, null),
+                      _buildDetailRow('Net Payout', _formatMoney(netAmount),
+                          isDark, AppColors.primary),
+                    ],
+                  ),
+                ),
+                if (modalError != null) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  _buildModalError(modalError!, isDark),
+                ],
+                const SizedBox(height: AppSpacing.md),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                            color: isDark
+                                ? Colors.white70
+                                : AppColors.textSecondary),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: isSubmitting
+                          ? null
+                          : () async {
+                              final submitAmount = double.tryParse(
+                                  _withdrawAmountController.text.trim());
+                              if (submitAmount == null || submitAmount <= 0) {
+                                setModalState(
+                                    () => modalError = 'Enter a valid amount.');
+                                return;
+                              }
+                              if (submitAmount > availableBalance) {
+                                setModalState(() => modalError =
+                                    'Amount exceeds available balance.');
+                                return;
+                              }
+                              if (_ownerFarms.isEmpty) {
+                                setModalState(() => modalError =
+                                    'No owned farm is linked to this account.');
+                                return;
+                              }
+                              if (selectedBank == null) {
+                                setModalState(() => modalError =
+                                    'Add a payout account before withdrawing.');
+                                return;
+                              }
+
+                              final user = ref.read(authProvider).user;
+                              final farm = _ownerFarms.first;
+                              setModalState(() {
+                                isSubmitting = true;
+                                modalError = null;
+                              });
+                              try {
+                                await _api.createWalletWithdrawal(data: {
+                                  'user_id': user?.id ?? '',
+                                  'user_name': user?.name ?? 'Farm Owner',
+                                  'farm_id': _docId(farm),
+                                  'farm_name': _value(
+                                    farm,
+                                    ['name', 'farm_name'],
+                                    fallback: 'Owned farm',
+                                  ),
+                                  'amount': submitAmount.toStringAsFixed(2),
+                                  'bank_account': selectedBank,
+                                  'note': _withdrawNoteController.text.trim(),
+                                  'currency': 'GHS',
+                                });
+                                if (!mounted) return;
+                                setState(() => _selectedFilter = 'All');
+                                _withdrawAmountController.clear();
+                                _withdrawNoteController.clear();
+                                if (!dialogContext.mounted) return;
+                                Navigator.of(dialogContext).pop();
+                                await _loadWalletData(showLoading: false);
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(this.context).showSnackBar(
+                                  const SnackBar(
+                                    content:
+                                        Text('Withdrawal request submitted'),
+                                  ),
+                                );
+                              } catch (error) {
+                                setModalState(() {
+                                  isSubmitting = false;
+                                  modalError = error.toString();
+                                });
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: isSubmitting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Submit'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    if (isAndroid) {
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (sheetContext) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
           ),
-        );
-      },
-    );
+          child: SingleChildScrollView(
+            child: buildContent(sheetContext),
+          ),
+        ),
+      );
+    } else {
+      showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (dialogContext) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+          child: buildContent(dialogContext),
+        ),
+      );
+    }
   }
 
   String _formatDate(DateTime value) {

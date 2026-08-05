@@ -10,7 +10,7 @@ class SuperAdminApiService {
 
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://127.0.0.1:8000',
+    defaultValue: 'https://api-5u45d.ondigitalocean.app',
   );
 
   final http.Client _client;

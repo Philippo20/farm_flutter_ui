@@ -2362,7 +2362,10 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
           ? _buildMobileLayout(isDark, userName, batches)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole, batches),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmManagerMobileBottomNav(
+              selectedIndex: 4,
+              onItemSelected: (_) {},
+            )
           : null,
     );
   }

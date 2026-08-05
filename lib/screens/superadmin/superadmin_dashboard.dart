@@ -422,6 +422,12 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
               firstName,
               isTablet,
             ),
+      bottomNavigationBar: isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 0,
+              onItemSelected: (_) {},
+            )
+          : null,
     );
   }
 
@@ -477,7 +483,12 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
         ),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: EdgeInsets.only(
+              left: AppSpacing.md,
+              right: AppSpacing.md,
+              top: _isLoadingDashboard ? 0 : AppSpacing.md,
+              bottom: AppSpacing.md,
+            ),
             child: _buildDashboardContent(
               isDark: isDark,
               isMobile: true,
@@ -495,7 +506,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     required bool isTablet,
   }) {
     if (_isLoadingDashboard) {
-      return const AdminDataSkeleton(rowCount: 6);
+      return AdminDataSkeleton(rowCount: 6, compact: isMobile);
     }
 
     if (_dashboardError != null) {
@@ -506,14 +517,22 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHero(isDark, isMobile),
-        const SizedBox(height: AppSpacing.lg),
-        _buildMetricGrid(isDark, isMobile, isTablet),
-        const SizedBox(height: AppSpacing.lg),
-        _buildOperationsGrid(isDark, isMobile, isTablet),
-        const SizedBox(height: AppSpacing.lg),
-        _buildGovernanceRow(isDark, isMobile),
-        const SizedBox(height: AppSpacing.lg),
-        _buildActivityPanel(isDark),
+        Transform.translate(
+          offset: Offset(0, isMobile ? -56 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.lg),
+              _buildMetricGrid(isDark, isMobile, isTablet),
+              const SizedBox(height: AppSpacing.lg),
+              _buildOperationsGrid(isDark, isMobile, isTablet),
+              const SizedBox(height: AppSpacing.lg),
+              _buildGovernanceRow(isDark, isMobile),
+              const SizedBox(height: AppSpacing.lg),
+              _buildActivityPanel(isDark),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -555,7 +574,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
 
   Widget _buildHero(bool isDark, bool isMobile) {
     return Container(
-      padding: EdgeInsets.all(isMobile ? AppSpacing.lg : AppSpacing.xl),
+      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.xl),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
@@ -570,20 +589,22 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
               ? Colors.white10
               : AppColors.primary.withValues(alpha: 0.12),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.06),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
+        boxShadow: isMobile
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.06),
+                  blurRadius: 24,
+                  offset: const Offset(0, 12),
+                ),
+              ],
       ),
       child: isMobile
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeroCopy(isDark),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.sm),
                 _buildHeroStatus(isDark),
               ],
             )

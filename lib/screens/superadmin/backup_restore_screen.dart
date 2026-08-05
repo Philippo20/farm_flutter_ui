@@ -670,6 +670,12 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       body: isMobile
           ? _buildMobileLayout(isDark, firstName)
           : _buildDesktopLayout(isDark, userName, userEmail, firstName),
+      bottomNavigationBar: isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 9,
+              onItemSelected: (_) {},
+            )
+          : null,
     );
   }
 

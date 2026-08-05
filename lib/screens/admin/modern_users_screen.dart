@@ -264,13 +264,22 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     final userEmail = user?.email ?? '';
 
     return Scaffold(
+      drawer: isMobile
+          ? AdminDrawer(
+              selectedIndex: 1,
+              onItemSelected: (_) {},
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Administrator',
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? AdminMobileBottomNav(selectedIndex: 1, onItemSelected: (_) {})
           : null,
     );
   }
@@ -337,16 +346,24 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
           children: [
             _buildTitleRow(isDark, isMobile),
             const SizedBox(height: AppSpacing.xl),
-            isMobile
-                ? _buildMobileStatsCards(isDark)
-                : _buildStatsCards(isDark),
-            const SizedBox(height: AppSpacing.xl),
-            _buildControls(isDark, isMobile),
-            const SizedBox(height: AppSpacing.lg),
-            if (isMobile)
-              _buildMobileUsersList(filteredUsers, isDark)
-            else
-              _buildUsersTable(filteredUsers, isDark),
+            Transform.translate(
+              offset: Offset(0, isMobile ? -70 : 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  isMobile
+                      ? _buildMobileStatsCards(isDark)
+                      : _buildStatsCards(isDark),
+                  const SizedBox(height: AppSpacing.xl),
+                  _buildControls(isDark, isMobile),
+                  const SizedBox(height: AppSpacing.lg),
+                  if (isMobile)
+                    _buildMobileUsersList(filteredUsers, isDark)
+                  else
+                    _buildUsersTable(filteredUsers, isDark),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -1045,9 +1062,19 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       child: DropdownButton<String>(
         value: items.contains(value) ? value : items.first,
         items: items
-            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+            .map(
+              (item) => DropdownMenuItem(
+                value: item,
+                child: Text(
+                  item,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            )
             .toList(),
         onChanged: onChanged,
+        isExpanded: true,
         underline: const SizedBox(),
         icon: const Icon(Icons.arrow_drop_down),
       ),

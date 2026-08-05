@@ -449,7 +449,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmManagerMobileBottomNav(
+              selectedIndex: 6,
+              onItemSelected: (_) {},
+            )
           : null,
     );
   }
@@ -522,7 +525,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           const SizedBox(height: AppSpacing.lg),
         ],
         _buildFilters(isDark),
-        SizedBox(height: isMobile ? AppSpacing.lg : AppSpacing.xl),
+        SizedBox(height: isMobile ? 0 : AppSpacing.xl),
         _buildSummaryCards(isDark),
         SizedBox(height: isMobile ? AppSpacing.lg : AppSpacing.xl),
         _buildChartsSection(isDark),

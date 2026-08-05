@@ -6,6 +6,7 @@ import '../theme/app_spacing.dart';
 import 'quality_assurance_header.dart';
 import 'quality_assurance_sidebar.dart';
 import 'weather_info_chip.dart';
+import 'role_mobile_navigation.dart';
 
 class QualityAssuranceScreenShell extends ConsumerWidget {
   final int selectedIndex;
@@ -25,8 +26,20 @@ class QualityAssuranceScreenShell extends ConsumerWidget {
     final userName = authState.user?.name ?? 'Quality Assurance';
     final userEmail = authState.user?.email ?? 'quality@farmestates.com';
     const weatherInfo = WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    final scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
+      key: scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Quality Assurance',
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+              items: qualityNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -36,6 +49,7 @@ class QualityAssuranceScreenShell extends ConsumerWidget {
                   userName: userName,
                   weatherInfo: weatherInfo,
                   onNotificationTap: () {},
+                  onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -73,6 +87,13 @@ class QualityAssuranceScreenShell extends ConsumerWidget {
                 ),
               ],
             ),
+      bottomNavigationBar: isMobile
+          ? RoleMobileBottomNav(
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+              items: qualityNavigationItems,
+            )
+          : null,
     );
   }
 }

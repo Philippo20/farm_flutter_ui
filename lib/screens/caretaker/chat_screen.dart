@@ -18,6 +18,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedNavIndex = 3;
   String? _selectedChat;
   final TextEditingController _messageController = TextEditingController();
@@ -84,19 +85,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final userRole = 'Caretaker';
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      drawer: isMobile
+          ? CaretakerMobileDrawer(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+              userName: userName,
+              userEmail: userEmail,
+            )
+          : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: CaretakerMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) =>
-                    setState(() => _selectedNavIndex = index),
-              ))
+          ? CaretakerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }

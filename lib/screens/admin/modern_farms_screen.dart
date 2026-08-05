@@ -628,13 +628,22 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
     final userEmail = user?.email ?? '';
 
     return Scaffold(
+      drawer: isMobile
+          ? AdminDrawer(
+              selectedIndex: 2,
+              onItemSelected: (_) {},
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Administrator',
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? AdminMobileBottomNav(selectedIndex: 2, onItemSelected: (_) {})
           : null,
     );
   }
@@ -657,7 +666,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                 onNotificationTap: () {},
                 onProfileTap: () {},
               ),
-              Expanded(child: _buildBody(isDark, AppSpacing.xl)),
+              Expanded(child: _buildBody(isDark, AppSpacing.xl, false)),
             ],
           ),
         ),
@@ -673,12 +682,12 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
           onNotificationTap: () {},
           onProfileTap: () {},
         ),
-        Expanded(child: _buildBody(isDark, AppSpacing.md)),
+        Expanded(child: _buildBody(isDark, AppSpacing.md, true)),
       ],
     );
   }
 
-  Widget _buildBody(bool isDark, double padding) {
+  Widget _buildBody(bool isDark, double padding, bool isMobile) {
     if (_isLoading) {
       return SingleChildScrollView(
         padding: EdgeInsets.all(padding),
@@ -695,7 +704,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
         padding: EdgeInsets.all(padding),
         child: _showingDetails && _selectedFarm != null
             ? _buildDetails(isDark, _selectedFarm!)
-            : _buildFarmList(isDark),
+            : _buildFarmList(isDark, isMobile),
       ),
     );
   }
@@ -736,7 +745,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
     );
   }
 
-  Widget _buildFarmList(bool isDark) {
+  Widget _buildFarmList(bool isDark, bool isMobile) {
     final farms = _filteredFarms;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -772,31 +781,43 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.xl),
-        _buildStats(isDark),
-        const SizedBox(height: AppSpacing.xl),
-        _buildControls(isDark),
-        const SizedBox(height: AppSpacing.lg),
-        if (farms.isEmpty)
-          _buildEmptyState(isDark)
-        else
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 980;
-              final cardHeight = isWide ? 320.0 : 300.0;
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: farms.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: isWide ? 2 : 1,
-                  crossAxisSpacing: AppSpacing.md,
-                  mainAxisSpacing: AppSpacing.md,
-                  mainAxisExtent: cardHeight,
-                ),
-                itemBuilder: (_, index) => _buildFarmCard(farms[index], isDark),
-              );
-            },
+        Transform.translate(
+          offset: Offset(0, isMobile ? -70 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStats(isDark),
+              const SizedBox(height: AppSpacing.xl),
+              _buildControls(isDark),
+              const SizedBox(height: AppSpacing.lg),
+              Transform.translate(
+                offset: Offset(0, isMobile ? -50 : 0),
+                child: farms.isEmpty
+                    ? _buildEmptyState(isDark)
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isWide = constraints.maxWidth >= 980;
+                          final cardHeight = isWide ? 320.0 : 330.0;
+                          return GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: farms.length,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: isWide ? 2 : 1,
+                              crossAxisSpacing: AppSpacing.md,
+                              mainAxisSpacing: AppSpacing.md,
+                              mainAxisExtent: cardHeight,
+                            ),
+                            itemBuilder: (_, index) =>
+                                _buildFarmCard(farms[index], isDark),
+                          );
+                        },
+                      ),
+              ),
+            ],
           ),
+        ),
       ],
     );
   }

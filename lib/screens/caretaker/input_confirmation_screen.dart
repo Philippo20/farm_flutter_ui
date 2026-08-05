@@ -22,6 +22,7 @@ class InputConfirmationScreen extends ConsumerStatefulWidget {
 
 class _InputConfirmationScreenState
     extends ConsumerState<InputConfirmationScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedNavIndex = 2;
   String _selectedFilter = 'All';
   String _selectedStatus = 'All';
@@ -113,19 +114,27 @@ class _InputConfirmationScreenState
     final userEmail = authState.user?.email ?? 'caretaker@farmestates.com';
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      drawer: isMobile
+          ? CaretakerMobileDrawer(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+              userName: userName,
+              userEmail: userEmail,
+            )
+          : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: CaretakerMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) =>
-                    setState(() => _selectedNavIndex = index),
-              ))
+          ? CaretakerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }

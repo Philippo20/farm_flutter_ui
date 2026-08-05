@@ -31,6 +31,15 @@ class _AdminDeliveryControlScreenState
     final firstName = userName.split(' ').first;
 
     return Scaffold(
+      drawer: isMobile
+          ? AdminDrawer(
+              selectedIndex: 7,
+              onItemSelected: (_) {},
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Administrator',
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -41,7 +50,7 @@ class _AdminDeliveryControlScreenState
               firstName: firstName,
             ),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? AdminMobileBottomNav(selectedIndex: 7, onItemSelected: (_) {})
           : null,
     );
   }

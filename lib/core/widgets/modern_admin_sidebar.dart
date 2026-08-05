@@ -27,6 +27,521 @@ class ModernAdminSidebar extends StatefulWidget {
   State<ModernAdminSidebar> createState() => _ModernAdminSidebarState();
 }
 
+/// Mobile drawer using the same navigation pattern as the desktop Admin sidebar.
+class AdminDrawer extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onItemSelected;
+  final String userName;
+  final String userEmail;
+  final String userRole;
+
+  const AdminDrawer({
+    super.key,
+    required this.selectedIndex,
+    required this.onItemSelected,
+    required this.userName,
+    required this.userEmail,
+    required this.userRole,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    const items = [
+      _NavItem(
+        icon: Icons.dashboard_outlined,
+        activeIcon: Icons.dashboard_rounded,
+        label: 'Dashboard',
+        route: '/dashboard',
+      ),
+      _NavItem(
+        icon: Icons.people_outline,
+        activeIcon: Icons.people_alt_rounded,
+        label: 'Users',
+        route: '/users',
+      ),
+      _NavItem(
+        icon: Icons.agriculture_outlined,
+        activeIcon: Icons.agriculture_rounded,
+        label: 'Farms',
+        route: '/farms',
+      ),
+      _NavItem(
+        icon: Icons.grass_outlined,
+        activeIcon: Icons.grass_rounded,
+        label: 'Crop Varieties',
+        route: '/crop-varieties',
+      ),
+      _NavItem(
+        icon: Icons.inventory_2_outlined,
+        activeIcon: Icons.inventory_2_rounded,
+        label: 'Inventory',
+        route: '/inventory-admin',
+      ),
+      _NavItem(
+        icon: Icons.local_shipping_outlined,
+        activeIcon: Icons.local_shipping_rounded,
+        label: 'Deliveries',
+        route: '/deliveries-admin',
+      ),
+      _NavItem(
+        icon: Icons.sensors_outlined,
+        activeIcon: Icons.sensors_rounded,
+        label: 'Sensors',
+        route: '/sensors',
+      ),
+      _NavItem(
+        icon: Icons.analytics_outlined,
+        activeIcon: Icons.analytics_rounded,
+        label: 'Analytics',
+        route: '/analytics',
+      ),
+      _NavItem(
+        icon: Icons.settings_outlined,
+        activeIcon: Icons.settings_rounded,
+        label: 'Settings',
+        route: '/settings',
+      ),
+    ];
+    int indexFor(_NavItem item) => const [
+          '/dashboard',
+          '/users',
+          '/farms',
+          '/sensors',
+          '/analytics',
+          '/settings',
+          '/inventory-admin',
+          '/deliveries-admin',
+          '/crop-varieties',
+        ].indexOf(item.route);
+
+    return Drawer(
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.neutral100,
+      child: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                ),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white24,
+                    child: Text(
+                      userName.isEmpty ? 'A' : userName[0].toUpperCase(),
+                      style: AppTypography.h4.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.h6.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          userRole,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: items.map((item) {
+                  final index = indexFor(item);
+                  final selected = index == selectedIndex;
+                  return ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                        color: selected
+                            ? AppColors.primary.withOpacity(0.2)
+                            : (isDark
+                                ? Colors.white.withOpacity(0.05)
+                                : Colors.black.withOpacity(0.04)),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
+                      ),
+                      child: Icon(
+                        selected ? item.activeIcon : item.icon,
+                        color: selected
+                            ? AppColors.primary
+                            : (isDark
+                                ? Colors.white70
+                                : AppColors.textSecondary),
+                      ),
+                    ),
+                    title: Text(
+                      item.label,
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontSize: 15,
+                        color: selected
+                            ? AppColors.primary
+                            : (isDark ? Colors.white : AppColors.textPrimary),
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                    selected: selected,
+                    selectedTileColor: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : AppColors.primary.withOpacity(0.1),
+                    onTap: () {
+                      onItemSelected(index);
+                      Navigator.pushReplacementNamed(context, item.route);
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            const Divider(height: 1),
+            Container(
+              margin: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? [
+                          AppColors.primary.withOpacity(0.15),
+                          AppColors.primary.withOpacity(0.08),
+                        ]
+                      : [
+                          AppColors.primary.withOpacity(0.1),
+                          AppColors.primary.withOpacity(0.05),
+                        ],
+                ),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [AppColors.primary, AppColors.primaryDark],
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        userName.isEmpty ? 'A' : userName[0].toUpperCase(),
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontSize: 15,
+                            color: isDark
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          userEmail,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.caption.copyWith(
+                            fontSize: 12,
+                            color: isDark
+                                ? Colors.white.withOpacity(0.7)
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                child: InkWell(
+                  onTap: () async {
+                    final confirmed =
+                        await showAdaptiveLogoutConfirmation(context);
+                    if (confirmed && context.mounted) {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.md,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withOpacity(0.1),
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(
+                        color: AppColors.error.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.logout_rounded,
+                          color: AppColors.error,
+                          size: 20,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          'Logout',
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontSize: 15,
+                            color: AppColors.error,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact mobile navigation for Admin screens.
+class AdminMobileBottomNav extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onItemSelected;
+
+  const AdminMobileBottomNav({
+    super.key,
+    required this.selectedIndex,
+    required this.onItemSelected,
+  });
+
+  static const _primaryItems = [
+    _NavItem(
+      icon: Icons.dashboard_outlined,
+      activeIcon: Icons.dashboard_rounded,
+      label: 'Home',
+      route: '/dashboard',
+    ),
+    _NavItem(
+      icon: Icons.people_outline,
+      activeIcon: Icons.people_alt_rounded,
+      label: 'Users',
+      route: '/users',
+    ),
+    _NavItem(
+      icon: Icons.agriculture_outlined,
+      activeIcon: Icons.agriculture_rounded,
+      label: 'Farms',
+      route: '/farms',
+    ),
+    _NavItem(
+      icon: Icons.sensors_outlined,
+      activeIcon: Icons.sensors_rounded,
+      label: 'Sensors',
+      route: '/sensors',
+    ),
+  ];
+
+  static const _allItems = [
+    ..._primaryItems,
+    _NavItem(
+      icon: Icons.analytics_outlined,
+      activeIcon: Icons.analytics_rounded,
+      label: 'Analytics',
+      route: '/analytics',
+    ),
+    _NavItem(
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings_rounded,
+      label: 'Settings',
+      route: '/settings',
+    ),
+    _NavItem(
+      icon: Icons.inventory_2_outlined,
+      activeIcon: Icons.inventory_2_rounded,
+      label: 'Inventory',
+      route: '/inventory-admin',
+    ),
+    _NavItem(
+      icon: Icons.local_shipping_outlined,
+      activeIcon: Icons.local_shipping_rounded,
+      label: 'Deliveries',
+      route: '/deliveries-admin',
+    ),
+    _NavItem(
+      icon: Icons.grass_outlined,
+      activeIcon: Icons.grass_rounded,
+      label: 'Crop Varieties',
+      route: '/crop-varieties',
+    ),
+  ];
+
+  int _routeIndex(String route) => _allItems.indexWhere(
+        (item) => item.route == route,
+      );
+
+  void _navigate(BuildContext context, _NavItem item) {
+    final index = _routeIndex(item.route);
+    onItemSelected(index);
+    if (index != selectedIndex) {
+      Navigator.pushReplacementNamed(context, item.route);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final current = _allItems.where(
+      (item) => _routeIndex(item.route) == selectedIndex,
+    );
+    final visible = [
+      ..._primaryItems,
+      if (current.isNotEmpty && !_primaryItems.contains(current.first))
+        current.first,
+    ];
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.24 : 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 76,
+          child: Row(
+            children: visible
+                .map((item) => _buildBottomItem(context, item, isDark))
+                .toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomItem(
+    BuildContext context,
+    _NavItem item,
+    bool isDark,
+  ) {
+    final selected = _routeIndex(item.route) == selectedIndex;
+    final color = selected
+        ? AppColors.primary
+        : (isDark
+            ? AppColors.textOnDark.withOpacity(0.74)
+            : AppColors.textSecondary);
+
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigate(context, item),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppColors.primary.withOpacity(isDark ? 0.16 : 0.10)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  ),
+                  child: Icon(
+                    selected ? item.activeIcon : item.icon,
+                    size: 22,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption.copyWith(
+                    color: color,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _ModernAdminSidebarState extends State<ModernAdminSidebar>
     with SingleTickerProviderStateMixin {
   bool _isCollapsed = SidebarCollapseState.isCollapsed;
@@ -683,7 +1198,7 @@ class _NavItem {
   final String label;
   final String route;
 
-  _NavItem({
+  const _NavItem({
     required this.icon,
     required this.label,
     required this.activeIcon,

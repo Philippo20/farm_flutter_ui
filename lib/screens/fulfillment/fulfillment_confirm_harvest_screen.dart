@@ -3,51 +3,68 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/fulfillment_manager_screen_shell.dart';
+import '../../services/fulfillment_data_service.dart';
 
-class FulfillmentConfirmHarvestScreen extends StatelessWidget {
+class FulfillmentConfirmHarvestScreen extends StatefulWidget {
   const FulfillmentConfirmHarvestScreen({super.key});
 
-  static const _requests = [
-    {
-      'batch': 'LTC-24019',
-      'farm': 'Greenhouse A',
-      'crop': 'Romaine Lettuce',
-      'quantity': '420 kg',
-      'eta': '08:30 AM',
-      'priority': 'High',
-      'status': 'Awaiting Dock',
-      'dock': 'Dock 02',
-      'owner': 'Sarah Mensah',
-      'quality': 'Pre-check pending',
-      'packaging': '500g retail box',
-    },
-    {
-      'batch': 'TMT-24022',
-      'farm': 'Tunnel House 2',
-      'crop': 'Cherry Tomato',
-      'quantity': '310 kg',
-      'eta': '10:00 AM',
-      'priority': 'Medium',
-      'status': 'Inspection Ready',
-      'dock': 'Dock 01',
-      'owner': 'Kojo Agyemang',
-      'quality': 'Inspection cleared',
-      'packaging': '1kg clamshell',
-    },
-    {
-      'batch': 'BSL-24007',
-      'farm': 'Herb Unit',
-      'crop': 'Sweet Basil',
-      'quantity': '96 kg',
-      'eta': '12:15 PM',
-      'priority': 'Low',
-      'status': 'Arrival Scheduled',
-      'dock': 'Dock 03',
-      'owner': 'Ama Boateng',
-      'quality': 'Cold chain verified',
-      'packaging': '60g herb sleeve',
-    },
-  ];
+  @override
+  State<FulfillmentConfirmHarvestScreen> createState() =>
+      _FulfillmentConfirmHarvestScreenState();
+}
+
+class _FulfillmentConfirmHarvestScreenState
+    extends State<FulfillmentConfirmHarvestScreen> {
+  List<Map<String, dynamic>> _requests = [];
+  bool _isLoading = true;
+  double _inboundKg = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRequests();
+  }
+
+  Future<void> _loadRequests() async {
+    try {
+      final snapshot = await FulfillmentDataService().load();
+      final requests = snapshot.batches
+          .where((batch) {
+            final status = batch['production_status']?.toString().toLowerCase();
+            return status == 'harvested' || status == 'delivered';
+          })
+          .map((batch) => <String, dynamic>{
+                'batch': batch['batch_no'] ??
+                    batch['batch_id'] ??
+                    'Unnumbered batch',
+                'farm': batch['farm_name'] ?? 'Unassigned farm',
+                'crop': batch['plant_name'] ?? 'Unspecified crop',
+                'quantity': '${batch['total_weight_kg'] ?? 0} kg',
+                'eta': batch['end_date'] ?? 'Not scheduled',
+                'priority': 'Medium',
+                'status': batch['delivery_status'] ?? 'Awaiting intake',
+                'dock': 'Unassigned',
+                'owner': batch['farm_manager_name'] ?? 'Unassigned',
+                'quality': 'Review required',
+                'packaging': 'Not assigned',
+              })
+          .toList();
+      if (!mounted) return;
+      setState(() {
+        _requests = requests;
+        _inboundKg = requests.fold<double>(0, (sum, item) {
+          final value = double.tryParse(
+                  item['quantity'].toString().replaceAll(' kg', '')) ??
+              0;
+          return sum + value;
+        });
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,38 +77,45 @@ class FulfillmentConfirmHarvestScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHero(isDark, isMobile),
-          const SizedBox(height: AppSpacing.lg),
-          Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.md,
-            children: const [
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            const SizedBox(height: AppSpacing.lg),
+            Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+            children: [
               _FulfillmentStatCard(
                 title: 'Pending',
-                value: '7 loads',
-                color: AppColors.warning,
-              ),
+                value: '${_requests.length} loads',
+                  color: AppColors.warning,
+                ),
               _FulfillmentStatCard(
                 title: 'Due before noon',
-                value: '3 loads',
-                color: AppColors.primary,
-              ),
+                value: 'Not recorded',
+                  color: AppColors.primary,
+                ),
               _FulfillmentStatCard(
                 title: 'Inbound volume',
-                value: '826 kg',
-                color: AppColors.success,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            'Harvest Intake Queue',
-            style: AppTypography.h5.copyWith(
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+                value: '${_inboundKg.toStringAsFixed(1)} kg',
+                  color: AppColors.success,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildRequestGrid(context, isDark),
+            const SizedBox(height: AppSpacing.xl),
+            Text(
+              'Harvest Intake Queue',
+              style: AppTypography.h5.copyWith(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildRequestGrid(context, isDark),
+          ],
         ],
       ),
     );
@@ -159,7 +183,7 @@ class FulfillmentConfirmHarvestScreen extends StatelessWidget {
   Widget _buildRequestCard(
     BuildContext context,
     bool isDark,
-    Map<String, String> request,
+    Map<String, dynamic> request,
   ) {
     final isMobile = MediaQuery.of(context).size.width < 600;
     final priority = request['priority'];
@@ -425,7 +449,7 @@ class FulfillmentConfirmHarvestScreen extends StatelessWidget {
 
   Widget _buildRequestHeader({
     required bool isDark,
-    required Map<String, String> request,
+    required Map<String, dynamic> request,
     required bool compact,
   }) {
     return Row(

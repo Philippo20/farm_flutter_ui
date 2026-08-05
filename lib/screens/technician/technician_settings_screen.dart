@@ -8,6 +8,7 @@ import '../../core/providers/theme_provider.dart';
 import '../../core/widgets/technician_header.dart';
 import '../../core/widgets/technician_mobile_bottom_nav.dart';
 import '../../core/widgets/technician_sidebar.dart';
+import '../../core/widgets/role_mobile_navigation.dart';
 import '../../providers/auth_provider.dart';
 
 class TechnicianSettingsScreen extends ConsumerStatefulWidget {
@@ -21,6 +22,7 @@ class TechnicianSettingsScreen extends ConsumerStatefulWidget {
 class _TechnicianSettingsScreenState
     extends ConsumerState<TechnicianSettingsScreen> {
   int _selectedNavIndex = 4;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   bool _pushAlerts = true;
   bool _smsAlerts = false;
@@ -65,19 +67,28 @@ class _TechnicianSettingsScreenState
     final userEmail = authState.user?.email ?? 'technician@farmestates.com';
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Technician',
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (_) {},
+              items: technicianNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
           ? _buildMobileLayout(isDark, userName, themeMode)
           : _buildDesktopLayout(isDark, userName, userEmail, themeMode),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: TechnicianMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) =>
-                    setState(() => _selectedNavIndex = index),
-              ))
+          ? TechnicianMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }
@@ -100,7 +111,11 @@ class _TechnicianSettingsScreenState
         Expanded(
           child: Column(
             children: [
-              TechnicianHeader(userName: userName, onNotificationTap: () {}),
+              TechnicianHeader(
+                userName: userName,
+                onNotificationTap: () {},
+                onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+              ),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(AppSpacing.lg),
@@ -117,7 +132,11 @@ class _TechnicianSettingsScreenState
   Widget _buildMobileLayout(bool isDark, String userName, ThemeMode themeMode) {
     return Column(
       children: [
-        TechnicianHeader(userName: userName, onNotificationTap: () {}),
+        TechnicianHeader(
+          userName: userName,
+          onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(

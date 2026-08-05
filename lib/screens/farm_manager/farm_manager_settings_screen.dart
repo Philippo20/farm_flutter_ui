@@ -282,7 +282,10 @@ class _FarmManagerSettingsScreenState
             child: _buildContent(isDark, true, themeMode),
           ),
         ),
-        SafeArea(top: false, child: _buildBottomNavigation(isDark)),
+        FarmManagerMobileBottomNav(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+        ),
       ],
     );
   }
@@ -300,7 +303,7 @@ class _FarmManagerSettingsScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPageHeader(isDark, isMobile),
-        SizedBox(height: isMobile ? 16 : 24),
+        SizedBox(height: isMobile ? 0 : 24),
         if (isMobile) ...[
           _buildProfileSection(isDark, isMobile),
           const SizedBox(height: 16),

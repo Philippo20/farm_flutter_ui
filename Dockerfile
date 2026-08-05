@@ -7,7 +7,7 @@ RUN flutter pub get
 
 COPY . .
 
-ARG API_BASE_URL=https://api.farmestates.farm
+ARG API_BASE_URL=https://api-5u45d.ondigitalocean.app
 RUN flutter build web --release --dart-define=API_BASE_URL=${API_BASE_URL}
 
 FROM nginx:1.27-alpine

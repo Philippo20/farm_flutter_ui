@@ -20,6 +20,7 @@ class RedesignedAdminDashboard extends ConsumerStatefulWidget {
 
 class _RedesignedAdminDashboardState
     extends ConsumerState<RedesignedAdminDashboard> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String _selectedPeriod = 'Today';
   String _selectedFarm = 'All Farms';
   final SuperAdminApiService _api = SuperAdminApiService();
@@ -527,13 +528,26 @@ class _RedesignedAdminDashboardState
     final userEmail = user?.email ?? '';
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      drawer: isMobile
+          ? AdminDrawer(
+              selectedIndex: 0,
+              onItemSelected: (_) {},
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Administrator',
+            )
+          : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? AdminMobileBottomNav(
+              selectedIndex: 0,
+              onItemSelected: (_) {},
+            )
           : null,
     );
   }
@@ -561,7 +575,9 @@ class _RedesignedAdminDashboardState
                 onNotificationTap: _showNotifications,
                 onProfileTap: _showProfileMenu,
               ),
-              Expanded(child: _buildContent(isDark, AppSpacing.xl)),
+              Expanded(
+                child: _buildContent(isDark, AppSpacing.xl, isMobile: false),
+              ),
             ],
           ),
         ),
@@ -581,13 +597,20 @@ class _RedesignedAdminDashboardState
           },
           onNotificationTap: _showNotifications,
           onProfileTap: _showProfileMenu,
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
-        Expanded(child: _buildContent(isDark, AppSpacing.md)),
+        Expanded(
+          child: _buildContent(isDark, AppSpacing.md, isMobile: true),
+        ),
       ],
     );
   }
 
-  Widget _buildContent(bool isDark, double padding) {
+  Widget _buildContent(
+    bool isDark,
+    double padding, {
+    required bool isMobile,
+  }) {
     if (_isLoading) {
       return SingleChildScrollView(
         padding: EdgeInsets.all(padding),
@@ -607,19 +630,37 @@ class _RedesignedAdminDashboardState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHero(isDark),
+          _buildHero(isDark, isMobile),
           const SizedBox(height: AppSpacing.lg),
-          _buildPeriodFilter(isDark),
-          const SizedBox(height: AppSpacing.lg),
-          _buildMetricsGrid(),
+          _buildPeriodFilter(isDark, isMobile),
+          SizedBox(height: isMobile ? 0 : AppSpacing.lg),
+          Transform.translate(
+            offset: Offset(0, isMobile ? -40 : 0),
+            transformHitTests: false,
+            child: _buildMetricsGrid(isMobile),
+          ),
           const SizedBox(height: AppSpacing.xl),
-          _buildOperationsGrid(isDark),
+          Transform.translate(
+            offset: Offset(0, isMobile ? -40 : 0),
+            child: _buildOperationsGrid(isDark, isMobile),
+          ),
           const SizedBox(height: AppSpacing.xl),
-          _buildInsightSection(isDark),
-          const SizedBox(height: AppSpacing.xl),
-          _buildFarmPerformanceSection(isDark),
-          const SizedBox(height: AppSpacing.xl),
-          _buildActivityFeed(isDark),
+          Transform.translate(
+            offset: Offset(0, isMobile ? -70 : 0),
+            child: _buildInsightSection(isDark, isMobile),
+          ),
+          Transform.translate(
+            offset: Offset(0, isMobile ? -70 : 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: AppSpacing.xl),
+                _buildFarmPerformanceSection(isDark, isMobile),
+                const SizedBox(height: AppSpacing.xl),
+                _buildActivityFeed(isDark),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -660,10 +701,10 @@ class _RedesignedAdminDashboardState
     );
   }
 
-  Widget _buildHero(bool isDark) {
+  Widget _buildHero(bool isDark, bool isMobile) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      padding: EdgeInsets.all(isMobile ? AppSpacing.lg : AppSpacing.xl),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: LinearGradient(
@@ -874,65 +915,94 @@ class _RedesignedAdminDashboardState
     );
   }
 
-  Widget _buildPeriodFilter(bool isDark) {
+  Widget _buildPeriodFilter(bool isDark, bool isMobile) {
     const periods = ['Today', 'Week', 'Month', 'Quarter'];
 
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: periods.map((period) {
-        final selected = _selectedPeriod == period;
-        return ChoiceChip(
-          label: Text(period),
-          selected: selected,
-          onSelected: (_) => setState(() => _selectedPeriod = period),
-          selectedColor: AppColors.primary.withValues(alpha: .14),
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          side: BorderSide(
-            color: selected
-                ? AppColors.primary.withValues(alpha: .55)
-                : (isDark
-                    ? Colors.white.withValues(alpha: .10)
-                    : AppColors.neutral300),
-          ),
-          checkmarkColor: AppColors.primary,
-          labelStyle: AppTypography.label.copyWith(
-            color: selected
-                ? AppColors.primary
-                : (isDark ? Colors.white : AppColors.textSecondary),
-            fontWeight: selected ? FontWeight.w500 : FontWeight.w500,
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildMetricsGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final columns = width >= 1200
-            ? 3
-            : width >= 760
-                ? 2
-                : 1;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _metrics.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            crossAxisSpacing: AppSpacing.md,
-            mainAxisSpacing: AppSpacing.md,
-            childAspectRatio: width < 430 ? 1.35 : 1.72,
-          ),
-          itemBuilder: (context, index) => _MetricCard(metric: _metrics[index]),
+        final chips = periods.map((period) {
+          final selected = _selectedPeriod == period;
+          return ChoiceChip(
+            label: Text(period),
+            selected: selected,
+            onSelected: (_) => setState(() => _selectedPeriod = period),
+            selectedColor: AppColors.primary.withValues(alpha: .14),
+            backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+            side: BorderSide(
+              color: selected
+                  ? AppColors.primary.withValues(alpha: .55)
+                  : (isDark
+                      ? Colors.white.withValues(alpha: .10)
+                      : AppColors.neutral300),
+            ),
+            checkmarkColor: AppColors.primary,
+            labelStyle: AppTypography.label.copyWith(
+              color: selected
+                  ? AppColors.primary
+                  : (isDark ? Colors.white : AppColors.textSecondary),
+              fontWeight: FontWeight.w500,
+            ),
+          );
+        }).toList();
+
+        if (isMobile) {
+          final chipWidth =
+              (constraints.maxWidth - (AppSpacing.sm * 3)) / periods.length;
+          return Row(
+            children: chips
+                .map(
+                  (chip) => SizedBox(width: chipWidth, child: chip),
+                )
+                .toList(),
+          );
+        }
+
+        return Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: chips,
         );
       },
     );
   }
 
-  Widget _buildOperationsGrid(bool isDark) {
+  Widget _buildMetricsGrid(bool isMobile) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final columns = isMobile
+            ? 2
+            : width >= 1200
+                ? 3
+                : width >= 760
+                    ? 2
+                    : 1;
+        final gridDelegate = isMobile
+            ? SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: AppSpacing.md,
+                mainAxisSpacing: AppSpacing.md,
+                mainAxisExtent: 174,
+              )
+            : SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: AppSpacing.md,
+                mainAxisSpacing: AppSpacing.md,
+                childAspectRatio: width < 430 ? 1.35 : 1.72,
+              );
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _metrics.length,
+          gridDelegate: gridDelegate,
+          itemBuilder: (context, index) =>
+              _MetricCard(metric: _metrics[index], compact: isMobile),
+        );
+      },
+    );
+  }
+
+  Widget _buildOperationsGrid(bool isDark, bool isMobile) {
     return _DashboardSection(
       title: 'Operations Console',
       subtitle: 'Fast access to the admin areas used to run daily operations.',
@@ -945,24 +1015,37 @@ class _RedesignedAdminDashboardState
               : width >= 720
                   ? 2
                   : 1;
+          final gridDelegate = isMobile
+              ? const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 1,
+                  mainAxisSpacing: 5,
+                  mainAxisExtent: 117,
+                )
+              : SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  crossAxisSpacing: AppSpacing.md,
+                  mainAxisSpacing: AppSpacing.md,
+                  childAspectRatio: width < 430 ? 1.38 : 1.9,
+                );
           return GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _shortcuts.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columns,
-              crossAxisSpacing: AppSpacing.md,
-              mainAxisSpacing: AppSpacing.md,
-              childAspectRatio: width < 430 ? 1.38 : 1.9,
-            ),
+            gridDelegate: gridDelegate,
             itemBuilder: (context, index) {
-              return _OperationCard(
+              final card = _OperationCard(
                 shortcut: _shortcuts[index],
                 onTap: () => Navigator.pushReplacementNamed(
                   context,
                   _shortcuts[index].route,
                 ),
               );
+              return isMobile
+                  ? Transform.translate(
+                      offset: const Offset(0, -50),
+                      child: card,
+                    )
+                  : card;
             },
           );
         },
@@ -970,7 +1053,7 @@ class _RedesignedAdminDashboardState
     );
   }
 
-  Widget _buildInsightSection(bool isDark) {
+  Widget _buildInsightSection(bool isDark, bool isMobile) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final stacked = constraints.maxWidth < 900;
@@ -1050,7 +1133,7 @@ class _RedesignedAdminDashboardState
     );
   }
 
-  Widget _buildFarmPerformanceSection(bool isDark) {
+  Widget _buildFarmPerformanceSection(bool isDark, bool isMobile) {
     return _DashboardSection(
       title: 'Farm Performance Snapshot',
       subtitle: 'Live operating score by farm and manager.',
@@ -1063,18 +1146,28 @@ class _RedesignedAdminDashboardState
           : LayoutBuilder(
               builder: (context, constraints) {
                 final columns = constraints.maxWidth >= 920 ? 3 : 1;
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _farmPerformance.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: columns,
-                    crossAxisSpacing: AppSpacing.md,
-                    mainAxisSpacing: AppSpacing.md,
-                    childAspectRatio: constraints.maxWidth < 430 ? 1.35 : 1.55,
+                final gridDelegate = isMobile
+                    ? const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 1,
+                        mainAxisExtent: 200,
+                      )
+                    : SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: columns,
+                        crossAxisSpacing: AppSpacing.md,
+                        mainAxisSpacing: AppSpacing.md,
+                        childAspectRatio:
+                            constraints.maxWidth < 430 ? 1.35 : 1.55,
+                      );
+                return Transform.translate(
+                  offset: Offset(0, isMobile ? -50 : 0),
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _farmPerformance.length,
+                    gridDelegate: gridDelegate,
+                    itemBuilder: (context, index) =>
+                        _FarmPerformanceCard(farm: _farmPerformance[index]),
                   ),
-                  itemBuilder: (context, index) =>
-                      _FarmPerformanceCard(farm: _farmPerformance[index]),
                 );
               },
             ),
@@ -1202,16 +1295,17 @@ class _RedesignedAdminDashboardState
 void _noopNav(int _) {}
 
 class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.metric});
+  const _MetricCard({required this.metric, this.compact = false});
 
   final _DashboardMetric metric;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(compact ? 12 : AppSpacing.lg),
       decoration: _cardDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1219,13 +1313,14 @@ class _MetricCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: compact ? 38 : 46,
+                height: compact ? 38 : 46,
                 decoration: BoxDecoration(
                   color: metric.color.withValues(alpha: .14),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 ),
-                child: Icon(metric.icon, color: metric.color, size: 24),
+                child: Icon(metric.icon,
+                    color: metric.color, size: compact ? 20 : 24),
               ),
               const Spacer(),
               Text(
@@ -1240,7 +1335,8 @@ class _MetricCard extends StatelessWidget {
           const Spacer(),
           Text(
             metric.value,
-            style: AppTypography.h3.copyWith(
+            style: (compact ? AppTypography.titleLarge : AppTypography.h3)
+                .copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
               fontWeight: FontWeight.w500,
               letterSpacing: -1,

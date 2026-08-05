@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../widgets/headers/caretaker_header.dart';
+import '../../core/widgets/caretaker_mobile_bottom_nav.dart';
 import '../../widgets/sidebars/caretaker_sidebar.dart';
 import '../../widgets/cards/farm/first_row.dart';
 import '../../widgets/cards/farm/second_row.dart';
@@ -149,14 +150,10 @@ class _caretakerFarmsScreenState extends State<CaretakerFarmScreen> {
         ),
       ),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: CaretakerSidebar(
-                selectedIndex: selectedIndex,
-                onItemSelected: (idx) => setState(() => selectedIndex = idx),
-                isDark: isDark,
-                isMobile: true,
-              ))
+          ? CaretakerMobileBottomNav(
+              selectedIndex: selectedIndex,
+              onItemSelected: (idx) => setState(() => selectedIndex = idx),
+            )
           : null,
     );
   }

@@ -387,27 +387,35 @@ class _OverallDeliveryControlModuleState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeader(isDark),
-        const SizedBox(height: AppSpacing.lg),
-        if (_deliveryError != null) ...[
-          _buildSyncStatus(isDark),
-          const SizedBox(height: AppSpacing.lg),
-        ],
-        if (_isLoadingDeliveries)
-          const AdminDataSkeleton(rowCount: 5)
-        else ...[
-          _buildStats(isDark, _deliveries),
-          const SizedBox(height: AppSpacing.lg),
-          _buildFarmDeliveryOverview(isDark),
-          const SizedBox(height: AppSpacing.lg),
-          _buildFilters(isDark),
-          const SizedBox(height: AppSpacing.lg),
-          _buildTabs(isDark),
-          const SizedBox(height: AppSpacing.md),
-          if (_selectedTab == 0)
-            _buildDeliveryControlList(isDark, filteredDeliveries)
-          else
-            _buildActivityLog(isDark, filteredActivities),
-        ],
+        Transform.translate(
+          offset: Offset(0, widget.isMobile ? -80 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: AppSpacing.lg),
+              if (_deliveryError != null) ...[
+                _buildSyncStatus(isDark),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+              if (_isLoadingDeliveries)
+                const AdminDataSkeleton(rowCount: 5)
+              else ...[
+                _buildStats(isDark, _deliveries),
+                const SizedBox(height: AppSpacing.lg),
+                _buildFarmDeliveryOverview(isDark),
+                const SizedBox(height: AppSpacing.lg),
+                _buildFilters(isDark),
+                const SizedBox(height: AppSpacing.lg),
+                _buildTabs(isDark),
+                const SizedBox(height: AppSpacing.md),
+                if (_selectedTab == 0)
+                  _buildDeliveryControlList(isDark, filteredDeliveries)
+                else
+                  _buildActivityLog(isDark, filteredActivities),
+              ],
+            ],
+          ),
+        ),
       ],
     );
   }

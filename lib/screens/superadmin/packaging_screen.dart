@@ -213,6 +213,12 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
       body: isMobile
           ? _buildMobileLayout(isDark, firstName)
           : _buildDesktopLayout(isDark, userName, userEmail, firstName),
+      bottomNavigationBar: isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 5,
+              onItemSelected: (_) {},
+            )
+          : null,
     );
   }
 

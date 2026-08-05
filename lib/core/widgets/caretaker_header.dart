@@ -75,7 +75,7 @@ class CaretakerHeader extends ConsumerWidget {
           color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
         ),
         child: isMobile
-            ? _buildMobileLayout(isDark, ref)
+            ? _buildMobileLayout(context, isDark, ref)
             : _buildDesktopLayout(isDark, ref),
       ),
     );
@@ -186,7 +186,7 @@ class CaretakerHeader extends ConsumerWidget {
     );
   }
 
-  Widget _buildMobileLayout(bool isDark, WidgetRef ref) {
+  Widget _buildMobileLayout(BuildContext context, bool isDark, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -194,6 +194,15 @@ class CaretakerHeader extends ConsumerWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (Scaffold.maybeOf(context) != null) ...[
+              _buildMobileActionButton(
+                icon: Icons.menu,
+                tooltip: 'Menu',
+                isDark: isDark,
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+            ],
             // Left Section: Greeting and User Name
             Expanded(
               child: Column(

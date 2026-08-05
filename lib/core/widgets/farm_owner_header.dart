@@ -19,6 +19,7 @@ class FarmOwnerHeader extends ConsumerWidget {
   final List<String>? farms;
   final String? selectedFarm;
   final ValueChanged<String?>? onFarmChanged;
+  final double mobileBottomPadding;
 
   const FarmOwnerHeader({
     super.key,
@@ -30,6 +31,7 @@ class FarmOwnerHeader extends ConsumerWidget {
     this.farms,
     this.selectedFarm,
     this.onFarmChanged,
+    this.mobileBottomPadding = AppSpacing.lg,
   });
 
   String _getGreeting() {
@@ -69,9 +71,11 @@ class FarmOwnerHeader extends ConsumerWidget {
       top: isMobile,
       bottom: false,
       child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: isMobile ? AppSpacing.md : AppSpacing.xl,
-          vertical: AppSpacing.lg,
+        padding: EdgeInsets.fromLTRB(
+          isMobile ? AppSpacing.md : AppSpacing.xl,
+          AppSpacing.lg,
+          isMobile ? AppSpacing.md : AppSpacing.xl,
+          isMobile ? mobileBottomPadding : AppSpacing.lg,
         ),
         decoration: BoxDecoration(
           color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
@@ -196,6 +200,15 @@ class FarmOwnerHeader extends ConsumerWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (onMenuTap != null) ...[
+              _buildMobileActionButton(
+                icon: Icons.menu,
+                tooltip: 'Menu',
+                isDark: isDark,
+                onPressed: onMenuTap,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+            ],
             // Left Section: Greeting and User Name
             Expanded(
               child: Column(
@@ -263,15 +276,6 @@ class FarmOwnerHeader extends ConsumerWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (onMenuTap != null) ...[
-                  _buildMobileActionButton(
-                    icon: Icons.menu_rounded,
-                    tooltip: 'Menu',
-                    isDark: isDark,
-                    onPressed: onMenuTap,
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                ],
                 _buildMobileActionButton(
                   icon: isDark
                       ? Icons.light_mode_outlined

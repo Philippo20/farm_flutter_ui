@@ -8,6 +8,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/modern_dashboard_scaffold.dart';
 import '../../core/widgets/technician_mobile_bottom_nav.dart';
 import '../../core/widgets/technician_sidebar.dart';
+import '../../core/widgets/role_mobile_navigation.dart';
 import '../../core/widgets/technician_header.dart';
 import '../../core/widgets/weather_time_widget.dart';
 import '../../core/widgets/weather_info_chip.dart';
@@ -27,6 +28,7 @@ class TechnicianDashboardRedesigned extends ConsumerStatefulWidget {
 
 class _TechnicianDashboardRedesignedState
     extends ConsumerState<TechnicianDashboardRedesigned> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedNavIndex = 0;
   WeatherInfo? _weatherInfo;
   final SuperAdminApiService _api = SuperAdminApiService();
@@ -132,6 +134,17 @@ class _TechnicianDashboardRedesignedState
     final userRole = 'Technician';
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: userRole,
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (_) {},
+              items: technicianNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -146,13 +159,11 @@ class _TechnicianDashboardRedesignedState
             )
           : null,
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: TechnicianMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) =>
-                    setState(() => _selectedNavIndex = index),
-              ))
+          ? TechnicianMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }
@@ -182,6 +193,7 @@ class _TechnicianDashboardRedesignedState
               TechnicianHeader(
                 userName: userName,
                 weatherInfo: _weatherInfo,
+                onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
                 onNotificationTap: () {
                   // Handle notifications
                 },
@@ -263,6 +275,7 @@ class _TechnicianDashboardRedesignedState
         TechnicianHeader(
           userName: userName,
           weatherInfo: _weatherInfo,
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
           onNotificationTap: () {
             // Handle notifications
           },
@@ -283,48 +296,69 @@ class _TechnicianDashboardRedesignedState
                           const SizedBox(height: AppSpacing.md),
 
                           // Compact Stats Section
-                          _buildStatsSection(context),
+                          Transform.translate(
+                            offset: const Offset(0, -90),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildStatsSection(context),
 
-                          const SizedBox(height: AppSpacing.lg),
+                                const SizedBox(height: 12),
 
-                          // Alert Summary
-                          _buildAlertSummary(isDark),
+                                // Alert Summary
+                                _buildAlertSummary(isDark),
 
-                          const SizedBox(height: AppSpacing.lg),
+                                const SizedBox(height: 12),
 
-                          // Section Title
-                          Text(
-                            'Farm Asset Monitoring',
-                            style: AppTypography.h5.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color:
-                                  isDark ? Colors.white : AppColors.textPrimary,
+                                Text(
+                                  'Farm Asset Monitoring',
+                                  style: AppTypography.h5.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 8),
+
+                                Transform.translate(
+                                  offset: const Offset(0, -60),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Asset Monitoring Grid
+                                      _buildAssetMonitoringGrid(context),
+
+                                      const SizedBox(height: 12),
+
+                                      // Section Title
+                                      Text(
+                                        'Maintenance Tasks',
+                                        style: AppTypography.h5.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                          color: isDark
+                                              ? Colors.white
+                                              : AppColors.textPrimary,
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 8),
+
+                                      // Features Grid
+                                      Transform.translate(
+                                        offset: const Offset(0, 60),
+                                        child: _buildFeaturesGrid(context),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-
-                          const SizedBox(height: AppSpacing.md),
-
-                          // Asset Monitoring Grid
-                          _buildAssetMonitoringGrid(context),
-
-                          const SizedBox(height: AppSpacing.lg),
-
-                          // Section Title
-                          Text(
-                            'Maintenance Tasks',
-                            style: AppTypography.h5.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color:
-                                  isDark ? Colors.white : AppColors.textPrimary,
-                            ),
-                          ),
-
-                          const SizedBox(height: AppSpacing.md),
-
-                          // Features Grid
-                          _buildFeaturesGrid(context),
                         ],
                       ),
           ),
@@ -465,7 +499,7 @@ class _TechnicianDashboardRedesignedState
             Icon(Icons.cloud_off_outlined,
                 size: 42,
                 color: isDark ? Colors.white54 : AppColors.textSecondary),
-            const SizedBox(height: AppSpacing.md),
+            const SizedBox(height: 8),
             Text('Unable to load technician dashboard',
                 style: AppTypography.h6.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary)),
@@ -581,10 +615,11 @@ class _TechnicianDashboardRedesignedState
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
+        final isMobile = constraints.maxWidth < 600;
 
         return GridView.count(
           crossAxisCount: crossAxisCount,
-          childAspectRatio: 3.2,
+          childAspectRatio: isMobile ? 2.55 : 3.2,
           crossAxisSpacing: AppSpacing.sm,
           mainAxisSpacing: AppSpacing.sm,
           shrinkWrap: true,
@@ -821,7 +856,6 @@ class _TechnicianDashboardRedesignedState
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
         // Adjust aspect ratio for mobile to prevent overflow
         final childAspectRatio = isMobile ? 1.4 : 1.2;
-
         return GridView.count(
           crossAxisCount: crossAxisCount,
           childAspectRatio: childAspectRatio,

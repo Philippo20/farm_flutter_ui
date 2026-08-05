@@ -8,6 +8,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/technician_header.dart';
 import '../../core/widgets/technician_mobile_bottom_nav.dart';
 import '../../core/widgets/technician_sidebar.dart';
+import '../../core/widgets/role_mobile_navigation.dart';
 import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/widgets/skeleton_loader.dart';
@@ -36,6 +37,7 @@ class _SensorManagementScreenState
   String? _errorMessage;
   List<Map<String, dynamic>> _backendSensors = [];
   List<Map<String, dynamic>> _farms = [];
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -205,8 +207,19 @@ class _SensorManagementScreenState
     }).toList();
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: authState.user?.email ?? 'technician@farmestates.com',
+              userRole: 'Technician',
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (_) {},
+              items: technicianNavigationItems,
+            )
+          : null,
       body: _isLoading
           ? _buildLoadingShell(isDark, isMobile, userName, userEmail)
           : _errorMessage != null
@@ -223,13 +236,11 @@ class _SensorManagementScreenState
                       filteredSensors,
                     ),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: TechnicianMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) =>
-                    setState(() => _selectedNavIndex = index),
-              ))
+          ? TechnicianMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }
@@ -239,7 +250,11 @@ class _SensorManagementScreenState
     final content = const Center(child: AdminDataSkeleton(rowCount: 5));
     if (isMobile) {
       return Column(children: [
-        TechnicianHeader(userName: userName, onNotificationTap: () {}),
+        TechnicianHeader(
+          userName: userName,
+          onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
         Expanded(child: content),
       ]);
     }
@@ -253,7 +268,11 @@ class _SensorManagementScreenState
       ),
       Expanded(
           child: Column(children: [
-        TechnicianHeader(userName: userName, onNotificationTap: () {}),
+        TechnicianHeader(
+          userName: userName,
+          onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
         Expanded(child: content),
       ])),
     ]);
@@ -276,7 +295,11 @@ class _SensorManagementScreenState
     ]));
     if (isMobile) {
       return Column(children: [
-        TechnicianHeader(userName: userName, onNotificationTap: () {}),
+        TechnicianHeader(
+          userName: userName,
+          onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
         Expanded(child: content),
       ]);
     }
@@ -290,7 +313,11 @@ class _SensorManagementScreenState
       ),
       Expanded(
           child: Column(children: [
-        TechnicianHeader(userName: userName, onNotificationTap: () {}),
+        TechnicianHeader(
+          userName: userName,
+          onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
         Expanded(child: content),
       ])),
     ]);
@@ -316,7 +343,11 @@ class _SensorManagementScreenState
         Expanded(
           child: Column(
             children: [
-              TechnicianHeader(userName: userName, onNotificationTap: () {}),
+              TechnicianHeader(
+                userName: userName,
+                onNotificationTap: () {},
+                onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+              ),
               Expanded(
                   child: _buildPageBody(
                       isDark, false, isTablet, sensors, filteredSensors)),
@@ -336,7 +367,11 @@ class _SensorManagementScreenState
   ) {
     return Column(
       children: [
-        TechnicianHeader(userName: userName, onNotificationTap: () {}),
+        TechnicianHeader(
+          userName: userName,
+          onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
         Expanded(
             child: _buildPageBody(
                 isDark, true, isTablet, sensors, filteredSensors)),

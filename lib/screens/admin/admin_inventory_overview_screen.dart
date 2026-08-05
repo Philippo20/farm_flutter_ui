@@ -31,6 +31,15 @@ class _AdminInventoryOverviewScreenState
     final firstName = userName.split(' ').first;
 
     return Scaffold(
+      drawer: isMobile
+          ? AdminDrawer(
+              selectedIndex: 6,
+              onItemSelected: (_) {},
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Administrator',
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -42,7 +51,7 @@ class _AdminInventoryOverviewScreenState
               firstName: firstName,
             ),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? AdminMobileBottomNav(selectedIndex: 6, onItemSelected: (_) {})
           : null,
     );
   }

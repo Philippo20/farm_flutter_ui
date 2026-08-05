@@ -331,7 +331,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ? _buildMobileLayout(isDark, userName, themeMode)
           : _buildDesktopLayout(isDark, userName, userEmail, themeMode),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmOwnerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }

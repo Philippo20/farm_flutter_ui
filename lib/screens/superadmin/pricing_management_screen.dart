@@ -365,6 +365,12 @@ class _PricingManagementScreenState
       body: isMobile
           ? _buildMobileLayout(isDark, firstName)
           : _buildDesktopLayout(isDark, userName, userEmail, firstName),
+      bottomNavigationBar: isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 6,
+              onItemSelected: (_) {},
+            )
+          : null,
     );
   }
 

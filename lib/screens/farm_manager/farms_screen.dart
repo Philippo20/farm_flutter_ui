@@ -448,6 +448,12 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName),
+      bottomNavigationBar: isMobile
+          ? FarmManagerMobileBottomNav(
+              selectedIndex: 1,
+              onItemSelected: (_) {},
+            )
+          : null,
     );
   }
 
@@ -494,7 +500,6 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             child: _buildContent(isDark, true),
           ),
         ),
-        SafeArea(top: false, child: _buildBottomNavigation(isDark)),
       ],
     );
   }
@@ -515,10 +520,23 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPageHeader(isDark, isMobile),
-        SizedBox(height: isMobile ? 16 : 24),
-        _buildStatsRow(isDark, isMobile),
-        SizedBox(height: isMobile ? 16 : 24),
-        _buildFarmsSection(isDark, isMobile),
+        if (isMobile)
+          Transform.translate(
+            offset: const Offset(0, -48),
+            child: Column(
+              children: [
+                _buildStatsRow(isDark, true),
+                const SizedBox(height: 16),
+                _buildFarmsSection(isDark, true),
+              ],
+            ),
+          )
+        else ...[
+          const SizedBox(height: 24),
+          _buildStatsRow(isDark, false),
+          const SizedBox(height: 24),
+          _buildFarmsSection(isDark, false),
+        ],
       ],
     );
   }
@@ -839,7 +857,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: isMobile ? 0 : 14),
         if (filtered.isEmpty)
           Container(
             width: double.infinity,
@@ -855,32 +873,36 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             child: _buildEmptyState(isDark),
           )
         else
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: filtered.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (_, i) => Container(
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.surfaceDark : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.06)
-                      : AppColors.neutral200,
+          Transform.translate(
+            offset: Offset(0, isMobile ? 16 : 0),
+            child: ListView.separated(
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: filtered.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (_, i) => Container(
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.surfaceDark : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withOpacity(0.06)
+                        : AppColors.neutral200,
+                  ),
+                  boxShadow: isDark
+                      ? null
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.035),
+                            blurRadius: 18,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                 ),
-                boxShadow: isDark
-                    ? null
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.035),
-                          blurRadius: 18,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
+                clipBehavior: Clip.antiAlias,
+                child: _buildFarmDataCard(filtered[i], isDark, isMobile),
               ),
-              clipBehavior: Clip.antiAlias,
-              child: _buildFarmDataCard(filtered[i], isDark, isMobile),
             ),
           ),
       ],
@@ -2983,6 +3005,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
         : priority == 'Low'
             ? AppColors.info
             : AppColors.warning;
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
     final isUpdating = _updatingTaskIds.contains(taskId);
     final isDeleting = _deletingTaskIds.contains(taskId);
     return Material(
@@ -3011,8 +3034,10 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                         color: isDark ? Colors.white : AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: isMobile ? null : 1,
+                      overflow: isMobile
+                          ? TextOverflow.visible
+                          : TextOverflow.ellipsis,
                     ),
                     Text(
                       'Assigned to ${_value(task, [
@@ -3022,8 +3047,10 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: isMobile ? null : 1,
+                      overflow: isMobile
+                          ? TextOverflow.visible
+                          : TextOverflow.ellipsis,
                     ),
                     if (_value(task, ['description']).isNotEmpty ||
                         _value(task, ['manager_comment']).isNotEmpty) ...[
@@ -3038,14 +3065,20 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                 : AppColors.textSecondary,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            _value(task, ['manager_comment']).isNotEmpty
-                                ? 'Manager comment added'
-                                : 'Task note available',
-                            style: AppTypography.caption.copyWith(
-                              color: isDark
-                                  ? Colors.white54
-                                  : AppColors.textSecondary,
+                          Expanded(
+                            child: Text(
+                              _value(task, ['manager_comment']).isNotEmpty
+                                  ? 'Manager comment added'
+                                  : 'Task note available',
+                              maxLines: isMobile ? null : 1,
+                              overflow: isMobile
+                                  ? TextOverflow.visible
+                                  : TextOverflow.ellipsis,
+                              style: AppTypography.caption.copyWith(
+                                color: isDark
+                                    ? Colors.white54
+                                    : AppColors.textSecondary,
+                              ),
                             ),
                           ),
                         ],

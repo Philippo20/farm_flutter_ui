@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -569,13 +570,41 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
               onItemSelected: (_) {},
               userName: userName,
             )
-          : null,
+          : widget.isSuperAdmin && isMobile
+              ? SuperAdminDrawer(
+                  selectedIndex: 12,
+                  onItemSelected: (_) {},
+                  userName: userName,
+                  userEmail: ref.read(authProvider).user?.email ??
+                      'superadmin@farmestates.com',
+                  userRole: 'Super Administrator',
+                )
+              : !widget.isSuperAdmin && isMobile
+                  ? AdminDrawer(
+                      selectedIndex: 3,
+                      onItemSelected: (_) {},
+                      userName: userName,
+                      userEmail: ref.read(authProvider).user?.email ?? '',
+                      userRole: 'Administrator',
+                    )
+                  : null,
       body: isMobile ? _buildMobileLayout(isDark) : _buildDesktopLayout(isDark),
-      bottomNavigationBar: widget.isFarmManager
-          ? null
-          : (isMobile
-              ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
-              : null),
+      bottomNavigationBar: widget.isSuperAdmin && isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 12,
+              onItemSelected: (_) {},
+            )
+          : widget.isFarmManager
+              ? FarmManagerMobileBottomNav(
+                  selectedIndex: 9,
+                  onItemSelected: (_) {},
+                )
+              : (isMobile
+                  ? AdminMobileBottomNav(
+                      selectedIndex: 3,
+                      onItemSelected: (_) {},
+                    )
+                  : null),
     );
   }
 
@@ -669,6 +698,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
           userName: widget.isSuperAdmin ? 'Super Admin' : 'Admin',
           onNotificationTap: () {},
           onProfileTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -694,9 +724,9 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
       children: [
         _buildHero(isDark, isMobile),
         const SizedBox(height: AppSpacing.lg),
-        _buildHealthStrip(isDark),
+        _buildHealthStrip(isDark, isMobile),
         const SizedBox(height: AppSpacing.lg),
-        _buildFilters(isDark),
+        _buildFilters(isDark, isMobile),
         const SizedBox(height: AppSpacing.lg),
         _buildFleetGrid(isDark),
       ],
@@ -947,7 +977,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     );
   }
 
-  Widget _buildHealthStrip(bool isDark) {
+  Widget _buildHealthStrip(bool isDark, bool isMobile) {
     final warning =
         _sensors.where((sensor) => sensor.status == 'Warning').length;
     final critical =
@@ -970,11 +1000,13 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 1000
-            ? 4
-            : constraints.maxWidth >= 620
-                ? 2
-                : 1;
+        final columns = isMobile
+            ? 2
+            : constraints.maxWidth >= 1000
+                ? 4
+                : constraints.maxWidth >= 620
+                    ? 2
+                    : 1;
         final cardWidth =
             (constraints.maxWidth - (AppSpacing.md * (columns - 1))) / columns;
 
@@ -984,7 +1016,12 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
           children: stats.map((stat) {
             return SizedBox(
               width: cardWidth,
-              child: _FleetStatCard(stat: stat, isDark: isDark),
+              height: isMobile ? 76 : null,
+              child: _FleetStatCard(
+                stat: stat,
+                isDark: isDark,
+                isMobile: isMobile,
+              ),
             );
           }).toList(),
         );
@@ -992,55 +1029,84 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     );
   }
 
-  Widget _buildFilters(bool isDark) {
+  Widget _buildFilters(bool isDark, bool isMobile) {
+    final resetButton = OutlinedButton.icon(
+      onPressed: () {
+        setState(() {
+          _selectedFarm = 'All Farms';
+          _selectedStatus = 'All';
+          _selectedType = 'All Types';
+        });
+      },
+      icon: const Icon(Icons.refresh_rounded, size: 18),
+      label: const Text('Reset'),
+    );
+    final registerButton = FilledButton.icon(
+      onPressed: () => _showAddSensorDialog(isDark),
+      icon: const Icon(Icons.add_rounded, size: 18),
+      label: const Text('Register Device'),
+    );
+
+    final farmDropdown = _buildDropdown(
+      label: 'Farm',
+      value: _selectedFarm,
+      items: _farmOptions(),
+      isDark: isDark,
+      width: isMobile ? double.infinity : null,
+      onChanged: (value) => setState(() => _selectedFarm = value!),
+    );
+    final statusDropdown = _buildDropdown(
+      label: 'Status',
+      value: _selectedStatus,
+      items: _statusOptions(),
+      isDark: isDark,
+      width: isMobile ? double.infinity : null,
+      onChanged: (value) => setState(() => _selectedStatus = value!),
+    );
+    final typeDropdown = _buildDropdown(
+      label: 'Sensor Type',
+      value: _selectedType,
+      items: _typeOptions(),
+      isDark: isDark,
+      width: isMobile ? double.infinity : null,
+      onChanged: (value) => setState(() => _selectedType = value!),
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: _cardDecoration(isDark),
-      child: Wrap(
-        spacing: AppSpacing.md,
-        runSpacing: AppSpacing.md,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          _buildDropdown(
-            label: 'Farm',
-            value: _selectedFarm,
-            items: _farmOptions(),
-            isDark: isDark,
-            onChanged: (value) => setState(() => _selectedFarm = value!),
-          ),
-          _buildDropdown(
-            label: 'Status',
-            value: _selectedStatus,
-            items: _statusOptions(),
-            isDark: isDark,
-            onChanged: (value) => setState(() => _selectedStatus = value!),
-          ),
-          _buildDropdown(
-            label: 'Sensor Type',
-            value: _selectedType,
-            items: _typeOptions(),
-            isDark: isDark,
-            onChanged: (value) => setState(() => _selectedType = value!),
-          ),
-          OutlinedButton.icon(
-            onPressed: () {
-              setState(() {
-                _selectedFarm = 'All Farms';
-                _selectedStatus = 'All';
-                _selectedType = 'All Types';
-              });
-            },
-            icon: const Icon(Icons.refresh_rounded, size: 18),
-            label: const Text('Reset'),
-          ),
-          FilledButton.icon(
-            onPressed: () => _showAddSensorDialog(isDark),
-            icon: const Icon(Icons.add_rounded, size: 18),
-            label: const Text('Register Device'),
-          ),
-        ],
-      ),
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: registerButton),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(child: resetButton),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                farmDropdown,
+                const SizedBox(height: AppSpacing.md),
+                statusDropdown,
+                const SizedBox(height: AppSpacing.md),
+                typeDropdown,
+              ],
+            )
+          : Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                farmDropdown,
+                statusDropdown,
+                typeDropdown,
+                resetButton,
+                registerButton,
+              ],
+            ),
     );
   }
 
@@ -1049,10 +1115,11 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     required String value,
     required List<String> items,
     required bool isDark,
+    double? width,
     required ValueChanged<String?> onChanged,
   }) {
     return SizedBox(
-      width: 210,
+      width: width ?? 210,
       child: DropdownButtonFormField<String>(
         initialValue: value,
         items: items
@@ -1321,110 +1388,263 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
 
   void _showDeleteSensorDialog(_IotSensor sensor, bool isDark) {
     bool isDeleting = false;
-    showDialog<void>(
-      context: context,
-      barrierDismissible: !isDeleting,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Dialog(
-              backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+    final isAndroid =
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+    Widget buildContent(
+      BuildContext modalContext,
+      StateSetter setModalState,
+    ) {
+      if (isAndroid) {
+        final bottomPadding = MediaQuery.of(modalContext).padding.bottom;
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 24,
+                offset: const Offset(0, -8),
               ),
-              child: Container(
-                width: 460,
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withValues(alpha: 0.12),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusMd),
-                          ),
-                          child: const Icon(
-                            Icons.delete_outline_rounded,
-                            color: AppColors.error,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Text(
-                            'Delete Sensor?',
-                            style: AppTypography.titleMedium.copyWith(
-                              color:
-                                  isDark ? Colors.white : AppColors.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Text(
-                      'This will remove ${sensor.name} (${sensor.id}) from the backend. Live readings from this device will be rejected until it is registered again.',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color:
-                            isDark ? Colors.white70 : AppColors.textSecondary,
-                        height: 1.45,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: isDeleting
-                              ? null
-                              : () => Navigator.of(dialogContext).pop(),
-                          child: const Text('Cancel'),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        ElevatedButton.icon(
-                          onPressed: isDeleting
-                              ? null
-                              : () async {
-                                  setModalState(() => isDeleting = true);
-                                  await _deleteSensor(sensor);
-                                  if (dialogContext.mounted) {
-                                    Navigator.of(dialogContext).pop();
-                                  }
-                                },
-                          icon: isDeleting
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.delete_outline_rounded),
-                          label: Text(isDeleting ? 'Deleting...' : 'Delete'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.error,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+            ],
+          ),
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.sm,
+            AppSpacing.lg,
+            AppSpacing.lg + bottomPadding,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 42,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.18)
+                      : AppColors.neutral300,
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
-            );
-          },
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.error,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Delete Sensor?',
+                textAlign: TextAlign.center,
+                style: AppTypography.titleLarge.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'This will remove ${sensor.name} (${sensor.id}) from the backend. Live readings from this device will be rejected until it is registered again.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: isDark ? Colors.white70 : AppColors.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: isDeleting
+                          ? null
+                          : () => Navigator.of(modalContext).pop(),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor:
+                            isDark ? Colors.white70 : AppColors.textPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                        ),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: isDeleting
+                          ? null
+                          : () async {
+                              setModalState(() => isDeleting = true);
+                              await _deleteSensor(sensor);
+                              if (modalContext.mounted) {
+                                Navigator.of(modalContext).pop();
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                        ),
+                      ),
+                      child: isDeleting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Delete'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         );
-      },
-    );
+      }
+
+      return Container(
+        width: isAndroid ? double.infinity : 460,
+        padding: EdgeInsets.all(isAndroid ? AppSpacing.lg : AppSpacing.xl),
+        decoration: isAndroid
+            ? BoxDecoration(
+                color: isDark ? AppColors.surfaceDark : Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(AppSpacing.radiusXl),
+                ),
+              )
+            : null,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: AppColors.error,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    'Delete Sensor?',
+                    style: AppTypography.titleMedium.copyWith(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'This will remove ${sensor.name} (${sensor.id}) from the backend. Live readings from this device will be rejected until it is registered again.',
+              style: AppTypography.bodyMedium.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: isDeleting
+                      ? null
+                      : () => Navigator.of(modalContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                ElevatedButton.icon(
+                  onPressed: isDeleting
+                      ? null
+                      : () async {
+                          setModalState(() => isDeleting = true);
+                          await _deleteSensor(sensor);
+                          if (modalContext.mounted) {
+                            Navigator.of(modalContext).pop();
+                          }
+                        },
+                  icon: isDeleting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(Icons.delete_outline_rounded),
+                  label: Text(isDeleting ? 'Deleting...' : 'Delete'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (isAndroid) {
+      showModalBottomSheet<void>(
+        context: context,
+        useSafeArea: true,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        barrierColor: Colors.black54,
+        builder: (sheetContext) => StatefulBuilder(
+          builder: (context, setModalState) =>
+              buildContent(context, setModalState),
+        ),
+      );
+    } else {
+      showDialog<void>(
+        context: context,
+        barrierDismissible: !isDeleting,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setModalState) => Dialog(
+            backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            ),
+            child: buildContent(dialogContext, setModalState),
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _showSensorForm(bool isDark, {_IotSensor? sensor}) async {
@@ -1545,405 +1765,456 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
               }
             }
 
+            final isMobile = MediaQuery.sizeOf(context).width < 600;
+
             return Dialog(
+              insetPadding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 12 : 40,
+                vertical: isMobile ? 16 : 24,
+              ),
               backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 620),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Form(
-                    key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                isEditing ? 'Update Sensor' : 'Register Sensor',
-                                style: AppTypography.titleLarge.copyWith(
-                                  color: isDark
-                                      ? Colors.white
-                                      : AppColors.textPrimary,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: isSaving
-                                  ? null
-                                  : () => Navigator.pop(dialogContext),
-                              icon: const Icon(Icons.close_rounded),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        if (modalError != null) ...[
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withValues(alpha: 0.10),
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd),
-                              border: Border.all(
-                                color: AppColors.error.withValues(alpha: 0.22),
-                              ),
-                            ),
+                constraints: BoxConstraints(
+                  maxWidth: 620,
+                  maxHeight:
+                      MediaQuery.sizeOf(context).height - (isMobile ? 32 : 48),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        isMobile ? AppSpacing.md : AppSpacing.xl,
+                        isMobile ? AppSpacing.sm : AppSpacing.md,
+                        isMobile ? AppSpacing.sm : AppSpacing.md,
+                        isMobile ? AppSpacing.sm : AppSpacing.md,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
                             child: Text(
-                              modalError!,
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.error,
+                              isEditing ? 'Update Sensor' : 'Register Sensor',
+                              style: AppTypography.titleLarge.copyWith(
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.md),
+                          IconButton(
+                            onPressed: isSaving
+                                ? null
+                                : () => Navigator.pop(dialogContext),
+                            icon: const Icon(Icons.close_rounded),
+                            visualDensity: VisualDensity.compact,
+                          ),
                         ],
-                        _dialogDropdown(
-                          label: 'Farm',
-                          value: selectedFarm.isEmpty ? null : selectedFarm,
-                          items: farmOptions,
-                          isDark: isDark,
-                          validator: (value) =>
-                              value == null ? 'Select a farm first' : null,
-                          onChanged: isSaving
-                              ? null
-                              : (value) =>
-                                  setModalState(() => selectedFarm = value!),
+                      ),
+                    ),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.fromLTRB(
+                          isMobile ? AppSpacing.md : AppSpacing.xl,
+                          isMobile ? AppSpacing.sm : AppSpacing.md,
+                          isMobile ? AppSpacing.md : AppSpacing.xl,
+                          isMobile ? AppSpacing.md : AppSpacing.xl,
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _dialogDropdown(
-                                label: 'Sensor Type',
-                                value: selectedType,
-                                items: const [
-                                  'Temperature',
-                                  'Humidity',
-                                  'CO2',
-                                  'Light',
-                                  'pH Level',
-                                  'EC Level',
-                                  'Water Level',
-                                  'Current',
-                                  'Voltage',
-                                  'Wattage',
-                                ],
+                        child: Form(
+                          key: formKey,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (modalError != null) ...[
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(AppSpacing.md),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        AppColors.error.withValues(alpha: 0.10),
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd),
+                                    border: Border.all(
+                                      color: AppColors.error
+                                          .withValues(alpha: 0.22),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    modalError!,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.error,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                              ],
+                              _dialogDropdown(
+                                label: 'Farm',
+                                value:
+                                    selectedFarm.isEmpty ? null : selectedFarm,
+                                items: farmOptions,
                                 isDark: isDark,
-                                onChanged: isSaving
-                                    ? null
-                                    : (value) {
-                                        setModalState(() {
-                                          selectedType = value!;
-                                          unitController.text =
-                                              _unitForType(selectedType);
-                                          final limits = _defaultLimitsForType(
-                                            selectedType,
-                                          );
-                                          rangeMinController.text =
-                                              '${limits.$1}';
-                                          rangeMaxController.text =
-                                              '${limits.$2}';
-                                          warningMinController.text =
-                                              '${limits.$3}';
-                                          warningMaxController.text =
-                                              '${limits.$4}';
-                                        });
-                                      },
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: _dialogDropdown(
-                                label: 'Status',
-                                value: selectedStatus,
-                                items: const [
-                                  'Active',
-                                  'Inactive',
-                                  'Faulty',
-                                  'Maintenance',
-                                ],
-                                isDark: isDark,
+                                validator: (value) => value == null
+                                    ? 'Select a farm first'
+                                    : null,
                                 onChanged: isSaving
                                     ? null
                                     : (value) => setModalState(
-                                          () => selectedStatus = value!,
-                                        ),
+                                        () => selectedFarm = value!),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        _SensorFormSectionHeader(
-                          title: 'Range Settings',
-                          subtitle:
-                              'Set normal operating limits and wider warning limits for alerts.',
-                          isDark: isDark,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _dialogField(
-                                controller: rangeMinController,
-                                label: 'Normal Min',
+                              const SizedBox(height: AppSpacing.md),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _dialogDropdown(
+                                      label: 'Sensor Type',
+                                      value: selectedType,
+                                      items: const [
+                                        'Temperature',
+                                        'Humidity',
+                                        'CO2',
+                                        'Light',
+                                        'pH Level',
+                                        'EC Level',
+                                        'Water Level',
+                                        'Current',
+                                        'Voltage',
+                                        'Wattage',
+                                      ],
+                                      isDark: isDark,
+                                      onChanged: isSaving
+                                          ? null
+                                          : (value) {
+                                              setModalState(() {
+                                                selectedType = value!;
+                                                unitController.text =
+                                                    _unitForType(selectedType);
+                                                final limits =
+                                                    _defaultLimitsForType(
+                                                  selectedType,
+                                                );
+                                                rangeMinController.text =
+                                                    '${limits.$1}';
+                                                rangeMaxController.text =
+                                                    '${limits.$2}';
+                                                warningMinController.text =
+                                                    '${limits.$3}';
+                                                warningMaxController.text =
+                                                    '${limits.$4}';
+                                              });
+                                            },
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(
+                                    child: _dialogDropdown(
+                                      label: 'Status',
+                                      value: selectedStatus,
+                                      items: const [
+                                        'Active',
+                                        'Inactive',
+                                        'Faulty',
+                                        'Maintenance',
+                                      ],
+                                      isDark: isDark,
+                                      onChanged: isSaving
+                                          ? null
+                                          : (value) => setModalState(
+                                                () => selectedStatus = value!,
+                                              ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              _SensorFormSectionHeader(
+                                title: 'Range Settings',
+                                subtitle:
+                                    'Set normal operating limits and wider warning limits for alerts.',
                                 isDark: isDark,
-                                enabled: !isSaving,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
-                                validator: (value) => _rangeValidator(
-                                  value: value,
-                                  normalMinText: value,
-                                  normalMaxText: rangeMaxController.text,
-                                  warningMinText: warningMinController.text,
-                                  warningMaxText: warningMaxController.text,
-                                  isMinimum: true,
-                                  requiredField: true,
-                                ),
                               ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: _dialogField(
-                                controller: rangeMaxController,
-                                label: 'Normal Max',
-                                isDark: isDark,
-                                enabled: !isSaving,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
-                                validator: (value) => _rangeValidator(
-                                  value: value,
-                                  normalMinText: rangeMinController.text,
-                                  normalMaxText: value,
-                                  warningMinText: warningMinController.text,
-                                  warningMaxText: warningMaxController.text,
-                                  isMinimum: false,
-                                  requiredField: true,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _dialogField(
-                                controller: warningMinController,
-                                label: 'Warning Low',
-                                isDark: isDark,
-                                enabled: !isSaving,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
-                                validator: (value) => _rangeValidator(
-                                  value: value,
-                                  normalMinText: rangeMinController.text,
-                                  normalMaxText: rangeMaxController.text,
-                                  warningMinText: value,
-                                  warningMaxText: warningMaxController.text,
-                                  isMinimum: true,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: _dialogField(
-                                controller: warningMaxController,
-                                label: 'Warning High',
-                                isDark: isDark,
-                                enabled: !isSaving,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
-                                validator: (value) => _rangeValidator(
-                                  value: value,
-                                  normalMinText: rangeMinController.text,
-                                  normalMaxText: rangeMaxController.text,
-                                  warningMinText: warningMinController.text,
-                                  warningMaxText: value,
-                                  isMinimum: false,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _dialogField(
-                                controller: modelController,
-                                label: 'Model Number',
-                                isDark: isDark,
-                                enabled: !isSaving,
-                                validator: _requiredValidator,
-                              ),
-                            ),
-                            if (isEditing) ...[
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      child: _dialogField(
-                                        controller: serialController,
-                                        label: 'Serial Number',
-                                        isDark: isDark,
-                                        enabled: false,
-                                        validator: _requiredValidator,
+                              const SizedBox(height: AppSpacing.sm),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _dialogField(
+                                      controller: rangeMinController,
+                                      label: 'Normal Min',
+                                      isDark: isDark,
+                                      enabled: !isSaving,
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      validator: (value) => _rangeValidator(
+                                        value: value,
+                                        normalMinText: value,
+                                        normalMaxText: rangeMaxController.text,
+                                        warningMinText:
+                                            warningMinController.text,
+                                        warningMaxText:
+                                            warningMaxController.text,
+                                        isMinimum: true,
+                                        requiredField: true,
                                       ),
                                     ),
-                                    const SizedBox(width: AppSpacing.xs),
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: IconButton(
-                                        tooltip: 'Copy serial number',
-                                        onPressed: () => _copySerialNumber(
-                                          serialController.text.trim(),
-                                        ),
-                                        icon: const Icon(
-                                          Icons.copy_rounded,
-                                          size: 18,
-                                        ),
-                                        color: AppColors.info,
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(
+                                    child: _dialogField(
+                                      controller: rangeMaxController,
+                                      label: 'Normal Max',
+                                      isDark: isDark,
+                                      enabled: !isSaving,
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      validator: (value) => _rangeValidator(
+                                        value: value,
+                                        normalMinText: rangeMinController.text,
+                                        normalMaxText: value,
+                                        warningMinText:
+                                            warningMinController.text,
+                                        warningMaxText:
+                                            warningMaxController.text,
+                                        isMinimum: false,
+                                        requiredField: true,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _dialogField(
+                                      controller: warningMinController,
+                                      label: 'Warning Low',
+                                      isDark: isDark,
+                                      enabled: !isSaving,
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      validator: (value) => _rangeValidator(
+                                        value: value,
+                                        normalMinText: rangeMinController.text,
+                                        normalMaxText: rangeMaxController.text,
+                                        warningMinText: value,
+                                        warningMaxText:
+                                            warningMaxController.text,
+                                        isMinimum: true,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(
+                                    child: _dialogField(
+                                      controller: warningMaxController,
+                                      label: 'Warning High',
+                                      isDark: isDark,
+                                      enabled: !isSaving,
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      validator: (value) => _rangeValidator(
+                                        value: value,
+                                        normalMinText: rangeMinController.text,
+                                        normalMaxText: rangeMaxController.text,
+                                        warningMinText:
+                                            warningMinController.text,
+                                        warningMaxText: value,
+                                        isMinimum: false,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _dialogField(
+                                      controller: modelController,
+                                      label: 'Model Number',
+                                      isDark: isDark,
+                                      enabled: !isSaving,
+                                      validator: _requiredValidator,
+                                    ),
+                                  ),
+                                  if (isEditing) ...[
+                                    const SizedBox(width: AppSpacing.md),
+                                    Expanded(
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: _dialogField(
+                                              controller: serialController,
+                                              label: 'Serial Number',
+                                              isDark: isDark,
+                                              enabled: false,
+                                              validator: _requiredValidator,
+                                            ),
+                                          ),
+                                          const SizedBox(width: AppSpacing.xs),
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 4),
+                                            child: IconButton(
+                                              tooltip: 'Copy serial number',
+                                              onPressed: () =>
+                                                  _copySerialNumber(
+                                                serialController.text.trim(),
+                                              ),
+                                              icon: const Icon(
+                                                Icons.copy_rounded,
+                                                size: 18,
+                                              ),
+                                              color: AppColors.info,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
+                                ],
+                              ),
+                              if (!isEditing) ...[
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  'Serial number will be generated automatically from the selected farm name, for example FARM-NAME-001.',
+                                  style: AppTypography.caption.copyWith(
+                                    color: isDark
+                                        ? Colors.white54
+                                        : AppColors.textSecondary,
+                                  ),
                                 ),
+                              ],
+                              const SizedBox(height: AppSpacing.md),
+                              _dialogField(
+                                controller: locationController,
+                                label: 'Location / Zone',
+                                isDark: isDark,
+                                enabled: !isSaving,
+                                validator: _requiredValidator,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _dialogField(
+                                      controller: valueController,
+                                      label: 'Current Reading',
+                                      isDark: isDark,
+                                      enabled: !isSaving,
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      validator: (value) {
+                                        if (_requiredValidator(value) != null) {
+                                          return _requiredValidator(value);
+                                        }
+                                        return double.tryParse(value!.trim()) ==
+                                                null
+                                            ? 'Enter a number'
+                                            : null;
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(
+                                    child: _dialogField(
+                                      controller: unitController,
+                                      label: 'Unit',
+                                      isDark: isDark,
+                                      enabled: !isSaving,
+                                      validator: _requiredValidator,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _dialogField(
+                                      controller: maintenanceController,
+                                      label: 'Maintenance Frequency',
+                                      isDark: isDark,
+                                      enabled: !isSaving,
+                                      validator: _requiredValidator,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  Expanded(
+                                    child: _dialogField(
+                                      controller: lastMaintenanceController,
+                                      label: 'Last Maintenance Date',
+                                      isDark: isDark,
+                                      enabled: !isSaving,
+                                      validator: _requiredValidator,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              SwitchListTile.adaptive(
+                                value: alertsEnabled,
+                                onChanged: isSaving
+                                    ? null
+                                    : (value) => setModalState(
+                                        () => alertsEnabled = value),
+                                title: const Text('Alerts enabled'),
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  SizedBox(
+                                    width: isMobile ? 132 : null,
+                                    child: TextButton(
+                                      onPressed: isSaving
+                                          ? null
+                                          : () => Navigator.pop(dialogContext),
+                                      child: const Text('Cancel'),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: isMobile ? 132 : null,
+                                    child: FilledButton.icon(
+                                      onPressed: isSaving ? null : save,
+                                      icon: isSaving
+                                          ? const SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Icon(Icons.save_rounded),
+                                      label:
+                                          Text(isSaving ? 'Saving...' : 'Save'),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
-                          ],
-                        ),
-                        if (!isEditing) ...[
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            'Serial number will be generated automatically from the selected farm name, for example FARM-NAME-001.',
-                            style: AppTypography.caption.copyWith(
-                              color: isDark
-                                  ? Colors.white54
-                                  : AppColors.textSecondary,
-                            ),
                           ),
-                        ],
-                        const SizedBox(height: AppSpacing.md),
-                        _dialogField(
-                          controller: locationController,
-                          label: 'Location / Zone',
-                          isDark: isDark,
-                          enabled: !isSaving,
-                          validator: _requiredValidator,
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _dialogField(
-                                controller: valueController,
-                                label: 'Current Reading',
-                                isDark: isDark,
-                                enabled: !isSaving,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
-                                validator: (value) {
-                                  if (_requiredValidator(value) != null) {
-                                    return _requiredValidator(value);
-                                  }
-                                  return double.tryParse(value!.trim()) == null
-                                      ? 'Enter a number'
-                                      : null;
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: _dialogField(
-                                controller: unitController,
-                                label: 'Unit',
-                                isDark: isDark,
-                                enabled: !isSaving,
-                                validator: _requiredValidator,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _dialogField(
-                                controller: maintenanceController,
-                                label: 'Maintenance Frequency',
-                                isDark: isDark,
-                                enabled: !isSaving,
-                                validator: _requiredValidator,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(
-                              child: _dialogField(
-                                controller: lastMaintenanceController,
-                                label: 'Last Maintenance Date',
-                                isDark: isDark,
-                                enabled: !isSaving,
-                                validator: _requiredValidator,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        SwitchListTile.adaptive(
-                          value: alertsEnabled,
-                          onChanged: isSaving
-                              ? null
-                              : (value) =>
-                                  setModalState(() => alertsEnabled = value),
-                          title: const Text('Alerts enabled'),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            TextButton(
-                              onPressed: isSaving
-                                  ? null
-                                  : () => Navigator.pop(dialogContext),
-                              child: const Text('Cancel'),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            FilledButton.icon(
-                              onPressed: isSaving ? null : save,
-                              icon: isSaving
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.save_rounded),
-                              label: Text(isSaving ? 'Saving...' : 'Save'),
-                            ),
-                          ],
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             );
@@ -2055,6 +2326,19 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     );
   }
 
+  Widget _sensorDialogIcon(_IotSensor sensor) {
+    return Container(
+      width: 58,
+      height: 58,
+      decoration: BoxDecoration(
+        color: sensor.color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: sensor.color.withValues(alpha: 0.22)),
+      ),
+      child: Icon(sensor.icon, color: sensor.color, size: 30),
+    );
+  }
+
   void _showSensorDetails(_IotSensor sensor, bool isDark) {
     final serialNumber = sensor.id;
     Timer? dialogRefreshTimer;
@@ -2105,95 +2389,156 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
             final statusColor = _statusColor(sensor);
             final readingColor = _readingDiagnosticColor(sensor);
             final readingState = _readingDiagnosticLabel(sensor);
+            final isMobile = MediaQuery.sizeOf(context).width < 600;
 
             return Dialog(
+              insetPadding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 12 : 40,
+                vertical: isMobile ? 16 : 24,
+              ),
               backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24)),
               child: ConstrainedBox(
-                constraints:
-                    const BoxConstraints(maxWidth: 760, maxHeight: 820),
+                constraints: BoxConstraints(
+                  maxWidth: 760,
+                  maxHeight:
+                      MediaQuery.sizeOf(context).height - (isMobile ? 32 : 48),
+                ),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  padding: EdgeInsets.all(
+                    isMobile ? AppSpacing.md : AppSpacing.xl,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 58,
-                            height: 58,
-                            decoration: BoxDecoration(
-                              color: sensor.color.withValues(alpha: 0.14),
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: sensor.color.withValues(alpha: 0.22),
-                              ),
-                            ),
-                            child: Icon(sensor.icon,
-                                color: sensor.color, size: 30),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
+                      if (isMobile)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        sensor.name,
-                                        style:
-                                            AppTypography.titleLarge.copyWith(
-                                          color: isDark
-                                              ? Colors.white
-                                              : AppColors.textPrimary,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
+                                _sensorDialogIcon(sensor),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    sensor.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.titleLarge.copyWith(
+                                      color: isDark
+                                          ? Colors.white
+                                          : AppColors.textPrimary,
+                                      fontWeight: FontWeight.w400,
                                     ),
-                                    _StatusBadge(
-                                      label: sensor.status,
-                                      color: statusColor,
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        '${sensor.id} - ${sensor.farm} - ${sensor.zone}',
-                                        style: AppTypography.bodySmall.copyWith(
-                                          color: isDark
-                                              ? Colors.white
-                                                  .withValues(alpha: 0.62)
-                                              : AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ),
-                                    IconButton(
-                                      tooltip: 'Copy serial number',
-                                      onPressed: () =>
-                                          _copySerialNumber(sensor.id),
-                                      icon: const Icon(Icons.copy_rounded),
-                                      iconSize: 18,
-                                      color: AppColors.info,
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                  ],
+                                IconButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  icon: const Icon(Icons.close_rounded),
+                                  visualDensity: VisualDensity.compact,
                                 ),
                               ],
                             ),
-                          ),
-                          IconButton(
-                            onPressed: () => Navigator.pop(context),
-                            icon: const Icon(Icons.close_rounded),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Row(
+                              children: [
+                                _StatusBadge(
+                                  label: sensor.status,
+                                  color: statusColor,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
+                                  child: Text(
+                                    '${sensor.id} - ${sensor.farm} - ${sensor.zone}',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: isDark
+                                          ? Colors.white.withValues(alpha: 0.62)
+                                          : AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Copy serial number',
+                                  onPressed: () => _copySerialNumber(sensor.id),
+                                  icon: const Icon(Icons.copy_rounded),
+                                  iconSize: 18,
+                                  color: AppColors.info,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      else
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _sensorDialogIcon(sensor),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          sensor.name,
+                                          style:
+                                              AppTypography.titleLarge.copyWith(
+                                            color: isDark
+                                                ? Colors.white
+                                                : AppColors.textPrimary,
+                                            fontWeight: FontWeight.w400,
+                                          ),
+                                        ),
+                                      ),
+                                      _StatusBadge(
+                                        label: sensor.status,
+                                        color: statusColor,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${sensor.id} - ${sensor.farm} - ${sensor.zone}',
+                                          style:
+                                              AppTypography.bodySmall.copyWith(
+                                            color: isDark
+                                                ? Colors.white
+                                                    .withValues(alpha: 0.62)
+                                                : AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        tooltip: 'Copy serial number',
+                                        onPressed: () =>
+                                            _copySerialNumber(sensor.id),
+                                        icon: const Icon(Icons.copy_rounded),
+                                        iconSize: 18,
+                                        color: AppColors.info,
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => Navigator.pop(context),
+                              icon: const Icon(Icons.close_rounded),
+                            ),
+                          ],
+                        ),
                       const SizedBox(height: AppSpacing.lg),
                       _DiagnosticHero(
                         sensor: sensor,
@@ -3079,28 +3424,33 @@ class _SensorDeviceCard extends StatelessWidget {
 }
 
 class _FleetStatCard extends StatelessWidget {
-  const _FleetStatCard({required this.stat, required this.isDark});
+  const _FleetStatCard({
+    required this.stat,
+    required this.isDark,
+    required this.isMobile,
+  });
 
   final _FleetStat stat;
   final bool isDark;
+  final bool isMobile;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(isMobile ? 12 : AppSpacing.lg),
       decoration: _cardDecoration(isDark),
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: isMobile ? 40 : 48,
+            height: isMobile ? 40 : 48,
             decoration: BoxDecoration(
               color: stat.color.withValues(alpha: 0.13),
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             ),
-            child: Icon(stat.icon, color: stat.color, size: 25),
+            child: Icon(stat.icon, color: stat.color, size: isMobile ? 21 : 25),
           ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: isMobile ? 8 : AppSpacing.md),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

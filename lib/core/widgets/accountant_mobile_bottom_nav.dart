@@ -16,26 +16,31 @@ class AccountantMobileBottomNav extends StatelessWidget {
   static const _navItems = [
     {
       'icon': Icons.dashboard_outlined,
+      'activeIcon': Icons.dashboard_rounded,
       'label': 'Home',
       'route': '/accountant-dashboard',
     },
     {
       'icon': Icons.receipt_long_outlined,
+      'activeIcon': Icons.receipt_long_rounded,
       'label': 'Ledger',
       'route': '/accountant-transactions',
     },
     {
       'icon': Icons.account_balance_outlined,
+      'activeIcon': Icons.account_balance_rounded,
       'label': 'Bank',
       'route': '/accountant-reconciliation',
     },
     {
       'icon': Icons.approval_outlined,
+      'activeIcon': Icons.approval_rounded,
       'label': 'Approvals',
       'route': '/accountant-approvals',
     },
     {
       'icon': Icons.assessment_outlined,
+      'activeIcon': Icons.assessment_rounded,
       'label': 'Reports',
       'route': '/accountant-reports',
     },
@@ -126,7 +131,9 @@ class AccountantMobileBottomNav extends StatelessWidget {
                                   BorderRadius.circular(AppSpacing.radiusFull),
                             ),
                             child: Icon(
-                              item['icon'] as IconData,
+                              isSelected
+                                  ? item['activeIcon'] as IconData
+                                  : item['icon'] as IconData,
                               size: 22,
                               color: color,
                             ),

@@ -213,11 +213,19 @@ class _FarmManagerDashboardRedesignedState
               onItemSelected: (index) =>
                   setState(() => _selectedNavIndex = index),
               userName: userName,
+              userEmail: userEmail,
             )
           : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
+      bottomNavigationBar: isMobile
+          ? FarmManagerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
+          : null,
       floatingActionButton: isMobile
           ? null
           : FloatingActionButton.extended(
@@ -289,8 +297,6 @@ class _FarmManagerDashboardRedesignedState
           child: _buildContentView(isDark),
         ),
 
-        // Bottom Navigation (only show on dashboard view)
-        SafeArea(top: false, child: _buildBottomNavigation(isDark)),
       ],
     );
   }
@@ -4138,20 +4144,29 @@ class _FarmManagerDashboardRedesignedState
       },
     ];
 
-    return Wrap(
-      spacing: 12,
-      runSpacing: 12,
-      children: features
-          .map((f) => _buildFeatureCard(
-                context,
-                isDark,
-                f['title'] as String,
-                f['icon'] as IconData,
-                f['color'] as Color,
-                f,
-                isMobile,
-              ))
-          .toList(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final spacing = isMobile ? 8.0 : 12.0;
+        final cardWidth = isMobile
+            ? (constraints.maxWidth - (spacing * 3)) / 4
+            : 80.0;
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: features
+              .map((f) => _buildFeatureCard(
+                    context,
+                    isDark,
+                    f['title'] as String,
+                    f['icon'] as IconData,
+                    f['color'] as Color,
+                    f,
+                    isMobile,
+                    cardWidth,
+                  ))
+              .toList(),
+        );
+      },
     );
   }
 
@@ -4163,10 +4178,8 @@ class _FarmManagerDashboardRedesignedState
     Color color,
     Map<String, dynamic> feature,
     bool isMobile,
+    double cardWidth,
   ) {
-    final cardWidth =
-        isMobile ? (MediaQuery.of(context).size.width - 56) / 4 : 80.0;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(

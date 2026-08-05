@@ -148,7 +148,13 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                       userEmail: userEmail,
                       userRole: 'Super Administrator',
                     )
-                  : navigation,
+                  : AdminDrawer(
+                      selectedIndex: 8,
+                      onItemSelected: (_) {},
+                      userName: userName,
+                      userEmail: userEmail,
+                      userRole: 'Administrator',
+                    ),
             )
           : null,
       body: Row(
@@ -176,6 +182,17 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: isMobile
+          ? widget.isSuperAdmin
+              ? SuperAdminMobileBottomNav(
+                  selectedIndex: 3,
+                  onItemSelected: (_) {},
+                )
+              : AdminMobileBottomNav(
+                  selectedIndex: 8,
+                  onItemSelected: (_) {},
+                )
+          : null,
     );
   }
 

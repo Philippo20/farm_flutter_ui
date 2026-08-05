@@ -16,26 +16,31 @@ class FulfillmentManagerMobileBottomNav extends StatelessWidget {
   static const List<Map<String, dynamic>> _navItems = [
     {
       'icon': Icons.dashboard_outlined,
+      'activeIcon': Icons.dashboard_rounded,
       'label': 'Dashboard',
       'route': '/fulfillment_dashboard',
     },
     {
       'icon': Icons.check_box_outlined,
+      'activeIcon': Icons.check_box_rounded,
       'label': 'Confirm',
       'route': '/fulfillment-confirm',
     },
     {
       'icon': Icons.inventory_2_outlined,
+      'activeIcon': Icons.inventory_2_rounded,
       'label': 'Packaging',
       'route': '/fulfillment-packaging',
     },
     {
       'icon': Icons.calculate_outlined,
+      'activeIcon': Icons.calculate_rounded,
       'label': 'Calculator',
       'route': '/fulfillment-yield',
     },
     {
       'icon': Icons.category_outlined,
+      'activeIcon': Icons.category_rounded,
       'label': 'Materials',
       'route': '/fulfillment-materials',
     },
@@ -122,7 +127,9 @@ class FulfillmentManagerMobileBottomNav extends StatelessWidget {
                                   BorderRadius.circular(AppSpacing.radiusFull),
                             ),
                             child: Icon(
-                              item['icon'] as IconData,
+                              isSelected
+                                  ? item['activeIcon'] as IconData
+                                  : item['icon'] as IconData,
                               size: 22,
                               color: color,
                             ),

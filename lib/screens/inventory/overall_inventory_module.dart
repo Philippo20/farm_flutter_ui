@@ -196,27 +196,37 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeader(isDark),
-        const SizedBox(height: AppSpacing.lg),
-        if (_inventoryError != null) ...[
-          _buildSyncStatus(isDark),
-          const SizedBox(height: AppSpacing.lg),
-        ],
-        if (_isLoadingInventory)
-          const AdminDataSkeleton(rowCount: 5)
-        else ...[
-          _buildStats(isDark, _items),
-          const SizedBox(height: AppSpacing.lg),
-          _buildFarmOverview(isDark),
-          const SizedBox(height: AppSpacing.lg),
-          _buildFilters(isDark),
-          const SizedBox(height: AppSpacing.lg),
-          _buildTabs(isDark),
-          const SizedBox(height: AppSpacing.md),
-          if (_selectedTab == 0)
-            _buildInventoryList(isDark, filteredItems)
-          else
-            _buildMovementHistory(isDark, filteredMovements),
-        ],
+        Transform.translate(
+          offset: Offset(0, widget.isMobile ? -50 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: widget.isMobile ? 0 : AppSpacing.lg),
+              if (_inventoryError != null) ...[
+                _buildSyncStatus(isDark),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+              if (_isLoadingInventory)
+                const AdminDataSkeleton(rowCount: 5)
+              else ...[
+                _buildStats(isDark, _items),
+                SizedBox(
+                  height: widget.isMobile ? AppSpacing.sm : AppSpacing.lg,
+                ),
+                _buildFarmOverview(isDark),
+                const SizedBox(height: AppSpacing.lg),
+                _buildFilters(isDark),
+                const SizedBox(height: AppSpacing.lg),
+                _buildTabs(isDark),
+                const SizedBox(height: AppSpacing.md),
+                if (_selectedTab == 0)
+                  _buildInventoryList(isDark, filteredItems)
+                else
+                  _buildMovementHistory(isDark, filteredMovements),
+              ],
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -278,20 +288,22 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
         border: Border.all(
           color: isDark ? Colors.white10 : AppColors.primary.withOpacity(0.14),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.24 : 0.06),
-            blurRadius: 28,
-            offset: const Offset(0, 16),
-          ),
-        ],
+        boxShadow: widget.isMobile
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.24 : 0.06),
+                  blurRadius: 28,
+                  offset: const Offset(0, 16),
+                ),
+              ],
       ),
       child: widget.isMobile
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeaderCopy(isDark),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 0),
                 _buildHeroMetrics(isDark, farmsCovered, totalValue),
               ],
             )

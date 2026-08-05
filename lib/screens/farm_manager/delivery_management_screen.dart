@@ -270,7 +270,10 @@ class _DeliveryManagementScreenState
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmManagerMobileBottomNav(
+              selectedIndex: 3,
+              onItemSelected: (_) {},
+            )
           : null,
     );
   }
@@ -339,10 +342,23 @@ class _DeliveryManagementScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPageHeader(isDark, isMobile),
-        SizedBox(height: isMobile ? 16 : 24),
-        _buildStatsRow(isDark, isMobile),
-        SizedBox(height: isMobile ? 16 : 24),
-        _buildDeliveriesSection(isDark, isMobile),
+        if (isMobile)
+          Transform.translate(
+            offset: const Offset(0, -48),
+            child: Column(
+              children: [
+                _buildStatsRow(isDark, true),
+                const SizedBox(height: 16),
+                _buildDeliveriesSection(isDark, true),
+              ],
+            ),
+          )
+        else ...[
+          const SizedBox(height: 24),
+          _buildStatsRow(isDark, false),
+          const SizedBox(height: 24),
+          _buildDeliveriesSection(isDark, false),
+        ],
       ],
     );
   }

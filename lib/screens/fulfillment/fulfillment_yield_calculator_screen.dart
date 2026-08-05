@@ -3,10 +3,61 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/fulfillment_manager_screen_shell.dart';
+import '../../services/fulfillment_data_service.dart';
 
-class FulfillmentYieldCalculatorScreen extends StatelessWidget {
+class FulfillmentYieldCalculatorScreen extends StatefulWidget {
   const FulfillmentYieldCalculatorScreen({super.key});
 
+  @override
+  State<FulfillmentYieldCalculatorScreen> createState() =>
+      _FulfillmentYieldCalculatorScreenState();
+}
+
+class _FulfillmentYieldCalculatorScreenState
+    extends State<FulfillmentYieldCalculatorScreen> {
+  List<Map<String, dynamic>> _breakdown = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadYieldData();
+  }
+
+  Future<void> _loadYieldData() async {
+    try {
+      final records = (await FulfillmentDataService().load()).fulfillments;
+      final breakdown = records.map((item) {
+        final received = _number(item['total_weight']);
+        final packed = _number(item['total_packaged_weight']);
+        final waste = _number(item['packaging_waste_weight']);
+        final loss = received <= 0 ? 0 : (waste / received * 100);
+        return <String, dynamic>{
+          'batch': item['batch_number'] ?? 'Unassigned batch',
+          'crop': item['plant_type'] ?? 'Unspecified crop',
+          'received': '${received.toStringAsFixed(1)} kg',
+          'packed': '${packed.toStringAsFixed(1)} kg',
+          'waste': '${waste.toStringAsFixed(1)} kg',
+          'loss': '${loss.toStringAsFixed(1)}%',
+          'status': item['status'] ?? 'Unknown',
+          'line': 'Unassigned',
+        };
+      }).toList();
+      if (!mounted) return;
+      setState(() {
+        _breakdown = breakdown;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  static double _number(dynamic value) =>
+      double.tryParse(value?.toString() ?? '') ?? 0;
+
+  /* Backend fulfillment records replace the former demo breakdown.
   static const _breakdown = [
     {
       'batch': 'LTC-24019',
@@ -39,11 +90,19 @@ class FulfillmentYieldCalculatorScreen extends StatelessWidget {
       'line': 'Line C',
     },
   ];
+  */
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isMobile = MediaQuery.of(context).size.width < 600;
+    final totalReceived = _breakdown.fold<double>(
+        0, (sum, item) => sum + _number(item['received'].toString().replaceAll(' kg', '')));
+    final totalPackaged = _breakdown.fold<double>(
+        0, (sum, item) => sum + _number(item['packed'].toString().replaceAll(' kg', '')));
+    final totalWaste = _breakdown.fold<double>(
+        0, (sum, item) => sum + _number(item['waste'].toString().replaceAll(' kg', '')));
+    final lossRate = totalReceived <= 0 ? 0 : totalWaste / totalReceived * 100;
 
     return FulfillmentManagerScreenShell(
       selectedIndex: 3,
@@ -51,65 +110,72 @@ class FulfillmentYieldCalculatorScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHero(isDark, isMobile),
-          const SizedBox(height: AppSpacing.lg),
-          Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.md,
-            children: const [
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            const SizedBox(height: AppSpacing.lg),
+            Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+            children: [
               _YieldKpi(
                 label: 'Total received',
-                value: '826 kg',
-                subtitle: 'Harvest intake',
-                icon: Icons.input_outlined,
-                color: AppColors.primary,
-              ),
+                value: '${totalReceived.toStringAsFixed(1)} kg',
+                  subtitle: 'Harvest intake',
+                  icon: Icons.input_outlined,
+                  color: AppColors.primary,
+                ),
               _YieldKpi(
                 label: 'Packaged',
-                value: '797 kg',
-                subtitle: 'Sellable output',
-                icon: Icons.inventory_2_outlined,
-                color: AppColors.success,
-              ),
+                value: '${totalPackaged.toStringAsFixed(1)} kg',
+                  subtitle: 'Sellable output',
+                  icon: Icons.inventory_2_outlined,
+                  color: AppColors.success,
+                ),
               _YieldKpi(
                 label: 'Waste',
-                value: '29 kg',
-                subtitle: 'Trim and rejects',
-                icon: Icons.delete_sweep_outlined,
-                color: AppColors.warning,
-              ),
+                value: '${totalWaste.toStringAsFixed(1)} kg',
+                  subtitle: 'Trim and rejects',
+                  icon: Icons.delete_sweep_outlined,
+                  color: AppColors.warning,
+                ),
               _YieldKpi(
                 label: 'Loss rate',
-                value: '3.5%',
-                subtitle: 'Today average',
-                icon: Icons.trending_down_outlined,
-                color: AppColors.error,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final twoColumns = constraints.maxWidth >= 980;
-              if (!twoColumns) {
-                return Column(
+                value: '${lossRate.toStringAsFixed(1)}%',
+                subtitle: 'Backend average',
+                  icon: Icons.trending_down_outlined,
+                  color: AppColors.error,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final twoColumns = constraints.maxWidth >= 980;
+                if (!twoColumns) {
+                  return Column(
+                    children: [
+                      _buildCalculatorPanel(isDark),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildInsightsPanel(isDark),
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCalculatorPanel(isDark),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildInsightsPanel(isDark),
+                    Expanded(child: _buildCalculatorPanel(isDark)),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(child: _buildInsightsPanel(isDark)),
                   ],
                 );
-              }
-
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildCalculatorPanel(isDark)),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(child: _buildInsightsPanel(isDark)),
-                ],
-              );
-            },
-          ),
+              },
+            ),
+          ],
           const SizedBox(height: AppSpacing.xl),
           Text(
             'Batch Yield Breakdown',
@@ -330,7 +396,7 @@ class FulfillmentYieldCalculatorScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBreakdownCard(bool isDark, Map<String, String> item) {
+  Widget _buildBreakdownCard(bool isDark, Map<String, dynamic> item) {
     final lossText = item['loss']!;
     final lossValue = double.tryParse(lossText.replaceAll('%', '')) ?? 0;
     final riskColor = lossValue >= 4

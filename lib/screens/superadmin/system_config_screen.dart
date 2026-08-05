@@ -32,7 +32,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
     'forceLogoutOnPasswordChange': true,
     'passwordMinLength': '8',
     'maxUploadSize': '50',
-    'apiBaseUrl': 'https://api.farmestates.com',
+    'apiBaseUrl': 'https://api-5u45d.ondigitalocean.app',
     'webhookUrl': 'https://hooks.farmestates.com',
     'apiRateLimit': '1000',
     'sensorIngestApiKey': '',
@@ -434,6 +434,12 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
         body: isMobile
             ? _buildMobileLayout(isDark, firstName)
             : _buildDesktopLayout(isDark, userName, userEmail, firstName),
+        bottomNavigationBar: isMobile
+            ? SuperAdminMobileBottomNav(
+                selectedIndex: 8,
+                onItemSelected: (_) {},
+              )
+            : null,
       ),
     );
   }
@@ -512,13 +518,21 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildConfigurationHero(isDark, isMobile),
-        const SizedBox(height: AppSpacing.lg),
-        _buildConfigurationStats(isDark, isMobile),
-        const SizedBox(height: AppSpacing.xl),
-        _buildProfessionalConfigGrid(isDark, isMobile),
-        const SizedBox(height: AppSpacing.xl),
-        _buildProfessionalActionBar(isDark, isMobile),
-        const SizedBox(height: AppSpacing.xl),
+        Transform.translate(
+          offset: Offset(0, isMobile ? -74 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: AppSpacing.lg),
+              _buildConfigurationStats(isDark, isMobile),
+              const SizedBox(height: AppSpacing.xl),
+              _buildProfessionalConfigGrid(isDark, isMobile),
+              const SizedBox(height: AppSpacing.xl),
+              _buildProfessionalActionBar(isDark, isMobile),
+              const SizedBox(height: AppSpacing.xl),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -746,6 +760,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
   }
 
   Widget _buildConfigStatusCard(_ConfigStatus stat, bool isDark) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -780,7 +795,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: isMobile ? 3 : 4),
                 Text(
                   stat.value,
                   overflow: TextOverflow.ellipsis,
@@ -789,7 +804,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: isMobile ? 1 : 2),
                 Text(
                   stat.detail,
                   overflow: TextOverflow.ellipsis,
@@ -1184,7 +1199,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
   String get _sensorIngestEndpoint {
     final base =
         _apiBaseUrlController.text.trim().replaceAll(RegExp(r'/+$'), '');
-    return '${base.isEmpty ? 'http://127.0.0.1:8000' : base}/sensors/ingest';
+    return '${base.isEmpty ? 'https://api-5u45d.ondigitalocean.app' : base}/sensors/ingest';
   }
 
   String get _sensorPayloadSample {

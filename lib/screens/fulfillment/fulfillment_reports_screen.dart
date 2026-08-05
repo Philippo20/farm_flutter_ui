@@ -3,10 +3,101 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/fulfillment_manager_screen_shell.dart';
+import '../../services/fulfillment_data_service.dart';
 
-class FulfillmentReportsScreen extends StatelessWidget {
+class FulfillmentReportsScreen extends StatefulWidget {
   const FulfillmentReportsScreen({super.key});
 
+  @override
+  State<FulfillmentReportsScreen> createState() =>
+      _FulfillmentReportsScreenState();
+}
+
+class _FulfillmentReportsScreenState extends State<FulfillmentReportsScreen> {
+  List<Map<String, dynamic>> _reports = [];
+  List<Map<String, dynamic>> _exports = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReports();
+  }
+
+  Future<void> _loadReports() async {
+    try {
+      final snapshot = await FulfillmentDataService().load();
+      final records = snapshot.fulfillments;
+      final inventory = snapshot.inventory;
+      final received = records.fold<double>(
+          0, (sum, item) => sum + _number(item['total_weight']));
+      final packaged = records.fold<double>(
+          0, (sum, item) => sum + _number(item['total_packaged_weight']));
+      final waste = records.fold<double>(
+          0, (sum, item) => sum + _number(item['packaging_waste_weight']));
+      final lowStock = inventory
+          .where((item) =>
+              _number(item['quantity'] ?? item['stock']) <=
+              _number(item['reorder_level'] ?? item['minimum_stock']))
+          .length;
+      final reports = [
+        _report(
+            'Daily Intake',
+            'Inbound weight from fulfillment records',
+            '${received.toStringAsFixed(1)} kg',
+            'Backend data',
+            Icons.move_to_inbox_outlined,
+            AppColors.primary),
+        _report(
+            'Packaging Throughput',
+            'Packaged output recorded by the hub',
+            '${packaged.toStringAsFixed(1)} kg',
+            '${records.length} records',
+            Icons.precision_manufacturing_outlined,
+            AppColors.success),
+        _report(
+            'Yield Variance',
+            'Waste and recovery from packaging records',
+            '${waste.toStringAsFixed(1)} kg',
+            'Recorded waste',
+            Icons.analytics_outlined,
+            AppColors.warning),
+        _report(
+            'Materials Risk',
+            'Inventory items below their thresholds',
+            '$lowStock risk',
+            '${inventory.length} tracked items',
+            Icons.inventory_2_outlined,
+            AppColors.error),
+      ];
+      if (!mounted) return;
+      setState(() {
+        _reports = reports;
+        _exports = [];
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
+
+  static double _number(dynamic value) =>
+      double.tryParse(value?.toString() ?? '') ?? 0;
+
+  Map<String, dynamic> _report(String title, String subtitle, String metric,
+          String trend, IconData icon, Color color) =>
+      {
+        'title': title,
+        'subtitle': subtitle,
+        'metric': metric,
+        'trend': trend,
+        'status': 'Live',
+        'icon': icon,
+        'color': color,
+      };
+
+  /* Backend-derived reports replace the former demo collections.
   static const _reports = [
     {
       'title': 'Daily Intake',
@@ -76,11 +167,13 @@ class FulfillmentReportsScreen extends StatelessWidget {
       'color': AppColors.warning,
     },
   ];
+  */
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isMobile = MediaQuery.of(context).size.width < 600;
+    final exceptions = _reports.where((item) => item['status'] == 'Action').length;
 
     return FulfillmentManagerScreenShell(
       selectedIndex: 5,
@@ -88,68 +181,75 @@ class FulfillmentReportsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHero(isDark, isMobile),
-          const SizedBox(height: AppSpacing.lg),
-          Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.md,
-            children: const [
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            const SizedBox(height: AppSpacing.lg),
+            Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+            children: [
               _ReportKpi(
                 title: 'Reports ready',
-                value: '8',
-                subtitle: 'Across today',
-                icon: Icons.fact_check_outlined,
-                color: AppColors.primary,
-              ),
+                value: '${_reports.length}',
+                subtitle: 'Backend-derived reports',
+                  icon: Icons.fact_check_outlined,
+                  color: AppColors.primary,
+                ),
               _ReportKpi(
                 title: 'Export queue',
-                value: '3',
-                subtitle: 'Scheduled outputs',
-                icon: Icons.file_download_outlined,
-                color: AppColors.success,
-              ),
+                value: '${_exports.length}',
+                subtitle: 'Backend export records',
+                  icon: Icons.file_download_outlined,
+                  color: AppColors.success,
+                ),
               _ReportKpi(
                 title: 'Exceptions',
-                value: '2',
-                subtitle: 'Need review',
-                icon: Icons.report_problem_outlined,
-                color: AppColors.warning,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            'Operational Reports',
-            style: AppTypography.h5.copyWith(
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+                value: '$exceptions',
+                subtitle: 'Backend risk records',
+                  icon: Icons.report_problem_outlined,
+                  color: AppColors.warning,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildReportsGrid(context, isDark),
-          const SizedBox(height: AppSpacing.xl),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final twoColumns = constraints.maxWidth >= 980;
-              if (!twoColumns) {
-                return Column(
+            const SizedBox(height: AppSpacing.xl),
+            Text(
+              'Operational Reports',
+              style: AppTypography.h5.copyWith(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildReportsGrid(context, isDark),
+            const SizedBox(height: AppSpacing.xl),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final twoColumns = constraints.maxWidth >= 980;
+                if (!twoColumns) {
+                  return Column(
+                    children: [
+                      _buildExportsPanel(isDark),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildInsightsPanel(isDark),
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildExportsPanel(isDark),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildInsightsPanel(isDark),
+                    Expanded(child: _buildExportsPanel(isDark)),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(child: _buildInsightsPanel(isDark)),
                   ],
                 );
-              }
-
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: _buildExportsPanel(isDark)),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(child: _buildInsightsPanel(isDark)),
-                ],
-              );
-            },
-          ),
+              },
+            ),
+          ],
         ],
       ),
     );
@@ -383,7 +483,7 @@ class _ReportKpi extends StatelessWidget {
 }
 
 class _ReportCard extends StatelessWidget {
-  final Map<String, Object> report;
+  final Map<String, dynamic> report;
   final bool isDark;
 
   const _ReportCard({
@@ -619,7 +719,7 @@ class _PanelTitle extends StatelessWidget {
 }
 
 class _ExportRow extends StatelessWidget {
-  final Map<String, Object> export;
+  final Map<String, dynamic> export;
 
   const _ExportRow({required this.export});
 

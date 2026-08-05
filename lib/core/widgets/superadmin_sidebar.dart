@@ -1120,6 +1120,233 @@ class SuperAdminDrawer extends StatelessWidget {
   }
 }
 
+/// Compact Android navigation for Super Admin screens.
+class SuperAdminMobileBottomNav extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onItemSelected;
+
+  const SuperAdminMobileBottomNav({
+    super.key,
+    required this.selectedIndex,
+    required this.onItemSelected,
+  });
+
+  static const _primaryItems = [
+    _NavItem(
+      icon: Icons.dashboard_outlined,
+      activeIcon: Icons.dashboard_rounded,
+      label: 'Home',
+      route: '/superadmin_dashboard',
+    ),
+    _NavItem(
+      icon: Icons.agriculture_outlined,
+      activeIcon: Icons.agriculture_rounded,
+      label: 'Farms',
+      route: '/superadmin/farms',
+    ),
+    _NavItem(
+      icon: Icons.inventory_2_outlined,
+      activeIcon: Icons.inventory_2_rounded,
+      label: 'Inventory',
+      route: '/superadmin/inventory',
+    ),
+    _NavItem(
+      icon: Icons.local_shipping_outlined,
+      activeIcon: Icons.local_shipping_rounded,
+      label: 'Deliveries',
+      route: '/superadmin/deliveries',
+    ),
+  ];
+
+  static const _allItems = [
+    _NavItem(
+      icon: Icons.people_outline,
+      activeIcon: Icons.people_alt_rounded,
+      label: 'User Management',
+      route: '/superadmin/users',
+    ),
+    _NavItem(
+      icon: Icons.grass_outlined,
+      activeIcon: Icons.grass_rounded,
+      label: 'Crop Varieties',
+      route: '/superadmin/crop-varieties',
+    ),
+    _NavItem(
+      icon: Icons.eco_outlined,
+      activeIcon: Icons.eco_rounded,
+      label: 'Plant Types',
+      route: '/superadmin/plants',
+    ),
+    _NavItem(
+      icon: Icons.inventory_2_outlined,
+      activeIcon: Icons.inventory_2_rounded,
+      label: 'Packaging',
+      route: '/superadmin/packaging',
+    ),
+    _NavItem(
+      icon: Icons.attach_money_outlined,
+      activeIcon: Icons.attach_money_rounded,
+      label: 'Pricing',
+      route: '/superadmin/pricing',
+    ),
+    _NavItem(
+      icon: Icons.sensors_outlined,
+      activeIcon: Icons.sensors_rounded,
+      label: 'Sensors',
+      route: '/superadmin/sensors',
+    ),
+    _NavItem(
+      icon: Icons.analytics_outlined,
+      activeIcon: Icons.analytics_rounded,
+      label: 'Analytics',
+      route: '/superadmin/analytics',
+    ),
+    _NavItem(
+      icon: Icons.history_outlined,
+      activeIcon: Icons.history_rounded,
+      label: 'Audit Logs',
+      route: '/superadmin/audit',
+    ),
+    _NavItem(
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings_rounded,
+      label: 'System Config',
+      route: '/superadmin/config',
+    ),
+    _NavItem(
+      icon: Icons.backup_outlined,
+      activeIcon: Icons.backup_rounded,
+      label: 'Backup & Restore',
+      route: '/superadmin/backup',
+    ),
+  ];
+
+  Future<void> _navigate(BuildContext context, _NavItem item) async {
+    onItemSelected(_routeIndex(item.route));
+    if (ModalRoute.of(context)?.settings.name == item.route) return;
+    await Navigator.pushReplacementNamed(context, item.route);
+  }
+
+  int _routeIndex(String route) {
+    const routes = [
+      '/superadmin_dashboard',
+      '/superadmin/users',
+      '/superadmin/farms',
+      '/superadmin/crop-varieties',
+      '/superadmin/plants',
+      '/superadmin/packaging',
+      '/superadmin/pricing',
+      '/superadmin/audit',
+      '/superadmin/config',
+      '/superadmin/backup',
+      '/superadmin/inventory',
+      '/superadmin/deliveries',
+      '/superadmin/sensors',
+      '/superadmin/analytics',
+    ];
+    return routes.indexOf(route);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final currentItem = _allItems.cast<_NavItem?>().firstWhere(
+          (item) => _routeIndex(item!.route) == selectedIndex,
+          orElse: () => null,
+        );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: isDark
+                ? Colors.white.withOpacity(0.08)
+                : Colors.black.withOpacity(0.08),
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.24 : 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 76,
+          child: Row(
+            children: [
+              ..._primaryItems.map((item) => _buildItem(
+                    context,
+                    item,
+                    _routeIndex(item.route) == selectedIndex,
+                  )),
+              if (currentItem != null)
+                _buildItem(context, currentItem, true)
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItem(BuildContext context, _NavItem item, bool selected) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final color = selected
+        ? AppColors.primary
+        : (isDark
+            ? AppColors.textOnDark.withOpacity(0.74)
+            : AppColors.textSecondary);
+
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigate(context, item),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppColors.primary.withOpacity(isDark ? 0.16 : 0.10)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  ),
+                  child: Icon(
+                    selected ? item.activeIcon : item.icon,
+                    size: 22,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption.copyWith(
+                    color: color,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _NavItem {
   final IconData icon;
   final IconData activeIcon;

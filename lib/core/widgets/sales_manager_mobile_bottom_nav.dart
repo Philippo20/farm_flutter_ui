@@ -16,30 +16,35 @@ class SalesManagerMobileBottomNav extends StatelessWidget {
   static const List<Map<String, dynamic>> _navItems = [
     {
       'icon': Icons.dashboard_outlined,
+      'activeIcon': Icons.dashboard_rounded,
       'label': 'Dashboard',
       'index': 0,
       'route': '/sales_dashboard',
     },
     {
       'icon': Icons.people_outlined,
+      'activeIcon': Icons.people_rounded,
       'label': 'Buyers',
       'index': 1,
       'route': '/sales-off-takers',
     },
     {
       'icon': Icons.trending_up_outlined,
+      'activeIcon': Icons.trending_up_rounded,
       'label': 'Growth',
       'index': 2,
       'route': '/sales-performance',
     },
     {
       'icon': Icons.local_shipping_outlined,
+      'activeIcon': Icons.local_shipping_rounded,
       'label': 'Delivery',
       'index': 3,
       'route': '/sales-deliveries',
     },
     {
       'icon': Icons.assessment_outlined,
+      'activeIcon': Icons.assessment_rounded,
       'label': 'Reports',
       'index': 5,
       'route': '/sales-reports',
@@ -135,7 +140,9 @@ class SalesManagerMobileBottomNav extends StatelessWidget {
                                   BorderRadius.circular(AppSpacing.radiusFull),
                             ),
                             child: Icon(
-                              item['icon'] as IconData,
+                              isSelected
+                                  ? item['activeIcon'] as IconData
+                                  : item['icon'] as IconData,
                               size: 22,
                               color: color,
                             ),

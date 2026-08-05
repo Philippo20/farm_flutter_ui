@@ -216,7 +216,11 @@ class _FarmOwnerDashboardRedesignedState
               label: const Text('Wallet Action'),
             ),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmOwnerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }
@@ -614,7 +618,10 @@ class _FarmOwnerDashboardRedesignedState
             ],
           ),
           const SizedBox(height: 20),
-          _buildFeaturesGrid(context),
+          Transform.translate(
+            offset: Offset(0, isMobile ? -60 : 0),
+            child: _buildFeaturesGrid(context),
+          ),
         ],
       ),
     );

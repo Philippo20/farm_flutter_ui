@@ -30,6 +30,7 @@ class CaretakerDashboardRedesigned extends ConsumerStatefulWidget {
 class _CaretakerDashboardRedesignedState
     extends ConsumerState<CaretakerDashboardRedesigned> {
   final SuperAdminApiService _api = SuperAdminApiService();
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedNavIndex = 0;
   WeatherInfo? _weatherInfo;
   Timer? _refreshTimer;
@@ -154,8 +155,10 @@ class _CaretakerDashboardRedesignedState
     final merged = <String, Map<String, dynamic>>{};
     for (final task in [...farmTasks, ...directTasks]) {
       final taskKey = _value(task, const [r'$id', 'id', 'task_id'],
-          fallback:
-              '${_value(task, const ['title'])}|${_value(task, const ['farm_id', 'farm_name'])}|${_value(task, const ['due_date'])}');
+          fallback: '${_value(task, const ['title'])}|${_value(task, const [
+                'farm_id',
+                'farm_name'
+              ])}|${_value(task, const ['due_date'])}');
       merged[taskKey] = task;
     }
     return merged.values.toList();
@@ -217,8 +220,18 @@ class _CaretakerDashboardRedesignedState
     final userEmail = auth.user?.email ?? 'caretaker@farmestates.com';
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      drawer: isMobile
+          ? CaretakerMobileDrawer(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+              userName: userName,
+              userEmail: userEmail,
+            )
+          : null,
       body: isMobile
           ? _mobileShell(isDark, userName)
           : _desktopShell(isDark, userName, userEmail),
@@ -235,13 +248,11 @@ class _CaretakerDashboardRedesignedState
                       fontWeight: FontWeight.w600, fontSize: 13)),
             ),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: CaretakerMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) =>
-                    setState(() => _selectedNavIndex = index),
-              ))
+          ? CaretakerMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) =>
+                  setState(() => _selectedNavIndex = index),
+            )
           : null,
     );
   }
@@ -315,27 +326,50 @@ class _CaretakerDashboardRedesignedState
         else ...[
           _dashboardHeader(isDark, narrow),
           const SizedBox(height: 16),
-          _kpiSection(isDark),
-          const SizedBox(height: 20),
-          // ── top: weather + alerts ──
-          if (narrow)
-            const WeatherTimeWidget()
-          else
-            const SizedBox(
-                width: double.infinity, child: WeatherTimeWidget()),
+          Transform.translate(
+            offset: Offset(0, narrow ? -66 : 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _kpiSection(isDark),
+                const SizedBox(height: 20),
+                // ── top: weather + alerts ──
+                if (narrow)
+                  const WeatherTimeWidget()
+                else
+                  const SizedBox(
+                      width: double.infinity, child: WeatherTimeWidget()),
 
-          const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-          // ── KPI cards ──
-          const SizedBox(height: 24),
-          _alertsAndTasks(isDark, narrow),
+                // ── KPI cards ──
+                const SizedBox(height: 24),
+                Transform.translate(
+                  offset: Offset(0, narrow ? -50 : 0),
+                  child: _alertsAndTasks(isDark, narrow),
+                ),
 
-          const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-          // ── quick actions ──
-          _sectionTitle(isDark, 'Quick Actions', Icons.grid_view_rounded),
-          const SizedBox(height: 12),
-          _quickActions(isDark),
+                // ── quick actions ──
+                Transform.translate(
+                  offset: Offset(0, narrow ? -50 : 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionTitle(
+                          isDark, 'Quick Actions', Icons.grid_view_rounded),
+                      const SizedBox(height: 12),
+                      Transform.translate(
+                        offset: Offset(0, narrow ? -50 : 0),
+                        child: _quickActions(isDark),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ],
     );
@@ -785,10 +819,9 @@ class _CaretakerDashboardRedesignedState
   }
 
   Widget _allTasksView(bool isDark, {required bool narrow}) {
-    final tasks = [..._assignedTasks]
-      ..sort((a, b) => (_date(_value(b, const ['due_date'])) ??
-              DateTime(9999))
-          .compareTo(_date(_value(a, const ['due_date'])) ?? DateTime(9999)));
+    final tasks = [..._assignedTasks]..sort((a, b) =>
+        (_date(_value(b, const ['due_date'])) ?? DateTime(9999))
+            .compareTo(_date(_value(a, const ['due_date'])) ?? DateTime(9999)));
     final completed = tasks
         .where((task) =>
             _value(task, const ['status']).toLowerCase().trim() == 'completed')
@@ -865,7 +898,8 @@ class _CaretakerDashboardRedesignedState
                     Text('$open open • $completed completed',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: isDark ? Colors.white54 : AppColors.textSecondary,
+                          color:
+                              isDark ? Colors.white54 : AppColors.textSecondary,
                         )),
                   ],
                 ),
@@ -931,9 +965,8 @@ class _CaretakerDashboardRedesignedState
                   );
                 }
                 return Column(
-                  children: tasks
-                      .map((task) => _taskTile(task, isDark))
-                      .toList(),
+                  children:
+                      tasks.map((task) => _taskTile(task, isDark)).toList(),
                 );
               },
             ),
@@ -970,7 +1003,8 @@ class _CaretakerDashboardRedesignedState
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: isDark ? Colors.white54 : AppColors.textSecondary)),
+                        color:
+                            isDark ? Colors.white54 : AppColors.textSecondary)),
               ],
             ),
           ),
@@ -987,8 +1021,8 @@ class _CaretakerDashboardRedesignedState
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Expanded(
-                child: AlertSummaryCard(
+              Expanded(
+                child: const AlertSummaryCard(
                   showRecentAlerts: true,
                   maxRecentAlerts: 3,
                 ),
@@ -1306,9 +1340,8 @@ class _CaretakerDashboardRedesignedState
       'Completed',
     ];
     final currentStatus = _value(task, const ['status'], fallback: 'Pending');
-    var selectedStatus = statuses.contains(currentStatus)
-        ? currentStatus
-        : 'Pending';
+    var selectedStatus =
+        statuses.contains(currentStatus) ? currentStatus : 'Pending';
     var isSaving = false;
     String? errorMessage;
 
@@ -1319,9 +1352,10 @@ class _CaretakerDashboardRedesignedState
           final statusColor = _taskStatusColor(selectedStatus);
           final taskTitle =
               _value(task, const ['title'], fallback: 'Task details');
-          final farm = _value(task, const ['farm_name'], fallback: 'Assigned farm');
-          final assignedBy =
-              _value(task, const ['assigned_by_name'], fallback: 'Farm Manager');
+          final farm =
+              _value(task, const ['farm_name'], fallback: 'Assigned farm');
+          final assignedBy = _value(task, const ['assigned_by_name'],
+              fallback: 'Farm Manager');
           final dueDate = _taskDateLabel(_value(task, const ['due_date']));
           final instructions = _value(task, const ['description'],
               fallback: 'No task instructions were added.');
@@ -1329,7 +1363,8 @@ class _CaretakerDashboardRedesignedState
 
           return Dialog(
             backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 700, maxHeight: 780),
               child: Container(
@@ -1400,7 +1435,8 @@ class _CaretakerDashboardRedesignedState
                                   spacing: 8,
                                   runSpacing: 6,
                                   children: [
-                                    _taskStatusBadge(selectedStatus, statusColor),
+                                    _taskStatusBadge(
+                                        selectedStatus, statusColor),
                                     _taskStatusBadge(
                                       _value(task, const ['priority'],
                                           fallback: 'Medium'),
@@ -1446,7 +1482,8 @@ class _CaretakerDashboardRedesignedState
                                   spacing: 12,
                                   runSpacing: 12,
                                   children: tiles
-                                      .map((tile) => SizedBox(width: width, child: tile))
+                                      .map((tile) =>
+                                          SizedBox(width: width, child: tile))
                                       .toList(),
                                 );
                               },
@@ -1455,7 +1492,8 @@ class _CaretakerDashboardRedesignedState
                             _taskDialogSection(
                               isDark: isDark,
                               title: 'Task instructions',
-                              subtitle: 'Review the work assigned by your manager.',
+                              subtitle:
+                                  'Review the work assigned by your manager.',
                               icon: Icons.notes_rounded,
                               child: Text(instructions,
                                   style: GoogleFonts.inter(
@@ -1487,14 +1525,16 @@ class _CaretakerDashboardRedesignedState
                             _taskDialogSection(
                               isDark: isDark,
                               title: 'Update task',
-                              subtitle: 'Change the status and send a progress note.',
+                              subtitle:
+                                  'Change the status and send a progress note.',
                               icon: Icons.edit_note_rounded,
                               child: Column(
                                 children: [
                                   DropdownButtonFormField<String>(
-                                    initialValue: statuses.contains(selectedStatus)
-                                        ? selectedStatus
-                                        : 'Pending',
+                                    initialValue:
+                                        statuses.contains(selectedStatus)
+                                            ? selectedStatus
+                                            : 'Pending',
                                     decoration: const InputDecoration(
                                       labelText: 'Status',
                                       prefixIcon: Icon(Icons.flag_outlined),
@@ -1601,7 +1641,8 @@ class _CaretakerDashboardRedesignedState
                                           strokeWidth: 2, color: Colors.white),
                                     )
                                   : const Icon(Icons.save_rounded, size: 18),
-                              label: Text(isSaving ? 'Saving...' : 'Save update'),
+                              label:
+                                  Text(isSaving ? 'Saving...' : 'Save update'),
                             ),
                           ),
                         ],
@@ -1622,19 +1663,20 @@ class _CaretakerDashboardRedesignedState
     });
   }
 
-  Widget _taskMetaTile(
-      String label, String value, IconData icon, bool isDark) {
+  Widget _taskMetaTile(String label, String value, IconData icon, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.035) : AppColors.neutral50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200),
+            color:
+                isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 17,
+          Icon(icon,
+              size: 17,
               color: isDark ? Colors.white54 : AppColors.textSecondary),
           const SizedBox(width: 9),
           Expanded(
@@ -1644,7 +1686,8 @@ class _CaretakerDashboardRedesignedState
                 Text(label,
                     style: GoogleFonts.inter(
                         fontSize: 10,
-                        color: isDark ? Colors.white54 : AppColors.textSecondary)),
+                        color:
+                            isDark ? Colors.white54 : AppColors.textSecondary)),
                 const SizedBox(height: 3),
                 Text(value.isEmpty ? 'Not provided' : value,
                     maxLines: 1,
@@ -1675,15 +1718,16 @@ class _CaretakerDashboardRedesignedState
         color: isDark ? Colors.white.withOpacity(0.035) : AppColors.neutral50,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200),
+            color:
+                isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 18,
-                  color: isDark ? Colors.white60 : AppColors.primary),
+              Icon(icon,
+                  size: 18, color: isDark ? Colors.white60 : AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -1693,12 +1737,15 @@ class _CaretakerDashboardRedesignedState
                         style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: isDark ? Colors.white : AppColors.textPrimary)),
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary)),
                     const SizedBox(height: 2),
                     Text(subtitle,
                         style: GoogleFonts.inter(
                             fontSize: 10,
-                            color: isDark ? Colors.white54 : AppColors.textSecondary)),
+                            color: isDark
+                                ? Colors.white54
+                                : AppColors.textSecondary)),
                   ],
                 ),
               ),
@@ -2077,7 +2124,6 @@ class _CaretakerDashboardRedesignedState
       final ratio = isDesktop
           ? (cardW < 170 ? 1.35 : 1.55)
           : (cardW < 120 ? 0.9 : (cardW < 155 ? 1.0 : 1.15));
-
       return GridView.count(
         crossAxisCount: cols,
         childAspectRatio: ratio,

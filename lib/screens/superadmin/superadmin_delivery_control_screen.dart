@@ -52,6 +52,12 @@ class _SuperAdminDeliveryControlScreenState
               userEmail: userEmail,
               firstName: firstName,
             ),
+      bottomNavigationBar: isMobile
+          ? SuperAdminMobileBottomNav(
+              selectedIndex: 11,
+              onItemSelected: (_) {},
+            )
+          : null,
     );
   }
 

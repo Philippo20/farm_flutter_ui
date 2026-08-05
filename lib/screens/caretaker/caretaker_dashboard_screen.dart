@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 //import '../../constants/colors.dart';
 import '../../widgets/headers/caretaker_header.dart';
+import '../../core/widgets/caretaker_mobile_bottom_nav.dart';
 import '../../widgets/sidebars/caretaker_sidebar.dart';
 
 import '../../widgets/cards/caretaker/owner_stat_card.dart';
@@ -209,14 +210,10 @@ class _CaretakerDashboardScreenState extends State<CaretakerDashboardScreen> {
         ),
       ),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: CaretakerSidebar(
-                selectedIndex: selectedIndex,
-                onItemSelected: (idx) => setState(() => selectedIndex = idx),
-                isDark: isDark,
-                isMobile: true,
-              ))
+          ? CaretakerMobileBottomNav(
+              selectedIndex: selectedIndex,
+              onItemSelected: (idx) => setState(() => selectedIndex = idx),
+            )
           : null,
     );
   }

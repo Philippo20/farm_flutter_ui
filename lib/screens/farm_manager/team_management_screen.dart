@@ -313,7 +313,10 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail),
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? FarmManagerMobileBottomNav(
+              selectedIndex: 7,
+              onItemSelected: (_) {},
+            )
           : null,
     );
   }
@@ -375,14 +378,22 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPageHeader(isDark, isMobile),
-        SizedBox(height: isMobile ? 16 : 24),
-        _buildStatsRow(isDark, isMobile),
-        SizedBox(height: isMobile ? 16 : 24),
-        _buildRoleQuickFilters(isDark),
-        SizedBox(height: isMobile ? 12 : 16),
-        _buildFilters(isDark),
-        SizedBox(height: isMobile ? 16 : 24),
-        _buildTeamSection(isDark, isMobile),
+        Transform.translate(
+          offset: Offset(0, isMobile ? -50 : 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: isMobile ? 0 : 24),
+              _buildStatsRow(isDark, isMobile),
+              SizedBox(height: isMobile ? 16 : 24),
+              _buildRoleQuickFilters(isDark),
+              SizedBox(height: isMobile ? 12 : 16),
+              _buildFilters(isDark),
+              SizedBox(height: isMobile ? 16 : 24),
+              _buildTeamSection(isDark, isMobile),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -827,21 +838,26 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                 ],
               ),
             ),
-            if (members.isEmpty)
-              _buildEmptyState(isDark)
-            else if (isMobile)
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: members.length,
-                separatorBuilder: (_, __) => Divider(
-                    height: 1,
-                    color: isDark
-                        ? Colors.white.withOpacity(0.06)
-                        : AppColors.neutral200),
-                itemBuilder: (_, i) =>
-                    _buildMemberCard(members[i], isDark, isMobile),
+            if (isMobile)
+              Transform.translate(
+                offset: const Offset(0, -60),
+                child: members.isEmpty
+                    ? _buildEmptyState(isDark)
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: members.length,
+                        separatorBuilder: (_, __) => Divider(
+                            height: 1,
+                            color: isDark
+                                ? Colors.white.withOpacity(0.06)
+                                : AppColors.neutral200),
+                        itemBuilder: (_, i) =>
+                            _buildMemberCard(members[i], isDark, isMobile),
+                      ),
               )
+            else if (members.isEmpty)
+              _buildEmptyState(isDark)
             else ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -1321,11 +1337,22 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${member['role']} - ${member['farm']}',
+                        member['role'] ?? '',
                         style: AppTypography.bodySmall.copyWith(
                           fontSize: 12,
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        member['farm'] ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.caption.copyWith(
+                          fontSize: 11,
+                          color:
+                              isDark ? Colors.white38 : AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -1362,13 +1389,20 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                _memberInfoChip(Icons.work_outline_rounded,
-                    member['specialty'] ?? '', isDark),
-                const SizedBox(width: 8),
-                _memberInfoChip(Icons.calendar_month_rounded,
-                    'Since ${member['joinedDate'] ?? ''}', isDark),
+                _memberInfoChip(
+                  Icons.work_outline_rounded,
+                  member['specialty'] ?? '',
+                  isDark,
+                ),
+                _memberInfoChip(
+                  Icons.calendar_month_rounded,
+                  'Since ${member['joinedDate'] ?? ''}',
+                  isDark,
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -1413,31 +1447,19 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
               ),
               const SizedBox(height: 10),
             ],
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.phone_outlined,
-                    size: 13,
-                    color: isDark ? Colors.white38 : AppColors.textSecondary),
-                const SizedBox(width: 4),
-                Text(member['phone'] ?? '',
-                    style: AppTypography.caption.copyWith(
-                        fontSize: 11,
-                        color:
-                            isDark ? Colors.white54 : AppColors.textSecondary)),
-                const Spacer(),
-                Icon(Icons.email_outlined,
-                    size: 13,
-                    color: isDark ? Colors.white38 : AppColors.textSecondary),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    member['email'] ?? '',
-                    style: AppTypography.caption.copyWith(
-                        fontSize: 11,
-                        color:
-                            isDark ? Colors.white54 : AppColors.textSecondary),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                _memberContactLine(
+                  Icons.phone_outlined,
+                  member['phone'] ?? '',
+                  isDark,
+                ),
+                const SizedBox(height: 6),
+                _memberContactLine(
+                  Icons.email_outlined,
+                  member['email'] ?? '',
+                  isDark,
                 ),
               ],
             ),
@@ -1773,37 +1795,60 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
   }
 
   Widget _memberInfoChip(IconData icon, String label, bool isDark) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.04) : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: isDark
-                  ? Colors.white.withOpacity(0.06)
-                  : AppColors.neutral200),
-        ),
-        child: Row(
-          children: [
-            Icon(icon,
-                size: 13,
-                color: isDark ? Colors.white38 : AppColors.textSecondary),
-            const SizedBox(width: 5),
-            Flexible(
-              child: Text(
-                label,
-                style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white54 : AppColors.textSecondary),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.04) : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+            color:
+                isDark ? Colors.white.withOpacity(0.06) : AppColors.neutral200),
       ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon,
+              size: 13,
+              color: isDark ? Colors.white38 : AppColors.textSecondary),
+          const SizedBox(width: 5),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 150),
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? Colors.white54 : AppColors.textSecondary),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _memberContactLine(IconData icon, String value, bool isDark) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 13,
+          color: isDark ? Colors.white38 : AppColors.textSecondary,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.caption.copyWith(
+              fontSize: 11,
+              color: isDark ? Colors.white54 : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

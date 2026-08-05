@@ -7,6 +7,7 @@ import 'sales_personnel_header.dart';
 import 'sales_personnel_mobile_bottom_nav.dart';
 import 'sales_personnel_sidebar.dart';
 import 'weather_info_chip.dart';
+import 'role_mobile_navigation.dart';
 
 class SalesPersonnelScreenShell extends ConsumerWidget {
   final int selectedIndex;
@@ -26,8 +27,20 @@ class SalesPersonnelScreenShell extends ConsumerWidget {
     final userName = authState.user?.name ?? 'Sales Personnel';
     final userEmail = authState.user?.email ?? 'salesperson@farmestates.com';
     const weatherInfo = WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    final scaffoldKey = GlobalKey<ScaffoldState>();
 
     return Scaffold(
+      key: scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Sales Personnel',
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+              items: salesPersonnelNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -37,6 +50,7 @@ class SalesPersonnelScreenShell extends ConsumerWidget {
                   userName: userName,
                   weatherInfo: weatherInfo,
                   onNotificationTap: () {},
+                  onMenuTap: () => scaffoldKey.currentState?.openDrawer(),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -80,12 +94,10 @@ class SalesPersonnelScreenShell extends ConsumerWidget {
               ],
             ),
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: SalesPersonnelMobileBottomNav(
-                selectedIndex: selectedIndex,
-                onItemSelected: (_) {},
-              ))
+          ? SalesPersonnelMobileBottomNav(
+              selectedIndex: selectedIndex,
+              onItemSelected: (_) {},
+            )
           : null,
     );
   }
