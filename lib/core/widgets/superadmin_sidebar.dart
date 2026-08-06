@@ -1221,6 +1221,13 @@ class SuperAdminMobileBottomNav extends StatelessWidget {
     ),
   ];
 
+  static const _defaultDynamicItem = _NavItem(
+    icon: Icons.people_outline,
+    activeIcon: Icons.people_alt_rounded,
+    label: 'Users',
+    route: '/superadmin/users',
+  );
+
   Future<void> _navigate(BuildContext context, _NavItem item) async {
     onItemSelected(_routeIndex(item.route));
     if (ModalRoute.of(context)?.settings.name == item.route) return;
@@ -1253,7 +1260,8 @@ class SuperAdminMobileBottomNav extends StatelessWidget {
     final currentItem = _allItems.cast<_NavItem?>().firstWhere(
           (item) => _routeIndex(item!.route) == selectedIndex,
           orElse: () => null,
-        );
+        ) ??
+        _defaultDynamicItem;
 
     return Container(
       decoration: BoxDecoration(
@@ -1284,8 +1292,11 @@ class SuperAdminMobileBottomNav extends StatelessWidget {
                     item,
                     _routeIndex(item.route) == selectedIndex,
                   )),
-              if (currentItem != null)
-                _buildItem(context, currentItem, true)
+              _buildItem(
+                context,
+                currentItem,
+                _routeIndex(currentItem.route) == selectedIndex,
+              ),
             ],
           ),
         ),

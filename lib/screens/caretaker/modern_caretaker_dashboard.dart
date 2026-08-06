@@ -59,7 +59,7 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
                   selectedFarm: _selectedFarm,
                   onFarmChanged: (farm) => setState(() => _selectedFarm = farm!),
                   onNotificationTap: () {},
-                  onProfileTap: () {},
+                  onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
                 ),
                 
                 // Content

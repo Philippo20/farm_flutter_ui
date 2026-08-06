@@ -544,7 +544,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
               ModernAdminHeader(
                 userName: firstName,
                 onNotificationTap: () {},
-                onProfileTap: () {},
+                onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -574,7 +574,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
         ModernAdminHeader(
           userName: firstName,
           onNotificationTap: () {},
-          onProfileTap: () {},
+          onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(

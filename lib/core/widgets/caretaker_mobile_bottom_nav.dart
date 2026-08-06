@@ -54,6 +54,7 @@ class CaretakerMobileBottomNav extends StatelessWidget {
   ];
 
   static const _primaryIndices = [0, 1, 2, 3];
+  static const _defaultDynamicIndex = 4;
 
   Color _inactiveColor(bool isDark) {
     return isDark
@@ -104,7 +105,7 @@ class CaretakerMobileBottomNav extends StatelessWidget {
           child: Row(
             children: [
               ..._primaryIndices,
-              if (selectedIndex >= 4) selectedIndex,
+              selectedIndex >= 4 ? selectedIndex : _defaultDynamicIndex,
             ].map((index) {
               final item = _navItems[index];
               final isSelected = index == selectedIndex;

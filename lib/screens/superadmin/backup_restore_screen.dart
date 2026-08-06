@@ -700,7 +700,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               ModernAdminHeader(
                 userName: firstName,
                 onNotificationTap: () {},
-                onProfileTap: () {},
+                onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -721,7 +721,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
         ModernAdminHeader(
           userName: firstName,
           onNotificationTap: () {},
-          onProfileTap: () {},
+          onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(

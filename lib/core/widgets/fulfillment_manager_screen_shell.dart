@@ -4,7 +4,6 @@ import '../../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import 'fulfillment_manager_header.dart';
-import 'fulfillment_manager_mobile_bottom_nav.dart';
 import 'fulfillment_manager_sidebar.dart';
 import 'role_mobile_navigation.dart';
 
@@ -90,9 +89,11 @@ class FulfillmentManagerScreenShell extends ConsumerWidget {
               ],
             ),
       bottomNavigationBar: isMobile
-          ? FulfillmentManagerMobileBottomNav(
+          ? RoleMobileBottomNav(
               selectedIndex: selectedIndex,
               onItemSelected: (_) {},
+              items: fulfillmentNavigationItems,
+              defaultDynamicItem: fulfillmentNavigationItems[4],
             )
           : null,
     );

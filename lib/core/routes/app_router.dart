@@ -9,6 +9,7 @@ import '../providers/enhanced_auth_provider.dart';
 // Auth Screens
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/signup_screen.dart';
+import '../../screens/profile/profile_screen.dart';
 
 // Dashboard Screens
 import '../../screens/superadmin/superadmin_dashboard.dart';
@@ -281,8 +282,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SystemControlPanel(),
       ),
 
-      // Common Routes (to be implemented)
-      // TODO: Create ProfileScreen, FarmListScreen, SensorListScreen
+      GoRoute(
+        path: AppRoutes.profile,
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
 
       // Phase 3 Routes - Analytics, Reports, Search
       GoRoute(

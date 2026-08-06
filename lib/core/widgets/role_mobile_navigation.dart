@@ -278,25 +278,34 @@ class RoleMobileBottomNav extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onItemSelected;
   final List<RoleNavigationItem> items;
+  final RoleNavigationItem? defaultDynamicItem;
 
   const RoleMobileBottomNav({
     super.key,
     required this.selectedIndex,
     required this.onItemSelected,
     required this.items,
+    this.defaultDynamicItem,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = items.where((item) => item.primary).toList();
-    final current = selectedIndex >= 0 && selectedIndex < items.length
+    final selectedItem = selectedIndex >= 0 && selectedIndex < items.length
         ? items[selectedIndex]
         : null;
-    final visible = [
-      ...primary,
-      if (current != null && !primary.contains(current)) current,
-    ];
+    final current = selectedItem != null && !primary.contains(selectedItem)
+        ? selectedItem
+        : null;
+    final dynamicItem = current ?? defaultDynamicItem;
+    final visible = primary.length >= 5
+        ? primary
+        : [
+            ...primary,
+            if (dynamicItem != null && !primary.contains(dynamicItem))
+              dynamicItem,
+          ];
 
     return Container(
       decoration: BoxDecoration(
@@ -558,7 +567,8 @@ const salesManagerNavigationItems = [
       icon: Icons.assessment_outlined,
       activeIcon: Icons.assessment_rounded,
       label: 'Reports',
-      route: '/sales-reports'),
+      route: '/sales-reports',
+      primary: true),
 ];
 
 const salesPersonnelNavigationItems = [
@@ -590,7 +600,8 @@ const salesPersonnelNavigationItems = [
       icon: Icons.assessment_outlined,
       activeIcon: Icons.assessment_rounded,
       label: 'Reports',
-      route: '/sales-personnel-reports'),
+      route: '/sales-personnel-reports',
+      primary: true),
 ];
 
 const accountantNavigationItems = [

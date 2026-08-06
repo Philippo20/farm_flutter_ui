@@ -3,6 +3,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/quality_assurance_screen_shell.dart';
+import '../../services/fulfillment_data_service.dart';
+import '../../services/superadmin_api_service.dart';
 
 class QualityInspectionScreen extends StatelessWidget {
   const QualityInspectionScreen({super.key});
@@ -190,8 +192,70 @@ class QualityReportsScreen extends StatelessWidget {
   }
 }
 
-class QualitySettingsScreen extends StatelessWidget {
+class QualitySettingsScreen extends StatefulWidget {
   const QualitySettingsScreen({super.key});
+
+  @override
+  State<QualitySettingsScreen> createState() => _QualitySettingsScreenState();
+}
+
+class _QualitySettingsScreenState extends State<QualitySettingsScreen> {
+  final _api = SuperAdminApiService();
+  bool _dualApproval = true;
+  bool _inspectionAlerts = true;
+  bool _autoExport = false;
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final config = await _api.getSystemConfig();
+      if (!mounted) return;
+      setState(() {
+        _dualApproval = config['qa_require_dual_approval'] as bool? ?? true;
+        _inspectionAlerts = config['qa_inspection_alerts'] as bool? ?? true;
+        _autoExport = config['qa_auto_export_reports'] as bool? ?? false;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = 'Unable to load quality settings from the backend.';
+      });
+    }
+  }
+
+  Future<void> _updateSetting(String key, bool value) async {
+    final previous = {
+      'qa_require_dual_approval': _dualApproval,
+      'qa_inspection_alerts': _inspectionAlerts,
+      'qa_auto_export_reports': _autoExport,
+    };
+    setState(() {
+      if (key == 'qa_require_dual_approval') _dualApproval = value;
+      if (key == 'qa_inspection_alerts') _inspectionAlerts = value;
+      if (key == 'qa_auto_export_reports') _autoExport = value;
+      _error = null;
+    });
+    try {
+      await _api.updateSystemConfig({key: value, 'updated_by': 'quality_officer'});
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _dualApproval = previous['qa_require_dual_approval']!;
+        _inspectionAlerts = previous['qa_inspection_alerts']!;
+        _autoExport = previous['qa_auto_export_reports']!;
+        _error = 'Could not save the quality setting. Please try again.';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -199,8 +263,8 @@ class QualitySettingsScreen extends StatelessWidget {
       selectedIndex: 5,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          _Hero(
+        children: [
+          const _Hero(
             title: 'Quality Settings',
             subtitle:
                 'Manage QA thresholds, approval policies, inspection alerts, and compliance preferences.',
@@ -208,7 +272,25 @@ class QualitySettingsScreen extends StatelessWidget {
             colors: [Color(0xFF334155), Color(0xFF475569)],
           ),
           SizedBox(height: AppSpacing.lg),
-          _SettingsPanel(),
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            _SettingsPanel(
+              dualApproval: _dualApproval,
+              inspectionAlerts: _inspectionAlerts,
+              autoExport: _autoExport,
+              onChanged: _updateSetting,
+            ),
+          if (_error != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _error!,
+              style: AppTypography.bodySmall.copyWith(color: AppColors.error),
+            ),
+          ],
         ],
       ),
     );
@@ -216,6 +298,7 @@ class QualitySettingsScreen extends StatelessWidget {
 }
 
 class _QualityPage extends StatelessWidget {
+  static final _dataFuture = FulfillmentDataService().load();
   final int selectedIndex;
   final String title;
   final String subtitle;
@@ -242,32 +325,123 @@ class _QualityPage extends StatelessWidget {
 
     return QualityAssuranceScreenShell(
       selectedIndex: selectedIndex,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _Hero(title: title, subtitle: subtitle, icon: icon, colors: colors),
-          const SizedBox(height: AppSpacing.lg),
-          Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.md,
-            children: kpis.map((kpi) => _KpiCard(data: kpi)).toList(),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Text(
-            sectionTitle,
-            style: AppTypography.h5.copyWith(
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _ResponsiveGrid(
-            itemCount: cards.length,
-            itemBuilder: (index) => _QualityCard(item: cards[index]),
-          ),
-        ],
+      child: FutureBuilder<FulfillmentSnapshot>(
+        future: _dataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+          if (snapshot.hasError || !snapshot.hasData) {
+            return Text(
+              'Unable to load quality records from the backend.',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.error),
+            );
+          }
+
+          final backendCards = _backendCards(snapshot.data!);
+          final backendKpis = _backendKpis(snapshot.data!);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _Hero(title: title, subtitle: subtitle, icon: icon, colors: colors),
+              const SizedBox(height: AppSpacing.lg),
+              Wrap(
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.md,
+                children: backendKpis.map((kpi) => _KpiCard(data: kpi)).toList(),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Text(
+                sectionTitle,
+                style: AppTypography.h5.copyWith(
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _ResponsiveGrid(
+                itemCount: backendCards.length,
+                itemBuilder: (index) => _QualityCard(item: backendCards[index]),
+              ),
+            ],
+          );
+        },
       ),
     );
+  }
+
+  List<Map<String, Object>> _backendCards(FulfillmentSnapshot snapshot) {
+    String value(Map<String, dynamic> item, List<String> keys,
+        [String fallback = '']) {
+      for (final key in keys) {
+        final result = item[key]?.toString().trim() ?? '';
+        if (result.isNotEmpty) return result;
+      }
+      return fallback;
+    }
+
+    bool hasStatus(Map<String, dynamic> item, List<String> terms) {
+      final status = value(item, ['status', 'delivery_status']).toLowerCase();
+      return terms.any(status.contains);
+    }
+
+    final records = snapshot.fulfillments.where((item) {
+      if (selectedIndex == 1) {
+        return !hasStatus(item, ['approve', 'release', 'reject', 'hold']);
+      }
+      if (selectedIndex == 2) return hasStatus(item, ['approve', 'release', 'packaged']);
+      if (selectedIndex == 3) {
+        return hasStatus(item, ['reject', 'hold']) ||
+            (double.tryParse(item['packaging_waste_weight']?.toString() ?? '') ?? 0) > 0;
+      }
+      return true;
+    }).toList();
+
+    return records.map((item) {
+      final status = value(item, ['status', 'delivery_status'], 'Pending');
+      final rejected = hasStatus(item, ['reject', 'hold']);
+      return <String, Object>{
+        'title': value(item, ['batch_number', 'batch_id'], 'Unassigned batch'),
+        'subtitle': '${value(item, ['plant_type', 'crop'], 'Unassigned crop')} | QA backend record',
+        'metric': value(item, ['total_weight', 'total_packaged_weight'], '0'),
+        'status': status,
+        'color': rejected ? AppColors.error : AppColors.success,
+      };
+    }).toList();
+  }
+
+  List<_KpiData> _backendKpis(FulfillmentSnapshot snapshot) {
+    final records = snapshot.fulfillments;
+    bool hasStatus(Map<String, dynamic> item, List<String> terms) {
+      final status = '${item['status'] ?? item['delivery_status'] ?? ''}'.toLowerCase();
+      return terms.any(status.contains);
+    }
+
+    final approved = records.where((item) => hasStatus(item, ['approve', 'release', 'packaged'])).length;
+    final rejected = records.where((item) => hasStatus(item, ['reject', 'hold'])).length;
+    if (selectedIndex == 1) {
+      final pending = records.length - approved - rejected;
+      return [
+        _KpiData('Pending', '$pending', 'Items waiting', Icons.pending_actions_outlined, AppColors.warning),
+        _KpiData('Inspected', '${records.length}', 'Backend records', Icons.fact_check_outlined, AppColors.success),
+        _KpiData('Pass rate', '${records.isEmpty ? 0 : (approved / records.length * 100).toStringAsFixed(0)}%', 'Approval ratio', Icons.verified_outlined, AppColors.primary),
+      ];
+    }
+    if (selectedIndex == 2) {
+      return [
+        _KpiData('Ready', '$approved', 'Awaiting approval', Icons.check_circle_outline, AppColors.success),
+        _KpiData('Released', '$approved', 'Backend status', Icons.task_alt_outlined, AppColors.primary),
+        _KpiData('Avg score', '${records.isEmpty ? 0 : (approved / records.length * 100).toStringAsFixed(0)}%', 'Quality ratio', Icons.workspace_premium, AppColors.warning),
+      ];
+    }
+    return [
+      _KpiData('Rejected', '$rejected', 'Backend records', Icons.cancel_outlined, AppColors.error),
+      _KpiData('On hold', '$rejected', 'Needs review', Icons.pause_circle_outline, AppColors.warning),
+      _KpiData('Resolved', '0', 'No resolution field', Icons.task_alt_outlined, AppColors.success),
+    ];
   }
 }
 
@@ -510,29 +684,42 @@ class _KpiCard extends StatelessWidget {
 }
 
 class _SettingsPanel extends StatelessWidget {
-  const _SettingsPanel();
+  final bool dualApproval;
+  final bool inspectionAlerts;
+  final bool autoExport;
+  final Future<void> Function(String key, bool value) onChanged;
+
+  const _SettingsPanel({
+    required this.dualApproval,
+    required this.inspectionAlerts,
+    required this.autoExport,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: const [
+      children: [
         _SettingRow(
           title: 'Require dual approval',
           subtitle: 'Escalate high-risk batches for supervisor sign-off.',
           icon: Icons.verified_user_outlined,
-          enabled: true,
+          enabled: dualApproval,
+          onChanged: (value) => onChanged('qa_require_dual_approval', value),
         ),
         _SettingRow(
           title: 'Inspection alerts',
           subtitle: 'Notify QA when pending inspections exceed SLA.',
           icon: Icons.notifications_active_outlined,
-          enabled: true,
+          enabled: inspectionAlerts,
+          onChanged: (value) => onChanged('qa_inspection_alerts', value),
         ),
         _SettingRow(
           title: 'Auto-export reports',
           subtitle: 'Generate daily QA reports at shift close.',
           icon: Icons.file_download_outlined,
-          enabled: false,
+          enabled: autoExport,
+          onChanged: (value) => onChanged('qa_auto_export_reports', value),
         ),
       ],
     );
@@ -544,12 +731,14 @@ class _SettingRow extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final bool enabled;
+  final ValueChanged<bool> onChanged;
 
   const _SettingRow({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.enabled,
+    required this.onChanged,
   });
 
   @override
@@ -586,7 +775,7 @@ class _SettingRow extends StatelessWidget {
               ],
             ),
           ),
-          Switch(value: enabled, onChanged: (_) {}),
+          Switch(value: enabled, onChanged: onChanged),
         ],
       ),
     );

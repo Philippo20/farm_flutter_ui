@@ -4,8 +4,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/fulfillment_manager_header.dart';
-import '../../core/widgets/fulfillment_manager_mobile_bottom_nav.dart';
 import '../../core/widgets/fulfillment_manager_sidebar.dart';
+import '../../core/widgets/role_mobile_navigation.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/fulfillment_data_service.dart';
@@ -23,6 +23,7 @@ class FulfillmentManagerDashboardRedesigned extends ConsumerStatefulWidget {
 class _FulfillmentManagerDashboardRedesignedState
     extends ConsumerState<FulfillmentManagerDashboardRedesigned> {
   int _selectedNavIndex = 0;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   WeatherInfo? _weatherInfo;
   bool _isLoading = true;
   String? _errorMessage;
@@ -244,6 +245,19 @@ class _FulfillmentManagerDashboardRedesignedState
     final userEmail = authState.user?.email ?? 'fulfillment@farmestates.com';
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Fulfillment Manager',
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) {
+                setState(() => _selectedNavIndex = index);
+              },
+              items: fulfillmentNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -261,14 +275,14 @@ class _FulfillmentManagerDashboardRedesignedState
             )
           : null,
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: FulfillmentManagerMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) {
-                  setState(() => _selectedNavIndex = index);
-                },
-              ))
+          ? RoleMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) {
+                setState(() => _selectedNavIndex = index);
+              },
+              items: fulfillmentNavigationItems,
+              defaultDynamicItem: fulfillmentNavigationItems[4],
+            )
           : null,
     );
   }
@@ -313,6 +327,7 @@ class _FulfillmentManagerDashboardRedesignedState
           userName: userName,
           weatherInfo: _weatherInfo,
           onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -454,11 +469,15 @@ class _FulfillmentManagerDashboardRedesignedState
             runSpacing: AppSpacing.sm,
             children: [
               _HeroChip(
-                  label: '$_pendingHarvest pending intake', icon: Icons.warehouse_outlined),
+                  label: '$_pendingHarvest pending intake',
+                  icon: Icons.warehouse_outlined),
               _HeroChip(
-                  label: '${_activity.length} recent records', icon: Icons.assessment_outlined),
+                  label: '${_activity.length} recent records',
+                  icon: Icons.assessment_outlined),
               _HeroChip(
-                  label: '${_pipeline.isEmpty ? 0 : _pipeline.length} live workflow areas', icon: Icons.warning_amber_outlined),
+                  label:
+                      '${_pipeline.isEmpty ? 0 : _pipeline.length} live workflow areas',
+                  icon: Icons.warning_amber_outlined),
             ],
           ),
         ],

@@ -191,7 +191,7 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
               ModernAdminHeader(
                 userName: userName.split(' ').first,
                 onNotificationTap: () {},
-                onProfileTap: () {},
+                onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
               ),
               Expanded(
                 child: RefreshIndicator(
@@ -219,7 +219,7 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
         ModernAdminHeader(
           userName: userName.split(' ').first,
           onNotificationTap: () {},
-          onProfileTap: () {},
+          onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
         ),
         Expanded(
           child: RefreshIndicator(

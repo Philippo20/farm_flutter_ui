@@ -5,8 +5,10 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/packaging_supervisor_header.dart';
 import '../../core/widgets/packaging_supervisor_sidebar.dart';
+import '../../core/widgets/role_mobile_navigation.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/fulfillment_data_service.dart';
 
 /// Packaging Supervisor Dashboard - Redesigned
 /// Package recording, waste tracking, and line progress control.
@@ -21,9 +23,15 @@ class PackagingSupervisorDashboardRedesigned extends ConsumerStatefulWidget {
 class _PackagingSupervisorDashboardRedesignedState
     extends ConsumerState<PackagingSupervisorDashboardRedesigned> {
   int _selectedNavIndex = 0;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   WeatherInfo? _weatherInfo;
+  bool _isLoadingData = true;
+  bool _hasDataError = false;
+  double _progressValue = 0;
+  double _wasteRate = 0;
+  double _completedWeight = 0;
 
-  static const _lines = [
+  List<Map<String, dynamic>> _lines = [
     {
       'line': 'Line A',
       'batch': 'LTC-24019',
@@ -56,7 +64,7 @@ class _PackagingSupervisorDashboardRedesignedState
     },
   ];
 
-  static const _activity = [
+  List<Map<String, dynamic>> _activity = [
     {
       'title': 'Line C final count submitted',
       'subtitle': 'Ama K. recorded 1,392 herb sleeves',
@@ -81,6 +89,26 @@ class _PackagingSupervisorDashboardRedesignedState
   void initState() {
     super.initState();
     _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    _loadPackagingData();
+  }
+
+  Future<void> _loadPackagingData() async {
+    try {
+      final snapshot = await FulfillmentDataService().load();
+      if (mounted) {
+        setState(() {
+          _applySnapshot(snapshot);
+          _isLoadingData = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoadingData = false;
+          _hasDataError = true;
+        });
+      }
+    }
   }
 
   @override
@@ -92,6 +120,19 @@ class _PackagingSupervisorDashboardRedesignedState
     final userEmail = authState.user?.email ?? 'packaging@farmestates.com';
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Packaging Supervisor',
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) {
+                setState(() => _selectedNavIndex = index);
+              },
+              items: packagingNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -109,7 +150,14 @@ class _PackagingSupervisorDashboardRedesignedState
             )
           : null,
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? RoleMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) {
+                setState(() => _selectedNavIndex = index);
+              },
+              items: packagingNavigationItems,
+              defaultDynamicItem: packagingNavigationItems[4],
+            )
           : null,
     );
   }
@@ -154,6 +202,7 @@ class _PackagingSupervisorDashboardRedesignedState
           userName: userName,
           weatherInfo: _weatherInfo,
           onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -171,6 +220,19 @@ class _PackagingSupervisorDashboardRedesignedState
   }
 
   Widget _buildDashboardContent(bool isDark, bool isMobile) {
+    if (_isLoadingData) {
+      return const Padding(
+        padding: EdgeInsets.all(AppSpacing.xxl),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_hasDataError) {
+      return Text(
+        'Unable to load packaging data from the backend.',
+        style: AppTypography.bodyMedium.copyWith(color: AppColors.error),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -179,31 +241,31 @@ class _PackagingSupervisorDashboardRedesignedState
         Wrap(
           spacing: AppSpacing.md,
           runSpacing: AppSpacing.md,
-          children: const [
+          children: [
             _DashboardKpi(
               title: 'Packaging progress',
-              value: '72%',
+              value: '${_progressValue.toStringAsFixed(0)}%',
               subtitle: 'Across active lines',
               icon: Icons.pie_chart_outline,
               color: AppColors.primary,
             ),
             _DashboardKpi(
               title: 'Completed today',
-              value: '2,179',
+              value: '${_completedWeight.toStringAsFixed(1)} kg',
               subtitle: 'Packages recorded',
               icon: Icons.inventory_2_outlined,
               color: AppColors.success,
             ),
             _DashboardKpi(
               title: 'Waste rate',
-              value: '2.3%',
+              value: '${_wasteRate.toStringAsFixed(1)}%',
               subtitle: 'Below 3% target',
               icon: Icons.delete_sweep_outlined,
               color: AppColors.error,
             ),
             _DashboardKpi(
               title: 'Line efficiency',
-              value: '92%',
+              value: '${(100 - _wasteRate).clamp(0, 100).toStringAsFixed(0)}%',
               subtitle: 'Current shift',
               icon: Icons.speed_outlined,
               color: AppColors.warning,
@@ -214,6 +276,84 @@ class _PackagingSupervisorDashboardRedesignedState
         _buildMainDashboardGrid(isDark),
       ],
     );
+  }
+
+  void _applySnapshot(FulfillmentSnapshot snapshot) {
+    double number(Map<String, dynamic> item, List<String> keys) {
+      for (final key in keys) {
+        final parsed = double.tryParse(item[key]?.toString() ?? '');
+        if (parsed != null) return parsed;
+      }
+      return 0;
+    }
+
+    String text(Map<String, dynamic> item, List<String> keys,
+        [String fallback = '']) {
+      for (final key in keys) {
+        final value = item[key]?.toString().trim() ?? '';
+        if (value.isNotEmpty) return value;
+      }
+      return fallback;
+    }
+
+    final fulfillments = snapshot.fulfillments;
+    final totalPackaged = fulfillments.fold<double>(
+      0,
+      (sum, item) =>
+          sum + number(item, ['total_packaged_weight', 'packaging_weight']),
+    );
+    final totalWaste = fulfillments.fold<double>(
+      0,
+      (sum, item) => sum + number(item, ['packaging_waste_weight']),
+    );
+
+    _lines = fulfillments.asMap().entries.map((entry) {
+      final item = entry.value;
+      final received = number(item, ['total_weight']);
+      final packaged =
+          number(item, ['total_packaged_weight', 'packaging_weight']);
+      final progress = received > 0
+          ? (packaged / received * 100).clamp(0, 100)
+          : 0.0;
+      final status = text(item, ['status', 'delivery_status'], 'Pending');
+      final isWatch = status.toLowerCase().contains('hold') || progress < 50;
+      return <String, dynamic>{
+        'line': 'Line ${String.fromCharCode(65 + entry.key)}',
+        'batch': text(item, ['batch_number', 'batch_id'], 'Unassigned batch'),
+        'crop': text(item, ['plant_type', 'crop'], 'Unassigned crop'),
+        'progress': '${progress.toStringAsFixed(0)}%',
+        'output': '${packaged.toStringAsFixed(1)} kg',
+        'eta': text(item, ['eta'], 'Not set'),
+        'status': status,
+        'color': isWatch ? AppColors.warning : AppColors.success,
+      };
+    }).toList();
+
+    _activity = fulfillments.take(5).map((item) {
+      final batch = text(item, ['batch_number', 'batch_id'], 'Fulfillment');
+      final status = text(item, ['status', 'delivery_status'], 'Updated');
+      return <String, dynamic>{
+        'title': '$batch updated',
+        'subtitle': 'Packaging status: $status',
+        'time': text(item, ['packaging_date_time', 'received_date_time'],
+            'Recently'),
+        'color': status.toLowerCase().contains('hold')
+            ? AppColors.warning
+            : AppColors.success,
+      };
+    }).toList();
+
+    _progressValue = _lines.isEmpty
+        ? 0
+        : _lines
+                .map((line) => double.tryParse(
+                    (line['progress'] as String).replaceAll('%', '')) ?? 0)
+                .reduce((a, b) => a + b) /
+            _lines.length;
+    _wasteRate = totalPackaged + totalWaste == 0
+        ? 0
+        : totalWaste / (totalPackaged + totalWaste) * 100;
+    _completedWeight = totalPackaged;
   }
 
   Widget _buildHero(bool isDark, bool isMobile) {
@@ -282,11 +422,18 @@ class _PackagingSupervisorDashboardRedesignedState
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
-            children: const [
-              _HeroChip(label: '3 active lines', icon: Icons.conveyor_belt),
-              _HeroChip(label: '1 line watch', icon: Icons.visibility_outlined),
+            children: [
               _HeroChip(
-                  label: '2 reviews pending', icon: Icons.task_alt_outlined),
+                  label: '${_lines.length} active lines',
+                  icon: Icons.conveyor_belt),
+              _HeroChip(
+                  label:
+                      '${_lines.where((line) => line['color'] == AppColors.warning).length} line watch',
+                  icon: Icons.visibility_outlined),
+              _HeroChip(
+                  label:
+                      '${_activity.length} reviews pending',
+                  icon: Icons.task_alt_outlined),
             ],
           ),
         ],
@@ -646,7 +793,7 @@ class _DashboardPanel extends StatelessWidget {
 }
 
 class _LineStatusRow extends StatelessWidget {
-  final Map<String, Object> line;
+  final Map<String, dynamic> line;
 
   const _LineStatusRow({required this.line});
 
@@ -790,7 +937,7 @@ class _ActionTile extends StatelessWidget {
 }
 
 class _ActivityRow extends StatelessWidget {
-  final Map<String, Object> activity;
+  final Map<String, dynamic> activity;
 
   const _ActivityRow({required this.activity});
 

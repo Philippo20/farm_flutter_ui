@@ -184,7 +184,7 @@ class SalesFinancialScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SalesPage(
-      selectedIndex: 4,
+      selectedIndex: 5,
       title: 'Sales Financials',
       subtitle:
           'Monitor revenue, receivables, buyer balances, commission exposure, and collection risk.',
@@ -234,7 +234,7 @@ class SalesReportsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SalesPage(
-      selectedIndex: 5,
+      selectedIndex: 4,
       title: 'Sales Reports',
       subtitle:
           'Review sales analytics, buyer performance, delivery reliability, and export-ready summaries.',

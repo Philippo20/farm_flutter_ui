@@ -239,7 +239,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
               ModernAdminHeader(
                 userName: firstName,
                 onNotificationTap: () {},
-                onProfileTap: () {},
+                onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -260,7 +260,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
         ModernAdminHeader(
           userName: firstName,
           onNotificationTap: () {},
-          onProfileTap: () {},
+          onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(

@@ -4,8 +4,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/sales_manager_header.dart';
-import '../../core/widgets/sales_manager_mobile_bottom_nav.dart';
 import '../../core/widgets/sales_manager_sidebar.dart';
+import '../../core/widgets/role_mobile_navigation.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../providers/auth_provider.dart';
 
@@ -21,6 +21,7 @@ class SalesManagerDashboardRedesigned extends ConsumerStatefulWidget {
 class _SalesManagerDashboardRedesignedState
     extends ConsumerState<SalesManagerDashboardRedesigned> {
   int _selectedNavIndex = 0;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   WeatherInfo? _weatherInfo;
 
   static const _pipeline = [
@@ -98,6 +99,19 @@ class _SalesManagerDashboardRedesignedState
     final userEmail = authState.user?.email ?? 'sales@farmestates.com';
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Sales Manager',
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) {
+                setState(() => _selectedNavIndex = index);
+              },
+              items: salesManagerNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -115,14 +129,13 @@ class _SalesManagerDashboardRedesignedState
             )
           : null,
       bottomNavigationBar: isMobile
-          ? SafeArea(
-              top: false,
-              child: SalesManagerMobileBottomNav(
-                selectedIndex: _selectedNavIndex,
-                onItemSelected: (index) {
-                  setState(() => _selectedNavIndex = index);
-                },
-              ))
+          ? RoleMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) {
+                setState(() => _selectedNavIndex = index);
+              },
+              items: salesManagerNavigationItems,
+            )
           : null,
     );
   }
@@ -167,6 +180,7 @@ class _SalesManagerDashboardRedesignedState
           userName: userName,
           weatherInfo: _weatherInfo,
           onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(
           child: SingleChildScrollView(

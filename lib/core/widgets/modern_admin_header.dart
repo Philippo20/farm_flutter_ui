@@ -6,6 +6,7 @@ import '../theme/app_spacing.dart';
 import '../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
 import 'weather_info_chip.dart';
+import 'adaptive_profile_menu.dart';
 import 'notification_center.dart';
 import 'adaptive_logout_confirmation.dart';
 
@@ -409,7 +410,7 @@ class ModernAdminHeader extends ConsumerWidget {
   Widget _buildMobileProfileButton(bool isDark) {
     return Consumer(
       builder: (context, ref, child) {
-        return PopupMenuButton<String>(
+        return AdaptiveProfilePopupMenuButton(
           offset: const Offset(0, 50),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -461,7 +462,11 @@ class ModernAdminHeader extends ConsumerWidget {
             } else if (value == 'settings') {
               Navigator.of(context).pushNamed('/settings');
             } else if (value == 'profile') {
-              if (onProfileTap != null) onProfileTap!();
+              if (onProfileTap != null) {
+                onProfileTap!();
+              } else {
+                Navigator.of(context).pushNamed('/profile');
+              }
             }
           },
           child: Material(
@@ -585,7 +590,7 @@ class ModernAdminHeader extends ConsumerWidget {
   Widget _buildProfileButton(bool isDark) {
     return Consumer(
       builder: (context, ref, child) {
-        return PopupMenuButton<String>(
+        return AdaptiveProfilePopupMenuButton(
           offset: const Offset(0, 50),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -640,7 +645,11 @@ class ModernAdminHeader extends ConsumerWidget {
             } else if (value == 'settings') {
               Navigator.of(context).pushNamed('/settings');
             } else if (value == 'profile') {
-              if (onProfileTap != null) onProfileTap!();
+              if (onProfileTap != null) {
+                onProfileTap!();
+              } else {
+                Navigator.of(context).pushNamed('/profile');
+              }
             }
           },
           child: Material(

@@ -657,7 +657,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
               ModernAdminHeader(
                 userName: widget.isSuperAdmin ? 'Super Admin' : 'Admin',
                 onNotificationTap: () {},
-                onProfileTap: () {},
+                onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -697,7 +697,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         ModernAdminHeader(
           userName: widget.isSuperAdmin ? 'Super Admin' : 'Admin',
           onNotificationTap: () {},
-          onProfileTap: () {},
+          onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(

@@ -97,6 +97,7 @@ class PackagingSupervisorScreenShell extends ConsumerWidget {
               selectedIndex: selectedIndex,
               onItemSelected: (_) {},
               items: packagingNavigationItems,
+              defaultDynamicItem: packagingNavigationItems[4],
             )
           : null,
     );

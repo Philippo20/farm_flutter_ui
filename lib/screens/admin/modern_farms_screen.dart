@@ -664,7 +664,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
               ModernAdminHeader(
                 userName: userName.split(' ').first,
                 onNotificationTap: () {},
-                onProfileTap: () {},
+                onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
               ),
               Expanded(child: _buildBody(isDark, AppSpacing.xl, false)),
             ],
@@ -680,7 +680,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
         ModernAdminHeader(
           userName: userName.split(' ').first,
           onNotificationTap: () {},
-          onProfileTap: () {},
+          onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
         ),
         Expanded(child: _buildBody(isDark, AppSpacing.md, true)),
       ],

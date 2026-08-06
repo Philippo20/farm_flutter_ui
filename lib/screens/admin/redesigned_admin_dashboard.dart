@@ -1286,9 +1286,7 @@ class _RedesignedAdminDashboardState
   }
 
   void _showProfileMenu() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Admin profile panel coming soon')),
-    );
+    Navigator.of(context).pushNamed('/profile');
   }
 }
 

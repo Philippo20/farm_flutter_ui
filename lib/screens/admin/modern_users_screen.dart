@@ -300,7 +300,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
               ModernAdminHeader(
                 userName: userName.split(' ').first,
                 onNotificationTap: () {},
-                onProfileTap: () {},
+                onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
               ),
               Expanded(child: _buildContent(isDark, AppSpacing.xl, false)),
             ],
@@ -316,7 +316,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
         ModernAdminHeader(
           userName: userName.split(' ').first,
           onNotificationTap: () {},
-          onProfileTap: () {},
+          onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
         ),
         Expanded(child: _buildContent(isDark, AppSpacing.md, true)),
       ],

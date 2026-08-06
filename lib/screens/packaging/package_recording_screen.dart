@@ -3,11 +3,19 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/packaging_supervisor_screen_shell.dart';
+import '../../services/fulfillment_data_service.dart';
 
-class PackageRecordingScreen extends StatelessWidget {
+class PackageRecordingScreen extends StatefulWidget {
   const PackageRecordingScreen({super.key});
 
-  static const _lines = [
+  @override
+  State<PackageRecordingScreen> createState() => _PackageRecordingScreenState();
+}
+
+class _PackageRecordingScreenState extends State<PackageRecordingScreen> {
+  bool _isLoading = true;
+  bool _hasError = false;
+  List<Map<String, dynamic>> _lines = [
     {
       'line': 'Line A',
       'batch': 'LTC-24019',
@@ -41,6 +49,68 @@ class PackageRecordingScreen extends StatelessWidget {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadPackagingRecords();
+  }
+
+  Future<void> _loadPackagingRecords() async {
+    try {
+      final snapshot = await FulfillmentDataService().load();
+      final records = snapshot.fulfillments;
+      double number(Map<String, dynamic> item, List<String> keys) {
+        for (final key in keys) {
+          final value = double.tryParse(item[key]?.toString() ?? '');
+          if (value != null) return value;
+        }
+        return 0;
+      }
+
+      String text(Map<String, dynamic> item, List<String> keys,
+          [String fallback = '']) {
+        for (final key in keys) {
+          final value = item[key]?.toString().trim() ?? '';
+          if (value.isNotEmpty) return value;
+        }
+        return fallback;
+      }
+
+      final lines = records.asMap().entries.map((entry) {
+        final item = entry.value;
+        final target = number(item, ['total_weight']);
+        final completed =
+            number(item, ['total_packaged_weight', 'packaging_weight']);
+        final progress = target > 0 ? completed / target : 0.0;
+        return <String, dynamic>{
+          'line': 'Line ${String.fromCharCode(65 + entry.key)}',
+          'batch': text(item, ['batch_number', 'batch_id'], 'Unassigned batch'),
+          'crop': text(item, ['plant_type', 'crop'], 'Unassigned crop'),
+          'target': '${target.toStringAsFixed(1)} kg',
+          'completed': '${completed.toStringAsFixed(1)} kg',
+          'operator': text(item, ['packaging_supervisor_id'], 'Unassigned'),
+          'status': text(item, ['status', 'delivery_status'], 'Pending'),
+          'progress': progress,
+          'color': progress < 0.5 ? AppColors.warning : AppColors.primary,
+        };
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _lines = lines;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -49,6 +119,17 @@ class PackageRecordingScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_hasError)
+            Text(
+              'Unable to load packaging records from the backend.',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.error),
+            )
+          else ...[
           const _HeroPanel(
             title: 'Package Recording',
             subtitle:
@@ -60,24 +141,24 @@ class PackageRecordingScreen extends StatelessWidget {
           Wrap(
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.md,
-            children: const [
+            children: [
               _KpiCard(
                 title: 'Recorded today',
-                value: '2,179',
+                value: '${_lines.fold<double>(0, (sum, line) => sum + (double.tryParse((line['completed'] as String).split(' ').first) ?? 0)).toStringAsFixed(1)} kg',
                 subtitle: 'Packages confirmed',
                 icon: Icons.fact_check_outlined,
                 color: AppColors.primary,
               ),
               _KpiCard(
                 title: 'Active lines',
-                value: '3',
+                value: '${_lines.length}',
                 subtitle: 'All supervised',
                 icon: Icons.precision_manufacturing_outlined,
                 color: AppColors.success,
               ),
               _KpiCard(
                 title: 'Pending entry',
-                value: '2',
+                value: '${_lines.where((line) => (line['status'] as String).toLowerCase().contains('pending')).length}',
                 subtitle: 'Need supervisor review',
                 icon: Icons.edit_note_outlined,
                 color: AppColors.warning,
@@ -99,16 +180,25 @@ class PackageRecordingScreen extends StatelessWidget {
             desktopExtent: 310,
             itemBuilder: (index) => _LineCard(item: _lines[index]),
           ),
+          ],
         ],
       ),
     );
   }
 }
 
-class WasteTrackingScreen extends StatelessWidget {
+class WasteTrackingScreen extends StatefulWidget {
   const WasteTrackingScreen({super.key});
 
-  static const _waste = [
+  @override
+  State<WasteTrackingScreen> createState() => _WasteTrackingScreenState();
+}
+
+class _WasteTrackingScreenState extends State<WasteTrackingScreen> {
+  bool _isLoading = true;
+  bool _hasError = false;
+  double _wasteRate = 0;
+  List<Map<String, dynamic>> _waste = [
     {
       'source': 'Trimming loss',
       'batch': 'LTC-24019',
@@ -136,6 +226,74 @@ class WasteTrackingScreen extends StatelessWidget {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadWasteRecords();
+  }
+
+  Future<void> _loadWasteRecords() async {
+    try {
+      final snapshot = await FulfillmentDataService().load();
+      final records = snapshot.fulfillments;
+      double number(Map<String, dynamic> item, List<String> keys) {
+        for (final key in keys) {
+          final value = double.tryParse(item[key]?.toString() ?? '');
+          if (value != null) return value;
+        }
+        return 0;
+      }
+
+      String text(Map<String, dynamic> item, List<String> keys,
+          [String fallback = '']) {
+        for (final key in keys) {
+          final value = item[key]?.toString().trim() ?? '';
+          if (value.isNotEmpty) return value;
+        }
+        return fallback;
+      }
+
+      final totalPackaged = records.fold<double>(
+          0, (sum, item) => sum + number(item, ['total_packaged_weight', 'packaging_weight']));
+      final totalWaste = records.fold<double>(
+          0, (sum, item) => sum + number(item, ['packaging_waste_weight']));
+      final waste = records.where((item) =>
+          number(item, ['packaging_waste_weight']) > 0).map((item) {
+        final amount = number(item, ['packaging_waste_weight']);
+        final severity = amount >= 25 ? 'Critical' : amount >= 10 ? 'Review' : 'Normal';
+        return <String, dynamic>{
+          'source': text(item, ['packaging_waste_type'], 'Packaging waste'),
+          'batch': text(item, ['batch_number', 'batch_id'], 'Unassigned batch'),
+          'amount': '${amount.toStringAsFixed(1)} kg',
+          'reason': text(item, ['packaging_waste_type'], 'Reason not recorded'),
+          'severity': severity,
+          'color': severity == 'Critical'
+              ? AppColors.error
+              : severity == 'Review'
+                  ? AppColors.warning
+                  : AppColors.success,
+        };
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _waste = waste;
+          _wasteRate = totalPackaged + totalWaste == 0
+              ? 0
+              : totalWaste / (totalPackaged + totalWaste) * 100;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -144,6 +302,17 @@ class WasteTrackingScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_hasError)
+            Text(
+              'Unable to load waste records from the backend.',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.error),
+            )
+          else ...[
           const _HeroPanel(
             title: 'Waste Tracking',
             subtitle:
@@ -155,24 +324,24 @@ class WasteTrackingScreen extends StatelessWidget {
           Wrap(
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.md,
-            children: const [
+            children: [
               _KpiCard(
                 title: 'Waste rate',
-                value: '2.3%',
+                value: '${_wasteRate.toStringAsFixed(1)}%',
                 subtitle: 'Below 3% target',
                 icon: Icons.trending_down_outlined,
                 color: AppColors.success,
               ),
               _KpiCard(
                 title: 'Open issues',
-                value: '2',
+                value: '${_waste.length}',
                 subtitle: 'Need line follow-up',
                 icon: Icons.report_problem_outlined,
                 color: AppColors.warning,
               ),
               _KpiCard(
                 title: 'Critical',
-                value: '1',
+                value: '${_waste.where((item) => item['severity'] == 'Critical').length}',
                 subtitle: 'Label mismatch',
                 icon: Icons.priority_high_outlined,
                 color: AppColors.error,
@@ -194,16 +363,26 @@ class WasteTrackingScreen extends StatelessWidget {
             desktopExtent: 280,
             itemBuilder: (index) => _WasteCard(item: _waste[index]),
           ),
+          ],
         ],
       ),
     );
   }
 }
 
-class PackagingProgressScreen extends StatelessWidget {
+class PackagingProgressScreen extends StatefulWidget {
   const PackagingProgressScreen({super.key});
 
-  static const _progress = [
+  @override
+  State<PackagingProgressScreen> createState() => _PackagingProgressScreenState();
+}
+
+class _PackagingProgressScreenState extends State<PackagingProgressScreen> {
+  bool _isLoading = true;
+  bool _hasError = false;
+  double _averageProgress = 0;
+  double _outputRate = 0;
+  List<Map<String, dynamic>> _progress = [
     {
       'line': 'Line A',
       'batch': 'LTC-24019',
@@ -234,6 +413,80 @@ class PackagingProgressScreen extends StatelessWidget {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadProgressRecords();
+  }
+
+  Future<void> _loadProgressRecords() async {
+    try {
+      final snapshot = await FulfillmentDataService().load();
+      final records = snapshot.fulfillments;
+      double number(Map<String, dynamic> item, List<String> keys) {
+        for (final key in keys) {
+          final value = double.tryParse(item[key]?.toString() ?? '');
+          if (value != null) return value;
+        }
+        return 0;
+      }
+
+      String text(Map<String, dynamic> item, List<String> keys,
+          [String fallback = '']) {
+        for (final key in keys) {
+          final value = item[key]?.toString().trim() ?? '';
+          if (value.isNotEmpty) return value;
+        }
+        return fallback;
+      }
+
+      final rows = records.asMap().entries.map((entry) {
+        final item = entry.value;
+        final received = number(item, ['total_weight']);
+        final packaged =
+            number(item, ['total_packaged_weight', 'packaging_weight']);
+        final progress = received > 0
+            ? (packaged / received * 100).clamp(0, 100)
+            : 0.0;
+        final status = text(item, ['status', 'delivery_status'], 'Pending');
+        return <String, dynamic>{
+          'line': 'Line ${String.fromCharCode(65 + entry.key)}',
+          'batch': text(item, ['batch_number', 'batch_id'], 'Unassigned batch'),
+          'progress': '${progress.toStringAsFixed(0)}%',
+          'eta': text(item, ['eta'], 'Not set'),
+          'throughput': '${packaged.toStringAsFixed(1)} kg',
+          'status': status,
+          'color': progress < 50 ? AppColors.warning : AppColors.success,
+        };
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _progress = rows;
+          _averageProgress = rows.isEmpty
+              ? 0
+              : rows
+                      .map((row) => double.tryParse(
+                          (row['progress'] as String).replaceAll('%', '')) ?? 0)
+                      .reduce((a, b) => a + b) /
+                  rows.length;
+          _outputRate = records.fold<double>(
+              0,
+              (sum, item) => sum +
+                  number(item, ['total_packaged_weight', 'packaging_weight']));
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -242,6 +495,17 @@ class PackagingProgressScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.xxl),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_hasError)
+            Text(
+              'Unable to load progress records from the backend.',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.error),
+            )
+          else ...[
           const _HeroPanel(
             title: 'Packaging Progress',
             subtitle:
@@ -253,24 +517,24 @@ class PackagingProgressScreen extends StatelessWidget {
           Wrap(
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.md,
-            children: const [
+            children: [
               _KpiCard(
                 title: 'Average progress',
-                value: '72%',
+                value: '${_averageProgress.toStringAsFixed(0)}%',
                 subtitle: 'Across active lines',
                 icon: Icons.pie_chart_outline,
                 color: AppColors.primary,
               ),
               _KpiCard(
                 title: 'Output rate',
-                value: '526/hr',
+                value: '${_outputRate.toStringAsFixed(1)} kg',
                 subtitle: 'Current velocity',
                 icon: Icons.speed_outlined,
                 color: AppColors.success,
               ),
               _KpiCard(
                 title: 'Line watch',
-                value: '1',
+                value: '${_progress.where((row) => (double.tryParse((row['progress'] as String).replaceAll('%', '')) ?? 0) < 50).length}',
                 subtitle: 'Line B below pace',
                 icon: Icons.visibility_outlined,
                 color: AppColors.warning,
@@ -292,6 +556,7 @@ class PackagingProgressScreen extends StatelessWidget {
             desktopExtent: 280,
             itemBuilder: (index) => _ProgressCard(item: _progress[index]),
           ),
+          ],
         ],
       ),
     );
@@ -306,7 +571,7 @@ class PackagingSupervisorSettingsScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return PackagingSupervisorScreenShell(
-      selectedIndex: 4,
+      selectedIndex: 5,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -330,7 +595,125 @@ class PackagingReportsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const PackagingProgressScreen();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return PackagingSupervisorScreenShell(
+      selectedIndex: 4,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _HeroPanel(
+            title: 'Packaging Reports',
+            subtitle:
+                'Review packaging output, waste trends, and operational performance.',
+            icon: Icons.assessment_outlined,
+            colors: [Color(0xFF334155), Color(0xFF1D4ED8)],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : Colors.white,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(
+                color: isDark ? Colors.white10 : AppColors.neutral200,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Report Library',
+                  style: AppTypography.h5.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _ReportRow(
+                  title: 'Packaging progress report',
+                  subtitle: 'Completed quantity and line throughput',
+                  icon: Icons.trending_up_outlined,
+                  color: AppColors.primary,
+                ),
+                _ReportRow(
+                  title: 'Waste tracking report',
+                  subtitle: 'Waste volume and operational loss rate',
+                  icon: Icons.delete_outline,
+                  color: AppColors.warning,
+                ),
+                _ReportRow(
+                  title: 'Production activity report',
+                  subtitle: 'Packaging records and shift activity',
+                  icon: Icons.inventory_2_outlined,
+                  color: AppColors.success,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportRow extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+
+  const _ReportRow({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppColors.neutral200,
+        ),
+      ),
+      child: Row(
+        children: [
+          _IconBox(icon: icon, color: color),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white70 : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded,
+              color: isDark ? Colors.white70 : AppColors.textSecondary),
+        ],
+      ),
+    );
   }
 }
 
@@ -511,7 +894,7 @@ class _KpiCard extends StatelessWidget {
 }
 
 class _LineCard extends StatelessWidget {
-  final Map<String, Object> item;
+  final Map<String, dynamic> item;
 
   const _LineCard({required this.item});
 
@@ -533,7 +916,7 @@ class _LineCard extends StatelessWidget {
 }
 
 class _WasteCard extends StatelessWidget {
-  final Map<String, Object> item;
+  final Map<String, dynamic> item;
 
   const _WasteCard({required this.item});
 
@@ -554,7 +937,7 @@ class _WasteCard extends StatelessWidget {
 }
 
 class _ProgressCard extends StatelessWidget {
-  final Map<String, Object> item;
+  final Map<String, dynamic> item;
 
   const _ProgressCard({required this.item});
 

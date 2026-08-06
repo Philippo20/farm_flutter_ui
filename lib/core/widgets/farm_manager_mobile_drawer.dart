@@ -425,6 +425,13 @@ class FarmManagerMobileBottomNav extends StatelessWidget {
     ),
   ];
 
+  static const _defaultDynamicItem = _FarmNavItem(
+    icon: Icons.grid_view_outlined,
+    activeIcon: Icons.grid_view_rounded,
+    label: 'Batch Generation',
+    route: '/farm-manager/batch-generation',
+  );
+
   int _routeIndex(String route) => _allItems.indexWhere(
         (item) => item.route == route,
       );
@@ -433,12 +440,16 @@ class FarmManagerMobileBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final current = _allItems.where(
-      (item) => _routeIndex(item.route) == selectedIndex,
+      (item) =>
+          _routeIndex(item.route) == selectedIndex &&
+          !_primaryItems.contains(item),
     );
+    final dynamicItem = current.isNotEmpty
+        ? current.first
+        : _defaultDynamicItem;
     final visible = [
       ..._primaryItems,
-      if (current.isNotEmpty && !_primaryItems.contains(current.first))
-        current.first,
+      dynamicItem,
     ];
 
     return Container(

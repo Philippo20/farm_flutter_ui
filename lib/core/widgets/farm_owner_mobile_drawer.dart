@@ -354,18 +354,28 @@ class FarmOwnerMobileBottomNav extends StatelessWidget {
         '/farm-owner/settings'),
   ];
 
+  static const _defaultDynamicItem = _OwnerNavItem(
+    Icons.assessment_outlined,
+    Icons.assessment_rounded,
+    'Reports',
+    '/farm-owner/reports',
+  );
+
   int _routeIndex(String route) =>
       _allItems.indexWhere((item) => item.route == route);
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final current =
-        _allItems.where((item) => _routeIndex(item.route) == selectedIndex);
+    final current = _allItems.where((item) =>
+        _routeIndex(item.route) == selectedIndex &&
+        !_primaryItems.contains(item));
+    final dynamicItem = current.isNotEmpty
+        ? current.first
+        : _defaultDynamicItem;
     final visible = [
       ..._primaryItems,
-      if (current.isNotEmpty && !_primaryItems.contains(current.first))
-        current.first,
+      dynamicItem,
     ];
 
     return Container(

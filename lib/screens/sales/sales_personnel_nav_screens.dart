@@ -415,7 +415,7 @@ class SalesPersonnelExpensesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SalesPersonnelPage(
-      selectedIndex: 4,
+      selectedIndex: 5,
       title: 'Expense Tracking',
       subtitle:
           'Log field expenses, attach receipts, and keep accountant sync ready.',
@@ -465,7 +465,7 @@ class SalesPersonnelReportsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _SalesPersonnelPage(
-      selectedIndex: 5,
+      selectedIndex: 4,
       title: 'Sales Reports',
       subtitle:
           'Generate personal sales, delivery, expense, and pipeline summaries.',

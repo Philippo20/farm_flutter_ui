@@ -6,6 +6,7 @@ import '../theme/app_spacing.dart';
 import '../../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import 'adaptive_logout_confirmation.dart';
+import 'adaptive_profile_menu.dart';
 import 'notification_center.dart';
 
 /// Modern Dashboard Scaffold
@@ -368,7 +369,7 @@ class _ModernDashboardScaffoldState
           const SizedBox(width: AppSpacing.sm),
 
           // User Menu
-          PopupMenuButton<String>(
+          AdaptiveProfilePopupMenuButton(
             offset: const Offset(0, 48),
             child: Row(
               children: [
@@ -429,7 +430,9 @@ class _ModernDashboardScaffoldState
               ),
             ],
             onSelected: (value) {
-              if (value == 'logout') {
+              if (value == 'profile') {
+                Navigator.of(context).pushNamed('/profile');
+              } else if (value == 'logout') {
                 _handleLogout();
               }
             },

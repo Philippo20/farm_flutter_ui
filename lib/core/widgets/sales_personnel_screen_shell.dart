@@ -4,7 +4,6 @@ import '../../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import 'sales_personnel_header.dart';
-import 'sales_personnel_mobile_bottom_nav.dart';
 import 'sales_personnel_sidebar.dart';
 import 'weather_info_chip.dart';
 import 'role_mobile_navigation.dart';
@@ -94,9 +93,10 @@ class SalesPersonnelScreenShell extends ConsumerWidget {
               ],
             ),
       bottomNavigationBar: isMobile
-          ? SalesPersonnelMobileBottomNav(
+          ? RoleMobileBottomNav(
               selectedIndex: selectedIndex,
               onItemSelected: (_) {},
+              items: salesPersonnelNavigationItems,
             )
           : null,
     );

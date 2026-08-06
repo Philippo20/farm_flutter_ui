@@ -4,7 +4,6 @@ import '../../providers/auth_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import 'sales_manager_header.dart';
-import 'sales_manager_mobile_bottom_nav.dart';
 import 'sales_manager_sidebar.dart';
 import 'weather_info_chip.dart';
 import 'role_mobile_navigation.dart';
@@ -94,9 +93,10 @@ class SalesManagerScreenShell extends ConsumerWidget {
               ],
             ),
       bottomNavigationBar: isMobile
-          ? SalesManagerMobileBottomNav(
+          ? RoleMobileBottomNav(
               selectedIndex: selectedIndex,
               onItemSelected: (_) {},
+              items: salesManagerNavigationItems,
             )
           : null,
     );

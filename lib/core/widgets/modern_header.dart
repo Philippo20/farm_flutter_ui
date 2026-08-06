@@ -10,6 +10,7 @@ import '../models/dashboard_app_bar_models.dart';
 import '../../constants/colors.dart';
 import 'notification_center.dart';
 import 'weather_info_chip.dart';
+import 'adaptive_profile_menu.dart';
 
 class ModernHeader extends ConsumerStatefulWidget
     implements PreferredSizeWidget {
@@ -163,7 +164,7 @@ class _ModernHeaderState extends ConsumerState<ModernHeader> {
                     onPressed: () =>
                         ref.read(themeProvider.notifier).toggleTheme(),
                   ),
-                  PopupMenuButton(
+                  AdaptiveProfilePopupMenuButton(
                     icon: const CircleAvatar(
                       backgroundColor: AppColors.primary,
                       child: Icon(Icons.person, color: Colors.white),
@@ -182,6 +183,11 @@ class _ModernHeaderState extends ConsumerState<ModernHeader> {
                         child: Text('Logout'),
                       ),
                     ],
+                    onSelected: (value) {
+                      if (value == 'profile') {
+                        Navigator.of(context).pushNamed('/profile');
+                      }
+                    },
                   ),
                 ],
               ),

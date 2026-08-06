@@ -9,7 +9,9 @@ import 'package:farmestates_ai_dashbaord/screens/farm_manager/team_management_sc
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter/services.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'screens/admin/redesigned_admin_dashboard.dart';
 import 'screens/admin/modern_users_screen.dart';
@@ -21,6 +23,7 @@ import 'screens/admin/admin_inventory_overview_screen.dart';
 import 'screens/admin/admin_delivery_control_screen.dart';
 import 'screens/auth/modern_login_screen.dart';
 import 'screens/auth/signup_screen.dart';
+import 'screens/profile/profile_screen.dart';
 import 'screens/owner/farm_screen.dart';
 import 'screens/owner/farm_settings_screen.dart';
 import 'screens/caretaker/caretaker_farm_screen.dart';
@@ -118,10 +121,33 @@ class MyApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
+      builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final background = isDark
+            ? AppColors.backgroundDark
+            : AppColors.backgroundLight;
+        final iconBrightness = isDark ? Brightness.light : Brightness.dark;
+
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            statusBarColor: background,
+            statusBarIconBrightness: iconBrightness,
+            statusBarBrightness:
+                isDark ? Brightness.dark : Brightness.light,
+            systemNavigationBarColor: background,
+            systemNavigationBarIconBrightness: iconBrightness,
+            systemNavigationBarDividerColor: background,
+            systemStatusBarContrastEnforced: false,
+            systemNavigationBarContrastEnforced: false,
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       routes: {
         // Auth
         '/login': (context) => const ModernLoginScreen(),
         '/signup': (context) => const SignupScreen(),
+        '/profile': (context) => const ProfileScreen(),
 
         // Super Admin
         '/superadmin_dashboard': (context) => const SuperAdminDashboard(),

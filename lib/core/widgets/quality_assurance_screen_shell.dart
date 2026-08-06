@@ -92,6 +92,7 @@ class QualityAssuranceScreenShell extends ConsumerWidget {
               selectedIndex: selectedIndex,
               onItemSelected: (_) {},
               items: qualityNavigationItems,
+              defaultDynamicItem: qualityNavigationItems[4],
             )
           : null,
     );

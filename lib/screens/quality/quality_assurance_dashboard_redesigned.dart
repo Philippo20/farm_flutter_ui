@@ -5,8 +5,10 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/quality_assurance_header.dart';
 import '../../core/widgets/quality_assurance_sidebar.dart';
+import '../../core/widgets/role_mobile_navigation.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/fulfillment_data_service.dart';
 
 /// Quality Assurance Dashboard - Redesigned
 class QualityAssuranceDashboardRedesigned extends ConsumerStatefulWidget {
@@ -20,9 +22,18 @@ class QualityAssuranceDashboardRedesigned extends ConsumerStatefulWidget {
 class _QualityAssuranceDashboardRedesignedState
     extends ConsumerState<QualityAssuranceDashboardRedesigned> {
   int _selectedNavIndex = 0;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   WeatherInfo? _weatherInfo;
+  bool _isLoading = true;
+  bool _hasError = false;
+  int _pendingCount = 0;
+  int _approvedCount = 0;
+  int _holdCount = 0;
+  int _inspectedCount = 0;
+  double _passRate = 0;
+  double _rejectionRate = 0;
 
-  static const _pipeline = [
+  List<Map<String, dynamic>> _pipeline = [
     {
       'title': 'Inspection Queue',
       'subtitle': 'Incoming batches pending QA review',
@@ -61,7 +72,7 @@ class _QualityAssuranceDashboardRedesignedState
     },
   ];
 
-  static const _activity = [
+  List<Map<String, dynamic>> _activity = [
     {
       'title': 'TMT-24022 approved',
       'subtitle': 'Cherry Tomato passed all quality gates',
@@ -86,6 +97,103 @@ class _QualityAssuranceDashboardRedesignedState
   void initState() {
     super.initState();
     _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    _loadQualityData();
+  }
+
+  Future<void> _loadQualityData() async {
+    try {
+      final snapshot = await FulfillmentDataService().load();
+      final records = snapshot.fulfillments;
+      String text(Map<String, dynamic> item, List<String> keys,
+          [String fallback = '']) {
+        for (final key in keys) {
+          final value = item[key]?.toString().trim() ?? '';
+          if (value.isNotEmpty) return value;
+        }
+        return fallback;
+      }
+
+      bool matches(Map<String, dynamic> item, List<String> terms) {
+        final status = text(item, ['status', 'delivery_status']).toLowerCase();
+        return terms.any(status.contains);
+      }
+
+      final pending = records.where((item) =>
+          !matches(item, ['approve', 'release', 'reject', 'hold'])).length;
+      final approved = records.where((item) =>
+          matches(item, ['approve', 'release', 'packaged'])).length;
+      final holds = records.where((item) => matches(item, ['reject', 'hold'])).length;
+      final total = records.length;
+
+      if (mounted) {
+        setState(() {
+          _pendingCount = pending;
+          _approvedCount = approved;
+          _holdCount = holds;
+          _inspectedCount = records.length;
+          _passRate = total == 0 ? 0 : approved / total * 100;
+          _rejectionRate = total == 0 ? 0 : holds / total * 100;
+          _pipeline = [
+            {
+              'title': 'Inspection Queue',
+              'subtitle': 'Incoming batches pending QA review',
+              'metric': '$pending items',
+              'status': 'Pending',
+              'route': '/quality-inspection',
+              'icon': Icons.search_outlined,
+              'color': AppColors.warning,
+            },
+            {
+              'title': 'Approval Ready',
+              'subtitle': 'Batches cleared for release',
+              'metric': '$approved ready',
+              'status': 'Approve',
+              'route': '/quality-approve',
+              'icon': Icons.check_circle_outline,
+              'color': AppColors.success,
+            },
+            {
+              'title': 'Reject & Hold',
+              'subtitle': 'Exceptions requiring corrective action',
+              'metric': '$holds holds',
+              'status': 'Review',
+              'route': '/quality-reject',
+              'icon': Icons.cancel_outlined,
+              'color': AppColors.error,
+            },
+            {
+              'title': 'Quality Reports',
+              'subtitle': 'Audit exports and trend summaries',
+              'metric': '${records.length} records',
+              'status': 'Ready',
+              'route': '/quality-reports',
+              'icon': Icons.assessment_outlined,
+              'color': AppColors.primary,
+            },
+          ];
+          _activity = records.take(5).map((item) {
+            final batch = text(item, ['batch_number', 'batch_id'], 'Fulfillment');
+            final status = text(item, ['status', 'delivery_status'], 'Updated');
+            return <String, dynamic>{
+              'title': '$batch $status',
+              'subtitle': 'Quality workflow record from backend',
+              'time': text(item, ['packaging_date_time', 'received_date_time'], 'Recently'),
+              'color': matches(item, ['reject', 'hold'])
+                  ? AppColors.error
+                  : AppColors.success,
+            };
+          }).toList();
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _hasError = true;
+        });
+      }
+    }
   }
 
   @override
@@ -97,6 +205,19 @@ class _QualityAssuranceDashboardRedesignedState
     final userEmail = authState.user?.email ?? 'quality@farmestates.com';
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: isMobile
+          ? RoleMobileDrawer(
+              userName: userName,
+              userEmail: userEmail,
+              userRole: 'Quality Assurance',
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) {
+                setState(() => _selectedNavIndex = index);
+              },
+              items: qualityNavigationItems,
+            )
+          : null,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: isMobile
@@ -114,7 +235,14 @@ class _QualityAssuranceDashboardRedesignedState
             )
           : null,
       bottomNavigationBar: isMobile
-          ? SafeArea(top: false, child: _buildBottomNavigation(isDark))
+          ? RoleMobileBottomNav(
+              selectedIndex: _selectedNavIndex,
+              onItemSelected: (index) {
+                setState(() => _selectedNavIndex = index);
+              },
+              items: qualityNavigationItems,
+              defaultDynamicItem: qualityNavigationItems[4],
+            )
           : null,
     );
   }
@@ -159,6 +287,7 @@ class _QualityAssuranceDashboardRedesignedState
           userName: userName,
           weatherInfo: _weatherInfo,
           onNotificationTap: () {},
+          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -176,6 +305,19 @@ class _QualityAssuranceDashboardRedesignedState
   }
 
   Widget _buildDashboardContent(bool isDark, bool isMobile) {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(AppSpacing.xxl),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_hasError) {
+      return Text(
+        'Unable to load quality data from the backend.',
+        style: AppTypography.bodyMedium.copyWith(color: AppColors.error),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -184,31 +326,31 @@ class _QualityAssuranceDashboardRedesignedState
         Wrap(
           spacing: AppSpacing.md,
           runSpacing: AppSpacing.md,
-          children: const [
+          children: [
             _QualityKpi(
               title: 'Pending inspection',
-              value: '12',
+              value: '$_pendingCount',
               subtitle: 'Items waiting',
               icon: Icons.pending_actions_outlined,
               color: AppColors.warning,
             ),
             _QualityKpi(
               title: 'Pass rate',
-              value: '95%',
+              value: '${_passRate.toStringAsFixed(0)}%',
               subtitle: '+2% shift trend',
               icon: Icons.verified_outlined,
               color: AppColors.success,
             ),
             _QualityKpi(
               title: 'Inspected today',
-              value: '28',
+              value: '$_inspectedCount',
               subtitle: '+5 vs yesterday',
               icon: Icons.fact_check_outlined,
               color: AppColors.primary,
             ),
             _QualityKpi(
               title: 'Rejection rate',
-              value: '5%',
+              value: '${_rejectionRate.toStringAsFixed(0)}%',
               subtitle: '-1% this shift',
               icon: Icons.cancel_outlined,
               color: AppColors.error,
@@ -287,13 +429,16 @@ class _QualityAssuranceDashboardRedesignedState
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
-            children: const [
+            children: [
               _HeroChip(
-                  label: '12 pending inspections', icon: Icons.search_outlined),
+                  label: '$_pendingCount pending inspections',
+                  icon: Icons.search_outlined),
               _HeroChip(
-                  label: '6 ready approvals', icon: Icons.check_circle_outline),
+                  label: '$_approvedCount ready approvals',
+                  icon: Icons.check_circle_outline),
               _HeroChip(
-                  label: '5 active holds', icon: Icons.pause_circle_outline),
+                  label: '$_holdCount active holds',
+                  icon: Icons.pause_circle_outline),
             ],
           ),
         ],
@@ -359,10 +504,10 @@ class _QualityAssuranceDashboardRedesignedState
       icon: Icons.bolt_outlined,
       color: AppColors.warning,
       child: Column(
-        children: const [
+        children: [
           _ActionTile(
             title: 'Start inspection',
-            subtitle: 'Review 12 waiting items',
+            subtitle: 'Review $_pendingCount waiting items',
             icon: Icons.search_outlined,
             color: AppColors.warning,
             route: '/quality-inspection',
@@ -370,7 +515,7 @@ class _QualityAssuranceDashboardRedesignedState
           SizedBox(height: AppSpacing.sm),
           _ActionTile(
             title: 'Approve clean batches',
-            subtitle: 'Release 6 verified lots',
+            subtitle: 'Release $_approvedCount verified lots',
             icon: Icons.check_circle_outline,
             color: AppColors.success,
             route: '/quality-approve',
@@ -378,7 +523,7 @@ class _QualityAssuranceDashboardRedesignedState
           SizedBox(height: AppSpacing.sm),
           _ActionTile(
             title: 'Review holds',
-            subtitle: 'Resolve 5 blocked items',
+            subtitle: 'Resolve $_holdCount blocked items',
             icon: Icons.cancel_outlined,
             color: AppColors.error,
             route: '/quality-reject',
@@ -689,7 +834,7 @@ class _ResponsiveGrid extends StatelessWidget {
 }
 
 class _PipelineCard extends StatelessWidget {
-  final Map<String, Object> item;
+  final Map<String, dynamic> item;
 
   const _PipelineCard({required this.item});
 
@@ -820,7 +965,7 @@ class _ActionTile extends StatelessWidget {
 }
 
 class _ActivityRow extends StatelessWidget {
-  final Map<String, Object> activity;
+  final Map<String, dynamic> activity;
 
   const _ActivityRow({required this.activity});
 

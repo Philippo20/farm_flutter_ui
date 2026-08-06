@@ -278,7 +278,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               ModernAdminHeader(
                 userName: firstName,
                 onNotificationTap: () {},
-                onProfileTap: () {},
+                onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -299,7 +299,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         ModernAdminHeader(
           userName: firstName,
           onNotificationTap: () {},
-          onProfileTap: () {},
+          onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
           onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         Expanded(

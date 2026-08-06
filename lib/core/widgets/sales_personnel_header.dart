@@ -6,6 +6,7 @@ import '../theme/app_spacing.dart';
 import '../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
 import 'weather_info_chip.dart';
+import 'adaptive_profile_menu.dart';
 import 'notification_center.dart';
 import 'adaptive_logout_confirmation.dart';
 
@@ -197,11 +198,13 @@ class SalesPersonnelHeader extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (onMenuTap != null)
-              IconButton(
-                onPressed: onMenuTap,
-                icon: const Icon(Icons.menu_rounded),
+              _buildMobileActionButton(
+                icon: Icons.menu_rounded,
                 tooltip: 'Open navigation',
+                isDark: isDark,
+                onPressed: onMenuTap,
               ),
+            if (onMenuTap != null) const SizedBox(width: AppSpacing.sm),
             // Left Section: Greeting and User Name
             Expanded(
               child: Column(
@@ -431,7 +434,7 @@ class SalesPersonnelHeader extends ConsumerWidget {
                 .toUpperCase() ??
             'SP';
 
-        return PopupMenuButton<String>(
+        return AdaptiveProfilePopupMenuButton(
           offset: const Offset(0, 50),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -514,7 +517,11 @@ class SalesPersonnelHeader extends ConsumerWidget {
             } else if (value == 'settings') {
               Navigator.of(context).pushNamed('/sales-personnel-settings');
             } else if (value == 'profile') {
-              if (onProfileTap != null) onProfileTap!();
+              if (onProfileTap != null) {
+                onProfileTap!();
+              } else {
+                Navigator.of(context).pushNamed('/profile');
+              }
             }
           },
         );
@@ -595,7 +602,7 @@ class SalesPersonnelHeader extends ConsumerWidget {
   Widget _buildProfileButton(bool isDark) {
     return Consumer(
       builder: (context, ref, child) {
-        return PopupMenuButton<String>(
+        return AdaptiveProfilePopupMenuButton(
           offset: const Offset(0, 50),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -650,7 +657,11 @@ class SalesPersonnelHeader extends ConsumerWidget {
             } else if (value == 'settings') {
               Navigator.of(context).pushNamed('/sales-personnel-settings');
             } else if (value == 'profile') {
-              if (onProfileTap != null) onProfileTap!();
+              if (onProfileTap != null) {
+                onProfileTap!();
+              } else {
+                Navigator.of(context).pushNamed('/profile');
+              }
             }
           },
           child: Material(

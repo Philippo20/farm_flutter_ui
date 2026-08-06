@@ -77,7 +77,7 @@ class _AdminInventoryOverviewScreenState
               ModernAdminHeader(
                 userName: firstName,
                 onNotificationTap: () {},
-                onProfileTap: () {},
+                onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -103,7 +103,7 @@ class _AdminInventoryOverviewScreenState
         ModernAdminHeader(
           userName: firstName,
           onNotificationTap: () {},
-          onProfileTap: () {},
+          onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
         ),
         Expanded(
           child: SingleChildScrollView(
