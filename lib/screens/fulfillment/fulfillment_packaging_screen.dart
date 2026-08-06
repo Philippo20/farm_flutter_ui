@@ -17,6 +17,7 @@ class _FulfillmentPackagingScreenState
     extends State<FulfillmentPackagingScreen> {
   List<Map<String, dynamic>> _stations = [];
   List<Map<String, dynamic>> _queue = [];
+  List<Map<String, dynamic>> _packages = [];
   bool _isLoading = true;
 
   @override
@@ -27,7 +28,8 @@ class _FulfillmentPackagingScreenState
 
   Future<void> _loadPackagingData() async {
     try {
-      final records = (await FulfillmentDataService().load()).fulfillments;
+      final snapshot = await FulfillmentDataService().load();
+      final records = snapshot.fulfillments;
       final stations = records.asMap().entries.map((entry) {
         final item = entry.value;
         final total = _number(item['total_weight']);
@@ -59,6 +61,7 @@ class _FulfillmentPackagingScreenState
       setState(() {
         _stations = stations;
         _queue = queue;
+        _packages = snapshot.packages;
         _isLoading = false;
       });
     } catch (_) {
@@ -192,10 +195,88 @@ class _FulfillmentPackagingScreenState
             const SizedBox(height: AppSpacing.md),
             _buildStationGrid(context, isDark),
             const SizedBox(height: AppSpacing.xl),
+            Text(
+              'Packaging Catalog',
+              style: AppTypography.h5.copyWith(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildPackageCatalog(isDark),
+            const SizedBox(height: AppSpacing.xl),
             _buildQueuePanel(isDark),
           ],
         ],
       ),
+    );
+  }
+
+  Widget _buildPackageCatalog(bool isDark) {
+    if (_packages.isEmpty) {
+      return _emptyPanel('No packaging options have been configured.');
+    }
+    return Column(
+      children: _packages.map((package) {
+        final quantity = package['quantity_available'] ?? 0;
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: isDark ? Colors.white10 : AppColors.neutral200,
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.inventory_2_outlined, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      package['package_name']?.toString() ??
+                          'Unnamed packaging',
+                      style: AppTypography.bodyLarge.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '${package['material_used'] ?? 'Material not recorded'} | ${package['weight_capacity'] ?? 0}${package['unit'] ?? ''} | ${package['plant_type_name'] ?? 'All plant types'}',
+                      style: AppTypography.bodySmall.copyWith(
+                        color:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '$quantity available',
+                style: AppTypography.bodySmall.copyWith(
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _emptyPanel(String message) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Text(message,
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          )),
     );
   }
 

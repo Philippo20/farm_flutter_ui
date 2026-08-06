@@ -27,8 +27,9 @@ class _FulfillmentMaterialsScreenState
 
   Future<void> _loadInventory() async {
     try {
-      final records = (await FulfillmentDataService().load()).inventory;
-      final items = records.map((item) {
+      final snapshot = await FulfillmentDataService().load();
+      final records = snapshot.inventory;
+      final inventoryItems = records.map((item) {
         final stock = item['quantity'] ?? item['stock'] ?? 0;
         final threshold = item['reorder_level'] ?? item['minimum_stock'] ?? 0;
         final low = _number(stock) <= _number(threshold);
@@ -44,9 +45,26 @@ class _FulfillmentMaterialsScreenState
           'color': low ? AppColors.error : AppColors.success,
         };
       }).toList();
+      final packageItems = snapshot.packages.map((item) {
+        final quantity = item['quantity_available'] ?? 0;
+        final status = item['status']?.toString() ?? 'Unknown';
+        return <String, dynamic>{
+          'item': item['package_name'] ?? 'Unnamed packaging',
+          'sku': item['package_id'] ?? 'No package ID',
+          'stock': quantity.toString(),
+          'unit': item['unit'] ?? 'units',
+          'status': status,
+          'coverage': 'Not recorded',
+          'assigned': item['plant_type_name'] ?? 'All plant types',
+          'reorder': 'Not configured',
+          'color': status.toLowerCase() == 'active'
+              ? AppColors.success
+              : AppColors.warning,
+        };
+      }).toList();
       if (!mounted) return;
       setState(() {
-        _inventory = items;
+        _inventory = [...inventoryItems, ...packageItems];
         _requests = [];
         _isLoading = false;
       });
