@@ -62,12 +62,14 @@ class RoleMobileDrawer extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final item = items[index];
                   final selected = index == selectedIndex;
-                  return ListTile(
-                    selected: selected,
-                    selectedTileColor: isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : AppColors.primary.withOpacity(0.1),
-                    leading: Container(
+                  return Material(
+                    color: Colors.transparent,
+                    child: ListTile(
+                      selected: selected,
+                      selectedTileColor: isDark
+                          ? Colors.white.withOpacity(0.1)
+                          : AppColors.primary.withOpacity(0.1),
+                      leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: selected
@@ -87,8 +89,8 @@ class RoleMobileDrawer extends StatelessWidget {
                                 ? Colors.white70
                                 : AppColors.textSecondary),
                       ),
-                    ),
-                    title: Text(
+                      ),
+                      title: Text(
                       item.label,
                       style: AppTypography.bodyMedium.copyWith(
                         fontSize: 15,
@@ -98,14 +100,15 @@ class RoleMobileDrawer extends StatelessWidget {
                             ? AppColors.primary
                             : (isDark ? Colors.white : AppColors.textPrimary),
                       ),
+                      ),
+                      onTap: () {
+                        onItemSelected(index);
+                        Navigator.pop(context);
+                        if (index != selectedIndex) {
+                          Navigator.pushReplacementNamed(context, item.route);
+                        }
+                      },
                     ),
-                    onTap: () {
-                      onItemSelected(index);
-                      Navigator.pop(context);
-                      if (index != selectedIndex) {
-                        Navigator.pushReplacementNamed(context, item.route);
-                      }
-                    },
                   );
                 },
               ),

@@ -136,10 +136,30 @@ class _SalesOffTakersScreenState
                             DropdownButtonFormField<String>(
                               value: status,
                               isExpanded: true,
-                              decoration: const InputDecoration(
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
+                              ),
+                              dropdownColor: Theme.of(context).colorScheme.surface,
+                              decoration: InputDecoration(
                                 labelText: 'Relationship status',
-                                prefixIcon: Icon(Icons.flag_outlined, size: 19),
+                                labelStyle: TextStyle(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white70
+                                      : AppColors.textSecondary,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.flag_outlined,
+                                  size: 19,
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.white70
+                                      : AppColors.textSecondary,
+                                ),
                                 filled: true,
+                                fillColor: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white.withOpacity(0.06)
+                                    : AppColors.neutral50,
                               ),
                               items: const ['Active', 'Prospect', 'Inactive']
                                   .map((item) => DropdownMenuItem(value: item, child: Text(item)))
@@ -226,15 +246,26 @@ class _SalesOffTakersScreenState
     TextInputType? keyboard,
     int maxLines = 1,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextFormField(
       controller: controller,
       keyboardType: keyboard,
       maxLines: maxLines,
+      style: AppTypography.bodyMedium.copyWith(
+        color: isDark ? Colors.white : AppColors.textPrimary,
+      ),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, size: 19),
+        labelStyle: TextStyle(
+          color: isDark ? Colors.white70 : AppColors.textSecondary,
+        ),
+        prefixIcon: Icon(
+          icon,
+          size: 19,
+          color: isDark ? Colors.white70 : AppColors.textSecondary,
+        ),
         filled: true,
-        fillColor: Theme.of(context).brightness == Brightness.dark
+        fillColor: isDark
             ? Colors.white.withOpacity(0.04)
             : AppColors.neutral50,
       ),
