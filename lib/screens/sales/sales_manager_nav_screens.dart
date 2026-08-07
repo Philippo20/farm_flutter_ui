@@ -1,57 +1,254 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/sales_manager_screen_shell.dart';
+import '../../core/widgets/sales_personnel_screen_shell.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
-class SalesOffTakersScreen extends StatelessWidget {
-  const SalesOffTakersScreen({super.key});
+class SalesOffTakersScreen extends ConsumerStatefulWidget {
+  final bool forSalesPersonnel;
 
-  static const _cards = [
-    {
-      'title': 'FreshMart Retail',
-      'subtitle': 'Retail chain | Accra North',
-      'metric': 'GHS 42.5K',
-      'status': 'Active',
-      'color': AppColors.success,
-    },
-    {
-      'title': 'Green Basket',
-      'subtitle': 'Wholesale buyer | Tema',
-      'metric': 'GHS 31.2K',
-      'status': 'Renewal',
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'KitchenPro Foods',
-      'subtitle': 'Food service | East Legon',
-      'metric': 'GHS 18.7K',
-      'status': 'New',
-      'color': AppColors.primary,
-    },
-  ];
+  const SalesOffTakersScreen({
+    super.key,
+    this.forSalesPersonnel = false,
+  });
+
+  @override
+  ConsumerState<SalesOffTakersScreen> createState() =>
+      _SalesOffTakersScreenState();
+}
+
+class _SalesOffTakersScreenState
+    extends ConsumerState<SalesOffTakersScreen> {
+  final _api = SuperAdminApiService();
+  List<Map<String, dynamic>> _offTakers = const [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final items = await _api.getOffTakers();
+      if (!mounted) return;
+      setState(() {
+        _offTakers = items;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = error.toString();
+      });
+    }
+  }
+
+  Future<void> _openAddForm() async {
+    final formKey = GlobalKey<FormState>();
+    final name = TextEditingController();
+    final type = TextEditingController();
+    final contact = TextEditingController();
+    final phone = TextEditingController();
+    final email = TextEditingController();
+    final location = TextEditingController();
+    var status = 'Active';
+    var saving = false;
+
+    try {
+      final saved = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setModalState) => AlertDialog(
+            title: const Text('Add Off-Taker'),
+            content: SizedBox(
+              width: 460,
+              child: Form(
+                key: formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _formField(name, 'Business name', required: true),
+                      _formField(type, 'Business type'),
+                      _formField(contact, 'Contact person'),
+                      _formField(phone, 'Phone number'),
+                      _formField(email, 'Email', keyboard: TextInputType.emailAddress),
+                      _formField(location, 'Location'),
+                      DropdownButtonFormField<String>(
+                        value: status,
+                        decoration: const InputDecoration(labelText: 'Status'),
+                        items: const ['Active', 'Prospect', 'Inactive']
+                            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                            .toList(),
+                        onChanged: (value) => setModalState(() => status = value ?? 'Active'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: saving ? null : () => Navigator.pop(dialogContext, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton.icon(
+                onPressed: saving
+                    ? null
+                    : () async {
+                        if (!(formKey.currentState?.validate() ?? false)) return;
+                        setModalState(() => saving = true);
+                        try {
+                          final userId = ref.read(authProvider).user?.id ?? '';
+                          await _api.createOffTaker(data: {
+                            'name': name.text,
+                            'business_type': type.text,
+                            'contact_person': contact.text,
+                            'phone': phone.text,
+                            'email': email.text,
+                            'location': location.text,
+                            'status': status,
+                            'created_by': userId,
+                          });
+                          if (dialogContext.mounted) {
+                            Navigator.pop(dialogContext, true);
+                          }
+                        } catch (error) {
+                          setModalState(() => saving = false);
+                          if (dialogContext.mounted) {
+                            ScaffoldMessenger.of(dialogContext).showSnackBar(
+                              SnackBar(content: Text(error.toString())),
+                            );
+                          }
+                        }
+                      },
+                icon: saving
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.save_outlined),
+                label: Text(saving ? 'Saving...' : 'Save'),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (saved == true) await _load();
+    } finally {
+      name.dispose();
+      type.dispose();
+      contact.dispose();
+      phone.dispose();
+      email.dispose();
+      location.dispose();
+    }
+  }
+
+  TextFormField _formField(
+    TextEditingController controller,
+    String label, {
+    bool required = false,
+    TextInputType? keyboard,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboard,
+      decoration: InputDecoration(labelText: label),
+      validator: required
+          ? (value) => value == null || value.trim().isEmpty ? '$label is required' : null
+          : null,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _SalesPage(
-      selectedIndex: 1,
-      title: 'Off-Taker Management',
-      subtitle:
-          'Manage buyer accounts, relationship status, contract value, and next sales actions.',
-      icon: Icons.people_outlined,
-      colors: const [Color(0xFF1D4ED8), Color(0xFF0F766E)],
-      kpis: const [
-        _KpiData('Active buyers', '12', '4 priority accounts',
-            Icons.people_outlined, AppColors.primary),
-        _KpiData('Pipeline value', 'GHS 92K', 'Open contract value',
-            Icons.account_balance_wallet_outlined, AppColors.success),
-        _KpiData('Renewals', '3', 'Due this month', Icons.autorenew_outlined,
-            AppColors.warning),
+    final active = _offTakers.where((item) =>
+        '${item['status'] ?? 'Active'}'.toLowerCase() == 'active').length;
+    final cards = _offTakers.map<Map<String, Object>>((item) {
+      final status = '${item['status'] ?? 'Active'}';
+      final color = status == 'Active'
+          ? AppColors.success
+          : status == 'Prospect'
+              ? AppColors.primary
+              : AppColors.warning;
+      return {
+        'title': '${item['name'] ?? 'Unnamed off-taker'}',
+        'subtitle': '${item['business_type'] ?? 'Business'} | ${item['location'] ?? 'Location not set'}',
+        'metric': '${item['contact_person'] ?? item['phone'] ?? 'No contact'}',
+        'status': status,
+        'color': color,
+      };
+    }).toList();
+
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Hero(
+          title: 'Off-Taker Management',
+          subtitle: 'Manage separate buyer accounts, relationship status, and sales contacts.',
+          icon: Icons.people_outlined,
+          colors: const [Color(0xFF1D4ED8), Color(0xFF0F766E)],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: _openAddForm,
+            icon: const Icon(Icons.person_add_alt_outlined),
+            label: const Text('Add Off-Taker'),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Wrap(
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.md,
+          children: [
+            _KpiCard(data: _KpiData('Active off-takers', '$active', 'Separate business records', Icons.people_outlined, AppColors.primary)),
+            _KpiCard(data: _KpiData('Total accounts', '${_offTakers.length}', 'Registered buyers', Icons.account_balance_wallet_outlined, AppColors.success)),
+            _KpiCard(data: _KpiData('Prospects', '${_offTakers.where((item) => item['status'] == 'Prospect').length}', 'Potential accounts', Icons.autorenew_outlined, AppColors.warning)),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        Text('Buyer Accounts', style: AppTypography.h5.copyWith(fontWeight: FontWeight.w600)),
+        const SizedBox(height: AppSpacing.md),
+        if (_loading)
+          const Center(child: CircularProgressIndicator())
+        else if (_error != null)
+          Text('Could not load off-takers. Please retry from the dashboard.', style: AppTypography.bodyMedium)
+        else if (cards.isEmpty)
+          const _EmptySalesState(label: 'No off-takers have been registered yet.')
+        else
+          _ResponsiveGrid(itemCount: cards.length, itemBuilder: (index) => _SalesCard(item: cards[index])),
       ],
-      sectionTitle: 'Buyer Accounts',
-      cards: _cards,
     );
+
+    if (widget.forSalesPersonnel) {
+      return SalesPersonnelScreenShell(selectedIndex: 1, child: content);
+    }
+    return SalesManagerScreenShell(selectedIndex: 1, child: content);
   }
+}
+
+class _EmptySalesState extends StatelessWidget {
+  final String label;
+
+  const _EmptySalesState({required this.label});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Center(child: Text(label)),
+      );
 }
 
 class SalesPerformanceScreen extends StatelessWidget {

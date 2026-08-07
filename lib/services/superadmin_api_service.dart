@@ -24,6 +24,64 @@ class SuperAdminApiService {
   Future<List<Map<String, dynamic>>> getPackages() => _getDocuments('/package');
   Future<List<Map<String, dynamic>>> getPricing() => _getDocuments('/pricing');
   Future<List<Map<String, dynamic>>> getSales() => _getDocuments('/sales');
+  Future<List<Map<String, dynamic>>> getOffTakers() =>
+      _getDocuments('/off-takers');
+
+  Future<Map<String, dynamic>> createOffTaker({
+    required Map<String, dynamic> data,
+  }) async {
+    return _submitOffTaker('POST', '/off-takers', data);
+  }
+
+  Future<Map<String, dynamic>> updateOffTaker({
+    required String id,
+    required Map<String, dynamic> data,
+  }) async {
+    return _submitOffTaker(
+      'PUT',
+      '/off-takers/${Uri.encodeComponent(id)}',
+      data,
+    );
+  }
+
+  Future<void> deleteOffTaker(String id) async {
+    final response = await _client
+        .delete(Uri.parse('$baseUrl/off-takers/${Uri.encodeComponent(id)}'))
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to delete off-taker (${response.statusCode})',
+        ),
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> _submitOffTaker(
+    String method,
+    String path,
+    Map<String, dynamic> data,
+  ) async {
+    final request = http.Request(method, Uri.parse('$baseUrl$path'))
+      ..headers['Content-Type'] = 'application/x-www-form-urlencoded'
+      ..bodyFields = data.map((key, value) => MapEntry(key, '$value'));
+    final streamed = await _client.send(request).withApiTimeout();
+    final response = await http.Response.fromStream(streamed);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to save off-taker (${response.statusCode})',
+        ),
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid off-taker response');
+    }
+    return decoded;
+  }
   Future<List<Map<String, dynamic>>> getWallet() => _getDocuments('/wallet');
   Future<List<Map<String, dynamic>>> getAudits() => _getDocuments('/audits');
   Future<List<Map<String, dynamic>>> getAlerts() => _getDocuments('/alerts');
@@ -1787,7 +1845,11 @@ class SuperAdminApiService {
       throw SuperAdminApiException('Invalid response for $path');
     }
 
-    final rawDocuments = decoded['users'] ?? decoded['documents'] ?? [];
+    final rawDocuments = decoded['users'] ??
+        decoded['documents'] ??
+        decoded['off_takers'] ??
+        decoded['sales'] ??
+        [];
     if (rawDocuments is! List) {
       throw SuperAdminApiException('Invalid document list for $path');
     }

@@ -8,6 +8,7 @@ import '../../core/widgets/sales_manager_sidebar.dart';
 import '../../core/widgets/role_mobile_navigation.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
 /// Sales Manager Dashboard - Redesigned
 class SalesManagerDashboardRedesigned extends ConsumerStatefulWidget {
@@ -22,73 +23,166 @@ class _SalesManagerDashboardRedesignedState
     extends ConsumerState<SalesManagerDashboardRedesigned> {
   int _selectedNavIndex = 0;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _api = SuperAdminApiService();
   WeatherInfo? _weatherInfo;
-
-  static const _pipeline = [
-    {
-      'title': 'Off-Takers',
-      'subtitle': 'Buyer accounts, renewals, and contract value',
-      'metric': '12 active',
-      'status': '3 renewals',
-      'route': '/sales-off-takers',
-      'icon': Icons.people_outlined,
-      'color': AppColors.primary,
-    },
-    {
-      'title': 'Performance',
-      'subtitle': 'Revenue targets and crop sales momentum',
-      'metric': '87%',
-      'status': '+18%',
-      'route': '/sales-performance',
-      'icon': Icons.trending_up_outlined,
-      'color': AppColors.success,
-    },
-    {
-      'title': 'Deliveries',
-      'subtitle': 'Dispatch commitments and buyer handoff',
-      'metric': '5 pending',
-      'status': '94% SLA',
-      'route': '/sales-deliveries',
-      'icon': Icons.local_shipping_outlined,
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'Financials',
-      'subtitle': 'Revenue, receivables, and commission exposure',
-      'metric': 'GHS 125K',
-      'status': 'GHS 37K due',
-      'route': '/sales-financial',
-      'icon': Icons.account_balance_wallet_outlined,
-      'color': AppColors.error,
-    },
-  ];
-
-  static const _activity = [
-    {
-      'title': 'FreshMart order confirmed',
-      'subtitle': '420 kg romaine lettuce moved to delivery',
-      'time': '14 min ago',
-      'color': AppColors.success,
-    },
-    {
-      'title': 'Green Basket renewal due',
-      'subtitle': 'Contract review needed before Friday',
-      'time': '36 min ago',
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'Receivable reminder created',
-      'subtitle': 'GHS 18.4K invoice due from wholesale buyer',
-      'time': '52 min ago',
-      'color': AppColors.error,
-    },
-  ];
+  bool _isLoading = true;
+  String? _loadError;
+  List<Map<String, dynamic>> _sales = const [];
+  List<Map<String, dynamic>> _offTakers = const [];
 
   @override
   void initState() {
     super.initState();
     _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
+    _loadSalesData();
   }
+
+  Future<void> _loadSalesData() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    try {
+      final sales = await _api.getSales();
+      final offTakers = await _api.getOffTakers();
+      if (!mounted) return;
+      setState(() {
+        _sales = sales;
+        _offTakers = offTakers;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadError = error.toString();
+      });
+    }
+  }
+
+  List<Map<String, Object>> get _pipeline {
+    final validSales = _sales.where((sale) => !_isCancelled(sale)).toList();
+    final revenue = validSales.fold<double>(0, (sum, sale) =>
+        sum + _number(sale['total_amount']));
+    final receivables = validSales.where((sale) => sale['paid'] != true).fold<double>(
+        0, (sum, sale) => sum + _number(sale['total_amount']));
+    final pending = _sales.where((sale) => _status(sale) == 'pending').length;
+    final paidAmount = validSales.where((sale) => sale['paid'] == true).fold<double>(
+        0, (sum, sale) => sum + _number(sale['total_amount']));
+    final paidRate = revenue == 0 ? 0 : ((paidAmount / revenue) * 100).round();
+
+    return [
+      {
+        'title': 'Off-Takers',
+        'subtitle': 'Buyer accounts and sales relationships',
+        'metric': '${_activeBuyerCount} active',
+        'status': '${_offTakers.length} total',
+        'route': '/sales-off-takers',
+        'icon': Icons.people_outlined,
+        'color': AppColors.primary,
+      },
+      {
+        'title': 'Performance',
+        'subtitle': 'Revenue collection and crop sales momentum',
+        'metric': '$paidRate% paid',
+        'status': '${_sales.length} sales',
+        'route': '/sales-performance',
+        'icon': Icons.trending_up_outlined,
+        'color': AppColors.success,
+      },
+      {
+        'title': 'Deliveries',
+        'subtitle': 'Dispatch commitments and buyer handoff',
+        'metric': '$pending pending',
+        'status': '${validSales.length} valid',
+        'route': '/sales-deliveries',
+        'icon': Icons.local_shipping_outlined,
+        'color': AppColors.warning,
+      },
+      {
+        'title': 'Financials',
+        'subtitle': 'Revenue, receivables, and payment exposure',
+        'metric': _money(revenue),
+        'status': '${_money(receivables)} due',
+        'route': '/sales-financial',
+        'icon': Icons.account_balance_wallet_outlined,
+        'color': AppColors.error,
+      },
+    ];
+  }
+
+  List<Map<String, Object>> get _activity {
+    final records = [..._sales]
+      ..sort((a, b) => _dateValue(b).compareTo(_dateValue(a)));
+    return records.take(3).map((sale) {
+      final buyer = _text(sale['buyer_name'], fallback: 'Buyer');
+      final status = _status(sale);
+      final quantity = _number(sale['quantity_delivered']);
+      final color = status == 'delivered'
+          ? AppColors.success
+          : status == 'cancelled'
+              ? AppColors.error
+              : AppColors.warning;
+      return <String, Object>{
+        'title': '$buyer sale ${_titleCase(status)}',
+        'subtitle': '${_formatQuantity(quantity)} kg recorded for delivery',
+        'time': _relativeTime(_dateValue(sale)),
+        'color': color,
+      };
+    }).toList();
+  }
+
+  int get _activeBuyerCount => _offTakers
+      .where((offTaker) =>
+          _text(offTaker['status'], fallback: 'Active').toLowerCase() ==
+          'active')
+      .length;
+
+  bool _isCancelled(Map<String, dynamic> sale) => _status(sale) == 'cancelled';
+
+  String _status(Map<String, dynamic> sale) =>
+      _text(sale['status'], fallback: 'pending').toLowerCase();
+
+  double _number(Object? value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse('$value') ?? 0;
+  }
+
+  String _text(Object? value, {String fallback = ''}) {
+    final text = '$value'.trim();
+    return value == null || text == 'null' || text.isEmpty ? fallback : text;
+  }
+
+  DateTime _dateValue(Map<String, dynamic> sale) =>
+      DateTime.tryParse(_text(sale['delivered_at'])) ??
+      DateTime.tryParse(_text(sale['payment_date'])) ??
+      DateTime.tryParse(_text(sale['\$createdAt'])) ??
+      DateTime.fromMillisecondsSinceEpoch(0);
+
+  String _money(double amount) {
+    if (amount >= 1000000) return 'GHS ${(amount / 1000000).toStringAsFixed(1)}M';
+    if (amount >= 1000) return 'GHS ${(amount / 1000).toStringAsFixed(1)}K';
+    return 'GHS ${amount.toStringAsFixed(0)}';
+  }
+
+  String _formatQuantity(double quantity) =>
+      quantity == quantity.roundToDouble()
+          ? quantity.toStringAsFixed(0)
+          : quantity.toStringAsFixed(1);
+
+  String _relativeTime(DateTime date) {
+    if (date.millisecondsSinceEpoch == 0) return 'No date';
+    final difference = DateTime.now().difference(date);
+    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.inHours < 1) return '${difference.inMinutes} min ago';
+    if (difference.inDays < 1) return '${difference.inHours} hr ago';
+    return '${difference.inDays} d ago';
+  }
+
+  String _titleCase(String value) => value.isEmpty
+      ? value
+      : '${value[0].toUpperCase()}${value.substring(1)}';
 
   @override
   Widget build(BuildContext context) {
@@ -198,6 +292,25 @@ class _SalesManagerDashboardRedesignedState
   }
 
   Widget _buildDashboardContent(bool isDark, bool isMobile) {
+    if (_isLoading) {
+      return const SizedBox(
+        height: 420,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_loadError != null) {
+      return _buildLoadError(isDark);
+    }
+
+    final validSales = _sales.where((sale) => !_isCancelled(sale)).toList();
+    final revenue = validSales.fold<double>(0, (sum, sale) =>
+        sum + _number(sale['total_amount']));
+    final paidAmount = validSales.where((sale) => sale['paid'] == true).fold<double>(
+        0, (sum, sale) => sum + _number(sale['total_amount']));
+    final paidRate = revenue == 0 ? 0 : ((paidAmount / revenue) * 100).round();
+    final pending = _sales.where((sale) => _status(sale) == 'pending').length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -206,32 +319,32 @@ class _SalesManagerDashboardRedesignedState
         Wrap(
           spacing: AppSpacing.md,
           runSpacing: AppSpacing.md,
-          children: const [
+          children: [
             _SalesKpi(
               title: 'Revenue',
-              value: 'GHS 125K',
-              subtitle: '+18% this month',
+              value: _money(revenue),
+              subtitle: '${validSales.length} valid sales',
               icon: Icons.payments_outlined,
               color: AppColors.success,
             ),
             _SalesKpi(
               title: 'Off-takers',
-              value: '12',
-              subtitle: 'Active buyers',
+              value: '${_activeBuyerCount}',
+              subtitle: 'Active or recorded buyers',
               icon: Icons.people_outlined,
               color: AppColors.primary,
             ),
             _SalesKpi(
               title: 'Deliveries',
-              value: '5',
+              value: '$pending',
               subtitle: 'Pending dispatch',
               icon: Icons.local_shipping_outlined,
               color: AppColors.warning,
             ),
             _SalesKpi(
-              title: 'Target hit',
-              value: '87%',
-              subtitle: 'Monthly progress',
+              title: 'Paid rate',
+              value: '$paidRate%',
+              subtitle: 'Collected from sales',
               icon: Icons.track_changes_outlined,
               color: AppColors.error,
             ),
@@ -240,6 +353,37 @@ class _SalesManagerDashboardRedesignedState
         const SizedBox(height: AppSpacing.xl),
         _buildMainGrid(),
       ],
+    );
+  }
+
+  Widget _buildLoadError(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.error.withOpacity(0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.cloud_off_outlined, color: AppColors.error),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Sales data could not be loaded',
+            style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          _MutedText('Check the API connection and try again.'),
+          const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            onPressed: _loadSalesData,
+            icon: const Icon(Icons.refresh_outlined),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -309,14 +453,15 @@ class _SalesManagerDashboardRedesignedState
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
-            children: const [
+            children: [
               _HeroChip(
-                  label: '12 active off-takers', icon: Icons.people_outlined),
+                  label: '$_activeBuyerCount active off-takers',
+                  icon: Icons.people_outlined),
               _HeroChip(
-                  label: '5 deliveries pending',
+                  label: '${_sales.where((sale) => _status(sale) == 'pending').length} deliveries pending',
                   icon: Icons.local_shipping_outlined),
               _HeroChip(
-                  label: 'GHS 37K receivables',
+                  label: '${_money(_sales.where((sale) => !_isCancelled(sale) && sale['paid'] != true).fold<double>(0, (sum, sale) => sum + _number(sale['total_amount'])))} receivables',
                   icon: Icons.receipt_long_outlined),
             ],
           ),
@@ -383,10 +528,10 @@ class _SalesManagerDashboardRedesignedState
       icon: Icons.bolt_outlined,
       color: AppColors.warning,
       child: Column(
-        children: const [
+        children: [
           _ActionTile(
             title: 'Add or review off-takers',
-            subtitle: '3 buyer renewals due',
+            subtitle: '${_offTakers.length} registered accounts',
             icon: Icons.people_outlined,
             color: AppColors.primary,
             route: '/sales-off-takers',
@@ -394,7 +539,7 @@ class _SalesManagerDashboardRedesignedState
           SizedBox(height: AppSpacing.sm),
           _ActionTile(
             title: 'Check delivery commitments',
-            subtitle: '5 dispatches need follow-up',
+            subtitle: '${_sales.where((sale) => _status(sale) == 'pending').length} dispatches need follow-up',
             icon: Icons.local_shipping_outlined,
             color: AppColors.warning,
             route: '/sales-deliveries',
@@ -402,7 +547,7 @@ class _SalesManagerDashboardRedesignedState
           SizedBox(height: AppSpacing.sm),
           _ActionTile(
             title: 'Review financial exposure',
-            subtitle: 'GHS 37K receivables open',
+            subtitle: '${_money(_sales.where((sale) => !_isCancelled(sale) && sale['paid'] != true).fold<double>(0, (sum, sale) => sum + _number(sale['total_amount'])))} receivables open',
             icon: Icons.account_balance_wallet_outlined,
             color: AppColors.success,
             route: '/sales-financial',

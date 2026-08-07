@@ -328,9 +328,9 @@ class MyApp extends ConsumerWidget {
         '/sales-personnel/status': (context) =>
             const SalesPersonnelRecordDeliveryScreen(),
         '/sales-personnel-pipeline': (context) =>
-            const SalesPersonnelPipelineScreen(),
+            const SalesOffTakersScreen(forSalesPersonnel: true),
         '/sales-personnel/pipeline': (context) =>
-            const SalesPersonnelPipelineScreen(),
+            const SalesOffTakersScreen(forSalesPersonnel: true),
         '/sales-personnel-sales': (context) =>
             const SalesPersonnelMySalesScreen(),
         '/my-sales': (context) => const SalesPersonnelMySalesScreen(),
