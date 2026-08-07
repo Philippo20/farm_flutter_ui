@@ -84,13 +84,320 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     }
   }
 
+  Future<void> _showRequestDetails(
+      Map<String, dynamic> request, Map<String, dynamic>? offTaker) async {
+    if (MediaQuery.sizeOf(context).width < 600) {
+      await _showRequestDetailsSheet(request, offTaker);
+      return;
+    }
+    Map<String, dynamic> proposal = const {};
+    try {
+      final decoded = jsonDecode('${request['proposed_data'] ?? '{}'}');
+      if (decoded is Map) proposal = Map<String, dynamic>.from(decoded);
+    } catch (_) {
+      proposal = const {};
+    }
+
+    String label(String key) => key
+        .split('_')
+        .map((part) => part.isEmpty
+            ? part
+            : '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560, maxHeight: 720),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.fact_check_outlined,
+                        color: AppColors.warning),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text('Review Off-Taker Update',
+                          style: AppTypography.h5
+                              .copyWith(fontWeight: FontWeight.w600)),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const Divider(height: AppSpacing.lg),
+                Text('${offTaker?['name'] ?? 'Off-taker'}',
+                    style:
+                        AppTypography.h6.copyWith(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(
+                    'Requested by ${request['requested_by_name'] ?? 'Sales Personnel'}',
+                    style: AppTypography.bodySmall),
+                const SizedBox(height: AppSpacing.md),
+                _ReviewInfoBlock(
+                  title: 'Reason for update',
+                  value: '${request['reason'] ?? 'No reason provided'}',
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text('Current details',
+                    style: AppTypography.bodyMedium
+                        .copyWith(fontWeight: FontWeight.w600)),
+                const SizedBox(height: AppSpacing.sm),
+                if (offTaker == null || offTaker.isEmpty)
+                  const _ReviewInfoBlock(
+                    title: 'Current record',
+                    value: 'The original off-taker record is unavailable.',
+                  )
+                else
+                  ...offTaker.entries
+                      .where((entry) => !{'\$id', '\$createdAt', '\$updatedAt'}
+                          .contains(entry.key))
+                      .map((entry) => _ReviewInfoBlock(
+                            title: label(entry.key),
+                            value: '${entry.value}'.trim().isEmpty
+                                ? 'Not set'
+                                : '${entry.value}',
+                          )),
+                const SizedBox(height: AppSpacing.md),
+                Text('Proposed details',
+                    style: AppTypography.bodyMedium
+                        .copyWith(fontWeight: FontWeight.w600)),
+                const SizedBox(height: AppSpacing.sm),
+                if (proposal.isEmpty)
+                  const Text('No proposed details were supplied.')
+                else
+                  ...proposal.entries.map(
+                    (entry) => _ReviewInfoBlock(
+                      title: label(entry.key),
+                      value: '${entry.value}'.trim().isEmpty
+                          ? 'Not set'
+                          : '${entry.value}',
+                    ),
+                  ),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          await _reviewUpdate(request, 'Rejected');
+                          if (dialogContext.mounted) {
+                            Navigator.pop(dialogContext);
+                          }
+                        },
+                        icon: const Icon(Icons.close, size: 17),
+                        label: const Text('Reject'),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () async {
+                          await _reviewUpdate(request, 'Approved');
+                          if (dialogContext.mounted) {
+                            Navigator.pop(dialogContext);
+                          }
+                        },
+                        icon: const Icon(Icons.check, size: 17),
+                        label: const Text('Approve'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showRequestDetailsSheet(
+      Map<String, dynamic> request, Map<String, dynamic>? offTaker) async {
+    Map<String, dynamic> proposal = const {};
+    try {
+      final decoded = jsonDecode('${request['proposed_data'] ?? '{}'}');
+      if (decoded is Map) proposal = Map<String, dynamic>.from(decoded);
+    } catch (_) {
+      proposal = const {};
+    }
+
+    String label(String key) => key
+        .split('_')
+        .map((part) => part.isEmpty
+            ? part
+            : '${part[0].toUpperCase()}${part.substring(1)}')
+        .join(' ');
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SizedBox(
+        height: MediaQuery.sizeOf(sheetContext).height * 0.86,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg, AppSpacing.md, AppSpacing.sm, AppSpacing.sm),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                    child: const Icon(Icons.fact_check_outlined,
+                        color: AppColors.warning),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Review change request',
+                            style: AppTypography.h6
+                                .copyWith(fontWeight: FontWeight.w600)),
+                        Text('Compare details before deciding',
+                            style: AppTypography.bodySmall),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close',
+                    onPressed: () => Navigator.pop(sheetContext),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('${offTaker?['name'] ?? 'Off-taker'}',
+                        style: AppTypography.h5
+                            .copyWith(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 4),
+                    Text(
+                        'Requested by ${request['requested_by_name'] ?? 'Sales Personnel'}',
+                        style: AppTypography.bodySmall),
+                    const SizedBox(height: AppSpacing.md),
+                    _ReviewInfoBlock(
+                      title: 'Reason for update',
+                      value: '${request['reason'] ?? 'No reason provided'}',
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text('Current details',
+                        style: AppTypography.bodyMedium
+                            .copyWith(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (offTaker == null || offTaker.isEmpty)
+                      const _ReviewInfoBlock(
+                        title: 'Current record',
+                        value: 'The original record is unavailable.',
+                      )
+                    else
+                      ...offTaker.entries
+                          .where((entry) => !{
+                                '\$id',
+                                '\$createdAt',
+                                '\$updatedAt'
+                              }.contains(entry.key))
+                          .map((entry) => _ReviewInfoBlock(
+                                title: label(entry.key),
+                                value: '${entry.value}'.trim().isEmpty
+                                    ? 'Not set'
+                                    : '${entry.value}',
+                              )),
+                    const SizedBox(height: AppSpacing.md),
+                    Text('Proposed details',
+                        style: AppTypography.bodyMedium
+                            .copyWith(fontWeight: FontWeight.w600)),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (proposal.isEmpty)
+                      const _ReviewInfoBlock(
+                        title: 'Proposal',
+                        value: 'No proposed details were supplied.',
+                      )
+                    else
+                      ...proposal.entries.map(
+                        (entry) => _ReviewInfoBlock(
+                          title: label(entry.key),
+                          value: '${entry.value}'.trim().isEmpty
+                              ? 'Not set'
+                              : '${entry.value}',
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          await _reviewUpdate(request, 'Rejected');
+                          if (sheetContext.mounted) {
+                            Navigator.pop(sheetContext);
+                          }
+                        },
+                        icon: const Icon(Icons.close, size: 17),
+                        label: const Text('Reject'),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () async {
+                          await _reviewUpdate(request, 'Approved');
+                          if (sheetContext.mounted) {
+                            Navigator.pop(sheetContext);
+                          }
+                        },
+                        icon: const Icon(Icons.check, size: 17),
+                        label: const Text('Approve'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _deleteOffTaker(Map<String, dynamic> item) async {
     final name = '${item['name'] ?? 'this off-taker'}';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Delete off-taker?'),
-        content: Text('This will permanently remove $name from the buyer list.'),
+        content:
+            Text('This will permanently remove $name from the buyer list.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -146,7 +453,6 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
       reason.dispose();
     }
 
-
     try {
       final saved = await showDialog<bool>(
         context: context,
@@ -173,7 +479,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
               ),
               child: Column(
                 children: [
-                    Padding(
+                  Padding(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
                     child: Row(
                       children: [
@@ -242,123 +548,123 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                       ],
                     ),
                   ),
-                    Flexible(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        physics: const BouncingScrollPhysics(),
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        child: Form(
-                          key: formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                          _formField(
-                            context,
-                            name,
-                            'Business name',
-                            Icons.business_outlined,
-                            required: true,
-                          ),
-                          _fieldPair(
-                            context,
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      physics: const BouncingScrollPhysics(),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      child: Form(
+                        key: formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             _formField(
                               context,
-                              type,
-                              'Business type',
-                              Icons.category_outlined,
-                            ),
-                            _formField(
-                              context,
-                              contact,
-                              'Contact person',
-                              Icons.person_outline_rounded,
-                            ),
-                          ),
-                          _fieldPair(
-                            context,
-                            _formField(
-                              context,
-                              phone,
-                              'Phone number',
-                              Icons.phone_outlined,
-                              keyboard: TextInputType.phone,
-                            ),
-                            _formField(
-                              context,
-                              email,
-                              'Email',
-                              Icons.email_outlined,
-                              keyboard: TextInputType.emailAddress,
-                            ),
-                          ),
-                          _formField(
-                            context,
-                            location,
-                            'Location',
-                            Icons.location_on_outlined,
-                          ),
-                          _formField(
-                            context,
-                            notes,
-                            'Notes',
-                            Icons.notes_outlined,
-                            maxLines: 3,
-                          ),
-                          if (isEdit && widget.forSalesPersonnel)
-                            _formField(
-                              context,
-                              reason,
-                              'Reason for update',
-                              Icons.info_outline_rounded,
+                              name,
+                              'Business name',
+                              Icons.business_outlined,
                               required: true,
-                              maxLines: 3,
                             ),
-                          _dialogLabel('Relationship status', context),
-                          const SizedBox(height: 6),
-                          DropdownButtonFormField<String>(
-                            value: status,
-                            isExpanded: true,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : AppColors.textPrimary,
-                            ),
-                            dropdownColor: Theme.of(context).brightness ==
-                                    Brightness.dark
-                                ? AppColors.surfaceDark
-                                : Colors.white,
-                            decoration: _dialogInputDecoration(context),
-                            items: const ['Active', 'Prospect', 'Inactive']
-                                .map((item) => DropdownMenuItem(
-                                      value: item,
-                                      child: Text(item),
-                                    ))
-                                .toList(),
-                            onChanged: (value) => setModalState(
-                              () => status = value ?? 'Active',
-                            ),
-                          ),
-                          if (formError != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: Text(
-                                formError!,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.error,
-                                ),
+                            _fieldPair(
+                              context,
+                              _formField(
+                                context,
+                                type,
+                                'Business type',
+                                Icons.category_outlined,
+                              ),
+                              _formField(
+                                context,
+                                contact,
+                                'Contact person',
+                                Icons.person_outline_rounded,
                               ),
                             ),
-                            ],
-                          ),
+                            _fieldPair(
+                              context,
+                              _formField(
+                                context,
+                                phone,
+                                'Phone number',
+                                Icons.phone_outlined,
+                                keyboard: TextInputType.phone,
+                              ),
+                              _formField(
+                                context,
+                                email,
+                                'Email',
+                                Icons.email_outlined,
+                                keyboard: TextInputType.emailAddress,
+                              ),
+                            ),
+                            _formField(
+                              context,
+                              location,
+                              'Location',
+                              Icons.location_on_outlined,
+                            ),
+                            _formField(
+                              context,
+                              notes,
+                              'Notes',
+                              Icons.notes_outlined,
+                              maxLines: 3,
+                            ),
+                            if (isEdit && widget.forSalesPersonnel)
+                              _formField(
+                                context,
+                                reason,
+                                'Reason for update',
+                                Icons.info_outline_rounded,
+                                required: true,
+                                maxLines: 3,
+                              ),
+                            _dialogLabel('Relationship status', context),
+                            const SizedBox(height: 6),
+                            DropdownButtonFormField<String>(
+                              value: status,
+                              isExpanded: true,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
+                              ),
+                              dropdownColor: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.surfaceDark
+                                  : Colors.white,
+                              decoration: _dialogInputDecoration(context),
+                              items: const ['Active', 'Prospect', 'Inactive']
+                                  .map((item) => DropdownMenuItem(
+                                        value: item,
+                                        child: Text(item),
+                                      ))
+                                  .toList(),
+                              onChanged: (value) => setModalState(
+                                () => status = value ?? 'Active',
+                              ),
+                            ),
+                            if (formError != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Text(
+                                  formError!,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.error,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ),
-                    Padding(
+                  ),
+                  Padding(
                     padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
                     child: Row(
                       children: [
@@ -409,7 +715,8 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                     try {
                                       if (isEdit && widget.forSalesPersonnel) {
                                         await _api.requestOffTakerUpdate(data: {
-                                          'off_taker_id': '${existing?['\$id'] ?? existing?['id'] ?? ''}',
+                                          'off_taker_id':
+                                              '${existing?['\$id'] ?? existing?['id'] ?? ''}',
                                           'proposed_data': jsonEncode(payload),
                                           'reason': requestReason,
                                           'requested_by_id': userId,
@@ -421,7 +728,8 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                           data: payload,
                                         );
                                       } else {
-                                        await _api.createOffTaker(data: payload);
+                                        await _api.createOffTaker(
+                                            data: payload);
                                       }
                                       if (dialogContext.mounted) {
                                         Navigator.pop(dialogContext, true);
@@ -440,19 +748,17 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                     child: CircularProgressIndicator(
                                         strokeWidth: 2))
                                 : const Icon(Icons.save_outlined),
-                            label:
-                                Text(
-                                  saving
-                                      ? 'Saving...'
-                                      : isEdit && widget.forSalesPersonnel
-                                          ? 'Submit for Approval'
-                                          : isEdit
-                                              ? 'Update Off-Taker'
-                                              : 'Save Off-Taker',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600),
-                                ),
+                            label: Text(
+                              saving
+                                  ? 'Saving...'
+                                  : isEdit && widget.forSalesPersonnel
+                                      ? 'Submit for Approval'
+                                      : isEdit
+                                          ? 'Update Off-Taker'
+                                          : 'Save Off-Taker',
+                              style: GoogleFonts.inter(
+                                  fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
@@ -663,52 +969,68 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
           ..._updateRequests
               .where((item) => item['status'] == 'Pending')
               .map((request) {
-            final offTaker = _offTakers.cast<Map<String, dynamic>?>().firstWhere(
-                  (item) =>
-                      '${item?['\$id'] ?? item?['id'] ?? ''}' ==
-                      '${request['off_taker_id'] ?? ''}',
-                  orElse: () => null,
-                );
+            final offTaker =
+                _offTakers.cast<Map<String, dynamic>?>().firstWhere(
+                      (item) =>
+                          '${item?['\$id'] ?? item?['id'] ?? ''}' ==
+                          '${request['off_taker_id'] ?? ''}',
+                      orElse: () => null,
+                    );
             return Container(
               margin: const EdgeInsets.only(bottom: AppSpacing.md),
-              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 border: Border.all(color: AppColors.warning.withOpacity(0.35)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('${offTaker?['name'] ?? 'Off-taker update'}',
-                      style: AppTypography.h6.copyWith(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 4),
-                  Text('Requested by ${request['requested_by_name'] ?? 'Sales personnel'}',
-                      style: AppTypography.bodySmall),
-                  const SizedBox(height: 6),
-                  Text('Reason: ${request['reason'] ?? 'No reason provided'}',
-                      style: AppTypography.bodySmall),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => _reviewUpdate(request, 'Rejected'),
-                          icon: const Icon(Icons.close, size: 16),
-                          label: const Text('Reject'),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                child: InkWell(
+                  onTap: () => _showRequestDetails(request, offTaker),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${offTaker?['name'] ?? 'Off-taker update'}',
+                            style: AppTypography.h6
+                                .copyWith(fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 4),
+                        Text(
+                            'Requested by ${request['requested_by_name'] ?? 'Sales personnel'}',
+                            style: AppTypography.bodySmall),
+                        const SizedBox(height: 6),
+                        Text(
+                            'Reason: ${request['reason'] ?? 'No reason provided'}',
+                            style: AppTypography.bodySmall),
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () =>
+                                    _reviewUpdate(request, 'Rejected'),
+                                icon: const Icon(Icons.close, size: 16),
+                                label: const Text('Reject'),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: () =>
+                                    _reviewUpdate(request, 'Approved'),
+                                icon: const Icon(Icons.check, size: 16),
+                                label: const Text('Approve'),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () => _reviewUpdate(request, 'Approved'),
-                          icon: const Icon(Icons.check, size: 16),
-                          label: const Text('Approve'),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ],
+                ),
               ),
             );
           }),
@@ -760,6 +1082,40 @@ class _EmptySalesState extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Center(child: Text(label)),
       );
+}
+
+class _ReviewInfoBlock extends StatelessWidget {
+  final String title;
+  final String value;
+
+  const _ReviewInfoBlock({required this.title, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: AppTypography.bodySmall.copyWith(
+                  color: isDark ? Colors.white54 : AppColors.textSecondary,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 3),
+          Text(value,
+              style: AppTypography.bodyMedium.copyWith(
+                  color: isDark ? Colors.white : AppColors.textPrimary)),
+        ],
+      ),
+    );
+  }
 }
 
 class _OffTakerCard extends StatelessWidget {
@@ -851,7 +1207,8 @@ class _OffTakerCard extends StatelessWidget {
                       '${item['business_type'] ?? 'Business type not set'}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodySmall.copyWith(color: secondaryColor),
+                      style: AppTypography.bodySmall
+                          .copyWith(color: secondaryColor),
                     ),
                   ],
                 ),
@@ -860,13 +1217,13 @@ class _OffTakerCard extends StatelessWidget {
               if (hasPendingUpdate)
                 Container(
                   margin: const EdgeInsets.only(left: 8),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 7, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.warning.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                        color: AppColors.warning.withOpacity(0.3)),
+                    border:
+                        Border.all(color: AppColors.warning.withOpacity(0.3)),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
