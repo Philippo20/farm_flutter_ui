@@ -146,14 +146,19 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
     Color? color,
   }) {
     final foreground = color ?? (isDark ? Colors.white : AppColors.textPrimary);
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: foreground),
-      title: Text(label, style: AppTypography.bodyMedium.copyWith(color: foreground)),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Icon(icon, color: foreground),
+        title: Text(label,
+            style: AppTypography.bodyMedium.copyWith(color: foreground)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        onTap: () => Navigator.of(context).pop(value),
       ),
-      onTap: () => Navigator.of(context).pop(value),
     );
   }
 

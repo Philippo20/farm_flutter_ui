@@ -133,6 +133,19 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     final reason = TextEditingController();
     var status = '${existing?['status'] ?? 'Active'}';
     var saving = false;
+    String? formError;
+
+    void disposeControllers() {
+      name.dispose();
+      type.dispose();
+      contact.dispose();
+      phone.dispose();
+      email.dispose();
+      location.dispose();
+      notes.dispose();
+      reason.dispose();
+    }
+
 
     try {
       final saved = await showDialog<bool>(
@@ -328,6 +341,18 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                               () => status = value ?? 'Active',
                             ),
                           ),
+                          if (formError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text(
+                                formError!,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                            ),
                             ],
                           ),
                         ),
@@ -366,26 +391,27 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                     if (!(formKey.currentState?.validate() ??
                                         false)) return;
                                     setModalState(() => saving = true);
+                                    final userId =
+                                        ref.read(authProvider).user?.id ?? '';
+                                    final user = ref.read(authProvider).user;
+                                    final payload = <String, dynamic>{
+                                      'name': name.text,
+                                      'business_type': type.text,
+                                      'contact_person': contact.text,
+                                      'phone': phone.text,
+                                      'email': email.text,
+                                      'location': location.text,
+                                      'notes': notes.text,
+                                      'status': status,
+                                      'created_by': userId,
+                                    };
+                                    final requestReason = reason.text.trim();
                                     try {
-                                      final userId =
-                                          ref.read(authProvider).user?.id ?? '';
-                                      final user = ref.read(authProvider).user;
-                                      final payload = <String, dynamic>{
-                                        'name': name.text,
-                                        'business_type': type.text,
-                                        'contact_person': contact.text,
-                                        'phone': phone.text,
-                                        'email': email.text,
-                                        'location': location.text,
-                                        'notes': notes.text,
-                                        'status': status,
-                                        'created_by': userId,
-                                      };
                                       if (isEdit && widget.forSalesPersonnel) {
                                         await _api.requestOffTakerUpdate(data: {
                                           'off_taker_id': '${existing?['\$id'] ?? existing?['id'] ?? ''}',
                                           'proposed_data': jsonEncode(payload),
-                                          'reason': reason.text.trim(),
+                                          'reason': requestReason,
                                           'requested_by_id': userId,
                                           'requested_by_name': user?.name ?? '',
                                         });
@@ -397,16 +423,14 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                       } else {
                                         await _api.createOffTaker(data: payload);
                                       }
-                                      if (dialogContext.mounted)
-                                        Navigator.pop(dialogContext, true);
-                                    } catch (error) {
-                                      setModalState(() => saving = false);
                                       if (dialogContext.mounted) {
-                                        ScaffoldMessenger.of(dialogContext)
-                                            .showSnackBar(SnackBar(
-                                                content:
-                                                    Text(error.toString())));
+                                        Navigator.pop(dialogContext, true);
                                       }
+                                    } catch (error) {
+                                      setModalState(() {
+                                        saving = false;
+                                        formError = error.toString();
+                                      });
                                     }
                                   },
                             icon: saving
@@ -453,13 +477,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
       // Let the dialog route finish its final rebuild before disposing the
       // controllers still attached to its TextFormFields.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        name.dispose();
-        type.dispose();
-        contact.dispose();
-        phone.dispose();
-        email.dispose();
-        location.dispose();
-        notes.dispose();
+        disposeControllers();
       });
     }
   }
