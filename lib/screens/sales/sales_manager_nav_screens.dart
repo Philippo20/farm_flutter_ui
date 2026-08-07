@@ -80,6 +80,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                 maxWidth: 500,
                 maxHeight: MediaQuery.of(context).size.height * 0.9,
               ),
+              height: MediaQuery.of(context).size.height * 0.86,
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -91,10 +92,9 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                 ],
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
                     child: Row(
                       children: [
                         Container(
@@ -157,13 +157,17 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                       ],
                     ),
                   ),
-                  Form(
-                    key: formKey,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        physics: const BouncingScrollPhysics(),
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        child: Form(
+                          key: formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                           _formField(
                             context,
                             name,
@@ -237,11 +241,12 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                               () => status = value ?? 'Active',
                             ),
                           ),
-                        ],
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  Padding(
+                    Padding(
                     padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
                     child: Row(
                       children: [
