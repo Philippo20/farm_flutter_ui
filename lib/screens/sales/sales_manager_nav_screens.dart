@@ -70,76 +70,130 @@ class _SalesOffTakersScreenState
       final saved = await showDialog<bool>(
         context: context,
         builder: (dialogContext) => StatefulBuilder(
-          builder: (context, setModalState) => AlertDialog(
-            title: const Text('Add Off-Taker'),
-            content: SizedBox(
-              width: 460,
-              child: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _formField(name, 'Business name', required: true),
-                      _formField(type, 'Business type'),
-                      _formField(contact, 'Contact person'),
-                      _formField(phone, 'Phone number'),
-                      _formField(email, 'Email', keyboard: TextInputType.emailAddress),
-                      _formField(location, 'Location'),
-                      DropdownButtonFormField<String>(
-                        value: status,
-                        decoration: const InputDecoration(labelText: 'Status'),
-                        items: const ['Active', 'Prospect', 'Inactive']
-                            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-                            .toList(),
-                        onChanged: (value) => setModalState(() => status = value ?? 'Active'),
+          builder: (context, setModalState) => Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: 560,
+                maxHeight: MediaQuery.of(context).size.height * 0.9,
+              ),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                boxShadow: const [
+                  BoxShadow(color: Colors.black26, blurRadius: 24, offset: Offset(0, 12)),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 16, 18),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF1D4ED8), Color(0xFF0F766E)],
                       ),
-                    ],
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.business_outlined, color: Colors.white, size: 26),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Add Off-Taker', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w700)),
+                              SizedBox(height: 3),
+                              Text('Create a separate buyer business record', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: saving ? null : () => Navigator.pop(dialogContext, false),
+                          icon: const Icon(Icons.close_rounded, color: Colors.white),
+                          tooltip: 'Close',
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  Flexible(
+                    child: Form(
+                      key: formKey,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+                        child: Column(
+                          children: [
+                            _formField(name, 'Business name', required: true),
+                            _formField(type, 'Business type'),
+                            _formField(contact, 'Contact person'),
+                            _formField(phone, 'Phone number', keyboard: TextInputType.phone),
+                            _formField(email, 'Email', keyboard: TextInputType.emailAddress),
+                            _formField(location, 'Location'),
+                            DropdownButtonFormField<String>(
+                              value: status,
+                              decoration: const InputDecoration(labelText: 'Relationship status'),
+                              items: const ['Active', 'Prospect', 'Inactive']
+                                  .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                                  .toList(),
+                              onChanged: (value) => setModalState(() => status = value ?? 'Active'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: saving ? null : () => Navigator.pop(dialogContext, false),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: saving
+                                ? null
+                                : () async {
+                                    if (!(formKey.currentState?.validate() ?? false)) return;
+                                    setModalState(() => saving = true);
+                                    try {
+                                      final userId = ref.read(authProvider).user?.id ?? '';
+                                      await _api.createOffTaker(data: {
+                                        'name': name.text,
+                                        'business_type': type.text,
+                                        'contact_person': contact.text,
+                                        'phone': phone.text,
+                                        'email': email.text,
+                                        'location': location.text,
+                                        'status': status,
+                                        'created_by': userId,
+                                      });
+                                      if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+                                    } catch (error) {
+                                      setModalState(() => saving = false);
+                                      if (dialogContext.mounted) {
+                                        ScaffoldMessenger.of(dialogContext).showSnackBar(SnackBar(content: Text(error.toString())));
+                                      }
+                                    }
+                                  },
+                            icon: saving
+                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Icon(Icons.save_outlined),
+                            label: Text(saving ? 'Saving...' : 'Save Off-Taker'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: saving ? null : () => Navigator.pop(dialogContext, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton.icon(
-                onPressed: saving
-                    ? null
-                    : () async {
-                        if (!(formKey.currentState?.validate() ?? false)) return;
-                        setModalState(() => saving = true);
-                        try {
-                          final userId = ref.read(authProvider).user?.id ?? '';
-                          await _api.createOffTaker(data: {
-                            'name': name.text,
-                            'business_type': type.text,
-                            'contact_person': contact.text,
-                            'phone': phone.text,
-                            'email': email.text,
-                            'location': location.text,
-                            'status': status,
-                            'created_by': userId,
-                          });
-                          if (dialogContext.mounted) {
-                            Navigator.pop(dialogContext, true);
-                          }
-                        } catch (error) {
-                          setModalState(() => saving = false);
-                          if (dialogContext.mounted) {
-                            ScaffoldMessenger.of(dialogContext).showSnackBar(
-                              SnackBar(content: Text(error.toString())),
-                            );
-                          }
-                        }
-                      },
-                icon: saving
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.save_outlined),
-                label: Text(saving ? 'Saving...' : 'Save'),
-              ),
-            ],
           ),
         ),
       );
@@ -233,7 +287,7 @@ class _SalesOffTakersScreenState
     );
 
     if (widget.forSalesPersonnel) {
-      return SalesPersonnelScreenShell(selectedIndex: 1, child: content);
+      return SalesPersonnelScreenShell(selectedIndex: 2, child: content);
     }
     return SalesManagerScreenShell(selectedIndex: 1, child: content);
   }

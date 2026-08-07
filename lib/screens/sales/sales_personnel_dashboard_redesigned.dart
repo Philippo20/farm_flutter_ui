@@ -1,74 +1,175 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/sales_personnel_screen_shell.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
-class SalesPersonnelDashboardRedesigned extends StatelessWidget {
+class SalesPersonnelDashboardRedesigned extends ConsumerStatefulWidget {
   const SalesPersonnelDashboardRedesigned({super.key});
 
-  static const _workItems = [
-    {
-      'title': 'Record Delivery',
-      'subtitle': 'Capture proof, quantity, buyer handoff, and exceptions.',
-      'metric': '5 due today',
-      'status': '2 proof needed',
-      'route': '/sales-personnel-record-delivery',
-      'icon': Icons.local_shipping_outlined,
-      'color': AppColors.primary,
-    },
-    {
-      'title': 'Off-Taker Pipeline',
-      'subtitle': 'Follow prospects and close new buyer opportunities.',
-      'metric': '8 prospects',
-      'status': '3 closing',
-      'route': '/sales-personnel-pipeline',
-      'icon': Icons.timeline_outlined,
-      'color': AppColors.success,
-    },
-    {
-      'title': 'My Sales',
-      'subtitle': 'Track personal revenue, collections, and order value.',
-      'metric': 'GHS 45.2K',
-      'status': '+12%',
-      'route': '/sales-personnel-sales',
-      'icon': Icons.payments_outlined,
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'Expenses',
-      'subtitle': 'Log receipts and prepare accountant sync records.',
-      'metric': 'GHS 695',
-      'status': '2 pending',
-      'route': '/sales-personnel-expenses',
-      'icon': Icons.receipt_long_outlined,
-      'color': AppColors.error,
-    },
-  ];
+  @override
+  ConsumerState<SalesPersonnelDashboardRedesigned> createState() =>
+      _SalesPersonnelDashboardRedesignedState();
+}
 
-  static const _activity = [
-    {
-      'title': 'FreshMart delivery proof pending',
-      'subtitle': '420 kg romaine lettuce scheduled for 2 PM',
-      'time': '12 min ago',
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'Organic Plus moved to closing',
-      'subtitle': 'Contract value updated to GHS 24K',
-      'time': '29 min ago',
-      'color': AppColors.success,
-    },
-    {
-      'title': 'Fuel expense submitted',
-      'subtitle': 'Route expense awaiting accountant review',
-      'time': '48 min ago',
-      'color': AppColors.primary,
-    },
-  ];
+class _SalesPersonnelDashboardRedesignedState
+    extends ConsumerState<SalesPersonnelDashboardRedesigned> {
+  final _api = SuperAdminApiService();
+  List<Map<String, dynamic>> _sales = const [];
+  List<Map<String, dynamic>> _offTakers = const [];
+  bool _loading = true;
+  String? _error;
+
+  List<Map<String, Object>> get _workItems => [
+        {
+          'title': 'Record Delivery',
+          'subtitle': 'Capture proof, quantity, buyer handoff, and exceptions.',
+          'metric': '${_sales.where((s) => _status(s) == 'pending').length} pending',
+          'status': '${_sales.length} personal sales',
+          'route': '/sales-personnel-record-delivery',
+          'icon': Icons.local_shipping_outlined,
+          'color': AppColors.primary,
+        },
+        {
+          'title': 'Off-Taker Pipeline',
+          'subtitle': 'Follow prospects and close new buyer opportunities.',
+          'metric': '${_prospectCount} prospects',
+          'status': '${_activeOffTakers} active',
+          'route': '/sales-personnel-pipeline',
+          'icon': Icons.timeline_outlined,
+          'color': AppColors.success,
+        },
+        {
+          'title': 'My Sales',
+          'subtitle': 'Track personal revenue, collections, and order value.',
+          'metric': _money(_revenue),
+          'status': '${_sales.length} records',
+          'route': '/sales-personnel-sales',
+          'icon': Icons.payments_outlined,
+          'color': AppColors.warning,
+        },
+        {
+          'title': 'Expenses',
+          'subtitle': 'Log receipts and prepare accountant sync records.',
+          'metric': 'No expense data',
+          'status': 'Backend endpoint pending',
+          'route': '/sales-personnel-expenses',
+          'icon': Icons.receipt_long_outlined,
+          'color': AppColors.error,
+        },
+      ];
+
+  List<Map<String, Object>> get _activity {
+    final records = [..._sales]
+      ..sort((a, b) => _date(b).compareTo(_date(a)));
+    return records.take(3).map((sale) => <String, Object>{
+          'title': '${_text(sale['buyer_name'], 'Buyer')} sale ${_title(_status(sale))}',
+          'subtitle': '${_number(sale['quantity_delivered'])} kg delivery record',
+          'time': _relative(_date(sale)),
+          'color': _status(sale) == 'delivered' ? AppColors.success : AppColors.warning,
+        }).toList();
+  }
+
+  double get _revenue => _sales
+      .where((sale) => _status(sale) != 'cancelled')
+      .fold<double>(0, (sum, sale) => sum + _number(sale['total_amount']));
+
+  int get _prospectCount => _offTakers
+      .where((item) => _text(item['status'], 'Active').toLowerCase() == 'prospect')
+      .length;
+
+  int get _activeOffTakers => _offTakers
+      .where((item) => _text(item['status'], 'Active').toLowerCase() == 'active')
+      .length;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final allSales = await _api.getSales();
+      final offTakers = await _api.getOffTakers();
+      final user = ref.read(authProvider).user;
+      final identity = {user?.id ?? '', user?.email ?? '', user?.name ?? ''}
+        ..removeWhere((value) => value.trim().isEmpty);
+      final personalSales = allSales.where((sale) {
+        final creator = _text(sale['created_by'], '');
+        return identity.contains(creator);
+      }).toList();
+      if (!mounted) return;
+      setState(() {
+        _sales = personalSales;
+        _offTakers = offTakers;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = error.toString();
+      });
+    }
+  }
+
+  String _status(Map<String, dynamic> sale) =>
+      _text(sale['status'], 'Pending').toLowerCase();
+
+  String _text(Object? value, String fallback) {
+    final text = '$value'.trim();
+    return value == null || text == 'null' || text.isEmpty ? fallback : text;
+  }
+
+  double _number(Object? value) => value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
+
+  DateTime _date(Map<String, dynamic> sale) =>
+      DateTime.tryParse(_text(sale['delivered_at'], '')) ??
+      DateTime.tryParse(_text(sale['\$createdAt'], '')) ??
+      DateTime.fromMillisecondsSinceEpoch(0);
+
+  String _money(double value) => value >= 1000
+      ? 'GHS ${(value / 1000).toStringAsFixed(1)}K'
+      : 'GHS ${value.toStringAsFixed(0)}';
+
+  String _relative(DateTime date) {
+    if (date.millisecondsSinceEpoch == 0) return 'No date';
+    final difference = DateTime.now().difference(date);
+    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.inHours < 1) return '${difference.inMinutes} min ago';
+    return '${difference.inHours} hr ago';
+  }
+
+  String _title(String value) => value.isEmpty ? value : '${value[0].toUpperCase()}${value.substring(1)}';
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return SalesPersonnelScreenShell(
+        selectedIndex: 0,
+        child: const SizedBox(
+          height: 420,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+    if (_error != null) {
+      return SalesPersonnelScreenShell(
+        selectedIndex: 0,
+        child: Center(
+          child: OutlinedButton.icon(
+            onPressed: _load,
+            icon: const Icon(Icons.refresh_outlined),
+            label: const Text('Retry loading sales data'),
+          ),
+        ),
+      );
+    }
+
     return SalesPersonnelScreenShell(
       selectedIndex: 0,
       child: Column(
@@ -79,32 +180,32 @@ class SalesPersonnelDashboardRedesigned extends StatelessWidget {
           Wrap(
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.md,
-            children: const [
+            children: [
               _KpiCard(
                 title: 'Today deliveries',
-                value: '5',
-                subtitle: '2 need proof',
+                value: '${_sales.where((s) => _status(s) == 'pending').length}',
+                subtitle: 'Pending sales deliveries',
                 icon: Icons.local_shipping_outlined,
                 color: AppColors.primary,
               ),
               _KpiCard(
                 title: 'Personal sales',
-                value: 'GHS 45.2K',
-                subtitle: '+12% this month',
+                value: _money(_revenue),
+                subtitle: '${_sales.length} backend records',
                 icon: Icons.payments_outlined,
                 color: AppColors.success,
               ),
               _KpiCard(
                 title: 'Prospects',
-                value: '8',
-                subtitle: '3 closing soon',
+                value: '$_prospectCount',
+                subtitle: 'Off-taker records',
                 icon: Icons.people_outlined,
                 color: AppColors.warning,
               ),
               _KpiCard(
                 title: 'Expenses',
-                value: 'GHS 695',
-                subtitle: '2 pending review',
+                value: 'N/A',
+                subtitle: 'No expenses endpoint',
                 icon: Icons.receipt_long_outlined,
                 color: AppColors.error,
               ),
@@ -218,13 +319,16 @@ class SalesPersonnelDashboardRedesigned extends StatelessWidget {
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
-            children: const [
+            children: [
               _HeroChip(
-                  label: '5 deliveries today', icon: Icons.today_outlined),
+                  label: '${_sales.where((s) => _status(s) == 'pending').length} deliveries pending',
+                  icon: Icons.today_outlined),
               _HeroChip(
-                  label: '8 active prospects', icon: Icons.people_outlined),
+                  label: '$_prospectCount off-taker prospects',
+                  icon: Icons.people_outlined),
               _HeroChip(
-                  label: 'GHS 45.2K sales', icon: Icons.payments_outlined),
+                  label: '${_money(_revenue)} personal sales',
+                  icon: Icons.payments_outlined),
             ],
           ),
         ],
@@ -252,10 +356,10 @@ class SalesPersonnelDashboardRedesigned extends StatelessWidget {
       icon: Icons.bolt_outlined,
       color: AppColors.warning,
       child: Column(
-        children: const [
+        children: [
           _ActionTile(
             title: 'Record delivery proof',
-            subtitle: '2 deliveries still need proof',
+            subtitle: '${_sales.where((s) => _status(s) == 'pending').length} sales need delivery follow-up',
             icon: Icons.add_photo_alternate_outlined,
             color: AppColors.primary,
             route: '/sales-personnel-record-delivery',
@@ -263,7 +367,7 @@ class SalesPersonnelDashboardRedesigned extends StatelessWidget {
           SizedBox(height: AppSpacing.sm),
           _ActionTile(
             title: 'Update buyer pipeline',
-            subtitle: '3 accounts need follow-up',
+            subtitle: '$_prospectCount off-taker prospects',
             icon: Icons.timeline_outlined,
             color: AppColors.success,
             route: '/sales-personnel-pipeline',

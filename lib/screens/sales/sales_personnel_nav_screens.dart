@@ -1,38 +1,96 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/sales_personnel_screen_shell.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/superadmin_api_service.dart';
 
-class SalesPersonnelRecordDeliveryScreen extends StatelessWidget {
+String _saleStatus(Map<String, dynamic> sale) =>
+    '${sale['status'] ?? 'Pending'}'.toLowerCase();
+
+String _saleNumber(Object? value) {
+  final number = value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
+  return number == number.roundToDouble()
+      ? number.toStringAsFixed(0)
+      : number.toStringAsFixed(1);
+}
+
+class SalesPersonnelRecordDeliveryScreen extends ConsumerStatefulWidget {
   const SalesPersonnelRecordDeliveryScreen({super.key});
 
-  static const _cards = [
-    {
-      'title': 'FreshMart Retail',
-      'subtitle': 'Romaine Lettuce | 420 kg | Proof required',
-      'metric': 'Today 2 PM',
-      'status': 'Pending',
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'KitchenPro Foods',
-      'subtitle': 'Sweet Basil | 96 kg | Invoice attached',
-      'metric': 'Ready',
-      'status': 'Record',
-      'color': AppColors.primary,
-    },
-    {
-      'title': 'Green Basket',
-      'subtitle': 'Cherry Tomato | 310 kg | Buyer signature needed',
-      'metric': 'Tomorrow',
-      'status': 'Scheduled',
-      'color': AppColors.success,
-    },
-  ];
+  @override
+  ConsumerState<SalesPersonnelRecordDeliveryScreen> createState() =>
+      _SalesPersonnelRecordDeliveryScreenState();
+}
+
+class _SalesPersonnelRecordDeliveryScreenState
+    extends ConsumerState<SalesPersonnelRecordDeliveryScreen> {
+  final _api = SuperAdminApiService();
+  List<Map<String, dynamic>> _sales = const [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final allSales = await _api.getSales();
+      final user = ref.read(authProvider).user;
+      final identity = {user?.id ?? '', user?.email ?? '', user?.name ?? ''}
+        ..removeWhere((value) => value.trim().isEmpty);
+      final sales = allSales
+          .where((sale) => identity.contains('${sale['created_by'] ?? ''}'))
+          .toList();
+      if (!mounted) return;
+      setState(() {
+        _sales = sales;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = error.toString();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading || _error != null) {
+      return SalesPersonnelScreenShell(
+        selectedIndex: 1,
+        child: Center(
+          child: _error == null
+              ? const CircularProgressIndicator()
+              : OutlinedButton.icon(
+                  onPressed: _load,
+                  icon: const Icon(Icons.refresh_outlined),
+                  label: const Text('Retry loading deliveries'),
+                ),
+        ),
+      );
+    }
+
+    final pending = _sales.where((sale) => _saleStatus(sale) == 'pending').length;
+    final cards = _sales.map<Map<String, Object>>((sale) {
+      final status = '${sale['status'] ?? 'Pending'}';
+      final color = status == 'Delivered' ? AppColors.success : AppColors.warning;
+      return {
+        'title': '${sale['buyer_name'] ?? 'Buyer'}',
+        'subtitle': '${sale['batch_id'] ?? 'Batch'} | ${_saleNumber(sale['quantity_delivered'])} kg',
+        'metric': '${sale['delivered_at'] ?? sale['payment_date'] ?? 'No date'}'.split('T').first,
+        'status': status,
+        'color': color,
+      };
+    }).toList();
+
     return _SalesPersonnelPage(
       selectedIndex: 1,
       title: 'Record Delivery',
@@ -40,16 +98,16 @@ class SalesPersonnelRecordDeliveryScreen extends StatelessWidget {
           'Capture delivery proof, buyer handoff notes, quantities delivered, and exception details.',
       icon: Icons.local_shipping_outlined,
       colors: const [Color(0xFF1D4ED8), Color(0xFF0F766E)],
-      kpis: const [
-        _KpiData('Due today', '5', '2 need proof', Icons.today_outlined,
+      kpis: [
+        _KpiData('Pending', '$pending', 'Awaiting completion', Icons.today_outlined,
             AppColors.primary),
-        _KpiData('Completed', '8', 'This week', Icons.task_alt_outlined,
+        _KpiData('Completed', '${_sales.where((sale) => _saleStatus(sale) == 'delivered').length}', 'Backend sales records', Icons.task_alt_outlined,
             AppColors.success),
-        _KpiData('Exceptions', '1', 'Quantity variance',
+        _KpiData('Exceptions', '${_sales.where((sale) => _saleStatus(sale) == 'cancelled').length}', 'Cancelled records',
             Icons.report_problem_outlined, AppColors.warning),
       ],
       sectionTitle: 'Delivery Queue',
-      cards: _cards,
+      cards: cards,
     );
   }
 }
@@ -155,7 +213,6 @@ class SalesPersonnelPipelineScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return SalesPersonnelScreenShell(
       selectedIndex: 2,
       child: Column(
@@ -230,63 +287,100 @@ class SalesPersonnelPipelineScreen extends StatelessWidget {
   }
 }
 
-class SalesPersonnelMySalesScreen extends StatelessWidget {
+class SalesPersonnelMySalesScreen extends ConsumerStatefulWidget {
   const SalesPersonnelMySalesScreen({super.key});
 
-  static const _sales = [
-    {
-      'invoice': 'INV-SP-1042',
-      'buyer': 'FreshMart Retail',
-      'crop': 'Romaine Lettuce',
-      'quantity': '420 kg',
-      'amount': 'GHS 18.4K',
-      'payment': 'Collected',
-      'delivery': 'Delivered',
-      'date': 'May 13',
-      'margin': '28%',
-      'color': AppColors.success,
-    },
-    {
-      'invoice': 'INV-SP-1041',
-      'buyer': 'Green Basket',
-      'crop': 'Cherry Tomato',
-      'quantity': '310 kg',
-      'amount': 'GHS 13.2K',
-      'payment': 'Due',
-      'delivery': 'In transit',
-      'date': 'May 13',
-      'margin': '22%',
-      'color': AppColors.warning,
-    },
-    {
-      'invoice': 'INV-SP-1039',
-      'buyer': 'KitchenPro Foods',
-      'crop': 'Sweet Basil',
-      'quantity': '96 kg',
-      'amount': 'GHS 5.8K',
-      'payment': 'Booked',
-      'delivery': 'Scheduled',
-      'date': 'May 14',
-      'margin': '31%',
-      'color': AppColors.primary,
-    },
-    {
-      'invoice': 'INV-SP-1037',
-      'buyer': 'North Ridge Grocers',
-      'crop': 'Mixed Greens',
-      'quantity': '180 kg',
-      'amount': 'GHS 7.8K',
-      'payment': 'Partial',
-      'delivery': 'Delivered',
-      'date': 'May 11',
-      'margin': '24%',
-      'color': AppColors.error,
-    },
-  ];
+  @override
+  ConsumerState<SalesPersonnelMySalesScreen> createState() =>
+      _SalesPersonnelMySalesScreenState();
+}
+
+class _SalesPersonnelMySalesScreenState
+    extends ConsumerState<SalesPersonnelMySalesScreen> {
+  final _api = SuperAdminApiService();
+  List<Map<String, Object>> _sales = const [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final allSales = await _api.getSales();
+      final user = ref.read(authProvider).user;
+      final identity = {user?.id ?? '', user?.email ?? '', user?.name ?? ''}
+        ..removeWhere((value) => value.trim().isEmpty);
+      final records = allSales.where((sale) {
+        return identity.contains('${sale['created_by'] ?? ''}');
+      }).map<Map<String, Object>>(_mapSale).toList();
+      if (!mounted) return;
+      setState(() {
+        _sales = records;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = error.toString();
+      });
+    }
+  }
+
+  Map<String, Object> _mapSale(Map<String, dynamic> sale) {
+    final paid = sale['paid'] == true;
+    final status = '${sale['status'] ?? 'Pending'}';
+    final amount = _number(sale['total_amount']);
+    return {
+      'invoice': '${sale['receipt_number'] ?? sale['\$id'] ?? 'Sale'}',
+      'buyer': '${sale['buyer_name'] ?? 'Buyer'}',
+      'crop': '${sale['batch_id'] ?? 'Batch'}',
+      'quantity': '${_number(sale['quantity_delivered'])} kg',
+      'amount': _money(amount),
+      'payment': paid ? 'Collected' : 'Due',
+      'delivery': status,
+      'date': '${sale['delivered_at'] ?? sale['payment_date'] ?? 'No date'}'.split('T').first,
+      'margin': 'N/A',
+      'color': paid ? AppColors.success : AppColors.warning,
+    };
+  }
+
+  double _number(Object? value) => value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
+
+  String _money(double value) => value >= 1000
+      ? 'GHS ${(value / 1000).toStringAsFixed(1)}K'
+      : 'GHS ${value.toStringAsFixed(0)}';
+
+  double get _gross => _sales.fold<double>(0, (sum, sale) {
+    final value = '${sale['amount']}'.replaceAll('GHS ', '').replaceAll('K', '');
+    return sum + (double.tryParse(value) ?? 0) * (sale['amount'].toString().contains('K') ? 1000 : 1);
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_loading || _error != null) {
+      return SalesPersonnelScreenShell(
+        selectedIndex: 3,
+        child: Center(
+          child: _error == null
+              ? const CircularProgressIndicator()
+              : OutlinedButton.icon(
+                  onPressed: _load,
+                  icon: const Icon(Icons.refresh_outlined),
+                  label: const Text('Retry loading my sales'),
+                ),
+        ),
+      );
+    }
+
+    final collected = _sales.where((sale) => sale['payment'] == 'Collected').length;
+    final receivables = _sales.length - collected;
 
     return SalesPersonnelScreenShell(
       selectedIndex: 3,
@@ -304,12 +398,12 @@ class SalesPersonnelMySalesScreen extends StatelessWidget {
           Wrap(
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.md,
-            children: const [
+            children: [
               _KpiCard(
                 data: _KpiData(
                   'Gross sales',
-                  'GHS 45.2K',
-                  '+12% this month',
+                  _money(_gross),
+                  '${_sales.length} backend records',
                   Icons.payments_outlined,
                   AppColors.success,
                 ),
@@ -317,8 +411,8 @@ class SalesPersonnelMySalesScreen extends StatelessWidget {
               _KpiCard(
                 data: _KpiData(
                   'Collected',
-                  'GHS 26.2K',
-                  '58% collection rate',
+                  '${_money(collected == 0 ? 0 : _gross * collected / _sales.length)}',
+                  '$collected collected records',
                   Icons.account_balance_wallet_outlined,
                   AppColors.primary,
                 ),
@@ -326,8 +420,8 @@ class SalesPersonnelMySalesScreen extends StatelessWidget {
               _KpiCard(
                 data: _KpiData(
                   'Receivables',
-                  'GHS 19K',
-                  '3 invoices open',
+                  '$receivables open',
+                  'Unpaid sales records',
                   Icons.receipt_long_outlined,
                   AppColors.warning,
                 ),
@@ -335,8 +429,8 @@ class SalesPersonnelMySalesScreen extends StatelessWidget {
               _KpiCard(
                 data: _KpiData(
                   'Avg margin',
-                  '26%',
-                  '+4% vs target',
+                  'N/A',
+                  'Margin not stored in Sales schema',
                   Icons.trending_up_outlined,
                   AppColors.error,
                 ),
@@ -390,24 +484,24 @@ class SalesPersonnelExpensesScreen extends StatelessWidget {
 
   static const _cards = [
     {
-      'title': 'Delivery Fuel',
-      'subtitle': 'Route: Farm gate to Accra North',
-      'metric': 'GHS 420',
-      'status': 'Submitted',
+      'title': 'Expense Tracking Unavailable',
+      'subtitle': 'The backend has no expense collection yet',
+      'metric': 'N/A',
+      'status': 'Not connected',
       'color': AppColors.primary,
     },
     {
-      'title': 'Cold Chain Handling',
-      'subtitle': 'Buyer handoff handling fee',
-      'metric': 'GHS 180',
-      'status': 'Review',
+      'title': 'Receipt Sync',
+      'subtitle': 'Waiting for the expense API and schema',
+      'metric': 'N/A',
+      'status': 'Not connected',
       'color': AppColors.warning,
     },
     {
-      'title': 'Buyer Visit',
-      'subtitle': 'Prospect follow-up transport',
-      'metric': 'GHS 95',
-      'status': 'Approved',
+      'title': 'Accountant Handoff',
+      'subtitle': 'No expense records available to sync',
+      'metric': 'N/A',
+      'status': 'Not connected',
       'color': AppColors.success,
     },
   ];
@@ -422,11 +516,11 @@ class SalesPersonnelExpensesScreen extends StatelessWidget {
       icon: Icons.receipt_long_outlined,
       colors: const [Color(0xFF334155), Color(0xFF1D4ED8)],
       kpis: const [
-        _KpiData('Submitted', 'GHS 695', 'This month',
+        _KpiData('Submitted', 'N/A', 'Expense API not available',
             Icons.receipt_long_outlined, AppColors.primary),
-        _KpiData('Approved', 'GHS 395', 'Ready for sync',
+        _KpiData('Approved', 'N/A', 'Expense API not available',
             Icons.verified_outlined, AppColors.success),
-        _KpiData('Pending', '2', 'Need review', Icons.schedule_outlined,
+        _KpiData('Pending', 'N/A', 'Expense API not available', Icons.schedule_outlined,
             AppColors.warning),
       ],
       sectionTitle: 'Expense Records',
@@ -435,35 +529,98 @@ class SalesPersonnelExpensesScreen extends StatelessWidget {
   }
 }
 
-class SalesPersonnelReportsScreen extends StatelessWidget {
+class SalesPersonnelReportsScreen extends ConsumerStatefulWidget {
   const SalesPersonnelReportsScreen({super.key});
 
-  static const _cards = [
-    {
-      'title': 'Daily Delivery Summary',
-      'subtitle': 'Proof status, delivery exceptions, and handoff notes',
-      'metric': 'Ready',
-      'status': 'Today',
-      'color': AppColors.primary,
-    },
-    {
-      'title': 'Personal Sales Report',
-      'subtitle': 'Revenue by crop and buyer account',
-      'metric': 'GHS 45.2K',
-      'status': 'Live',
-      'color': AppColors.success,
-    },
-    {
-      'title': 'Expense Sync Report',
-      'subtitle': 'Approved expenses for accountant review',
-      'metric': '3 items',
-      'status': 'Sync',
-      'color': AppColors.warning,
-    },
-  ];
+  @override
+  ConsumerState<SalesPersonnelReportsScreen> createState() =>
+      _SalesPersonnelReportsScreenState();
+}
+
+class _SalesPersonnelReportsScreenState
+    extends ConsumerState<SalesPersonnelReportsScreen> {
+  final _api = SuperAdminApiService();
+  List<Map<String, dynamic>> _sales = const [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final allSales = await _api.getSales();
+      final user = ref.read(authProvider).user;
+      final identity = {user?.id ?? '', user?.email ?? '', user?.name ?? ''}
+        ..removeWhere((value) => value.trim().isEmpty);
+      final sales = allSales
+          .where((sale) => identity.contains('${sale['created_by'] ?? ''}'))
+          .toList();
+      if (!mounted) return;
+      setState(() {
+        _sales = sales;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = error.toString();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading || _error != null) {
+      return SalesPersonnelScreenShell(
+        selectedIndex: 4,
+        child: Center(
+          child: _error == null
+              ? const CircularProgressIndicator()
+              : OutlinedButton.icon(
+                  onPressed: _load,
+                  icon: const Icon(Icons.refresh_outlined),
+                  label: const Text('Retry loading reports'),
+                ),
+        ),
+      );
+    }
+
+    final revenue = _sales.fold<double>(0, (sum, sale) {
+      final amount = sale['total_amount'];
+      return sum + (amount is num ? amount.toDouble() : 0);
+    });
+    final revenueLabel = revenue >= 1000
+        ? 'GHS ${(revenue / 1000).toStringAsFixed(1)}K'
+        : 'GHS ${revenue.toStringAsFixed(0)}';
+    final cards = <Map<String, Object>>[
+      {
+        'title': 'Daily Delivery Summary',
+        'subtitle': 'Backend delivery status and quantities',
+        'metric': '${_sales.length} records',
+        'status': 'Live',
+        'color': AppColors.primary,
+      },
+      {
+        'title': 'Personal Sales Report',
+        'subtitle': 'Revenue by buyer and sales record',
+        'metric': revenueLabel,
+        'status': 'Live',
+        'color': AppColors.success,
+      },
+      {
+        'title': 'Expense Sync Report',
+        'subtitle': 'Expense data is not available in the backend yet',
+        'metric': 'N/A',
+        'status': 'Unavailable',
+        'color': AppColors.warning,
+      },
+    ];
+
     return _SalesPersonnelPage(
       selectedIndex: 4,
       title: 'Sales Reports',
@@ -471,16 +628,16 @@ class SalesPersonnelReportsScreen extends StatelessWidget {
           'Generate personal sales, delivery, expense, and pipeline summaries.',
       icon: Icons.assessment_outlined,
       colors: const [Color(0xFF1E3A8A), Color(0xFF0F766E)],
-      kpis: const [
-        _KpiData('Reports', '6', 'Available', Icons.assessment_outlined,
+      kpis: [
+        _KpiData('Sales records', '${_sales.length}', 'From backend', Icons.assessment_outlined,
             AppColors.primary),
-        _KpiData('Exports', '3', 'This week', Icons.file_download_outlined,
+        _KpiData('Revenue', revenueLabel, 'Personal records', Icons.file_download_outlined,
             AppColors.success),
-        _KpiData('Issues', '1', 'Needs correction',
+        _KpiData('Unpaid', '${_sales.where((sale) => sale['paid'] != true).length}', 'Needs collection',
             Icons.report_problem_outlined, AppColors.warning),
       ],
       sectionTitle: 'Report Library',
-      cards: _cards,
+      cards: cards,
     );
   }
 }
@@ -752,6 +909,20 @@ class _SalesCollectionPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    double amount(Map<String, Object> sale) {
+      final raw = '${sale['amount']}'.replaceAll('GHS ', '');
+      final multiplier = raw.contains('K') ? 1000 : 1;
+      return (double.tryParse(raw.replaceAll('K', '')) ?? 0) * multiplier;
+    }
+
+    final total = sales.fold<double>(0, (sum, sale) => sum + amount(sale));
+    final collected = sales
+        .where((sale) => sale['payment'] == 'Collected')
+        .fold<double>(0, (sum, sale) => sum + amount(sale));
+    final collectionRate = total == 0 ? 0.0 : collected / total;
+    String money(double value) => value >= 1000
+        ? 'GHS ${(value / 1000).toStringAsFixed(1)}K'
+        : 'GHS ${value.toStringAsFixed(0)}';
 
     return Container(
       width: double.infinity,
@@ -801,15 +972,15 @@ class _SalesCollectionPanel extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           _CollectionProgress(
             label: 'Collected revenue',
-            value: 'GHS 26.2K',
-            percent: 0.58,
+            value: money(collected),
+            percent: collectionRate,
             color: AppColors.success,
           ),
           const SizedBox(height: AppSpacing.md),
           _CollectionProgress(
             label: 'Open receivables',
-            value: 'GHS 19K',
-            percent: 0.42,
+            value: money(total - collected),
+            percent: 1 - collectionRate,
             color: AppColors.warning,
           ),
           const SizedBox(height: AppSpacing.lg),
