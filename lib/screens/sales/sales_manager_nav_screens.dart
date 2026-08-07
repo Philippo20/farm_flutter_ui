@@ -159,54 +159,85 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                   ),
                   Form(
                     key: formKey,
-                    child: SingleChildScrollView(
+                    child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                            _formField(context, name, 'Business name',
-                                Icons.business_outlined,
-                                required: true),
-                            _formField(context, type, 'Business type',
-                                Icons.category_outlined),
-                            _formField(context, contact, 'Contact person',
-                                Icons.person_outline_rounded),
-                            _formField(context, phone, 'Phone number',
-                                Icons.phone_outlined,
-                                keyboard: TextInputType.phone),
-                            _formField(
-                                context, email, 'Email', Icons.email_outlined,
-                                keyboard: TextInputType.emailAddress),
-                            _formField(context, location, 'Location',
-                                Icons.location_on_outlined),
-                            _formField(
-                                context, notes, 'Notes', Icons.notes_outlined,
-                                maxLines: 3),
-                            _dialogLabel('Relationship status', context),
-                            const SizedBox(height: 6),
-                            DropdownButtonFormField<String>(
-                              value: status,
-                              isExpanded: true,
-                              style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white
-                                      : AppColors.textPrimary),
-                              dropdownColor: Theme.of(context).brightness ==
+                          _formField(
+                            context,
+                            name,
+                            'Business name',
+                            Icons.business_outlined,
+                            required: true,
+                          ),
+                          _formField(
+                            context,
+                            type,
+                            'Business type',
+                            Icons.category_outlined,
+                          ),
+                          _formField(
+                            context,
+                            contact,
+                            'Contact person',
+                            Icons.person_outline_rounded,
+                          ),
+                          _formField(
+                            context,
+                            phone,
+                            'Phone number',
+                            Icons.phone_outlined,
+                            keyboard: TextInputType.phone,
+                          ),
+                          _formField(
+                            context,
+                            email,
+                            'Email',
+                            Icons.email_outlined,
+                            keyboard: TextInputType.emailAddress,
+                          ),
+                          _formField(
+                            context,
+                            location,
+                            'Location',
+                            Icons.location_on_outlined,
+                          ),
+                          _formField(
+                            context,
+                            notes,
+                            'Notes',
+                            Icons.notes_outlined,
+                            maxLines: 3,
+                          ),
+                          _dialogLabel('Relationship status', context),
+                          const SizedBox(height: 6),
+                          DropdownButtonFormField<String>(
+                            value: status,
+                            isExpanded: true,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: Theme.of(context).brightness ==
                                       Brightness.dark
-                                  ? AppColors.surfaceDark
-                                  : Colors.white,
-                              decoration: _dialogInputDecoration(context),
-                              items: const ['Active', 'Prospect', 'Inactive']
-                                  .map((item) => DropdownMenuItem(
-                                      value: item, child: Text(item)))
-                                  .toList(),
-                              onChanged: (value) => setModalState(
-                                  () => status = value ?? 'Active'),
+                                  ? Colors.white
+                                  : AppColors.textPrimary,
                             ),
-                          ],
-                        ),
+                            dropdownColor: Theme.of(context).brightness ==
+                                    Brightness.dark
+                                ? AppColors.surfaceDark
+                                : Colors.white,
+                            decoration: _dialogInputDecoration(context),
+                            items: const ['Active', 'Prospect', 'Inactive']
+                                .map((item) => DropdownMenuItem(
+                                      value: item,
+                                      child: Text(item),
+                                    ))
+                                .toList(),
+                            onChanged: (value) => setModalState(
+                              () => status = value ?? 'Active',
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
