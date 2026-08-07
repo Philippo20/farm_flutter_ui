@@ -227,13 +227,17 @@ class _SalesOffTakersScreenState
       );
       if (saved == true) await _load();
     } finally {
-      name.dispose();
-      type.dispose();
-      contact.dispose();
-      phone.dispose();
-      email.dispose();
-      location.dispose();
-      notes.dispose();
+      // Let the dialog route finish its final rebuild before disposing the
+      // controllers still attached to its TextFormFields.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        name.dispose();
+        type.dispose();
+        contact.dispose();
+        phone.dispose();
+        email.dispose();
+        location.dispose();
+        notes.dispose();
+      });
     }
   }
 
