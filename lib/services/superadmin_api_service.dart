@@ -26,6 +26,33 @@ class SuperAdminApiService {
   Future<List<Map<String, dynamic>>> getSales() => _getDocuments('/sales');
   Future<List<Map<String, dynamic>>> getOffTakers() =>
       _getDocuments('/off-takers');
+  Future<List<Map<String, dynamic>>> getOffTakerUpdateRequests() =>
+      _getDocuments('/off-taker-update-requests');
+
+  Future<Map<String, dynamic>> requestOffTakerUpdate({
+    required Map<String, dynamic> data,
+  }) async {
+    return _submitOffTaker('POST', '/off-taker-update-requests', data);
+  }
+
+  Future<Map<String, dynamic>> reviewOffTakerUpdate({
+    required String id,
+    required String status,
+    required String reviewedById,
+    required String reviewedByName,
+    String reviewNotes = '',
+  }) async {
+    return _submitOffTaker(
+      'PUT',
+      '/off-taker-update-requests/${Uri.encodeComponent(id)}/review',
+      {
+        'status': status,
+        'reviewed_by_id': reviewedById,
+        'reviewed_by_name': reviewedByName,
+        'review_notes': reviewNotes,
+      },
+    );
+  }
 
   Future<Map<String, dynamic>> createOffTaker({
     required Map<String, dynamic> data,
@@ -1848,6 +1875,7 @@ class SuperAdminApiService {
     final rawDocuments = decoded['users'] ??
         decoded['documents'] ??
         decoded['off_takers'] ??
+        decoded['off_taker_update_requests'] ??
         decoded['sales'] ??
         [];
     if (rawDocuments is! List) {

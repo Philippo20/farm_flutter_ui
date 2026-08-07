@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,6 +27,7 @@ class SalesOffTakersScreen extends ConsumerStatefulWidget {
 class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
   final _api = SuperAdminApiService();
   List<Map<String, dynamic>> _offTakers = const [];
+  List<Map<String, dynamic>> _updateRequests = const [];
   bool _loading = true;
   String? _error;
 
@@ -41,9 +44,16 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     });
     try {
       final items = await _api.getOffTakers();
+      List<Map<String, dynamic>> requests = const [];
+      try {
+        requests = await _api.getOffTakerUpdateRequests();
+      } catch (_) {
+        // Buyer records remain usable if the optional approval feed is down.
+      }
       if (!mounted) return;
       setState(() {
         _offTakers = items;
+        _updateRequests = requests;
         _loading = false;
       });
     } catch (error) {
@@ -55,16 +65,73 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     }
   }
 
-  Future<void> _openAddForm() async {
+  Future<void> _reviewUpdate(
+      Map<String, dynamic> request, String status) async {
+    final user = ref.read(authProvider).user;
+    try {
+      await _api.reviewOffTakerUpdate(
+        id: '${request['\$id'] ?? request['id'] ?? ''}',
+        status: status,
+        reviewedById: user?.id ?? '',
+        reviewedByName: user?.name ?? 'Sales Manager',
+      );
+      await _load();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
+    }
+  }
+
+  Future<void> _deleteOffTaker(Map<String, dynamic> item) async {
+    final name = '${item['name'] ?? 'this off-taker'}';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete off-taker?'),
+        content: Text('This will permanently remove $name from the buyer list.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.delete_outline, size: 17),
+            label: const Text('Delete'),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await _api.deleteOffTaker('${item['\$id'] ?? item['id'] ?? ''}');
+      await _load();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString())),
+      );
+    }
+  }
+
+  Future<void> _openAddForm({Map<String, dynamic>? existing}) async {
+    final isEdit = existing != null;
     final formKey = GlobalKey<FormState>();
-    final name = TextEditingController();
-    final type = TextEditingController();
-    final contact = TextEditingController();
-    final phone = TextEditingController();
-    final email = TextEditingController();
-    final location = TextEditingController();
-    final notes = TextEditingController();
-    var status = 'Active';
+    final name = TextEditingController(text: '${existing?['name'] ?? ''}');
+    final type =
+        TextEditingController(text: '${existing?['business_type'] ?? ''}');
+    final contact =
+        TextEditingController(text: '${existing?['contact_person'] ?? ''}');
+    final phone = TextEditingController(text: '${existing?['phone'] ?? ''}');
+    final email = TextEditingController(text: '${existing?['email'] ?? ''}');
+    final location =
+        TextEditingController(text: '${existing?['location'] ?? ''}');
+    final notes = TextEditingController(text: '${existing?['notes'] ?? ''}');
+    final reason = TextEditingController();
+    var status = '${existing?['status'] ?? 'Active'}';
     var saving = false;
 
     try {
@@ -114,7 +181,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('New Off-Taker',
+                              Text(isEdit ? 'Edit Off-Taker' : 'New Off-Taker',
                                   style: GoogleFonts.inter(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
@@ -122,7 +189,12 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                               Brightness.dark
                                           ? Colors.white
                                           : AppColors.textPrimary)),
-                              Text('Create a separate buyer business record',
+                              Text(
+                                  isEdit
+                                      ? widget.forSalesPersonnel
+                                          ? 'Submit changes for manager approval'
+                                          : 'Update the buyer business record'
+                                      : 'Create a separate buyer business record',
                                   style: GoogleFonts.inter(
                                       fontSize: 12,
                                       color: Theme.of(context).brightness ==
@@ -220,6 +292,15 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                             Icons.notes_outlined,
                             maxLines: 3,
                           ),
+                          if (isEdit && widget.forSalesPersonnel)
+                            _formField(
+                              context,
+                              reason,
+                              'Reason for update',
+                              Icons.info_outline_rounded,
+                              required: true,
+                              maxLines: 3,
+                            ),
                           _dialogLabel('Relationship status', context),
                           const SizedBox(height: 6),
                           DropdownButtonFormField<String>(
@@ -288,7 +369,8 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                     try {
                                       final userId =
                                           ref.read(authProvider).user?.id ?? '';
-                                      await _api.createOffTaker(data: {
+                                      final user = ref.read(authProvider).user;
+                                      final payload = <String, dynamic>{
                                         'name': name.text,
                                         'business_type': type.text,
                                         'contact_person': contact.text,
@@ -298,7 +380,23 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                         'notes': notes.text,
                                         'status': status,
                                         'created_by': userId,
-                                      });
+                                      };
+                                      if (isEdit && widget.forSalesPersonnel) {
+                                        await _api.requestOffTakerUpdate(data: {
+                                          'off_taker_id': '${existing?['\$id'] ?? existing?['id'] ?? ''}',
+                                          'proposed_data': jsonEncode(payload),
+                                          'reason': reason.text.trim(),
+                                          'requested_by_id': userId,
+                                          'requested_by_name': user?.name ?? '',
+                                        });
+                                      } else if (isEdit) {
+                                        await _api.updateOffTaker(
+                                          id: '${existing?['\$id'] ?? existing?['id'] ?? ''}',
+                                          data: payload,
+                                        );
+                                      } else {
+                                        await _api.createOffTaker(data: payload);
+                                      }
                                       if (dialogContext.mounted)
                                         Navigator.pop(dialogContext, true);
                                     } catch (error) {
@@ -320,7 +418,13 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                 : const Icon(Icons.save_outlined),
                             label:
                                 Text(
-                                  saving ? 'Saving...' : 'Save Off-Taker',
+                                  saving
+                                      ? 'Saving...'
+                                      : isEdit && widget.forSalesPersonnel
+                                          ? 'Submit for Approval'
+                                          : isEdit
+                                              ? 'Update Off-Taker'
+                                              : 'Save Off-Taker',
                                   style: GoogleFonts.inter(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600),
@@ -533,6 +637,65 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
           ],
         ),
         const SizedBox(height: AppSpacing.xl),
+        if (!widget.forSalesPersonnel &&
+            _updateRequests.any((item) => item['status'] == 'Pending')) ...[
+          Text('Pending Change Requests',
+              style: AppTypography.h5.copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: AppSpacing.md),
+          ..._updateRequests
+              .where((item) => item['status'] == 'Pending')
+              .map((request) {
+            final offTaker = _offTakers.cast<Map<String, dynamic>?>().firstWhere(
+                  (item) =>
+                      '${item?['\$id'] ?? item?['id'] ?? ''}' ==
+                      '${request['off_taker_id'] ?? ''}',
+                  orElse: () => null,
+                );
+            return Container(
+              margin: const EdgeInsets.only(bottom: AppSpacing.md),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                border: Border.all(color: AppColors.warning.withOpacity(0.35)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${offTaker?['name'] ?? 'Off-taker update'}',
+                      style: AppTypography.h6.copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text('Requested by ${request['requested_by_name'] ?? 'Sales personnel'}',
+                      style: AppTypography.bodySmall),
+                  const SizedBox(height: 6),
+                  Text('Reason: ${request['reason'] ?? 'No reason provided'}',
+                      style: AppTypography.bodySmall),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _reviewUpdate(request, 'Rejected'),
+                          icon: const Icon(Icons.close, size: 16),
+                          label: const Text('Reject'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => _reviewUpdate(request, 'Approved'),
+                          icon: const Icon(Icons.check, size: 16),
+                          label: const Text('Approve'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: AppSpacing.md),
+        ],
         Text('Buyer Accounts',
             style: AppTypography.h5.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: AppSpacing.md),
@@ -547,7 +710,18 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
         else
           _ResponsiveGrid(
               itemCount: cards.length,
-              itemBuilder: (index) => _SalesCard(item: cards[index])),
+              itemBuilder: (index) => _OffTakerCard(
+                    item: _offTakers[index],
+                    isSalesPersonnel: widget.forSalesPersonnel,
+                    hasPendingUpdate: _updateRequests.any(
+                      (request) =>
+                          request['status'] == 'Pending' &&
+                          '${request['off_taker_id'] ?? ''}' ==
+                              '${_offTakers[index]['\$id'] ?? _offTakers[index]['id'] ?? ''}',
+                    ),
+                    onEdit: () => _openAddForm(existing: _offTakers[index]),
+                    onDelete: () => _deleteOffTaker(_offTakers[index]),
+                  )),
       ],
     );
 
@@ -568,6 +742,160 @@ class _EmptySalesState extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Center(child: Text(label)),
       );
+}
+
+class _OffTakerCard extends StatelessWidget {
+  final Map<String, dynamic> item;
+  final bool isSalesPersonnel;
+  final bool hasPendingUpdate;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _OffTakerCard({
+    required this.item,
+    required this.isSalesPersonnel,
+    required this.hasPendingUpdate,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final status = '${item['status'] ?? 'Active'}';
+    final statusColor = status == 'Active'
+        ? AppColors.success
+        : status == 'Prospect'
+            ? AppColors.primary
+            : AppColors.warning;
+    final textColor = isDark ? Colors.white : AppColors.textPrimary;
+    final secondaryColor = isDark ? Colors.white70 : AppColors.textSecondary;
+
+    Widget detail(IconData icon, String value) {
+      if (value.trim().isEmpty) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 16, color: secondaryColor),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodySmall.copyWith(color: secondaryColor),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: statusColor.withOpacity(isDark ? 0.3 : 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.14 : 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _IconBox(icon: Icons.business_outlined, color: statusColor),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${item['name'] ?? 'Unnamed off-taker'}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.h6.copyWith(
+                        color: textColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${item['business_type'] ?? 'Business type not set'}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall.copyWith(color: secondaryColor),
+                    ),
+                  ],
+                ),
+              ),
+              _StatusBadge(label: status, color: statusColor),
+              if (hasPendingUpdate)
+                Container(
+                  margin: const EdgeInsets.only(left: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 7, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: AppColors.warning.withOpacity(0.3)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.hourglass_top_rounded,
+                          size: 13, color: AppColors.warning),
+                      SizedBox(width: 4),
+                      Text('Pending',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.warning,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          detail(Icons.person_outline, '${item['contact_person'] ?? ''}'),
+          detail(Icons.phone_outlined, '${item['phone'] ?? ''}'),
+          detail(Icons.email_outlined, '${item['email'] ?? ''}'),
+          detail(Icons.location_on_outlined, '${item['location'] ?? ''}'),
+          const Spacer(),
+          const Divider(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: Text(isSalesPersonnel ? 'Request Update' : 'Edit'),
+                ),
+              ),
+              if (!isSalesPersonnel) ...[
+                const SizedBox(width: AppSpacing.sm),
+                IconButton(
+                  onPressed: onDelete,
+                  tooltip: 'Delete off-taker',
+                  icon: const Icon(Icons.delete_outline),
+                  color: AppColors.error,
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class SalesPerformanceScreen extends StatelessWidget {
