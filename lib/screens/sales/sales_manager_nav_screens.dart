@@ -63,6 +63,7 @@ class _SalesOffTakersScreenState
     final phone = TextEditingController();
     final email = TextEditingController();
     final location = TextEditingController();
+    final notes = TextEditingController();
     var status = 'Active';
     var saving = false;
 
@@ -125,15 +126,21 @@ class _SalesOffTakersScreenState
                         padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
                         child: Column(
                           children: [
-                            _formField(name, 'Business name', required: true),
-                            _formField(type, 'Business type'),
-                            _formField(contact, 'Contact person'),
-                            _formField(phone, 'Phone number', keyboard: TextInputType.phone),
-                            _formField(email, 'Email', keyboard: TextInputType.emailAddress),
-                            _formField(location, 'Location'),
+                            _formField(context, name, 'Business name', Icons.business_outlined, required: true),
+                            _formField(context, type, 'Business type', Icons.category_outlined),
+                            _formField(context, contact, 'Contact person', Icons.person_outline_rounded),
+                            _formField(context, phone, 'Phone number', Icons.phone_outlined, keyboard: TextInputType.phone),
+                            _formField(context, email, 'Email', Icons.email_outlined, keyboard: TextInputType.emailAddress),
+                            _formField(context, location, 'Location', Icons.location_on_outlined),
+                            _formField(context, notes, 'Notes', Icons.notes_outlined, maxLines: 3),
                             DropdownButtonFormField<String>(
                               value: status,
-                              decoration: const InputDecoration(labelText: 'Relationship status'),
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Relationship status',
+                                prefixIcon: Icon(Icons.flag_outlined, size: 19),
+                                filled: true,
+                              ),
                               items: const ['Active', 'Prospect', 'Inactive']
                                   .map((item) => DropdownMenuItem(value: item, child: Text(item)))
                                   .toList(),
@@ -171,6 +178,7 @@ class _SalesOffTakersScreenState
                                         'phone': phone.text,
                                         'email': email.text,
                                         'location': location.text,
+                                        'notes': notes.text,
                                         'status': status,
                                         'created_by': userId,
                                       });
@@ -205,19 +213,31 @@ class _SalesOffTakersScreenState
       phone.dispose();
       email.dispose();
       location.dispose();
+      notes.dispose();
     }
   }
 
   TextFormField _formField(
+    BuildContext context,
     TextEditingController controller,
-    String label, {
+    String label,
+    IconData icon, {
     bool required = false,
     TextInputType? keyboard,
+    int maxLines = 1,
   }) {
     return TextFormField(
       controller: controller,
       keyboardType: keyboard,
-      decoration: InputDecoration(labelText: label),
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, size: 19),
+        filled: true,
+        fillColor: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white.withOpacity(0.04)
+            : AppColors.neutral50,
+      ),
       validator: required
           ? (value) => value == null || value.trim().isEmpty ? '$label is required' : null
           : null,
