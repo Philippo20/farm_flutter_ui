@@ -21,8 +21,7 @@ class SalesOffTakersScreen extends ConsumerStatefulWidget {
       _SalesOffTakersScreenState();
 }
 
-class _SalesOffTakersScreenState
-    extends ConsumerState<SalesOffTakersScreen> {
+class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
   final _api = SuperAdminApiService();
   List<Map<String, dynamic>> _offTakers = const [];
   bool _loading = true;
@@ -73,7 +72,8 @@ class _SalesOffTakersScreenState
         builder: (dialogContext) => StatefulBuilder(
           builder: (context, setModalState) => Dialog(
             backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             child: Container(
               constraints: BoxConstraints(
                 maxWidth: 560,
@@ -83,7 +83,10 @@ class _SalesOffTakersScreenState
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
                 boxShadow: const [
-                  BoxShadow(color: Colors.black26, blurRadius: 24, offset: Offset(0, 12)),
+                  BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 24,
+                      offset: Offset(0, 12)),
                 ],
               ),
               child: Column(
@@ -95,25 +98,36 @@ class _SalesOffTakersScreenState
                       gradient: LinearGradient(
                         colors: [Color(0xFF1D4ED8), Color(0xFF0F766E)],
                       ),
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
+                      borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(AppSpacing.radiusXl)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.business_outlined, color: Colors.white, size: 26),
+                        const Icon(Icons.business_outlined,
+                            color: Colors.white, size: 26),
                         const SizedBox(width: 12),
                         const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Add Off-Taker', style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w700)),
+                              Text('Add Off-Taker',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 19,
+                                      fontWeight: FontWeight.w700)),
                               SizedBox(height: 3),
-                              Text('Create a separate buyer business record', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                              Text('Create a separate buyer business record',
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 12)),
                             ],
                           ),
                         ),
                         IconButton(
-                          onPressed: saving ? null : () => Navigator.pop(dialogContext, false),
-                          icon: const Icon(Icons.close_rounded, color: Colors.white),
+                          onPressed: saving
+                              ? null
+                              : () => Navigator.pop(dialogContext, false),
+                          icon: const Icon(Icons.close_rounded,
+                              color: Colors.white),
                           tooltip: 'Close',
                         ),
                       ],
@@ -126,45 +140,63 @@ class _SalesOffTakersScreenState
                         padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
                         child: Column(
                           children: [
-                            _formField(context, name, 'Business name', Icons.business_outlined, required: true),
-                            _formField(context, type, 'Business type', Icons.category_outlined),
-                            _formField(context, contact, 'Contact person', Icons.person_outline_rounded),
-                            _formField(context, phone, 'Phone number', Icons.phone_outlined, keyboard: TextInputType.phone),
-                            _formField(context, email, 'Email', Icons.email_outlined, keyboard: TextInputType.emailAddress),
-                            _formField(context, location, 'Location', Icons.location_on_outlined),
-                            _formField(context, notes, 'Notes', Icons.notes_outlined, maxLines: 3),
+                            _formField(context, name, 'Business name',
+                                Icons.business_outlined,
+                                required: true),
+                            _formField(context, type, 'Business type',
+                                Icons.category_outlined),
+                            _formField(context, contact, 'Contact person',
+                                Icons.person_outline_rounded),
+                            _formField(context, phone, 'Phone number',
+                                Icons.phone_outlined,
+                                keyboard: TextInputType.phone),
+                            _formField(
+                                context, email, 'Email', Icons.email_outlined,
+                                keyboard: TextInputType.emailAddress),
+                            _formField(context, location, 'Location',
+                                Icons.location_on_outlined),
+                            _formField(
+                                context, notes, 'Notes', Icons.notes_outlined,
+                                maxLines: 3),
                             DropdownButtonFormField<String>(
                               value: status,
                               isExpanded: true,
                               style: AppTypography.bodyMedium.copyWith(
-                                color: Theme.of(context).brightness == Brightness.dark
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
                                     ? Colors.white
                                     : AppColors.textPrimary,
                               ),
-                              dropdownColor: Theme.of(context).colorScheme.surface,
+                              dropdownColor:
+                                  Theme.of(context).colorScheme.surface,
                               decoration: InputDecoration(
                                 labelText: 'Relationship status',
                                 labelStyle: TextStyle(
-                                  color: Theme.of(context).brightness == Brightness.dark
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
                                       ? Colors.white70
                                       : AppColors.textSecondary,
                                 ),
                                 prefixIcon: Icon(
                                   Icons.flag_outlined,
                                   size: 19,
-                                  color: Theme.of(context).brightness == Brightness.dark
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
                                       ? Colors.white70
                                       : AppColors.textSecondary,
                                 ),
                                 filled: true,
-                                fillColor: Theme.of(context).brightness == Brightness.dark
+                                fillColor: Theme.of(context).brightness ==
+                                        Brightness.dark
                                     ? Colors.white.withOpacity(0.06)
                                     : AppColors.neutral50,
                               ),
                               items: const ['Active', 'Prospect', 'Inactive']
-                                  .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+                                  .map((item) => DropdownMenuItem(
+                                      value: item, child: Text(item)))
                                   .toList(),
-                              onChanged: (value) => setModalState(() => status = value ?? 'Active'),
+                              onChanged: (value) => setModalState(
+                                  () => status = value ?? 'Active'),
                             ),
                           ],
                         ),
@@ -177,7 +209,9 @@ class _SalesOffTakersScreenState
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: saving ? null : () => Navigator.pop(dialogContext, false),
+                            onPressed: saving
+                                ? null
+                                : () => Navigator.pop(dialogContext, false),
                             child: const Text('Cancel'),
                           ),
                         ),
@@ -187,10 +221,12 @@ class _SalesOffTakersScreenState
                             onPressed: saving
                                 ? null
                                 : () async {
-                                    if (!(formKey.currentState?.validate() ?? false)) return;
+                                    if (!(formKey.currentState?.validate() ??
+                                        false)) return;
                                     setModalState(() => saving = true);
                                     try {
-                                      final userId = ref.read(authProvider).user?.id ?? '';
+                                      final userId =
+                                          ref.read(authProvider).user?.id ?? '';
                                       await _api.createOffTaker(data: {
                                         'name': name.text,
                                         'business_type': type.text,
@@ -202,18 +238,27 @@ class _SalesOffTakersScreenState
                                         'status': status,
                                         'created_by': userId,
                                       });
-                                      if (dialogContext.mounted) Navigator.pop(dialogContext, true);
+                                      if (dialogContext.mounted)
+                                        Navigator.pop(dialogContext, true);
                                     } catch (error) {
                                       setModalState(() => saving = false);
                                       if (dialogContext.mounted) {
-                                        ScaffoldMessenger.of(dialogContext).showSnackBar(SnackBar(content: Text(error.toString())));
+                                        ScaffoldMessenger.of(dialogContext)
+                                            .showSnackBar(SnackBar(
+                                                content:
+                                                    Text(error.toString())));
                                       }
                                     }
                                   },
                             icon: saving
-                                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2))
                                 : const Icon(Icons.save_outlined),
-                            label: Text(saving ? 'Saving...' : 'Save Off-Taker'),
+                            label:
+                                Text(saving ? 'Saving...' : 'Save Off-Taker'),
                           ),
                         ),
                       ],
@@ -269,20 +314,23 @@ class _SalesOffTakersScreenState
           color: isDark ? Colors.white70 : AppColors.textSecondary,
         ),
         filled: true,
-        fillColor: isDark
-            ? Colors.white.withOpacity(0.04)
-            : AppColors.neutral50,
+        fillColor:
+            isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
       ),
       validator: required
-          ? (value) => value == null || value.trim().isEmpty ? '$label is required' : null
+          ? (value) => value == null || value.trim().isEmpty
+              ? '$label is required'
+              : null
           : null,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final active = _offTakers.where((item) =>
-        '${item['status'] ?? 'Active'}'.toLowerCase() == 'active').length;
+    final active = _offTakers
+        .where(
+            (item) => '${item['status'] ?? 'Active'}'.toLowerCase() == 'active')
+        .length;
     final cards = _offTakers.map<Map<String, Object>>((item) {
       final status = '${item['status'] ?? 'Active'}';
       final color = status == 'Active'
@@ -292,7 +340,8 @@ class _SalesOffTakersScreenState
               : AppColors.warning;
       return {
         'title': '${item['name'] ?? 'Unnamed off-taker'}',
-        'subtitle': '${item['business_type'] ?? 'Business'} | ${item['location'] ?? 'Location not set'}',
+        'subtitle':
+            '${item['business_type'] ?? 'Business'} | ${item['location'] ?? 'Location not set'}',
         'metric': '${item['contact_person'] ?? item['phone'] ?? 'No contact'}',
         'status': status,
         'color': color,
@@ -304,7 +353,8 @@ class _SalesOffTakersScreenState
       children: [
         _Hero(
           title: 'Off-Taker Management',
-          subtitle: 'Manage separate buyer accounts, relationship status, and sales contacts.',
+          subtitle:
+              'Manage separate buyer accounts, relationship status, and sales contacts.',
           icon: Icons.people_outlined,
           colors: const [Color(0xFF1D4ED8), Color(0xFF0F766E)],
         ),
@@ -322,22 +372,45 @@ class _SalesOffTakersScreenState
           spacing: AppSpacing.md,
           runSpacing: AppSpacing.md,
           children: [
-            _KpiCard(data: _KpiData('Active off-takers', '$active', 'Separate business records', Icons.people_outlined, AppColors.primary)),
-            _KpiCard(data: _KpiData('Total accounts', '${_offTakers.length}', 'Registered buyers', Icons.account_balance_wallet_outlined, AppColors.success)),
-            _KpiCard(data: _KpiData('Prospects', '${_offTakers.where((item) => item['status'] == 'Prospect').length}', 'Potential accounts', Icons.autorenew_outlined, AppColors.warning)),
+            _KpiCard(
+                data: _KpiData(
+                    'Active off-takers',
+                    '$active',
+                    'Separate business records',
+                    Icons.people_outlined,
+                    AppColors.primary)),
+            _KpiCard(
+                data: _KpiData(
+                    'Total accounts',
+                    '${_offTakers.length}',
+                    'Registered buyers',
+                    Icons.account_balance_wallet_outlined,
+                    AppColors.success)),
+            _KpiCard(
+                data: _KpiData(
+                    'Prospects',
+                    '${_offTakers.where((item) => item['status'] == 'Prospect').length}',
+                    'Potential accounts',
+                    Icons.autorenew_outlined,
+                    AppColors.warning)),
           ],
         ),
         const SizedBox(height: AppSpacing.xl),
-        Text('Buyer Accounts', style: AppTypography.h5.copyWith(fontWeight: FontWeight.w600)),
+        Text('Buyer Accounts',
+            style: AppTypography.h5.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: AppSpacing.md),
         if (_loading)
           const Center(child: CircularProgressIndicator())
         else if (_error != null)
-          Text('Could not load off-takers. Please retry from the dashboard.', style: AppTypography.bodyMedium)
+          Text('Could not load off-takers. Please retry from the dashboard.',
+              style: AppTypography.bodyMedium)
         else if (cards.isEmpty)
-          const _EmptySalesState(label: 'No off-takers have been registered yet.')
+          const _EmptySalesState(
+              label: 'No off-takers have been registered yet.')
         else
-          _ResponsiveGrid(itemCount: cards.length, itemBuilder: (index) => _SalesCard(item: cards[index])),
+          _ResponsiveGrid(
+              itemCount: cards.length,
+              itemBuilder: (index) => _SalesCard(item: cards[index])),
       ],
     );
 
@@ -363,199 +436,330 @@ class _EmptySalesState extends StatelessWidget {
 class SalesPerformanceScreen extends StatelessWidget {
   const SalesPerformanceScreen({super.key});
 
-  static const _cards = [
-    {
-      'title': 'Romaine Lettuce',
-      'subtitle': 'Top moving crop this week',
-      'metric': 'GHS 48K',
-      'status': '+18%',
-      'color': AppColors.success,
-    },
-    {
-      'title': 'Cherry Tomato',
-      'subtitle': 'Strong wholesale demand',
-      'metric': 'GHS 36K',
-      'status': '+11%',
-      'color': AppColors.primary,
-    },
-    {
-      'title': 'Sweet Basil',
-      'subtitle': 'Below forecast due to yield holds',
-      'metric': 'GHS 9K',
-      'status': 'Watch',
-      'color': AppColors.warning,
-    },
-  ];
-
   @override
-  Widget build(BuildContext context) {
-    return _SalesPage(
-      selectedIndex: 2,
-      title: 'Sales Performance',
-      subtitle:
-          'Track revenue momentum, target attainment, top crops, and buyer conversion.',
-      icon: Icons.trending_up_outlined,
-      colors: const [Color(0xFF166534), Color(0xFF0F766E)],
-      kpis: const [
-        _KpiData('Revenue', 'GHS 125K', '+18% this week',
-            Icons.payments_outlined, AppColors.success),
-        _KpiData('Target hit', '87%', 'Monthly progress',
-            Icons.track_changes_outlined, AppColors.primary),
-        _KpiData('Open deals', '9', '3 closing soon', Icons.handshake_outlined,
-            AppColors.warning),
-      ],
-      sectionTitle: 'Performance Drivers',
-      cards: _cards,
-    );
-  }
+  Widget build(BuildContext context) => const _SalesManagerDataPage(
+        kind: _SalesManagerPageKind.performance,
+        selectedIndex: 2,
+      );
 }
 
 class SalesDeliveriesScreen extends StatelessWidget {
   const SalesDeliveriesScreen({super.key});
 
-  static const _cards = [
-    {
-      'title': 'FreshMart Retail',
-      'subtitle': 'Romaine Lettuce | 420 kg',
-      'metric': 'Today 2 PM',
-      'status': 'Scheduled',
-      'color': AppColors.primary,
-    },
-    {
-      'title': 'Green Basket',
-      'subtitle': 'Cherry Tomato | 310 kg',
-      'metric': 'Tomorrow',
-      'status': 'Pending',
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'KitchenPro Foods',
-      'subtitle': 'Sweet Basil | 96 kg',
-      'metric': 'Delivered',
-      'status': 'Complete',
-      'color': AppColors.success,
-    },
-  ];
-
   @override
-  Widget build(BuildContext context) {
-    return _SalesPage(
-      selectedIndex: 3,
-      title: 'Sales Deliveries',
-      subtitle:
-          'Coordinate delivery commitments, dispatch timing, order status, and buyer handoff.',
-      icon: Icons.local_shipping_outlined,
-      colors: const [Color(0xFF334155), Color(0xFF1D4ED8)],
-      kpis: const [
-        _KpiData('Pending', '5', 'Awaiting dispatch',
-            Icons.local_shipping_outlined, AppColors.warning),
-        _KpiData('Delivered', '18', 'This week', Icons.task_alt_outlined,
-            AppColors.success),
-        _KpiData('On time', '94%', 'Delivery SLA', Icons.schedule_outlined,
-            AppColors.primary),
-      ],
-      sectionTitle: 'Delivery Commitments',
-      cards: _cards,
-    );
-  }
+  Widget build(BuildContext context) => const _SalesManagerDataPage(
+        kind: _SalesManagerPageKind.deliveries,
+        selectedIndex: 3,
+      );
 }
 
 class SalesFinancialScreen extends StatelessWidget {
   const SalesFinancialScreen({super.key});
 
-  static const _cards = [
-    {
-      'title': 'Collected Revenue',
-      'subtitle': 'Cash received from confirmed orders',
-      'metric': 'GHS 88K',
-      'status': 'Collected',
-      'color': AppColors.success,
-    },
-    {
-      'title': 'Outstanding',
-      'subtitle': 'Invoices awaiting payment',
-      'metric': 'GHS 37K',
-      'status': 'Due',
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'Commission Pool',
-      'subtitle': 'Sales team payout forecast',
-      'metric': 'GHS 9.4K',
-      'status': 'Forecast',
-      'color': AppColors.primary,
-    },
-  ];
-
   @override
-  Widget build(BuildContext context) {
-    return _SalesPage(
-      selectedIndex: 5,
-      title: 'Sales Financials',
-      subtitle:
-          'Monitor revenue, receivables, buyer balances, commission exposure, and collection risk.',
-      icon: Icons.account_balance_wallet_outlined,
-      colors: const [Color(0xFF7C2D12), Color(0xFFEA580C)],
-      kpis: const [
-        _KpiData('Revenue', 'GHS 125K', 'This month', Icons.payments_outlined,
-            AppColors.success),
-        _KpiData('Receivables', 'GHS 37K', 'Open invoices',
-            Icons.receipt_long_outlined, AppColors.warning),
-        _KpiData('Commission', 'GHS 9.4K', 'Forecast payout',
-            Icons.account_balance_outlined, AppColors.primary),
-      ],
-      sectionTitle: 'Financial Overview',
-      cards: _cards,
-    );
-  }
+  Widget build(BuildContext context) => const _SalesManagerDataPage(
+        kind: _SalesManagerPageKind.financial,
+        selectedIndex: 5,
+      );
 }
 
 class SalesReportsScreen extends StatelessWidget {
   const SalesReportsScreen({super.key});
 
-  static const _cards = [
-    {
-      'title': 'Revenue Report',
-      'subtitle': 'Sales by buyer, crop, and week',
-      'metric': 'Ready',
-      'status': 'PDF',
-      'color': AppColors.primary,
-    },
-    {
-      'title': 'Buyer Performance',
-      'subtitle': 'Off-taker ranking and retention',
-      'metric': '12 buyers',
-      'status': 'Live',
-      'color': AppColors.success,
-    },
-    {
-      'title': 'Delivery SLA',
-      'subtitle': 'On-time rate and exception analysis',
-      'metric': '94%',
-      'status': 'Review',
-      'color': AppColors.warning,
-    },
-  ];
+  @override
+  Widget build(BuildContext context) => const _SalesManagerDataPage(
+        kind: _SalesManagerPageKind.reports,
+        selectedIndex: 4,
+      );
+}
+
+enum _SalesManagerPageKind { performance, deliveries, financial, reports }
+
+class _SalesManagerDataPage extends ConsumerStatefulWidget {
+  final _SalesManagerPageKind kind;
+  final int selectedIndex;
+
+  const _SalesManagerDataPage({
+    required this.kind,
+    required this.selectedIndex,
+  });
+
+  @override
+  ConsumerState<_SalesManagerDataPage> createState() =>
+      _SalesManagerDataPageState();
+}
+
+class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
+  final _api = SuperAdminApiService();
+  List<Map<String, dynamic>> _sales = const [];
+  List<Map<String, dynamic>> _offTakers = const [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final result = await Future.wait<List<Map<String, dynamic>>>([
+        _api.getSales(),
+        _api.getOffTakers(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _sales = result[0];
+        _offTakers = result[1];
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  String _text(Map<String, dynamic> item, List<String> keys,
+      {String fallback = ''}) {
+    for (final key in keys) {
+      final value = item[key];
+      if (value != null && value.toString().trim().isNotEmpty) {
+        return value.toString().trim();
+      }
+    }
+    return fallback;
+  }
+
+  double _number(Map<String, dynamic> item, List<String> keys) {
+    final value = _text(item, keys);
+    return double.tryParse(value.replaceAll(',', '')) ?? 0;
+  }
+
+  bool _isPaid(Map<String, dynamic> item) {
+    final value = item['paid'];
+    if (value is bool) return value;
+    return '${value ?? ''}'.toLowerCase() == 'true';
+  }
+
+  String _status(Map<String, dynamic> item) =>
+      _text(item, ['status'], fallback: 'Pending');
+
+  DateTime _date(Map<String, dynamic> item) {
+    final value = _text(item, [
+      'delivered_at',
+      'payment_date',
+      'created_at',
+      r'$createdAt',
+    ]);
+    return DateTime.tryParse(value) ?? DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  String _money(double value) => 'GHS ${value.toStringAsFixed(2)}';
+
+  List<Map<String, dynamic>> get _validSales => _sales
+      .where((sale) => _status(sale).toLowerCase() != 'cancelled')
+      .toList();
+
+  List<Map<String, Object>> _recordCards() {
+    final records = [..._validSales]
+      ..sort((a, b) => _date(b).compareTo(_date(a)));
+    return records.take(6).map<Map<String, Object>>((sale) {
+      final status = _status(sale);
+      final statusLower = status.toLowerCase();
+      final color = statusLower == 'delivered'
+          ? AppColors.success
+          : statusLower == 'cancelled'
+              ? AppColors.warning
+              : AppColors.primary;
+      final buyer = _text(sale, ['buyer_name', 'buyer_id', 'off_taker_id'],
+          fallback: 'Unnamed buyer');
+      final batch = _text(sale, ['batch_id'], fallback: 'Batch not set');
+      final amount = _number(sale, ['total_amount', 'amount', 'total']);
+      return {
+        'title': buyer,
+        'subtitle':
+            '$batch | ${_text(sale, ['payment_mode'], fallback: 'Sale')}',
+        'metric': _money(amount),
+        'status': status,
+        'color': color,
+      };
+    }).toList();
+  }
+
+  List<_KpiData> _kpis() {
+    final sales = _validSales;
+    final revenue = sales.fold<double>(
+      0,
+      (sum, sale) => sum + _number(sale, ['total_amount', 'amount', 'total']),
+    );
+    final collected = sales.where(_isPaid).fold<double>(
+          0,
+          (sum, sale) =>
+              sum + _number(sale, ['total_amount', 'amount', 'total']),
+        );
+    final delivered = sales
+        .where((sale) => _status(sale).toLowerCase() == 'delivered')
+        .length;
+    final pending =
+        sales.where((sale) => _status(sale).toLowerCase() == 'pending').length;
+    final activeBuyers = _offTakers
+        .where((buyer) =>
+            _text(buyer, ['status'], fallback: 'Active').toLowerCase() ==
+            'active')
+        .length;
+    final paidRate = revenue == 0 ? 0 : (collected / revenue * 100).round();
+    final deliveryRate =
+        sales.isEmpty ? 0 : (delivered / sales.length * 100).round();
+
+    switch (widget.kind) {
+      case _SalesManagerPageKind.performance:
+        return [
+          _KpiData('Revenue', _money(revenue), '${sales.length} recorded sales',
+              Icons.payments_outlined, AppColors.success),
+          _KpiData('Paid rate', '$paidRate%', 'Based on paid sales',
+              Icons.track_changes_outlined, AppColors.primary),
+          _KpiData('Active buyers', '$activeBuyers', 'Off-taker accounts',
+              Icons.handshake_outlined, AppColors.warning),
+        ];
+      case _SalesManagerPageKind.deliveries:
+        return [
+          _KpiData('Pending', '$pending', 'Awaiting delivery',
+              Icons.local_shipping_outlined, AppColors.warning),
+          _KpiData('Delivered', '$delivered', 'Recorded sales',
+              Icons.task_alt_outlined, AppColors.success),
+          _KpiData('Completion', '$deliveryRate%', 'Based on sales status',
+              Icons.schedule_outlined, AppColors.primary),
+        ];
+      case _SalesManagerPageKind.financial:
+        return [
+          _KpiData('Revenue', _money(revenue), 'From recorded sales',
+              Icons.payments_outlined, AppColors.success),
+          _KpiData('Receivables', _money(revenue - collected), 'Unpaid sales',
+              Icons.receipt_long_outlined, AppColors.warning),
+          _KpiData('Collected', _money(collected), 'Paid sales',
+              Icons.account_balance_outlined, AppColors.primary),
+        ];
+      case _SalesManagerPageKind.reports:
+        return [
+          _KpiData('Sales records', '${sales.length}', 'Available to report',
+              Icons.assessment_outlined, AppColors.primary),
+          _KpiData('Buyers covered', '$activeBuyers', 'Active off-takers',
+              Icons.people_outline, AppColors.success),
+          _KpiData(
+              'Unpaid records',
+              '${sales.where((sale) => !_isPaid(sale)).length}',
+              'Require collection follow-up',
+              Icons.report_problem_outlined,
+              AppColors.warning),
+        ];
+    }
+  }
+
+  _SalesPage _page(
+      {required List<_KpiData> kpis,
+      required List<Map<String, Object>> cards}) {
+    switch (widget.kind) {
+      case _SalesManagerPageKind.performance:
+        return _SalesPage(
+          selectedIndex: widget.selectedIndex,
+          title: 'Sales Performance',
+          subtitle:
+              'Track revenue, buyer activity, and recorded sales performance.',
+          icon: Icons.trending_up_outlined,
+          colors: const [Color(0xFF166534), Color(0xFF0F766E)],
+          kpis: kpis,
+          sectionTitle: 'Recent Sales Performance',
+          cards: cards,
+        );
+      case _SalesManagerPageKind.deliveries:
+        return _SalesPage(
+          selectedIndex: widget.selectedIndex,
+          title: 'Sales Deliveries',
+          subtitle:
+              'Track delivery commitments and handoff status from sales records.',
+          icon: Icons.local_shipping_outlined,
+          colors: const [Color(0xFF334155), Color(0xFF1D4ED8)],
+          kpis: kpis,
+          sectionTitle: 'Delivery Records',
+          cards: cards,
+        );
+      case _SalesManagerPageKind.financial:
+        return _SalesPage(
+          selectedIndex: widget.selectedIndex,
+          title: 'Sales Financials',
+          subtitle: 'Monitor recorded revenue, collections, and unpaid sales.',
+          icon: Icons.account_balance_wallet_outlined,
+          colors: const [Color(0xFF7C2D12), Color(0xFFEA580C)],
+          kpis: kpis,
+          sectionTitle: 'Financial Records',
+          cards: cards,
+        );
+      case _SalesManagerPageKind.reports:
+        return _SalesPage(
+          selectedIndex: widget.selectedIndex,
+          title: 'Sales Reports',
+          subtitle:
+              'Review reportable sales, buyer coverage, and collection follow-up.',
+          icon: Icons.assessment_outlined,
+          colors: const [Color(0xFF1E3A8A), Color(0xFF0F766E)],
+          kpis: kpis,
+          sectionTitle: 'Recent Report Data',
+          cards: cards,
+        );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _SalesPage(
-      selectedIndex: 4,
-      title: 'Sales Reports',
-      subtitle:
-          'Review sales analytics, buyer performance, delivery reliability, and export-ready summaries.',
-      icon: Icons.assessment_outlined,
-      colors: const [Color(0xFF1E3A8A), Color(0xFF0F766E)],
-      kpis: const [
-        _KpiData('Reports', '7', 'Ready now', Icons.assessment_outlined,
-            AppColors.primary),
-        _KpiData('Exports', '4', 'Scheduled', Icons.file_download_outlined,
-            AppColors.success),
-        _KpiData('Findings', '3', 'Need review', Icons.report_problem_outlined,
-            AppColors.warning),
-      ],
-      sectionTitle: 'Report Library',
-      cards: _cards,
+    final shellChild = _loading
+        ? const Center(child: CircularProgressIndicator())
+        : _error != null
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Could not load sales data.'),
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton.icon(
+                      onPressed: _load,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              )
+            : _page(kpis: _kpis(), cards: _recordCards());
+
+    if (!_loading && _error == null) return shellChild;
+    return SalesManagerScreenShell(
+      selectedIndex: widget.selectedIndex,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Hero(
+            title: widget.kind == _SalesManagerPageKind.performance
+                ? 'Sales Performance'
+                : widget.kind == _SalesManagerPageKind.deliveries
+                    ? 'Sales Deliveries'
+                    : widget.kind == _SalesManagerPageKind.financial
+                        ? 'Sales Financials'
+                        : 'Sales Reports',
+            subtitle: 'Loading live sales data from the backend.',
+            icon: Icons.analytics_outlined,
+            colors: const [Color(0xFF334155), Color(0xFF1D4ED8)],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: 240, child: shellChild),
+        ],
+      ),
     );
   }
 }
