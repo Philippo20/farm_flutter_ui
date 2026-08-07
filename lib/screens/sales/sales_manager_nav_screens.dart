@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -76,7 +77,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                 const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             child: Container(
               constraints: BoxConstraints(
-                maxWidth: 560,
+                maxWidth: 500,
                 maxHeight: MediaQuery.of(context).size.height * 0.9,
               ),
               decoration: BoxDecoration(
@@ -92,54 +93,77 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 16, 18),
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF1D4ED8), Color(0xFF0F766E)],
-                      ),
-                      borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(AppSpacing.radiusXl)),
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                     child: Row(
                       children: [
-                        const Icon(Icons.business_outlined,
-                            color: Colors.white, size: 26),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(colors: [
+                              AppColors.primary,
+                              AppColors.primary.withOpacity(0.75),
+                            ]),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(Icons.business_outlined,
+                              size: 20, color: Colors.white),
+                        ),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Add Off-Taker',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 19,
-                                      fontWeight: FontWeight.w700)),
-                              SizedBox(height: 3),
+                              Text('New Off-Taker',
+                                  style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : AppColors.textPrimary)),
                               Text('Create a separate buyer business record',
-                                  style: TextStyle(
-                                      color: Colors.white70, fontSize: 12)),
+                                  style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white38
+                                          : AppColors.textSecondary)),
                             ],
                           ),
                         ),
-                        IconButton(
-                          onPressed: saving
+                        InkWell(
+                          onTap: saving
                               ? null
                               : () => Navigator.pop(dialogContext, false),
-                          icon: const Icon(Icons.close_rounded,
-                              color: Colors.white),
-                          tooltip: 'Close',
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white.withOpacity(0.04)
+                                  : Colors.black.withOpacity(0.04),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.close_rounded,
+                                size: 16,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white38
+                                    : AppColors.textSecondary),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  Flexible(
-                    child: Form(
-                      key: formKey,
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
-                        child: Column(
-                          children: [
+                  Form(
+                    key: formKey,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                             _formField(context, name, 'Business name',
                                 Icons.business_outlined,
                                 required: true),
@@ -158,39 +182,22 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                             _formField(
                                 context, notes, 'Notes', Icons.notes_outlined,
                                 maxLines: 3),
+                            _dialogLabel('Relationship status', context),
+                            const SizedBox(height: 6),
                             DropdownButtonFormField<String>(
                               value: status,
                               isExpanded: true,
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : AppColors.textPrimary,
-                              ),
-                              dropdownColor:
-                                  Theme.of(context).colorScheme.surface,
-                              decoration: InputDecoration(
-                                labelText: 'Relationship status',
-                                labelStyle: TextStyle(
+                              style: GoogleFonts.inter(
+                                  fontSize: 12,
                                   color: Theme.of(context).brightness ==
                                           Brightness.dark
-                                      ? Colors.white70
-                                      : AppColors.textSecondary,
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.flag_outlined,
-                                  size: 19,
-                                  color: Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white70
-                                      : AppColors.textSecondary,
-                                ),
-                                filled: true,
-                                fillColor: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white.withOpacity(0.06)
-                                    : AppColors.neutral50,
-                              ),
+                                      ? Colors.white
+                                      : AppColors.textPrimary),
+                              dropdownColor: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.surfaceDark
+                                  : Colors.white,
+                              decoration: _dialogInputDecoration(context),
                               items: const ['Active', 'Prospect', 'Inactive']
                                   .map((item) => DropdownMenuItem(
                                       value: item, child: Text(item)))
@@ -212,12 +219,24 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                             onPressed: saving
                                 ? null
                                 : () => Navigator.pop(dialogContext, false),
-                            child: const Text('Cancel'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                              side: BorderSide(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white.withOpacity(0.1)
+                                      : Colors.black.withOpacity(0.08)),
+                            ),
+                            child: Text('Cancel',
+                                style: GoogleFonts.inter(
+                                    fontSize: 13, fontWeight: FontWeight.w500)),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: FilledButton.icon(
+                          child: ElevatedButton.icon(
                             onPressed: saving
                                 ? null
                                 : () async {
@@ -258,7 +277,20 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                         strokeWidth: 2))
                                 : const Icon(Icons.save_outlined),
                             label:
-                                Text(saving ? 'Saving...' : 'Save Off-Taker'),
+                                Text(
+                                  saving ? 'Saving...' : 'Save Off-Taker',
+                                  style: GoogleFonts.inter(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)),
+                            ),
                           ),
                         ),
                       ],
@@ -286,7 +318,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     }
   }
 
-  TextFormField _formField(
+  Widget _formField(
     BuildContext context,
     TextEditingController controller,
     String label,
@@ -296,32 +328,78 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     int maxLines = 1,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboard,
-      maxLines: maxLines,
-      style: AppTypography.bodyMedium.copyWith(
-        color: isDark ? Colors.white : AppColors.textPrimary,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _dialogLabel(label, context),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: controller,
+            keyboardType: keyboard,
+            maxLines: maxLines,
+            style: GoogleFonts.inter(
+                fontSize: 12,
+                color: isDark ? Colors.white : AppColors.textPrimary),
+            decoration: _dialogInputDecoration(context, icon: icon),
+            validator: required
+                ? (value) => value == null || value.trim().isEmpty
+                    ? '$label is required'
+                    : null
+                : null,
+          ),
+        ],
       ),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(
-          color: isDark ? Colors.white70 : AppColors.textSecondary,
-        ),
-        prefixIcon: Icon(
-          icon,
-          size: 19,
-          color: isDark ? Colors.white70 : AppColors.textSecondary,
-        ),
-        filled: true,
-        fillColor:
-            isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+    );
+  }
+
+  Widget _dialogLabel(String label, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Text(
+      label,
+      style: GoogleFonts.inter(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: isDark ? Colors.white54 : AppColors.textSecondary,
       ),
-      validator: required
-          ? (value) => value == null || value.trim().isEmpty
-              ? '$label is required'
-              : null
-          : null,
+    );
+  }
+
+  InputDecoration _dialogInputDecoration(BuildContext context,
+      {IconData? icon}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InputDecoration(
+      hintText: 'Enter ${icon == Icons.notes_outlined ? 'notes' : 'value'}',
+      hintStyle: GoogleFonts.inter(
+          fontSize: 12,
+          color: isDark ? Colors.white24 : AppColors.textSecondary),
+      prefixIcon: icon == null
+          ? null
+          : Icon(icon,
+              size: 16,
+              color: isDark ? Colors.white24 : AppColors.textSecondary),
+      filled: true,
+      fillColor: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(
+            color: isDark
+                ? Colors.white.withOpacity(0.06)
+                : Colors.black.withOpacity(0.06)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(
+            color: isDark
+                ? Colors.white.withOpacity(0.06)
+                : Colors.black.withOpacity(0.06)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
     );
   }
 
