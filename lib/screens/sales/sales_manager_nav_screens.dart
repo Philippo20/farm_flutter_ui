@@ -175,31 +175,37 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                             Icons.business_outlined,
                             required: true,
                           ),
-                          _formField(
+                          _fieldPair(
                             context,
-                            type,
-                            'Business type',
-                            Icons.category_outlined,
+                            _formField(
+                              context,
+                              type,
+                              'Business type',
+                              Icons.category_outlined,
+                            ),
+                            _formField(
+                              context,
+                              contact,
+                              'Contact person',
+                              Icons.person_outline_rounded,
+                            ),
                           ),
-                          _formField(
+                          _fieldPair(
                             context,
-                            contact,
-                            'Contact person',
-                            Icons.person_outline_rounded,
-                          ),
-                          _formField(
-                            context,
-                            phone,
-                            'Phone number',
-                            Icons.phone_outlined,
-                            keyboard: TextInputType.phone,
-                          ),
-                          _formField(
-                            context,
-                            email,
-                            'Email',
-                            Icons.email_outlined,
-                            keyboard: TextInputType.emailAddress,
+                            _formField(
+                              context,
+                              phone,
+                              'Phone number',
+                              Icons.phone_outlined,
+                              keyboard: TextInputType.phone,
+                            ),
+                            _formField(
+                              context,
+                              email,
+                              'Email',
+                              Icons.email_outlined,
+                              keyboard: TextInputType.emailAddress,
+                            ),
                           ),
                           _formField(
                             context,
@@ -387,6 +393,23 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _fieldPair(BuildContext context, Widget first, Widget second) {
+    final isDesktop = MediaQuery.of(context).size.width >= 700;
+    if (!isDesktop) {
+      return Column(
+        children: [first, second],
+      );
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: first),
+        const SizedBox(width: 10),
+        Expanded(child: second),
+      ],
     );
   }
 
