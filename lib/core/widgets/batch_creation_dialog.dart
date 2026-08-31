@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../theme/app_colors.dart';
@@ -36,23 +37,45 @@ Future<bool?> showBatchCreationDialog({
   InputDecoration inputDecoration(bool isDark, String label,
       {String? hint, IconData? icon}) {
     return InputDecoration(
-      labelText: label,
       hintText: hint,
       prefixIcon: icon == null ? null : Icon(icon),
       filled: true,
       fillColor: isDark ? Colors.black.withOpacity(0.1) : AppColors.neutral50,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        borderSide: BorderSide.none,
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(
+          color: isDark
+              ? Colors.white.withOpacity(0.08)
+              : Colors.black.withOpacity(0.06),
+        ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(
-          color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
+          color: isDark
+              ? Colors.white.withOpacity(0.08)
+              : Colors.black.withOpacity(0.06),
         ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
     );
   }
+
+  Widget fieldLabel(String label, bool isDark) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text(
+          label,
+          style: AppTypography.bodySmall.copyWith(
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white54 : AppColors.textSecondary,
+          ),
+        ),
+      );
 
   Future<void> pickDate(BuildContext dialogContext, bool isStart,
       StateSetter setModalState) async {
@@ -108,25 +131,42 @@ Future<bool?> showBatchCreationDialog({
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.primary,
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.primary,
+                                AppColors.primary.withOpacity(0.75),
+                              ],
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(Icons.add_circle_outline_rounded,
-                              color: Colors.white, size: 22),
+                              color: Colors.white, size: 20),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Create Batch Number',
-                                  style: AppTypography.h6.copyWith(
-                                      fontWeight: FontWeight.w700)),
+                              Text(
+                                'Create Batch Number',
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
                               const SizedBox(height: 3),
                               Text('Generate a production batch for $farmName',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: AppTypography.bodySmall),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: isDark
+                                        ? Colors.white38
+                                        : AppColors.textSecondary,
+                                  )),
                             ],
                           ),
                         ),
@@ -160,27 +200,44 @@ Future<bool?> showBatchCreationDialog({
                                   border: Border.all(
                                       color: AppColors.error.withOpacity(0.25)),
                                 ),
-                                child: Text(formError!,
-                                    style: AppTypography.bodySmall
-                                        .copyWith(color: AppColors.error)),
+                            child: Text(
+                              formError!,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppColors.error,
+                              ),
+                            ),
                               ),
                               const SizedBox(height: AppSpacing.md),
                             ],
-                            TextFormField(
-                              initialValue: farmName,
-                              readOnly: true,
-                              decoration: inputDecoration(isDark, 'Farm',
-                                  icon: Icons.agriculture_outlined),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                fieldLabel('Farm', isDark),
+                                TextFormField(
+                                  initialValue: farmName,
+                                  readOnly: true,
+                                  decoration: inputDecoration(isDark, 'Farm',
+                                      icon: Icons.agriculture_outlined),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              initialValue:
-                                  plantName.isEmpty ? 'Plant' : plantName,
-                              readOnly: true,
-                              decoration: inputDecoration(isDark, 'Plant Type',
-                                  icon: Icons.eco_outlined),
+                            const SizedBox(height: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                fieldLabel('Plant Type', isDark),
+                                TextFormField(
+                                  initialValue:
+                                      plantName.isEmpty ? 'Plant' : plantName,
+                                  readOnly: true,
+                                  decoration: inputDecoration(
+                                      isDark, 'Plant Type',
+                                      icon: Icons.eco_outlined),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 16),
                             Row(
                               children: [
                                 Expanded(
@@ -208,44 +265,62 @@ Future<bool?> showBatchCreationDialog({
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: seedsController,
-                              enabled: !saving,
-                              keyboardType: TextInputType.number,
-                              decoration: inputDecoration(
-                                  isDark, 'Number of Seeds',
-                                  hint: 'Enter number',
-                                  icon: Icons.spa_outlined),
-                              validator: (value) {
-                                final number =
-                                    int.tryParse(value?.trim() ?? '');
-                                if (number == null || number <= 0) {
-                                  return 'Enter a valid number of seeds';
-                                }
-                                return null;
-                              },
+                            const SizedBox(height: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                fieldLabel('Number of Seeds', isDark),
+                                TextFormField(
+                                  controller: seedsController,
+                                  enabled: !saving,
+                                  keyboardType: TextInputType.number,
+                                  decoration: inputDecoration(
+                                      isDark, 'Number of Seeds',
+                                      hint: 'Enter number',
+                                      icon: Icons.spa_outlined),
+                                  validator: (value) {
+                                    final number =
+                                        int.tryParse(value?.trim() ?? '');
+                                    if (number == null || number <= 0) {
+                                      return 'Enter a valid number of seeds';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: caretakerController,
-                              enabled: !saving,
-                              decoration: inputDecoration(
-                                isDark,
-                                'Caretaker (Optional)',
-                                hint: 'Select caretaker',
-                                icon: Icons.person_outline,
-                              ),
+                            const SizedBox(height: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                fieldLabel('Caretaker (Optional)', isDark),
+                                TextFormField(
+                                  controller: caretakerController,
+                                  enabled: !saving,
+                                  decoration: inputDecoration(
+                                    isDark,
+                                    'Caretaker (Optional)',
+                                    hint: 'Select caretaker',
+                                    icon: Icons.person_outline,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: notesController,
-                              enabled: !saving,
-                              maxLines: 3,
-                              decoration: inputDecoration(
-                                  isDark, 'Notes (Optional)',
-                                  hint: 'Add any additional notes...',
-                                  icon: Icons.note_outlined),
+                            const SizedBox(height: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                fieldLabel('Notes (Optional)', isDark),
+                                TextFormField(
+                                  controller: notesController,
+                                  enabled: !saving,
+                                  maxLines: 3,
+                                  decoration: inputDecoration(
+                                      isDark, 'Notes (Optional)',
+                                      hint: 'Add any additional notes...',
+                                      icon: Icons.note_outlined),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -375,23 +450,50 @@ class _BatchDateField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon),
-          filled: true,
-          fillColor:
-              isDark ? Colors.black.withOpacity(0.1) : AppColors.neutral50,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            borderSide: BorderSide.none,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white54 : AppColors.textSecondary,
+            ),
           ),
         ),
-        child: Text(value, style: AppTypography.bodyMedium),
-      ),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: InputDecorator(
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon),
+              filled: true,
+              fillColor:
+                  isDark ? Colors.black.withOpacity(0.1) : AppColors.neutral50,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.08)
+                      : Colors.black.withOpacity(0.06),
+                ),
+              ),
+            ),
+            child: Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: isDark ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
