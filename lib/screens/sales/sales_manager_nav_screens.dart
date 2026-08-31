@@ -84,6 +84,35 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     }
   }
 
+  List<Map<String, String>> _buildReviewChanges(
+    Map<String, dynamic>? current,
+    Map<String, dynamic> proposed,
+    String Function(String) label,
+  ) {
+    const ignoredKeys = {'\$id', '\$createdAt', '\$updatedAt'};
+
+    String display(Object? value) {
+      if (value == null || '$value'.trim().isEmpty || value == 'null') {
+        return 'Not set';
+      }
+      return '$value';
+    }
+
+    return proposed.entries
+        .where((entry) => !ignoredKeys.contains(entry.key))
+        .where((entry) {
+          final oldValue = '${current?[entry.key] ?? ''}'.trim();
+          final newValue = '${entry.value ?? ''}'.trim();
+          return oldValue != newValue;
+        })
+        .map((entry) => {
+              'label': label(entry.key),
+              'oldValue': display(current?[entry.key]),
+              'newValue': display(entry.value),
+            })
+        .toList();
+  }
+
   Future<void> _showRequestDetails(
       Map<String, dynamic> request, Map<String, dynamic>? offTaker) async {
     if (MediaQuery.sizeOf(context).width < 600) {
@@ -105,112 +134,114 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
             : '${part[0].toUpperCase()}${part.substring(1)}')
         .join(' ');
 
+    final changes = _buildReviewChanges(offTaker, proposal, label);
+    var reviewing = false;
+
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => Dialog(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560, maxHeight: 720),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.fact_check_outlined,
-                        color: AppColors.warning),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text('Review Off-Taker Update',
-                          style: AppTypography.h5
-                              .copyWith(fontWeight: FontWeight.w600)),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const Divider(height: AppSpacing.lg),
-                Text('${offTaker?['name'] ?? 'Off-taker'}',
-                    style:
-                        AppTypography.h6.copyWith(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
-                Text(
-                    'Requested by ${request['requested_by_name'] ?? 'Sales Personnel'}',
-                    style: AppTypography.bodySmall),
-                const SizedBox(height: AppSpacing.md),
-                _ReviewInfoBlock(
-                  title: 'Reason for update',
-                  value: '${request['reason'] ?? 'No reason provided'}',
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text('Current details',
-                    style: AppTypography.bodyMedium
-                        .copyWith(fontWeight: FontWeight.w600)),
-                const SizedBox(height: AppSpacing.sm),
-                if (offTaker == null || offTaker.isEmpty)
-                  const _ReviewInfoBlock(
-                    title: 'Current record',
-                    value: 'The original off-taker record is unavailable.',
-                  )
-                else
-                  ...offTaker.entries
-                      .where((entry) => !{'\$id', '\$createdAt', '\$updatedAt'}
-                          .contains(entry.key))
-                      .map((entry) => _ReviewInfoBlock(
-                            title: label(entry.key),
-                            value: '${entry.value}'.trim().isEmpty
-                                ? 'Not set'
-                                : '${entry.value}',
-                          )),
-                const SizedBox(height: AppSpacing.md),
-                Text('Proposed details',
-                    style: AppTypography.bodyMedium
-                        .copyWith(fontWeight: FontWeight.w600)),
-                const SizedBox(height: AppSpacing.sm),
-                if (proposal.isEmpty)
-                  const Text('No proposed details were supplied.')
-                else
-                  ...proposal.entries.map(
-                    (entry) => _ReviewInfoBlock(
-                      title: label(entry.key),
-                      value: '${entry.value}'.trim().isEmpty
-                          ? 'Not set'
-                          : '${entry.value}',
-                    ),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => Dialog(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560, maxHeight: 720),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.fact_check_outlined,
+                          color: AppColors.warning),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text('Review Off-Taker Update',
+                            style: AppTypography.h5
+                                .copyWith(fontWeight: FontWeight.w600)),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
                   ),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          await _reviewUpdate(request, 'Rejected');
-                          if (dialogContext.mounted) {
-                            Navigator.pop(dialogContext);
-                          }
-                        },
-                        icon: const Icon(Icons.close, size: 17),
-                        label: const Text('Reject'),
+                  const Divider(height: AppSpacing.lg),
+                  Text('${offTaker?['name'] ?? 'Off-taker'}',
+                      style: AppTypography.h6
+                          .copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text(
+                      'Requested by ${request['requested_by_name'] ?? 'Sales Personnel'}',
+                      style: AppTypography.bodySmall),
+                  const SizedBox(height: AppSpacing.md),
+                  _ReviewInfoBlock(
+                    title: 'Reason for update',
+                    value: '${request['reason'] ?? 'No reason provided'}',
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text('Changed fields',
+                      style: AppTypography.bodyMedium
+                          .copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: AppSpacing.sm),
+                  if (changes.isEmpty)
+                    const _ReviewInfoBlock(
+                      title: 'No differences detected',
+                      value: 'The submitted values match the current record.',
+                    )
+                  else
+                    ...changes
+                        .map((change) => _ReviewChangeRow(change: change)),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: reviewing
+                              ? null
+                              : () async {
+                                  setDialogState(() => reviewing = true);
+                                  await _reviewUpdate(request, 'Rejected');
+                                  if (dialogContext.mounted) {
+                                    Navigator.pop(dialogContext);
+                                  }
+                                },
+                          icon: reviewing
+                              ? const SizedBox(
+                                  width: 17,
+                                  height: 17,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.close, size: 17),
+                          label: Text(reviewing ? 'Processing...' : 'Reject'),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () async {
-                          await _reviewUpdate(request, 'Approved');
-                          if (dialogContext.mounted) {
-                            Navigator.pop(dialogContext);
-                          }
-                        },
-                        icon: const Icon(Icons.check, size: 17),
-                        label: const Text('Approve'),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: reviewing
+                              ? null
+                              : () async {
+                                  setDialogState(() => reviewing = true);
+                                  await _reviewUpdate(request, 'Approved');
+                                  if (dialogContext.mounted) {
+                                    Navigator.pop(dialogContext);
+                                  }
+                                },
+                          icon: reviewing
+                              ? const SizedBox(
+                                  width: 17,
+                                  height: 17,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.check, size: 17),
+                          label: Text(reviewing ? 'Processing...' : 'Approve'),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -235,6 +266,9 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
             : '${part[0].toUpperCase()}${part.substring(1)}')
         .join(' ');
 
+    final changes = _buildReviewChanges(offTaker, proposal, label);
+    var reviewing = false;
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -243,148 +277,143 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (sheetContext) => SizedBox(
-        height: MediaQuery.sizeOf(sheetContext).height * 0.86,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg, AppSpacing.md, AppSpacing.sm, AppSpacing.sm),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                    child: const Icon(Icons.fact_check_outlined,
-                        color: AppColors.warning),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Review change request',
-                            style: AppTypography.h6
-                                .copyWith(fontWeight: FontWeight.w600)),
-                        Text('Compare details before deciding',
-                            style: AppTypography.bodySmall),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Close',
-                    onPressed: () => Navigator.pop(sheetContext),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            Expanded(
-              child: SingleChildScrollView(
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * 0.86,
+          child: Column(
+            children: [
+              Padding(
                 padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('${offTaker?['name'] ?? 'Off-taker'}',
-                        style: AppTypography.h5
-                            .copyWith(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 4),
-                    Text(
-                        'Requested by ${request['requested_by_name'] ?? 'Sales Personnel'}',
-                        style: AppTypography.bodySmall),
-                    const SizedBox(height: AppSpacing.md),
-                    _ReviewInfoBlock(
-                      title: 'Reason for update',
-                      value: '${request['reason'] ?? 'No reason provided'}',
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text('Current details',
-                        style: AppTypography.bodyMedium
-                            .copyWith(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: AppSpacing.sm),
-                    if (offTaker == null || offTaker.isEmpty)
-                      const _ReviewInfoBlock(
-                        title: 'Current record',
-                        value: 'The original record is unavailable.',
-                      )
-                    else
-                      ...offTaker.entries
-                          .where((entry) => !{
-                                '\$id',
-                                '\$createdAt',
-                                '\$updatedAt'
-                              }.contains(entry.key))
-                          .map((entry) => _ReviewInfoBlock(
-                                title: label(entry.key),
-                                value: '${entry.value}'.trim().isEmpty
-                                    ? 'Not set'
-                                    : '${entry.value}',
-                              )),
-                    const SizedBox(height: AppSpacing.md),
-                    Text('Proposed details',
-                        style: AppTypography.bodyMedium
-                            .copyWith(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: AppSpacing.sm),
-                    if (proposal.isEmpty)
-                      const _ReviewInfoBlock(
-                        title: 'Proposal',
-                        value: 'No proposed details were supplied.',
-                      )
-                    else
-                      ...proposal.entries.map(
-                        (entry) => _ReviewInfoBlock(
-                          title: label(entry.key),
-                          value: '${entry.value}'.trim().isEmpty
-                              ? 'Not set'
-                              : '${entry.value}',
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
+                    AppSpacing.lg, AppSpacing.md, AppSpacing.sm, AppSpacing.sm),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          await _reviewUpdate(request, 'Rejected');
-                          if (sheetContext.mounted) {
-                            Navigator.pop(sheetContext);
-                          }
-                        },
-                        icon: const Icon(Icons.close, size: 17),
-                        label: const Text('Reject'),
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withOpacity(0.12),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
                       ),
+                      child: const Icon(Icons.fact_check_outlined,
+                          color: AppColors.warning),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () async {
-                          await _reviewUpdate(request, 'Approved');
-                          if (sheetContext.mounted) {
-                            Navigator.pop(sheetContext);
-                          }
-                        },
-                        icon: const Icon(Icons.check, size: 17),
-                        label: const Text('Approve'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Review change request',
+                              style: AppTypography.h6
+                                  .copyWith(fontWeight: FontWeight.w600)),
+                          Text('Compare details before deciding',
+                              style: AppTypography.bodySmall),
+                        ],
                       ),
+                    ),
+                    IconButton(
+                      tooltip: 'Close',
+                      onPressed: () => Navigator.pop(sheetContext),
+                      icon: const Icon(Icons.close),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+              const Divider(height: 1),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
+                      AppSpacing.md, AppSpacing.lg, AppSpacing.sm),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${offTaker?['name'] ?? 'Off-taker'}',
+                          style: AppTypography.h5
+                              .copyWith(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      Text(
+                          'Requested by ${request['requested_by_name'] ?? 'Sales Personnel'}',
+                          style: AppTypography.bodySmall),
+                      const SizedBox(height: AppSpacing.md),
+                      _ReviewInfoBlock(
+                        title: 'Reason for update',
+                        value: '${request['reason'] ?? 'No reason provided'}',
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text('Changed fields',
+                          style: AppTypography.bodyMedium
+                              .copyWith(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: AppSpacing.sm),
+                      if (changes.isEmpty)
+                        const _ReviewInfoBlock(
+                          title: 'No differences detected',
+                          value:
+                              'The submitted values match the current record.',
+                        )
+                      else
+                        ...changes
+                            .map((change) => _ReviewChangeRow(change: change)),
+                    ],
+                  ),
+                ),
+              ),
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
+                      AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: reviewing
+                              ? null
+                              : () async {
+                                  setSheetState(() => reviewing = true);
+                                  await _reviewUpdate(request, 'Rejected');
+                                  if (sheetContext.mounted) {
+                                    Navigator.pop(sheetContext);
+                                  }
+                                },
+                          icon: reviewing
+                              ? const SizedBox(
+                                  width: 17,
+                                  height: 17,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.close, size: 17),
+                          label: Text(reviewing ? 'Processing...' : 'Reject'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: reviewing
+                              ? null
+                              : () async {
+                                  setSheetState(() => reviewing = true);
+                                  await _reviewUpdate(request, 'Approved');
+                                  if (sheetContext.mounted) {
+                                    Navigator.pop(sheetContext);
+                                  }
+                                },
+                          icon: reviewing
+                              ? const SizedBox(
+                                  width: 17,
+                                  height: 17,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.check, size: 17),
+                          label: Text(reviewing ? 'Processing...' : 'Approve'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1082,6 +1111,60 @@ class _EmptySalesState extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Center(child: Text(label)),
       );
+}
+
+class _ReviewChangeRow extends StatelessWidget {
+  final Map<String, String> change;
+
+  const _ReviewChangeRow({required this.change});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final warning = isDark ? Colors.amber.shade300 : AppColors.warning;
+    final textColor = isDark ? Colors.white : AppColors.textPrimary;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: warning.withOpacity(isDark ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: warning.withOpacity(0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(change['label'] ?? 'Changed field',
+              style: AppTypography.bodySmall
+                  .copyWith(color: warning, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(change['oldValue'] ?? 'Not set',
+                    style: AppTypography.bodyMedium.copyWith(
+                        color:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
+                        decoration: TextDecoration.lineThrough)),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                child:
+                    Icon(Icons.arrow_forward_rounded, size: 18, color: warning),
+              ),
+              Expanded(
+                child: Text(change['newValue'] ?? 'Not set',
+                    style: AppTypography.bodyMedium.copyWith(
+                        color: textColor, fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ReviewInfoBlock extends StatelessWidget {
