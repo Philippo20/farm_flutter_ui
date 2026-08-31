@@ -86,12 +86,12 @@ Future<bool?> showBatchCreationDialog({
           return Dialog(
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
+                horizontal: AppSpacing.md, vertical: AppSpacing.lg),
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 720, maxHeight: 760),
+              constraints: const BoxConstraints(maxWidth: 560, maxHeight: 760),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.surfaceDark : Colors.white,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isDark
                       ? Colors.white.withOpacity(0.08)
@@ -102,29 +102,30 @@ Future<bool?> showBatchCreationDialog({
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
-                        AppSpacing.md, AppSpacing.sm, AppSpacing.md),
+                    padding: const EdgeInsets.fromLTRB(24, 22, 16, 18),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.12),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusMd),
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(Icons.add_circle_outline_rounded,
-                              color: AppColors.primary),
+                              color: Colors.white, size: 22),
                         ),
-                        const SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Create New Batch',
-                                  style: AppTypography.h6
-                                      .copyWith(fontWeight: FontWeight.w600)),
+                              Text('Create Batch Number',
+                                  style: AppTypography.h6.copyWith(
+                                      fontWeight: FontWeight.w700)),
+                              const SizedBox(height: 3),
                               Text('Generate a production batch for $farmName',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                   style: AppTypography.bodySmall),
                             ],
                           ),
@@ -142,7 +143,7 @@ Future<bool?> showBatchCreationDialog({
                   const Divider(height: 1),
                   Flexible(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                       child: Form(
                         key: formKey,
                         child: Column(
@@ -171,7 +172,7 @@ Future<bool?> showBatchCreationDialog({
                               decoration: inputDecoration(isDark, 'Farm',
                                   icon: Icons.agriculture_outlined),
                             ),
-                            const SizedBox(height: AppSpacing.sm),
+                            const SizedBox(height: 12),
                             TextFormField(
                               initialValue:
                                   plantName.isEmpty ? 'Plant' : plantName,
@@ -179,7 +180,7 @@ Future<bool?> showBatchCreationDialog({
                               decoration: inputDecoration(isDark, 'Plant Type',
                                   icon: Icons.eco_outlined),
                             ),
-                            const SizedBox(height: AppSpacing.sm),
+                            const SizedBox(height: 12),
                             Row(
                               children: [
                                 Expanded(
@@ -193,7 +194,7 @@ Future<bool?> showBatchCreationDialog({
                                             dialogContext, true, setModalState),
                                   ),
                                 ),
-                                const SizedBox(width: AppSpacing.sm),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: _BatchDateField(
                                     label: 'End Date',
@@ -207,7 +208,7 @@ Future<bool?> showBatchCreationDialog({
                                 ),
                               ],
                             ),
-                            const SizedBox(height: AppSpacing.sm),
+                            const SizedBox(height: 12),
                             TextFormField(
                               controller: seedsController,
                               enabled: !saving,
@@ -225,7 +226,7 @@ Future<bool?> showBatchCreationDialog({
                                 return null;
                               },
                             ),
-                            const SizedBox(height: AppSpacing.sm),
+                            const SizedBox(height: 12),
                             TextFormField(
                               controller: caretakerController,
                               enabled: !saving,
@@ -236,7 +237,7 @@ Future<bool?> showBatchCreationDialog({
                                 icon: Icons.person_outline,
                               ),
                             ),
-                            const SizedBox(height: AppSpacing.sm),
+                            const SizedBox(height: 12),
                             TextFormField(
                               controller: notesController,
                               enabled: !saving,
@@ -254,8 +255,7 @@ Future<bool?> showBatchCreationDialog({
                   SafeArea(
                     top: false,
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(AppSpacing.lg,
-                          AppSpacing.sm, AppSpacing.lg, AppSpacing.md),
+                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
                       child: Row(
                         children: [
                           Expanded(
@@ -266,7 +266,7 @@ Future<bool?> showBatchCreationDialog({
                               child: const Text('Cancel'),
                             ),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: FilledButton.icon(
                               onPressed: saving
