@@ -566,7 +566,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       drawer: widget.isFarmManager && isMobile
           ? FarmManagerMobileDrawer(
-              selectedIndex: 9,
+              selectedIndex: 8,
               onItemSelected: (_) {},
               userName: userName,
             )
@@ -594,9 +594,9 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
               selectedIndex: 12,
               onItemSelected: (_) {},
             )
-          : widget.isFarmManager
+          : widget.isFarmManager && isMobile
               ? FarmManagerMobileBottomNav(
-                  selectedIndex: 9,
+                  selectedIndex: 8,
                   onItemSelected: (_) {},
                 )
               : (isMobile
@@ -614,7 +614,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
       return Row(
         children: [
           FarmManagerSidebar(
-            selectedIndex: 9,
+            selectedIndex: 8,
             onItemSelected: (_) {},
             userName: authState.user?.name ?? 'Farm Manager',
             userEmail: authState.user?.email ?? '',

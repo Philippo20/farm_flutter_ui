@@ -26,7 +26,7 @@ class FarmManagerSettingsScreen extends ConsumerStatefulWidget {
 class _FarmManagerSettingsScreenState
     extends ConsumerState<FarmManagerSettingsScreen> {
   final SuperAdminApiService _api = SuperAdminApiService();
-  int _selectedNavIndex = 8;
+  int _selectedNavIndex = 9;
   final _scrollController = ScrollController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final List<Map<String, dynamic>> _farms = [];

@@ -278,16 +278,16 @@ class FarmManagerMobileDrawer extends StatelessWidget {
         'route': '/farm-manager/team'
       },
       {
-        'icon': Icons.settings_outlined,
-        'active': Icons.settings_rounded,
-        'label': 'Settings',
-        'route': '/farm-manager/settings'
-      },
-      {
         'icon': Icons.sensors_outlined,
         'active': Icons.sensors_rounded,
         'label': 'Sensors',
         'route': '/farm-manager/sensors'
+      },
+      {
+        'icon': Icons.settings_outlined,
+        'active': Icons.settings_rounded,
+        'label': 'Settings',
+        'route': '/farm-manager/settings'
       },
     ];
 
@@ -412,16 +412,16 @@ class FarmManagerMobileBottomNav extends StatelessWidget {
       route: '/farm-manager/team',
     ),
     _FarmNavItem(
-      icon: Icons.settings_outlined,
-      activeIcon: Icons.settings_rounded,
-      label: 'Settings',
-      route: '/farm-manager/settings',
-    ),
-    _FarmNavItem(
       icon: Icons.sensors_outlined,
       activeIcon: Icons.sensors_rounded,
       label: 'Sensors',
       route: '/farm-manager/sensors',
+    ),
+    _FarmNavItem(
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings_rounded,
+      label: 'Settings',
+      route: '/farm-manager/settings',
     ),
   ];
 

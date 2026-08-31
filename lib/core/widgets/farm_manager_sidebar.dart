@@ -85,16 +85,16 @@ class _FarmManagerSidebarState extends State<FarmManagerSidebar>
       route: '/farm-manager/team',
     ),
     _NavItem(
-      icon: Icons.settings_outlined,
-      activeIcon: Icons.settings_rounded,
-      label: 'Settings',
-      route: '/farm-manager/settings',
-    ),
-    _NavItem(
       icon: Icons.sensors_outlined,
       activeIcon: Icons.sensors_rounded,
       label: 'Sensors',
       route: '/farm-manager/sensors',
+    ),
+    _NavItem(
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings_rounded,
+      label: 'Settings',
+      route: '/farm-manager/settings',
     ),
   ];
 

@@ -571,115 +571,13 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
   }
 
   Future<void> _createBatchForFarm(Map<String, dynamic> farm) async {
-    final controller = TextEditingController();
-    var saving = false;
-    String? errorText;
-    final now = DateTime.now();
-    final start = now.toIso8601String().substring(0, 10);
-    final end =
-        now.add(const Duration(days: 30)).toIso8601String().substring(0, 10);
-    final farmId = '${farm['id'] ?? farm[r'$id'] ?? ''}';
-    final farmName = '${farm['name'] ?? farm['farm_name'] ?? 'Farm'}';
-    final plantName = '${farm['plantType'] ?? farm['plant_type'] ?? 'Plant'}';
-    final managerId =
-        '${farm['farmManagerId'] ?? farm['farm_manager_id'] ?? ''}';
-    final managerName =
-        '${farm['farmManager'] ?? farm['farm_manager_name'] ?? ''}';
-
-    try {
-      await showDialog<void>(
-        context: context,
-        builder: (dialogContext) => StatefulBuilder(
-          builder: (context, setModalState) => AlertDialog(
-            title: const Text('Create Batch Number'),
-            content: TextField(
-              controller: controller,
-              autofocus: true,
-              enabled: !saving,
-              decoration: InputDecoration(
-                labelText: 'Batch number',
-                hintText: 'Example: FAM-2026-001',
-                errorText: errorText,
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: saving ? null : () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
-              ),
-              FilledButton.icon(
-                onPressed: saving
-                    ? null
-                    : () async {
-                        final batchNumber = controller.text.trim();
-                        if (batchNumber.isEmpty) {
-                          setModalState(
-                              () => errorText = 'Enter a batch number.');
-                          return;
-                        }
-                        setModalState(() => saving = true);
-                        try {
-                          await _api.createBatch(data: {
-                            'batch_no': batchNumber,
-                            'farmID': farmId,
-                            'farm_name': farmName,
-                            'plant_type_ID': '',
-                            'plant_name': plantName,
-                            'farm_manager_id': managerId,
-                            'farm_manager_name': managerName,
-                            'caretaker_id': '',
-                            'caretaker_name': '',
-                            'start_date': start,
-                            'end_date': end,
-                            'actual_harvest_date': end,
-                            'total_seeds_nursed': 0,
-                            'total_harvested': 0,
-                            'total_transplanted': 0,
-                            'total_weight_kg': 0,
-                            'production_status': 'Planted',
-                            'technical_issues': '',
-                            'inputs_supplied':
-                                'Batch created from farm details',
-                            'funds_requested': false,
-                            'financial_status': 'Pending',
-                            'fund_request_id': '',
-                            'delivery_status': 'Pending',
-                            'delivery_details': '',
-                            'created_by': ref.read(currentUserProvider)?.name ??
-                                'Administrator',
-                            'created_at': start,
-                            'updated_at': now.toIso8601String(),
-                          });
-                          if (!mounted) return;
-                          Navigator.pop(dialogContext);
-                          await _loadData();
-                          ScaffoldMessenger.of(this.context).showSnackBar(
-                            SnackBar(
-                                content: Text(
-                                    'Batch $batchNumber created successfully')),
-                          );
-                        } catch (error) {
-                          setModalState(() {
-                            saving = false;
-                            errorText = error.toString();
-                          });
-                        }
-                      },
-                icon: saving
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.add, size: 18),
-                label: Text(saving ? 'Creating...' : 'Create Batch'),
-              ),
-            ],
-          ),
-        ),
-      );
-    } finally {
-      controller.dispose();
-    }
+    await showBatchCreationDialog(
+      context: context,
+      api: _api,
+      farm: farm,
+      createdBy: ref.read(currentUserProvider)?.name ?? 'Administrator',
+      onCreated: _loadData,
+    );
   }
 
   _RevenueStats _revenueStatsForFarm(Map<String, dynamic> farm) {
