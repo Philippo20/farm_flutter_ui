@@ -9,6 +9,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/modern_admin_header.dart';
 import '../../core/widgets/modern_admin_sidebar.dart';
 import '../../core/widgets/skeleton_loader.dart';
+import '../../core/widgets/batch_creation_dialog.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/superadmin_api_service.dart';
 
@@ -1483,7 +1484,14 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                 runSpacing: AppSpacing.sm,
                 children: [
                   OutlinedButton.icon(
-                    onPressed: () => _createBatchForFarm(farm),
+                    onPressed: () => showBatchCreationDialog(
+                      context: context,
+                      api: _api,
+                      farm: farm,
+                      createdBy: ref.read(currentUserProvider)?.name ??
+                          'Administrator',
+                      onCreated: _loadData,
+                    ),
                     icon: const Icon(Icons.qr_code_2_rounded, size: 18),
                     label: const Text('Batch Number'),
                   ),
