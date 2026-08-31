@@ -17,6 +17,36 @@ Future<bool?> showBatchCreationDialog({
   final farmId = '${farm['id'] ?? farm[r'$id'] ?? ''}';
   final farmName = '${farm['name'] ?? farm['farm_name'] ?? 'Farm'}';
   final plantName = '${farm['plantType'] ?? farm['plant_type'] ?? ''}';
+  var selectedVariety =
+      '${farm['plantVariety'] ?? farm['plant_variety'] ?? ''}'.trim();
+  if (selectedVariety == '-' || selectedVariety.toLowerCase() == 'none') {
+    selectedVariety = '';
+  }
+  final varietyOptions = <String>{
+    if (selectedVariety.isNotEmpty) selectedVariety,
+  };
+  try {
+    final crops = await api.getCrops();
+    for (final crop in crops) {
+      final cropPlant =
+          '${crop['plant_type'] ?? crop['plant_name'] ?? crop['plantType'] ?? crop['crop_name'] ?? ''}'
+              .trim();
+      final variety =
+          '${crop['variety_name'] ?? crop['variety'] ?? crop['name'] ?? ''}'
+              .trim();
+      if (variety.isNotEmpty &&
+          (plantName.trim().isEmpty ||
+              cropPlant.isEmpty ||
+              cropPlant.toLowerCase() == plantName.trim().toLowerCase())) {
+        varietyOptions.add(variety);
+      }
+    }
+  } catch (_) {
+    // The farm's saved variety remains available if the catalog is offline.
+  }
+  if (selectedVariety.isEmpty && varietyOptions.isNotEmpty) {
+    selectedVariety = varietyOptions.first;
+  }
   final managerId = '${farm['farmManagerId'] ?? farm['farm_manager_id'] ?? ''}';
   final managerName =
       '${farm['farmManager'] ?? farm['farm_manager_name'] ?? ''}';
@@ -238,6 +268,41 @@ Future<bool?> showBatchCreationDialog({
                               ],
                             ),
                             const SizedBox(height: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                fieldLabel('Crop Variety', isDark),
+                                DropdownButtonFormField<String>(
+                                  value: varietyOptions.contains(selectedVariety)
+                                      ? selectedVariety
+                                      : null,
+                                  isExpanded: true,
+                                  decoration: inputDecoration(
+                                    isDark,
+                                    'Crop Variety',
+                                    hint: 'Select crop variety',
+                                    icon: Icons.category_outlined,
+                                  ),
+                                  items: varietyOptions
+                                      .map((variety) => DropdownMenuItem(
+                                            value: variety,
+                                            child: Text(variety,
+                                                overflow:
+                                                    TextOverflow.ellipsis),
+                                          ))
+                                      .toList(),
+                                  onChanged: saving
+                                      ? null
+                                      : (value) => setModalState(
+                                          () => selectedVariety = value ?? ''),
+                                  validator: (value) => value == null ||
+                                          value.trim().isEmpty
+                                      ? 'Select a crop variety'
+                                      : null,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
                             Row(
                               children: [
                                 Expanded(
@@ -364,6 +429,7 @@ Future<bool?> showBatchCreationDialog({
                                           'plant_name': plantName.isEmpty
                                               ? 'Plant'
                                               : plantName,
+                                          'plant_variety': selectedVariety,
                                           'farm_manager_id': managerId,
                                           'farm_manager_name': managerName,
                                           'caretaker_id': '',

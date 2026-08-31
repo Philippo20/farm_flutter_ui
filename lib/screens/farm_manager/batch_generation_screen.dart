@@ -35,6 +35,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   // Form controllers
   String? _selectedFarm;
   String? _selectedPlantType;
+  String? _selectedPlantVariety;
   DateTime? _startDate;
   DateTime? _endDate;
   int _nursedSeeds = 0;
@@ -52,6 +53,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   final List<Map<String, dynamic>> _farms = [];
   final List<Map<String, dynamic>> _caretakers = [];
   final List<Map<String, dynamic>> _plantTypes = [];
+  final List<Map<String, dynamic>> _cropVarieties = [];
   bool _isLoadingData = true;
   String? _loadError;
 
@@ -79,12 +81,13 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         _api.getFarms(),
         _api.getUsers(),
         _api.getPlantTypes(),
+        _api.getCrops(),
         _api.getBatches(),
       ]);
       if (!mounted) return;
       final assignedFarms =
           results[0].where(_isAssignedToCurrentManager).toList();
-      final assignedBatches = results[3]
+      final assignedBatches = results[4]
           .where((batch) => _matchesAnyFarm(batch, assignedFarms))
           .map(_mapBatch)
           .toList();
@@ -111,6 +114,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         _plantTypes
           ..clear()
           ..addAll(results[2]);
+        _cropVarieties
+          ..clear()
+          ..addAll(results[3]);
         ref.read(batchProvider.notifier).setBatches(assignedBatches);
         _isLoadingData = false;
       });
@@ -253,6 +259,21 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     return options;
   }
 
+  List<String> _varietyOptionsForPlant(String plantType) {
+    final options = <String>{};
+    for (final crop in _cropVarieties) {
+      final cropPlant = _value(crop,
+          ['plant_type', 'plant_name', 'plantType', 'crop_name']);
+      final variety = _value(crop, ['variety_name', 'variety', 'name']);
+      if (variety.isNotEmpty &&
+          (cropPlant.isEmpty ||
+              cropPlant.toLowerCase() == plantType.toLowerCase())) {
+        options.add(variety);
+      }
+    }
+    return options.toList()..sort();
+  }
+
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -301,6 +322,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   void _onPlantTypeChanged(String? plantType) {
     setState(() {
       _selectedPlantType = plantType;
+      _selectedPlantVariety = null;
       // Auto-calculate end date if start date is set
       if (_startDate != null && plantType != null) {
         _endDate =
@@ -336,6 +358,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         'farm_name': farmName,
         'plant_type_ID': farm['plantType']?.toString() ?? '',
         'plant_name': _selectedPlantType!,
+        'plant_variety': _selectedPlantVariety!,
         'farm_manager_id': user?.id ?? '',
         'farm_manager_name': user?.name ?? 'Farm Manager',
         'caretaker_id': caretaker['id']?.toString() ?? '',
@@ -723,6 +746,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                         onChanged: (value) => setState(() {
                           _selectedFarm = value;
                           _selectedPlantType = null;
+                          _selectedPlantVariety = null;
                           _endDate = null;
                         }),
                         validator: (value) =>
@@ -773,6 +797,56 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     ],
                   ),
                 ],
+                const SizedBox(height: AppSpacing.lg),
+
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Crop Variety',
+                      style: AppTypography.labelLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    DropdownButtonFormField<String>(
+                      value: _selectedPlantVariety,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        hintText: _selectedPlantType == null
+                            ? 'Select plant type first'
+                            : 'Select crop variety',
+                        prefixIcon: const Icon(Icons.category_outlined),
+                        filled: true,
+                        fillColor: isDark
+                            ? Colors.black.withOpacity(0.1)
+                            : AppColors.neutral50,
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      items: _selectedPlantType == null
+                          ? const []
+                          : _varietyOptionsForPlant(_selectedPlantType!)
+                              .map((variety) => DropdownMenuItem(
+                                    value: variety,
+                                    child: Text(variety,
+                                        overflow: TextOverflow.ellipsis),
+                                  ))
+                              .toList(),
+                      onChanged: _selectedPlantType == null
+                          ? null
+                          : (value) =>
+                              setState(() => _selectedPlantVariety = value),
+                      validator: (value) => value == null
+                          ? 'Please select a crop variety'
+                          : null,
+                    ),
+                  ],
+                ),
                 const SizedBox(height: AppSpacing.lg),
 
                 // Date Selection Row
