@@ -1563,6 +1563,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         (plant['maturityUnit'] ?? 'months').toString();
     String selectedStatus = plant['status'];
     var saving = false;
+    String? formError;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -1675,6 +1676,28 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (formError != null) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withValues(alpha: 0.08),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusMd),
+                              border: Border.all(
+                                  color:
+                                      AppColors.error.withValues(alpha: 0.22)),
+                            ),
+                            child: Text(
+                              formError!,
+                              style: TextStyle(
+                                color: AppColors.error,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                        ],
                         _buildFormLabel('Plant Name', isDark),
                         const SizedBox(height: AppSpacing.sm),
                         _buildTextField(
@@ -1784,10 +1807,14 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                     maturityMax == null ||
                                     maturityMin <= 0 ||
                                     maturityMax < maturityMin) {
-                                  setDialogState(() {});
+                                  setDialogState(() => formError =
+                                      'Enter a valid maturity range.');
                                   return;
                                 }
-                                setDialogState(() => saving = true);
+                                setDialogState(() {
+                                  saving = true;
+                                  formError = null;
+                                });
                                 try {
                                   await _api.updatePlantType(
                                     id: plant['id'].toString(),
@@ -1808,8 +1835,10 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                   _showSuccessSnack('$plantName updated.');
                                 } catch (error) {
                                   if (!context.mounted) return;
-                                  setDialogState(() => saving = false);
-                                  _showErrorSnack(error.toString());
+                                  setDialogState(() {
+                                    saving = false;
+                                    formError = error.toString();
+                                  });
                                 }
                               },
                               icon: saving
