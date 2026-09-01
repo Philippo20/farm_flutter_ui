@@ -505,13 +505,15 @@ class SuperAdminApiService {
   Future<Map<String, dynamic>> createBatch({
     required Map<String, dynamic> data,
   }) async {
-    final response = await _client
-        .post(
-          Uri.parse('$baseUrl/batches/info'),
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: data.map((key, value) => MapEntry(key, value.toString())),
-        )
-        .withApiTimeout();
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/batches/info'),
+    )..fields.addAll(
+        data.map((key, value) => MapEntry(key, value.toString())),
+      );
+    final streamedResponse = await _client.send(request).withApiTimeout();
+    final response =
+        await http.Response.fromStream(streamedResponse).withApiTimeout();
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw SuperAdminApiException(
@@ -1940,6 +1942,17 @@ class SuperAdminApiService {
       if (decoded is Map<String, dynamic>) {
         final detail = decoded['detail'];
         if (detail is String && detail.trim().isNotEmpty) return detail;
+        if (detail is List) {
+          final messages = detail.whereType<Map>().map((item) {
+            final location = item['loc'];
+            final field = location is List && location.isNotEmpty
+                ? location.last.toString()
+                : 'request';
+            final message = item['msg']?.toString() ?? 'Invalid value';
+            return '$field: $message';
+          }).where((message) => message.isNotEmpty);
+          if (messages.isNotEmpty) return messages.join('\n');
+        }
       }
     } catch (_) {
       // Use fallback when the API response is not JSON.
