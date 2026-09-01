@@ -239,7 +239,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     final variety = _selectedPlantVariety;
     if (variety != null && variety.isNotEmpty) {
       for (final crop in _cropVarieties) {
-        if (_value(crop, ['variety_name', 'variety', 'name']) == variety) {
+        if (_catalogKey(_value(crop, ['variety_name', 'variety', 'name'])) ==
+            _catalogKey(variety)) {
           final rawValue = crop['plant_duration_value'];
           final value = rawValue is num
               ? rawValue.toInt()
@@ -254,6 +255,23 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       }
     }
     return null;
+  }
+
+  String _catalogKey(Object? value) => value
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+      .trim();
+
+  bool _compatiblePlantNames(String first, String second) {
+    final firstKey = _catalogKey(first);
+    final secondKey = _catalogKey(second);
+    return firstKey.isEmpty ||
+        secondKey.isEmpty ||
+        firstKey == secondKey ||
+        firstKey.contains(secondKey) ||
+        secondKey.contains(firstKey);
   }
 
   DateTime? _calculatedEndDate(DateTime startDate) {
@@ -292,9 +310,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       final cropPlant =
           _value(crop, ['plant_type', 'plant_name', 'plantType', 'crop_name']);
       final variety = _value(crop, ['variety_name', 'variety', 'name']);
-      if (variety.isNotEmpty &&
-          (cropPlant.isEmpty ||
-              cropPlant.toLowerCase() == plantType.toLowerCase())) {
+      if (variety.isNotEmpty && _compatiblePlantNames(cropPlant, plantType)) {
         options.add(variety);
       }
     }

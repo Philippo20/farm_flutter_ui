@@ -19,12 +19,29 @@ import '../../services/superadmin_api_service.dart';
   return (value: 0, unit: 'days');
 }
 
-DateTime _calculateBatchEndDate(
+String _catalogKey(Object? value) => value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+    .trim();
+
+bool _compatiblePlantNames(String first, String second) {
+  final firstKey = _catalogKey(first);
+  final secondKey = _catalogKey(second);
+  return firstKey.isEmpty ||
+      secondKey.isEmpty ||
+      firstKey == secondKey ||
+      firstKey.contains(secondKey) ||
+      secondKey.contains(firstKey);
+}
+
+DateTime? _calculateBatchEndDate(
   DateTime startDate,
   int durationValue,
   String durationUnit,
 ) {
-  if (durationValue <= 0) return startDate;
+  if (durationValue <= 0) return null;
   if (durationUnit == 'weeks') {
     return startDate.add(Duration(days: durationValue * 7));
   }
@@ -69,12 +86,11 @@ Future<bool?> showBatchCreationDialog({
       final variety =
           '${crop['variety_name'] ?? crop['variety'] ?? crop['name'] ?? ''}'
               .trim();
-      if (variety.isNotEmpty &&
-          (plantName.trim().isEmpty ||
-              cropPlant.isEmpty ||
-              cropPlant.toLowerCase() == plantName.trim().toLowerCase())) {
+      if (variety.isNotEmpty) {
+        varietyRecords[_catalogKey(variety)] = crop;
+      }
+      if (variety.isNotEmpty && _compatiblePlantNames(cropPlant, plantName)) {
         varietyOptions.add(variety);
-        varietyRecords[variety] = crop;
       }
     }
   } catch (_) {
@@ -94,7 +110,8 @@ Future<bool?> showBatchCreationDialog({
   final notesController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   var startDate = DateTime.now();
-  var selectedDuration = _cropDuration(varietyRecords[selectedVariety]);
+  var selectedDuration =
+      _cropDuration(varietyRecords[_catalogKey(selectedVariety)]);
   var endDate = _calculateBatchEndDate(
     startDate,
     selectedDuration.value,
@@ -373,7 +390,8 @@ Future<bool?> showBatchCreationDialog({
                                       : (value) => setModalState(() {
                                             selectedVariety = value ?? '';
                                             selectedDuration = _cropDuration(
-                                              varietyRecords[selectedVariety],
+                                              varietyRecords[
+                                                  _catalogKey(selectedVariety)],
                                             );
                                             endDate = _calculateBatchEndDate(
                                               startDate,
@@ -409,7 +427,9 @@ Future<bool?> showBatchCreationDialog({
                                 Expanded(
                                   child: _BatchDateField(
                                     label: 'End Date (Auto)',
-                                    value: dateText(endDate),
+                                    value: endDate == null
+                                        ? 'Duration unavailable'
+                                        : dateText(endDate!),
                                     icon: Icons.event_available_outlined,
                                     onTap: null,
                                   ),
@@ -553,7 +573,9 @@ Future<bool?> showBatchCreationDialog({
                                       if (!formKey.currentState!.validate()) {
                                         return;
                                       }
-                                      if (selectedDuration.value <= 0) {
+                                      final calculatedEndDate = endDate;
+                                      if (selectedDuration.value <= 0 ||
+                                          calculatedEndDate == null) {
                                         setModalState(() => formError =
                                             'The selected crop variety has no valid plant duration.');
                                         return;
@@ -580,9 +602,10 @@ Future<bool?> showBatchCreationDialog({
                                           'caretaker_name':
                                               caretakerController.text.trim(),
                                           'start_date': isoDate(startDate),
-                                          'end_date': isoDate(endDate),
+                                          'end_date':
+                                              isoDate(calculatedEndDate),
                                           'actual_harvest_date':
-                                              isoDate(endDate),
+                                              isoDate(calculatedEndDate),
                                           'total_seeds_nursed': int.parse(
                                               seedsController.text.trim()),
                                           'total_harvested': 0,
