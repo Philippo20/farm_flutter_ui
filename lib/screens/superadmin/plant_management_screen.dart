@@ -98,8 +98,10 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
       'category':
           (doc['category'] ?? doc['plant_type'] ?? 'Plant Types').toString(),
       'isCategory': doc['is_category'] == true,
-      'maturity': doc['months_to_maturity'] ?? doc['maturity'] ?? 0,
-      'maturityUnit': 'months',
+      'maturityMin': doc['maturity_min_value'] ?? doc['months_to_maturity'] ?? doc['maturity'] ?? 0,
+      'maturityMax': doc['maturity_max_value'] ?? doc['months_to_maturity'] ?? doc['maturity'] ?? 0,
+      'maturity': doc['maturity_max_value'] ?? doc['months_to_maturity'] ?? doc['maturity'] ?? 0,
+      'maturityUnit': (doc['maturity_unit'] ?? 'months').toString(),
       'imageUrl': (doc['image_url'] ?? '').toString(),
       'status': _statusLabel(doc['status']),
       'created': _dateLabel(doc[r'$createdAt'] ?? doc['created_at']),
@@ -179,20 +181,29 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   }
 
   String _maturityLabel(Map<String, dynamic> plant) {
-    final value = plant['maturity'];
+    final min = plant['maturityMin'] ?? plant['maturity'] ?? 0;
+    final max = plant['maturityMax'] ?? plant['maturity'] ?? min;
     final unit = (plant['maturityUnit'] ?? 'months').toString();
-    return '$value $unit';
+    return '$min${min == max ? '' : '-$max'} $unit';
   }
 
   Future<bool> _savePlantType({
     required String name,
     required String category,
-    required String monthsToMaturity,
+    required String maturityMin,
+    required String maturityMax,
+    required String maturityUnit,
     required String imageFileName,
     required String status,
   }) async {
-    final months = int.tryParse(monthsToMaturity.trim());
-    if (name.trim().isEmpty || months == null || imageFileName.trim().isEmpty) {
+    final min = int.tryParse(maturityMin.trim());
+    final max = int.tryParse(maturityMax.trim());
+    if (name.trim().isEmpty ||
+        min == null ||
+        max == null ||
+        min <= 0 ||
+        max < min ||
+        imageFileName.trim().isEmpty) {
       return false;
     }
 
@@ -205,7 +216,9 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
       await _api.createPlantType(
         name: name.trim(),
         category: category.trim(),
-        monthsToMaturity: months,
+        maturityMinValue: min,
+        maturityMaxValue: max,
+        maturityUnit: maturityUnit,
         imageFileName: imageFileName.trim(),
         status: status,
       );
@@ -1295,11 +1308,13 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   void _showAddPlantDialog(BuildContext context, bool isDark) {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController();
-    final maturityController = TextEditingController();
+    final maturityMinController = TextEditingController();
+    final maturityMaxController = TextEditingController();
     final imageController = TextEditingController();
     String selectedCategory =
         _plantCategories.isNotEmpty ? _plantCategories.first : 'Plant Types';
     String selectedStatus = 'Active';
+    String selectedMaturityUnit = 'months';
     var saving = false;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
@@ -1388,25 +1403,18 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                 return null;
                               }),
                           const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Months To Maturity', isDark),
+                          _buildFormLabel('Maturity Range', isDark),
                           const SizedBox(height: AppSpacing.sm),
-                          _buildTextField(
-                              controller: maturityController,
-                              hint: 'e.g., 2',
-                              icon: Icons.schedule,
-                              isDark: isDark,
-                              keyboardType: TextInputType.number,
-                              validator: (value) {
-                                final text = (value ?? '').trim();
-                                if (text.isEmpty) {
-                                  return 'Add the maturity time in months.';
-                                }
-                                final months = int.tryParse(text);
-                                if (months == null || months <= 0) {
-                                  return 'Use a whole number greater than 0.';
-                                }
-                                return null;
-                              }),
+                          _buildMaturityControls(
+                            minController: maturityMinController,
+                            maxController: maturityMaxController,
+                            hint: 'Min',
+                            value: selectedMaturityUnit,
+                            isDark: isDark,
+                            isMobile: isMobile,
+                            onChanged: (v) => setDialogState(
+                                () => selectedMaturityUnit = v ?? 'months'),
+                          ),
                           const SizedBox(height: AppSpacing.lg),
                           _buildFormLabel('Image File Name', isDark),
                           const SizedBox(height: AppSpacing.sm),
@@ -1497,8 +1505,11 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                       final saved = await _savePlantType(
                                         name: nameController.text,
                                         category: selectedCategory,
-                                        monthsToMaturity:
-                                            maturityController.text,
+                                        maturityMin:
+                                            maturityMinController.text,
+                                        maturityMax:
+                                            maturityMaxController.text,
+                                        maturityUnit: selectedMaturityUnit,
                                         imageFileName: imageController.text,
                                         status: selectedStatus,
                                       );
@@ -1542,8 +1553,10 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   void _showEditPlantDialog(
       BuildContext context, Map<String, dynamic> plant, bool isDark) {
     final nameController = TextEditingController(text: plant['name']);
-    final maturityController =
-        TextEditingController(text: plant['maturity'].toString());
+    final maturityMinController = TextEditingController(
+        text: (plant['maturityMin'] ?? plant['maturity'] ?? 0).toString());
+    final maturityMaxController = TextEditingController(
+        text: (plant['maturityMax'] ?? plant['maturity'] ?? 0).toString());
     final imageFileName = (plant['imageUrl'] ?? '').toString();
     String selectedCategory = plant['category'];
     String selectedMaturityUnit =
@@ -1682,7 +1695,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                         _buildFormLabel('Maturity Duration', isDark),
                         const SizedBox(height: AppSpacing.sm),
                         _buildMaturityControls(
-                          controller: maturityController,
+                          minController: maturityMinController,
+                          maxController: maturityMaxController,
                           hint: 'Duration',
                           value: selectedMaturityUnit,
                           isDark: isDark,
@@ -1761,15 +1775,25 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                     nameController.text.trim().isEmpty
                                         ? plant['name']
                                         : nameController.text.trim();
-                                final maturity =
-                                    int.tryParse(maturityController.text) ??
-                                        plant['maturity'];
+                                final maturityMin = int.tryParse(
+                                    maturityMinController.text.trim());
+                                final maturityMax = int.tryParse(
+                                    maturityMaxController.text.trim());
+                                if (maturityMin == null ||
+                                    maturityMax == null ||
+                                    maturityMin <= 0 ||
+                                    maturityMax < maturityMin) {
+                                  setDialogState(() {});
+                                  return;
+                                }
                                 try {
                                   await _api.updatePlantType(
                                     id: plant['id'].toString(),
                                     name: plantName,
                                     category: selectedCategory,
-                                    monthsToMaturity: maturity,
+                                    maturityMinValue: maturityMin,
+                                    maturityMaxValue: maturityMax,
+                                    maturityUnit: selectedMaturityUnit,
                                     imageFileName: imageFileName,
                                     status: selectedStatus,
                                   );
@@ -2040,7 +2064,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   }
 
   Widget _buildMaturityControls({
-    required TextEditingController controller,
+    required TextEditingController minController,
+    required TextEditingController maxController,
     required String hint,
     required String value,
     required bool isDark,
@@ -2050,12 +2075,30 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     if (isMobile) {
       return Column(
         children: [
-          _buildTextField(
-            controller: controller,
-            hint: hint,
-            icon: Icons.schedule,
-            isDark: isDark,
-            keyboardType: TextInputType.number,
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  controller: minController,
+                  hint: 'Minimum',
+                  icon: Icons.schedule,
+                  isDark: isDark,
+                  keyboardType: TextInputType.number,
+                  validator: (value) => _rangeValueError(value),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _buildTextField(
+                  controller: maxController,
+                  hint: 'Maximum',
+                  icon: Icons.event_available_outlined,
+                  isDark: isDark,
+                  keyboardType: TextInputType.number,
+                  validator: (value) => _rangeValueError(value),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.sm),
           _buildCompactDropdownField(
@@ -2072,11 +2115,31 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
       children: [
         Expanded(
           child: _buildTextField(
-            controller: controller,
-            hint: hint,
+            controller: minController,
+            hint: 'Minimum',
             icon: Icons.schedule,
             isDark: isDark,
             keyboardType: TextInputType.number,
+            validator: (value) => _rangeValueError(value),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _buildTextField(
+            controller: maxController,
+            hint: 'Maximum',
+            icon: Icons.event_available_outlined,
+            isDark: isDark,
+            keyboardType: TextInputType.number,
+            validator: (value) {
+              final error = _rangeValueError(value);
+              if (error != null) return error;
+              final min = int.tryParse(minController.text.trim());
+              final max = int.tryParse(value?.trim() ?? '');
+              return min != null && max != null && max < min
+                  ? 'Must be >= min'
+                  : null;
+            },
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -2091,6 +2154,11 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         ),
       ],
     );
+  }
+
+  String? _rangeValueError(String? value) {
+    final number = int.tryParse(value?.trim() ?? '');
+    return number == null || number <= 0 ? 'Enter a positive number' : null;
   }
 
   Widget _buildCompactDropdownField({

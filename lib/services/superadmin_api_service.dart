@@ -1440,7 +1440,9 @@ class SuperAdminApiService {
   Future<Map<String, dynamic>> createPlantType({
     required String name,
     required String category,
-    required int monthsToMaturity,
+    required int maturityMinValue,
+    required int maturityMaxValue,
+    required String maturityUnit,
     required String imageFileName,
     required String status,
   }) async {
@@ -1450,7 +1452,9 @@ class SuperAdminApiService {
       body: {
         'name': name,
         'category': category,
-        'months_to_maturity': monthsToMaturity.toString(),
+        'maturity_min_value': maturityMinValue.toString(),
+        'maturity_max_value': maturityMaxValue.toString(),
+        'maturity_unit': maturityUnit.toLowerCase(),
         'image_url': imageFileName,
         'status': status.toLowerCase(),
       },
@@ -1479,7 +1483,9 @@ class SuperAdminApiService {
     required String id,
     required String name,
     required String category,
-    required int monthsToMaturity,
+    required int maturityMinValue,
+    required int maturityMaxValue,
+    required String maturityUnit,
     required String imageFileName,
     required String status,
   }) async {
@@ -1489,7 +1495,9 @@ class SuperAdminApiService {
       body: {
         'name': name,
         'category': category,
-        'months_to_maturity': monthsToMaturity.toString(),
+        'maturity_min_value': maturityMinValue.toString(),
+        'maturity_max_value': maturityMaxValue.toString(),
+        'maturity_unit': maturityUnit.toLowerCase(),
         'image_url': imageFileName,
         'status': status.toLowerCase(),
       },
