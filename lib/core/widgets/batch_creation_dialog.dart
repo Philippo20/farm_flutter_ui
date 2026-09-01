@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import '../theme/app_typography.dart';
 import '../../services/superadmin_api_service.dart';
 
 Future<bool?> showBatchCreationDialog({
@@ -47,6 +46,7 @@ Future<bool?> showBatchCreationDialog({
   if (selectedVariety.isEmpty && varietyOptions.isNotEmpty) {
     selectedVariety = varietyOptions.first;
   }
+  if (!context.mounted) return null;
   final managerId = '${farm['farmManagerId'] ?? farm['farm_manager_id'] ?? ''}';
   final managerName =
       '${farm['farmManager'] ?? farm['farm_manager_name'] ?? ''}';
@@ -68,41 +68,47 @@ Future<bool?> showBatchCreationDialog({
       {String? hint, IconData? icon}) {
     return InputDecoration(
       hintText: hint,
-      prefixIcon: icon == null ? null : Icon(icon),
+      hintStyle: GoogleFonts.poppins(
+        fontSize: 12.5,
+        color: isDark ? Colors.white54 : AppColors.textSecondary,
+      ),
+      errorStyle: GoogleFonts.poppins(fontSize: 10.5, height: 1.25),
+      prefixIcon: icon == null ? null : Icon(icon, size: 18),
       filled: true,
-      fillColor: isDark ? Colors.black.withOpacity(0.1) : AppColors.neutral50,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      fillColor:
+          isDark ? Colors.white.withValues(alpha: 0.05) : AppColors.neutral50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(
-          color: isDark
-              ? Colors.white.withOpacity(0.08)
-              : Colors.black.withOpacity(0.06),
-        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         borderSide: BorderSide(
-          color: isDark
-              ? Colors.white.withOpacity(0.08)
-              : Colors.black.withOpacity(0.06),
+          color: isDark ? Colors.white12 : AppColors.neutral200,
         ),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        borderSide: const BorderSide(color: AppColors.success, width: 2),
       ),
     );
   }
 
+  TextStyle inputTextStyle(bool isDark) => GoogleFonts.poppins(
+        fontSize: 13,
+        fontWeight: FontWeight.w400,
+        color: isDark ? Colors.white : AppColors.textPrimary,
+      );
+
   Widget fieldLabel(String label, bool isDark) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.only(bottom: 7),
         child: Text(
           label,
-          style: AppTypography.bodySmall.copyWith(
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white54 : AppColors.textSecondary,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            height: 1.35,
+            color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
       );
@@ -137,40 +143,52 @@ Future<bool?> showBatchCreationDialog({
         builder: (context, setModalState) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
           return Dialog(
-            backgroundColor: Colors.transparent,
+            backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
             insetPadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md, vertical: AppSpacing.lg),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 560, maxHeight: 760),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.surfaceDark : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.08)
-                      : Colors.black.withOpacity(0.08),
-                ),
+              horizontal: 16,
+              vertical: 20,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 600,
+                maxHeight: MediaQuery.sizeOf(context).height * 0.9,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 22, 16, 18),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 18,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.success,
+                          AppColors.success.withValues(alpha: 0.82),
+                        ],
+                      ),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppSpacing.radiusLg),
+                      ),
+                    ),
                     child: Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(9),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.primary,
-                                AppColors.primary.withOpacity(0.75),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(10),
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.radiusMd),
                           ),
-                          child: const Icon(Icons.add_circle_outline_rounded,
-                              color: Colors.white, size: 20),
+                          child: const Icon(
+                            Icons.add_circle_outline_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -179,23 +197,22 @@ Future<bool?> showBatchCreationDialog({
                             children: [
                               Text(
                                 'Create Batch Number',
-                                style: GoogleFonts.inter(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: isDark
-                                      ? Colors.white
-                                      : AppColors.textPrimary,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                  height: 1.25,
                                 ),
                               ),
                               const SizedBox(height: 3),
                               Text('Generate a production batch for $farmName',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: isDark
-                                        ? Colors.white38
-                                        : AppColors.textSecondary,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.white70,
+                                    height: 1.35,
                                   )),
                             ],
                           ),
@@ -205,15 +222,19 @@ Future<bool?> showBatchCreationDialog({
                           onPressed: saving
                               ? null
                               : () => Navigator.pop(dialogContext),
-                          icon: const Icon(Icons.close),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: Colors.white70,
+                            size: 20,
+                          ),
+                          visualDensity: VisualDensity.compact,
                         ),
                       ],
                     ),
                   ),
-                  const Divider(height: 1),
                   Flexible(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                      padding: const EdgeInsets.all(20),
                       child: Form(
                         key: formKey,
                         child: Column(
@@ -224,19 +245,22 @@ Future<bool?> showBatchCreationDialog({
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(AppSpacing.md),
                                 decoration: BoxDecoration(
-                                  color: AppColors.error.withOpacity(0.10),
+                                  color:
+                                      AppColors.error.withValues(alpha: 0.10),
                                   borderRadius: BorderRadius.circular(
                                       AppSpacing.radiusMd),
                                   border: Border.all(
-                                      color: AppColors.error.withOpacity(0.25)),
+                                      color: AppColors.error
+                                          .withValues(alpha: 0.25)),
                                 ),
-                            child: Text(
-                              formError!,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: AppColors.error,
-                              ),
-                            ),
+                                child: Text(
+                                  formError!,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10.5,
+                                    height: 1.4,
+                                    color: AppColors.error,
+                                  ),
+                                ),
                               ),
                               const SizedBox(height: AppSpacing.md),
                             ],
@@ -247,6 +271,7 @@ Future<bool?> showBatchCreationDialog({
                                 TextFormField(
                                   initialValue: farmName,
                                   readOnly: true,
+                                  style: inputTextStyle(isDark),
                                   decoration: inputDecoration(isDark, 'Farm',
                                       icon: Icons.agriculture_outlined),
                                 ),
@@ -261,6 +286,7 @@ Future<bool?> showBatchCreationDialog({
                                   initialValue:
                                       plantName.isEmpty ? 'Plant' : plantName,
                                   readOnly: true,
+                                  style: inputTextStyle(isDark),
                                   decoration: inputDecoration(
                                       isDark, 'Plant Type',
                                       icon: Icons.eco_outlined),
@@ -273,10 +299,12 @@ Future<bool?> showBatchCreationDialog({
                               children: [
                                 fieldLabel('Crop Variety', isDark),
                                 DropdownButtonFormField<String>(
-                                  value: varietyOptions.contains(selectedVariety)
-                                      ? selectedVariety
-                                      : null,
+                                  initialValue:
+                                      varietyOptions.contains(selectedVariety)
+                                          ? selectedVariety
+                                          : null,
                                   isExpanded: true,
+                                  style: inputTextStyle(isDark),
                                   decoration: inputDecoration(
                                     isDark,
                                     'Crop Variety',
@@ -286,19 +314,26 @@ Future<bool?> showBatchCreationDialog({
                                   items: varietyOptions
                                       .map((variety) => DropdownMenuItem(
                                             value: variety,
-                                            child: Text(variety,
-                                                overflow:
-                                                    TextOverflow.ellipsis),
+                                            child: Text(
+                                              variety,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 13,
+                                                color: isDark
+                                                    ? Colors.white
+                                                    : AppColors.textPrimary,
+                                              ),
+                                            ),
                                           ))
                                       .toList(),
                                   onChanged: saving
                                       ? null
                                       : (value) => setModalState(
                                           () => selectedVariety = value ?? ''),
-                                  validator: (value) => value == null ||
-                                          value.trim().isEmpty
-                                      ? 'Select a crop variety'
-                                      : null,
+                                  validator: (value) =>
+                                      value == null || value.trim().isEmpty
+                                          ? 'Select a crop variety'
+                                          : null,
                                 ),
                               ],
                             ),
@@ -338,6 +373,7 @@ Future<bool?> showBatchCreationDialog({
                                 TextFormField(
                                   controller: seedsController,
                                   enabled: !saving,
+                                  style: inputTextStyle(isDark),
                                   keyboardType: TextInputType.number,
                                   decoration: inputDecoration(
                                       isDark, 'Number of Seeds',
@@ -362,6 +398,7 @@ Future<bool?> showBatchCreationDialog({
                                 TextFormField(
                                   controller: caretakerController,
                                   enabled: !saving,
+                                  style: inputTextStyle(isDark),
                                   decoration: inputDecoration(
                                     isDark,
                                     'Caretaker (Optional)',
@@ -379,6 +416,7 @@ Future<bool?> showBatchCreationDialog({
                                 TextFormField(
                                   controller: notesController,
                                   enabled: !saving,
+                                  style: inputTextStyle(isDark),
                                   maxLines: 3,
                                   decoration: inputDecoration(
                                       isDark, 'Notes (Optional)',
@@ -394,8 +432,19 @@ Future<bool?> showBatchCreationDialog({
                   ),
                   SafeArea(
                     top: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.03)
+                            : AppColors.neutral50,
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(AppSpacing.radiusLg),
+                        ),
+                      ),
                       child: Row(
                         children: [
                           Expanded(
@@ -403,6 +452,14 @@ Future<bool?> showBatchCreationDialog({
                               onPressed: saving
                                   ? null
                                   : () => Navigator.pop(dialogContext),
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 13),
+                                textStyle: GoogleFonts.poppins(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                               child: const Text('Cancel'),
                             ),
                           ),
@@ -412,8 +469,9 @@ Future<bool?> showBatchCreationDialog({
                               onPressed: saving
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate())
+                                      if (!formKey.currentState!.validate()) {
                                         return;
+                                      }
                                       setModalState(() {
                                         saving = true;
                                         formError = null;
@@ -475,11 +533,26 @@ Future<bool?> showBatchCreationDialog({
                                       width: 16,
                                       height: 16,
                                       child: CircularProgressIndicator(
-                                          strokeWidth: 2),
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
                                     )
-                                  : const Icon(Icons.add, size: 18),
+                                  : const Icon(
+                                      Icons.add_circle_outline_rounded,
+                                      size: 17,
+                                    ),
                               label:
                                   Text(saving ? 'Creating...' : 'Create Batch'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.success,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 13),
+                                textStyle: GoogleFonts.poppins(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -520,40 +593,47 @@ class _BatchDateField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.only(bottom: 7),
           child: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white54 : AppColors.textSecondary,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              height: 1.35,
+              color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
         ),
         InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           child: InputDecorator(
             decoration: InputDecoration(
-              prefixIcon: Icon(icon),
+              prefixIcon: Icon(icon, size: 18),
               filled: true,
-              fillColor:
-                  isDark ? Colors.black.withOpacity(0.1) : AppColors.neutral50,
+              fillColor: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : AppColors.neutral50,
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 borderSide: BorderSide(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.08)
-                      : Colors.black.withOpacity(0.06),
+                  color: isDark ? Colors.white12 : AppColors.neutral200,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.white12 : AppColors.neutral200,
                 ),
               ),
             ),
             child: Text(
               value,
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
