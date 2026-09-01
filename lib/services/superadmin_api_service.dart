@@ -109,6 +109,7 @@ class SuperAdminApiService {
     }
     return decoded;
   }
+
   Future<List<Map<String, dynamic>>> getWallet() => _getDocuments('/wallet');
   Future<List<Map<String, dynamic>>> getAudits() => _getDocuments('/audits');
   Future<List<Map<String, dynamic>>> getAlerts() => _getDocuments('/alerts');
@@ -1716,6 +1717,29 @@ class SuperAdminApiService {
       throw SuperAdminApiException(decoded['error'].toString());
     }
     return decoded;
+  }
+
+  Future<void> deleteCropVariety(String id) async {
+    final response = await _client
+        .delete(
+          Uri.parse('$baseUrl/crops/${Uri.encodeComponent(id)}'),
+        )
+        .withApiTimeout();
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to delete crop variety (${response.statusCode})',
+        ),
+      );
+    }
+
+    if (response.body.trim().isEmpty) return;
+    final decoded = jsonDecode(response.body);
+    if (decoded is Map<String, dynamic> && decoded['error'] is String) {
+      throw SuperAdminApiException(decoded['error'].toString());
+    }
   }
 
   Future<Map<String, dynamic>> createPackage({

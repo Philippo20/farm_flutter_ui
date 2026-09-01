@@ -483,6 +483,18 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
           _buildTableHeader('pH', isDark: isDark),
           _buildTableHeader('Temperature', isDark: isDark),
           _buildTableHeader('Sprouting', isDark: isDark),
+          SizedBox(
+            width: 88,
+            child: Text(
+              'Actions',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white54 : AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -583,10 +595,34 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
             Expanded(
                 child: _buildMetricBadge(
                     '${crop['sproutingRatio']}%', AppColors.success)),
-            const SizedBox(width: AppSpacing.sm),
-            Icon(Icons.edit_outlined,
-                size: 18,
-                color: isDark ? Colors.white38 : AppColors.textSecondary),
+            SizedBox(
+              width: 88,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    tooltip: 'Edit crop variety',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _showEditDialog(isDark, crop),
+                    icon: Icon(
+                      Icons.edit_outlined,
+                      size: 18,
+                      color: isDark ? Colors.white60 : AppColors.textSecondary,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Delete crop variety',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _showDeleteDialog(crop, isDark),
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      size: 18,
+                      color: AppColors.error,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -1015,15 +1051,17 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       child: Column(
                         children: [
-                          _formField(cropController, 'Crop Name',
-                              'Enter crop name', Icons.eco_outlined, isDark),
-                          const SizedBox(height: 16),
-                          _formField(
-                              varietyController,
-                              'Variety Name',
-                              'Enter variety name',
-                              Icons.grass_outlined,
-                              isDark),
+                          _formFieldPair(
+                            firstController: cropController,
+                            firstLabel: 'Crop Name',
+                            firstHint: 'Enter crop name',
+                            firstIcon: Icons.eco_outlined,
+                            secondController: varietyController,
+                            secondLabel: 'Variety Name',
+                            secondHint: 'Enter variety name',
+                            secondIcon: Icons.grass_outlined,
+                            isDark: isDark,
+                          ),
                           const SizedBox(height: 16),
                           _imagePickerField(
                               imageController,
@@ -1057,15 +1095,17 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                 formKey.currentState?.validate();
                               }),
                           const SizedBox(height: 16),
-                          _formField(durationController, 'Plant Duration',
-                              'e.g., 60 days', Icons.schedule_outlined, isDark),
-                          const SizedBox(height: 16),
-                          _formField(
-                              companyController,
-                              'Seed Company',
-                              'Enter seed company',
-                              Icons.business_outlined,
-                              isDark),
+                          _formFieldPair(
+                            firstController: durationController,
+                            firstLabel: 'Plant Duration',
+                            firstHint: 'e.g., 60 days',
+                            firstIcon: Icons.schedule_outlined,
+                            secondController: companyController,
+                            secondLabel: 'Seed Company',
+                            secondHint: 'Enter seed company',
+                            secondIcon: Icons.business_outlined,
+                            isDark: isDark,
+                          ),
                           const SizedBox(height: 16),
                           _numberPair(
                             harvestController,
@@ -1126,6 +1166,35 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.md),
+                      if (isEditing) ...[
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: saving
+                                ? null
+                                : () {
+                                    Navigator.pop(dialogContext);
+                                    _showDeleteDialog(crop, isDark);
+                                  },
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              size: 17,
+                            ),
+                            label: const Text('Delete'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.error,
+                              side: BorderSide(
+                                color: AppColors.error.withValues(alpha: 0.45),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              textStyle: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                      ],
                       Expanded(
                         flex: 2,
                         child: ElevatedButton.icon(
@@ -1222,6 +1291,246 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showDeleteDialog(
+    Map<String, dynamic> crop,
+    bool isDark,
+  ) async {
+    var deleting = false;
+    String? deleteError;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => PopScope(
+          canPop: !deleting,
+          child: Dialog(
+            backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 24,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.delete_forever_outlined,
+                        color: AppColors.error,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Delete Crop Variety?',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'This permanently removes the variety from the crop catalogue and cannot be undone.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 11.5,
+                        height: 1.5,
+                        color:
+                            isDark ? Colors.white60 : AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.04)
+                            : AppColors.neutral50,
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusMd),
+                        border: Border.all(
+                          color: AppColors.error.withValues(alpha: 0.18),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            child: _buildCropImage(crop, isDark),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  crop['crop'].toString(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  crop['variety'].toString(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 11.5,
+                                    color: isDark
+                                        ? Colors.white60
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (deleteError != null) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withValues(alpha: 0.08),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusSm),
+                        ),
+                        child: Text(
+                          deleteError!,
+                          style: GoogleFonts.poppins(
+                            fontSize: 10.5,
+                            height: 1.4,
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: deleting
+                                ? null
+                                : () => Navigator.pop(dialogContext),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              textStyle: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: deleting
+                                ? null
+                                : () async {
+                                    final id = crop['id']?.toString() ?? '';
+                                    if (id.isEmpty) {
+                                      setDialogState(() => deleteError =
+                                          'This crop variety has no valid record ID.');
+                                      return;
+                                    }
+                                    setDialogState(() {
+                                      deleting = true;
+                                      deleteError = null;
+                                    });
+                                    if (mounted) {
+                                      setState(() => _isSaving = true);
+                                    }
+                                    try {
+                                      await _api.deleteCropVariety(id);
+                                      await _loadCrops();
+                                      if (!dialogContext.mounted) return;
+                                      Navigator.pop(dialogContext);
+                                      if (mounted) {
+                                        _showMessage(
+                                          'Crop variety deleted successfully.',
+                                        );
+                                      }
+                                    } catch (error) {
+                                      if (!dialogContext.mounted) return;
+                                      setDialogState(() {
+                                        deleting = false;
+                                        deleteError = error.toString();
+                                      });
+                                    } finally {
+                                      if (mounted) {
+                                        setState(() => _isSaving = false);
+                                      }
+                                    }
+                                  },
+                            icon: deleting
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.delete_outline_rounded,
+                                    size: 17,
+                                  ),
+                            label: Text(deleting ? 'Deleting' : 'Delete'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.error,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              textStyle: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -1441,6 +1750,55 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         size: 24,
         color: isDark ? Colors.white38 : AppColors.textSecondary,
       ),
+    );
+  }
+
+  Widget _formFieldPair({
+    required TextEditingController firstController,
+    required String firstLabel,
+    required String firstHint,
+    required IconData firstIcon,
+    required TextEditingController secondController,
+    required String secondLabel,
+    required String secondHint,
+    required IconData secondIcon,
+    required bool isDark,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final firstField = _formField(
+          firstController,
+          firstLabel,
+          firstHint,
+          firstIcon,
+          isDark,
+        );
+        final secondField = _formField(
+          secondController,
+          secondLabel,
+          secondHint,
+          secondIcon,
+          isDark,
+        );
+
+        if (constraints.maxWidth < 500) {
+          return Column(
+            children: [
+              firstField,
+              const SizedBox(height: 16),
+              secondField,
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: firstField),
+            const SizedBox(width: 16),
+            Expanded(child: secondField),
+          ],
+        );
+      },
     );
   }
 
