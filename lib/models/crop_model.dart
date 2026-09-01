@@ -1,4 +1,3 @@
-
 /// Crop Model
 /// Represents a crop type with its growing requirements
 class CropModel {
@@ -6,7 +5,8 @@ class CropModel {
   final String cropName;
   final String? cropImage;
   final String varietyName;
-  final int plantDuration; // Days to maturity
+  final int plantDuration;
+  final String plantDurationUnit;
   final double harvestingWeight;
   final String company;
   final double sproutingRatio;
@@ -32,6 +32,7 @@ class CropModel {
     this.cropImage,
     required this.varietyName,
     required this.plantDuration,
+    this.plantDurationUnit = 'days',
     required this.harvestingWeight,
     required this.company,
     required this.sproutingRatio,
@@ -54,12 +55,14 @@ class CropModel {
 
   /// Create CropModel from JSON
   factory CropModel.fromJson(Map<String, dynamic> json) {
+    final duration = _durationFromJson(json);
     return CropModel(
       id: json['id'] as String? ?? json['\$id'] as String,
       cropName: json['crop_name'] as String,
       cropImage: json['crop_image'] as String?,
       varietyName: json['variety_name'] as String,
-      plantDuration: json['plant_duration'] as int,
+      plantDuration: duration.value,
+      plantDurationUnit: duration.unit,
       harvestingWeight: (json['harvesting_weight'] as num).toDouble(),
       company: json['company'] as String,
       sproutingRatio: (json['sprouting_ratio'] as num).toDouble(),
@@ -100,7 +103,8 @@ class CropModel {
       'crop_name': cropName,
       if (cropImage != null) 'crop_image': cropImage,
       'variety_name': varietyName,
-      'plant_duration': plantDuration,
+      'plant_duration_value': plantDuration,
+      'plant_duration_unit': plantDurationUnit,
       'harvesting_weight': harvestingWeight,
       'company': company,
       'sprouting_ratio': sproutingRatio,
@@ -129,6 +133,7 @@ class CropModel {
     String? cropImage,
     String? varietyName,
     int? plantDuration,
+    String? plantDurationUnit,
     double? harvestingWeight,
     String? company,
     double? sproutingRatio,
@@ -154,6 +159,7 @@ class CropModel {
       cropImage: cropImage ?? this.cropImage,
       varietyName: varietyName ?? this.varietyName,
       plantDuration: plantDuration ?? this.plantDuration,
+      plantDurationUnit: plantDurationUnit ?? this.plantDurationUnit,
       harvestingWeight: harvestingWeight ?? this.harvestingWeight,
       company: company ?? this.company,
       sproutingRatio: sproutingRatio ?? this.sproutingRatio,
@@ -180,7 +186,17 @@ class CropModel {
 
   /// Get estimated harvest date from planting date
   DateTime getEstimatedHarvestDate(DateTime plantingDate) {
-    return plantingDate.add(Duration(days: plantDuration));
+    if (plantDurationUnit != 'months') {
+      return plantingDate.add(Duration(days: plantDuration));
+    }
+    final targetMonth = DateTime(
+      plantingDate.year,
+      plantingDate.month + plantDuration,
+      1,
+    );
+    final lastDay = DateTime(targetMonth.year, targetMonth.month + 1, 0).day;
+    final day = plantingDate.day > lastDay ? lastDay : plantingDate.day;
+    return DateTime(targetMonth.year, targetMonth.month, day);
   }
 
   /// Check if sensor value is within optimal range
@@ -206,7 +222,7 @@ class CropModel {
 
   @override
   String toString() {
-    return 'CropModel(name: $fullName, duration: $plantDuration days, company: $company)';
+    return 'CropModel(name: $fullName, duration: $plantDuration $plantDurationUnit, company: $company)';
   }
 
   @override
@@ -217,4 +233,31 @@ class CropModel {
 
   @override
   int get hashCode => id.hashCode;
+}
+
+({int value, String unit}) _durationFromJson(Map<String, dynamic> json) {
+  final rawValue = json['plant_duration_value'];
+  final parsedValue = rawValue is num
+      ? rawValue.toInt()
+      : int.tryParse(rawValue?.toString() ?? '');
+  final unit = (json['plant_duration_unit'] ?? '').toString().toLowerCase();
+  if (parsedValue != null &&
+      parsedValue > 0 &&
+      (unit == 'days' || unit == 'months')) {
+    return (value: parsedValue, unit: unit);
+  }
+
+  final legacy = (json['plant_duration'] ?? '').toString().toLowerCase();
+  final match = RegExp(
+    r'(\d+)\s*(day|days|month|months|week|weeks)?',
+  ).firstMatch(legacy);
+  final value = int.tryParse(match?.group(1) ?? '') ?? 0;
+  final legacyUnit = match?.group(2) ?? 'days';
+  if (legacyUnit.startsWith('week')) {
+    return (value: value * 7, unit: 'days');
+  }
+  return (
+    value: value,
+    unit: legacyUnit.startsWith('month') ? 'months' : 'days',
+  );
 }

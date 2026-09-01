@@ -235,24 +235,54 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     }
   }
 
-  int _maturityDaysForPlant(String plantName) {
+  ({int value, String unit})? _selectedVarietyDuration() {
     final variety = _selectedPlantVariety;
     if (variety != null && variety.isNotEmpty) {
       for (final crop in _cropVarieties) {
         if (_value(crop, ['variety_name', 'variety', 'name']) == variety) {
-          final duration = _value(crop, ['plant_duration', 'duration']);
-          final number = int.tryParse(
-              RegExp(r'\d+').firstMatch(duration)?.group(0) ?? '');
-          if (number != null && number > 0) {
-            final normalized = duration.toLowerCase();
-            if (normalized.contains('week')) return number * 7;
-            if (normalized.contains('month')) return number * 30;
-            return number;
+          final rawValue = crop['plant_duration_value'];
+          var value = rawValue is num
+              ? rawValue.toInt()
+              : int.tryParse(rawValue?.toString() ?? '') ?? 0;
+          var unit =
+              (crop['plant_duration_unit'] ?? '').toString().toLowerCase();
+          if (value > 0 && (unit == 'days' || unit == 'months')) {
+            return (value: value, unit: unit);
+          }
+
+          final legacy = _value(crop, ['plant_duration', 'duration']);
+          final match = RegExp(
+            r'(\d+)\s*(day|days|month|months|week|weeks)?',
+          ).firstMatch(legacy.toLowerCase());
+          if (match != null) {
+            value = int.tryParse(match.group(1) ?? '') ?? 0;
+            final legacyUnit = match.group(2) ?? 'days';
+            if (value > 0 && legacyUnit.startsWith('week')) {
+              return (value: value * 7, unit: 'days');
+            }
+            unit = legacyUnit.startsWith('month') ? 'months' : 'days';
+            if (value > 0) return (value: value, unit: unit);
           }
         }
       }
     }
-    return 30;
+    return null;
+  }
+
+  DateTime? _calculatedEndDate(DateTime startDate) {
+    final duration = _selectedVarietyDuration();
+    if (duration == null) return null;
+    if (duration.unit != 'months') {
+      return startDate.add(Duration(days: duration.value));
+    }
+    final targetMonth = DateTime(
+      startDate.year,
+      startDate.month + duration.value,
+      1,
+    );
+    final lastDay = DateTime(targetMonth.year, targetMonth.month + 1, 0).day;
+    final targetDay = startDate.day > lastDay ? lastDay : startDate.day;
+    return DateTime(targetMonth.year, targetMonth.month, targetDay);
   }
 
   List<String> get _plantTypeOptions {
@@ -269,8 +299,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   List<String> _varietyOptionsForPlant(String plantType) {
     final options = <String>{};
     for (final crop in _cropVarieties) {
-      final cropPlant = _value(crop,
-          ['plant_type', 'plant_name', 'plantType', 'crop_name']);
+      final cropPlant =
+          _value(crop, ['plant_type', 'plant_name', 'plantType', 'crop_name']);
       final variety = _value(crop, ['variety_name', 'variety', 'name']);
       if (variety.isNotEmpty &&
           (cropPlant.isEmpty ||
@@ -314,11 +344,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       setState(() {
         if (isStartDate) {
           _startDate = picked;
-          // Auto-calculate end date if plant type is selected
-          if (_selectedPlantType != null) {
-            _endDate = _startDate!.add(
-                Duration(days: _maturityDaysForPlant(_selectedPlantType!)));
-          }
+          _endDate = _calculatedEndDate(picked);
         } else {
           _endDate = picked;
         }
@@ -330,16 +356,24 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     setState(() {
       _selectedPlantType = plantType;
       _selectedPlantVariety = null;
-      // Auto-calculate end date if start date is set
-      if (_startDate != null && plantType != null) {
-        _endDate =
-            _startDate!.add(Duration(days: _maturityDaysForPlant(plantType)));
-      }
+      _endDate = null;
     });
   }
 
   Future<void> _generateBatch() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_startDate == null || _endDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Select a start date and a crop variety with a valid duration.',
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     setState(() => _isGenerating = true);
 
@@ -430,6 +464,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     setState(() {
       _selectedFarm = null;
       _selectedPlantType = null;
+      _selectedPlantVariety = null;
       _startDate = null;
       _endDate = null;
       _nursedSeeds = 0;
@@ -659,6 +694,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                               onChanged: (value) => setState(() {
                                 _selectedFarm = value;
                                 _selectedPlantType = null;
+                                _selectedPlantVariety = null;
                                 _endDate = null;
                               }),
                               validator: (value) =>
@@ -699,10 +735,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                 ),
                               ),
                               items: _plantTypeOptions.map((name) {
-                                final days = _maturityDaysForPlant(name);
                                 return DropdownMenuItem(
                                   value: name,
-                                  child: Text('$name ($days days)'),
+                                  child: Text(name),
                                 );
                               }).toList(),
                               onChanged: _onPlantTypeChanged,
@@ -791,10 +826,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           ),
                         ),
                         items: _plantTypeOptions.map((name) {
-                          final days = _maturityDaysForPlant(name);
                           return DropdownMenuItem(
                             value: name,
-                            child: Text('$name ($days days)'),
+                            child: Text(name),
                           );
                         }).toList(),
                         onChanged: _onPlantTypeChanged,
@@ -847,16 +881,15 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       onChanged: _selectedPlantType == null
                           ? null
                           : (value) => setState(() {
-                              _selectedPlantVariety = value;
-                              if (_startDate != null && value != null) {
-                                _endDate = _startDate!.add(Duration(
-                                    days: _maturityDaysForPlant(
-                                        _selectedPlantType!)));
-                              }
-                            }),
-                      validator: (value) => value == null
-                          ? 'Please select a crop variety'
-                          : null,
+                                _selectedPlantVariety = value;
+                                if (_startDate != null && value != null) {
+                                  _endDate = _calculatedEndDate(_startDate!);
+                                } else {
+                                  _endDate = null;
+                                }
+                              }),
+                      validator: (value) =>
+                          value == null ? 'Please select a crop variety' : null,
                     ),
                   ],
                 ),
@@ -937,7 +970,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'End Date',
+                              'End Date (Auto)',
                               style: AppTypography.labelLarge.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: isDark
@@ -994,6 +1027,44 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           ]),
                     ),
                   ],
+                ),
+                const SizedBox(height: 7),
+                Builder(
+                  builder: (context) {
+                    final duration = _selectedVarietyDuration();
+                    final available = duration != null;
+                    final durationLabel = duration == null
+                        ? null
+                        : '${duration.value} ${duration.unit}';
+                    return Row(
+                      children: [
+                        Icon(
+                          available
+                              ? Icons.auto_awesome_outlined
+                              : Icons.info_outline_rounded,
+                          size: 14,
+                          color:
+                              available ? AppColors.success : AppColors.warning,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            available
+                                ? 'Calculated from $durationLabel'
+                                : 'Select a crop variety with a valid duration.',
+                            style: GoogleFonts.poppins(
+                              fontSize: 10.5,
+                              color: available
+                                  ? (isDark
+                                      ? Colors.white60
+                                      : AppColors.textSecondary)
+                                  : AppColors.warning,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: AppSpacing.lg),
 

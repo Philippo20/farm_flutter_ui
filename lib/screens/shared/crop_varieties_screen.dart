@@ -63,6 +63,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   }
 
   Map<String, dynamic> _mapCrop(Map<String, dynamic> doc) {
+    final duration = _durationParts(doc);
     return {
       'id': (doc[r'$id'] ?? doc['id'] ?? '').toString(),
       'crop': (doc['crop_name'] ?? 'Unnamed Crop').toString(),
@@ -75,7 +76,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
               '')
           .toString(),
       'variety': (doc['variety_name'] ?? 'Unspecified').toString(),
-      'duration': (doc['plant_duration'] ?? '-').toString(),
+      'duration': duration.label,
+      'durationValue': duration.value,
+      'durationUnit': duration.unit,
       'company': (doc['company'] ?? '-').toString(),
       'harvestWeightValue': _rawNumber(doc['harvesting_weight']),
       'sproutingRatioValue': _rawNumber(doc['sprouting_ratio']),
@@ -94,6 +97,36 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       'temperature': _range(doc['temp_min'], doc['temp_max']),
       'humidity': _range(doc['humidity_min'], doc['humidity_max']),
     };
+  }
+
+  ({int value, String unit, String label}) _durationParts(
+    Map<String, dynamic> doc,
+  ) {
+    final rawValue = doc['plant_duration_value'];
+    var value = rawValue is num
+        ? rawValue.toInt()
+        : int.tryParse(rawValue?.toString() ?? '') ?? 0;
+    var unit = (doc['plant_duration_unit'] ?? '').toString().toLowerCase();
+
+    if (value <= 0 || (unit != 'days' && unit != 'months')) {
+      final legacy = (doc['plant_duration'] ?? '').toString().toLowerCase();
+      final match = RegExp(
+        r'(\d+)\s*(day|days|month|months|week|weeks)?',
+      ).firstMatch(legacy);
+      if (match != null) {
+        value = int.tryParse(match.group(1) ?? '') ?? 0;
+        final legacyUnit = match.group(2) ?? 'days';
+        if (legacyUnit.startsWith('week')) {
+          value *= 7;
+          unit = 'days';
+        } else {
+          unit = legacyUnit.startsWith('month') ? 'months' : 'days';
+        }
+      }
+    }
+
+    if (value <= 0) return (value: 0, unit: 'days', label: '-');
+    return (value: value, unit: unit, label: '$value $unit');
   }
 
   String _number(dynamic value) {
@@ -911,8 +944,11 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         TextEditingController(text: _editText(crop, 'variety'));
     final imageController =
         TextEditingController(text: _editText(crop, 'imageName'));
-    final durationController =
-        TextEditingController(text: _editText(crop, 'duration'));
+    final durationController = TextEditingController(
+      text: _editText(crop, 'durationValue'),
+    );
+    var selectedDurationUnit = _editText(crop, 'durationUnit').toLowerCase();
+    if (selectedDurationUnit != 'months') selectedDurationUnit = 'days';
     final companyController =
         TextEditingController(text: _editText(crop, 'company'));
     final harvestController = TextEditingController(
@@ -1095,16 +1131,24 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                 formKey.currentState?.validate();
                               }),
                           const SizedBox(height: 16),
-                          _formFieldPair(
-                            firstController: durationController,
-                            firstLabel: 'Plant Duration',
-                            firstHint: 'e.g., 60 days',
-                            firstIcon: Icons.schedule_outlined,
-                            secondController: companyController,
-                            secondLabel: 'Seed Company',
-                            secondHint: 'Enter seed company',
-                            secondIcon: Icons.business_outlined,
-                            isDark: isDark,
+                          _widgetPair(
+                            first: _durationField(
+                              controller: durationController,
+                              selectedUnit: selectedDurationUnit,
+                              isDark: isDark,
+                              onUnitChanged: saving
+                                  ? null
+                                  : (value) => setDialogState(
+                                        () => selectedDurationUnit = value,
+                                      ),
+                            ),
+                            second: _formField(
+                              companyController,
+                              'Seed Company',
+                              'Enter seed company',
+                              Icons.business_outlined,
+                              isDark,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           _numberPair(
@@ -1213,8 +1257,10 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                           varietyName: varietyController.text,
                                           imageFileName: imageController.text,
                                           imageBytes: selectedImageBytes,
-                                          plantDuration:
+                                          plantDurationValue:
                                               durationController.text,
+                                          plantDurationUnit:
+                                              selectedDurationUnit,
                                           company: companyController.text,
                                           harvestingWeight:
                                               harvestController.text,
@@ -1236,8 +1282,10 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                           varietyName: varietyController.text,
                                           imageFileName: imageController.text,
                                           imageBytes: selectedImageBytes!,
-                                          plantDuration:
+                                          plantDurationValue:
                                               durationController.text,
+                                          plantDurationUnit:
+                                              selectedDurationUnit,
                                           company: companyController.text,
                                           harvestingWeight:
                                               harvestController.text,
@@ -1802,6 +1850,132 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     );
   }
 
+  Widget _widgetPair({required Widget first, required Widget second}) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 500) {
+          return Column(
+            children: [
+              first,
+              const SizedBox(height: 16),
+              second,
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: first),
+            const SizedBox(width: 16),
+            Expanded(child: second),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _durationField({
+    required TextEditingController controller,
+    required String selectedUnit,
+    required bool isDark,
+    required ValueChanged<String>? onUnitChanged,
+  }) {
+    InputDecoration decoration({String? hint, IconData? icon}) {
+      return InputDecoration(
+        hintText: hint,
+        hintStyle: GoogleFonts.poppins(
+          fontSize: 12.5,
+          color: isDark ? Colors.white54 : AppColors.textSecondary,
+        ),
+        errorStyle: GoogleFonts.poppins(fontSize: 10.5, height: 1.25),
+        prefixIcon: icon == null ? null : Icon(icon, size: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 13,
+        ),
+        filled: true,
+        fillColor:
+            isDark ? Colors.white.withValues(alpha: 0.05) : AppColors.neutral50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderSide: BorderSide(
+            color: isDark ? Colors.white12 : AppColors.neutral200,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderSide: const BorderSide(color: AppColors.success, width: 2),
+        ),
+      );
+    }
+
+    final textStyle = GoogleFonts.poppins(
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      color: isDark ? Colors.white : AppColors.textPrimary,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Plant Duration',
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            height: 1.35,
+          ),
+        ),
+        const SizedBox(height: 7),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: controller,
+                style: textStyle,
+                keyboardType: TextInputType.number,
+                decoration: decoration(
+                  hint: 'e.g., 60',
+                  icon: Icons.schedule_outlined,
+                ),
+                validator: (value) {
+                  final duration = int.tryParse(value?.trim() ?? '');
+                  if (duration == null || duration <= 0) {
+                    return 'Enter a valid duration';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 108,
+              child: DropdownButtonFormField<String>(
+                initialValue: selectedUnit,
+                isExpanded: true,
+                style: textStyle,
+                decoration: decoration(),
+                items: const [
+                  DropdownMenuItem(value: 'days', child: Text('Days')),
+                  DropdownMenuItem(value: 'months', child: Text('Months')),
+                ],
+                onChanged: onUnitChanged == null
+                    ? null
+                    : (value) {
+                        if (value != null) onUnitChanged(value);
+                      },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _numberPair(
     TextEditingController first,
     String firstLabel,
@@ -1846,7 +2020,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     required String varietyName,
     required String imageFileName,
     required Uint8List imageBytes,
-    required String plantDuration,
+    required String plantDurationValue,
+    required String plantDurationUnit,
     required String company,
     required String harvestingWeight,
     required String sproutingRatio,
@@ -1880,7 +2055,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         varietyName: varietyName.trim(),
         imageFileName: imageFileName.trim(),
         imageBytes: imageBytes,
-        plantDuration: plantDuration.trim(),
+        plantDurationValue: int.parse(plantDurationValue.trim()),
+        plantDurationUnit: plantDurationUnit,
         harvestingWeight: numericValues[0],
         company: company.trim(),
         sproutingRatio: numericValues[1],
@@ -1913,7 +2089,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     required String varietyName,
     required String imageFileName,
     required Uint8List? imageBytes,
-    required String plantDuration,
+    required String plantDurationValue,
+    required String plantDurationUnit,
     required String company,
     required String harvestingWeight,
     required String sproutingRatio,
@@ -1948,7 +2125,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         varietyName: varietyName.trim(),
         imageFileName: imageBytes == null ? null : imageFileName.trim(),
         imageBytes: imageBytes,
-        plantDuration: plantDuration.trim(),
+        plantDurationValue: int.parse(plantDurationValue.trim()),
+        plantDurationUnit: plantDurationUnit,
         harvestingWeight: numericValues[0],
         company: company.trim(),
         sproutingRatio: numericValues[1],

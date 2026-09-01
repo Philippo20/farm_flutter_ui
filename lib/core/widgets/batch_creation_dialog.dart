@@ -6,6 +6,50 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../../services/superadmin_api_service.dart';
 
+({int value, String unit}) _cropDuration(Map<String, dynamic>? crop) {
+  if (crop == null) return (value: 0, unit: 'days');
+  final rawValue = crop['plant_duration_value'];
+  var value = rawValue is num
+      ? rawValue.toInt()
+      : int.tryParse(rawValue?.toString() ?? '') ?? 0;
+  var unit = (crop['plant_duration_unit'] ?? '').toString().toLowerCase();
+  if (value > 0 && (unit == 'days' || unit == 'months')) {
+    return (value: value, unit: unit);
+  }
+
+  final legacy = (crop['plant_duration'] ?? '').toString().toLowerCase();
+  final match = RegExp(
+    r'(\d+)\s*(day|days|month|months|week|weeks)?',
+  ).firstMatch(legacy);
+  if (match == null) return (value: 0, unit: 'days');
+  value = int.tryParse(match.group(1) ?? '') ?? 0;
+  final legacyUnit = match.group(2) ?? 'days';
+  if (legacyUnit.startsWith('week')) {
+    return (value: value * 7, unit: 'days');
+  }
+  unit = legacyUnit.startsWith('month') ? 'months' : 'days';
+  return (value: value, unit: unit);
+}
+
+DateTime _calculateBatchEndDate(
+  DateTime startDate,
+  int durationValue,
+  String durationUnit,
+) {
+  if (durationValue <= 0) return startDate;
+  if (durationUnit != 'months') {
+    return startDate.add(Duration(days: durationValue));
+  }
+  final targetMonth = DateTime(
+    startDate.year,
+    startDate.month + durationValue,
+    1,
+  );
+  final lastDay = DateTime(targetMonth.year, targetMonth.month + 1, 0).day;
+  final targetDay = startDate.day > lastDay ? lastDay : startDate.day;
+  return DateTime(targetMonth.year, targetMonth.month, targetDay);
+}
+
 Future<bool?> showBatchCreationDialog({
   required BuildContext context,
   required SuperAdminApiService api,
@@ -24,6 +68,7 @@ Future<bool?> showBatchCreationDialog({
   final varietyOptions = <String>{
     if (selectedVariety.isNotEmpty) selectedVariety,
   };
+  final varietyRecords = <String, Map<String, dynamic>>{};
   try {
     final crops = await api.getCrops();
     for (final crop in crops) {
@@ -38,6 +83,7 @@ Future<bool?> showBatchCreationDialog({
               cropPlant.isEmpty ||
               cropPlant.toLowerCase() == plantName.trim().toLowerCase())) {
         varietyOptions.add(variety);
+        varietyRecords[variety] = crop;
       }
     }
   } catch (_) {
@@ -57,7 +103,12 @@ Future<bool?> showBatchCreationDialog({
   final notesController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   var startDate = DateTime.now();
-  var endDate = startDate.add(const Duration(days: 30));
+  var selectedDuration = _cropDuration(varietyRecords[selectedVariety]);
+  var endDate = _calculateBatchEndDate(
+    startDate,
+    selectedDuration.value,
+    selectedDuration.unit,
+  );
   var saving = false;
   String? formError;
 
@@ -113,24 +164,24 @@ Future<bool?> showBatchCreationDialog({
         ),
       );
 
-  Future<void> pickDate(BuildContext dialogContext, bool isStart,
-      StateSetter setModalState) async {
+  Future<void> pickStartDate(
+    BuildContext dialogContext,
+    StateSetter setModalState,
+  ) async {
     final picked = await showDatePicker(
       context: dialogContext,
-      initialDate: isStart ? startDate : endDate,
-      firstDate: isStart ? DateTime.now() : startDate,
+      initialDate: startDate,
+      firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 730)),
     );
     if (picked == null) return;
     setModalState(() {
-      if (isStart) {
-        startDate = picked;
-        if (!endDate.isAfter(startDate)) {
-          endDate = startDate.add(const Duration(days: 30));
-        }
-      } else {
-        endDate = picked;
-      }
+      startDate = picked;
+      endDate = _calculateBatchEndDate(
+        startDate,
+        selectedDuration.value,
+        selectedDuration.unit,
+      );
       formError = null;
     });
   }
@@ -328,8 +379,18 @@ Future<bool?> showBatchCreationDialog({
                                       .toList(),
                                   onChanged: saving
                                       ? null
-                                      : (value) => setModalState(
-                                          () => selectedVariety = value ?? ''),
+                                      : (value) => setModalState(() {
+                                            selectedVariety = value ?? '';
+                                            selectedDuration = _cropDuration(
+                                              varietyRecords[selectedVariety],
+                                            );
+                                            endDate = _calculateBatchEndDate(
+                                              startDate,
+                                              selectedDuration.value,
+                                              selectedDuration.unit,
+                                            );
+                                            formError = null;
+                                          }),
                                   validator: (value) =>
                                       value == null || value.trim().isEmpty
                                           ? 'Select a crop variety'
@@ -347,20 +408,49 @@ Future<bool?> showBatchCreationDialog({
                                     icon: Icons.calendar_today_outlined,
                                     onTap: saving
                                         ? null
-                                        : () => pickDate(
-                                            dialogContext, true, setModalState),
+                                        : () => pickStartDate(
+                                              dialogContext,
+                                              setModalState,
+                                            ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: _BatchDateField(
-                                    label: 'End Date',
+                                    label: 'End Date (Auto)',
                                     value: dateText(endDate),
                                     icon: Icons.event_available_outlined,
-                                    onTap: saving
-                                        ? null
-                                        : () => pickDate(dialogContext, false,
-                                            setModalState),
+                                    onTap: null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 7),
+                            Row(
+                              children: [
+                                Icon(
+                                  selectedDuration.value > 0
+                                      ? Icons.auto_awesome_outlined
+                                      : Icons.info_outline_rounded,
+                                  size: 14,
+                                  color: selectedDuration.value > 0
+                                      ? AppColors.success
+                                      : AppColors.warning,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    selectedDuration.value > 0
+                                        ? 'Calculated from ${selectedDuration.value} ${selectedDuration.unit}'
+                                        : 'Add a duration to this crop variety before creating a batch.',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 10.5,
+                                      color: selectedDuration.value > 0
+                                          ? (isDark
+                                              ? Colors.white60
+                                              : AppColors.textSecondary)
+                                          : AppColors.warning,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -470,6 +560,11 @@ Future<bool?> showBatchCreationDialog({
                                   ? null
                                   : () async {
                                       if (!formKey.currentState!.validate()) {
+                                        return;
+                                      }
+                                      if (selectedDuration.value <= 0) {
+                                        setModalState(() => formError =
+                                            'The selected crop variety has no valid plant duration.');
                                         return;
                                       }
                                       setModalState(() {
