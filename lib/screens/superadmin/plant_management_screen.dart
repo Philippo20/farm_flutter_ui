@@ -1403,7 +1403,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                 return null;
                               }),
                           const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Maturity Range', isDark),
+                          _buildFormLabel('Maturity Duration Range', isDark),
                           const SizedBox(height: AppSpacing.sm),
                           _buildMaturityControls(
                             minController: maturityMinController,
@@ -1692,7 +1692,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                             onChanged: (v) =>
                                 setDialogState(() => selectedCategory = v!)),
                         const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Maturity Duration', isDark),
+                        _buildFormLabel('Maturity Duration Range', isDark),
                         const SizedBox(height: AppSpacing.sm),
                         _buildMaturityControls(
                           minController: maturityMinController,
@@ -2087,6 +2087,17 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                   validator: (value) => _rangeValueError(value),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  '-',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white54 : AppColors.textSecondary,
+                  ),
+                ),
+              ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: _buildTextField(
@@ -2121,6 +2132,17 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
             isDark: isDark,
             keyboardType: TextInputType.number,
             validator: (value) => _rangeValueError(value),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            '-',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white54 : AppColors.textSecondary,
+            ),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),

@@ -236,16 +236,23 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   }
 
   int _maturityDaysForPlant(String plantName) {
-    for (final plant in _plantTypes) {
-      final name = _value(plant, ['plant_name', 'name']);
-      if (name == plantName) {
-        final months = _intValue(plant['months_to_maturity']);
-        final days = _intValue(plant['maturity_days']);
-        if (days > 0) return days;
-        if (months > 0) return months * 30;
+    final variety = _selectedPlantVariety;
+    if (variety != null && variety.isNotEmpty) {
+      for (final crop in _cropVarieties) {
+        if (_value(crop, ['variety_name', 'variety', 'name']) == variety) {
+          final duration = _value(crop, ['plant_duration', 'duration']);
+          final number = int.tryParse(
+              RegExp(r'\d+').firstMatch(duration)?.group(0) ?? '');
+          if (number != null && number > 0) {
+            final normalized = duration.toLowerCase();
+            if (normalized.contains('week')) return number * 7;
+            if (normalized.contains('month')) return number * 30;
+            return number;
+          }
+        }
       }
     }
-    return PlantType.getByName(plantName)?.maturityDays ?? 30;
+    return 30;
   }
 
   List<String> get _plantTypeOptions {
@@ -839,8 +846,14 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                               .toList(),
                       onChanged: _selectedPlantType == null
                           ? null
-                          : (value) =>
-                              setState(() => _selectedPlantVariety = value),
+                          : (value) => setState(() {
+                              _selectedPlantVariety = value;
+                              if (_startDate != null && value != null) {
+                                _endDate = _startDate!.add(Duration(
+                                    days: _maturityDaysForPlant(
+                                        _selectedPlantType!)));
+                              }
+                            }),
                       validator: (value) => value == null
                           ? 'Please select a crop variety'
                           : null,
