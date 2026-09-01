@@ -1034,6 +1034,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                   : imageController.text,
                               Icons.image_outlined,
                               isDark,
+                              previewBytes: selectedImageBytes,
+                              existingCrop: crop,
                               saving: saving,
                               hasImage: () =>
                                   isEditing ||
@@ -1308,6 +1310,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     String hint,
     IconData icon,
     bool isDark, {
+    required Uint8List? previewBytes,
+    required Map<String, dynamic>? existingCrop,
     required bool saving,
     required bool Function() hasImage,
     required VoidCallback onPick,
@@ -1325,64 +1329,118 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
           ),
         ),
         const SizedBox(height: 7),
-        TextFormField(
-          controller: controller,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: isDark ? Colors.white : AppColors.textPrimary,
-          ),
-          readOnly: true,
-          onTap: saving ? null : onPick,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: GoogleFonts.poppins(
-              fontSize: 12.5,
-              color: isDark ? Colors.white54 : AppColors.textSecondary,
-            ),
-            errorStyle: GoogleFonts.poppins(fontSize: 10.5, height: 1.25),
-            prefixIcon: Icon(icon, size: 18),
-            suffixIcon: TextButton.icon(
-              onPressed: saving ? null : onPick,
-              icon: const Icon(Icons.upload_file_rounded, size: 16),
-              label: Text(
-                'Choose',
-                style: GoogleFonts.poppins(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: saving ? null : onPick,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : AppColors.neutral50,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(
+                    color: isDark ? Colors.white12 : AppColors.neutral200,
+                  ),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: _buildImagePickerPreview(
+                  previewBytes: previewBytes,
+                  existingCrop: existingCrop,
+                  isDark: isDark,
                 ),
               ),
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 13,
-            ),
-            filled: true,
-            fillColor: isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : AppColors.neutral50,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              borderSide: BorderSide(
-                color: isDark ? Colors.white12 : AppColors.neutral200,
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: controller,
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+                readOnly: true,
+                onTap: saving ? null : onPick,
+                decoration: InputDecoration(
+                  hintText: hint,
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 12.5,
+                    color: isDark ? Colors.white54 : AppColors.textSecondary,
+                  ),
+                  errorStyle: GoogleFonts.poppins(fontSize: 10.5, height: 1.25),
+                  prefixIcon: Icon(icon, size: 18),
+                  suffixIcon: IconButton(
+                    tooltip: 'Choose image',
+                    onPressed: saving ? null : onPick,
+                    icon: const Icon(Icons.upload_file_rounded, size: 18),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 13,
+                  ),
+                  filled: true,
+                  fillColor: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : AppColors.neutral50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.white12 : AppColors.neutral200,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    borderSide:
+                        const BorderSide(color: AppColors.success, width: 2),
+                  ),
+                ),
+                validator: (value) {
+                  if (!hasImage()) {
+                    return 'Select an image file';
+                  }
+                  return null;
+                },
               ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              borderSide: const BorderSide(color: AppColors.success, width: 2),
-            ),
-          ),
-          validator: (value) {
-            if (!hasImage()) {
-              return 'Select an image file';
-            }
-            return null;
-          },
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildImagePickerPreview({
+    required Uint8List? previewBytes,
+    required Map<String, dynamic>? existingCrop,
+    required bool isDark,
+  }) {
+    if (previewBytes != null && previewBytes.isNotEmpty) {
+      return Image.memory(
+        previewBytes,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _imagePickerPlaceholder(isDark),
+      );
+    }
+    if (existingCrop != null) {
+      return _buildCropImage(existingCrop, isDark);
+    }
+    return _imagePickerPlaceholder(isDark);
+  }
+
+  Widget _imagePickerPlaceholder(bool isDark) {
+    return Center(
+      child: Icon(
+        Icons.add_photo_alternate_outlined,
+        size: 24,
+        color: isDark ? Colors.white38 : AppColors.textSecondary,
+      ),
     );
   }
 
