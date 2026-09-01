@@ -241,27 +241,13 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       for (final crop in _cropVarieties) {
         if (_value(crop, ['variety_name', 'variety', 'name']) == variety) {
           final rawValue = crop['plant_duration_value'];
-          var value = rawValue is num
+          final value = rawValue is num
               ? rawValue.toInt()
               : int.tryParse(rawValue?.toString() ?? '') ?? 0;
-          var unit =
+          final unit =
               (crop['plant_duration_unit'] ?? '').toString().toLowerCase();
           if (value > 0 && (unit == 'days' || unit == 'months')) {
             return (value: value, unit: unit);
-          }
-
-          final legacy = _value(crop, ['plant_duration', 'duration']);
-          final match = RegExp(
-            r'(\d+)\s*(day|days|month|months|week|weeks)?',
-          ).firstMatch(legacy.toLowerCase());
-          if (match != null) {
-            value = int.tryParse(match.group(1) ?? '') ?? 0;
-            final legacyUnit = match.group(2) ?? 'days';
-            if (value > 0 && legacyUnit.startsWith('week')) {
-              return (value: value * 7, unit: 'days');
-            }
-            unit = legacyUnit.startsWith('month') ? 'months' : 'days';
-            if (value > 0) return (value: value, unit: unit);
           }
         }
       }

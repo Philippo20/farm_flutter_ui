@@ -246,18 +246,5 @@ class CropModel {
       (unit == 'days' || unit == 'months')) {
     return (value: parsedValue, unit: unit);
   }
-
-  final legacy = (json['plant_duration'] ?? '').toString().toLowerCase();
-  final match = RegExp(
-    r'(\d+)\s*(day|days|month|months|week|weeks)?',
-  ).firstMatch(legacy);
-  final value = int.tryParse(match?.group(1) ?? '') ?? 0;
-  final legacyUnit = match?.group(2) ?? 'days';
-  if (legacyUnit.startsWith('week')) {
-    return (value: value * 7, unit: 'days');
-  }
-  return (
-    value: value,
-    unit: legacyUnit.startsWith('month') ? 'months' : 'days',
-  );
+  return (value: 0, unit: 'days');
 }

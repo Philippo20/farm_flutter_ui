@@ -9,26 +9,14 @@ import '../../services/superadmin_api_service.dart';
 ({int value, String unit}) _cropDuration(Map<String, dynamic>? crop) {
   if (crop == null) return (value: 0, unit: 'days');
   final rawValue = crop['plant_duration_value'];
-  var value = rawValue is num
+  final value = rawValue is num
       ? rawValue.toInt()
       : int.tryParse(rawValue?.toString() ?? '') ?? 0;
-  var unit = (crop['plant_duration_unit'] ?? '').toString().toLowerCase();
+  final unit = (crop['plant_duration_unit'] ?? '').toString().toLowerCase();
   if (value > 0 && (unit == 'days' || unit == 'months')) {
     return (value: value, unit: unit);
   }
-
-  final legacy = (crop['plant_duration'] ?? '').toString().toLowerCase();
-  final match = RegExp(
-    r'(\d+)\s*(day|days|month|months|week|weeks)?',
-  ).firstMatch(legacy);
-  if (match == null) return (value: 0, unit: 'days');
-  value = int.tryParse(match.group(1) ?? '') ?? 0;
-  final legacyUnit = match.group(2) ?? 'days';
-  if (legacyUnit.startsWith('week')) {
-    return (value: value * 7, unit: 'days');
-  }
-  unit = legacyUnit.startsWith('month') ? 'months' : 'days';
-  return (value: value, unit: unit);
+  return (value: 0, unit: 'days');
 }
 
 DateTime _calculateBatchEndDate(

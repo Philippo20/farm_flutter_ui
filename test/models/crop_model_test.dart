@@ -4,15 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 Map<String, dynamic> cropJson({
   Object? durationValue = 1,
   String durationUnit = 'months',
-  Object? legacyDuration,
 }) {
   return {
     r'$id': 'crop-1',
     'crop_name': 'Tomato',
     'variety_name': 'Roma',
-    if (durationValue != null) 'plant_duration_value': durationValue,
-    if (durationValue != null) 'plant_duration_unit': durationUnit,
-    if (legacyDuration != null) 'plant_duration': legacyDuration,
+    'plant_duration_value': durationValue,
+    'plant_duration_unit': durationUnit,
     'harvesting_weight': 1,
     'company': 'Farm Estates',
     'sprouting_ratio': 90,
@@ -38,14 +36,14 @@ void main() {
     );
   });
 
-  test('converts legacy weeks to structured days while reading', () {
+  test('serializes structured day durations', () {
     final crop = CropModel.fromJson(
-      cropJson(durationValue: null, legacyDuration: '6 weeks'),
+      cropJson(durationValue: 42, durationUnit: 'days'),
     );
 
     expect(crop.plantDuration, 42);
     expect(crop.plantDurationUnit, 'days');
     expect(crop.toJson()['plant_duration_value'], 42);
-    expect(crop.toJson().containsKey('plant_duration'), isFalse);
+    expect(crop.toJson()['plant_duration_unit'], 'days');
   });
 }

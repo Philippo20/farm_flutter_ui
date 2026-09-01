@@ -103,29 +103,14 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     Map<String, dynamic> doc,
   ) {
     final rawValue = doc['plant_duration_value'];
-    var value = rawValue is num
+    final value = rawValue is num
         ? rawValue.toInt()
         : int.tryParse(rawValue?.toString() ?? '') ?? 0;
-    var unit = (doc['plant_duration_unit'] ?? '').toString().toLowerCase();
+    final unit = (doc['plant_duration_unit'] ?? '').toString().toLowerCase();
 
     if (value <= 0 || (unit != 'days' && unit != 'months')) {
-      final legacy = (doc['plant_duration'] ?? '').toString().toLowerCase();
-      final match = RegExp(
-        r'(\d+)\s*(day|days|month|months|week|weeks)?',
-      ).firstMatch(legacy);
-      if (match != null) {
-        value = int.tryParse(match.group(1) ?? '') ?? 0;
-        final legacyUnit = match.group(2) ?? 'days';
-        if (legacyUnit.startsWith('week')) {
-          value *= 7;
-          unit = 'days';
-        } else {
-          unit = legacyUnit.startsWith('month') ? 'months' : 'days';
-        }
-      }
+      return (value: 0, unit: 'days', label: '-');
     }
-
-    if (value <= 0) return (value: 0, unit: 'days', label: '-');
     return (value: value, unit: unit, label: '$value $unit');
   }
 
