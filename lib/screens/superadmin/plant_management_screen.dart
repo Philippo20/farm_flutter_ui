@@ -1562,6 +1562,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     String selectedMaturityUnit =
         (plant['maturityUnit'] ?? 'months').toString();
     String selectedStatus = plant['status'];
+    var saving = false;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
