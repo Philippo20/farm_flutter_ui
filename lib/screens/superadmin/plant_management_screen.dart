@@ -1786,6 +1786,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                   setDialogState(() {});
                                   return;
                                 }
+                                setDialogState(() => saving = true);
                                 try {
                                   await _api.updatePlantType(
                                     id: plant['id'].toString(),
@@ -1806,11 +1807,21 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                   _showSuccessSnack('$plantName updated.');
                                 } catch (error) {
                                   if (!context.mounted) return;
+                                  setDialogState(() => saving = false);
                                   _showErrorSnack(error.toString());
                                 }
                               },
-                              icon: const Icon(Icons.save, size: 18),
-                              label: const Text('Save'),
+                              icon: saving
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save, size: 18),
+                              label: Text(saving ? 'Saving...' : 'Save'),
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.success,
                                   foregroundColor: Colors.white,

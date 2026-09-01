@@ -1498,11 +1498,6 @@ class SuperAdminApiService {
         'maturity_min_value': maturityMinValue.toString(),
         'maturity_max_value': maturityMaxValue.toString(),
         'maturity_unit': maturityUnit.toLowerCase(),
-        // Keep compatibility with API instances that still require this field.
-        'months_to_maturity': (maturityUnit.toLowerCase() == 'months'
-                ? maturityMaxValue
-                : (maturityMaxValue / 4.345).ceil())
-            .toString(),
         'image_url': imageFileName,
         'status': status.toLowerCase(),
       },
