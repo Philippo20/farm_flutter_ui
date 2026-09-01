@@ -1455,6 +1455,11 @@ class SuperAdminApiService {
         'maturity_min_value': maturityMinValue.toString(),
         'maturity_max_value': maturityMaxValue.toString(),
         'maturity_unit': maturityUnit.toLowerCase(),
+        // Compatibility with an API container that has not been redeployed yet.
+        'months_to_maturity': (maturityUnit.toLowerCase() == 'months'
+                ? maturityMaxValue
+                : (maturityMaxValue / 4.345).ceil())
+            .toString(),
         'image_url': imageFileName,
         'status': status.toLowerCase(),
       },
@@ -1498,6 +1503,11 @@ class SuperAdminApiService {
         'maturity_min_value': maturityMinValue.toString(),
         'maturity_max_value': maturityMaxValue.toString(),
         'maturity_unit': maturityUnit.toLowerCase(),
+        // Compatibility with an API container that has not been redeployed yet.
+        'months_to_maturity': (maturityUnit.toLowerCase() == 'months'
+                ? maturityMaxValue
+                : (maturityMaxValue / 4.345).ceil())
+            .toString(),
         'image_url': imageFileName,
         'status': status.toLowerCase(),
       },
