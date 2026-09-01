@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -918,19 +919,25 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         builder: (context, setDialogState) => Dialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           ),
           insetPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.xl,
+            horizontal: 16,
+            vertical: 20,
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720, maxHeight: 760),
+            constraints: BoxConstraints(
+              maxWidth: 600,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 18,
+                  ),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -939,22 +946,25 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                       ],
                     ),
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(AppSpacing.radiusXl),
+                      top: Radius.circular(AppSpacing.radiusLg),
                     ),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(9),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius:
                               BorderRadius.circular(AppSpacing.radiusMd),
                         ),
-                        child: const Icon(Icons.grass_rounded,
-                            color: Colors.white),
+                        child: const Icon(
+                          Icons.grass_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
-                      const SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -963,16 +973,23 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                 isEditing
                                     ? 'Edit Crop Variety'
                                     : 'Add Crop Variety',
-                                style: AppTypography.h6.copyWith(
+                                style: GoogleFonts.poppins(
+                                  fontSize: 17,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
+                                  height: 1.25,
                                 )),
+                            const SizedBox(height: 3),
                             Text(
                               isEditing
                                   ? 'Update seed and production specifications'
                                   : 'Define seed and production specifications',
-                              style: AppTypography.bodySmall
-                                  .copyWith(color: Colors.white70),
+                              style: GoogleFonts.poppins(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white70,
+                                height: 1.35,
+                              ),
                             ),
                           ],
                         ),
@@ -980,15 +997,19 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                       IconButton(
                         onPressed:
                             saving ? null : () => Navigator.pop(dialogContext),
-                        icon: const Icon(Icons.close_rounded,
-                            color: Colors.white70),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
+                        visualDensity: VisualDensity.compact,
                       ),
                     ],
                   ),
                 ),
                 Flexible(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    padding: const EdgeInsets.all(20),
                     child: Form(
                       key: formKey,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -996,14 +1017,14 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                         children: [
                           _formField(cropController, 'Crop Name',
                               'Enter crop name', Icons.eco_outlined, isDark),
-                          const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: 16),
                           _formField(
                               varietyController,
                               'Variety Name',
                               'Enter variety name',
                               Icons.grass_outlined,
                               isDark),
-                          const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: 16),
                           _imagePickerField(
                               imageController,
                               'Image File Name',
@@ -1033,17 +1054,17 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                 });
                                 formKey.currentState?.validate();
                               }),
-                          const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: 16),
                           _formField(durationController, 'Plant Duration',
                               'e.g., 60 days', Icons.schedule_outlined, isDark),
-                          const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: 16),
                           _formField(
                               companyController,
                               'Seed Company',
                               'Enter seed company',
                               Icons.business_outlined,
                               isDark),
-                          const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: 16),
                           _numberPair(
                             harvestController,
                             'Harvest weight',
@@ -1051,16 +1072,16 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                             'Sprouting ratio',
                             isDark,
                           ),
-                          const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: 16),
                           _numberPair(ecMinController, 'EC minimum',
                               ecMaxController, 'EC maximum', isDark),
-                          const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: 16),
                           _numberPair(phMinController, 'pH minimum',
                               phMaxController, 'pH maximum', isDark),
-                          const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: 16),
                           _numberPair(tempMinController, 'Temperature minimum',
                               tempMaxController, 'Temperature maximum', isDark),
-                          const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: 16),
                           _numberPair(
                               humidityMinController,
                               'Humidity minimum',
@@ -1073,13 +1094,16 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.03)
                         : AppColors.neutral50,
                     borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(AppSpacing.radiusXl),
+                      bottom: Radius.circular(AppSpacing.radiusLg),
                     ),
                   ),
                   child: Row(
@@ -1090,8 +1114,11 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                               ? null
                               : () => Navigator.pop(dialogContext),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.md),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            textStyle: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           child: const Text('Cancel'),
                         ),
@@ -1181,8 +1208,11 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.success,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.md),
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            textStyle: GoogleFonts.poppins(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -1208,21 +1238,39 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white : AppColors.textPrimary,
-            )),
-        const SizedBox(height: AppSpacing.sm),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            height: 1.35,
+          ),
+        ),
+        const SizedBox(height: 7),
         TextFormField(
           controller: controller,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: isDark ? Colors.white : AppColors.textPrimary,
+          ),
           keyboardType: numeric
               ? const TextInputType.numberWithOptions(
                   decimal: true, signed: true)
               : TextInputType.text,
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: Icon(icon, size: 20),
+            hintStyle: GoogleFonts.poppins(
+              fontSize: 12.5,
+              color: isDark ? Colors.white54 : AppColors.textSecondary,
+            ),
+            errorStyle: GoogleFonts.poppins(fontSize: 10.5, height: 1.25),
+            prefixIcon: Icon(icon, size: 18),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 13,
+            ),
             filled: true,
             fillColor: isDark
                 ? Colors.white.withValues(alpha: 0.05)
@@ -1267,23 +1315,47 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white : AppColors.textPrimary,
-            )),
-        const SizedBox(height: AppSpacing.sm),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDark ? Colors.white : AppColors.textPrimary,
+            height: 1.35,
+          ),
+        ),
+        const SizedBox(height: 7),
         TextFormField(
           controller: controller,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: isDark ? Colors.white : AppColors.textPrimary,
+          ),
           readOnly: true,
           onTap: saving ? null : onPick,
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: Icon(icon, size: 20),
+            hintStyle: GoogleFonts.poppins(
+              fontSize: 12.5,
+              color: isDark ? Colors.white54 : AppColors.textSecondary,
+            ),
+            errorStyle: GoogleFonts.poppins(fontSize: 10.5, height: 1.25),
+            prefixIcon: Icon(icon, size: 18),
             suffixIcon: TextButton.icon(
               onPressed: saving ? null : onPick,
-              icon: const Icon(Icons.upload_file_rounded, size: 18),
-              label: const Text('Choose'),
+              icon: const Icon(Icons.upload_file_rounded, size: 16),
+              label: Text(
+                'Choose',
+                style: GoogleFonts.poppins(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 13,
             ),
             filled: true,
             fillColor: isDark
@@ -1323,7 +1395,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 520) {
+        if (constraints.maxWidth < 500) {
           return Column(
             children: [
               _formField(
