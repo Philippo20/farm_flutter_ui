@@ -246,7 +246,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
               : int.tryParse(rawValue?.toString() ?? '') ?? 0;
           final unit =
               (crop['plant_duration_unit'] ?? '').toString().toLowerCase();
-          if (value > 0 && (unit == 'days' || unit == 'months')) {
+          if (value > 0 &&
+              (unit == 'days' || unit == 'weeks' || unit == 'months')) {
             return (value: value, unit: unit);
           }
         }
@@ -258,6 +259,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   DateTime? _calculatedEndDate(DateTime startDate) {
     final duration = _selectedVarietyDuration();
     if (duration == null) return null;
+    if (duration.unit == 'weeks') {
+      return startDate.add(Duration(days: duration.value * 7));
+    }
     if (duration.unit != 'months') {
       return startDate.add(Duration(days: duration.value));
     }

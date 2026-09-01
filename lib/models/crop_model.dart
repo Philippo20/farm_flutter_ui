@@ -186,6 +186,9 @@ class CropModel {
 
   /// Get estimated harvest date from planting date
   DateTime getEstimatedHarvestDate(DateTime plantingDate) {
+    if (plantDurationUnit == 'weeks') {
+      return plantingDate.add(Duration(days: plantDuration * 7));
+    }
     if (plantDurationUnit != 'months') {
       return plantingDate.add(Duration(days: plantDuration));
     }
@@ -243,7 +246,7 @@ class CropModel {
   final unit = (json['plant_duration_unit'] ?? '').toString().toLowerCase();
   if (parsedValue != null &&
       parsedValue > 0 &&
-      (unit == 'days' || unit == 'months')) {
+      (unit == 'days' || unit == 'weeks' || unit == 'months')) {
     return (value: parsedValue, unit: unit);
   }
   return (value: 0, unit: 'days');

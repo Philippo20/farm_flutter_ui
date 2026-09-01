@@ -46,4 +46,15 @@ void main() {
     expect(crop.toJson()['plant_duration_value'], 42);
     expect(crop.toJson()['plant_duration_unit'], 'days');
   });
+
+  test('converts week durations to seven calendar days per week', () {
+    final crop = CropModel.fromJson(
+      cropJson(durationValue: 6, durationUnit: 'weeks'),
+    );
+
+    expect(
+      crop.getEstimatedHarvestDate(DateTime(2026, 9, 1)),
+      DateTime(2026, 10, 13),
+    );
+  });
 }

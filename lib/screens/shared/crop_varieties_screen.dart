@@ -108,7 +108,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         : int.tryParse(rawValue?.toString() ?? '') ?? 0;
     final unit = (doc['plant_duration_unit'] ?? '').toString().toLowerCase();
 
-    if (value <= 0 || (unit != 'days' && unit != 'months')) {
+    if (value <= 0 || (unit != 'days' && unit != 'weeks' && unit != 'months')) {
       return (value: 0, unit: 'days', label: '-');
     }
     return (value: value, unit: unit, label: '$value $unit');
@@ -933,7 +933,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       text: _editText(crop, 'durationValue'),
     );
     var selectedDurationUnit = _editText(crop, 'durationUnit').toLowerCase();
-    if (selectedDurationUnit != 'months') selectedDurationUnit = 'days';
+    if (!const {'days', 'weeks', 'months'}.contains(selectedDurationUnit)) {
+      selectedDurationUnit = 'days';
+    }
     final companyController =
         TextEditingController(text: _editText(crop, 'company'));
     final harvestController = TextEditingController(
@@ -1946,6 +1948,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                 decoration: decoration(),
                 items: const [
                   DropdownMenuItem(value: 'days', child: Text('Days')),
+                  DropdownMenuItem(value: 'weeks', child: Text('Weeks')),
                   DropdownMenuItem(value: 'months', child: Text('Months')),
                 ],
                 onChanged: onUnitChanged == null

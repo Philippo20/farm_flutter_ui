@@ -13,7 +13,7 @@ import '../../services/superadmin_api_service.dart';
       ? rawValue.toInt()
       : int.tryParse(rawValue?.toString() ?? '') ?? 0;
   final unit = (crop['plant_duration_unit'] ?? '').toString().toLowerCase();
-  if (value > 0 && (unit == 'days' || unit == 'months')) {
+  if (value > 0 && (unit == 'days' || unit == 'weeks' || unit == 'months')) {
     return (value: value, unit: unit);
   }
   return (value: 0, unit: 'days');
@@ -25,6 +25,9 @@ DateTime _calculateBatchEndDate(
   String durationUnit,
 ) {
   if (durationValue <= 0) return startDate;
+  if (durationUnit == 'weeks') {
+    return startDate.add(Duration(days: durationValue * 7));
+  }
   if (durationUnit != 'months') {
     return startDate.add(Duration(days: durationValue));
   }
