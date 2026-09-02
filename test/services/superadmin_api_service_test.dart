@@ -40,4 +40,27 @@ void main() {
     expect(request.fields['start_date'], '2026-09-01');
     expect(request.fields['end_date'], '2026-10-13');
   });
+
+  test('updateBatch sends a partial multipart PUT request', () async {
+    final client = _RecordingClient();
+    final service = SuperAdminApiService(client: client);
+
+    await service.updateBatch(
+      id: 'batch-1',
+      data: {
+        'plant_variety': 'Batavia',
+        'production_status': 'Growing',
+        'total_transplanted': 120,
+      },
+    );
+
+    expect(client.request, isA<http.MultipartRequest>());
+    final request = client.request! as http.MultipartRequest;
+    expect(request.method, 'PUT');
+    expect(request.url.path, '/batches/batch-1');
+    expect(request.fields['plant_variety'], 'Batavia');
+    expect(request.fields['production_status'], 'Growing');
+    expect(request.fields['total_transplanted'], '120');
+    expect(request.fields.containsKey('farmID'), isFalse);
+  });
 }

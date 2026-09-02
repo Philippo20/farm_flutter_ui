@@ -122,6 +122,12 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
       label: 'Analytics',
       route: '/superadmin/analytics',
     ),
+    _NavItem(
+      icon: Icons.grid_view_outlined,
+      activeIcon: Icons.grid_view_rounded,
+      label: 'Batch Management',
+      route: '/superadmin/batches',
+    ),
   ];
 
   @override
@@ -810,6 +816,12 @@ class SuperAdminDrawer extends StatelessWidget {
           label: 'Analytics',
           route: '/superadmin/analytics',
         ),
+        _NavItem(
+          icon: Icons.grid_view_outlined,
+          activeIcon: Icons.grid_view_rounded,
+          label: 'Batch Management',
+          route: '/superadmin/batches',
+        ),
       ];
 
   @override
@@ -1202,6 +1214,12 @@ class SuperAdminMobileBottomNav extends StatelessWidget {
       route: '/superadmin/analytics',
     ),
     _NavItem(
+      icon: Icons.grid_view_outlined,
+      activeIcon: Icons.grid_view_rounded,
+      label: 'Batches',
+      route: '/superadmin/batches',
+    ),
+    _NavItem(
       icon: Icons.history_outlined,
       activeIcon: Icons.history_rounded,
       label: 'Audit Logs',
@@ -1250,6 +1268,7 @@ class SuperAdminMobileBottomNav extends StatelessWidget {
       '/superadmin/deliveries',
       '/superadmin/sensors',
       '/superadmin/analytics',
+      '/superadmin/batches',
     ];
     return routes.indexOf(route);
   }
@@ -1258,9 +1277,9 @@ class SuperAdminMobileBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentItem = _allItems.cast<_NavItem?>().firstWhere(
-          (item) => _routeIndex(item!.route) == selectedIndex,
-          orElse: () => null,
-        ) ??
+              (item) => _routeIndex(item!.route) == selectedIndex,
+              orElse: () => null,
+            ) ??
         _defaultDynamicItem;
 
     return Container(

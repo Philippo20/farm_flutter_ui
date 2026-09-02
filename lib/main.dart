@@ -123,17 +123,15 @@ class MyApp extends ConsumerWidget {
       themeMode: themeMode,
       builder: (context, child) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
-        final background = isDark
-            ? AppColors.backgroundDark
-            : AppColors.backgroundLight;
+        final background =
+            isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
         final iconBrightness = isDark ? Brightness.light : Brightness.dark;
 
         return AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle(
             statusBarColor: background,
             statusBarIconBrightness: iconBrightness,
-            statusBarBrightness:
-                isDark ? Brightness.dark : Brightness.light,
+            statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
             systemNavigationBarColor: background,
             systemNavigationBarIconBrightness: iconBrightness,
             systemNavigationBarDividerColor: background,
@@ -169,6 +167,9 @@ class MyApp extends ConsumerWidget {
             const CropVarietiesScreen(isSuperAdmin: true),
         '/superadmin/analytics': (context) =>
             const ModernAnalyticsScreen(isSuperAdmin: true),
+        '/superadmin/batches': (context) => const BatchGenerationScreen(
+              access: BatchScreenAccess.superAdmin,
+            ),
 
         // Admin
         '/dashboard': (context) => const RedesignedAdminDashboard(),
@@ -181,6 +182,9 @@ class MyApp extends ConsumerWidget {
         '/deliveries-admin': (context) => const AdminDeliveryControlScreen(),
         '/crop-varieties': (context) =>
             const CropVarietiesScreen(isSuperAdmin: false),
+        '/batches-admin': (context) => const BatchGenerationScreen(
+              access: BatchScreenAccess.admin,
+            ),
 
         // Farm Manager (NEW - REDESIGNED)
         '/farm-manager': (context) => const FarmManagerDashboardRedesigned(),

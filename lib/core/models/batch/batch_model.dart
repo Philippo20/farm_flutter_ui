@@ -10,23 +10,24 @@ class BatchModel {
   final String farmManagerId;
   final String farmManagerName;
   final String plantType;
+  final String plantVariety;
   final DateTime startDate;
   final DateTime endDate;
   final int plantMaturityDays;
-  
+
   // Status tracking
   final BatchStatus status;
-  
+
   // Production records
   final int nursedSeeds;
   final int transplantedPlants;
   final int harvestedHeads;
   final double harvestedWeight; // in kg
-  
+
   // Caretaker info
   final String? caretakerId;
   final String? caretakerName;
-  
+
   // Timestamps
   final DateTime createdAt;
   final DateTime? nurseryDate;
@@ -34,7 +35,7 @@ class BatchModel {
   final DateTime? harvestDate;
   final DateTime? packagedDate;
   final DateTime? deliveredDate;
-  
+
   // Notes and metadata
   final String? notes;
   final Map<String, dynamic>? metadata;
@@ -47,6 +48,7 @@ class BatchModel {
     required this.farmManagerId,
     required this.farmManagerName,
     required this.plantType,
+    this.plantVariety = '',
     required this.startDate,
     required this.endDate,
     required this.plantMaturityDays,
@@ -69,16 +71,17 @@ class BatchModel {
 
   /// Generate unique batch number
   /// Format: FA-20251001-20251101
-  static String generateBatchNumber(String farmName, DateTime start, DateTime end) {
+  static String generateBatchNumber(
+      String farmName, DateTime start, DateTime end) {
     // Get first two letters of farm name
-    final prefix = farmName.length >= 2 
+    final prefix = farmName.length >= 2
         ? farmName.substring(0, 2).toUpperCase()
         : farmName.toUpperCase().padRight(2, 'X');
-    
+
     // Format dates as YYYYMMDD
     final startStr = DateFormat('yyyyMMdd').format(start);
     final endStr = DateFormat('yyyyMMdd').format(end);
-    
+
     return '$prefix-$startStr-$endStr';
   }
 
@@ -126,15 +129,16 @@ class BatchModel {
 
   /// Check if batch is active
   bool get isActive {
-    return status != BatchStatus.completed && 
-           status != BatchStatus.delivered &&
-           status != BatchStatus.cancelled;
+    return status != BatchStatus.completed &&
+        status != BatchStatus.delivered &&
+        status != BatchStatus.cancelled;
   }
 
   /// Check if batch is ready for harvest
   bool get isReadyForHarvest {
-    return status == BatchStatus.growing && 
-           DateTime.now().isAfter(expectedHarvestDate.subtract(const Duration(days: 2)));
+    return status == BatchStatus.growing &&
+        DateTime.now()
+            .isAfter(expectedHarvestDate.subtract(const Duration(days: 2)));
   }
 
   /// From JSON
@@ -147,6 +151,8 @@ class BatchModel {
       farmManagerId: json['farmManagerId'] as String,
       farmManagerName: json['farmManagerName'] as String,
       plantType: json['plantType'] as String,
+      plantVariety:
+          (json['plantVariety'] ?? json['plant_variety'] ?? '').toString(),
       startDate: DateTime.parse(json['startDate'] as String),
       endDate: DateTime.parse(json['endDate'] as String),
       plantMaturityDays: json['plantMaturityDays'] as int,
@@ -158,20 +164,20 @@ class BatchModel {
       caretakerId: json['caretakerId'] as String?,
       caretakerName: json['caretakerName'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      nurseryDate: json['nurseryDate'] != null 
-          ? DateTime.parse(json['nurseryDate'] as String) 
+      nurseryDate: json['nurseryDate'] != null
+          ? DateTime.parse(json['nurseryDate'] as String)
           : null,
-      transplantDate: json['transplantDate'] != null 
-          ? DateTime.parse(json['transplantDate'] as String) 
+      transplantDate: json['transplantDate'] != null
+          ? DateTime.parse(json['transplantDate'] as String)
           : null,
-      harvestDate: json['harvestDate'] != null 
-          ? DateTime.parse(json['harvestDate'] as String) 
+      harvestDate: json['harvestDate'] != null
+          ? DateTime.parse(json['harvestDate'] as String)
           : null,
-      packagedDate: json['packagedDate'] != null 
-          ? DateTime.parse(json['packagedDate'] as String) 
+      packagedDate: json['packagedDate'] != null
+          ? DateTime.parse(json['packagedDate'] as String)
           : null,
-      deliveredDate: json['deliveredDate'] != null 
-          ? DateTime.parse(json['deliveredDate'] as String) 
+      deliveredDate: json['deliveredDate'] != null
+          ? DateTime.parse(json['deliveredDate'] as String)
           : null,
       notes: json['notes'] as String?,
       metadata: json['metadata'] as Map<String, dynamic>?,
@@ -188,6 +194,7 @@ class BatchModel {
       'farmManagerId': farmManagerId,
       'farmManagerName': farmManagerName,
       'plantType': plantType,
+      'plantVariety': plantVariety,
       'startDate': startDate.toIso8601String(),
       'endDate': endDate.toIso8601String(),
       'plantMaturityDays': plantMaturityDays,
@@ -218,6 +225,7 @@ class BatchModel {
     String? farmManagerId,
     String? farmManagerName,
     String? plantType,
+    String? plantVariety,
     DateTime? startDate,
     DateTime? endDate,
     int? plantMaturityDays,
@@ -245,6 +253,7 @@ class BatchModel {
       farmManagerId: farmManagerId ?? this.farmManagerId,
       farmManagerName: farmManagerName ?? this.farmManagerName,
       plantType: plantType ?? this.plantType,
+      plantVariety: plantVariety ?? this.plantVariety,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       plantMaturityDays: plantMaturityDays ?? this.plantMaturityDays,
@@ -284,12 +293,14 @@ class BatchModel {
 /// Batch Status Enum
 enum BatchStatus {
   nursery('nursery', 'Nursery', 'Seeds in nursery stage'),
-  transplanted('transplanted', 'Transplanted', 'Plants transplanted to grow beds'),
+  transplanted(
+      'transplanted', 'Transplanted', 'Plants transplanted to grow beds'),
   growing('growing', 'Growing', 'Plants actively growing'),
   harvesting('harvesting', 'Harvesting', 'Harvest in progress'),
   harvested('harvested', 'Harvested', 'Harvest completed'),
   packaged('packaged', 'Packaged', 'Products packaged'),
-  qualityChecked('quality_checked', 'Quality Checked', 'Passed quality inspection'),
+  qualityChecked(
+      'quality_checked', 'Quality Checked', 'Passed quality inspection'),
   readyForSales('ready_for_sales', 'Ready for Sales', 'Ready for delivery'),
   delivered('delivered', 'Delivered', 'Delivered to customer'),
   completed('completed', 'Completed', 'Batch cycle completed'),

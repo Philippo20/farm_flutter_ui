@@ -534,6 +534,39 @@ class SuperAdminApiService {
     return decoded;
   }
 
+  Future<Map<String, dynamic>> updateBatch({
+    required String id,
+    required Map<String, dynamic> data,
+  }) async {
+    final request = http.MultipartRequest(
+      'PUT',
+      Uri.parse('$baseUrl/batches/${Uri.encodeComponent(id)}'),
+    )..fields.addAll(
+        data.map((key, value) => MapEntry(key, value.toString())),
+      );
+    final streamedResponse = await _client.send(request).withApiTimeout();
+    final response =
+        await http.Response.fromStream(streamedResponse).withApiTimeout();
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to update batch (${response.statusCode})',
+        ),
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid batch update response');
+    }
+    if (decoded['error'] is String) {
+      throw SuperAdminApiException(decoded['error'].toString());
+    }
+    return decoded;
+  }
+
   Future<Map<String, dynamic>> createSensor({
     required Map<String, dynamic> data,
   }) async {

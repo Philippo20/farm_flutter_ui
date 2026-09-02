@@ -121,6 +121,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
 
       GoRoute(
+        path: '/batches-admin',
+        name: 'admin-batches',
+        builder: (context, state) => const BatchGenerationScreen(
+          access: BatchScreenAccess.admin,
+        ),
+      ),
+
+      GoRoute(
+        path: '/superadmin/batches',
+        name: 'super-admin-batches',
+        builder: (context, state) => const BatchGenerationScreen(
+          access: BatchScreenAccess.superAdmin,
+        ),
+      ),
+
+      GoRoute(
         path: AppRoutes.farmManagerDashboard,
         name: 'farm-manager-dashboard',
         builder: (context, state) => const FarmManagerDashboardRedesigned(),

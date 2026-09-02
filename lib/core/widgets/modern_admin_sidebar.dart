@@ -102,6 +102,12 @@ class AdminDrawer extends StatelessWidget {
         label: 'Settings',
         route: '/settings',
       ),
+      _NavItem(
+        icon: Icons.grid_view_outlined,
+        activeIcon: Icons.grid_view_rounded,
+        label: 'Batch Management',
+        route: '/batches-admin',
+      ),
     ];
     int indexFor(_NavItem item) => const [
           '/dashboard',
@@ -113,6 +119,7 @@ class AdminDrawer extends StatelessWidget {
           '/inventory-admin',
           '/deliveries-admin',
           '/crop-varieties',
+          '/batches-admin',
         ].indexOf(item.route);
 
     return Drawer(
@@ -181,7 +188,7 @@ class AdminDrawer extends StatelessWidget {
                   return ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
+                      decoration: BoxDecoration(
                         color: selected
                             ? AppColors.primary.withOpacity(0.2)
                             : (isDark
@@ -276,9 +283,8 @@ class AdminDrawer extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodyMedium.copyWith(
                             fontSize: 15,
-                            color: isDark
-                                ? Colors.white
-                                : AppColors.textPrimary,
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -320,8 +326,7 @@ class AdminDrawer extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.error.withOpacity(0.1),
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusMd),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                       border: Border.all(
                         color: AppColors.error.withOpacity(0.2),
                       ),
@@ -426,6 +431,12 @@ class AdminMobileBottomNav extends StatelessWidget {
       label: 'Crop Varieties',
       route: '/crop-varieties',
     ),
+    _NavItem(
+      icon: Icons.grid_view_outlined,
+      activeIcon: Icons.grid_view_rounded,
+      label: 'Batches',
+      route: '/batches-admin',
+    ),
   ];
 
   static const _defaultDynamicItem = _NavItem(
@@ -455,9 +466,8 @@ class AdminMobileBottomNav extends StatelessWidget {
           _routeIndex(item.route) == selectedIndex &&
           !_primaryItems.contains(item),
     );
-    final dynamicItem = current.isNotEmpty
-        ? current.first
-        : _defaultDynamicItem;
+    final dynamicItem =
+        current.isNotEmpty ? current.first : _defaultDynamicItem;
     final visible = [
       ..._primaryItems,
       dynamicItem,
@@ -616,6 +626,12 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
       activeIcon: Icons.grass_rounded,
       label: 'Crop Varieties',
       route: '/crop-varieties',
+    ),
+    _NavItem(
+      icon: Icons.grid_view_outlined,
+      activeIcon: Icons.grid_view_rounded,
+      label: 'Batch Management',
+      route: '/batches-admin',
     ),
   ];
 

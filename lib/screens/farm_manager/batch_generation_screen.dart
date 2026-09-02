@@ -10,15 +10,26 @@ import '../../core/providers/batch_provider.dart';
 import '../../core/widgets/farm_manager_sidebar.dart';
 import '../../core/widgets/farm_manager_header.dart';
 import '../../core/widgets/farm_manager_mobile_drawer.dart';
+import '../../core/widgets/modern_admin_header.dart';
+import '../../core/widgets/modern_admin_sidebar.dart';
+import '../../core/widgets/superadmin_sidebar.dart';
 import '../../core/widgets/skeleton_loader.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/widgets/status_badge.dart';
+import '../../core/widgets/batch_edit_dialog.dart';
 import '../../services/superadmin_api_service.dart';
 
 /// Batch Management & Tracking Screen
 /// Farm Manager can generate new batches and track their progress
+enum BatchScreenAccess { farmManager, admin, superAdmin }
+
 class BatchGenerationScreen extends ConsumerStatefulWidget {
-  const BatchGenerationScreen({super.key});
+  const BatchGenerationScreen({
+    super.key,
+    this.access = BatchScreenAccess.farmManager,
+  });
+
+  final BatchScreenAccess access;
 
   @override
   ConsumerState<BatchGenerationScreen> createState() =>
@@ -60,6 +71,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedNavIndex = switch (widget.access) {
+      BatchScreenAccess.farmManager => 3,
+      BatchScreenAccess.admin => 9,
+      BatchScreenAccess.superAdmin => 14,
+    };
     _loadBatchData();
   }
 
@@ -85,8 +101,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         _api.getBatches(),
       ]);
       if (!mounted) return;
-      final assignedFarms =
-          results[0].where(_isAssignedToCurrentManager).toList();
+      final assignedFarms = widget.access == BatchScreenAccess.farmManager
+          ? results[0].where(_isAssignedToCurrentManager).toList()
+          : List<Map<String, dynamic>>.from(results[0]);
       final assignedBatches = results[4]
           .where((batch) => _matchesAnyFarm(batch, assignedFarms))
           .map(_mapBatch)
@@ -201,6 +218,10 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       farmManagerName: _value(doc, ['farm_manager_name', 'farmManagerName']),
       plantType: _value(doc, ['plant_name', 'plant_type', 'plantType'],
           fallback: 'Plant'),
+      plantVariety: _value(
+        doc,
+        ['plant_variety', 'plantVariety', 'variety_name'],
+      ),
       startDate: startDate,
       endDate: endDate,
       plantMaturityDays: endDate.difference(startDate).inDays.clamp(0, 999),
@@ -216,6 +237,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
           ? null
           : _dateValue(doc['actual_harvest_date']),
       notes: _value(doc, ['technical_issues', 'notes']),
+      metadata: Map<String, dynamic>.from(doc),
       status: _batchStatusFromBackend(
         _value(doc, ['production_status', 'status'], fallback: 'Planted'),
       ),
@@ -2347,6 +2369,12 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                   _buildDetailRow('Plant Type', batch.plantType,
                       Icons.eco_outlined, isDark),
                   _buildDetailRow(
+                    'Crop Variety',
+                    batch.plantVariety.isEmpty ? 'Not set' : batch.plantVariety,
+                    Icons.category_outlined,
+                    isDark,
+                  ),
+                  _buildDetailRow(
                       'Status',
                       batch.status.toString().split('.').last,
                       Icons.flag_outlined,
@@ -2504,12 +2532,23 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     );
   }
 
-  void _editBatch(BatchModel batch) {
-    // Implement edit functionality
+  Future<void> _editBatch(BatchModel batch) async {
+    final user = ref.read(authProvider).user;
+    final updated = await showBatchEditDialog(
+      context: context,
+      api: _api,
+      batch: batch,
+      cropVarieties: _cropVarieties,
+      updatedBy: user?.name ?? _fallbackName,
+      updatedByRole: _roleApiValue,
+      onUpdated: _loadBatchData,
+    );
+    if (!mounted || updated != true) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Edit functionality for ${batch.batchNumber}'),
-        backgroundColor: AppColors.info,
+        content: Text('${batch.batchNumber} updated successfully'),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -2558,6 +2597,119 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     );
   }
 
+  String get _roleLabel => switch (widget.access) {
+        BatchScreenAccess.farmManager => 'Farm Manager',
+        BatchScreenAccess.admin => 'Administrator',
+        BatchScreenAccess.superAdmin => 'Super Administrator',
+      };
+
+  String get _roleApiValue => switch (widget.access) {
+        BatchScreenAccess.farmManager => 'farm_manager',
+        BatchScreenAccess.admin => 'admin',
+        BatchScreenAccess.superAdmin => 'superadmin',
+      };
+
+  String get _fallbackName => switch (widget.access) {
+        BatchScreenAccess.farmManager => 'Farm Manager',
+        BatchScreenAccess.admin => 'Admin',
+        BatchScreenAccess.superAdmin => 'Super Admin',
+      };
+
+  Widget _mobileDrawer(String userName, String userEmail) {
+    switch (widget.access) {
+      case BatchScreenAccess.admin:
+        return AdminDrawer(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+          userName: userName,
+          userEmail: userEmail,
+          userRole: _roleLabel,
+        );
+      case BatchScreenAccess.superAdmin:
+        return SuperAdminDrawer(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+          userName: userName,
+          userEmail: userEmail,
+          userRole: _roleLabel,
+        );
+      case BatchScreenAccess.farmManager:
+        return FarmManagerMobileDrawer(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+          userName: userName,
+        );
+    }
+  }
+
+  Widget _desktopSidebar(String userName, String userEmail) {
+    switch (widget.access) {
+      case BatchScreenAccess.admin:
+        return ModernAdminSidebar(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+          userName: userName,
+          userEmail: userEmail,
+          userRole: _roleLabel,
+        );
+      case BatchScreenAccess.superAdmin:
+        return SuperAdminSidebar(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+          userName: userName,
+          userEmail: userEmail,
+          userRole: _roleLabel,
+        );
+      case BatchScreenAccess.farmManager:
+        return FarmManagerSidebar(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (index) => setState(() => _selectedNavIndex = index),
+          userName: userName,
+          userEmail: userEmail,
+          userRole: _roleLabel,
+        );
+    }
+  }
+
+  Widget _roleHeader(String userName, {required bool mobile}) {
+    final onMenuTap =
+        mobile ? () => _scaffoldKey.currentState?.openDrawer() : null;
+    if (widget.access == BatchScreenAccess.farmManager) {
+      return FarmManagerHeader(
+        userName: userName,
+        onNotificationTap: () {},
+        onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
+        onMenuTap: onMenuTap,
+      );
+    }
+    return ModernAdminHeader(
+      userName: userName.split(' ').first,
+      onNotificationTap: () {},
+      onProfileTap: () => Navigator.of(context).pushNamed('/profile'),
+      onMenuTap: onMenuTap,
+    );
+  }
+
+  Widget _mobileBottomNavigation() {
+    switch (widget.access) {
+      case BatchScreenAccess.admin:
+        return AdminMobileBottomNav(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (_) {},
+        );
+      case BatchScreenAccess.superAdmin:
+        return SuperAdminMobileBottomNav(
+          selectedIndex: _selectedNavIndex,
+          onItemSelected: (_) {},
+        );
+      case BatchScreenAccess.farmManager:
+        return FarmManagerMobileBottomNav(
+          selectedIndex: 4,
+          onItemSelected: (_) {},
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -2565,54 +2717,31 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     final isMobile = screenWidth < 768;
     final authState = ref.watch(authProvider);
     final batches = ref.watch(batchProvider);
-    final userName = authState.user?.name ?? 'Farm Manager';
-    final userEmail = authState.user?.email ?? 'manager@farmestates.com';
-    final userRole = 'Farm Manager';
+    final userName = authState.user?.name ?? _fallbackName;
+    final userEmail = authState.user?.email ?? '';
 
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-      drawer: isMobile
-          ? FarmManagerMobileDrawer(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (i) => setState(() => _selectedNavIndex = i),
-              userName: userName,
-            )
-          : null,
+      drawer: isMobile ? _mobileDrawer(userName, userEmail) : null,
       body: isMobile
           ? _buildMobileLayout(isDark, userName, batches)
-          : _buildDesktopLayout(isDark, userName, userEmail, userRole, batches),
-      bottomNavigationBar: isMobile
-          ? FarmManagerMobileBottomNav(
-              selectedIndex: 4,
-              onItemSelected: (_) {},
-            )
-          : null,
+          : _buildDesktopLayout(isDark, userName, userEmail, batches),
+      bottomNavigationBar: isMobile ? _mobileBottomNavigation() : null,
     );
   }
 
   Widget _buildDesktopLayout(bool isDark, String userName, String userEmail,
-      String userRole, List<BatchModel> batches) {
+      List<BatchModel> batches) {
     final filteredBatches = _getFilteredBatches(batches);
     return Row(
       children: [
-        FarmManagerSidebar(
-          selectedIndex: _selectedNavIndex,
-          onItemSelected: (index) {
-            setState(() => _selectedNavIndex = index);
-          },
-          userName: userName,
-          userEmail: userEmail,
-          userRole: userRole,
-        ),
+        _desktopSidebar(userName, userEmail),
         Expanded(
           child: Column(
             children: [
-              FarmManagerHeader(
-                userName: userName,
-                onNotificationTap: () {},
-              ),
+              _roleHeader(userName, mobile: false),
               Expanded(
                 child: SingleChildScrollView(
                   controller: _scrollController,
@@ -3022,11 +3151,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     final filteredBatches = _getFilteredBatches(batches);
     return Column(
       children: [
-        FarmManagerHeader(
-          userName: userName,
-          onNotificationTap: () {},
-          onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
-        ),
+        _roleHeader(userName, mobile: true),
         if (_isLoadingData || _loadError != null)
           Expanded(
             child: SingleChildScrollView(
