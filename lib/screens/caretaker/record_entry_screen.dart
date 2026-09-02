@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -29,6 +28,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   final _formKey = GlobalKey<FormState>();
   int _selectedNavIndex = 1;
   int _selectedRecordTab = 0;
+  int _maxUnlockedStep = 0;
 
   // Form fields
   String? _selectedFarm;
@@ -365,7 +365,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
               _buildSubmitError(isDark),
               SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
             ],
-            _buildSubmitButton(isDark),
+            _buildStepActions(isDark),
             SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
           ],
         ),
@@ -376,116 +376,119 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   List<({String title, String subtitle, IconData icon})> get _recordTabs =>
       const [
         (
-          title: 'Basic',
-          subtitle: 'Farm, batch, type, and date',
-          icon: Icons.info_outline_rounded
+          title: 'Select Batch',
+          subtitle: 'Choose the assigned farm and production batch',
+          icon: Icons.inventory_2_outlined
         ),
         (
-          title: 'Environment',
-          subtitle: 'Climate and nutrient readings',
-          icon: Icons.sensors_rounded
+          title: 'Record Details',
+          subtitle: 'Enter progress, readings, observations, and activities',
+          icon: Icons.edit_note_rounded
         ),
         (
-          title: 'Plants',
-          subtitle: 'Batch progress, health, and observations',
-          icon: Icons.spa_rounded
-        ),
-        (
-          title: 'Activities',
-          subtitle: 'Completed assigned work',
-          icon: Icons.checklist_rounded
-        ),
-        (
-          title: 'Issues',
-          subtitle: 'Incidents and concerns',
-          icon: Icons.report_problem_outlined
-        ),
-        (
-          title: 'Notes',
-          subtitle: 'Extra handover information',
-          icon: Icons.sticky_note_2_outlined
+          title: 'Review',
+          subtitle: 'Report issues, add notes, and submit the record',
+          icon: Icons.fact_check_outlined
         ),
       ];
 
   Widget _buildRecordTabs(bool isDark) {
     final tabs = _recordTabs;
-
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : AppColors.neutral200,
         ),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: List.generate(tabs.length, (index) {
-            final tab = tabs[index];
-            final isSelected = index == _selectedRecordTab;
-            return Padding(
-              padding: EdgeInsets.only(
-                right: index == tabs.length - 1 ? 0 : AppSpacing.xs,
-              ),
-              child: Tooltip(
-                message: tab.subtitle,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => setState(() => _selectedRecordTab = index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOut,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primary.withOpacity(isDark ? 0.18 : 0.1)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.primary.withOpacity(0.45)
-                            : Colors.transparent,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(tabs.length, (index) {
+          final tab = tabs[index];
+          final isSelected = index == _selectedRecordTab;
+          final isComplete = index < _maxUnlockedStep && !isSelected;
+          final isUnlocked = index <= _maxUnlockedStep;
+          final color = isSelected || isComplete
+              ? AppColors.primary
+              : (isDark ? Colors.white30 : AppColors.neutral400);
+          return Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Tooltip(
+                    message: tab.subtitle,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: isUnlocked
+                          ? () => setState(() {
+                                _selectedRecordTab = index;
+                                _submitError = null;
+                              })
+                          : null,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: isSelected || isComplete
+                                    ? AppColors.primary
+                                    : (isDark
+                                        ? Colors.white.withValues(alpha: 0.06)
+                                        : AppColors.neutral100),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: color),
+                              ),
+                              child: Icon(
+                                isComplete ? Icons.check_rounded : tab.icon,
+                                size: 17,
+                                color: isSelected || isComplete
+                                    ? Colors.white
+                                    : color,
+                              ),
+                            ),
+                            const SizedBox(height: 7),
+                            Text(
+                              tab.title,
+                              maxLines: 2,
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.caption.copyWith(
+                                color: color,
+                                fontWeight: isSelected || isComplete
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          tab.icon,
-                          size: 18,
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark
-                                  ? Colors.white60
-                                  : AppColors.textSecondary),
-                        ),
-                        const SizedBox(width: 7),
-                        Text(
-                          tab.title,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: isSelected
-                                ? AppColors.primary
-                                : (isDark
-                                    ? Colors.white70
-                                    : AppColors.textSecondary),
-                            fontWeight:
-                                isSelected ? FontWeight.w700 : FontWeight.w500,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ),
-              ),
-            );
-          }),
-        ),
+                if (index < tabs.length - 1)
+                  Container(
+                    width: 18,
+                    height: 2,
+                    margin: const EdgeInsets.only(top: 16),
+                    color: index < _maxUnlockedStep
+                        ? AppColors.primary
+                        : (isDark ? Colors.white12 : AppColors.neutral200),
+                  ),
+              ],
+            ),
+          );
+        }),
       ),
     );
   }
@@ -499,7 +502,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       child: KeyedSubtree(
         key: ValueKey(_selectedRecordTab),
         child: _buildSection(
-          title: tab.title == 'Basic' ? 'Basic Information' : tab.title,
+          title: tab.title,
           subtitle: tab.subtitle,
           icon: tab.icon,
           isDark: isDark,
@@ -523,13 +526,25 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           _buildDatePicker(isDark),
         ];
       case 1:
-        return [_buildEnvironmentFields(isDark, isMobile)];
-      case 2:
         return [
           _buildSelectedBatchSummary(isDark),
+          const SizedBox(height: AppSpacing.lg),
+          _buildSubsectionTitle(
+            'Batch Progress',
+            'Update the current cumulative production totals.',
+            Icons.trending_up_rounded,
+            isDark,
+          ),
           const SizedBox(height: AppSpacing.md),
           _buildBatchProgressFields(isDark, isMobile),
           const SizedBox(height: AppSpacing.lg),
+          _buildSubsectionTitle(
+            'Plant Observations',
+            'Record crop health and the current growth stage.',
+            Icons.spa_outlined,
+            isDark,
+          ),
+          const SizedBox(height: AppSpacing.md),
           _buildTextField('Plant Health', _plantHealthController,
               'e.g., Healthy, Yellowing, etc.', isDark),
           const SizedBox(height: AppSpacing.md),
@@ -539,11 +554,36 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           _buildTextField('Observations', _observationsController,
               'Any notable observations...', isDark,
               maxLines: 3),
+          const SizedBox(height: AppSpacing.lg),
+          _buildSubsectionTitle(
+            'Environment',
+            'Add available climate and nutrient readings.',
+            Icons.sensors_outlined,
+            isDark,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildEnvironmentFields(isDark, isMobile),
+          const SizedBox(height: AppSpacing.lg),
+          _buildSubsectionTitle(
+            'Completed Activities',
+            'Select work completed during this record period.',
+            Icons.checklist_rounded,
+            isDark,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _buildActivitiesSelector(isDark),
         ];
-      case 3:
-        return [_buildActivitiesSelector(isDark)];
-      case 4:
+      case 2:
         return [
+          _buildReviewSummary(isDark),
+          const SizedBox(height: AppSpacing.lg),
+          _buildSubsectionTitle(
+            'Issues and Concerns',
+            'Flag anything that requires attention from the Farm Manager.',
+            Icons.report_problem_outlined,
+            isDark,
+          ),
+          const SizedBox(height: AppSpacing.md),
           _buildIssuesToggle(isDark),
           if (_hasIssues) ...[
             const SizedBox(height: AppSpacing.md),
@@ -557,9 +597,14 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
               maxLines: 3,
             ),
           ],
-        ];
-      case 5:
-        return [
+          const SizedBox(height: AppSpacing.lg),
+          _buildSubsectionTitle(
+            'Handover Notes',
+            'Add any final context for the farm team.',
+            Icons.sticky_note_2_outlined,
+            isDark,
+          ),
+          const SizedBox(height: AppSpacing.md),
           _buildTextField(
             'Notes',
             _notesController,
@@ -571,6 +616,140 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       default:
         return const [];
     }
+  }
+
+  Widget _buildSubsectionTitle(
+    String title,
+    String subtitle,
+    IconData icon,
+    bool isDark,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Icon(icon, size: 18, color: AppColors.primary),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: AppTypography.bodySmall.copyWith(
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: AppTypography.caption.copyWith(
+                  color: isDark ? Colors.white60 : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildReviewSummary(bool isDark) {
+    final batch = _selectedBatchDoc;
+    final batchNumber = batch == null
+        ? 'No batch selected'
+        : _value(
+            batch,
+            const ['batch_no', 'batch_number', 'batch_id'],
+            fallback: 'Batch',
+          );
+    final items = [
+      ('Batch', batchNumber, Icons.inventory_2_outlined),
+      ('Planted / Nursed', _plantedController.text, Icons.spa_outlined),
+      ('Transplanted', _transplantedController.text, Icons.grass_rounded),
+      ('Harvested', _harvestedController.text, Icons.agriculture_outlined),
+      (
+        'Harvest Weight',
+        '${_harvestWeightController.text} kg',
+        Icons.scale_outlined
+      ),
+      (
+        'Activities',
+        '${_selectedActivities.length} selected',
+        Icons.checklist_rounded
+      ),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 700 ? 3 : 2;
+        final spacing = AppSpacing.sm;
+        final width =
+            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: items.map((item) {
+            return Container(
+              width: width,
+              constraints: const BoxConstraints(minHeight: 76),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.04)
+                    : AppColors.neutral50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark ? Colors.white10 : AppColors.neutral200,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(item.$3, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.$1,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.caption.copyWith(
+                            color: isDark
+                                ? Colors.white60
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          item.$2.isEmpty ? '0' : item.$2,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodySmall.copyWith(
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
   }
 
   Widget _buildSelectedBatchSummary(bool isDark) {
@@ -951,7 +1130,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       navigator.pop();
       return;
     }
-    context.go('/caretaker_dashboard');
+    navigator.pushReplacementNamed('/caretaker_dashboard');
   }
 
   InputDecoration _inputDecoration({
@@ -1233,6 +1412,8 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       onChanged: (value) => setState(() {
         _selectedFarm = value;
         _selectedBatch = null;
+        _maxUnlockedStep = 0;
+        _submitError = null;
         final batches = _farmBatches;
         if (batches.isNotEmpty) {
           _selectedBatch = _batchId(batches.first);
@@ -1317,6 +1498,8 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           .toList(),
       onChanged: (value) => setState(() {
         _selectedBatch = value;
+        _maxUnlockedStep = 0;
+        _submitError = null;
         _populateBatchProgress();
       }),
       validator: (value) =>
@@ -1564,6 +1747,96 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     );
   }
 
+  Widget _buildStepActions(bool isDark) {
+    final isLastStep = _selectedRecordTab == _recordTabs.length - 1;
+    return Row(
+      children: [
+        if (_selectedRecordTab > 0) ...[
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: _isSubmitting
+                  ? null
+                  : () => setState(() {
+                        _selectedRecordTab -= 1;
+                        _submitError = null;
+                      }),
+              icon: const Icon(Icons.arrow_back_rounded, size: 18),
+              label: const Text('Back'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 54),
+                foregroundColor:
+                    isDark ? Colors.white70 : AppColors.textPrimary,
+                side: BorderSide(
+                  color: isDark ? Colors.white24 : AppColors.neutral300,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+        ],
+        Expanded(
+          flex: _selectedRecordTab == 0 ? 1 : 2,
+          child: isLastStep
+              ? _buildSubmitButton(isDark)
+              : ElevatedButton.icon(
+                  onPressed: _isSubmitting ? null : _continueToNextStep,
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                  label: const Text('Continue'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    minimumSize: const Size(0, 54),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+        ),
+      ],
+    );
+  }
+
+  void _continueToNextStep() {
+    if (_selectedRecordTab == 0) {
+      if (_selectedFarmDoc == null) {
+        _rejectSubmission('Select one of your assigned farms to continue.');
+        return;
+      }
+      if (_selectedBatchDoc == null) {
+        _rejectSubmission(
+          _farmBatches.isEmpty
+              ? 'This farm has no active batches available for record entry.'
+              : 'Select a production batch to continue.',
+        );
+        return;
+      }
+    }
+    if (_selectedRecordTab == 1) {
+      final progressIsValid =
+          _nonNegativeWholeNumber(_plantedController.text) == null &&
+              _nonNegativeWholeNumber(_transplantedController.text) == null &&
+              _nonNegativeWholeNumber(_harvestedController.text) == null &&
+              _nonNegativeNumber(_harvestWeightController.text) == null;
+      if (!progressIsValid || !_formKey.currentState!.validate()) {
+        _rejectSubmission(
+          'Check the highlighted record values before continuing.',
+        );
+        return;
+      }
+    }
+    setState(() {
+      _selectedRecordTab += 1;
+      _maxUnlockedStep = _maxUnlockedStep < _selectedRecordTab
+          ? _selectedRecordTab
+          : _maxUnlockedStep;
+      _submitError = null;
+    });
+  }
+
   Widget _buildSubmitButton(bool isDark) {
     return SizedBox(
       width: double.infinity,
@@ -1654,13 +1927,13 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       if (!progressIsValid) {
         _rejectSubmission(
           'Check the batch progress values. Use zero or positive numbers only.',
-          tab: 2,
+          tab: 1,
         );
         return;
       }
     }
     if (_hasIssues && _issueDescriptionController.text.trim().isEmpty) {
-      _rejectSubmission('Describe the issue before submitting.', tab: 4);
+      _rejectSubmission('Describe the issue before submitting.', tab: 2);
       return;
     }
     setState(() {
@@ -1748,22 +2021,23 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           'notes': _notesController.text.trim(),
         },
       );
-      ref.read(recordsProvider.notifier).addRecord(record);
-      if (!mounted) return;
-      setState(() {
-        _isSubmitting = false;
-        _submitError = null;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Record submitted successfully'),
-          backgroundColor: AppColors.success,
-        ),
-      );
-      context.pop();
     } catch (error) {
       if (!mounted) return;
       _rejectSubmission('Submit failed: $error');
+      return;
     }
+    if (!mounted) return;
+    ref.read(recordsProvider.notifier).addRecord(record);
+    setState(() {
+      _isSubmitting = false;
+      _submitError = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Record submitted successfully'),
+        backgroundColor: AppColors.success,
+      ),
+    );
+    Navigator.of(context).pushReplacementNamed('/caretaker_dashboard');
   }
 }
