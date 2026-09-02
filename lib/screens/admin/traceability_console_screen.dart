@@ -224,9 +224,10 @@ class _TraceabilityConsoleScreenState
       barrierColor: Colors.black54,
       builder: (_) => Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        backgroundColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 680, maxHeight: 760),
+          constraints: const BoxConstraints(maxWidth: 560, maxHeight: 760),
           child: child,
         ),
       ),
@@ -356,8 +357,16 @@ class _TraceabilityConsoleScreenState
         padding: EdgeInsets.all(mobile ? 20 : 28),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.primary.withValues(alpha: .22)),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: Theme.of(context).brightness == Brightness.dark
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: .04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
         ),
         child: Wrap(
           spacing: 18,
@@ -791,15 +800,36 @@ class _TraceabilityConsoleScreenState
   InputDecoration _input(String label, IconData icon) => InputDecoration(
         labelText: label,
         labelStyle: GoogleFonts.poppins(fontSize: 12),
-        prefixIcon: Icon(icon, size: 19),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        prefixIcon: Icon(icon, size: 17),
+        filled: true,
+        fillColor: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white.withValues(alpha: .04)
+            : AppColors.neutral50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withValues(alpha: .06)
+                : Colors.black.withValues(alpha: .06),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
       );
 
   Widget _settingSwitch(String key, String label) => Container(
         width: 220,
         decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).dividerColor),
-          borderRadius: BorderRadius.circular(8),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white.withValues(alpha: .03)
+              : AppColors.neutral50,
+          borderRadius: BorderRadius.circular(10),
         ),
         child: SwitchListTile.adaptive(
           dense: true,
@@ -814,8 +844,16 @@ class _TraceabilityConsoleScreenState
         padding: const EdgeInsets.symmetric(vertical: 42, horizontal: 20),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Theme.of(context).dividerColor),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: Theme.of(context).brightness == Brightness.dark
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: .04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: Column(
           children: [
@@ -836,9 +874,24 @@ class _Panel extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Theme.of(context).dividerColor),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.surfaceDark
+              : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withValues(alpha: .06)
+                : Colors.black.withValues(alpha: .04),
+          ),
+          boxShadow: Theme.of(context).brightness == Brightness.dark
+              ? null
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: .04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: child,
       );
@@ -1146,27 +1199,34 @@ class _PublicationPanelState extends State<_PublicationPanel> {
               value: _published,
               onChanged: (value) => setState(() => _published = value),
             ),
-            const SizedBox(height: 10),
-            _modalField(_region, 'Farm region', Icons.location_on_outlined),
-            const SizedBox(height: 14),
-            _modalField(
-                _packaging, 'Packaging label', Icons.inventory_2_outlined),
-            const SizedBox(height: 14),
-            _modalField(_quality, 'Quality status', Icons.verified_outlined),
-            const SizedBox(height: 14),
-            DropdownButtonFormField<String>(
-              initialValue: _recall,
-              decoration: _modalDecoration(
-                  'Consumer safety status', Icons.health_and_safety_outlined),
-              items: const [
-                DropdownMenuItem(value: 'none', child: Text('No recall')),
-                DropdownMenuItem(value: 'advisory', child: Text('Advisory')),
-                DropdownMenuItem(value: 'recalled', child: Text('Recalled')),
-              ],
-              onChanged: (value) => setState(() => _recall = value ?? 'none'),
+            const SizedBox(height: 12),
+            _modalPair(
+              context,
+              _modalField(_region, 'Farm Region', 'e.g. Greater Accra',
+                  Icons.location_on_outlined),
+              _modalField(_packaging, 'Packaging Label', 'e.g. 500g sealed pack',
+                  Icons.inventory_2_outlined),
             ),
-            const SizedBox(height: 14),
-            _modalField(_message, 'Public message', Icons.message_outlined,
+            const SizedBox(height: 12),
+            _modalPair(
+              context,
+              _modalField(_quality, 'Quality Status', 'e.g. Verified',
+                  Icons.verified_outlined),
+              _modalDropdown(
+                label: 'Consumer Safety Status',
+                icon: Icons.health_and_safety_outlined,
+                value: _recall,
+                values: const {
+                  'none': 'No recall',
+                  'advisory': 'Advisory',
+                  'recalled': 'Recalled',
+                },
+                onChanged: (value) => setState(() => _recall = value),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _modalField(_message, 'Public Message',
+                'Message shown with this verified product', Icons.message_outlined,
                 lines: 3),
           ],
         ),
@@ -1256,50 +1316,56 @@ class _PromotionPanelState extends State<_PromotionPanel> {
         onSave: _submit,
         child: Column(
           children: [
-            _modalField(_title, 'Campaign title', Icons.title_rounded),
-            const SizedBox(height: 14),
-            _modalField(_message, 'Consumer message', Icons.message_outlined,
+            _modalPair(
+              context,
+              _modalField(_title, 'Campaign Title', 'e.g. Harvest Week Offer',
+                  Icons.title_rounded),
+              _modalDropdown(
+                label: 'Status',
+                icon: Icons.toggle_on_outlined,
+                value: _status,
+                values: const {
+                  'draft': 'Draft',
+                  'active': 'Active',
+                  'paused': 'Paused',
+                  'expired': 'Expired',
+                },
+                onChanged: (value) => setState(() => _status = value),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _modalField(_message, 'Consumer Message',
+                'Promotion text shown after verification', Icons.message_outlined,
                 lines: 3),
-            const SizedBox(height: 14),
-            DropdownButtonFormField<String>(
-              initialValue: _status,
-              decoration: _modalDecoration('Status', Icons.toggle_on_outlined),
-              items: const [
-                DropdownMenuItem(value: 'draft', child: Text('Draft')),
-                DropdownMenuItem(value: 'active', child: Text('Active')),
-                DropdownMenuItem(value: 'paused', child: Text('Paused')),
-                DropdownMenuItem(value: 'expired', child: Text('Expired')),
-              ],
-              onChanged: (value) => setState(() => _status = value ?? 'draft'),
+            const SizedBox(height: 12),
+            _modalPair(
+              context,
+              _modalDropdown(
+                label: 'Target Batch',
+                icon: Icons.qr_code_rounded,
+                value: widget.batches
+                        .any((item) => '${item['batch_id']}' == _batchId)
+                    ? _batchId
+                    : '',
+                values: {
+                  '': 'All published batches',
+                  for (final batch in widget.batches)
+                    '${batch['batch_id']}':
+                        '${batch['batch_number']} - ${batch['product_name']}',
+                },
+                onChanged: (value) => setState(() => _batchId = value),
+              ),
+              _modalField(_region, 'Target Region', 'Optional region filter',
+                  Icons.location_on_outlined),
             ),
-            const SizedBox(height: 14),
-            DropdownButtonFormField<String>(
-              initialValue: widget.batches
-                      .any((item) => '${item['batch_id']}' == _batchId)
-                  ? _batchId
-                  : '',
-              isExpanded: true,
-              decoration:
-                  _modalDecoration('Target batch', Icons.qr_code_rounded),
-              items: [
-                const DropdownMenuItem(
-                    value: '', child: Text('All published batches')),
-                ...widget.batches.map((batch) => DropdownMenuItem(
-                      value: '${batch['batch_id']}',
-                      child: Text(
-                          '${batch['batch_number']} - ${batch['product_name']}',
-                          overflow: TextOverflow.ellipsis),
-                    )),
-              ],
-              onChanged: (value) => setState(() => _batchId = value ?? ''),
+            const SizedBox(height: 12),
+            _modalPair(
+              context,
+              _modalField(_image, 'Campaign Image URL', 'https://...',
+                  Icons.image_outlined),
+              _modalField(_destination, 'Action URL', 'https://...',
+                  Icons.open_in_new_rounded),
             ),
-            const SizedBox(height: 14),
-            _modalField(_region, 'Target region (optional)',
-                Icons.location_on_outlined),
-            const SizedBox(height: 14),
-            _modalField(_image, 'Campaign image URL', Icons.image_outlined),
-            const SizedBox(height: 14),
-            _modalField(_destination, 'Action URL', Icons.open_in_new_rounded),
           ],
         ),
       );
@@ -1326,9 +1392,13 @@ class _ModalFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     final mobile = MediaQuery.sizeOf(context).width < 600;
     return Material(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius:
-          BorderRadius.vertical(top: Radius.circular(mobile ? 18 : 8)),
+      color: Theme.of(context).brightness == Brightness.dark
+          ? AppColors.surfaceDark
+          : Colors.white,
+      borderRadius: mobile
+          ? const BorderRadius.vertical(top: Radius.circular(18))
+          : BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
       child: SafeArea(
         top: false,
         child: SizedBox(
@@ -1345,30 +1415,35 @@ class _ModalFrame extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4)),
                 ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(22, 18, 14, 14),
+                padding: EdgeInsets.fromLTRB(24, mobile ? 16 : 24, 16, 16),
                 child: Row(
                   children: [
                     Container(
-                      width: 44,
-                      height: 44,
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: .12),
-                          borderRadius: BorderRadius.circular(8)),
-                      child: Icon(icon, color: AppColors.primary),
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primary.withValues(alpha: .75),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 20),
                     ),
-                    const SizedBox(width: 13),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(title,
                               style: GoogleFonts.poppins(
-                                  fontSize: 18, fontWeight: FontWeight.w600)),
+                                  fontSize: 16, fontWeight: FontWeight.w700)),
                           Text(subtitle,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.poppins(
-                                  fontSize: 11,
+                                  fontSize: 12,
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurfaceVariant)),
@@ -1377,14 +1452,19 @@ class _ModalFrame extends StatelessWidget {
                     ),
                     IconButton(
                         onPressed: saving ? null : () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded)),
+                        icon: const Icon(Icons.close_rounded, size: 18)),
                   ],
                 ),
               ),
-              const Divider(height: 1),
+              Divider(
+                height: 1,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: .05)
+                    : Colors.black.withValues(alpha: .05),
+              ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(22),
+                  padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
                       if (error != null) ...[
@@ -1394,8 +1474,8 @@ class _ModalFrame extends StatelessWidget {
                           decoration: BoxDecoration(
                               color: Colors.red.withValues(alpha: .08),
                               border: Border.all(
-                                  color: Colors.red.withValues(alpha: .3)),
-                              borderRadius: BorderRadius.circular(8)),
+                                  color: Colors.red.withValues(alpha: .2)),
+                              borderRadius: BorderRadius.circular(10)),
                           child: Text(error!,
                               style: GoogleFonts.poppins(
                                   fontSize: 12, color: Colors.red.shade700)),
@@ -1407,9 +1487,14 @@ class _ModalFrame extends StatelessWidget {
                   ),
                 ),
               ),
-              const Divider(height: 1),
+              Divider(
+                height: 1,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: .05)
+                    : Colors.black.withValues(alpha: .05),
+              ),
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                 child: Row(
                   children: [
                     Expanded(
@@ -1418,9 +1503,9 @@ class _ModalFrame extends StatelessWidget {
                                 saving ? null : () => Navigator.pop(context),
                             child:
                                 Text('Cancel', style: GoogleFonts.poppins()))),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: FilledButton.icon(
+                      child: ElevatedButton.icon(
                         onPressed: saving ? null : onSave,
                         icon: saving
                             ? const SizedBox(
@@ -1431,6 +1516,10 @@ class _ModalFrame extends StatelessWidget {
                             : const Icon(Icons.check_rounded, size: 18),
                         label: Text(saving ? 'Saving...' : 'Save',
                             style: GoogleFonts.poppins()),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
                       ),
                     ),
                   ],
@@ -1444,28 +1533,136 @@ class _ModalFrame extends StatelessWidget {
   }
 }
 
+Widget _modalPair(BuildContext context, Widget first, Widget second) {
+  if (MediaQuery.sizeOf(context).width < 600) {
+    return Column(
+      children: [first, const SizedBox(height: 12), second],
+    );
+  }
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(child: first),
+      const SizedBox(width: 10),
+      Expanded(child: second),
+    ],
+  );
+}
+
 Widget _modalField(
-        TextEditingController controller, String label, IconData icon,
-        {int lines = 1}) =>
-    TextFormField(
-      controller: controller,
-      maxLines: lines,
-      style: GoogleFonts.poppins(fontSize: 13),
-      decoration: _modalDecoration(label, icon),
+  TextEditingController controller,
+  String label,
+  String hint,
+  IconData icon, {
+  int lines = 1,
+}) =>
+    Builder(
+      builder: (context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _modalLabel(context, label),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: controller,
+            maxLines: lines,
+            style: GoogleFonts.poppins(fontSize: 12),
+            decoration: _modalDecoration(context, hint, icon),
+          ),
+        ],
+      ),
     );
 
-InputDecoration _modalDecoration(String label, IconData icon) =>
+Widget _modalDropdown({
+  required String label,
+  required IconData icon,
+  required String value,
+  required Map<String, String> values,
+  required ValueChanged<String> onChanged,
+}) =>
+    Builder(
+      builder: (context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _modalLabel(context, label),
+          const SizedBox(height: 6),
+          DropdownButtonFormField<String>(
+            initialValue: values.containsKey(value) ? value : values.keys.first,
+            isExpanded: true,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : AppColors.textPrimary,
+            ),
+            dropdownColor: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.surfaceDark
+                : Colors.white,
+            decoration: _modalDecoration(context, '', icon),
+            items: values.entries
+                .map((entry) => DropdownMenuItem(
+                      value: entry.key,
+                      child: Text(entry.value, overflow: TextOverflow.ellipsis),
+                    ))
+                .toList(),
+            onChanged: (selected) {
+              if (selected != null) onChanged(selected);
+            },
+          ),
+        ],
+      ),
+    );
+
+Widget _modalLabel(BuildContext context, String label) => Text(
+      label,
+      style: GoogleFonts.poppins(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white54
+            : AppColors.textSecondary,
+      ),
+    );
+
+InputDecoration _modalDecoration(
+        BuildContext context, String hint, IconData icon) =>
     InputDecoration(
-      labelText: label,
-      labelStyle: GoogleFonts.poppins(fontSize: 12),
-      prefixIcon: Icon(icon, size: 19),
+      hintText: hint,
+      hintStyle: GoogleFonts.poppins(
+        fontSize: 12,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white24
+            : AppColors.textSecondary,
+      ),
+      prefixIcon: Icon(
+        icon,
+        size: 16,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white24
+            : AppColors.textSecondary,
+      ),
       filled: true,
+      fillColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.white.withValues(alpha: .04)
+          : AppColors.neutral50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white.withValues(alpha: .06)
+              : Colors.black.withValues(alpha: .06),
+        ),
+      ),
       enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.withValues(alpha: .25))),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white.withValues(alpha: .06)
+              : Colors.black.withValues(alpha: .06),
+        ),
+      ),
       focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
     );
