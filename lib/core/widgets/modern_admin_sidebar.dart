@@ -108,6 +108,12 @@ class AdminDrawer extends StatelessWidget {
         label: 'Batch Management',
         route: '/batches-admin',
       ),
+      _NavItem(
+        icon: Icons.qr_code_2_outlined,
+        activeIcon: Icons.qr_code_2_rounded,
+        label: 'Traceability',
+        route: '/traceability-admin',
+      ),
     ];
     int indexFor(_NavItem item) => const [
           '/dashboard',
@@ -120,6 +126,7 @@ class AdminDrawer extends StatelessWidget {
           '/deliveries-admin',
           '/crop-varieties',
           '/batches-admin',
+          '/traceability-admin',
         ].indexOf(item.route);
 
     return Drawer(
@@ -437,6 +444,12 @@ class AdminMobileBottomNav extends StatelessWidget {
       label: 'Batches',
       route: '/batches-admin',
     ),
+    _NavItem(
+      icon: Icons.qr_code_2_outlined,
+      activeIcon: Icons.qr_code_2_rounded,
+      label: 'Traceability',
+      route: '/traceability-admin',
+    ),
   ];
 
   static const _defaultDynamicItem = _NavItem(
@@ -632,6 +645,12 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
       activeIcon: Icons.grid_view_rounded,
       label: 'Batch Management',
       route: '/batches-admin',
+    ),
+    _NavItem(
+      icon: Icons.qr_code_2_outlined,
+      activeIcon: Icons.qr_code_2_rounded,
+      label: 'Traceability',
+      route: '/traceability-admin',
     ),
   ];
 

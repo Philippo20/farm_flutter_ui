@@ -1938,6 +1938,124 @@ class SuperAdminApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getTraceabilityOverview() async {
+    final response = await _client
+        .get(Uri.parse('$baseUrl/traceability/overview'))
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback:
+              'Failed to load traceability console (${response.statusCode})',
+        ),
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid traceability response');
+    }
+    return decoded;
+  }
+
+  Future<Map<String, dynamic>> updateTraceabilitySettings(
+    Map<String, dynamic> settings,
+  ) async {
+    final response = await _client
+        .put(
+          Uri.parse('$baseUrl/traceability/settings'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(settings),
+        )
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback:
+              'Failed to update traceability settings (${response.statusCode})',
+        ),
+      );
+    }
+    return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+  }
+
+  Future<Map<String, dynamic>> updateBatchPublication({
+    required String batchId,
+    required Map<String, dynamic> data,
+  }) async {
+    final response = await _client
+        .post(
+          Uri.parse(
+            '$baseUrl/traceability/batches/${Uri.encodeComponent(batchId)}/publish',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(data),
+        )
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback:
+              'Failed to update batch publication (${response.statusCode})',
+        ),
+      );
+    }
+    return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+  }
+
+  Future<Map<String, dynamic>> saveTraceabilityPromotion({
+    String? id,
+    required Map<String, dynamic> data,
+  }) async {
+    final uri = id == null
+        ? Uri.parse('$baseUrl/traceability/promotions')
+        : Uri.parse(
+            '$baseUrl/traceability/promotions/${Uri.encodeComponent(id)}',
+          );
+    final response = await (id == null
+            ? _client.post(
+                uri,
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode(data),
+              )
+            : _client.put(
+                uri,
+                headers: {'Content-Type': 'application/json'},
+                body: jsonEncode(data),
+              ))
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to save promotion (${response.statusCode})',
+        ),
+      );
+    }
+    return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+  }
+
+  Future<void> deleteTraceabilityPromotion({
+    required String id,
+    required String actorId,
+    required String actorRole,
+  }) async {
+    final uri = Uri.parse('$baseUrl/traceability/promotions/$id').replace(
+      queryParameters: {'actor_id': actorId, 'actor_role': actorRole},
+    );
+    final response = await _client.delete(uri).withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to delete promotion (${response.statusCode})',
+        ),
+      );
+    }
+  }
+
   Future<List<Map<String, dynamic>>> _getDocuments(String path) async {
     final response =
         await _client.get(Uri.parse('$baseUrl$path')).withApiTimeout();
@@ -1975,6 +2093,10 @@ class SuperAdminApiService {
       if (decoded is Map<String, dynamic>) {
         final detail = decoded['detail'];
         if (detail is String && detail.trim().isNotEmpty) return detail;
+        if (detail is Map) {
+          final message = detail['message']?.toString().trim();
+          if (message != null && message.isNotEmpty) return message;
+        }
         if (detail is List) {
           final messages = detail.whereType<Map>().map((item) {
             final location = item['loc'];

@@ -128,6 +128,12 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
       label: 'Batch Management',
       route: '/superadmin/batches',
     ),
+    _NavItem(
+      icon: Icons.qr_code_2_outlined,
+      activeIcon: Icons.qr_code_2_rounded,
+      label: 'Traceability',
+      route: '/superadmin/traceability',
+    ),
   ];
 
   @override
@@ -822,6 +828,12 @@ class SuperAdminDrawer extends StatelessWidget {
           label: 'Batch Management',
           route: '/superadmin/batches',
         ),
+        _NavItem(
+          icon: Icons.qr_code_2_outlined,
+          activeIcon: Icons.qr_code_2_rounded,
+          label: 'Traceability',
+          route: '/superadmin/traceability',
+        ),
       ];
 
   @override
@@ -1237,6 +1249,12 @@ class SuperAdminMobileBottomNav extends StatelessWidget {
       label: 'Backup & Restore',
       route: '/superadmin/backup',
     ),
+    _NavItem(
+      icon: Icons.qr_code_2_outlined,
+      activeIcon: Icons.qr_code_2_rounded,
+      label: 'Traceability',
+      route: '/superadmin/traceability',
+    ),
   ];
 
   static const _defaultDynamicItem = _NavItem(
@@ -1269,6 +1287,7 @@ class SuperAdminMobileBottomNav extends StatelessWidget {
       '/superadmin/sensors',
       '/superadmin/analytics',
       '/superadmin/batches',
+      '/superadmin/traceability',
     ];
     return routes.indexOf(route);
   }

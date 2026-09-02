@@ -21,6 +21,7 @@ import 'screens/admin/modern_analytics_screen.dart';
 import 'screens/admin/modern_settings_screen.dart';
 import 'screens/admin/admin_inventory_overview_screen.dart';
 import 'screens/admin/admin_delivery_control_screen.dart';
+import 'screens/admin/traceability_console_screen.dart';
 import 'screens/auth/modern_login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 import 'screens/profile/profile_screen.dart';
@@ -170,6 +171,8 @@ class MyApp extends ConsumerWidget {
         '/superadmin/batches': (context) => const BatchGenerationScreen(
               access: BatchScreenAccess.superAdmin,
             ),
+        '/superadmin/traceability': (context) =>
+            const TraceabilityConsoleScreen(isSuperAdmin: true),
 
         // Admin
         '/dashboard': (context) => const RedesignedAdminDashboard(),
@@ -185,6 +188,8 @@ class MyApp extends ConsumerWidget {
         '/batches-admin': (context) => const BatchGenerationScreen(
               access: BatchScreenAccess.admin,
             ),
+        '/traceability-admin': (context) =>
+            const TraceabilityConsoleScreen(isSuperAdmin: false),
 
         // Farm Manager (NEW - REDESIGNED)
         '/farm-manager': (context) => const FarmManagerDashboardRedesigned(),

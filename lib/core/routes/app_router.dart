@@ -50,6 +50,7 @@ import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/modern_sensors_screen.dart';
 import '../../screens/admin/manage_users_screen.dart';
 import '../../screens/admin/settings_screen.dart';
+import '../../screens/admin/traceability_console_screen.dart';
 
 // Super Admin Screens
 import '../../screens/superadmin/user_management_screen.dart';
@@ -134,6 +135,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const BatchGenerationScreen(
           access: BatchScreenAccess.superAdmin,
         ),
+      ),
+
+      GoRoute(
+        path: '/traceability-admin',
+        name: 'admin-traceability',
+        builder: (context, state) =>
+            const TraceabilityConsoleScreen(isSuperAdmin: false),
+      ),
+
+      GoRoute(
+        path: '/superadmin/traceability',
+        name: 'super-admin-traceability',
+        builder: (context, state) =>
+            const TraceabilityConsoleScreen(isSuperAdmin: true),
       ),
 
       GoRoute(
