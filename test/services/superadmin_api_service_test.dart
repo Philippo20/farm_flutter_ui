@@ -25,14 +25,18 @@ void main() {
 
     await service.createBatch(data: {
       'batch_no': 'BATCH-1',
+      'plant_type_ID': 'plant-type-1',
       'plant_variety': 'Batavia',
+      'caretaker_id': 'caretaker-1',
       'start_date': '2026-09-01',
       'end_date': '2026-10-13',
     });
 
     expect(client.request, isA<http.MultipartRequest>());
     final request = client.request! as http.MultipartRequest;
+    expect(request.fields['plant_type_ID'], 'plant-type-1');
     expect(request.fields['plant_variety'], 'Batavia');
+    expect(request.fields['caretaker_id'], 'caretaker-1');
     expect(request.fields['start_date'], '2026-09-01');
     expect(request.fields['end_date'], '2026-10-13');
   });

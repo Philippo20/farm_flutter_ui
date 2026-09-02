@@ -129,8 +129,13 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     }
   }
 
-  String _docId(Map<String, dynamic> doc) =>
-      (doc[r'$id'] ?? doc['id'] ?? doc['farm_id'] ?? '').toString();
+  String _docId(Map<String, dynamic> doc) => (doc[r'$id'] ??
+          doc['id'] ??
+          doc['farm_id'] ??
+          doc['plant_type_ID'] ??
+          doc['user_id'] ??
+          '')
+      .toString();
 
   String _value(Map<String, dynamic> doc, List<String> keys,
       {String fallback = ''}) {
@@ -298,6 +303,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         .map((farm) => farm['plantType']?.toString() ?? '')
         .where((name) => name.isNotEmpty);
     final fromTypes = _plantTypes
+        .where((plant) => plant['is_category'] != true)
         .map((plant) => _value(plant, ['plant_name', 'name']))
         .where((name) => name.isNotEmpty);
     final options = <String>{...fromFarms, ...fromTypes}.toList()..sort();
@@ -315,6 +321,55 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       }
     }
     return options.toList()..sort();
+  }
+
+  String _plantTypeIdForName(String plantType) {
+    final plantTypeKey = _catalogKey(plantType);
+    if (plantTypeKey.isEmpty) return '';
+    for (final record in _plantTypes) {
+      if (record['is_category'] == true) continue;
+      final name = _value(record, ['name', 'plant_name']);
+      final nameKey = _catalogKey(name);
+      if (nameKey.isNotEmpty &&
+          (nameKey == plantTypeKey ||
+              nameKey.contains(plantTypeKey) ||
+              plantTypeKey.contains(nameKey))) {
+        return _docId(record);
+      }
+    }
+    return '';
+  }
+
+  String _assignedCaretakerName(String? caretakerId) {
+    if (caretakerId == null || caretakerId.trim().isEmpty) {
+      return 'No caretaker assigned';
+    }
+    for (final caretaker in _caretakers) {
+      if (caretaker['id']?.toString() == caretakerId) {
+        return caretaker['name']?.toString() ?? 'Assigned caretaker';
+      }
+    }
+    return 'Assigned caretaker';
+  }
+
+  void _onFarmChanged(String? farmId) {
+    final farm = _farms.cast<Map<String, dynamic>?>().firstWhere(
+          (record) => record?['id']?.toString() == farmId,
+          orElse: () => null,
+        );
+    final plantType = farm?['plantType']?.toString().trim() ?? '';
+    final caretakerId = farm?['caretakerId']?.toString().trim() ?? '';
+    setState(() {
+      _selectedFarm = farmId;
+      _selectedPlantType =
+          plantType.isEmpty || plantType == '-' ? null : plantType;
+      _selectedPlantVariety = null;
+      _caretakerId =
+          caretakerId.isEmpty || caretakerId.toLowerCase() == 'unassigned'
+              ? null
+              : caretakerId;
+      _endDate = null;
+    });
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
@@ -381,29 +436,56 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       return;
     }
 
+    final farm = _farms.firstWhere((f) => f['id'] == _selectedFarm);
+    final plantTypeId = _plantTypeIdForName(_selectedPlantType ?? '');
+    final assignedCaretakerId = farm['caretakerId']?.toString().trim() ?? '';
+    if (plantTypeId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'This plant type is not linked to the Plant Types catalog.',
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (assignedCaretakerId.isEmpty ||
+        assignedCaretakerId.toLowerCase() == 'unassigned') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Assign a caretaker to this farm first.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isGenerating = true);
 
     try {
       final authState = ref.read(authProvider);
       final user = authState.user;
-      final farm = _farms.firstWhere((f) => f['id'] == _selectedFarm);
       final farmName = farm['name'].toString();
       final caretaker = _caretakers.firstWhere(
-        (c) => c['id'] == _caretakerId,
-        orElse: () => {'id': '', 'name': ''},
+        (c) => c['id'] == assignedCaretakerId,
+        orElse: () => {
+          'id': assignedCaretakerId,
+          'name': 'Assigned caretaker',
+        },
       );
       final batchNumber = BatchModel.generateBatchNumber(
         farmName,
         _startDate!,
         _endDate!,
       );
-      final now = DateTime.now();
-
       await _api.createBatch(data: {
         'batch_no': batchNumber,
         'farmID': _selectedFarm!,
         'farm_name': farmName,
-        'plant_type_ID': farm['plantType']?.toString() ?? '',
+        'plant_type_ID': plantTypeId,
         'plant_name': _selectedPlantType!,
         'plant_variety': _selectedPlantVariety!,
         'farm_manager_id': user?.id ?? '',
@@ -412,22 +494,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         'caretaker_name': caretaker['name']?.toString() ?? '',
         'start_date': DateFormat('yyyy-MM-dd').format(_startDate!),
         'end_date': DateFormat('yyyy-MM-dd').format(_endDate!),
-        'actual_harvest_date': DateFormat('yyyy-MM-dd').format(_endDate!),
         'total_seeds_nursed': _nursedSeeds,
-        'total_harvested': 0,
-        'total_transplanted': 0,
-        'total_weight_kg': 0,
-        'production_status': 'Planted',
         'technical_issues': _notesController.text.trim(),
-        'inputs_supplied': 'Seed batch created',
-        'funds_requested': false,
-        'financial_status': 'Pending',
-        'fund_request_id': '',
-        'delivery_status': 'Pending',
-        'delivery_details': '',
         'created_by': user?.name ?? 'Farm Manager',
-        'created_at': DateFormat('yyyy-MM-dd').format(now),
-        'updated_at': now.toIso8601String(),
       });
 
       await _loadBatchData();
@@ -697,12 +766,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                   child: Text(farm['name']?.toString() ?? ''),
                                 );
                               }).toList(),
-                              onChanged: (value) => setState(() {
-                                _selectedFarm = value;
-                                _selectedPlantType = null;
-                                _selectedPlantVariety = null;
-                                _endDate = null;
-                              }),
+                              onChanged: _onFarmChanged,
                               validator: (value) =>
                                   value == null ? 'Please select a farm' : null,
                               isExpanded: true,
@@ -749,7 +813,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                               onChanged: _onPlantTypeChanged,
                               validator: (value) => value == null
                                   ? 'Please select a plant type'
-                                  : null,
+                                  : _plantTypeIdForName(value).isEmpty
+                                      ? 'Plant type is not linked to the catalog'
+                                      : null,
                               isExpanded: true,
                             ),
                           ],
@@ -791,12 +857,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             child: Text(farm['name']?.toString() ?? ''),
                           );
                         }).toList(),
-                        onChanged: (value) => setState(() {
-                          _selectedFarm = value;
-                          _selectedPlantType = null;
-                          _selectedPlantVariety = null;
-                          _endDate = null;
-                        }),
+                        onChanged: _onFarmChanged,
                         validator: (value) =>
                             value == null ? 'Please select a farm' : null,
                       ),
@@ -838,8 +899,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           );
                         }).toList(),
                         onChanged: _onPlantTypeChanged,
-                        validator: (value) =>
-                            value == null ? 'Please select a plant type' : null,
+                        validator: (value) => value == null
+                            ? 'Please select a plant type'
+                            : _plantTypeIdForName(value).isEmpty
+                                ? 'Plant type is not linked to the catalog'
+                                : null,
                       ),
                     ],
                   ),
@@ -1135,7 +1199,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Caretaker (Optional)',
+                              'Assigned Caretaker',
                               style: AppTypography.labelLarge.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: isDark
@@ -1144,10 +1208,13 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                               ),
                             ),
                             const SizedBox(height: AppSpacing.xs),
-                            DropdownButtonFormField<String>(
-                              value: _caretakerId,
+                            TextFormField(
+                              key: ValueKey(_caretakerId),
+                              initialValue:
+                                  _assignedCaretakerName(_caretakerId),
+                              readOnly: true,
                               decoration: InputDecoration(
-                                hintText: 'Select caretaker',
+                                hintText: 'No caretaker assigned',
                                 prefixIcon: const Icon(Icons.person_outline),
                                 filled: true,
                                 fillColor: isDark
@@ -1159,15 +1226,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                   borderSide: BorderSide.none,
                                 ),
                               ),
-                              items: _caretakers.map((caretaker) {
-                                return DropdownMenuItem<String>(
-                                  value: caretaker['id']?.toString(),
-                                  child:
-                                      Text(caretaker['name']?.toString() ?? ''),
-                                );
-                              }).toList(),
-                              onChanged: (value) =>
-                                  setState(() => _caretakerId = value),
+                              validator: (_) => _caretakerId == null
+                                  ? 'Assign a caretaker to this farm first'
+                                  : null,
                             ),
                           ],
                         ),
@@ -1229,17 +1290,19 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Caretaker (Optional)',
+                        'Assigned Caretaker',
                         style: AppTypography.labelLarge.copyWith(
                           fontWeight: FontWeight.w600,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
-                      DropdownButtonFormField<String>(
-                        value: _caretakerId,
+                      TextFormField(
+                        key: ValueKey(_caretakerId),
+                        initialValue: _assignedCaretakerName(_caretakerId),
+                        readOnly: true,
                         decoration: InputDecoration(
-                          hintText: 'Select caretaker',
+                          hintText: 'No caretaker assigned',
                           prefixIcon: const Icon(Icons.person_outline),
                           filled: true,
                           fillColor: isDark
@@ -1251,14 +1314,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             borderSide: BorderSide.none,
                           ),
                         ),
-                        items: _caretakers.map((caretaker) {
-                          return DropdownMenuItem<String>(
-                            value: caretaker['id']?.toString(),
-                            child: Text(caretaker['name']?.toString() ?? ''),
-                          );
-                        }).toList(),
-                        onChanged: (value) =>
-                            setState(() => _caretakerId = value),
+                        validator: (_) => _caretakerId == null
+                            ? 'Assign a caretaker to this farm first'
+                            : null,
                       ),
                     ],
                   ),

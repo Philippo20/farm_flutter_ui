@@ -36,6 +36,25 @@ bool _compatiblePlantNames(String first, String second) {
       secondKey.contains(firstKey);
 }
 
+bool _samePlantCatalogEntry(String first, String second) {
+  final firstKey = _catalogKey(first);
+  final secondKey = _catalogKey(second);
+  return firstKey.isNotEmpty &&
+      secondKey.isNotEmpty &&
+      (firstKey == secondKey ||
+          firstKey.contains(secondKey) ||
+          secondKey.contains(firstKey));
+}
+
+String _documentId(Map<String, dynamic> document) =>
+    '${document[r'$id'] ?? document['id'] ?? document['plant_type_ID'] ?? document['user_id'] ?? ''}'
+        .trim();
+
+String _relationshipId(Object? value) {
+  final id = '${value ?? ''}'.trim();
+  return id.isEmpty || id.toLowerCase() == 'unassigned' ? '' : id;
+}
+
 DateTime? _calculateBatchEndDate(
   DateTime startDate,
   int durationValue,
@@ -77,6 +96,14 @@ Future<bool?> showBatchCreationDialog({
     if (selectedVariety.isNotEmpty) selectedVariety,
   };
   final varietyRecords = <String, Map<String, dynamic>>{};
+  var plantTypeId = _relationshipId(
+    farm['plantTypeId'] ?? farm['plant_type_ID'] ?? farm['plant_type_id'],
+  );
+  var caretakerId = _relationshipId(
+    farm['caretakerID'] ?? farm['caretakerId'] ?? farm['caretaker_id'],
+  );
+  var caretakerName =
+      '${farm['caretaker'] ?? farm['caretaker_name'] ?? ''}'.trim();
   try {
     final crops = await api.getCrops();
     for (final crop in crops) {
@@ -96,6 +123,40 @@ Future<bool?> showBatchCreationDialog({
   } catch (_) {
     // The farm's saved variety remains available if the catalog is offline.
   }
+  try {
+    final plantTypes = await api.getPlantTypes();
+    for (final plantType in plantTypes) {
+      if (plantType['is_category'] == true) continue;
+      final name =
+          '${plantType['name'] ?? plantType['plant_name'] ?? ''}'.trim();
+      if (plantTypeId.isEmpty &&
+          name.isNotEmpty &&
+          _samePlantCatalogEntry(name, plantName)) {
+        plantTypeId = _documentId(plantType);
+        break;
+      }
+    }
+  } catch (_) {
+    // Relationship validation below reports a precise catalog error.
+  }
+  if (caretakerId.isNotEmpty &&
+      (caretakerName.isEmpty || caretakerName == caretakerId)) {
+    try {
+      final users = await api.getUsers();
+      for (final user in users) {
+        if (_documentId(user) == caretakerId) {
+          caretakerName = '${user['name'] ?? user['full_name'] ?? ''}'.trim();
+          break;
+        }
+      }
+    } catch (_) {
+      // The saved farm label remains available if users cannot be loaded.
+    }
+  }
+  if (caretakerId.isNotEmpty &&
+      (caretakerName.isEmpty || caretakerName == caretakerId)) {
+    caretakerName = 'Assigned caretaker';
+  }
   if (selectedVariety.isEmpty && varietyOptions.isNotEmpty) {
     selectedVariety = varietyOptions.first;
   }
@@ -105,7 +166,7 @@ Future<bool?> showBatchCreationDialog({
       '${farm['farmManager'] ?? farm['farm_manager_name'] ?? ''}';
   final seedsController = TextEditingController();
   final caretakerController = TextEditingController(
-    text: '${farm['caretaker'] ?? farm['caretaker_name'] ?? ''}',
+    text: caretakerName,
   );
   final notesController = TextEditingController();
   final formKey = GlobalKey<FormState>();
@@ -495,17 +556,20 @@ Future<bool?> showBatchCreationDialog({
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                fieldLabel('Caretaker (Optional)', isDark),
+                                fieldLabel('Assigned Caretaker', isDark),
                                 TextFormField(
                                   controller: caretakerController,
-                                  enabled: !saving,
+                                  readOnly: true,
                                   style: inputTextStyle(isDark),
                                   decoration: inputDecoration(
                                     isDark,
-                                    'Caretaker (Optional)',
-                                    hint: 'Select caretaker',
+                                    'Assigned Caretaker',
+                                    hint: 'No caretaker assigned',
                                     icon: Icons.person_outline,
                                   ),
+                                  validator: (_) => caretakerId.isEmpty
+                                      ? 'Assign a caretaker to this farm first'
+                                      : null,
                                 ),
                               ],
                             ),
@@ -580,6 +644,16 @@ Future<bool?> showBatchCreationDialog({
                                             'The selected crop variety has no valid plant duration.');
                                         return;
                                       }
+                                      if (plantTypeId.isEmpty) {
+                                        setModalState(() => formError =
+                                            'This farm plant type is not linked to the Plant Types catalog. Update the farm before creating a batch.');
+                                        return;
+                                      }
+                                      if (caretakerId.isEmpty) {
+                                        setModalState(() => formError =
+                                            'Assign a caretaker to this farm before creating a batch.');
+                                        return;
+                                      }
                                       setModalState(() {
                                         saving = true;
                                         formError = null;
@@ -591,40 +665,23 @@ Future<bool?> showBatchCreationDialog({
                                           'batch_no': batchNumber,
                                           'farmID': farmId,
                                           'farm_name': farmName,
-                                          'plant_type_ID': '',
+                                          'plant_type_ID': plantTypeId,
                                           'plant_name': plantName.isEmpty
                                               ? 'Plant'
                                               : plantName,
                                           'plant_variety': selectedVariety,
                                           'farm_manager_id': managerId,
                                           'farm_manager_name': managerName,
-                                          'caretaker_id': '',
-                                          'caretaker_name':
-                                              caretakerController.text.trim(),
+                                          'caretaker_id': caretakerId,
+                                          'caretaker_name': caretakerName,
                                           'start_date': isoDate(startDate),
                                           'end_date':
                                               isoDate(calculatedEndDate),
-                                          'actual_harvest_date':
-                                              isoDate(calculatedEndDate),
                                           'total_seeds_nursed': int.parse(
                                               seedsController.text.trim()),
-                                          'total_harvested': 0,
-                                          'total_transplanted': 0,
-                                          'total_weight_kg': 0,
-                                          'production_status': 'Planted',
                                           'technical_issues':
                                               notesController.text.trim(),
-                                          'inputs_supplied':
-                                              'Batch created from farm details',
-                                          'funds_requested': false,
-                                          'financial_status': 'Pending',
-                                          'fund_request_id': '',
-                                          'delivery_status': 'Pending',
-                                          'delivery_details': '',
                                           'created_by': createdBy,
-                                          'created_at': isoDate(DateTime.now()),
-                                          'updated_at':
-                                              DateTime.now().toIso8601String(),
                                         });
                                         await onCreated();
                                         if (dialogContext.mounted) {
