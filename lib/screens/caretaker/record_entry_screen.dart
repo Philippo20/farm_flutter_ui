@@ -46,7 +46,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   // Plant observations
   final _plantHealthController = TextEditingController();
   final _growthStageController = TextEditingController();
-  final _plantCountController = TextEditingController();
+  final _plantedController = TextEditingController();
+  final _transplantedController = TextEditingController();
+  final _harvestedController = TextEditingController();
+  final _harvestWeightController = TextEditingController();
   final _observationsController = TextEditingController();
 
   // Activities and issues
@@ -61,6 +64,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   bool _isSubmitting = false;
   bool _isLoading = true;
   String? _errorMessage;
+  String? _submitError;
   List<Map<String, dynamic>> _farms = [];
   List<Map<String, dynamic>> _batches = [];
   List<Map<String, dynamic>> _tasks = [];
@@ -80,7 +84,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     _lightController.dispose();
     _plantHealthController.dispose();
     _growthStageController.dispose();
-    _plantCountController.dispose();
+    _plantedController.dispose();
+    _transplantedController.dispose();
+    _harvestedController.dispose();
+    _harvestWeightController.dispose();
     _observationsController.dispose();
     _issueDescriptionController.dispose();
     _notesController.dispose();
@@ -157,6 +164,32 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     return null;
   }
 
+  String _numericText(Map<String, dynamic> batch, String key,
+      {bool decimal = false}) {
+    final raw = batch[key];
+    final number = raw is num ? raw : num.tryParse(raw?.toString() ?? '');
+    if (number == null) return '0';
+    return decimal
+        ? number.toDouble().toStringAsFixed(1)
+        : number.toInt().toString();
+  }
+
+  void _populateBatchProgress() {
+    final batch = _selectedBatchDoc;
+    if (batch == null) {
+      _plantedController.clear();
+      _transplantedController.clear();
+      _harvestedController.clear();
+      _harvestWeightController.clear();
+      return;
+    }
+    _plantedController.text = _numericText(batch, 'total_seeds_nursed');
+    _transplantedController.text = _numericText(batch, 'total_transplanted');
+    _harvestedController.text = _numericText(batch, 'total_harvested');
+    _harvestWeightController.text =
+        _numericText(batch, 'total_weight_kg', decimal: true);
+  }
+
   List<Map<String, dynamic>> get _assignedTasks {
     final user = ref.read(authProvider).user;
     return _tasks.where((task) {
@@ -196,9 +229,12 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           _selectedFarm = _farmId(assigned.first);
         }
         final batches = _farmBatches;
-        if (batches.isNotEmpty && _selectedBatch == null) {
+        if (batches.isEmpty) {
+          _selectedBatch = null;
+        } else if (!batches.any((batch) => _batchId(batch) == _selectedBatch)) {
           _selectedBatch = _batchId(batches.first);
         }
+        _populateBatchProgress();
         _isLoading = false;
       });
     } catch (error) {
@@ -325,6 +361,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
             _buildActiveRecordSection(isDark, isMobile),
             SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+            if (_submitError != null) ...[
+              _buildSubmitError(isDark),
+              SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
+            ],
             _buildSubmitButton(isDark),
             SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
           ],
@@ -347,7 +387,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         ),
         (
           title: 'Plants',
-          subtitle: 'Health, stage, count, and notes',
+          subtitle: 'Batch progress, health, and observations',
           icon: Icons.spa_rounded
         ),
         (
@@ -486,14 +526,15 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         return [_buildEnvironmentFields(isDark, isMobile)];
       case 2:
         return [
+          _buildSelectedBatchSummary(isDark),
+          const SizedBox(height: AppSpacing.md),
+          _buildBatchProgressFields(isDark, isMobile),
+          const SizedBox(height: AppSpacing.lg),
           _buildTextField('Plant Health', _plantHealthController,
               'e.g., Healthy, Yellowing, etc.', isDark),
           const SizedBox(height: AppSpacing.md),
           _buildTextField('Growth Stage', _growthStageController,
               'e.g., Vegetative, Flowering', isDark),
-          const SizedBox(height: AppSpacing.md),
-          _buildNumberField('Plant Count', _plantCountController,
-              Icons.format_list_numbered_rounded, isDark),
           const SizedBox(height: AppSpacing.md),
           _buildTextField('Observations', _observationsController,
               'Any notable observations...', isDark,
@@ -530,6 +571,197 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       default:
         return const [];
     }
+  }
+
+  Widget _buildSelectedBatchSummary(bool isDark) {
+    final batch = _selectedBatchDoc;
+    if (batch == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.warning.withOpacity(isDark ? 0.14 : 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+        ),
+        child: Text(
+          'Select an assigned farm and batch in Basic Information first.',
+          style: AppTypography.bodySmall.copyWith(
+            color: isDark ? Colors.white70 : AppColors.textPrimary,
+          ),
+        ),
+      );
+    }
+    final batchNumber = _value(
+      batch,
+      const ['batch_no', 'batch_number', 'batch_id'],
+      fallback: 'Batch',
+    );
+    final crop = _value(
+      batch,
+      const ['plant_name', 'plant_type'],
+      fallback: 'Crop not set',
+    );
+    final variety = _value(
+      batch,
+      const ['plant_variety', 'variety_name'],
+      fallback: 'Variety not set',
+    );
+    final status = _value(
+      batch,
+      const ['production_status', 'status'],
+      fallback: 'Planted',
+    );
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(isDark ? 0.14 : 0.07),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withOpacity(0.25)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.inventory_2_outlined,
+              color: AppColors.primary,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  batchNumber,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$crop - $variety',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption.copyWith(
+                    color: isDark ? Colors.white60 : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              status,
+              style: AppTypography.caption.copyWith(
+                color: AppColors.success,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBatchProgressFields(bool isDark, bool isMobile) {
+    final fields = [
+      _buildNumberField(
+        'Planted / Nursed',
+        _plantedController,
+        Icons.spa_outlined,
+        isDark,
+        allowDecimal: false,
+        validator: _nonNegativeWholeNumber,
+      ),
+      _buildNumberField(
+        'Transplanted',
+        _transplantedController,
+        Icons.grass_rounded,
+        isDark,
+        allowDecimal: false,
+        validator: _nonNegativeWholeNumber,
+      ),
+      _buildNumberField(
+        'Harvested',
+        _harvestedController,
+        Icons.agriculture_rounded,
+        isDark,
+        allowDecimal: false,
+        validator: _nonNegativeWholeNumber,
+      ),
+      _buildNumberField(
+        'Harvest Weight (kg)',
+        _harvestWeightController,
+        Icons.scale_outlined,
+        isDark,
+        allowDecimal: true,
+        validator: _nonNegativeNumber,
+      ),
+    ];
+    if (isMobile) {
+      return Column(
+        children: [
+          for (var index = 0; index < fields.length; index++) ...[
+            fields[index],
+            if (index < fields.length - 1)
+              const SizedBox(height: AppSpacing.md),
+          ],
+        ],
+      );
+    }
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: fields[0]),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(child: fields[1]),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            Expanded(child: fields[2]),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(child: fields[3]),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String? _nonNegativeWholeNumber(String? value) {
+    if (_selectedBatchDoc == null && (value == null || value.trim().isEmpty)) {
+      return null;
+    }
+    final parsed = int.tryParse(value?.trim() ?? '');
+    return parsed == null || parsed < 0 ? 'Enter zero or a whole number' : null;
+  }
+
+  String? _nonNegativeNumber(String? value) {
+    if (_selectedBatchDoc == null && (value == null || value.trim().isEmpty)) {
+      return null;
+    }
+    final parsed = double.tryParse(value?.trim() ?? '');
+    return parsed == null || parsed < 0 ? 'Enter zero or a valid weight' : null;
   }
 
   Widget _buildEnvironmentFields(bool isDark, bool isMobile) {
@@ -1001,6 +1233,11 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       onChanged: (value) => setState(() {
         _selectedFarm = value;
         _selectedBatch = null;
+        final batches = _farmBatches;
+        if (batches.isNotEmpty) {
+          _selectedBatch = _batchId(batches.first);
+        }
+        _populateBatchProgress();
       }),
       validator: (value) => value == null ? 'Please select a farm' : null,
     );
@@ -1078,7 +1315,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                 )),
               ))
           .toList(),
-      onChanged: (value) => setState(() => _selectedBatch = value),
+      onChanged: (value) => setState(() {
+        _selectedBatch = value;
+        _populateBatchProgress();
+      }),
       validator: (value) =>
           batches.isNotEmpty && value == null ? 'Please select a batch' : null,
     );
@@ -1149,13 +1389,15 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   }
 
   Widget _buildNumberField(String label, TextEditingController controller,
-      IconData icon, bool isDark) {
+      IconData icon, bool isDark,
+      {bool allowDecimal = true, String? Function(String?)? validator}) {
     return TextFormField(
       controller: controller,
-      keyboardType: TextInputType.number,
+      keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
       style: AppTypography.bodySmall.copyWith(
         color: isDark ? Colors.white : AppColors.textPrimary,
       ),
+      validator: validator,
       decoration: _inputDecoration(
         label: label,
         icon: icon,
@@ -1356,24 +1598,75 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     );
   }
 
+  Widget _buildSubmitError(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.error.withOpacity(isDark ? 0.16 : 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.error_outline_rounded,
+              color: AppColors.error, size: 19),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              _submitError!,
+              style: AppTypography.bodySmall.copyWith(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _rejectSubmission(String message, {int? tab}) {
+    setState(() {
+      _isSubmitting = false;
+      _submitError = message;
+      if (tab != null) _selectedRecordTab = tab;
+    });
+  }
+
   Future<void> _submitRecord() async {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isSubmitting = true);
 
     final user = ref.read(authProvider).user;
     final farm = _selectedFarmDoc;
     final batch = _selectedBatchDoc;
     if (farm == null || user == null) {
-      setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Select a valid assigned farm before submitting.'),
-          backgroundColor: AppColors.error,
-        ),
+      _rejectSubmission(
+        'Select a valid assigned farm before submitting.',
+        tab: 0,
       );
       return;
     }
+    if (batch != null) {
+      final progressIsValid =
+          _nonNegativeWholeNumber(_plantedController.text) == null &&
+              _nonNegativeWholeNumber(_transplantedController.text) == null &&
+              _nonNegativeWholeNumber(_harvestedController.text) == null &&
+              _nonNegativeNumber(_harvestWeightController.text) == null;
+      if (!progressIsValid) {
+        _rejectSubmission(
+          'Check the batch progress values. Use zero or positive numbers only.',
+          tab: 2,
+        );
+        return;
+      }
+    }
+    if (_hasIssues && _issueDescriptionController.text.trim().isEmpty) {
+      _rejectSubmission('Describe the issue before submitting.', tab: 4);
+      return;
+    }
+    setState(() {
+      _isSubmitting = true;
+      _submitError = null;
+    });
 
     final record = FarmRecordModel(
       id: 'REC_${DateTime.now().millisecondsSinceEpoch}',
@@ -1408,8 +1701,8 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       growthStage: _growthStageController.text.isNotEmpty
           ? _growthStageController.text
           : null,
-      plantCount: _plantCountController.text.isNotEmpty
-          ? int.tryParse(_plantCountController.text)
+      plantCount: _plantedController.text.isNotEmpty
+          ? int.tryParse(_plantedController.text)
           : null,
       observations: _observationsController.text.isNotEmpty
           ? _observationsController.text
@@ -1441,7 +1734,11 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           'light_intensity': _lightController.text.trim(),
           'plant_health': _plantHealthController.text.trim(),
           'growth_stage': _growthStageController.text.trim(),
-          'plant_count': _plantCountController.text.trim(),
+          'plant_count': _plantedController.text.trim(),
+          'planted_count': _plantedController.text.trim(),
+          'transplanted_count': _transplantedController.text.trim(),
+          'harvested_count': _harvestedController.text.trim(),
+          'harvest_weight_kg': _harvestWeightController.text.trim(),
           'observations': _observationsController.text.trim(),
           'activities_performed': _selectedActivities.join(', '),
           'has_issues': _hasIssues,
@@ -1453,7 +1750,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       );
       ref.read(recordsProvider.notifier).addRecord(record);
       if (!mounted) return;
-      setState(() => _isSubmitting = false);
+      setState(() {
+        _isSubmitting = false;
+        _submitError = null;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Record submitted successfully'),
@@ -1463,13 +1763,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       context.pop();
     } catch (error) {
       if (!mounted) return;
-      setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Submit failed: $error'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      _rejectSubmission('Submit failed: $error');
     }
   }
 }

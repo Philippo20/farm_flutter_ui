@@ -63,4 +63,36 @@ void main() {
     expect(request.fields['total_transplanted'], '120');
     expect(request.fields.containsKey('farmID'), isFalse);
   });
+
+  test('createFarmRecord sends caretaker batch progress fields', () async {
+    final client = _RecordingClient();
+    final service = SuperAdminApiService(client: client);
+
+    await service.createFarmRecord(data: {
+      'farm_id': 'farm-1',
+      'farm_name': 'Farm One',
+      'batch_id': 'batch-1',
+      'batch_number': 'BATCH-1',
+      'record_type': 'daily_monitoring',
+      'record_date': '2026-09-02T08:00:00.000Z',
+      'created_by': 'caretaker-1',
+      'created_by_name': 'Caretaker One',
+      'has_issues': false,
+      'issue_severity': 'none',
+      'planted_count': 500,
+      'transplanted_count': 420,
+      'harvested_count': 120,
+      'harvest_weight_kg': 47.5,
+    });
+
+    expect(client.request, isA<http.Request>());
+    final request = client.request! as http.Request;
+    expect(request.method, 'POST');
+    expect(request.url.path, '/farm-records/info');
+    expect(request.bodyFields['batch_id'], 'batch-1');
+    expect(request.bodyFields['planted_count'], '500');
+    expect(request.bodyFields['transplanted_count'], '420');
+    expect(request.bodyFields['harvested_count'], '120');
+    expect(request.bodyFields['harvest_weight_kg'], '47.5');
+  });
 }
