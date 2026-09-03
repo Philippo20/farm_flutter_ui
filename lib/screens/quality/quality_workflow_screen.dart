@@ -10,6 +10,7 @@ import '../../core/widgets/quality_assurance_screen_shell.dart';
 import '../../core/widgets/skeleton_loader.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/superadmin_api_service.dart';
+import 'quality_status.dart';
 
 enum QualityWorkflowStage { inspection, approval, rejected }
 
@@ -78,27 +79,25 @@ class _QualityWorkflowScreenState extends ConsumerState<QualityWorkflowScreen> {
     return value.isEmpty ? fallback : value;
   }
 
-  String _qualityStatus(Map<String, dynamic> record) {
-    return _text(record, 'quality_status', 'Pending Inspection');
-  }
-
   List<Map<String, dynamic>> get _visibleRecords {
     final query = _searchController.text.trim().toLowerCase();
     return _records.where((record) {
-      final fulfillmentStatus = _text(record, 'status').toLowerCase();
-      final qualityStatus = _qualityStatus(record).toLowerCase();
+      final qualityState = qualityRecordState(record);
       final belongsToStage = switch (widget.stage) {
-        QualityWorkflowStage.inspection => fulfillmentStatus == 'packaged' &&
-            (qualityStatus == 'pending inspection' ||
-                qualityStatus == 'rejected'),
-        QualityWorkflowStage.approval => qualityStatus == 'inspected',
-        QualityWorkflowStage.rejected => qualityStatus == 'rejected',
+        QualityWorkflowStage.inspection =>
+          qualityState == QualityRecordState.pendingInspection ||
+              qualityState == QualityRecordState.rejected,
+        QualityWorkflowStage.approval =>
+          qualityState == QualityRecordState.inspected,
+        QualityWorkflowStage.rejected =>
+          qualityState == QualityRecordState.rejected,
       };
       if (!belongsToStage) return false;
       if (query.isEmpty) return true;
       return [
         record['batch_number'],
         record['farm_name'],
+        record['plant_variety'],
         record['plant_type'],
         record['quality_grade'],
       ].any((value) => '$value'.toLowerCase().contains(query));
@@ -112,22 +111,21 @@ class _QualityWorkflowScreenState extends ConsumerState<QualityWorkflowScreen> {
         DateTime.fromMillisecondsSinceEpoch(0);
   }
 
-  int get _pendingCount => _records
-      .where((record) =>
-          _text(record, 'status').toLowerCase() == 'packaged' &&
-          _qualityStatus(record).toLowerCase() == 'pending inspection')
-      .length;
+  int get _pendingCount => _records.where(isPendingQualityInspection).length;
 
   int get _inspectedCount => _records
-      .where((record) => _qualityStatus(record).toLowerCase() == 'inspected')
+      .where((record) =>
+          qualityRecordState(record) == QualityRecordState.inspected)
       .length;
 
   int get _approvedCount => _records
-      .where((record) => _qualityStatus(record).toLowerCase() == 'approved')
+      .where(
+          (record) => qualityRecordState(record) == QualityRecordState.approved)
       .length;
 
   int get _rejectedCount => _records
-      .where((record) => _qualityStatus(record).toLowerCase() == 'rejected')
+      .where(
+          (record) => qualityRecordState(record) == QualityRecordState.rejected)
       .length;
 
   Future<void> _openRecord(Map<String, dynamic> record) async {
@@ -519,7 +517,7 @@ class _WorkflowCard extends StatelessWidget {
                             .copyWith(fontWeight: FontWeight.w600)),
                     const SizedBox(height: 3),
                     Text(
-                        '${value('plant_type', 'Crop')} | ${value('farm_name', 'Unassigned farm')}',
+                        '${value('plant_variety', value('plant_type', 'Crop variety'))} | ${value('farm_name', 'Unassigned farm')}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.bodySmall.copyWith(
@@ -667,7 +665,7 @@ class _QualityInspectionFormState extends State<_QualityInspectionForm> {
       icon: Icons.fact_check_outlined,
       title: 'Inspect ${widget.record['batch_number'] ?? 'batch'}',
       subtitle:
-          '${widget.record['plant_type'] ?? 'Crop'} | ${widget.record['farm_name'] ?? 'Farm'}',
+          '${widget.record['plant_variety'] ?? widget.record['plant_type'] ?? 'Crop variety'} | ${widget.record['farm_name'] ?? 'Farm'}',
       saving: _saving,
       primaryLabel: 'Save inspection',
       onPrimary: _submit,
@@ -797,7 +795,7 @@ class _QualityDecisionFormState extends State<_QualityDecisionForm> {
       icon: Icons.verified_outlined,
       title: 'Quality decision',
       subtitle:
-          '${widget.record['batch_number'] ?? 'Batch'} | ${widget.record['plant_type'] ?? 'Crop'}',
+          '${widget.record['batch_number'] ?? 'Batch'} | ${widget.record['plant_variety'] ?? widget.record['plant_type'] ?? 'Crop variety'}',
       saving: _saving,
       primaryLabel:
           _decision == 'Approve' ? 'Approve and release' : 'Reject batch',

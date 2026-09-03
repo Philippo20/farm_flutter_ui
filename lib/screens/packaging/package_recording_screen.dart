@@ -67,7 +67,9 @@ class _PackageRecordingScreenState
           'id': _documentId(item),
           'batch': _firstText(
               item, ['batch_number', 'batch_id'], 'Unassigned batch'),
-          'crop': _firstText(item, ['plant_type', 'crop'], 'Unassigned crop'),
+          'crop': _firstText(
+              item, ['plant_variety', 'crop_variety'], 'Unassigned variety'),
+          'plantType': _firstText(item, ['plant_type', 'crop']),
           'target': '${target.toStringAsFixed(1)} kg',
           'completed': '${completed.toStringAsFixed(1)} kg',
           'waste': '${waste.toStringAsFixed(1)} kg',
@@ -107,11 +109,8 @@ class _PackageRecordingScreenState
   Future<void> _openRecordForm(Map<String, dynamic> line) async {
     final crop = line['crop']?.toString() ?? '';
     final compatible = _packages.where((item) {
-      final packageCrop = _firstText(item, ['plant_type_name']);
-      final normalizedCrop = packageCrop.toLowerCase();
-      return packageCrop.isEmpty ||
-          normalizedCrop == 'all plant types' ||
-          normalizedCrop == 'all crops' ||
+      final packageCrop = _firstText(item, ['crop_variety_name']);
+      return packageCrop.isNotEmpty &&
           packageCrop.toLowerCase() == crop.toLowerCase();
     }).toList();
     final user = ref.read(currentUserProvider);

@@ -312,15 +312,15 @@ class _PackagingSupervisorDashboardRedesignedState
       final received = number(item, ['total_weight']);
       final packaged =
           number(item, ['total_packaged_weight', 'packaging_weight']);
-      final progress = received > 0
-          ? (packaged / received * 100).clamp(0, 100)
-          : 0.0;
+      final progress =
+          received > 0 ? (packaged / received * 100).clamp(0, 100) : 0.0;
       final status = text(item, ['status', 'delivery_status'], 'Pending');
       final isWatch = status.toLowerCase().contains('hold') || progress < 50;
       return <String, dynamic>{
         'line': 'Line ${String.fromCharCode(65 + entry.key)}',
         'batch': text(item, ['batch_number', 'batch_id'], 'Unassigned batch'),
-        'crop': text(item, ['plant_type', 'crop'], 'Unassigned crop'),
+        'crop': text(item, ['plant_variety', 'crop_variety', 'plant_type'],
+            'Unassigned variety'),
         'progress': '${progress.toStringAsFixed(0)}%',
         'output': '${packaged.toStringAsFixed(1)} kg',
         'eta': text(item, ['eta'], 'Not set'),
@@ -335,8 +335,8 @@ class _PackagingSupervisorDashboardRedesignedState
       return <String, dynamic>{
         'title': '$batch updated',
         'subtitle': 'Packaging status: $status',
-        'time': text(item, ['packaging_date_time', 'received_date_time'],
-            'Recently'),
+        'time': text(
+            item, ['packaging_date_time', 'received_date_time'], 'Recently'),
         'color': status.toLowerCase().contains('hold')
             ? AppColors.warning
             : AppColors.success,
@@ -346,8 +346,10 @@ class _PackagingSupervisorDashboardRedesignedState
     _progressValue = _lines.isEmpty
         ? 0
         : _lines
-                .map((line) => double.tryParse(
-                    (line['progress'] as String).replaceAll('%', '')) ?? 0)
+                .map((line) =>
+                    double.tryParse(
+                        (line['progress'] as String).replaceAll('%', '')) ??
+                    0)
                 .reduce((a, b) => a + b) /
             _lines.length;
     _wasteRate = totalPackaged + totalWaste == 0
@@ -431,8 +433,7 @@ class _PackagingSupervisorDashboardRedesignedState
                       '${_lines.where((line) => line['color'] == AppColors.warning).length} line watch',
                   icon: Icons.visibility_outlined),
               _HeroChip(
-                  label:
-                      '${_activity.length} reviews pending',
+                  label: '${_activity.length} reviews pending',
                   icon: Icons.task_alt_outlined),
             ],
           ),

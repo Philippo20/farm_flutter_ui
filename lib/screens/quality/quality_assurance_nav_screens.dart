@@ -6,6 +6,7 @@ import '../../core/widgets/quality_assurance_screen_shell.dart';
 import '../../services/fulfillment_data_service.dart';
 import '../../services/superadmin_api_service.dart';
 import 'quality_workflow_screen.dart';
+import 'quality_status.dart';
 
 class QualityInspectionScreen extends StatelessWidget {
   const QualityInspectionScreen({super.key});
@@ -190,8 +191,7 @@ class _QualitySettingsScreenState extends State<QualitySettingsScreen> {
   }
 }
 
-class _QualityPage extends StatelessWidget {
-  static final _dataFuture = FulfillmentDataService().load();
+class _QualityPage extends StatefulWidget {
   final int selectedIndex;
   final String title;
   final String subtitle;
@@ -213,11 +213,24 @@ class _QualityPage extends StatelessWidget {
   });
 
   @override
+  State<_QualityPage> createState() => _QualityPageState();
+}
+
+class _QualityPageState extends State<_QualityPage> {
+  late final Future<FulfillmentSnapshot> _dataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _dataFuture = FulfillmentDataService().load();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return QualityAssuranceScreenShell(
-      selectedIndex: selectedIndex,
+      selectedIndex: widget.selectedIndex,
       child: FutureBuilder<FulfillmentSnapshot>(
         future: _dataFuture,
         builder: (context, snapshot) {
@@ -240,7 +253,11 @@ class _QualityPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _Hero(
-                  title: title, subtitle: subtitle, icon: icon, colors: colors),
+                title: widget.title,
+                subtitle: widget.subtitle,
+                icon: widget.icon,
+                colors: widget.colors,
+              ),
               const SizedBox(height: AppSpacing.lg),
               Wrap(
                 spacing: AppSpacing.md,
@@ -250,7 +267,7 @@ class _QualityPage extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
-                sectionTitle,
+                widget.sectionTitle,
                 style: AppTypography.h5.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -278,83 +295,99 @@ class _QualityPage extends StatelessWidget {
       return fallback;
     }
 
-    bool hasStatus(Map<String, dynamic> item, List<String> terms) {
-      final status = value(item, ['status', 'delivery_status']).toLowerCase();
-      return terms.any(status.contains);
-    }
-
     final records = snapshot.fulfillments.where((item) {
-      if (selectedIndex == 1) {
-        return !hasStatus(item, ['approve', 'release', 'reject', 'hold']);
+      if (widget.selectedIndex == 1) {
+        return isPendingQualityInspection(item);
       }
-      if (selectedIndex == 2)
-        return hasStatus(item, ['approve', 'release', 'packaged']);
-      if (selectedIndex == 3) {
-        return hasStatus(item, ['reject', 'hold']) ||
-            (double.tryParse(
-                        item['packaging_waste_weight']?.toString() ?? '') ??
-                    0) >
-                0;
+      if (widget.selectedIndex == 2) {
+        return qualityRecordState(item) == QualityRecordState.inspected;
       }
-      return true;
+      if (widget.selectedIndex == 3) {
+        return qualityRecordState(item) == QualityRecordState.rejected;
+      }
+      return isQualityRecord(item);
     }).toList();
 
     return records.map((item) {
-      final status = value(item, ['status', 'delivery_status'], 'Pending');
-      final rejected = hasStatus(item, ['reject', 'hold']);
+      final state = qualityRecordState(item);
+      final status = qualityRecordLabel(item);
+      final score = double.tryParse(item['quality_score']?.toString() ?? '');
+      final color = switch (state) {
+        QualityRecordState.pendingInspection => AppColors.warning,
+        QualityRecordState.inspected => AppColors.primary,
+        QualityRecordState.approved => AppColors.success,
+        QualityRecordState.rejected => AppColors.error,
+        QualityRecordState.notReady => AppColors.textSecondary,
+      };
       return <String, Object>{
         'title': value(item, ['batch_number', 'batch_id'], 'Unassigned batch'),
         'subtitle': '${value(item, [
-              'plant_type',
-              'crop'
-            ], 'Unassigned crop')} | QA backend record',
-        'metric': value(item, ['total_weight', 'total_packaged_weight'], '0'),
+              'plant_variety',
+              'crop_variety',
+              'plant_type'
+            ], 'Unassigned variety')} | ${value(item, ['quality_grade'], 'Not graded')}',
+        'metric': score == null ? 'Not scored' : '${score.toStringAsFixed(0)}%',
         'status': status,
-        'color': rejected ? AppColors.error : AppColors.success,
+        'color': color,
       };
     }).toList();
   }
 
   List<_KpiData> _backendKpis(FulfillmentSnapshot snapshot) {
     final records = snapshot.fulfillments;
-    bool hasStatus(Map<String, dynamic> item, List<String> terms) {
-      final status =
-          '${item['status'] ?? item['delivery_status'] ?? ''}'.toLowerCase();
-      return terms.any(status.contains);
-    }
-
     final approved = records
-        .where((item) => hasStatus(item, ['approve', 'release', 'packaged']))
+        .where(
+            (item) => qualityRecordState(item) == QualityRecordState.approved)
         .length;
-    final rejected =
-        records.where((item) => hasStatus(item, ['reject', 'hold'])).length;
-    if (selectedIndex == 1) {
-      final pending = records.length - approved - rejected;
+    final rejected = records
+        .where(
+            (item) => qualityRecordState(item) == QualityRecordState.rejected)
+        .length;
+    final awaitingApproval = records
+        .where(
+            (item) => qualityRecordState(item) == QualityRecordState.inspected)
+        .length;
+    final pending = records.where(isPendingQualityInspection).length;
+    final inspected = records.where(hasCompletedQualityInspection).length;
+    final decided = approved + rejected;
+    if (widget.selectedIndex == 1) {
       return [
         _KpiData('Pending', '$pending', 'Items waiting',
             Icons.pending_actions_outlined, AppColors.warning),
-        _KpiData('Inspected', '${records.length}', 'Backend records',
+        _KpiData('Inspected', '$inspected', 'Completed inspections',
             Icons.fact_check_outlined, AppColors.success),
         _KpiData(
             'Pass rate',
-            '${records.isEmpty ? 0 : (approved / records.length * 100).toStringAsFixed(0)}%',
-            'Approval ratio',
+            '${decided == 0 ? 0 : (approved / decided * 100).toStringAsFixed(0)}%',
+            'Decided batches',
             Icons.verified_outlined,
             AppColors.primary),
       ];
     }
-    if (selectedIndex == 2) {
+    if (widget.selectedIndex == 2) {
       return [
-        _KpiData('Ready', '$approved', 'Awaiting approval',
+        _KpiData('Ready', '$awaitingApproval', 'Awaiting approval',
             Icons.check_circle_outline, AppColors.success),
         _KpiData('Released', '$approved', 'Backend status',
             Icons.task_alt_outlined, AppColors.primary),
         _KpiData(
-            'Avg score',
-            '${records.isEmpty ? 0 : (approved / records.length * 100).toStringAsFixed(0)}%',
-            'Quality ratio',
+            'Pass rate',
+            '${decided == 0 ? 0 : (approved / decided * 100).toStringAsFixed(0)}%',
+            'Decided batches',
             Icons.workspace_premium,
             AppColors.warning),
+      ];
+    }
+    if (widget.selectedIndex == 4) {
+      return [
+        _KpiData('Pending', '$pending', 'Awaiting inspection',
+            Icons.pending_actions_outlined, AppColors.warning),
+        _KpiData('Awaiting approval', '$awaitingApproval', 'Inspected batches',
+            Icons.fact_check_outlined, AppColors.primary),
+        _KpiData('Approved', '$approved', 'Released to sales',
+            Icons.verified_outlined, AppColors.success),
+        _KpiData('Rejected', '$rejected', 'On quality hold',
+            Icons.cancel_outlined, AppColors.error),
       ];
     }
     return [

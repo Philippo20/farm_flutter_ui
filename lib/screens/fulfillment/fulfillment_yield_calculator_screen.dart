@@ -34,7 +34,9 @@ class _FulfillmentYieldCalculatorScreenState
         final loss = received <= 0 ? 0 : (waste / received * 100);
         return <String, dynamic>{
           'batch': item['batch_number'] ?? 'Unassigned batch',
-          'crop': item['plant_type'] ?? 'Unspecified crop',
+          'crop': item['plant_variety'] ??
+              item['plant_type'] ??
+              'Unspecified variety',
           'received': '${received.toStringAsFixed(1)} kg',
           'packed': '${packed.toStringAsFixed(1)} kg',
           'waste': '${waste.toStringAsFixed(1)} kg',

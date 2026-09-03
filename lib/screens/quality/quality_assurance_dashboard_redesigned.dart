@@ -9,6 +9,7 @@ import '../../core/widgets/role_mobile_navigation.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/fulfillment_data_service.dart';
+import 'quality_status.dart';
 
 /// Quality Assurance Dashboard - Redesigned
 class QualityAssuranceDashboardRedesigned extends ConsumerStatefulWidget {
@@ -27,7 +28,7 @@ class _QualityAssuranceDashboardRedesignedState
   bool _isLoading = true;
   bool _hasError = false;
   int _pendingCount = 0;
-  int _approvedCount = 0;
+  int _approvalReadyCount = 0;
   int _holdCount = 0;
   int _inspectedCount = 0;
   double _passRate = 0;
@@ -113,26 +114,30 @@ class _QualityAssuranceDashboardRedesignedState
         return fallback;
       }
 
-      bool matches(Map<String, dynamic> item, List<String> terms) {
-        final status = text(item, ['status', 'delivery_status']).toLowerCase();
-        return terms.any(status.contains);
-      }
-
-      final pending = records.where((item) =>
-          !matches(item, ['approve', 'release', 'reject', 'hold'])).length;
-      final approved = records.where((item) =>
-          matches(item, ['approve', 'release', 'packaged'])).length;
-      final holds = records.where((item) => matches(item, ['reject', 'hold'])).length;
-      final total = records.length;
+      final pending = records.where(isPendingQualityInspection).length;
+      final approvalReady = records
+          .where((item) =>
+              qualityRecordState(item) == QualityRecordState.inspected)
+          .length;
+      final approved = records
+          .where(
+              (item) => qualityRecordState(item) == QualityRecordState.approved)
+          .length;
+      final holds = records
+          .where(
+              (item) => qualityRecordState(item) == QualityRecordState.rejected)
+          .length;
+      final inspected = records.where(hasCompletedQualityInspection).length;
+      final decided = approved + holds;
 
       if (mounted) {
         setState(() {
           _pendingCount = pending;
-          _approvedCount = approved;
+          _approvalReadyCount = approvalReady;
           _holdCount = holds;
-          _inspectedCount = records.length;
-          _passRate = total == 0 ? 0 : approved / total * 100;
-          _rejectionRate = total == 0 ? 0 : holds / total * 100;
+          _inspectedCount = inspected;
+          _passRate = decided == 0 ? 0 : approved / decided * 100;
+          _rejectionRate = decided == 0 ? 0 : holds / decided * 100;
           _pipeline = [
             {
               'title': 'Inspection Queue',
@@ -145,8 +150,8 @@ class _QualityAssuranceDashboardRedesignedState
             },
             {
               'title': 'Approval Ready',
-              'subtitle': 'Batches cleared for release',
-              'metric': '$approved ready',
+              'subtitle': 'Inspected batches awaiting a decision',
+              'metric': '$approvalReady ready',
               'status': 'Approve',
               'route': '/quality-approve',
               'icon': Icons.check_circle_outline,
@@ -171,16 +176,44 @@ class _QualityAssuranceDashboardRedesignedState
               'color': AppColors.primary,
             },
           ];
-          _activity = records.take(5).map((item) {
-            final batch = text(item, ['batch_number', 'batch_id'], 'Fulfillment');
-            final status = text(item, ['status', 'delivery_status'], 'Updated');
+          final qualityRecords = records.where(isQualityRecord).toList()
+            ..sort((a, b) {
+              final aDate = DateTime.tryParse(text(a, [
+                    'quality_decided_at',
+                    'quality_inspected_at',
+                    r'$updatedAt'
+                  ])) ??
+                  DateTime.fromMillisecondsSinceEpoch(0);
+              final bDate = DateTime.tryParse(text(b, [
+                    'quality_decided_at',
+                    'quality_inspected_at',
+                    r'$updatedAt'
+                  ])) ??
+                  DateTime.fromMillisecondsSinceEpoch(0);
+              return bDate.compareTo(aDate);
+            });
+          _activity = qualityRecords.take(5).map((item) {
+            final batch =
+                text(item, ['batch_number', 'batch_id'], 'Fulfillment');
+            final state = qualityRecordState(item);
+            final status = qualityRecordLabel(item);
             return <String, dynamic>{
               'title': '$batch $status',
-              'subtitle': 'Quality workflow record from backend',
-              'time': text(item, ['packaging_date_time', 'received_date_time'], 'Recently'),
-              'color': matches(item, ['reject', 'hold'])
+              'subtitle': text(
+                item,
+                ['quality_grade', 'quality_notes'],
+                'Quality workflow updated',
+              ),
+              'time': text(
+                  item,
+                  ['quality_decided_at', 'quality_inspected_at', r'$updatedAt'],
+                  'Recently'),
+              'color': state == QualityRecordState.rejected
                   ? AppColors.error
-                  : AppColors.success,
+                  : state == QualityRecordState.inspected ||
+                          state == QualityRecordState.pendingInspection
+                      ? AppColors.warning
+                      : AppColors.success,
             };
           }).toList();
           _isLoading = false;
@@ -434,7 +467,7 @@ class _QualityAssuranceDashboardRedesignedState
                   label: '$_pendingCount pending inspections',
                   icon: Icons.search_outlined),
               _HeroChip(
-                  label: '$_approvedCount ready approvals',
+                  label: '$_approvalReadyCount awaiting approval',
                   icon: Icons.check_circle_outline),
               _HeroChip(
                   label: '$_holdCount active holds',
@@ -515,7 +548,7 @@ class _QualityAssuranceDashboardRedesignedState
           SizedBox(height: AppSpacing.sm),
           _ActionTile(
             title: 'Approve clean batches',
-            subtitle: 'Release $_approvedCount verified lots',
+            subtitle: 'Review $_approvalReadyCount inspected batches',
             icon: Icons.check_circle_outline,
             color: AppColors.success,
             route: '/quality-approve',

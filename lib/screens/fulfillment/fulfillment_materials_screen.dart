@@ -55,7 +55,7 @@ class _FulfillmentMaterialsScreenState
           'unit': item['unit'] ?? 'units',
           'status': status,
           'coverage': 'Not recorded',
-          'assigned': item['plant_type_name'] ?? 'All plant types',
+          'assigned': item['crop_variety_name'] ?? 'Variety not assigned',
           'reorder': 'Not configured',
           'color': status.toLowerCase() == 'active'
               ? AppColors.success

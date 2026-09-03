@@ -30,7 +30,7 @@ class _PackagingConfigurationScreenState
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _searchController = TextEditingController();
   List<Map<String, dynamic>> _packages = [];
-  List<Map<String, dynamic>> _plantTypes = [];
+  List<Map<String, dynamic>> _cropVarieties = [];
   bool _loading = true;
   String? _error;
   String _cropFilter = 'all';
@@ -65,14 +65,13 @@ class _PackagingConfigurationScreenState
     try {
       final results = await Future.wait([
         _api.getPackages(),
-        _api.getPlantTypes(),
+        _api.getCrops(),
       ]);
       if (!mounted) return;
       setState(() {
         _packages = results[0];
-        _plantTypes = results[1]
-            .where((plant) =>
-                _text(plant, ['status'], 'Active').toLowerCase() == 'active')
+        _cropVarieties = results[1]
+            .where((variety) => _text(variety, ['variety_name']).isNotEmpty)
             .toList();
         _loading = false;
       });
@@ -88,7 +87,7 @@ class _PackagingConfigurationScreenState
   List<Map<String, dynamic>> get _visiblePackages {
     final query = _searchController.text.trim().toLowerCase();
     return _packages.where((package) {
-      final crop = _text(package, ['plant_type_name']);
+      final crop = _packageVarietyLabel(package);
       final matchesCrop = _cropFilter == 'all' || crop == _cropFilter;
       final searchable = [
         _text(package, ['package_name']),
@@ -104,7 +103,7 @@ class _PackagingConfigurationScreenState
     final user = ref.read(currentUserProvider);
     final panel = _PackageConfigurationPanel(
       package: package,
-      plantTypes: _plantTypes,
+      cropVarieties: _cropVarieties,
       api: _api,
       actorName: user?.name ?? _roleLabel,
     );
@@ -263,7 +262,7 @@ class _PackagingConfigurationScreenState
         _CatalogHero(
           mobile: mobile,
           roleLabel: _roleLabel,
-          onAdd: _plantTypes.isEmpty ? null : () => _openEditor(),
+          onAdd: _cropVarieties.isEmpty ? null : () => _openEditor(),
         ),
         const SizedBox(height: AppSpacing.lg),
         _PackageMetrics(packages: _packages),
@@ -272,7 +271,7 @@ class _PackagingConfigurationScreenState
           children: [
             Expanded(
               child: Text(
-                'Crop Packaging Catalog',
+                'Variety Packaging Catalog',
                 style: AppTypography.h5.copyWith(
                   color: dark ? Colors.white : AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
@@ -286,12 +285,11 @@ class _PackagingConfigurationScreenState
         const SizedBox(height: AppSpacing.md),
         _filters(mobile),
         const SizedBox(height: AppSpacing.md),
-        if (_plantTypes.isEmpty)
+        if (_cropVarieties.isEmpty)
           const _PackageEmptyState(
             icon: Icons.grass_outlined,
-            title: 'No active plant types',
-            message:
-                'Create an active plant type before configuring packaging for a crop.',
+            title: 'No crop varieties',
+            message: 'Create a crop variety before configuring its packaging.',
           )
         else if (_visiblePackages.isEmpty)
           const _PackageEmptyState(
@@ -308,8 +306,8 @@ class _PackagingConfigurationScreenState
 
   Widget _filters(bool mobile) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final cropNames = _plantTypes
-        .map((plant) => _text(plant, ['plant_name', 'name']))
+    final cropNames = _cropVarieties
+        .map(_cropVarietyLabel)
         .where((name) => name.isNotEmpty)
         .toSet()
         .toList()
@@ -404,13 +402,13 @@ class _PackagingConfigurationScreenState
 class _PackageConfigurationPanel extends StatefulWidget {
   const _PackageConfigurationPanel({
     required this.package,
-    required this.plantTypes,
+    required this.cropVarieties,
     required this.api,
     required this.actorName,
   });
 
   final Map<String, dynamic>? package;
-  final List<Map<String, dynamic>> plantTypes;
+  final List<Map<String, dynamic>> cropVarieties;
   final SuperAdminApiService api;
   final String actorName;
 
@@ -426,7 +424,7 @@ class _PackageConfigurationPanelState
   late final TextEditingController _capacityController;
   late final TextEditingController _stockController;
   late final TextEditingController _costController;
-  String? _plantId;
+  String? _cropVarietyId;
   String _unit = 'g';
   String _material = 'Biodegradable';
   String _status = 'Active';
@@ -447,10 +445,11 @@ class _PackageConfigurationPanelState
         TextEditingController(text: _numberText(package['quantity_available']));
     _costController =
         TextEditingController(text: _numberText(package['cost_per_unit']));
-    _plantId = _text(package, ['plant_type_id']);
-    if (_plantId!.isEmpty ||
-        !widget.plantTypes.any((plant) => _docId(plant) == _plantId)) {
-      _plantId = null;
+    _cropVarietyId = _text(package, ['crop_variety_id']);
+    if (_cropVarietyId!.isEmpty ||
+        !widget.cropVarieties
+            .any((variety) => _docId(variety) == _cropVarietyId)) {
+      _cropVarietyId = null;
     }
     _unit =
         _allowed(_text(package, ['unit']), const ['g', 'kg', 'lbs', 'oz'], 'g');
@@ -482,8 +481,8 @@ class _PackageConfigurationPanelState
     FocusScope.of(context).unfocus();
     setState(() => _error = null);
     if (!_formKey.currentState!.validate()) return;
-    final plant = widget.plantTypes.firstWhere(
-      (item) => _docId(item) == _plantId,
+    final variety = widget.cropVarieties.firstWhere(
+      (item) => _docId(item) == _cropVarietyId,
     );
     final stock = double.parse(_stockController.text.trim());
     final resolvedStatus =
@@ -495,8 +494,9 @@ class _PackageConfigurationPanelState
         await widget.api.updatePackage(
           id: _docId(package),
           packageName: _nameController.text.trim(),
-          plantTypeId: _plantId!,
-          plantTypeName: _text(plant, ['plant_name', 'name']),
+          cropVarietyId: _cropVarietyId!,
+          cropVarietyName: _text(variety, ['variety_name']),
+          cropName: _text(variety, ['crop_name']),
           materialUsed: _material,
           weightCapacity: double.parse(_capacityController.text.trim()),
           unit: _unit,
@@ -510,8 +510,9 @@ class _PackageConfigurationPanelState
       } else {
         await widget.api.createPackage(
           packageName: _nameController.text.trim(),
-          plantTypeId: _plantId!,
-          plantTypeName: _text(plant, ['plant_name', 'name']),
+          cropVarietyId: _cropVarietyId!,
+          cropVarietyName: _text(variety, ['variety_name']),
+          cropName: _text(variety, ['crop_name']),
           materialUsed: _material,
           weightCapacity: double.parse(_capacityController.text.trim()),
           unit: _unit,
@@ -579,14 +580,14 @@ class _PackageConfigurationPanelState
                       children: [
                         Text(
                           _editing
-                              ? 'Edit Crop Packaging'
-                              : 'Configure Crop Packaging',
+                              ? 'Edit Variety Packaging'
+                              : 'Configure Variety Packaging',
                           style: AppTypography.titleSmall.copyWith(
                             color: dark ? Colors.white : AppColors.textPrimary,
                           ),
                         ),
                         Text(
-                          'Define the package used for one crop',
+                          'Define the package used for one crop variety',
                           style: AppTypography.bodySmall.copyWith(
                             color:
                                 dark ? Colors.white60 : AppColors.textSecondary,
@@ -617,25 +618,26 @@ class _PackageConfigurationPanelState
                         const SizedBox(height: AppSpacing.md),
                       ],
                       _LabeledField(
-                        label: 'Crop',
+                        label: 'Crop variety',
                         child: DropdownButtonFormField<String>(
-                          initialValue: _plantId,
+                          initialValue: _cropVarietyId,
                           isExpanded: true,
                           decoration: _fieldDecoration(
-                              context, Icons.grass_outlined, 'Select crop'),
-                          items: widget.plantTypes.map((plant) {
-                            final name = _text(plant, ['plant_name', 'name']);
+                              context, Icons.grass_outlined, 'Select variety'),
+                          items: widget.cropVarieties.map((variety) {
+                            final name = _cropVarietyLabel(variety);
                             return DropdownMenuItem(
-                              value: _docId(plant),
+                              value: _docId(variety),
                               child:
                                   Text(name, overflow: TextOverflow.ellipsis),
                             );
                           }).toList(),
                           onChanged: _saving
                               ? null
-                              : (value) => setState(() => _plantId = value),
+                              : (value) =>
+                                  setState(() => _cropVarietyId = value),
                           validator: (value) => value == null
-                              ? 'Select the crop this package supports.'
+                              ? 'Select the crop variety this package supports.'
                               : null,
                         ),
                       ),
@@ -898,7 +900,7 @@ class _CatalogHero extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Crop Packaging Configuration',
+                      Text('Crop Variety Packaging',
                           style: AppTypography.h4.copyWith(
                             color: dark ? Colors.white : AppColors.textPrimary,
                             fontWeight: FontWeight.w600,
@@ -906,7 +908,7 @@ class _CatalogHero extends StatelessWidget {
                           )),
                       const SizedBox(height: 4),
                       Text(
-                        'Set the package capacity, material, stock and cost used to pack each crop.',
+                        'Set the package capacity, material, stock and cost for each crop variety.',
                         style: AppTypography.bodySmall.copyWith(
                           color:
                               dark ? Colors.white60 : AppColors.textSecondary,
@@ -942,7 +944,7 @@ class _PackageMetrics extends StatelessWidget {
     final active =
         packages.where((p) => _text(p, ['status']) == 'Active').length;
     final crops = packages
-        .map((item) => _text(item, ['plant_type_name']))
+        .map(_packageVarietyLabel)
         .where((name) => name.isNotEmpty)
         .toSet()
         .length;
@@ -958,7 +960,12 @@ class _PackageMetrics extends StatelessWidget {
           AppColors.info
         ),
         ('Active', '$active', Icons.check_circle_outline, AppColors.success),
-        ('Crops covered', '$crops', Icons.grass_outlined, AppColors.primary),
+        (
+          'Varieties covered',
+          '$crops',
+          Icons.grass_outlined,
+          AppColors.primary
+        ),
         (
           'Low stock',
           '$lowStock',
@@ -1084,9 +1091,7 @@ class _PackageConfigurationCard extends StatelessWidget {
                         style: AppTypography.h6.copyWith(
                             color: dark ? Colors.white : AppColors.textPrimary,
                             fontWeight: FontWeight.w600)),
-                    Text(
-                        _text(
-                            package, ['plant_type_name'], 'Crop not assigned'),
+                    Text(_packageVarietyLabel(package),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.bodySmall.copyWith(
@@ -1283,8 +1288,28 @@ String _text(Map<String, dynamic> item, List<String> keys,
   return fallback;
 }
 
-String _docId(Map<String, dynamic> item) =>
-    _text(item, [r'$id', 'plant_type_id', 'package_id', 'id']);
+String _docId(Map<String, dynamic> item) => _text(
+    item, [r'$id', 'crop_variety_id', 'plant_type_id', 'package_id', 'id']);
+
+String _cropVarietyLabel(Map<String, dynamic> item) {
+  final crop = _text(item, ['crop_name']);
+  final variety = _text(item, ['variety_name', 'crop_variety_name']);
+  if (crop.isEmpty) return variety.isEmpty ? 'Unnamed variety' : variety;
+  if (variety.isEmpty) return crop;
+  return '$crop - $variety';
+}
+
+String _packageVarietyLabel(Map<String, dynamic> package) {
+  final variety = _text(package, ['crop_variety_name']);
+  final crop = _text(package, ['crop_name']);
+  if (variety.isNotEmpty) {
+    return crop.isEmpty ? variety : '$crop - $variety';
+  }
+  final legacyCrop = _text(package, ['plant_type_name']);
+  return legacyCrop.isEmpty
+      ? 'Crop variety not assigned'
+      : '$legacyCrop - select a variety';
+}
 
 double _number(dynamic value) => double.tryParse(value?.toString() ?? '') ?? 0;
 

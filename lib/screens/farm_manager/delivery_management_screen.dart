@@ -141,7 +141,8 @@ class _DeliveryManagementScreenState
       'address': _value(delivery, ['address'], fallback: 'Address not set'),
       'quantity': quantity,
       'unit': quantity == _numValue(delivery['total_heads']) ? 'heads' : 'kg',
-      'crop': _value(delivery, ['plant_type'], fallback: 'Crop'),
+      'crop': _value(delivery, ['plant_variety', 'plant_type'],
+          fallback: 'Crop variety'),
       'status': status == 'Pending Approval' ? 'Pending Pickup' : status,
       'driver': _value(delivery, ['driver_name'], fallback: 'Unassigned'),
       'vehicle': _value(delivery, ['vehicle'], fallback: 'Pending'),
@@ -1644,7 +1645,8 @@ class _DeliveryManagementScreenState
         _value(raw, ['destination'], fallback: 'Sales Hub');
     String address =
         delivery?['address']?.toString() ?? _value(raw, ['address']);
-    String crop = delivery?['crop']?.toString() ?? _value(raw, ['plant_type']);
+    String crop = delivery?['crop']?.toString() ??
+        _value(raw, ['plant_variety', 'plant_type']);
     String quantity = (delivery?['quantity'] ??
             raw['total_packaged_weight'] ??
             raw['total_weight'] ??
@@ -1685,6 +1687,7 @@ class _DeliveryManagementScreenState
         'farm_name':
             _value(raw, ['farm_name'], fallback: 'Farm Manager Delivery'),
         'plant_type': crop.trim(),
+        'plant_variety': _value(raw, ['plant_variety'], fallback: crop.trim()),
         'total_heads': _value(raw, ['total_heads'], fallback: '0'),
         'total_weight': quantity.trim(),
         'harvest_received_images': _value(raw, ['harvest_received_images']),

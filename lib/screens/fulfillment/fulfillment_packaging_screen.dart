@@ -37,7 +37,9 @@ class _FulfillmentPackagingScreenState
         return <String, dynamic>{
           'name': 'Line ${String.fromCharCode(65 + entry.key)}',
           'batch': item['batch_number'] ?? 'Unassigned batch',
-          'crop': item['plant_type'] ?? 'Unspecified crop',
+          'crop': item['plant_variety'] ??
+              item['plant_type'] ??
+              'Unspecified variety',
           'packaging': item['packaging_type'] ?? 'Not assigned',
           'progress': total <= 0 ? 0.0 : (packaged / total).clamp(0.0, 1.0),
           'operator': item['packaging_supervisor_id'] ?? 'Unassigned',
@@ -50,7 +52,9 @@ class _FulfillmentPackagingScreenState
       final queue = records
           .map((item) => <String, dynamic>{
                 'batch': item['batch_number'] ?? 'Unassigned batch',
-                'crop': item['plant_type'] ?? 'Unspecified crop',
+                'crop': item['plant_variety'] ??
+                    item['plant_type'] ??
+                    'Unspecified variety',
                 'packaging': item['packaging_type'] ?? 'Not assigned',
                 'status': item['status'] ?? 'Unknown',
                 'priority': item['priority'] ?? 'Medium',
@@ -247,7 +251,7 @@ class _FulfillmentPackagingScreenState
                       ),
                     ),
                     Text(
-                      '${package['material_used'] ?? 'Material not recorded'} | ${package['weight_capacity'] ?? 0}${package['unit'] ?? ''} | ${package['plant_type_name'] ?? 'All plant types'}',
+                      '${package['material_used'] ?? 'Material not recorded'} | ${package['weight_capacity'] ?? 0}${package['unit'] ?? ''} | ${package['crop_name'] ?? 'Crop'} - ${package['crop_variety_name'] ?? 'Variety not assigned'}',
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white70 : AppColors.textSecondary,

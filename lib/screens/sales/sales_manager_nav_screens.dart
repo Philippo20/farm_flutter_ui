@@ -1556,10 +1556,11 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
       final saleRecorded = _hasSaleForBatch(item);
       return {
         'title': _text(item, ['batch_number'], fallback: 'Unassigned batch'),
-        'subtitle':
-            '${_text(item, ['plant_type'], fallback: 'Crop')} | ${_text(item, [
-                  'farm_name'
-                ], fallback: 'Farm')}',
+        'subtitle': '${_text(item, [
+              'plant_variety',
+              'crop_variety',
+              'plant_type'
+            ], fallback: 'Crop variety')} | ${_text(item, ['farm_name'], fallback: 'Farm')}',
         'metric': '${_number(item, [
               'total_packaged_weight'
             ]).toStringAsFixed(1)} kg available',

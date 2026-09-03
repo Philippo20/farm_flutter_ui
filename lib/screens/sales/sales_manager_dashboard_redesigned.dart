@@ -742,7 +742,7 @@ class _SalesIntakeCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${_value('plant_type', 'Crop')} | ${_value('farm_name', 'Farm')}',
+                          '${_value('plant_variety', _value('plant_type', 'Crop variety'))} | ${_value('farm_name', 'Farm')}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodySmall.copyWith(
@@ -879,7 +879,11 @@ class _SalesBatchDetailModal extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final details = [
       ('Batch Number', _value('batch_number'), Icons.qr_code_rounded),
-      ('Crop', _value('plant_type'), Icons.eco_outlined),
+      (
+        'Crop variety',
+        _value('plant_variety', _value('plant_type')),
+        Icons.eco_outlined
+      ),
       ('Farm', _value('farm_name'), Icons.agriculture_outlined),
       (
         'Packaged Weight',

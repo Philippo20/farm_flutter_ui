@@ -1922,6 +1922,8 @@ class _OverallDeliveryControlModuleState
                                         'superadmin',
                                 'farm_name': selectedFarm,
                                 'plant_type': selectedPlant,
+                                'plant_variety':
+                                    selectedBatch['plant_variety'] ?? '',
                                 'total_heads': isHeads ? quantity : 0,
                                 'total_weight': isHeads ? 0 : quantity,
                                 'harvest_received_images':
