@@ -132,6 +132,7 @@ class _TraceabilityConsoleScreenState
         'logo_url': _logoController.text.trim(),
         'privacy_notice_url': _privacyController.text.trim(),
         'lookup_enabled': _flag('lookup_enabled'),
+        'maintenance_mode': _settings['maintenance_mode'] == true,
         'show_farm': _flag('show_farm'),
         'show_location': _flag('show_location'),
         'show_dates': _flag('show_dates'),
@@ -570,6 +571,48 @@ class _TraceabilityConsoleScreenState
                   Icons.privacy_tip_outlined),
             ]),
             const SizedBox(height: 18),
+            Row(
+              children: [
+                const Icon(
+                  Icons.engineering_outlined,
+                  color: Colors.orange,
+                  size: 22,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Traceability maintenance mode',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'Temporarily pause public product verification while keeping this console available.',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch.adaptive(
+                  value: _settings['maintenance_mode'] == true,
+                  onChanged: (value) => _toggle('maintenance_mode', value),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Divider(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white.withValues(alpha: .06)
+                  : Colors.black.withValues(alpha: .06),
+            ),
+            const SizedBox(height: 14),
             Text('Public data visibility',
                 style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
@@ -823,7 +866,12 @@ class _TraceabilityConsoleScreenState
         ),
       );
 
-  Widget _settingSwitch(String key, String label) => Container(
+  Widget _settingSwitch(
+    String key,
+    String label, {
+    bool defaultValue = true,
+  }) =>
+      Container(
         width: 220,
         decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.dark
@@ -834,7 +882,7 @@ class _TraceabilityConsoleScreenState
         child: SwitchListTile.adaptive(
           dense: true,
           title: Text(label, style: GoogleFonts.poppins(fontSize: 12)),
-          value: _flag(key),
+          value: _settings[key] is bool ? _settings[key] as bool : defaultValue,
           onChanged: (value) => _toggle(key, value),
         ),
       );
@@ -1204,8 +1252,8 @@ class _PublicationPanelState extends State<_PublicationPanel> {
               context,
               _modalField(_region, 'Farm Region', 'e.g. Greater Accra',
                   Icons.location_on_outlined),
-              _modalField(_packaging, 'Packaging Label', 'e.g. 500g sealed pack',
-                  Icons.inventory_2_outlined),
+              _modalField(_packaging, 'Packaging Label',
+                  'e.g. 500g sealed pack', Icons.inventory_2_outlined),
             ),
             const SizedBox(height: 12),
             _modalPair(
@@ -1225,8 +1273,11 @@ class _PublicationPanelState extends State<_PublicationPanel> {
               ),
             ),
             const SizedBox(height: 12),
-            _modalField(_message, 'Public Message',
-                'Message shown with this verified product', Icons.message_outlined,
+            _modalField(
+                _message,
+                'Public Message',
+                'Message shown with this verified product',
+                Icons.message_outlined,
                 lines: 3),
           ],
         ),
@@ -1334,8 +1385,11 @@ class _PromotionPanelState extends State<_PromotionPanel> {
               ),
             ),
             const SizedBox(height: 12),
-            _modalField(_message, 'Consumer Message',
-                'Promotion text shown after verification', Icons.message_outlined,
+            _modalField(
+                _message,
+                'Consumer Message',
+                'Promotion text shown after verification',
+                Icons.message_outlined,
                 lines: 3),
             const SizedBox(height: 12),
             _modalPair(
