@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -27,6 +29,7 @@ class _FulfillmentManagerDashboardRedesignedState
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   WeatherInfo? _weatherInfo;
   bool _isLoading = true;
+  bool _isRefreshing = false;
   String? _errorMessage;
   int _pendingProductionCount = 0;
   int _pendingIntake = 0;
@@ -38,18 +41,32 @@ class _FulfillmentManagerDashboardRedesignedState
   List<Map<String, dynamic>> _pipeline = [];
 
   List<Map<String, dynamic>> _activity = [];
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _loadData(silent: true),
+    );
   }
 
-  Future<void> _loadData() async {
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadData({bool silent = false}) async {
+    if (_isRefreshing) return;
+    _isRefreshing = true;
     try {
       final snapshot = await FulfillmentDataService().load();
       final fulfillments = snapshot.fulfillments;
       final pendingProduction = _buildPendingProduction(snapshot.batches);
+      final harvestedBatches = snapshot.batches.where(_isHarvested).toList();
       final inventory = snapshot.inventory;
       final today = DateTime.now();
       double receivedToday = 0;
@@ -75,32 +92,37 @@ class _FulfillmentManagerDashboardRedesignedState
         final reorder = _number(item['reorder_level'] ?? item['minimum_stock']);
         return quantity <= reorder;
       }).length;
-      final pendingIntake = fulfillments.where((item) {
-        final status = item['status']?.toString().trim().toLowerCase();
-        return status == 'received' || status == 'pending';
-      }).length;
       if (!mounted) return;
       setState(() {
         _pendingProductionBatches = pendingProduction;
         _pendingProductionCount = pendingProduction.length;
-        _pendingIntake = pendingIntake;
+        _pendingIntake = harvestedBatches.length;
         _receivedTodayKg = receivedToday;
         _yieldLossKg = wasteToday;
         _materialCoverage = inventory.isEmpty
             ? 0
             : ((tracked - lowStock) / inventory.length * 100).clamp(0, 100);
-        _pipeline = _buildPipeline(fulfillments, inventory, pendingIntake);
+        _pipeline = _buildPipeline(
+          fulfillments,
+          snapshot.batches,
+          inventory,
+        );
         _activity = _buildActivity(fulfillments);
+        _errorMessage = null;
         _isLoading = false;
       });
     } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _errorMessage = error.toString();
-        _pipeline = [];
-        _activity = [];
-      });
+      if (!silent) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = error.toString();
+          _pipeline = [];
+          _activity = [];
+        });
+      }
+    } finally {
+      _isRefreshing = false;
     }
   }
 
@@ -125,6 +147,11 @@ class _FulfillmentManagerDashboardRedesignedState
     return parsed == null
         ? null
         : DateTime(parsed.year, parsed.month, parsed.day);
+  }
+
+  static bool _isHarvested(Map<String, dynamic> batch) {
+    return _value(batch, ['production_status', 'status']).toLowerCase() ==
+        'harvested';
   }
 
   List<Map<String, dynamic>> _buildPendingProduction(
@@ -203,9 +230,17 @@ class _FulfillmentManagerDashboardRedesignedState
 
   List<Map<String, dynamic>> _buildPipeline(
     List<Map<String, dynamic>> fulfillments,
+    List<Map<String, dynamic>> batches,
     List<Map<String, dynamic>> inventory,
-    int pendingIntake,
   ) {
+    final harvestedBatches = batches.where(_isHarvested).toList();
+    final harvestedWeight = harvestedBatches.fold<double>(
+      0,
+      (total, batch) => total + _number(batch['total_weight_kg']),
+    );
+    final harvestMetric = harvestedWeight > 0
+        ? '${harvestedWeight.toStringAsFixed(1)} kg'
+        : '${harvestedBatches.length} batches';
     final packaging = fulfillments.where((item) {
       final status = item['status']?.toString().toLowerCase();
       return status == 'packaging';
@@ -225,8 +260,13 @@ class _FulfillmentManagerDashboardRedesignedState
       {
         ..._pipelineTemplate('Harvest Intake', Icons.fact_check_outlined,
             AppColors.warning, '/fulfillment-confirm'),
-        'subtitle': '$pendingIntake loads awaiting confirmation',
-        'metric': '$pendingIntake loads'
+        'subtitle': harvestedBatches.isEmpty
+            ? 'No harvested batches awaiting hub intake'
+            : '${harvestedBatches.length} harvested batch${harvestedBatches.length == 1 ? '' : 'es'} ready for hub intake',
+        'metric': harvestMetric,
+        'status': harvestedBatches.isEmpty
+            ? 'Up to date'
+            : '${harvestedBatches.length} ready',
       },
       {
         ..._pipelineTemplate(
