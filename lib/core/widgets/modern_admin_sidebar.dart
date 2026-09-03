@@ -114,6 +114,12 @@ class AdminDrawer extends StatelessWidget {
         label: 'Traceability',
         route: '/traceability-admin',
       ),
+      _NavItem(
+        icon: Icons.inventory_2_outlined,
+        activeIcon: Icons.inventory_2_rounded,
+        label: 'Packaging',
+        route: '/admin/packaging',
+      ),
     ];
     int indexFor(_NavItem item) => const [
           '/dashboard',
@@ -127,6 +133,7 @@ class AdminDrawer extends StatelessWidget {
           '/crop-varieties',
           '/batches-admin',
           '/traceability-admin',
+          '/admin/packaging',
         ].indexOf(item.route);
 
     return Drawer(
@@ -450,6 +457,12 @@ class AdminMobileBottomNav extends StatelessWidget {
       label: 'Traceability',
       route: '/traceability-admin',
     ),
+    _NavItem(
+      icon: Icons.inventory_2_outlined,
+      activeIcon: Icons.inventory_2_rounded,
+      label: 'Packaging',
+      route: '/admin/packaging',
+    ),
   ];
 
   static const _defaultDynamicItem = _NavItem(
@@ -651,6 +664,12 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
       activeIcon: Icons.qr_code_2_rounded,
       label: 'Traceability',
       route: '/traceability-admin',
+    ),
+    _NavItem(
+      icon: Icons.inventory_2_outlined,
+      activeIcon: Icons.inventory_2_rounded,
+      label: 'Packaging',
+      route: '/admin/packaging',
     ),
   ];
 

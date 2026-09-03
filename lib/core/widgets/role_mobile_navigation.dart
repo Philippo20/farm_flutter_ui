@@ -70,36 +70,36 @@ class RoleMobileDrawer extends StatelessWidget {
                           ? Colors.white.withOpacity(0.1)
                           : AppColors.primary.withOpacity(0.1),
                       leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? AppColors.primary.withOpacity(0.2)
-                            : (isDark
-                                ? Colors.white.withOpacity(0.05)
-                                : Colors.black.withOpacity(0.04)),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusMd),
-                      ),
-                      child: Icon(
-                        selected ? item.activeIcon : item.icon,
-                        size: 22,
-                        color: selected
-                            ? AppColors.primary
-                            : (isDark
-                                ? Colors.white70
-                                : AppColors.textSecondary),
-                      ),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? AppColors.primary.withOpacity(0.2)
+                              : (isDark
+                                  ? Colors.white.withOpacity(0.05)
+                                  : Colors.black.withOpacity(0.04)),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                        ),
+                        child: Icon(
+                          selected ? item.activeIcon : item.icon,
+                          size: 22,
+                          color: selected
+                              ? AppColors.primary
+                              : (isDark
+                                  ? Colors.white70
+                                  : AppColors.textSecondary),
+                        ),
                       ),
                       title: Text(
-                      item.label,
-                      style: AppTypography.bodyMedium.copyWith(
-                        fontSize: 15,
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w500,
-                        color: selected
-                            ? AppColors.primary
-                            : (isDark ? Colors.white : AppColors.textPrimary),
-                      ),
+                        item.label,
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontSize: 15,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w500,
+                          color: selected
+                              ? AppColors.primary
+                              : (isDark ? Colors.white : AppColors.textPrimary),
+                        ),
                       ),
                       onTap: () {
                         onItemSelected(index);
@@ -502,6 +502,11 @@ const packagingNavigationItems = [
       activeIcon: Icons.settings_rounded,
       label: 'Settings',
       route: '/packaging-settings'),
+  RoleNavigationItem(
+      icon: Icons.tune_outlined,
+      activeIcon: Icons.tune_rounded,
+      label: 'Catalog',
+      route: '/packaging-catalog'),
 ];
 
 const qualityNavigationItems = [

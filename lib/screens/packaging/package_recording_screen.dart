@@ -108,7 +108,10 @@ class _PackageRecordingScreenState
     final crop = line['crop']?.toString() ?? '';
     final compatible = _packages.where((item) {
       final packageCrop = _firstText(item, ['plant_type_name']);
+      final normalizedCrop = packageCrop.toLowerCase();
       return packageCrop.isEmpty ||
+          normalizedCrop == 'all plant types' ||
+          normalizedCrop == 'all crops' ||
           packageCrop.toLowerCase() == crop.toLowerCase();
     }).toList();
     final user = ref.read(currentUserProvider);

@@ -76,7 +76,6 @@ import 'screens/superadmin/superadmin_dashboard.dart';
 import 'screens/superadmin/user_management_screen.dart';
 import 'screens/superadmin/farm_management_screen.dart';
 import 'screens/superadmin/plant_management_screen.dart';
-import 'screens/superadmin/packaging_screen.dart';
 import 'screens/superadmin/pricing_management_screen.dart';
 import 'screens/superadmin/audit_logs_screen.dart';
 import 'screens/superadmin/system_config_screen.dart';
@@ -84,6 +83,7 @@ import 'screens/superadmin/backup_restore_screen.dart';
 import 'screens/superadmin/superadmin_inventory_overview_screen.dart';
 import 'screens/superadmin/superadmin_delivery_control_screen.dart';
 import 'screens/shared/crop_varieties_screen.dart';
+import 'screens/shared/packaging_configuration_screen.dart';
 
 /// Main entry point for Farm Estates ADOM application
 void main() async {
@@ -153,7 +153,10 @@ class MyApp extends ConsumerWidget {
         '/superadmin/users': (context) => const UserManagementScreen(),
         '/superadmin/farms': (context) => const FarmManagementScreen(),
         '/superadmin/plants': (context) => const PlantManagementScreen(),
-        '/superadmin/packaging': (context) => const PackagingScreen(),
+        '/superadmin/packaging': (context) =>
+            const PackagingConfigurationScreen(
+              access: PackagingConfigurationAccess.superAdmin,
+            ),
         '/superadmin/pricing': (context) => const PricingManagementScreen(),
         '/superadmin/sensors': (context) =>
             const ModernSensorsScreen(isSuperAdmin: true),
@@ -185,6 +188,9 @@ class MyApp extends ConsumerWidget {
         '/deliveries-admin': (context) => const AdminDeliveryControlScreen(),
         '/crop-varieties': (context) =>
             const CropVarietiesScreen(isSuperAdmin: false),
+        '/admin/packaging': (context) => const PackagingConfigurationScreen(
+              access: PackagingConfigurationAccess.admin,
+            ),
         '/batches-admin': (context) => const BatchGenerationScreen(
               access: BatchScreenAccess.admin,
             ),
@@ -286,6 +292,9 @@ class MyApp extends ConsumerWidget {
         '/packaging-reports': (context) => const PackagingReportsScreen(),
         '/packaging-settings': (context) =>
             const PackagingSupervisorSettingsScreen(),
+        '/packaging-catalog': (context) => const PackagingConfigurationScreen(
+              access: PackagingConfigurationAccess.packagingSupervisor,
+            ),
         '/quality_dashboard': (context) =>
             const QualityAssuranceDashboardRedesigned(),
         '/quality-assurance-dashboard': (context) =>

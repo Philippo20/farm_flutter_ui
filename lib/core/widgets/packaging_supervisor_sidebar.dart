@@ -57,10 +57,20 @@ class _PackagingSupervisorSidebarState extends State<PackagingSupervisorSidebar>
         label: 'Progress',
         route: '/progress'),
     _NavItem(
+        icon: Icons.assessment_outlined,
+        activeIcon: Icons.assessment_rounded,
+        label: 'Reports',
+        route: '/packaging-reports'),
+    _NavItem(
         icon: Icons.settings_outlined,
         activeIcon: Icons.settings_rounded,
         label: 'Settings',
         route: '/packaging-settings'),
+    _NavItem(
+        icon: Icons.tune_outlined,
+        activeIcon: Icons.tune_rounded,
+        label: 'Packaging Catalog',
+        route: '/packaging-catalog'),
   ];
 
   @override

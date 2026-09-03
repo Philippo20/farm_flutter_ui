@@ -1897,6 +1897,54 @@ class SuperAdminApiService {
     return decoded;
   }
 
+  Future<Map<String, dynamic>> updatePackage({
+    required String id,
+    required String packageName,
+    required String plantTypeId,
+    required String plantTypeName,
+    required String materialUsed,
+    required double weightCapacity,
+    required String unit,
+    required double quantityAvailable,
+    required double costPerUnit,
+    required String createdBy,
+    required DateTime createdAt,
+    required String status,
+  }) async {
+    final response = await _client.put(
+      Uri.parse('$baseUrl/package/${Uri.encodeComponent(id)}'),
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: {
+        'package_name': packageName,
+        'plant_type_id': plantTypeId,
+        'plant_type_name': plantTypeName,
+        'material_used': materialUsed,
+        'weight_capacity': weightCapacity.toString(),
+        'unit': unit,
+        'quantity_available': quantityAvailable.toString(),
+        'cost_per_unit': costPerUnit.toString(),
+        'created_by': createdBy,
+        'created_at': createdAt.toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+        'status': status,
+      },
+    ).withApiTimeout();
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to update package (${response.statusCode})',
+        ),
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid package update response');
+    }
+    return decoded;
+  }
+
   Future<Map<String, dynamic>> createPricing({
     required String pricingType,
     required String farmId,

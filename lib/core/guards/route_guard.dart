@@ -27,6 +27,7 @@ class RouteGuard {
     '/inventory-admin': ['admin'],
     '/deliveries-admin': ['admin'],
     '/crop-varieties': ['admin'],
+    '/admin/packaging': ['admin'],
 
     // Farm Manager routes
     '/farm-manager': ['farm_manager'],
@@ -62,6 +63,7 @@ class RouteGuard {
     '/packaging_dashboard': ['packaging_supervisor'],
     '/package-record': ['packaging_supervisor'],
     '/waste-tracking': ['packaging_supervisor'],
+    '/packaging-catalog': ['packaging_supervisor'],
 
     // Quality routes
     '/quality_dashboard': ['quality_assurance'],
