@@ -188,6 +188,17 @@ class SuperAdminApiService {
     );
   }
 
+  Future<Map<String, dynamic>> recordPackagingOutput({
+    required String fulfillmentId,
+    required Map<String, dynamic> data,
+  }) {
+    return _postFulfillmentAction(
+      '/fulfillments/${Uri.encodeComponent(fulfillmentId)}/packaging-record',
+      data,
+      fallback: 'Failed to record packaging output',
+    );
+  }
+
   Future<Map<String, dynamic>> _postFulfillmentAction(
     String path,
     Map<String, dynamic> data, {
