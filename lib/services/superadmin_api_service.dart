@@ -755,6 +755,7 @@ class SuperAdminApiService {
         'packaging_type': value(data['packaging_type'], 'Delivery'),
         'packaging_weight': value(data['packaging_weight'], '0'),
         'total_packaged_weight': value(data['total_packaged_weight'], '0'),
+        'total_package_count': value(data['total_package_count'], '0'),
         'packaging_waste_type': value(data['packaging_waste_type'], 'None'),
         'packaging_waste_weight': value(data['packaging_waste_weight'], '0'),
         'packaging_images': value(data['packaging_images'], ''),
@@ -826,6 +827,8 @@ class SuperAdminApiService {
         'packaging_type': value(data['packaging_type'], ''),
         'packaging_weight': value(data['packaging_weight'], '0'),
         'total_packaged_weight': value(data['total_packaged_weight'], '0'),
+        if (data.containsKey('total_package_count'))
+          'total_package_count': value(data['total_package_count'], '0'),
         'packaging_waste_type': value(data['packaging_waste_type'], ''),
         'packaging_waste_weight': value(data['packaging_waste_weight'], '0'),
         'packaging_images': value(data['packaging_images'], ''),

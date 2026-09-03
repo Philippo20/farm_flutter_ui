@@ -1562,8 +1562,10 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
               'plant_type'
             ], fallback: 'Crop variety')} | ${_text(item, ['farm_name'], fallback: 'Farm')}',
         'metric': '${_number(item, [
+              'total_package_count'
+            ]).toStringAsFixed(0)} packs | ${_number(item, [
               'total_packaged_weight'
-            ]).toStringAsFixed(1)} kg available',
+            ]).toStringAsFixed(1)} kg',
         'status': saleRecorded ? 'Sale recorded' : 'QA approved',
         'color': saleRecorded ? AppColors.success : AppColors.primary,
       };

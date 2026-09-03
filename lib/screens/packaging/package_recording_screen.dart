@@ -73,8 +73,11 @@ class _PackageRecordingScreenState
           'target': '${target.toStringAsFixed(1)} kg',
           'completed': '${completed.toStringAsFixed(1)} kg',
           'waste': '${waste.toStringAsFixed(1)} kg',
-          'packages':
-              unitWeight > 0 ? '${(completed / unitWeight).round()}' : '0',
+          'packages': _firstText(
+            item,
+            ['total_package_count'],
+            unitWeight > 0 ? '${(completed / unitWeight).round()}' : '0',
+          ),
           'operator':
               userNames[_firstText(item, ['packaging_supervisor_id'])] ??
                   'Not recorded',

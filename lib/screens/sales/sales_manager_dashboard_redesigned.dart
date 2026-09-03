@@ -763,14 +763,14 @@ class _SalesIntakeCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _SalesBatchMetric(
-                      label: 'Available',
-                      value: '${_value('total_packaged_weight', '0')} kg',
+                      label: 'Packs',
+                      value: _value('total_package_count', '0'),
                     ),
                   ),
                   Expanded(
                     child: _SalesBatchMetric(
-                      label: 'Quality',
-                      value: _value('quality_grade', 'Approved'),
+                      label: 'Weight',
+                      value: '${_value('total_packaged_weight', '0')} kg',
                     ),
                   ),
                   _StatusBadge(
@@ -889,6 +889,11 @@ class _SalesBatchDetailModal extends StatelessWidget {
         'Packaged Weight',
         '${_value('total_packaged_weight', '0')} kg',
         Icons.scale_outlined
+      ),
+      (
+        'Number of Packs',
+        _value('total_package_count', '0'),
+        Icons.inventory_2_outlined
       ),
       ('Package Type', _value('packaging_type'), Icons.inventory_2_outlined),
       (

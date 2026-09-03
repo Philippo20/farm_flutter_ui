@@ -533,7 +533,11 @@ class _WorkflowCard extends StatelessWidget {
             Row(children: [
               Expanded(
                   child: _CardMetric(
-                      label: 'Packaged weight',
+                      label: 'Packs',
+                      value: value('total_package_count', '0'))),
+              Expanded(
+                  child: _CardMetric(
+                      label: 'Weight',
                       value: '${value('total_packaged_weight', '0')} kg')),
               Expanded(
                   child: _CardMetric(
@@ -1066,6 +1070,7 @@ class _InspectionSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final values = [
+      ('Packs', '${record['total_package_count'] ?? 0}'),
       ('Packaged', '${record['total_packaged_weight'] ?? 0} kg'),
       ('Package', '${record['packaging_type'] ?? 'Not set'}'),
       ('Temperature', '${record['temperature'] ?? 'N/A'}'),
