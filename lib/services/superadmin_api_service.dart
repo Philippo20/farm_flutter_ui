@@ -199,6 +199,28 @@ class SuperAdminApiService {
     );
   }
 
+  Future<Map<String, dynamic>> recordQualityInspection({
+    required String fulfillmentId,
+    required Map<String, dynamic> data,
+  }) {
+    return _postFulfillmentAction(
+      '/fulfillments/${Uri.encodeComponent(fulfillmentId)}/quality-inspection',
+      data,
+      fallback: 'Failed to save the quality inspection',
+    );
+  }
+
+  Future<Map<String, dynamic>> recordQualityDecision({
+    required String fulfillmentId,
+    required Map<String, dynamic> data,
+  }) {
+    return _postFulfillmentAction(
+      '/fulfillments/${Uri.encodeComponent(fulfillmentId)}/quality-decision',
+      data,
+      fallback: 'Failed to save the quality decision',
+    );
+  }
+
   Future<Map<String, dynamic>> _postFulfillmentAction(
     String path,
     Map<String, dynamic> data, {

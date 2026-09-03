@@ -5,140 +5,32 @@ import '../../core/theme/app_typography.dart';
 import '../../core/widgets/quality_assurance_screen_shell.dart';
 import '../../services/fulfillment_data_service.dart';
 import '../../services/superadmin_api_service.dart';
+import 'quality_workflow_screen.dart';
 
 class QualityInspectionScreen extends StatelessWidget {
   const QualityInspectionScreen({super.key});
 
-  static const _items = [
-    {
-      'title': 'LTC-24019',
-      'subtitle': 'Romaine Lettuce | Dock 02',
-      'metric': '420 kg',
-      'status': 'Pending',
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'TMT-24022',
-      'subtitle': 'Cherry Tomato | Line B',
-      'metric': '310 kg',
-      'status': 'In review',
-      'color': AppColors.primary,
-    },
-    {
-      'title': 'BSL-24007',
-      'subtitle': 'Sweet Basil | Line C',
-      'metric': '96 kg',
-      'status': 'Sampled',
-      'color': AppColors.success,
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return _QualityPage(
-      selectedIndex: 1,
-      title: 'Quality Inspection',
-      subtitle:
-          'Inspect incoming batches, record quality gates, and flag issues before approval.',
-      icon: Icons.search_outlined,
-      colors: const [Color(0xFF1D4ED8), Color(0xFF0F766E)],
-      kpis: const [
-        _KpiData('Pending', '12', 'Items waiting',
-            Icons.pending_actions_outlined, AppColors.warning),
-        _KpiData('Inspected', '28', 'Today', Icons.fact_check_outlined,
-            AppColors.success),
-        _KpiData('Pass rate', '95%', '+2% shift trend', Icons.verified_outlined,
-            AppColors.primary),
-      ],
-      sectionTitle: 'Inspection Queue',
-      cards: _items,
-    );
+    return const QualityWorkflowScreen(stage: QualityWorkflowStage.inspection);
   }
 }
 
 class QualityApproveScreen extends StatelessWidget {
   const QualityApproveScreen({super.key});
 
-  static const _items = [
-    {
-      'title': 'TMT-24022',
-      'subtitle': 'Cherry Tomato | Inspection cleared',
-      'metric': '97.1%',
-      'status': 'Approve',
-      'color': AppColors.success,
-    },
-    {
-      'title': 'LTC-24019',
-      'subtitle': 'Romaine Lettuce | Cold chain verified',
-      'metric': '96.2%',
-      'status': 'Ready',
-      'color': AppColors.primary,
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return _QualityPage(
-      selectedIndex: 2,
-      title: 'Approve Batches',
-      subtitle:
-          'Release clean batches to sales or dispatch after quality gates are verified.',
-      icon: Icons.check_circle_outline,
-      colors: const [Color(0xFF166534), Color(0xFF0F766E)],
-      kpis: const [
-        _KpiData('Ready', '6', 'Awaiting approval', Icons.check_circle_outline,
-            AppColors.success),
-        _KpiData('Released', '18', 'Today', Icons.task_alt_outlined,
-            AppColors.primary),
-        _KpiData('Avg score', '96%', 'Quality score', Icons.workspace_premium,
-            AppColors.warning),
-      ],
-      sectionTitle: 'Approval Queue',
-      cards: _items,
-    );
+    return const QualityWorkflowScreen(stage: QualityWorkflowStage.approval);
   }
 }
 
 class QualityRejectScreen extends StatelessWidget {
   const QualityRejectScreen({super.key});
 
-  static const _items = [
-    {
-      'title': 'BSL-24007',
-      'subtitle': 'Sweet Basil | Handling loss above limit',
-      'metric': '4.2%',
-      'status': 'Review',
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'LBL-ROLL',
-      'subtitle': 'Barcode labels | Wrong print batch',
-      'metric': '3 rolls',
-      'status': 'Reject',
-      'color': AppColors.error,
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return _QualityPage(
-      selectedIndex: 3,
-      title: 'Reject & Hold',
-      subtitle:
-          'Document rejected batches, hold reasons, corrective actions, and release blockers.',
-      icon: Icons.cancel_outlined,
-      colors: const [Color(0xFF991B1B), Color(0xFFEA580C)],
-      kpis: const [
-        _KpiData(
-            'Rejected', '3', 'Today', Icons.cancel_outlined, AppColors.error),
-        _KpiData('On hold', '5', 'Needs review', Icons.pause_circle_outline,
-            AppColors.warning),
-        _KpiData('Resolved', '9', 'This week', Icons.task_alt_outlined,
-            AppColors.success),
-      ],
-      sectionTitle: 'Exception Queue',
-      cards: _items,
-    );
+    return const QualityWorkflowScreen(stage: QualityWorkflowStage.rejected);
   }
 }
 
@@ -245,7 +137,8 @@ class _QualitySettingsScreenState extends State<QualitySettingsScreen> {
       _error = null;
     });
     try {
-      await _api.updateSystemConfig({key: value, 'updated_by': 'quality_officer'});
+      await _api
+          .updateSystemConfig({key: value, 'updated_by': 'quality_officer'});
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -346,12 +239,14 @@ class _QualityPage extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Hero(title: title, subtitle: subtitle, icon: icon, colors: colors),
+              _Hero(
+                  title: title, subtitle: subtitle, icon: icon, colors: colors),
               const SizedBox(height: AppSpacing.lg),
               Wrap(
                 spacing: AppSpacing.md,
                 runSpacing: AppSpacing.md,
-                children: backendKpis.map((kpi) => _KpiCard(data: kpi)).toList(),
+                children:
+                    backendKpis.map((kpi) => _KpiCard(data: kpi)).toList(),
               ),
               const SizedBox(height: AppSpacing.xl),
               Text(
@@ -392,10 +287,14 @@ class _QualityPage extends StatelessWidget {
       if (selectedIndex == 1) {
         return !hasStatus(item, ['approve', 'release', 'reject', 'hold']);
       }
-      if (selectedIndex == 2) return hasStatus(item, ['approve', 'release', 'packaged']);
+      if (selectedIndex == 2)
+        return hasStatus(item, ['approve', 'release', 'packaged']);
       if (selectedIndex == 3) {
         return hasStatus(item, ['reject', 'hold']) ||
-            (double.tryParse(item['packaging_waste_weight']?.toString() ?? '') ?? 0) > 0;
+            (double.tryParse(
+                        item['packaging_waste_weight']?.toString() ?? '') ??
+                    0) >
+                0;
       }
       return true;
     }).toList();
@@ -405,7 +304,10 @@ class _QualityPage extends StatelessWidget {
       final rejected = hasStatus(item, ['reject', 'hold']);
       return <String, Object>{
         'title': value(item, ['batch_number', 'batch_id'], 'Unassigned batch'),
-        'subtitle': '${value(item, ['plant_type', 'crop'], 'Unassigned crop')} | QA backend record',
+        'subtitle': '${value(item, [
+              'plant_type',
+              'crop'
+            ], 'Unassigned crop')} | QA backend record',
         'metric': value(item, ['total_weight', 'total_packaged_weight'], '0'),
         'status': status,
         'color': rejected ? AppColors.error : AppColors.success,
@@ -416,31 +318,52 @@ class _QualityPage extends StatelessWidget {
   List<_KpiData> _backendKpis(FulfillmentSnapshot snapshot) {
     final records = snapshot.fulfillments;
     bool hasStatus(Map<String, dynamic> item, List<String> terms) {
-      final status = '${item['status'] ?? item['delivery_status'] ?? ''}'.toLowerCase();
+      final status =
+          '${item['status'] ?? item['delivery_status'] ?? ''}'.toLowerCase();
       return terms.any(status.contains);
     }
 
-    final approved = records.where((item) => hasStatus(item, ['approve', 'release', 'packaged'])).length;
-    final rejected = records.where((item) => hasStatus(item, ['reject', 'hold'])).length;
+    final approved = records
+        .where((item) => hasStatus(item, ['approve', 'release', 'packaged']))
+        .length;
+    final rejected =
+        records.where((item) => hasStatus(item, ['reject', 'hold'])).length;
     if (selectedIndex == 1) {
       final pending = records.length - approved - rejected;
       return [
-        _KpiData('Pending', '$pending', 'Items waiting', Icons.pending_actions_outlined, AppColors.warning),
-        _KpiData('Inspected', '${records.length}', 'Backend records', Icons.fact_check_outlined, AppColors.success),
-        _KpiData('Pass rate', '${records.isEmpty ? 0 : (approved / records.length * 100).toStringAsFixed(0)}%', 'Approval ratio', Icons.verified_outlined, AppColors.primary),
+        _KpiData('Pending', '$pending', 'Items waiting',
+            Icons.pending_actions_outlined, AppColors.warning),
+        _KpiData('Inspected', '${records.length}', 'Backend records',
+            Icons.fact_check_outlined, AppColors.success),
+        _KpiData(
+            'Pass rate',
+            '${records.isEmpty ? 0 : (approved / records.length * 100).toStringAsFixed(0)}%',
+            'Approval ratio',
+            Icons.verified_outlined,
+            AppColors.primary),
       ];
     }
     if (selectedIndex == 2) {
       return [
-        _KpiData('Ready', '$approved', 'Awaiting approval', Icons.check_circle_outline, AppColors.success),
-        _KpiData('Released', '$approved', 'Backend status', Icons.task_alt_outlined, AppColors.primary),
-        _KpiData('Avg score', '${records.isEmpty ? 0 : (approved / records.length * 100).toStringAsFixed(0)}%', 'Quality ratio', Icons.workspace_premium, AppColors.warning),
+        _KpiData('Ready', '$approved', 'Awaiting approval',
+            Icons.check_circle_outline, AppColors.success),
+        _KpiData('Released', '$approved', 'Backend status',
+            Icons.task_alt_outlined, AppColors.primary),
+        _KpiData(
+            'Avg score',
+            '${records.isEmpty ? 0 : (approved / records.length * 100).toStringAsFixed(0)}%',
+            'Quality ratio',
+            Icons.workspace_premium,
+            AppColors.warning),
       ];
     }
     return [
-      _KpiData('Rejected', '$rejected', 'Backend records', Icons.cancel_outlined, AppColors.error),
-      _KpiData('On hold', '$rejected', 'Needs review', Icons.pause_circle_outline, AppColors.warning),
-      _KpiData('Resolved', '0', 'No resolution field', Icons.task_alt_outlined, AppColors.success),
+      _KpiData('Rejected', '$rejected', 'Backend records',
+          Icons.cancel_outlined, AppColors.error),
+      _KpiData('On hold', '$rejected', 'Needs review',
+          Icons.pause_circle_outline, AppColors.warning),
+      _KpiData('Resolved', '0', 'No resolution field', Icons.task_alt_outlined,
+          AppColors.success),
     ];
   }
 }
