@@ -161,6 +161,60 @@ class SuperAdminApiService {
       _getDocuments('/inventory/movements');
   Future<List<Map<String, dynamic>>> getFulfillments() =>
       _getDocuments('/fulfillments');
+
+  Future<Map<String, dynamic>> inspectHarvestIntake({
+    required String batchId,
+    required Map<String, dynamic> data,
+  }) async {
+    return _postFulfillmentAction(
+      '/fulfillments/intake/${Uri.encodeComponent(batchId)}/inspect',
+      data,
+      fallback: 'Failed to save the harvest inspection',
+    );
+  }
+
+  Future<Map<String, dynamic>> releaseHarvestToPackaging({
+    required String batchId,
+    required String releasedById,
+    required String releasedByName,
+  }) async {
+    return _postFulfillmentAction(
+      '/fulfillments/intake/${Uri.encodeComponent(batchId)}/release',
+      {
+        'released_by_id': releasedById,
+        'released_by_name': releasedByName,
+      },
+      fallback: 'Failed to release the harvest to packaging',
+    );
+  }
+
+  Future<Map<String, dynamic>> _postFulfillmentAction(
+    String path,
+    Map<String, dynamic> data, {
+    required String fallback,
+  }) async {
+    final response = await _client
+        .post(
+          Uri.parse('$baseUrl$path'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(data),
+        )
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: '$fallback (${response.statusCode})',
+        ),
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw SuperAdminApiException('$fallback: invalid server response');
+    }
+    return decoded;
+  }
+
   Future<List<Map<String, dynamic>>> getSensors() => _getDocuments('/sensors');
   Future<List<Map<String, dynamic>>> getFundRequests() =>
       _getDocuments('/fund-requests');
