@@ -29,6 +29,7 @@ class _SalesManagerDashboardRedesignedState
   String? _loadError;
   List<Map<String, dynamic>> _sales = const [];
   List<Map<String, dynamic>> _offTakers = const [];
+  List<Map<String, dynamic>> _fulfillments = const [];
 
   @override
   void initState() {
@@ -44,12 +45,16 @@ class _SalesManagerDashboardRedesignedState
     });
 
     try {
-      final sales = await _api.getSales();
-      final offTakers = await _api.getOffTakers();
+      final results = await Future.wait<List<Map<String, dynamic>>>([
+        _api.getSales(),
+        _api.getOffTakers(),
+        _api.getFulfillments(),
+      ]);
       if (!mounted) return;
       setState(() {
-        _sales = sales;
-        _offTakers = offTakers;
+        _sales = results[0];
+        _offTakers = results[1];
+        _fulfillments = results[2];
         _isLoading = false;
       });
     } catch (error) {
@@ -63,13 +68,15 @@ class _SalesManagerDashboardRedesignedState
 
   List<Map<String, Object>> get _pipeline {
     final validSales = _sales.where((sale) => !_isCancelled(sale)).toList();
-    final revenue = validSales.fold<double>(0, (sum, sale) =>
-        sum + _number(sale['total_amount']));
-    final receivables = validSales.where((sale) => sale['paid'] != true).fold<double>(
+    final revenue = validSales.fold<double>(
         0, (sum, sale) => sum + _number(sale['total_amount']));
+    final receivables = validSales
+        .where((sale) => sale['paid'] != true)
+        .fold<double>(0, (sum, sale) => sum + _number(sale['total_amount']));
     final pending = _sales.where((sale) => _status(sale) == 'pending').length;
-    final paidAmount = validSales.where((sale) => sale['paid'] == true).fold<double>(
-        0, (sum, sale) => sum + _number(sale['total_amount']));
+    final paidAmount = validSales
+        .where((sale) => sale['paid'] == true)
+        .fold<double>(0, (sum, sale) => sum + _number(sale['total_amount']));
     final paidRate = revenue == 0 ? 0 : ((paidAmount / revenue) * 100).round();
 
     return [
@@ -94,8 +101,8 @@ class _SalesManagerDashboardRedesignedState
       {
         'title': 'Deliveries',
         'subtitle': 'Dispatch commitments and buyer handoff',
-        'metric': '$pending pending',
-        'status': '${validSales.length} valid',
+        'metric': '${_releasedBatches.length} from QA',
+        'status': '$pending pending',
         'route': '/sales-deliveries',
         'icon': Icons.local_shipping_outlined,
         'color': AppColors.warning,
@@ -139,6 +146,48 @@ class _SalesManagerDashboardRedesignedState
           'active')
       .length;
 
+  List<Map<String, dynamic>> get _releasedBatches {
+    final records = _fulfillments.where((record) {
+      final status = _text(record['status']).toLowerCase();
+      final qualityStatus = _text(record['quality_status']).toLowerCase();
+      return status == 'sent to sales' && qualityStatus == 'approved';
+    }).toList();
+    records.sort((a, b) => _fulfillmentDate(b).compareTo(_fulfillmentDate(a)));
+    return records;
+  }
+
+  DateTime _fulfillmentDate(Map<String, dynamic> record) =>
+      DateTime.tryParse(_text(record['sent_to_sales_date_time'])) ??
+      DateTime.tryParse(_text(record['quality_decided_at'])) ??
+      DateTime.tryParse(_text(record[r'$updatedAt'])) ??
+      DateTime.fromMillisecondsSinceEpoch(0);
+
+  bool _hasSaleForBatch(Map<String, dynamic> record) {
+    final batchNumber = _text(record['batch_number']).toLowerCase();
+    if (batchNumber.isEmpty) return false;
+    return _sales.any((sale) =>
+        _text(sale['batch_id']).toLowerCase() == batchNumber ||
+        _text(sale['batch_number']).toLowerCase() == batchNumber);
+  }
+
+  Future<void> _showReleasedBatch(Map<String, dynamic> record) async {
+    final modal = _SalesBatchDetailModal(
+      record: record,
+      saleRecorded: _hasSaleForBatch(record),
+    );
+    if (MediaQuery.sizeOf(context).width < 600) {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => modal,
+      );
+      return;
+    }
+    await showDialog<void>(context: context, builder: (_) => modal);
+  }
+
   bool _isCancelled(Map<String, dynamic> sale) => _status(sale) == 'cancelled';
 
   String _status(Map<String, dynamic> sale) =>
@@ -161,7 +210,8 @@ class _SalesManagerDashboardRedesignedState
       DateTime.fromMillisecondsSinceEpoch(0);
 
   String _money(double amount) {
-    if (amount >= 1000000) return 'GHS ${(amount / 1000000).toStringAsFixed(1)}M';
+    if (amount >= 1000000)
+      return 'GHS ${(amount / 1000000).toStringAsFixed(1)}M';
     if (amount >= 1000) return 'GHS ${(amount / 1000).toStringAsFixed(1)}K';
     return 'GHS ${amount.toStringAsFixed(0)}';
   }
@@ -180,9 +230,8 @@ class _SalesManagerDashboardRedesignedState
     return '${difference.inDays} d ago';
   }
 
-  String _titleCase(String value) => value.isEmpty
-      ? value
-      : '${value[0].toUpperCase()}${value.substring(1)}';
+  String _titleCase(String value) =>
+      value.isEmpty ? value : '${value[0].toUpperCase()}${value.substring(1)}';
 
   @override
   Widget build(BuildContext context) {
@@ -304,10 +353,11 @@ class _SalesManagerDashboardRedesignedState
     }
 
     final validSales = _sales.where((sale) => !_isCancelled(sale)).toList();
-    final revenue = validSales.fold<double>(0, (sum, sale) =>
-        sum + _number(sale['total_amount']));
-    final paidAmount = validSales.where((sale) => sale['paid'] == true).fold<double>(
+    final revenue = validSales.fold<double>(
         0, (sum, sale) => sum + _number(sale['total_amount']));
+    final paidAmount = validSales
+        .where((sale) => sale['paid'] == true)
+        .fold<double>(0, (sum, sale) => sum + _number(sale['total_amount']));
     final paidRate = revenue == 0 ? 0 : ((paidAmount / revenue) * 100).round();
     final pending = _sales.where((sale) => _status(sale) == 'pending').length;
 
@@ -348,9 +398,18 @@ class _SalesManagerDashboardRedesignedState
               icon: Icons.track_changes_outlined,
               color: AppColors.error,
             ),
+            _SalesKpi(
+              title: 'Sales intake',
+              value: '${_releasedBatches.length}',
+              subtitle: 'QA-approved batches',
+              icon: Icons.inventory_2_outlined,
+              color: AppColors.primary,
+            ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: AppSpacing.lg),
+        _buildSalesIntakePanel(),
+        const SizedBox(height: AppSpacing.md),
         _buildMainGrid(),
       ],
     );
@@ -372,7 +431,8 @@ class _SalesManagerDashboardRedesignedState
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Sales data could not be loaded',
-            style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+            style:
+                AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppSpacing.xs),
           _MutedText('Check the API connection and try again.'),
@@ -458,10 +518,15 @@ class _SalesManagerDashboardRedesignedState
                   label: '$_activeBuyerCount active off-takers',
                   icon: Icons.people_outlined),
               _HeroChip(
-                  label: '${_sales.where((sale) => _status(sale) == 'pending').length} deliveries pending',
+                  label:
+                      '${_sales.where((sale) => _status(sale) == 'pending').length} deliveries pending',
                   icon: Icons.local_shipping_outlined),
               _HeroChip(
-                  label: '${_money(_sales.where((sale) => !_isCancelled(sale) && sale['paid'] != true).fold<double>(0, (sum, sale) => sum + _number(sale['total_amount'])))} receivables',
+                  label: '${_releasedBatches.length} batches from QA',
+                  icon: Icons.verified_outlined),
+              _HeroChip(
+                  label:
+                      '${_money(_sales.where((sale) => !_isCancelled(sale) && sale['paid'] != true).fold<double>(0, (sum, sale) => sum + _number(sale['total_amount'])))} receivables',
                   icon: Icons.receipt_long_outlined),
             ],
           ),
@@ -508,6 +573,41 @@ class _SalesManagerDashboardRedesignedState
     );
   }
 
+  Widget _buildSalesIntakePanel() {
+    return _DashboardPanel(
+      title: 'Batches Released to Sales',
+      subtitle:
+          'QA-approved inventory received from fulfillment and ready for allocation.',
+      icon: Icons.inventory_2_outlined,
+      color: AppColors.primary,
+      child: _releasedBatches.isEmpty
+          ? const _SalesIntakeEmpty()
+          : LayoutBuilder(builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 940 ? 3 : 1;
+              final visible = _releasedBatches.take(6).toList();
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: visible.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  mainAxisExtent: 164,
+                  crossAxisSpacing: AppSpacing.sm,
+                  mainAxisSpacing: AppSpacing.sm,
+                ),
+                itemBuilder: (_, index) {
+                  final record = visible[index];
+                  return _SalesIntakeCard(
+                    record: record,
+                    saleRecorded: _hasSaleForBatch(record),
+                    onTap: () => _showReleasedBatch(record),
+                  );
+                },
+              );
+            }),
+    );
+  }
+
   Widget _buildPipelinePanel() {
     return _DashboardPanel(
       title: 'Sales Pipeline',
@@ -538,8 +638,17 @@ class _SalesManagerDashboardRedesignedState
           ),
           SizedBox(height: AppSpacing.sm),
           _ActionTile(
+            title: 'Review batches from QA',
+            subtitle: '${_releasedBatches.length} approved batches available',
+            icon: Icons.verified_outlined,
+            color: AppColors.primary,
+            route: '/sales-deliveries',
+          ),
+          SizedBox(height: AppSpacing.sm),
+          _ActionTile(
             title: 'Check delivery commitments',
-            subtitle: '${_sales.where((sale) => _status(sale) == 'pending').length} dispatches need follow-up',
+            subtitle:
+                '${_sales.where((sale) => _status(sale) == 'pending').length} dispatches need follow-up',
             icon: Icons.local_shipping_outlined,
             color: AppColors.warning,
             route: '/sales-deliveries',
@@ -547,7 +656,8 @@ class _SalesManagerDashboardRedesignedState
           SizedBox(height: AppSpacing.sm),
           _ActionTile(
             title: 'Review financial exposure',
-            subtitle: '${_money(_sales.where((sale) => !_isCancelled(sale) && sale['paid'] != true).fold<double>(0, (sum, sale) => sum + _number(sale['total_amount'])))} receivables open',
+            subtitle:
+                '${_money(_sales.where((sale) => !_isCancelled(sale) && sale['paid'] != true).fold<double>(0, (sum, sale) => sum + _number(sale['total_amount'])))} receivables open',
             icon: Icons.account_balance_wallet_outlined,
             color: AppColors.success,
             route: '/sales-financial',
@@ -568,6 +678,443 @@ class _SalesManagerDashboardRedesignedState
             .map((activity) => _ActivityRow(activity: activity))
             .toList(),
       ),
+    );
+  }
+}
+
+class _SalesIntakeCard extends StatelessWidget {
+  const _SalesIntakeCard({
+    required this.record,
+    required this.saleRecorded,
+    required this.onTap,
+  });
+
+  final Map<String, dynamic> record;
+  final bool saleRecorded;
+  final VoidCallback onTap;
+
+  String _value(String key, [String fallback = 'Not set']) {
+    final value = record[key]?.toString().trim() ?? '';
+    return value.isEmpty ? fallback : value;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Ink(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: .04)
+                : AppColors.neutral50,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: saleRecorded
+                  ? AppColors.success.withValues(alpha: .2)
+                  : AppColors.primary.withValues(alpha: .18),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _IconBox(
+                    icon: Icons.qr_code_2_rounded,
+                    color: saleRecorded ? AppColors.success : AppColors.primary,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _value('batch_number', 'Unassigned batch'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '${_value('plant_type', 'Crop')} | ${_value('farm_name', 'Farm')}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: isDark
+                                ? Colors.white60
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded,
+                      color: isDark ? Colors.white54 : AppColors.textSecondary),
+                ],
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  Expanded(
+                    child: _SalesBatchMetric(
+                      label: 'Available',
+                      value: '${_value('total_packaged_weight', '0')} kg',
+                    ),
+                  ),
+                  Expanded(
+                    child: _SalesBatchMetric(
+                      label: 'Quality',
+                      value: _value('quality_grade', 'Approved'),
+                    ),
+                  ),
+                  _StatusBadge(
+                    label: saleRecorded ? 'Sale recorded' : 'Ready',
+                    color: saleRecorded ? AppColors.success : AppColors.primary,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SalesBatchMetric extends StatelessWidget {
+  const _SalesBatchMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: AppTypography.bodySmall
+                .copyWith(fontSize: 11, color: AppColors.textSecondary)),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.bodySmall.copyWith(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SalesIntakeEmpty extends StatelessWidget {
+  const _SalesIntakeEmpty();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color:
+            isDark ? Colors.white.withValues(alpha: .04) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.inventory_2_outlined,
+              color: AppColors.textSecondary),
+          const SizedBox(height: AppSpacing.sm),
+          Text('No batches released to sales',
+              style: AppTypography.bodyMedium
+                  .copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 3),
+          Text(
+            'Approved batches appear here immediately after the QA decision.',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white60 : AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SalesBatchDetailModal extends StatelessWidget {
+  const _SalesBatchDetailModal({
+    required this.record,
+    required this.saleRecorded,
+  });
+
+  final Map<String, dynamic> record;
+  final bool saleRecorded;
+
+  String _value(String key, [String fallback = 'Not set']) {
+    final value = record[key]?.toString().trim() ?? '';
+    return value.isEmpty ? fallback : value;
+  }
+
+  String _date(String key) {
+    final date = DateTime.tryParse(_value(key, ''));
+    if (date == null) return 'Not recorded';
+    String two(int value) => value.toString().padLeft(2, '0');
+    return '${two(date.day)}/${two(date.month)}/${date.year} ${two(date.hour)}:${two(date.minute)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mobile = MediaQuery.sizeOf(context).width < 600;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final details = [
+      ('Batch Number', _value('batch_number'), Icons.qr_code_rounded),
+      ('Crop', _value('plant_type'), Icons.eco_outlined),
+      ('Farm', _value('farm_name'), Icons.agriculture_outlined),
+      (
+        'Packaged Weight',
+        '${_value('total_packaged_weight', '0')} kg',
+        Icons.scale_outlined
+      ),
+      ('Package Type', _value('packaging_type'), Icons.inventory_2_outlined),
+      (
+        'Quality Grade',
+        _value('quality_grade', 'Approved'),
+        Icons.workspace_premium_outlined
+      ),
+      (
+        'Quality Score',
+        '${_value('quality_score', '0')}%',
+        Icons.fact_check_outlined
+      ),
+      ('Approved At', _date('quality_decided_at'), Icons.event_outlined),
+      (
+        'QA Officer',
+        _value('quality_decision_by_name', 'Quality Assurance'),
+        Icons.verified_user_outlined
+      ),
+      (
+        'Sales State',
+        saleRecorded ? 'Sale recorded' : 'Ready for allocation',
+        Icons.sell_outlined
+      ),
+    ];
+
+    final content = Container(
+      constraints: BoxConstraints(
+        maxWidth: 560,
+        maxHeight: MediaQuery.sizeOf(context).height * (mobile ? .94 : .9),
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.vertical(
+          top: const Radius.circular(16),
+          bottom: Radius.circular(mobile ? 0 : 16),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (mobile) ...[
+            const SizedBox(height: 10),
+            Container(
+              width: 42,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white24 : AppColors.neutral300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 16, 0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [
+                      AppColors.primary,
+                      AppColors.primary.withValues(alpha: .75),
+                    ]),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.inventory_2_outlined,
+                      size: 20, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sales Batch Intake',
+                        style: AppTypography.bodyLarge.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        'Review QA-approved batch details from fulfillment',
+                        style: AppTypography.bodySmall.copyWith(
+                          fontSize: 12,
+                          color:
+                              isDark ? Colors.white38 : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Close',
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded, size: 18),
+                ),
+              ],
+            ),
+          ),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+              child: LayoutBuilder(
+                builder: (_, constraints) {
+                  final fieldWidth = constraints.maxWidth < 420
+                      ? constraints.maxWidth
+                      : (constraints.maxWidth - 10) / 2;
+                  return Wrap(
+                    spacing: 10,
+                    runSpacing: 12,
+                    children: details
+                        .map((detail) => SizedBox(
+                              width: fieldWidth,
+                              child: _SalesModalReadOnlyField(
+                                label: detail.$1,
+                                value: detail.$2,
+                                icon: detail.$3,
+                              ),
+                            ))
+                        .toList(),
+                  );
+                },
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44)),
+                    child: const Text('Close'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/sales-deliveries');
+                    },
+                    icon: const Icon(Icons.local_shipping_outlined, size: 16),
+                    label: const Text('Open Deliveries'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return mobile
+        ? content
+        : Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.all(24),
+            child: content,
+          );
+  }
+}
+
+class _SalesModalReadOnlyField extends StatelessWidget {
+  const _SalesModalReadOnlyField({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTypography.bodySmall.copyWith(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white54 : AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: .04)
+                : AppColors.neutral50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: .06)
+                  : Colors.black.withValues(alpha: .06),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(icon,
+                  size: 16,
+                  color: isDark ? Colors.white24 : AppColors.textSecondary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodySmall.copyWith(
+                    fontSize: 12,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

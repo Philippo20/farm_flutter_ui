@@ -1416,6 +1416,7 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
   final _api = SuperAdminApiService();
   List<Map<String, dynamic>> _sales = const [];
   List<Map<String, dynamic>> _offTakers = const [];
+  List<Map<String, dynamic>> _fulfillments = const [];
   bool _loading = true;
   String? _error;
 
@@ -1434,11 +1435,13 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
       final result = await Future.wait<List<Map<String, dynamic>>>([
         _api.getSales(),
         _api.getOffTakers(),
+        _api.getFulfillments(),
       ]);
       if (!mounted) return;
       setState(() {
         _sales = result[0];
         _offTakers = result[1];
+        _fulfillments = result[2];
         _loading = false;
       });
     } catch (error) {
@@ -1491,10 +1494,41 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
       .where((sale) => _status(sale).toLowerCase() != 'cancelled')
       .toList();
 
+  List<Map<String, dynamic>> get _releasedFulfillments {
+    final records = _fulfillments.where((record) {
+      final status = _text(record, ['status']).toLowerCase();
+      final qualityStatus = _text(record, ['quality_status']).toLowerCase();
+      return status == 'sent to sales' && qualityStatus == 'approved';
+    }).toList();
+    records.sort((a, b) {
+      final bDate = DateTime.tryParse(_text(b, [
+            'sent_to_sales_date_time',
+            'quality_decided_at',
+            r'$updatedAt'
+          ])) ??
+          DateTime.fromMillisecondsSinceEpoch(0);
+      final aDate = DateTime.tryParse(_text(a, [
+            'sent_to_sales_date_time',
+            'quality_decided_at',
+            r'$updatedAt'
+          ])) ??
+          DateTime.fromMillisecondsSinceEpoch(0);
+      return bDate.compareTo(aDate);
+    });
+    return records;
+  }
+
+  bool _hasSaleForBatch(Map<String, dynamic> fulfillment) {
+    final batch = _text(fulfillment, ['batch_number']).toLowerCase();
+    if (batch.isEmpty) return false;
+    return _sales.any((sale) =>
+        _text(sale, ['batch_id', 'batch_number']).toLowerCase() == batch);
+  }
+
   List<Map<String, Object>> _recordCards() {
     final records = [..._validSales]
       ..sort((a, b) => _date(b).compareTo(_date(a)));
-    return records.take(6).map<Map<String, Object>>((sale) {
+    final salesCards = records.map<Map<String, Object>>((sale) {
       final status = _status(sale);
       final statusLower = status.toLowerCase();
       final color = statusLower == 'delivered'
@@ -1515,6 +1549,25 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
         'color': color,
       };
     }).toList();
+    if (widget.kind != _SalesManagerPageKind.deliveries) {
+      return salesCards.take(6).toList();
+    }
+    final intakeCards = _releasedFulfillments.map<Map<String, Object>>((item) {
+      final saleRecorded = _hasSaleForBatch(item);
+      return {
+        'title': _text(item, ['batch_number'], fallback: 'Unassigned batch'),
+        'subtitle':
+            '${_text(item, ['plant_type'], fallback: 'Crop')} | ${_text(item, [
+                  'farm_name'
+                ], fallback: 'Farm')}',
+        'metric': '${_number(item, [
+              'total_packaged_weight'
+            ]).toStringAsFixed(1)} kg available',
+        'status': saleRecorded ? 'Sale recorded' : 'QA approved',
+        'color': saleRecorded ? AppColors.success : AppColors.primary,
+      };
+    }).toList();
+    return [...intakeCards, ...salesCards].take(10).toList();
   }
 
   List<_KpiData> _kpis() {
@@ -1539,9 +1592,6 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
             'active')
         .length;
     final paidRate = revenue == 0 ? 0 : (collected / revenue * 100).round();
-    final deliveryRate =
-        sales.isEmpty ? 0 : (delivered / sales.length * 100).round();
-
     switch (widget.kind) {
       case _SalesManagerPageKind.performance:
         return [
@@ -1553,13 +1603,20 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
               Icons.handshake_outlined, AppColors.warning),
         ];
       case _SalesManagerPageKind.deliveries:
+        final ready = _releasedFulfillments
+            .where((record) => !_hasSaleForBatch(record))
+            .length;
         return [
-          _KpiData('Pending', '$pending', 'Awaiting delivery',
+          _KpiData(
+              'From QA',
+              '${_releasedFulfillments.length}',
+              '$ready ready for allocation',
+              Icons.verified_outlined,
+              AppColors.primary),
+          _KpiData('Pending', '$pending', 'Sales awaiting delivery',
               Icons.local_shipping_outlined, AppColors.warning),
           _KpiData('Delivered', '$delivered', 'Recorded sales',
               Icons.task_alt_outlined, AppColors.success),
-          _KpiData('Completion', '$deliveryRate%', 'Based on sales status',
-              Icons.schedule_outlined, AppColors.primary),
         ];
       case _SalesManagerPageKind.financial:
         return [
@@ -1607,11 +1664,11 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
           selectedIndex: widget.selectedIndex,
           title: 'Sales Deliveries',
           subtitle:
-              'Track delivery commitments and handoff status from sales records.',
+              'Receive QA-approved batches and track their buyer delivery commitments.',
           icon: Icons.local_shipping_outlined,
           colors: const [Color(0xFF334155), Color(0xFF1D4ED8)],
           kpis: kpis,
-          sectionTitle: 'Delivery Records',
+          sectionTitle: 'QA Batch Intake & Delivery Records',
           cards: cards,
         );
       case _SalesManagerPageKind.financial:

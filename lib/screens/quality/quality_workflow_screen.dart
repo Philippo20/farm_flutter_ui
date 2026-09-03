@@ -665,7 +665,6 @@ class _QualityInspectionFormState extends State<_QualityInspectionForm> {
   Widget build(BuildContext context) {
     return _WorkflowModalFrame(
       icon: Icons.fact_check_outlined,
-      color: AppColors.primary,
       title: 'Inspect ${widget.record['batch_number'] ?? 'batch'}',
       subtitle:
           '${widget.record['plant_type'] ?? 'Crop'} | ${widget.record['farm_name'] ?? 'Farm'}',
@@ -677,9 +676,8 @@ class _QualityInspectionFormState extends State<_QualityInspectionForm> {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           _InspectionSummary(record: widget.record, score: _score),
           const SizedBox(height: AppSpacing.lg),
-          Text('Quality gates',
-              style: AppTypography.h6.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: AppSpacing.sm),
+          const _QaModalLabel('Quality Gates'),
+          const SizedBox(height: 6),
           ...[
             (
               'appearance',
@@ -713,16 +711,11 @@ class _QualityInspectionFormState extends State<_QualityInspectionForm> {
                 onChanged: (value) => setState(() => _checks[gate.$1] = value),
               )),
           const SizedBox(height: AppSpacing.md),
-          TextFormField(
+          _QaModalTextField(
+            label: 'Inspection Notes',
+            hint: 'Record observations, variances, or corrective guidance',
+            icon: Icons.notes_rounded,
             controller: _notes,
-            minLines: 3,
-            maxLines: 5,
-            maxLength: 1000,
-            decoration: const InputDecoration(
-                labelText: 'Inspection notes',
-                hintText:
-                    'Record observations, variances, or corrective guidance',
-                alignLabelWithHint: true),
           ),
           if (_error != null) ...[
             const SizedBox(height: AppSpacing.sm),
@@ -802,7 +795,6 @@ class _QualityDecisionFormState extends State<_QualityDecisionForm> {
         double.tryParse('${widget.record['quality_score'] ?? 0}') ?? 0;
     return _WorkflowModalFrame(
       icon: Icons.verified_outlined,
-      color: _decision == 'Approve' ? AppColors.success : AppColors.error,
       title: 'Quality decision',
       subtitle:
           '${widget.record['batch_number'] ?? 'Batch'} | ${widget.record['plant_type'] ?? 'Crop'}',
@@ -815,9 +807,8 @@ class _QualityDecisionFormState extends State<_QualityDecisionForm> {
         const SizedBox(height: AppSpacing.lg),
         _ReadOnlyFindings(record: widget.record),
         const SizedBox(height: AppSpacing.lg),
-        Text('Decision',
-            style: AppTypography.h6.copyWith(fontWeight: FontWeight.w600)),
-        const SizedBox(height: AppSpacing.sm),
+        const _QaModalLabel('Decision'),
+        const SizedBox(height: 6),
         SegmentedButton<String>(
           segments: const [
             ButtonSegment(
@@ -838,16 +829,12 @@ class _QualityDecisionFormState extends State<_QualityDecisionForm> {
                   }),
         ),
         if (_decision == 'Reject') ...[
-          const SizedBox(height: AppSpacing.md),
-          TextField(
+          const SizedBox(height: 12),
+          _QaModalTextField(
+            label: 'Rejection Reason',
+            hint: 'Describe the issue and required corrective action',
+            icon: Icons.report_problem_outlined,
             controller: _reason,
-            minLines: 3,
-            maxLines: 5,
-            maxLength: 1000,
-            decoration: const InputDecoration(
-                labelText: 'Rejection reason',
-                hintText: 'Describe the issue and required corrective action',
-                alignLabelWithHint: true),
           ),
         ],
         if (_error != null) ...[
@@ -862,7 +849,6 @@ class _QualityDecisionFormState extends State<_QualityDecisionForm> {
 class _WorkflowModalFrame extends StatelessWidget {
   const _WorkflowModalFrame(
       {required this.icon,
-      required this.color,
       required this.title,
       required this.subtitle,
       required this.saving,
@@ -871,7 +857,6 @@ class _WorkflowModalFrame extends StatelessWidget {
       required this.child});
 
   final IconData icon;
-  final Color color;
   final String title;
   final String subtitle;
   final bool saving;
@@ -885,13 +870,13 @@ class _WorkflowModalFrame extends StatelessWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final content = Container(
       constraints: BoxConstraints(
-          maxWidth: 720,
-          maxHeight: MediaQuery.sizeOf(context).height * (mobile ? .94 : .88)),
+          maxWidth: 560,
+          maxHeight: MediaQuery.sizeOf(context).height * (mobile ? .94 : .9)),
       decoration: BoxDecoration(
         color: dark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.vertical(
-            top: const Radius.circular(20),
-            bottom: Radius.circular(mobile ? 0 : 20)),
+            top: const Radius.circular(16),
+            bottom: Radius.circular(mobile ? 0 : 16)),
       ),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         if (mobile) ...[
@@ -904,58 +889,72 @@ class _WorkflowModalFrame extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2))),
         ],
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg, AppSpacing.lg, AppSpacing.md, AppSpacing.md),
+          padding: const EdgeInsets.fromLTRB(24, 24, 16, 0),
           child: Row(children: [
-            _IconTile(icon: icon, color: color, size: 48),
-            const SizedBox(width: AppSpacing.md),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [
+                  AppColors.primary,
+                  AppColors.primary.withValues(alpha: .75),
+                ]),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 20, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Text(title,
-                      style: AppTypography.h5
-                          .copyWith(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 3),
+                      style: AppTypography.bodyLarge
+                          .copyWith(fontSize: 16, fontWeight: FontWeight.w700)),
                   Text(subtitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodySmall.copyWith(
+                          fontSize: 12,
                           color:
-                              dark ? Colors.white70 : AppColors.textSecondary)),
+                              dark ? Colors.white38 : AppColors.textSecondary)),
                 ])),
             IconButton(
                 tooltip: 'Close',
                 onPressed: saving ? null : () => Navigator.pop(context, false),
-                icon: const Icon(Icons.close_rounded)),
+                icon: const Icon(Icons.close_rounded, size: 18)),
           ]),
         ),
-        Divider(height: 1, color: dark ? Colors.white10 : AppColors.neutral200),
         Flexible(
             child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.lg), child: child)),
-        Divider(height: 1, color: dark ? Colors.white10 : AppColors.neutral200),
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
+                child: child)),
         Padding(
-          padding: EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.md,
-              AppSpacing.lg, mobile ? AppSpacing.lg : AppSpacing.md),
+          padding: EdgeInsets.fromLTRB(24, 12, 24, mobile ? 24 : 24),
           child: Row(children: [
             Expanded(
                 child: OutlinedButton(
                     onPressed:
                         saving ? null : () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44)),
                     child: const Text('Cancel'))),
-            const SizedBox(width: AppSpacing.sm),
+            const SizedBox(width: 8),
             Expanded(
-                child: FilledButton.icon(
+                child: ElevatedButton.icon(
               onPressed: saving ? null : onPrimary,
               icon: saving
                   ? const SizedBox(
-                      width: 18,
-                      height: 18,
+                      width: 16,
+                      height: 16,
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: Colors.white))
-                  : Icon(icon, size: 19),
+                  : const Icon(Icons.check_rounded, size: 16),
               label: Text(saving ? 'Saving...' : primaryLabel),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(44),
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
             )),
           ]),
         ),
@@ -967,6 +966,96 @@ class _WorkflowModalFrame extends StatelessWidget {
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.all(24),
             child: content);
+  }
+}
+
+class _QaModalLabel extends StatelessWidget {
+  const _QaModalLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Text(
+      label,
+      style: AppTypography.bodySmall.copyWith(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: dark ? Colors.white54 : AppColors.textSecondary,
+      ),
+    );
+  }
+}
+
+class _QaModalTextField extends StatelessWidget {
+  const _QaModalTextField({
+    required this.label,
+    required this.hint,
+    required this.icon,
+    required this.controller,
+  });
+
+  final String label;
+  final String hint;
+  final IconData icon;
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = dark
+        ? Colors.white.withValues(alpha: .06)
+        : Colors.black.withValues(alpha: .06);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _QaModalLabel(label),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          minLines: 3,
+          maxLines: 5,
+          maxLength: 1000,
+          style: AppTypography.bodySmall.copyWith(
+            fontSize: 12,
+            color: dark ? Colors.white : AppColors.textPrimary,
+          ),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: AppTypography.bodySmall.copyWith(
+              fontSize: 12,
+              color: dark ? Colors.white24 : AppColors.textSecondary,
+            ),
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(bottom: 54),
+              child: Icon(icon,
+                  size: 16,
+                  color: dark ? Colors.white24 : AppColors.textSecondary),
+            ),
+            filled: true,
+            fillColor: dark
+                ? Colors.white.withValues(alpha: .04)
+                : AppColors.neutral50,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: borderColor),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: borderColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide:
+                  const BorderSide(color: AppColors.primary, width: 1.5),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -1061,7 +1150,7 @@ class _GateTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: value
             ? AppColors.success.withValues(alpha: .08)
@@ -1070,15 +1159,17 @@ class _GateTile extends StatelessWidget {
                 : AppColors.neutral50),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         child: SwitchListTile.adaptive(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           value: value,
           onChanged: onChanged,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
           title: Text(title,
-              style: AppTypography.bodyMedium
-                  .copyWith(fontWeight: FontWeight.w600)),
+              style: AppTypography.bodySmall
+                  .copyWith(fontSize: 12, fontWeight: FontWeight.w600)),
           subtitle: Text(subtitle,
               style: AppTypography.bodySmall.copyWith(
+                  fontSize: 11,
                   color: dark ? Colors.white70 : AppColors.textSecondary)),
           secondary: Icon(
               value ? Icons.check_circle_outline : Icons.radio_button_unchecked,
@@ -1102,7 +1193,12 @@ class _SummaryCell extends StatelessWidget {
       decoration: BoxDecoration(
           color:
               dark ? Colors.white.withValues(alpha: .04) : AppColors.neutral50,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: dark
+                ? Colors.white.withValues(alpha: .06)
+                : Colors.black.withValues(alpha: .06),
+          )),
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
