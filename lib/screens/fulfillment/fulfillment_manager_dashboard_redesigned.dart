@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -27,70 +28,16 @@ class _FulfillmentManagerDashboardRedesignedState
   WeatherInfo? _weatherInfo;
   bool _isLoading = true;
   String? _errorMessage;
-  int _pendingHarvest = 0;
+  int _pendingProductionCount = 0;
+  int _pendingIntake = 0;
   double _receivedTodayKg = 0;
   double _yieldLossKg = 0;
   double _materialCoverage = 0;
+  List<Map<String, dynamic>> _pendingProductionBatches = [];
 
-  List<Map<String, dynamic>> _pipeline = [
-    {
-      'title': 'Harvest Intake',
-      'subtitle': '7 loads pending dock confirmation',
-      'metric': '826 kg',
-      'status': '3 urgent',
-      'route': '/fulfillment-confirm',
-      'icon': Icons.fact_check_outlined,
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'Packaging Lines',
-      'subtitle': '3 active lines moving confirmed loads',
-      'metric': '526/hr',
-      'status': '1 watch',
-      'route': '/fulfillment-packaging',
-      'icon': Icons.precision_manufacturing_outlined,
-      'color': AppColors.success,
-    },
-    {
-      'title': 'Yield Control',
-      'subtitle': 'Recovery and waste under daily target',
-      'metric': '3.5%',
-      'status': '2 reviews',
-      'route': '/fulfillment-yield',
-      'icon': Icons.analytics_outlined,
-      'color': AppColors.primary,
-    },
-    {
-      'title': 'Materials',
-      'subtitle': 'Barcode labels below safe coverage',
-      'metric': '1 risk',
-      'status': 'Action',
-      'route': '/fulfillment-materials',
-      'icon': Icons.inventory_2_outlined,
-      'color': AppColors.error,
-    },
-  ];
+  List<Map<String, dynamic>> _pipeline = [];
 
-  List<Map<String, dynamic>> _activity = [
-    {
-      'title': 'LTC-24019 moved to packaging',
-      'subtitle': 'Dock 02 confirmed 420 kg romaine lettuce',
-      'time': '12 min ago',
-      'color': AppColors.success,
-    },
-    {
-      'title': 'Line B requires attention',
-      'subtitle': 'Clamshell labels are close to reorder threshold',
-      'time': '24 min ago',
-      'color': AppColors.warning,
-    },
-    {
-      'title': 'Yield exception created',
-      'subtitle': 'Sweet Basil handling loss is above target',
-      'time': '41 min ago',
-      'color': AppColors.error,
-    },
-  ];
+  List<Map<String, dynamic>> _activity = [];
 
   @override
   void initState() {
@@ -102,6 +49,7 @@ class _FulfillmentManagerDashboardRedesignedState
     try {
       final snapshot = await FulfillmentDataService().load();
       final fulfillments = snapshot.fulfillments;
+      final pendingProduction = _buildPendingProduction(snapshot.batches);
       final inventory = snapshot.inventory;
       final today = DateTime.now();
       double receivedToday = 0;
@@ -127,18 +75,21 @@ class _FulfillmentManagerDashboardRedesignedState
         final reorder = _number(item['reorder_level'] ?? item['minimum_stock']);
         return quantity <= reorder;
       }).length;
+      final pendingIntake = fulfillments.where((item) {
+        final status = item['status']?.toString().trim().toLowerCase();
+        return status == 'received' || status == 'pending';
+      }).length;
       if (!mounted) return;
       setState(() {
-        _pendingHarvest = fulfillments.where((item) {
-          final status = item['status']?.toString().toLowerCase();
-          return status == 'received' || status == 'pending';
-        }).length;
+        _pendingProductionBatches = pendingProduction;
+        _pendingProductionCount = pendingProduction.length;
+        _pendingIntake = pendingIntake;
         _receivedTodayKg = receivedToday;
         _yieldLossKg = wasteToday;
         _materialCoverage = inventory.isEmpty
             ? 0
             : ((tracked - lowStock) / inventory.length * 100).clamp(0, 100);
-        _pipeline = _buildPipeline(fulfillments, inventory);
+        _pipeline = _buildPipeline(fulfillments, inventory, pendingIntake);
         _activity = _buildActivity(fulfillments);
         _isLoading = false;
       });
@@ -157,9 +108,103 @@ class _FulfillmentManagerDashboardRedesignedState
     return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 
+  static String _value(
+    Map<String, dynamic> item,
+    List<String> keys, {
+    String fallback = '',
+  }) {
+    for (final key in keys) {
+      final value = item[key]?.toString().trim() ?? '';
+      if (value.isNotEmpty && value.toLowerCase() != 'null') return value;
+    }
+    return fallback;
+  }
+
+  static DateTime? _date(dynamic value) {
+    final parsed = DateTime.tryParse(value?.toString() ?? '');
+    return parsed == null
+        ? null
+        : DateTime(parsed.year, parsed.month, parsed.day);
+  }
+
+  List<Map<String, dynamic>> _buildPendingProduction(
+    List<Map<String, dynamic>> batches,
+  ) {
+    const terminalStatuses = {
+      'harvested',
+      'delivered',
+      'completed',
+      'cancelled',
+      'canceled',
+    };
+    final today = DateTime.now();
+    final currentDate = DateTime(today.year, today.month, today.day);
+
+    final pending = batches.where((batch) {
+      final status = _value(
+        batch,
+        ['production_status', 'status'],
+        fallback: 'Planted',
+      ).toLowerCase();
+      return !terminalStatuses.contains(status);
+    }).map((batch) {
+      final item = Map<String, dynamic>.from(batch);
+      final endDate = _date(batch['end_date']);
+      final daysToHarvest = endDate?.difference(currentDate).inDays;
+      final harvested = _number(batch['total_harvested']);
+      final transplanted = _number(batch['total_transplanted']);
+      final rawStatus = _value(
+        batch,
+        ['production_status', 'status'],
+        fallback: 'Planted',
+      );
+
+      item['_current_state'] =
+          harvested > 0 && (transplanted <= 0 || harvested < transplanted)
+              ? 'Partially harvested'
+              : _titleCase(rawStatus);
+      item['_end_date'] = endDate;
+      item['_days_to_harvest'] = daysToHarvest;
+      item['_urgency'] = daysToHarvest == null
+          ? 4
+          : daysToHarvest < 0
+              ? 0
+              : daysToHarvest <= 7
+                  ? 1
+                  : rawStatus.toLowerCase() == 'growing'
+                      ? 2
+                      : 3;
+      return item;
+    }).toList();
+
+    pending.sort((a, b) {
+      final urgency = (a['_urgency'] as int).compareTo(b['_urgency'] as int);
+      if (urgency != 0) return urgency;
+      final aDate = a['_end_date'] as DateTime?;
+      final bDate = b['_end_date'] as DateTime?;
+      if (aDate == null && bDate == null) return 0;
+      if (aDate == null) return 1;
+      if (bDate == null) return -1;
+      return aDate.compareTo(bDate);
+    });
+    return pending;
+  }
+
+  static String _titleCase(String value) {
+    final normalized = value.trim().replaceAll('_', ' ');
+    if (normalized.isEmpty) return 'Planted';
+    return normalized
+        .split(RegExp(r'\s+'))
+        .map((word) => word.isEmpty
+            ? word
+            : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}')
+        .join(' ');
+  }
+
   List<Map<String, dynamic>> _buildPipeline(
     List<Map<String, dynamic>> fulfillments,
     List<Map<String, dynamic>> inventory,
+    int pendingIntake,
   ) {
     final packaging = fulfillments.where((item) {
       final status = item['status']?.toString().toLowerCase();
@@ -180,8 +225,8 @@ class _FulfillmentManagerDashboardRedesignedState
       {
         ..._pipelineTemplate('Harvest Intake', Icons.fact_check_outlined,
             AppColors.warning, '/fulfillment-confirm'),
-        'subtitle': '$_pendingHarvest loads awaiting confirmation',
-        'metric': '$_pendingHarvest loads'
+        'subtitle': '$pendingIntake loads awaiting confirmation',
+        'metric': '$pendingIntake loads'
       },
       {
         ..._pipelineTemplate(
@@ -366,9 +411,9 @@ class _FulfillmentManagerDashboardRedesignedState
           runSpacing: AppSpacing.md,
           children: [
             _FulfillmentKpi(
-              title: 'Pending harvest',
-              value: '$_pendingHarvest',
-              subtitle: 'Loads waiting',
+              title: 'Pending production',
+              value: '$_pendingProductionCount',
+              subtitle: 'Batches awaiting harvest',
               icon: Icons.pending_actions_outlined,
               color: AppColors.warning,
             ),
@@ -395,6 +440,8 @@ class _FulfillmentManagerDashboardRedesignedState
             ),
           ],
         ),
+        const SizedBox(height: AppSpacing.xl),
+        _buildPendingProductionPanel(),
         const SizedBox(height: AppSpacing.xl),
         _buildMainGrid(isDark),
       ],
@@ -469,7 +516,7 @@ class _FulfillmentManagerDashboardRedesignedState
             runSpacing: AppSpacing.sm,
             children: [
               _HeroChip(
-                  label: '$_pendingHarvest pending intake',
+                  label: '$_pendingProductionCount awaiting harvest',
                   icon: Icons.warehouse_outlined),
               _HeroChip(
                   label: '${_activity.length} recent records',
@@ -523,6 +570,38 @@ class _FulfillmentManagerDashboardRedesignedState
     );
   }
 
+  Widget _buildPendingProductionPanel() {
+    return _DashboardPanel(
+      title: 'Production Awaiting Harvest',
+      subtitle:
+          'Live farm batches ordered by harvest urgency and current state.',
+      icon: Icons.agriculture_outlined,
+      color: AppColors.warning,
+      child: _pendingProductionBatches.isEmpty
+          ? const _ProductionEmptyState()
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 760 ? 2 : 1;
+                final cardWidth = columns == 2
+                    ? (constraints.maxWidth - AppSpacing.md) / 2
+                    : constraints.maxWidth;
+                return Wrap(
+                  spacing: AppSpacing.md,
+                  runSpacing: AppSpacing.md,
+                  children: _pendingProductionBatches
+                      .map(
+                        (batch) => SizedBox(
+                          width: cardWidth,
+                          child: _ProductionBatchCard(batch: batch),
+                        ),
+                      )
+                      .toList(),
+                );
+              },
+            ),
+    );
+  }
+
   Widget _buildPipelinePanel() {
     return _DashboardPanel(
       title: 'Fulfillment Pipeline',
@@ -546,7 +625,7 @@ class _FulfillmentManagerDashboardRedesignedState
         children: [
           _ActionTile(
             title: 'Confirm harvest intake',
-            subtitle: 'Review $_pendingHarvest pending loads',
+            subtitle: 'Review $_pendingIntake pending loads',
             icon: Icons.fact_check_outlined,
             color: AppColors.warning,
             route: '/fulfillment-confirm',
@@ -582,6 +661,337 @@ class _FulfillmentManagerDashboardRedesignedState
         children: _activity
             .map((activity) => _ActivityRow(activity: activity))
             .toList(),
+      ),
+    );
+  }
+}
+
+class _ProductionBatchCard extends StatelessWidget {
+  const _ProductionBatchCard({required this.batch});
+
+  final Map<String, dynamic> batch;
+
+  String _value(List<String> keys, {String fallback = ''}) {
+    for (final key in keys) {
+      final value = batch[key]?.toString().trim() ?? '';
+      if (value.isNotEmpty && value.toLowerCase() != 'null') return value;
+    }
+    return fallback;
+  }
+
+  String _quantity(dynamic value) {
+    final number = double.tryParse(value?.toString() ?? '') ?? 0;
+    return number == number.roundToDouble()
+        ? number.toInt().toString()
+        : number.toStringAsFixed(1);
+  }
+
+  Color _stateColor(String state) {
+    final normalized = state.toLowerCase();
+    if (normalized.contains('partial')) return AppColors.warning;
+    if (normalized.contains('growing')) return AppColors.success;
+    return AppColors.info;
+  }
+
+  String _scheduleLabel(int? days) {
+    if (days == null) return 'Date not set';
+    if (days < 0) {
+      final overdue = days.abs();
+      return '$overdue day${overdue == 1 ? '' : 's'} overdue';
+    }
+    if (days == 0) return 'Due today';
+    return 'Due in $days day${days == 1 ? '' : 's'}';
+  }
+
+  Color _scheduleColor(int? days) {
+    if (days == null) return AppColors.neutral600;
+    if (days < 0) return AppColors.error;
+    if (days <= 7) return AppColors.warning;
+    return AppColors.success;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final state = batch['_current_state']?.toString() ?? 'Planted';
+    final stateColor = _stateColor(state);
+    final endDate = batch['_end_date'] as DateTime?;
+    final days = batch['_days_to_harvest'] as int?;
+    final scheduleColor = _scheduleColor(days);
+    final batchNumber = _value(
+      ['batch_no', 'batch_number', 'batch_id', r'$id'],
+      fallback: 'Unnumbered batch',
+    );
+    final crop = _value(
+      ['plant_name', 'plant_type', 'crop_name'],
+      fallback: 'Crop not recorded',
+    );
+    final variety = _value(
+      ['plant_variety', 'variety_name', 'crop_variety'],
+    );
+    final issue = _value(['technical_issues', 'issue_notes']);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppColors.neutral200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _IconBox(icon: Icons.grass_outlined, color: stateColor),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      batchNumber,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyLarge.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      variety.isEmpty ? crop : '$crop | $variety',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall.copyWith(
+                        color:
+                            isDark ? Colors.white70 : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _StatusBadge(label: state, color: stateColor),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Icon(
+                Icons.agriculture_outlined,
+                size: 17,
+                color: isDark ? Colors.white60 : AppColors.textSecondary,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  _value(['farm_name'], fallback: 'Farm not assigned'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white70 : AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: scheduleColor.withOpacity(isDark ? 0.14 : 0.08),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.event_outlined, size: 18, color: scheduleColor),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Expected harvest',
+                        style: AppTypography.caption.copyWith(
+                          color:
+                              isDark ? Colors.white60 : AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        endDate == null
+                            ? 'Not scheduled'
+                            : DateFormat('dd MMM yyyy').format(endDate),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _StatusBadge(
+                  label: _scheduleLabel(days),
+                  color: scheduleColor,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: _ProductionMetric(
+                  label: 'Nursed',
+                  value: _quantity(batch['total_seeds_nursed']),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: _ProductionMetric(
+                  label: 'Transplanted',
+                  value: _quantity(batch['total_transplanted']),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: _ProductionMetric(
+                  label: 'Harvested',
+                  value: _quantity(batch['total_harvested']),
+                ),
+              ),
+            ],
+          ),
+          if (issue.isNotEmpty && issue.toLowerCase() != 'none') ...[
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(isDark ? 0.14 : 0.07),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.report_problem_outlined,
+                    size: 17,
+                    color: AppColors.error,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      issue,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.caption.copyWith(
+                        color: isDark ? Colors.white70 : AppColors.error,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductionMetric extends StatelessWidget {
+  const _ProductionMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.03) : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppColors.neutral200,
+        ),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.caption.copyWith(
+              color: isDark ? Colors.white60 : AppColors.textSecondary,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProductionEmptyState extends StatelessWidget {
+  const _ProductionEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.task_alt_outlined,
+            color: AppColors.success,
+            size: 30,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'No batches are awaiting harvest',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'New planted or growing batches will appear here automatically.',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? Colors.white60 : AppColors.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }
