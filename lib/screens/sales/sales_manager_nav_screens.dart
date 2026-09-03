@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/skeleton_loader.dart';
 import '../../core/widgets/sales_manager_screen_shell.dart';
 import '../../core/widgets/sales_personnel_screen_shell.dart';
 import '../../providers/auth_provider.dart';
@@ -1366,14 +1367,1624 @@ class SalesPerformanceScreen extends StatelessWidget {
       );
 }
 
-class SalesDeliveriesScreen extends StatelessWidget {
+class SalesDeliveriesScreen extends ConsumerStatefulWidget {
   const SalesDeliveriesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => const _SalesManagerDataPage(
-        kind: _SalesManagerPageKind.deliveries,
-        selectedIndex: 3,
+  ConsumerState<SalesDeliveriesScreen> createState() =>
+      _SalesDeliveriesScreenState();
+}
+
+class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
+  final _api = SuperAdminApiService();
+  List<Map<String, dynamic>> _sales = const [];
+  List<Map<String, dynamic>> _offTakers = const [];
+  List<Map<String, dynamic>> _fulfillments = const [];
+  bool _loading = true;
+  String? _error;
+  String _search = '';
+  String _status = 'All';
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  String _text(Map<String, dynamic> item, List<String> keys,
+      {String fallback = ''}) {
+    for (final key in keys) {
+      final value = item[key]?.toString().trim() ?? '';
+      if (value.isNotEmpty && value != 'null') return value;
+    }
+    return fallback;
+  }
+
+  double _number(Map<String, dynamic> item, List<String> keys) =>
+      double.tryParse(_text(item, keys).replaceAll(',', '')) ?? 0;
+
+  int _packs(Map<String, dynamic> item, List<String> keys) =>
+      _number(item, keys).round().clamp(0, 1 << 31);
+
+  String _id(Map<String, dynamic> item) =>
+      _text(item, [r'$id', 'id', 'fulfillment_id']);
+
+  String _batch(Map<String, dynamic> item) =>
+      _text(item, ['batch_number', 'batch_id']);
+
+  bool _matchesBatch(
+    Map<String, dynamic> sale,
+    Map<String, dynamic> fulfillment,
+  ) {
+    final saleFulfillment = _text(sale, ['fulfillment_id']).toLowerCase();
+    if (saleFulfillment.isNotEmpty &&
+        saleFulfillment == _id(fulfillment).toLowerCase()) {
+      return true;
+    }
+    return _batch(sale).toLowerCase() == _batch(fulfillment).toLowerCase();
+  }
+
+  int _allocatedPacks(Map<String, dynamic> fulfillment,
+      {String excludeSaleId = ''}) {
+    return _sales.where((sale) {
+      if (_id(sale) == excludeSaleId) return false;
+      if (_text(sale, ['status']).toLowerCase() == 'cancelled') return false;
+      return _matchesBatch(sale, fulfillment);
+    }).fold<int>(
+      0,
+      (sum, sale) => sum + _packs(sale, ['package_count']),
+    );
+  }
+
+  int _totalPacks(Map<String, dynamic> fulfillment) {
+    final recorded = _packs(fulfillment, ['total_package_count']);
+    if (recorded > 0) return recorded;
+    final unit = _number(fulfillment, ['packaging_weight']);
+    return unit <= 0
+        ? 0
+        : (_number(fulfillment, ['total_packaged_weight']) / unit).round();
+  }
+
+  int _availablePacks(Map<String, dynamic> fulfillment) =>
+      (_totalPacks(fulfillment) - _allocatedPacks(fulfillment))
+          .clamp(0, 1 << 31);
+
+  List<Map<String, dynamic>> get _releasedBatches {
+    final batches = _fulfillments.where((item) {
+      return _text(item, ['status']).toLowerCase() == 'sent to sales' &&
+          _text(item, ['quality_status']).toLowerCase() == 'approved';
+    }).toList();
+    batches.sort((a, b) => _batch(a).compareTo(_batch(b)));
+    return batches;
+  }
+
+  List<Map<String, dynamic>> get _activeOffTakers => _offTakers
+      .where((item) =>
+          _text(item, ['status'], fallback: 'Active').toLowerCase() == 'active')
+      .toList();
+
+  List<Map<String, dynamic>> get _filteredSales {
+    final query = _search.trim().toLowerCase();
+    final records = _sales.where((sale) {
+      final statusMatches = _status == 'All' ||
+          _text(sale, ['status'], fallback: 'Pending') == _status;
+      final queryMatches = query.isEmpty ||
+          [
+            _batch(sale),
+            _text(sale, ['buyer_name']),
+            _text(sale, ['crop_variety']),
+            _text(sale, ['package_type']),
+          ].any((value) => value.toLowerCase().contains(query));
+      return statusMatches && queryMatches;
+    }).toList();
+    records.sort((a, b) => _deliveryDate(b).compareTo(_deliveryDate(a)));
+    return records;
+  }
+
+  DateTime _deliveryDate(Map<String, dynamic> item) =>
+      DateTime.tryParse(
+          _text(item, ['scheduled_for', 'delivered_at', r'$createdAt'])) ??
+      DateTime.fromMillisecondsSinceEpoch(0);
+
+  String _dateLabel(Map<String, dynamic> item) {
+    final date = _deliveryDate(item).toLocal();
+    if (date.year == 1970) return 'Not scheduled';
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  Future<void> _load() async {
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
+    try {
+      final result = await Future.wait<List<Map<String, dynamic>>>([
+        _api.getSales(),
+        _api.getOffTakers(),
+        _api.getFulfillments(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _sales = result[0];
+        _offTakers = result[1];
+        _fulfillments = result[2];
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = error.toString();
+      });
+    }
+  }
+
+  Future<void> _openEditor({
+    Map<String, dynamic>? fulfillment,
+    Map<String, dynamic>? sale,
+  }) async {
+    final modal = _SalesDeliveryEditor(
+      api: _api,
+      batches: _releasedBatches,
+      offTakers: _activeOffTakers,
+      sales: _sales,
+      initialFulfillment: fulfillment,
+      sale: sale,
+      currentUserId: ref.read(authProvider).user?.id ?? 'sales-manager',
+      currentUserName: ref.read(authProvider).user?.name ?? 'Sales Manager',
+    );
+    final mobile = MediaQuery.sizeOf(context).width < 600;
+    final changed = mobile
+        ? await showModalBottomSheet<bool>(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => modal,
+          )
+        : await showDialog<bool>(context: context, builder: (_) => modal);
+    if (changed == true) await _load();
+  }
+
+  Future<void> _delete(Map<String, dynamic> sale) async {
+    var deleting = false;
+    String? modalError;
+    final mobile = MediaQuery.sizeOf(context).width < 600;
+    final content = StatefulBuilder(builder: (dialogContext, setModalState) {
+      return Material(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.surfaceDark
+            : Colors.white,
+        borderRadius: BorderRadius.vertical(
+          top: const Radius.circular(20),
+          bottom: Radius.circular(mobile ? 0 : 20),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.error.withValues(alpha: .1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.delete_outline,
+                        color: AppColors.error),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text('Delete Delivery',
+                        style: AppTypography.titleMedium),
+                  ),
+                  IconButton(
+                    onPressed:
+                        deleting ? null : () => Navigator.pop(dialogContext),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ]),
+                const SizedBox(height: 16),
+                Text(
+                  'Delete the ${_batch(sale)} allocation for ${_text(sale, [
+                        'buyer_name'
+                      ], fallback: 'this off-taker')}? The allocated packs will become available again.',
+                  style: AppTypography.bodyMedium,
+                ),
+                if (modalError != null) ...[
+                  const SizedBox(height: 12),
+                  _SalesDeliveryError(message: modalError!),
+                ],
+                const SizedBox(height: 24),
+                Row(children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          deleting ? null : () => Navigator.pop(dialogContext),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: deleting
+                          ? null
+                          : () async {
+                              setModalState(() => deleting = true);
+                              try {
+                                await _api.deleteSale(_id(sale));
+                                if (dialogContext.mounted) {
+                                  Navigator.pop(dialogContext, true);
+                                }
+                              } catch (error) {
+                                setModalState(() {
+                                  deleting = false;
+                                  modalError = error.toString();
+                                });
+                              }
+                            },
+                      style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.error),
+                      icon: deleting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.delete_outline, size: 18),
+                      label: Text(deleting ? 'Deleting...' : 'Delete'),
+                    ),
+                  ),
+                ]),
+              ],
+            ),
+          ),
+        ),
       );
+    });
+    final changed = mobile
+        ? await showModalBottomSheet<bool>(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => content,
+          )
+        : await showDialog<bool>(
+            context: context,
+            builder: (_) => Dialog(
+              backgroundColor: Colors.transparent,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: content,
+              ),
+            ),
+          );
+    if (changed == true) await _load();
+  }
+
+  Widget _responsiveCards(
+    List<Widget> cards, {
+    double desktopWidth = 340,
+  }) {
+    return LayoutBuilder(builder: (_, constraints) {
+      final width = constraints.maxWidth < 600
+          ? constraints.maxWidth
+          : constraints.maxWidth < 1000
+              ? (constraints.maxWidth - AppSpacing.md) / 2
+              : desktopWidth;
+      return Wrap(
+        spacing: AppSpacing.md,
+        runSpacing: AppSpacing.md,
+        children:
+            cards.map((card) => SizedBox(width: width, child: card)).toList(),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final pending = _sales
+        .where(
+            (item) => _text(item, ['status'], fallback: 'Pending') == 'Pending')
+        .length;
+    final delivered =
+        _sales.where((item) => _text(item, ['status']) == 'Delivered').length;
+    final availablePacks = _releasedBatches.fold<int>(
+      0,
+      (sum, item) => sum + _availablePacks(item),
+    );
+
+    return SalesManagerScreenShell(
+      selectedIndex: 3,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SalesDeliveryHero(onCreate: () => _openEditor()),
+          const SizedBox(height: AppSpacing.lg),
+          if (_loading)
+            const AdminDataSkeleton(rowCount: 5)
+          else if (_error != null)
+            _SalesDeliveryLoadError(message: _error!, onRetry: _load)
+          else ...[
+            Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+              children: [
+                _KpiCard(
+                  data: _KpiData(
+                      'Available packs',
+                      '$availablePacks',
+                      '${_releasedBatches.length} QA-approved batches',
+                      Icons.inventory_2_outlined,
+                      AppColors.primary),
+                ),
+                _KpiCard(
+                  data: _KpiData(
+                      'Scheduled',
+                      '$pending',
+                      'Awaiting delivery completion',
+                      Icons.schedule_outlined,
+                      AppColors.warning),
+                ),
+                _KpiCard(
+                  data: _KpiData(
+                      'Delivered',
+                      '$delivered',
+                      '${_sales.length} total delivery records',
+                      Icons.task_alt_outlined,
+                      AppColors.success),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            _SalesSectionHeader(
+              icon: Icons.verified_outlined,
+              title: 'QA-Approved Batch Inventory',
+              subtitle: 'Allocate available packs to an active off-taker.',
+              trailing: Text('$availablePacks packs available',
+                  style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primary, fontWeight: FontWeight.w600)),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            if (_releasedBatches.isEmpty)
+              const _SalesDeliveryEmpty(
+                icon: Icons.inventory_2_outlined,
+                title: 'No batches released by QA',
+                message:
+                    'Approved packaging batches will appear here automatically.',
+              )
+            else
+              _responsiveCards(
+                _releasedBatches
+                    .map((batch) => _SalesBatchAllocationCard(
+                          batch: batch,
+                          totalPacks: _totalPacks(batch),
+                          allocatedPacks: _allocatedPacks(batch),
+                          availablePacks: _availablePacks(batch),
+                          onAllocate: _availablePacks(batch) > 0
+                              ? () => _openEditor(fulfillment: batch)
+                              : null,
+                        ))
+                    .toList(),
+              ),
+            const SizedBox(height: AppSpacing.xl),
+            _SalesSectionHeader(
+              icon: Icons.local_shipping_outlined,
+              title: 'Delivery Records',
+              subtitle: 'Track allocations, payment state, and completion.',
+              trailing: IconButton(
+                tooltip: 'Refresh deliveries',
+                onPressed: _load,
+                icon: const Icon(Icons.refresh_rounded),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            LayoutBuilder(builder: (_, constraints) {
+              final filters = ['All', 'Pending', 'Delivered', 'Cancelled'];
+              return Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  SizedBox(
+                    width:
+                        constraints.maxWidth < 600 ? constraints.maxWidth : 320,
+                    child: TextField(
+                      onChanged: (value) => setState(() => _search = value),
+                      decoration: InputDecoration(
+                        hintText: 'Search batch, off-taker or crop...',
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        filled: true,
+                        fillColor: dark
+                            ? Colors.white.withValues(alpha: .04)
+                            : Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                              color:
+                                  dark ? Colors.white10 : AppColors.neutral200),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                              color:
+                                  dark ? Colors.white10 : AppColors.neutral200),
+                        ),
+                      ),
+                    ),
+                  ),
+                  ...filters.map((filter) => ChoiceChip(
+                        label: Text(filter),
+                        selected: _status == filter,
+                        onSelected: (_) => setState(() => _status = filter),
+                      )),
+                ],
+              );
+            }),
+            const SizedBox(height: AppSpacing.md),
+            if (_filteredSales.isEmpty)
+              const _SalesDeliveryEmpty(
+                icon: Icons.local_shipping_outlined,
+                title: 'No delivery records found',
+                message: 'Allocate a QA-approved batch to create a delivery.',
+              )
+            else
+              _responsiveCards(
+                _filteredSales
+                    .map((sale) => _SalesDeliveryRecordCard(
+                          sale: sale,
+                          dateLabel: _dateLabel(sale),
+                          onEdit: () => _openEditor(sale: sale),
+                          onDelete: () => _delete(sale),
+                        ))
+                    .toList(),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SalesDeliveryHero extends StatelessWidget {
+  const _SalesDeliveryHero({required this.onCreate});
+
+  final VoidCallback onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    final mobile = MediaQuery.sizeOf(context).width < 600;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(mobile ? AppSpacing.md : AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF334155), Color(0xFF1D4ED8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      ),
+      child: mobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _icon(),
+                const SizedBox(height: 14),
+                _copy(),
+                const SizedBox(height: 18),
+                _action(),
+              ],
+            )
+          : Row(
+              children: [
+                _icon(),
+                const SizedBox(width: 16),
+                Expanded(child: _copy()),
+                const SizedBox(width: 20),
+                _action(),
+              ],
+            ),
+    );
+  }
+
+  Widget _icon() => Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: .14),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.local_shipping_outlined,
+            color: Colors.white, size: 26),
+      );
+
+  Widget _copy() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Sales Delivery Control',
+              style: AppTypography.h4.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              )),
+          const SizedBox(height: 5),
+          Text(
+            'Allocate QA-approved packs to off-takers and control every delivery through completion.',
+            style: AppTypography.bodyMedium.copyWith(
+              color: Colors.white.withValues(alpha: .76),
+            ),
+          ),
+        ],
+      );
+
+  Widget _action() => FilledButton.icon(
+        onPressed: onCreate,
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF1D4ED8),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        icon: const Icon(Icons.add_circle_outline, size: 19),
+        label: const Text('Allocate Delivery'),
+      );
+}
+
+class _SalesSectionHeader extends StatelessWidget {
+  const _SalesSectionHeader({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final iconTile = Container(
+      padding: const EdgeInsets.all(9),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: .1),
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Icon(icon, color: AppColors.primary, size: 19),
+    );
+    final copy = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title,
+            style: AppTypography.titleMedium.copyWith(
+              color: dark ? Colors.white : AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            )),
+        Text(subtitle,
+            style: AppTypography.bodySmall.copyWith(
+              color: dark ? Colors.white60 : AppColors.textSecondary,
+            )),
+      ],
+    );
+    return LayoutBuilder(builder: (_, constraints) {
+      if (constraints.maxWidth < 480) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              iconTile,
+              const SizedBox(width: 11),
+              Expanded(child: copy),
+            ]),
+            const SizedBox(height: 8),
+            Align(alignment: Alignment.centerRight, child: trailing),
+          ],
+        );
+      }
+      return Row(children: [
+        iconTile,
+        const SizedBox(width: 11),
+        Expanded(child: copy),
+        const SizedBox(width: 10),
+        trailing,
+      ]);
+    });
+  }
+}
+
+class _SalesDeliveryMetric extends StatelessWidget {
+  const _SalesDeliveryMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodySmall.copyWith(
+              fontSize: 11,
+              color: dark ? Colors.white54 : AppColors.textSecondary,
+            )),
+        const SizedBox(height: 3),
+        Text(value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodySmall.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            )),
+      ],
+    );
+  }
+}
+
+class _SalesBatchAllocationCard extends StatelessWidget {
+  const _SalesBatchAllocationCard({
+    required this.batch,
+    required this.totalPacks,
+    required this.allocatedPacks,
+    required this.availablePacks,
+    required this.onAllocate,
+  });
+
+  final Map<String, dynamic> batch;
+  final int totalPacks;
+  final int allocatedPacks;
+  final int availablePacks;
+  final VoidCallback? onAllocate;
+
+  String _value(List<String> keys, [String fallback = 'Not set']) {
+    for (final key in keys) {
+      final value = batch[key]?.toString().trim() ?? '';
+      if (value.isNotEmpty && value != 'null') return value;
+    }
+    return fallback;
+  }
+
+  double _number(String key) => double.tryParse('${batch[key] ?? 0}') ?? 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final unitWeight = _number('packaging_weight');
+    final progress = totalPacks == 0 ? 0.0 : allocatedPacks / totalPacks;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: dark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: availablePacks > 0
+              ? AppColors.primary.withValues(alpha: .18)
+              : (dark ? Colors.white10 : AppColors.neutral200),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            _IconBox(icon: Icons.qr_code_2_rounded, color: AppColors.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_value(['batch_number']),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyMedium
+                          .copyWith(fontWeight: FontWeight.w600)),
+                  Text(
+                    '${_value(['plant_variety', 'plant_type'])} | ${_value([
+                          'farm_name'
+                        ], 'Farm')}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(
+                        color: dark ? Colors.white60 : AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            _StatusBadge(
+              label: availablePacks > 0 ? 'Available' : 'Allocated',
+              color: availablePacks > 0
+                  ? AppColors.success
+                  : AppColors.textSecondary,
+            ),
+          ]),
+          const SizedBox(height: AppSpacing.md),
+          Row(children: [
+            Expanded(
+                child: _SalesDeliveryMetric(
+                    label: 'Available', value: '$availablePacks packs')),
+            Expanded(
+                child: _SalesDeliveryMetric(
+                    label: 'Weight',
+                    value:
+                        '${(availablePacks * unitWeight).toStringAsFixed(2)} kg')),
+            Expanded(
+                child: _SalesDeliveryMetric(
+                    label: 'Package', value: _value(['packaging_type']))),
+          ]),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              minHeight: 6,
+              value: progress.clamp(0, 1),
+              backgroundColor: dark ? Colors.white10 : AppColors.neutral200,
+              color: availablePacks > 0 ? AppColors.primary : AppColors.success,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: onAllocate,
+              icon: Icon(
+                  onAllocate == null
+                      ? Icons.check_circle_outline
+                      : Icons.local_shipping_outlined,
+                  size: 18),
+              label: Text(onAllocate == null
+                  ? 'No packs available'
+                  : 'Allocate to Off-taker'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SalesDeliveryRecordCard extends StatelessWidget {
+  const _SalesDeliveryRecordCard({
+    required this.sale,
+    required this.dateLabel,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final Map<String, dynamic> sale;
+  final String dateLabel;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  String _value(List<String> keys, [String fallback = 'Not set']) {
+    for (final key in keys) {
+      final value = sale[key]?.toString().trim() ?? '';
+      if (value.isNotEmpty && value != 'null') return value;
+    }
+    return fallback;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final status = _value(['status'], 'Pending');
+    final color = status == 'Delivered'
+        ? AppColors.success
+        : status == 'Cancelled'
+            ? AppColors.error
+            : AppColors.warning;
+    final weight = double.tryParse(_value(['quantity_delivered'], '0')) ?? 0;
+    final amount = double.tryParse(_value(['total_amount'], '0')) ?? 0;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onEdit,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: Ink(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: dark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: color.withValues(alpha: .18)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                _IconBox(icon: Icons.local_shipping_outlined, color: color),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_value(['buyer_name'], 'Off-taker'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodyMedium
+                              .copyWith(fontWeight: FontWeight.w600)),
+                      Text(
+                          '${_value([
+                                'batch_number',
+                                'batch_id'
+                              ])} | $dateLabel',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodySmall.copyWith(
+                              color: dark
+                                  ? Colors.white60
+                                  : AppColors.textSecondary)),
+                    ],
+                  ),
+                ),
+                _StatusBadge(label: status, color: color),
+              ]),
+              const SizedBox(height: AppSpacing.md),
+              Row(children: [
+                Expanded(
+                    child: _SalesDeliveryMetric(
+                        label: 'Packs', value: _value(['package_count'], '0'))),
+                Expanded(
+                    child: _SalesDeliveryMetric(
+                        label: 'Weight',
+                        value: '${weight.toStringAsFixed(2)} kg')),
+                Expanded(
+                    child: _SalesDeliveryMetric(
+                        label: 'Amount',
+                        value: 'GHS ${amount.toStringAsFixed(2)}')),
+              ]),
+              const SizedBox(height: AppSpacing.md),
+              Row(children: [
+                Expanded(
+                  child: Text(
+                    '${_value(['crop_variety'], 'Crop')} | ${_value([
+                          'package_type'
+                        ], 'Package')}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(
+                        color: dark ? Colors.white60 : AppColors.textSecondary),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Edit delivery',
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined, size: 19),
+                ),
+                IconButton(
+                  tooltip: 'Delete delivery',
+                  onPressed: onDelete,
+                  color: AppColors.error,
+                  icon: const Icon(Icons.delete_outline, size: 19),
+                ),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SalesDeliveryEditor extends StatefulWidget {
+  const _SalesDeliveryEditor({
+    required this.api,
+    required this.batches,
+    required this.offTakers,
+    required this.sales,
+    required this.currentUserId,
+    required this.currentUserName,
+    this.initialFulfillment,
+    this.sale,
+  });
+
+  final SuperAdminApiService api;
+  final List<Map<String, dynamic>> batches;
+  final List<Map<String, dynamic>> offTakers;
+  final List<Map<String, dynamic>> sales;
+  final String currentUserId;
+  final String currentUserName;
+  final Map<String, dynamic>? initialFulfillment;
+  final Map<String, dynamic>? sale;
+
+  @override
+  State<_SalesDeliveryEditor> createState() => _SalesDeliveryEditorState();
+}
+
+class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _packsController;
+  late final TextEditingController _amountController;
+  late final TextEditingController _addressController;
+  late final TextEditingController _receiptController;
+  late final TextEditingController _notesController;
+  String? _batchId;
+  String? _offTakerId;
+  String _paymentMode = 'Bank Transfer';
+  String _status = 'Pending';
+  bool _paid = false;
+  bool _saving = false;
+  String? _error;
+  late DateTime _scheduledDate;
+
+  bool get _editing => widget.sale != null;
+
+  String _id(Map<String, dynamic> item) =>
+      '${item[r'$id'] ?? item['id'] ?? item['fulfillment_id'] ?? ''}'.trim();
+
+  String _text(Map<String, dynamic>? item, List<String> keys,
+      [String fallback = '']) {
+    if (item == null) return fallback;
+    for (final key in keys) {
+      final value = item[key]?.toString().trim() ?? '';
+      if (value.isNotEmpty && value != 'null') return value;
+    }
+    return fallback;
+  }
+
+  double _number(Map<String, dynamic>? item, List<String> keys) =>
+      double.tryParse(_text(item, keys, '0')) ?? 0;
+
+  Map<String, dynamic>? get _selectedBatch {
+    for (final item in widget.batches) {
+      if (_id(item) == _batchId) return item;
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? get _selectedOffTaker {
+    for (final item in widget.offTakers) {
+      if (_id(item) == _offTakerId) return item;
+    }
+    return null;
+  }
+
+  int _totalPacks(Map<String, dynamic> batch) {
+    final count = _number(batch, ['total_package_count']).round();
+    if (count > 0) return count;
+    final unit = _number(batch, ['packaging_weight']);
+    return unit <= 0
+        ? 0
+        : (_number(batch, ['total_packaged_weight']) / unit).round();
+  }
+
+  bool _sameBatch(Map<String, dynamic> sale, Map<String, dynamic> batch) {
+    final fulfillmentId = _text(sale, ['fulfillment_id']).toLowerCase();
+    if (fulfillmentId.isNotEmpty && fulfillmentId == _id(batch).toLowerCase()) {
+      return true;
+    }
+    return _text(sale, ['batch_number', 'batch_id']).toLowerCase() ==
+        _text(batch, ['batch_number']).toLowerCase();
+  }
+
+  int get _availablePacks {
+    final batch = _selectedBatch;
+    if (batch == null) return 0;
+    final currentId = widget.sale == null ? '' : _id(widget.sale!);
+    final allocated = widget.sales.where((sale) {
+      if (_id(sale) == currentId) return false;
+      if (_text(sale, ['status']).toLowerCase() == 'cancelled') return false;
+      return _sameBatch(sale, batch);
+    }).fold<int>(
+      0,
+      (sum, sale) => sum + _number(sale, ['package_count']).round(),
+    );
+    return (_totalPacks(batch) - allocated).clamp(0, 1 << 31);
+  }
+
+  double get _unitWeight => _number(_selectedBatch, ['packaging_weight']);
+  int get _requestedPacks => int.tryParse(_packsController.text.trim()) ?? 0;
+  double get _allocatedWeight => _requestedPacks * _unitWeight;
+
+  @override
+  void initState() {
+    super.initState();
+    final sale = widget.sale;
+    Map<String, dynamic>? initial = widget.initialFulfillment;
+    if (sale != null) {
+      for (final batch in widget.batches) {
+        if (_sameBatch(sale, batch)) {
+          initial = batch;
+          break;
+        }
+      }
+    }
+    _batchId = initial == null ? null : _id(initial);
+    final buyerId = _text(sale, ['off_taker_id', 'buyer_id']);
+    _offTakerId =
+        widget.offTakers.any((item) => _id(item) == buyerId) ? buyerId : null;
+    _packsController =
+        TextEditingController(text: _text(sale, ['package_count'], ''));
+    _amountController =
+        TextEditingController(text: _text(sale, ['total_amount'], ''));
+    _addressController =
+        TextEditingController(text: _text(sale, ['delivery_address'], ''));
+    _receiptController =
+        TextEditingController(text: _text(sale, ['receipt_number'], ''));
+    _notesController =
+        TextEditingController(text: _text(sale, ['delivery_notes'], ''));
+    _paymentMode = _text(sale, ['payment_mode'], 'Bank Transfer');
+    _status = _text(sale, ['status'], 'Pending');
+    if (!const ['Bank Transfer', 'Mobile Money', 'Cash', 'Credit']
+        .contains(_paymentMode)) {
+      _paymentMode = 'Bank Transfer';
+    }
+    if (!const ['Pending', 'Delivered', 'Cancelled'].contains(_status)) {
+      _status = 'Pending';
+    }
+    _paid = sale?['paid'] == true;
+    _scheduledDate = DateTime.tryParse(_text(sale, ['scheduled_for'])) ??
+        DateTime.tryParse(_text(sale, ['delivered_at'])) ??
+        DateTime.now().add(const Duration(days: 1));
+  }
+
+  @override
+  void dispose() {
+    _packsController.dispose();
+    _amountController.dispose();
+    _addressController.dispose();
+    _receiptController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: _scheduledDate,
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+    );
+    if (selected != null && mounted) {
+      setState(() => _scheduledDate = selected);
+    }
+  }
+
+  Future<void> _submit() async {
+    FocusScope.of(context).unfocus();
+    setState(() => _error = null);
+    if (!_formKey.currentState!.validate()) return;
+    final batch = _selectedBatch;
+    final buyer = _selectedOffTaker;
+    if (batch == null || buyer == null) {
+      setState(
+          () => _error = 'Select a QA-approved batch and an active off-taker.');
+      return;
+    }
+    if (_requestedPacks > _availablePacks) {
+      setState(() =>
+          _error = 'Only $_availablePacks packs are available for allocation.');
+      return;
+    }
+    setState(() => _saving = true);
+    final dateTime = DateTime(
+      _scheduledDate.year,
+      _scheduledDate.month,
+      _scheduledDate.day,
+      12,
+    );
+    final date = dateTime.toIso8601String().split('T').first;
+    final payload = <String, dynamic>{
+      'batch_id': _id(batch),
+      'batch_number': _text(batch, ['batch_number']),
+      'fulfillment_id': _id(batch),
+      'buyer_id': _id(buyer),
+      'off_taker_id': _id(buyer),
+      'buyer_name': _text(buyer, ['name'], 'Off-taker'),
+      'delivered_by': widget.currentUserName,
+      'delivered_at': dateTime.toIso8601String(),
+      'scheduled_for': dateTime.toIso8601String(),
+      'quantity_delivered': _allocatedWeight,
+      'package_count': _requestedPacks,
+      'total_amount': double.tryParse(_amountController.text.trim()) ?? 0,
+      'paid': _paid,
+      'payment_mode': _paymentMode,
+      'receipt_image': _text(widget.sale, ['receipt_image']),
+      'receipt_number': _receiptController.text.trim(),
+      'payment_date': date,
+      'created_by': _editing
+          ? _text(widget.sale, ['created_by'], widget.currentUserId)
+          : widget.currentUserId,
+      'created_by_role': 'sales_manager',
+      'status': _status,
+      'delivery_address': _addressController.text.trim(),
+      'delivery_notes': _notesController.text.trim(),
+    };
+    try {
+      if (_editing) {
+        await widget.api.updateSale(_id(widget.sale!), payload);
+      } else {
+        await widget.api.createSale(payload);
+      }
+      if (mounted) Navigator.pop(context, true);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = error.toString();
+      });
+    }
+  }
+
+  InputDecoration _decoration(String label, IconData icon, {String? hint}) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: Icon(icon, size: 19),
+      filled: true,
+      fillColor:
+          dark ? Colors.white.withValues(alpha: .04) : AppColors.neutral50,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide:
+            BorderSide(color: dark ? Colors.white10 : AppColors.neutral200),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mobile = MediaQuery.sizeOf(context).width < 600;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final content = Material(
+      color: dark ? AppColors.surfaceDark : Colors.white,
+      borderRadius: BorderRadius.vertical(
+        top: const Radius.circular(20),
+        bottom: Radius.circular(mobile ? 0 : 20),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 760,
+          maxHeight: MediaQuery.sizeOf(context).height * (mobile ? .95 : .9),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (mobile) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: dark ? Colors.white24 : AppColors.neutral300,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 16, 16),
+              child: Row(children: [
+                Container(
+                  padding: const EdgeInsets.all(11),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.local_shipping_outlined,
+                      color: AppColors.primary, size: 21),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_editing ? 'Update Delivery' : 'Allocate Delivery',
+                          style: AppTypography.titleLarge
+                              .copyWith(fontWeight: FontWeight.w700)),
+                      Text('Assign verified packs to an off-taker',
+                          style: AppTypography.bodySmall.copyWith(
+                              color: dark
+                                  ? Colors.white60
+                                  : AppColors.textSecondary)),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Close',
+                  onPressed: _saving ? null : () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ]),
+            ),
+            Divider(
+                height: 1, color: dark ? Colors.white10 : AppColors.neutral200),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: LayoutBuilder(builder: (_, constraints) {
+                    final fieldWidth = constraints.maxWidth < 620
+                        ? constraints.maxWidth
+                        : (constraints.maxWidth - 14) / 2;
+                    Widget sized(Widget child, {bool full = false}) => SizedBox(
+                          width: full ? constraints.maxWidth : fieldWidth,
+                          child: child,
+                        );
+                    return Wrap(
+                      spacing: 14,
+                      runSpacing: 16,
+                      children: [
+                        if (widget.batches.isEmpty)
+                          sized(
+                              const _SalesDeliveryError(
+                                  message:
+                                      'No QA-approved batch is available for allocation.'),
+                              full: true),
+                        if (widget.offTakers.isEmpty)
+                          sized(
+                              const _SalesDeliveryError(
+                                  message:
+                                      'Create or activate an off-taker before scheduling a delivery.'),
+                              full: true),
+                        if (_error != null)
+                          sized(_SalesDeliveryError(message: _error!),
+                              full: true),
+                        sized(DropdownButtonFormField<String>(
+                          initialValue: _batchId,
+                          isExpanded: true,
+                          decoration: _decoration(
+                              'QA-approved batch', Icons.qr_code_2_rounded),
+                          items: widget.batches
+                              .map((batch) => DropdownMenuItem(
+                                    value: _id(batch),
+                                    child: Text(
+                                      '${_text(batch, [
+                                            'batch_number'
+                                          ])} - ${_text(batch, [
+                                            'plant_variety',
+                                            'plant_type'
+                                          ])}',
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ))
+                              .toList(),
+                          onChanged: _saving
+                              ? null
+                              : (value) => setState(() {
+                                    _batchId = value;
+                                    _packsController.clear();
+                                  }),
+                          validator: (value) => value == null
+                              ? 'Select a batch released by QA.'
+                              : null,
+                        )),
+                        sized(DropdownButtonFormField<String>(
+                          initialValue: _offTakerId,
+                          isExpanded: true,
+                          decoration:
+                              _decoration('Off-taker', Icons.business_outlined),
+                          items: widget.offTakers
+                              .map((buyer) => DropdownMenuItem(
+                                    value: _id(buyer),
+                                    child: Text(
+                                        _text(buyer, ['name'], 'Off-taker'),
+                                        overflow: TextOverflow.ellipsis),
+                                  ))
+                              .toList(),
+                          onChanged: _saving
+                              ? null
+                              : (value) => setState(() {
+                                    _offTakerId = value;
+                                    final buyer = _selectedOffTaker;
+                                    if (buyer != null) {
+                                      _addressController.text =
+                                          _text(buyer, ['location']);
+                                    }
+                                  }),
+                          validator: (value) => value == null
+                              ? 'Select an active off-taker.'
+                              : null,
+                        )),
+                        if (_selectedBatch != null)
+                          sized(
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color:
+                                      AppColors.primary.withValues(alpha: .07),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                      color: AppColors.primary
+                                          .withValues(alpha: .16)),
+                                ),
+                                child: Row(children: [
+                                  const Icon(Icons.inventory_2_outlined,
+                                      color: AppColors.primary, size: 20),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      '$_availablePacks packs available\n${_unitWeight.toStringAsFixed(3)} kg per pack',
+                                      style: AppTypography.bodySmall,
+                                    ),
+                                  ),
+                                ]),
+                              ),
+                              full: true),
+                        sized(TextFormField(
+                          controller: _packsController,
+                          keyboardType: TextInputType.number,
+                          onChanged: (_) => setState(() {}),
+                          decoration: _decoration(
+                              'Number of packs', Icons.inventory_2_outlined,
+                              hint: 'e.g. 120'),
+                          validator: (value) {
+                            final count = int.tryParse(value?.trim() ?? '');
+                            if (count == null || count <= 0) {
+                              return 'Enter at least one pack.';
+                            }
+                            if (count > _availablePacks) {
+                              return 'Maximum available is $_availablePacks.';
+                            }
+                            return null;
+                          },
+                        )),
+                        sized(InputDecorator(
+                          decoration: _decoration(
+                              'Calculated weight', Icons.scale_outlined),
+                          child:
+                              Text('${_allocatedWeight.toStringAsFixed(2)} kg'),
+                        )),
+                        sized(TextFormField(
+                          controller: _amountController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          decoration: _decoration(
+                              'Total amount (GHS)', Icons.payments_outlined,
+                              hint: '0.00'),
+                          validator: (value) {
+                            final amount = double.tryParse(value?.trim() ?? '');
+                            return amount == null || amount < 0
+                                ? 'Enter a valid amount.'
+                                : null;
+                          },
+                        )),
+                        sized(InkWell(
+                          onTap: _saving ? null : _pickDate,
+                          borderRadius: BorderRadius.circular(10),
+                          child: InputDecorator(
+                            decoration: _decoration('Scheduled date',
+                                Icons.calendar_today_outlined),
+                            child: Text(
+                                '${_scheduledDate.day.toString().padLeft(2, '0')}/${_scheduledDate.month.toString().padLeft(2, '0')}/${_scheduledDate.year}'),
+                          ),
+                        )),
+                        sized(DropdownButtonFormField<String>(
+                          initialValue: _paymentMode,
+                          decoration: _decoration('Payment mode',
+                              Icons.account_balance_wallet_outlined),
+                          items: const [
+                            'Bank Transfer',
+                            'Mobile Money',
+                            'Cash',
+                            'Credit',
+                          ]
+                              .map((item) => DropdownMenuItem(
+                                  value: item, child: Text(item)))
+                              .toList(),
+                          onChanged: _saving
+                              ? null
+                              : (value) =>
+                                  setState(() => _paymentMode = value!),
+                        )),
+                        sized(DropdownButtonFormField<String>(
+                          initialValue: _status,
+                          decoration: _decoration(
+                              'Delivery status', Icons.flag_outlined),
+                          items: const ['Pending', 'Delivered', 'Cancelled']
+                              .map((item) => DropdownMenuItem(
+                                  value: item, child: Text(item)))
+                              .toList(),
+                          onChanged: _saving
+                              ? null
+                              : (value) => setState(() => _status = value!),
+                        )),
+                        sized(TextFormField(
+                          controller: _receiptController,
+                          decoration: _decoration('Receipt / reference',
+                              Icons.receipt_long_outlined,
+                              hint: 'Optional'),
+                        )),
+                        sized(
+                            TextFormField(
+                              controller: _addressController,
+                              decoration: _decoration('Delivery address',
+                                  Icons.location_on_outlined),
+                              validator: (value) =>
+                                  value == null || value.trim().isEmpty
+                                      ? 'Enter the delivery address.'
+                                      : null,
+                            ),
+                            full: true),
+                        sized(
+                            TextFormField(
+                              controller: _notesController,
+                              minLines: 3,
+                              maxLines: 5,
+                              decoration: _decoration(
+                                  'Delivery notes', Icons.notes_outlined,
+                                  hint:
+                                      'Handoff instructions or buyer requirements'),
+                            ),
+                            full: true),
+                        sized(
+                            SwitchListTile.adaptive(
+                              contentPadding: EdgeInsets.zero,
+                              title: const Text('Payment received'),
+                              subtitle: const Text(
+                                  'Mark only after payment has been confirmed.'),
+                              value: _paid,
+                              onChanged: _saving
+                                  ? null
+                                  : (value) => setState(() => _paid = value),
+                            ),
+                            full: true),
+                      ],
+                    );
+                  }),
+                ),
+              ),
+            ),
+            Divider(
+                height: 1, color: dark ? Colors.white10 : AppColors.neutral200),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _saving ? null : () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _saving ? null : _submit,
+                    icon: _saving
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white),
+                          )
+                        : Icon(_editing
+                            ? Icons.save_outlined
+                            : Icons.add_circle_outline),
+                    label: Text(_saving
+                        ? 'Saving...'
+                        : _editing
+                            ? 'Save Changes'
+                            : 'Create Delivery'),
+                  ),
+                ),
+              ]),
+            ),
+          ],
+        ),
+      ),
+    );
+    return mobile
+        ? Padding(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(context).bottom),
+            child: content,
+          )
+        : Dialog(backgroundColor: Colors.transparent, child: content);
+  }
+}
+
+class _SalesDeliveryError extends StatelessWidget {
+  const _SalesDeliveryError({required this.message});
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: .08),
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(color: AppColors.error.withValues(alpha: .24)),
+        ),
+        child: Row(children: [
+          const Icon(Icons.error_outline, color: AppColors.error, size: 19),
+          const SizedBox(width: 9),
+          Expanded(
+              child: Text(message,
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.error))),
+        ]),
+      );
+}
+
+class _SalesDeliveryLoadError extends StatelessWidget {
+  const _SalesDeliveryLoadError({required this.message, required this.onRetry});
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => _SalesDeliveryEmpty(
+        icon: Icons.cloud_off_outlined,
+        title: 'Could not load sales deliveries',
+        message: message,
+        action: OutlinedButton.icon(
+          onPressed: onRetry,
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('Retry'),
+        ),
+      );
+}
+
+class _SalesDeliveryEmpty extends StatelessWidget {
+  const _SalesDeliveryEmpty({
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.action,
+  });
+  final IconData icon;
+  final String title;
+  final String message;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: dark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: dark ? Colors.white10 : AppColors.neutral200),
+      ),
+      child: Column(children: [
+        Icon(icon, size: 34, color: AppColors.textSecondary),
+        const SizedBox(height: 10),
+        Text(title,
+            textAlign: TextAlign.center,
+            style:
+                AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        Text(message,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+                color: dark ? Colors.white60 : AppColors.textSecondary)),
+        if (action != null) ...[
+          const SizedBox(height: 14),
+          action!,
+        ],
+      ]),
+    );
+  }
 }
 
 class SalesFinancialScreen extends StatelessWidget {

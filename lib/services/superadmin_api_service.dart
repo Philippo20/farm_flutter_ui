@@ -24,6 +24,61 @@ class SuperAdminApiService {
   Future<List<Map<String, dynamic>>> getPackages() => _getDocuments('/package');
   Future<List<Map<String, dynamic>>> getPricing() => _getDocuments('/pricing');
   Future<List<Map<String, dynamic>>> getSales() => _getDocuments('/sales');
+
+  Future<Map<String, dynamic>> createSale(Map<String, dynamic> data) =>
+      _submitSalesRecord('POST', '/sales/info', data);
+
+  Future<Map<String, dynamic>> updateSale(
+    String id,
+    Map<String, dynamic> data,
+  ) =>
+      _submitSalesRecord(
+        'PUT',
+        '/sales/${Uri.encodeComponent(id)}',
+        data,
+      );
+
+  Future<void> deleteSale(String id) async {
+    final response = await _client
+        .delete(Uri.parse('$baseUrl/sales/${Uri.encodeComponent(id)}'))
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to delete delivery (${response.statusCode})',
+        ),
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> _submitSalesRecord(
+    String method,
+    String path,
+    Map<String, dynamic> data,
+  ) async {
+    final request = http.Request(method, Uri.parse('$baseUrl$path'))
+      ..headers['Content-Type'] = 'application/x-www-form-urlencoded'
+      ..bodyFields = data.map(
+        (key, value) => MapEntry(key, value?.toString() ?? ''),
+      );
+    final streamed = await _client.send(request).withApiTimeout();
+    final response = await http.Response.fromStream(streamed);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to save delivery (${response.statusCode})',
+        ),
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid delivery response');
+    }
+    return decoded;
+  }
+
   Future<List<Map<String, dynamic>>> getOffTakers() =>
       _getDocuments('/off-takers');
   Future<List<Map<String, dynamic>>> getOffTakerUpdateRequests() =>

@@ -95,4 +95,64 @@ void main() {
     expect(request.bodyFields['harvested_count'], '120');
     expect(request.bodyFields['harvest_weight_kg'], '47.5');
   });
+
+  test('createSale sends the complete pack allocation contract', () async {
+    final client = _RecordingClient();
+    final service = SuperAdminApiService(client: client);
+
+    await service.createSale({
+      'batch_id': 'fulfillment-1',
+      'batch_number': 'BATCH-2026-001',
+      'fulfillment_id': 'fulfillment-1',
+      'buyer_id': 'off-taker-1',
+      'off_taker_id': 'off-taker-1',
+      'buyer_name': 'Fresh Market',
+      'delivered_by': 'Sales Manager',
+      'delivered_at': '2026-09-05T12:00:00.000',
+      'scheduled_for': '2026-09-05T12:00:00.000',
+      'quantity_delivered': 30,
+      'package_count': 60,
+      'total_amount': 900,
+      'paid': false,
+      'payment_mode': 'Bank Transfer',
+      'receipt_image': '',
+      'receipt_number': '',
+      'payment_date': '2026-09-05',
+      'created_by': 'sales-manager-1',
+      'created_by_role': 'sales_manager',
+      'status': 'Pending',
+      'delivery_address': 'Accra',
+      'delivery_notes': 'Deliver before noon',
+    });
+
+    expect(client.request, isA<http.Request>());
+    final request = client.request! as http.Request;
+    expect(request.method, 'POST');
+    expect(request.url.path, '/sales/info');
+    expect(request.bodyFields['batch_number'], 'BATCH-2026-001');
+    expect(request.bodyFields['fulfillment_id'], 'fulfillment-1');
+    expect(request.bodyFields['off_taker_id'], 'off-taker-1');
+    expect(request.bodyFields['package_count'], '60');
+    expect(request.bodyFields['quantity_delivered'], '30');
+    expect(request.bodyFields['scheduled_for'], '2026-09-05T12:00:00.000');
+    expect(request.bodyFields['delivery_address'], 'Accra');
+  });
+
+  test('updateSale targets the selected sales delivery document', () async {
+    final client = _RecordingClient();
+    final service = SuperAdminApiService(client: client);
+
+    await service.updateSale('sale-1', {
+      'batch_id': 'fulfillment-1',
+      'package_count': 40,
+      'status': 'Delivered',
+    });
+
+    expect(client.request, isA<http.Request>());
+    final request = client.request! as http.Request;
+    expect(request.method, 'PUT');
+    expect(request.url.path, '/sales/sale-1');
+    expect(request.bodyFields['package_count'], '40');
+    expect(request.bodyFields['status'], 'Delivered');
+  });
 }
