@@ -279,6 +279,10 @@ class MyApp extends ConsumerWidget {
         '/materials': (context) => const FulfillmentMaterialsScreen(),
         '/fulfillment-reports': (context) => const FulfillmentReportsScreen(),
         '/fulfillment-settings': (context) => const FulfillmentSettingsScreen(),
+        '/fulfillment/packaging-catalog': (context) =>
+            const PackagingConfigurationScreen(
+              access: PackagingConfigurationAccess.fulfillmentManager,
+            ),
         '/packaging_dashboard': (context) =>
             const PackagingSupervisorDashboardRedesigned(),
         '/packaging-supervisor-dashboard': (context) =>
@@ -292,9 +296,6 @@ class MyApp extends ConsumerWidget {
         '/packaging-reports': (context) => const PackagingReportsScreen(),
         '/packaging-settings': (context) =>
             const PackagingSupervisorSettingsScreen(),
-        '/packaging-catalog': (context) => const PackagingConfigurationScreen(
-              access: PackagingConfigurationAccess.packagingSupervisor,
-            ),
         '/quality_dashboard': (context) =>
             const QualityAssuranceDashboardRedesigned(),
         '/quality-assurance-dashboard': (context) =>

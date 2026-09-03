@@ -79,6 +79,12 @@ class _FulfillmentManagerSidebarState extends State<FulfillmentManagerSidebar>
       label: 'Settings',
       route: '/fulfillment-settings',
     ),
+    _NavItem(
+      icon: Icons.tune_outlined,
+      activeIcon: Icons.tune_rounded,
+      label: 'Packaging Catalog',
+      route: '/fulfillment/packaging-catalog',
+    ),
   ];
 
   @override

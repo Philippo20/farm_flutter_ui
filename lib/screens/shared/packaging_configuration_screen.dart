@@ -4,15 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/widgets/fulfillment_manager_screen_shell.dart';
 import '../../core/widgets/modern_admin_header.dart';
 import '../../core/widgets/modern_admin_sidebar.dart';
-import '../../core/widgets/packaging_supervisor_screen_shell.dart';
 import '../../core/widgets/skeleton_loader.dart';
 import '../../core/widgets/superadmin_sidebar.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/superadmin_api_service.dart';
 
-enum PackagingConfigurationAccess { superAdmin, admin, packagingSupervisor }
+enum PackagingConfigurationAccess { superAdmin, admin, fulfillmentManager }
 
 class PackagingConfigurationScreen extends ConsumerStatefulWidget {
   const PackagingConfigurationScreen({required this.access, super.key});
@@ -38,7 +38,7 @@ class _PackagingConfigurationScreenState
   bool get _isSuperAdmin =>
       widget.access == PackagingConfigurationAccess.superAdmin;
   bool get _isAdmin => widget.access == PackagingConfigurationAccess.admin;
-  int get _navIndex => _isSuperAdmin ? 5 : (_isAdmin ? 11 : 6);
+  int get _navIndex => _isSuperAdmin ? 5 : (_isAdmin ? 11 : 7);
 
   @override
   void initState() {
@@ -147,13 +147,13 @@ class _PackagingConfigurationScreenState
   String get _roleLabel {
     if (_isSuperAdmin) return 'Super Administrator';
     if (_isAdmin) return 'Administrator';
-    return 'Packaging Supervisor';
+    return 'Fulfillment Manager';
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.access == PackagingConfigurationAccess.packagingSupervisor) {
-      return PackagingSupervisorScreenShell(
+    if (widget.access == PackagingConfigurationAccess.fulfillmentManager) {
+      return FulfillmentManagerScreenShell(
         selectedIndex: _navIndex,
         child: _content(),
       );

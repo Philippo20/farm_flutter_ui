@@ -465,6 +465,11 @@ const fulfillmentNavigationItems = [
       activeIcon: Icons.settings_rounded,
       label: 'Settings',
       route: '/fulfillment-settings'),
+  RoleNavigationItem(
+      icon: Icons.tune_outlined,
+      activeIcon: Icons.tune_rounded,
+      label: 'Catalog',
+      route: '/fulfillment/packaging-catalog'),
 ];
 
 const packagingNavigationItems = [
@@ -502,11 +507,6 @@ const packagingNavigationItems = [
       activeIcon: Icons.settings_rounded,
       label: 'Settings',
       route: '/packaging-settings'),
-  RoleNavigationItem(
-      icon: Icons.tune_outlined,
-      activeIcon: Icons.tune_rounded,
-      label: 'Catalog',
-      route: '/packaging-catalog'),
 ];
 
 const qualityNavigationItems = [

@@ -66,11 +66,6 @@ class _PackagingSupervisorSidebarState extends State<PackagingSupervisorSidebar>
         activeIcon: Icons.settings_rounded,
         label: 'Settings',
         route: '/packaging-settings'),
-    _NavItem(
-        icon: Icons.tune_outlined,
-        activeIcon: Icons.tune_rounded,
-        label: 'Packaging Catalog',
-        route: '/packaging-catalog'),
   ];
 
   @override

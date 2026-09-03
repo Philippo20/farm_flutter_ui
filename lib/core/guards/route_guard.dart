@@ -58,12 +58,12 @@ class RouteGuard {
     '/confirm-harvest': ['fulfillment_manager'],
     '/materials-inventory': ['fulfillment_manager'],
     '/yield-loss': ['fulfillment_manager'],
+    '/fulfillment/packaging-catalog': ['fulfillment_manager'],
 
     // Packaging routes
     '/packaging_dashboard': ['packaging_supervisor'],
     '/package-record': ['packaging_supervisor'],
     '/waste-tracking': ['packaging_supervisor'],
-    '/packaging-catalog': ['packaging_supervisor'],
 
     // Quality routes
     '/quality_dashboard': ['quality_assurance'],
