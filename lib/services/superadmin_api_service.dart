@@ -2056,6 +2056,31 @@ class SuperAdminApiService {
     }
   }
 
+  Future<Map<String, dynamic>> updateTraceabilityFeedback({
+    required String id,
+    required Map<String, dynamic> data,
+  }) async {
+    final response = await _client
+        .put(
+          Uri.parse(
+            '$baseUrl/traceability/feedback/${Uri.encodeComponent(id)}',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(data),
+        )
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback:
+              'Failed to update traceability feedback (${response.statusCode})',
+        ),
+      );
+    }
+    return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
+  }
+
   Future<List<Map<String, dynamic>>> _getDocuments(String path) async {
     final response =
         await _client.get(Uri.parse('$baseUrl$path')).withApiTimeout();

@@ -41,10 +41,12 @@ class _TraceabilityConsoleScreenState
   List<Map<String, dynamic>> _batches = [];
   List<Map<String, dynamic>> _promotions = [];
   List<Map<String, dynamic>> _events = [];
+  List<Map<String, dynamic>> _feedback = [];
   bool _loading = true;
   bool _savingSettings = false;
   String? _error;
   int _tab = 0;
+  String _feedbackFilter = 'all';
 
   int get _navIndex => widget.isSuperAdmin ? 15 : 10;
   String get _role => widget.isSuperAdmin ? 'superadmin' : 'admin';
@@ -85,6 +87,7 @@ class _TraceabilityConsoleScreenState
         _batches = _list(data['batches']);
         _promotions = _list(data['promotions']);
         _events = _list(data['events']);
+        _feedback = _list(data['feedback']);
         _syncSettingsControllers(settings);
         _loading = false;
       });
@@ -140,6 +143,7 @@ class _TraceabilityConsoleScreenState
         'show_journey': _flag('show_journey'),
         'analytics_enabled': _flag('analytics_enabled'),
         'promotions_enabled': _flag('promotions_enabled'),
+        'feedback_enabled': _flag('feedback_enabled'),
         'retention_days': (_settings['retention_days'] as num?)?.toInt() ?? 365,
         'updated_by': user?.id ?? 'system',
       });
@@ -233,6 +237,27 @@ class _TraceabilityConsoleScreenState
         ),
       ),
     );
+  }
+
+  Future<void> _openFeedback(Map<String, dynamic> feedback) async {
+    final user = ref.read(currentUserProvider);
+    final changed = await _showAdaptive<bool>(
+      _FeedbackReviewPanel(
+        feedback: feedback,
+        onSubmit: (data) => _api.updateTraceabilityFeedback(
+          id: '${feedback[r'$id'] ?? feedback['feedback_id']}',
+          data: {
+            ...data,
+            'actor_id': user?.id ?? 'system',
+            'actor_role': _role,
+          },
+        ),
+      ),
+    );
+    if (changed == true) {
+      _notice('Feedback review updated');
+      await _load();
+    }
   }
 
   @override
@@ -347,6 +372,7 @@ class _TraceabilityConsoleScreenState
                 if (_tab == 1) _experience(mobile),
                 if (_tab == 2) _promotionList(mobile),
                 if (_tab == 3) _analytics(mobile),
+                if (_tab == 4) _feedbackList(mobile),
               ],
             ],
           ),
@@ -449,24 +475,35 @@ class _TraceabilityConsoleScreenState
         Icons.search_off_rounded,
         Colors.red
       ),
-    ];
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: items.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: mobile ? 2 : 5,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: mobile ? 1.55 : 1.7,
+      (
+        'Open reports',
+        _metrics['open_reports'] ?? 0,
+        Icons.report_problem_outlined,
+        Colors.deepOrange
       ),
-      itemBuilder: (_, index) {
-        final item = items[index];
-        return _MetricCard(
-          label: item.$1,
-          value: '${item.$2}',
-          icon: item.$3,
-          color: item.$4,
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = mobile ? 2 : (constraints.maxWidth < 900 ? 3 : 6);
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: mobile ? 1.55 : 1.7,
+          ),
+          itemBuilder: (_, index) {
+            final item = items[index];
+            return _MetricCard(
+              label: item.$1,
+              value: '${item.$2}',
+              icon: item.$3,
+              color: item.$4,
+            );
+          },
         );
       },
     );
@@ -478,6 +515,7 @@ class _TraceabilityConsoleScreenState
       ('Experience', Icons.palette_outlined),
       ('Promotions', Icons.campaign_outlined),
       ('Analytics', Icons.insights_outlined),
+      ('Feedback', Icons.rate_review_outlined),
     ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -628,6 +666,8 @@ class _TraceabilityConsoleScreenState
                 _settingSwitch('show_journey', 'Product journey'),
                 _settingSwitch('analytics_enabled', 'Anonymous analytics'),
                 _settingSwitch('promotions_enabled', 'Promotions'),
+                _settingSwitch(
+                    'feedback_enabled', 'Feedback and issue reports'),
               ],
             ),
             const SizedBox(height: 22),
@@ -717,11 +757,14 @@ class _TraceabilityConsoleScreenState
   Widget _analytics(bool mobile) {
     final byType = <String, int>{};
     final byRegion = <String, int>{};
+    final byDevice = <String, int>{};
     for (final event in _events) {
       final type = '${event['event_type'] ?? 'unknown'}';
       byType[type] = (byType[type] ?? 0) + 1;
       final region = '${event['region'] ?? ''}'.trim();
       if (region.isNotEmpty) byRegion[region] = (byRegion[region] ?? 0) + 1;
+      final device = '${event['device_type'] ?? 'unknown'}'.trim();
+      byDevice[device] = (byDevice[device] ?? 0) + 1;
     }
     final maxValue = byType.values.fold<int>(1, (a, b) => a > b ? a : b);
     return _Panel(
@@ -757,9 +800,104 @@ class _TraceabilityConsoleScreenState
                     .toList(),
               ),
             ],
+            if (byDevice.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Text('Devices',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: byDevice.entries
+                    .map((entry) => Chip(
+                          avatar: Icon(_deviceIcon(entry.key), size: 16),
+                          label: Text('${_friendly(entry.key)}  ${entry.value}',
+                              style: GoogleFonts.poppins(fontSize: 12)),
+                        ))
+                    .toList(),
+              ),
+            ],
+            const SizedBox(height: 24),
+            Text('Recent visitors',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text(
+              'Approximate IP location and server-detected device details',
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 10),
+            ..._events.take(12).map((event) => _VisitorRow(event: event)),
           ],
         ],
       ),
+    );
+  }
+
+  IconData _deviceIcon(String value) {
+    switch (value.toLowerCase()) {
+      case 'mobile':
+        return Icons.smartphone_rounded;
+      case 'tablet':
+        return Icons.tablet_mac_rounded;
+      default:
+        return Icons.computer_rounded;
+    }
+  }
+
+  Widget _feedbackList(bool mobile) {
+    final rows = _feedback.where((item) {
+      if (_feedbackFilter == 'all') return true;
+      if (_feedbackFilter == 'open') {
+        return item['status'] == 'new' || item['status'] == 'reviewing';
+      }
+      return item['feedback_type'] == _feedbackFilter;
+    }).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader(
+          title: 'Consumer feedback',
+          subtitle: 'Review product feedback and reported issues',
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: {
+              'all': 'All',
+              'open': 'Open',
+              'feedback': 'Feedback',
+              'issue': 'Issues',
+            }
+                .entries
+                .map((entry) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(entry.value,
+                            style: GoogleFonts.poppins(fontSize: 12)),
+                        selected: _feedbackFilter == entry.key,
+                        onSelected: (_) =>
+                            setState(() => _feedbackFilter = entry.key),
+                      ),
+                    ))
+                .toList(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (rows.isEmpty)
+          _empty(Icons.rate_review_outlined, 'No matching feedback or issues')
+        else
+          ...rows.map((item) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _FeedbackCard(
+                  feedback: item,
+                  onTap: () => _openFeedback(item),
+                ),
+              )),
+      ],
     );
   }
 
@@ -1110,6 +1248,246 @@ class _PromotionCard extends StatelessWidget {
       );
 }
 
+class _FeedbackCard extends StatelessWidget {
+  const _FeedbackCard({required this.feedback, required this.onTap});
+  final Map<String, dynamic> feedback;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isIssue = feedback['feedback_type'] == 'issue';
+    final rating = (feedback['rating'] as num?)?.toInt() ?? 0;
+    final location = [
+      '${feedback['city'] ?? ''}'.trim(),
+      '${feedback['region'] ?? ''}'.trim(),
+      '${feedback['country'] ?? ''}'.trim(),
+    ].where((value) => value.isNotEmpty).join(', ');
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: _Panel(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: (isIssue ? Colors.deepOrange : AppColors.primary)
+                      .withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  isIssue
+                      ? Icons.report_problem_outlined
+                      : Icons.rate_review_outlined,
+                  color: isIssue ? Colors.deepOrange : AppColors.primary,
+                  size: 21,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 5,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          isIssue ? 'Issue report' : 'Product feedback',
+                          style: GoogleFonts.poppins(
+                              fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                        _StatusPill(
+                          text: '${feedback['status'] ?? 'new'}',
+                          color: _feedbackStatusColor(
+                              '${feedback['status'] ?? 'new'}'),
+                        ),
+                        if (rating > 0)
+                          Text('$rating/5',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  color: Colors.amber.shade800,
+                                  fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${feedback['message'] ?? ''}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: [
+                        _MetaText(Icons.qr_code_rounded,
+                            '${feedback['batch_number'] ?? 'No batch'}'),
+                        _MetaText(
+                            Icons.location_on_outlined,
+                            location.isEmpty
+                                ? 'Location unavailable'
+                                : location),
+                        _MetaText(Icons.devices_outlined,
+                            '${feedback['device_type'] ?? 'unknown'}'),
+                        _MetaText(Icons.schedule_rounded,
+                            _formatTraceDate(feedback['created_at'])),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, size: 21),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VisitorRow extends StatelessWidget {
+  const _VisitorRow({required this.event});
+  final Map<String, dynamic> event;
+
+  @override
+  Widget build(BuildContext context) {
+    final location = [
+      '${event['city'] ?? ''}'.trim(),
+      '${event['region'] ?? ''}'.trim(),
+      '${event['country'] ?? ''}'.trim(),
+    ].where((value) => value.isNotEmpty).join(', ');
+    final device = [
+      '${event['device_type'] ?? ''}'.trim(),
+      '${event['browser'] ?? ''}'.trim(),
+      '${event['operating_system'] ?? ''}'.trim(),
+    ].where((value) => value.isNotEmpty && value != 'Unknown').join(' | ');
+    final latitude = (event['latitude'] as num?)?.toDouble() ?? 0;
+    final longitude = (event['longitude'] as num?)?.toDouble() ?? 0;
+    final coordinates = latitude == 0 && longitude == 0
+        ? ''
+        : '${latitude.toStringAsFixed(3)}, ${longitude.toStringAsFixed(3)}';
+    final network = [
+      '${event['timezone'] ?? ''}'.trim(),
+      '${event['isp'] ?? ''}'.trim(),
+      coordinates,
+    ].where((value) => value.isNotEmpty).join(' | ');
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white.withValues(alpha: .03)
+            : AppColors.neutral50,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.public_rounded, size: 19, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  location.isEmpty ? 'Location unavailable' : location,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                      fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  '${event['ip_masked'] ?? 'unknown'}  |  ${device.isEmpty ? 'Unknown device' : device}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                if (network.isNotEmpty)
+                  Text(
+                    network,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            _formatTraceDate(event['occurred_at']),
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetaText extends StatelessWidget {
+  const _MetaText(this.icon, this.text);
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 260),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 13,
+                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            ),
+          ],
+        ),
+      );
+}
+
+Color _feedbackStatusColor(String status) {
+  switch (status) {
+    case 'resolved':
+      return AppColors.primary;
+    case 'reviewing':
+      return Colors.blue;
+    case 'closed':
+      return Colors.grey;
+    default:
+      return Colors.deepOrange;
+  }
+}
+
+String _formatTraceDate(dynamic value) {
+  final date = DateTime.tryParse('${value ?? ''}')?.toLocal();
+  if (date == null) return 'Unknown time';
+  String two(int part) => part.toString().padLeft(2, '0');
+  return '${two(date.day)}/${two(date.month)}/${date.year} ${two(date.hour)}:${two(date.minute)}';
+}
+
 class _StatusPill extends StatelessWidget {
   const _StatusPill({required this.text, required this.color});
   final String text;
@@ -1156,6 +1534,198 @@ class _AnalyticsBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               color: AppColors.primary,
               backgroundColor: AppColors.primary.withValues(alpha: .1),
+            ),
+          ],
+        ),
+      );
+}
+
+class _FeedbackReviewPanel extends StatefulWidget {
+  const _FeedbackReviewPanel({
+    required this.feedback,
+    required this.onSubmit,
+  });
+  final Map<String, dynamic> feedback;
+  final Future<Map<String, dynamic>> Function(Map<String, dynamic>) onSubmit;
+
+  @override
+  State<_FeedbackReviewPanel> createState() => _FeedbackReviewPanelState();
+}
+
+class _FeedbackReviewPanelState extends State<_FeedbackReviewPanel> {
+  late final TextEditingController _notes;
+  late String _status;
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _status = '${widget.feedback['status'] ?? 'new'}';
+    _notes =
+        TextEditingController(text: '${widget.feedback['admin_notes'] ?? ''}');
+  }
+
+  @override
+  void dispose() {
+    _notes.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.onSubmit({
+        'status': _status,
+        'admin_notes': _notes.text.trim(),
+      });
+      if (mounted) Navigator.pop(context, true);
+    } catch (error) {
+      if (mounted) setState(() => _error = error.toString());
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.feedback;
+    final isIssue = item['feedback_type'] == 'issue';
+    final rating = (item['rating'] as num?)?.toInt() ?? 0;
+    final location = [item['city'], item['region'], item['country']]
+        .map((value) => '${value ?? ''}'.trim())
+        .where((value) => value.isNotEmpty)
+        .join(', ');
+    final contactAllowed = item['consent_to_contact'] == true;
+    return _ModalFrame(
+      title: isIssue ? 'Review issue report' : 'Review product feedback',
+      subtitle:
+          '${item['batch_number'] ?? 'No batch supplied'} - ${_formatTraceDate(item['created_at'])}',
+      icon:
+          isIssue ? Icons.report_problem_outlined : Icons.rate_review_outlined,
+      saving: _saving,
+      error: _error,
+      onSave: _submit,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: (isIssue ? Colors.deepOrange : AppColors.primary)
+                  .withValues(alpha: .07),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _StatusPill(
+                        text: '${item['category'] ?? 'other'}',
+                        color: isIssue ? Colors.deepOrange : AppColors.primary),
+                    if (rating > 0)
+                      _StatusPill(
+                          text: '$rating / 5 stars', color: Colors.amber),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text('${item['message'] ?? ''}',
+                    style: GoogleFonts.poppins(fontSize: 13, height: 1.5)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _ReviewInfo(
+                  icon: Icons.location_on_outlined,
+                  label: location.isEmpty ? 'Location unavailable' : location),
+              _ReviewInfo(
+                  icon: Icons.devices_outlined,
+                  label:
+                      '${item['device_type'] ?? 'unknown'} | ${item['browser'] ?? 'Unknown'} | ${item['operating_system'] ?? 'Unknown'}'),
+              _ReviewInfo(
+                  icon: Icons.shield_outlined,
+                  label: 'IP ${item['ip_masked'] ?? 'unknown'}'),
+              if ('${item['timezone'] ?? ''}'.isNotEmpty ||
+                  '${item['isp'] ?? ''}'.isNotEmpty)
+                _ReviewInfo(
+                    icon: Icons.language_rounded,
+                    label:
+                        '${item['timezone'] ?? ''}${'${item['timezone'] ?? ''}'.isNotEmpty && '${item['isp'] ?? ''}'.isNotEmpty ? ' | ' : ''}${item['isp'] ?? ''}'),
+            ],
+          ),
+          if (contactAllowed) ...[
+            const SizedBox(height: 12),
+            _ReviewInfo(
+              icon: Icons.alternate_email_rounded,
+              label:
+                  '${item['contact_name'] ?? 'Consumer'} - ${item['contact_email'] ?? ''}',
+            ),
+          ],
+          const SizedBox(height: 16),
+          _modalDropdown(
+            label: 'Review Status',
+            icon: Icons.fact_check_outlined,
+            value: _status,
+            values: const {
+              'new': 'New',
+              'reviewing': 'Reviewing',
+              'resolved': 'Resolved',
+              'closed': 'Closed',
+            },
+            onChanged: (value) => setState(() => _status = value),
+          ),
+          const SizedBox(height: 12),
+          _modalField(
+            _notes,
+            'Internal Notes',
+            'Record the investigation or resolution for your team',
+            Icons.edit_note_rounded,
+            lines: 4,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReviewInfo extends StatelessWidget {
+  const _ReviewInfo({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width < 600
+              ? MediaQuery.sizeOf(context).width - 88
+              : 480,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white.withValues(alpha: .04)
+              : AppColors.neutral50,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 15, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(label,
+                  style: GoogleFonts.poppins(fontSize: 10),
+                  overflow: TextOverflow.ellipsis),
             ),
           ],
         ),
