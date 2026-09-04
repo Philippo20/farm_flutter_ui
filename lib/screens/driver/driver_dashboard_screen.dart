@@ -32,6 +32,7 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
   List<Map<String, dynamic>> _deliveries = const [];
   bool _loading = true;
   bool _requestInFlight = false;
+  bool _demoPreview = false;
   String? _error;
 
   int get _selectedTab => widget.initialTab.clamp(0, 2);
@@ -58,6 +59,8 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
     try {
       final sales = await _api.getSales();
       final user = ref.read(authProvider).user;
+      final demoPreview = user?.id == 'driver' &&
+          user?.email.toLowerCase() == 'driver@farmestates.com';
       final identity = {
         user?.id,
         user?.email,
@@ -73,13 +76,20 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
           sale['delivery_agent_name'],
         }
             .map((value) => '${value ?? ''}'.trim().toLowerCase())
-            .where((value) => value.isNotEmpty);
+            .where((value) => value.isNotEmpty)
+            .toList();
+        if (demoPreview) {
+          final deliveryType =
+              '${sale['delivery_type'] ?? ''}'.trim().toLowerCase();
+          return deliveryIdentity.isNotEmpty || deliveryType == 'third_party';
+        }
         return deliveryIdentity.any(identity.contains);
       }).toList()
         ..sort((a, b) => _date(b).compareTo(_date(a)));
       if (!mounted) return;
       setState(() {
         _deliveries = assigned;
+        _demoPreview = demoPreview;
         _loading = false;
         _error = null;
       });
@@ -237,6 +247,10 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (_demoPreview) ...[
+          const _DemoPreviewNotice(),
+          const SizedBox(height: AppSpacing.md),
+        ],
         _hero(),
         const SizedBox(height: AppSpacing.md),
         LayoutBuilder(
@@ -437,6 +451,58 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
   }
 }
 
+class _DemoPreviewNotice extends StatelessWidget {
+  const _DemoPreviewNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.info.withValues(alpha: isDark ? 0.14 : 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: AppColors.info.withValues(alpha: 0.24),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.visibility_outlined,
+            color: AppColors.info,
+            size: 21,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Demo delivery preview',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Showing current assigned deliveries for this demo. Real Driver accounts only see records assigned to their user ID.',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white70 : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MetricCard extends StatelessWidget {
   const _MetricCard({
     required this.label,
@@ -610,6 +676,18 @@ class _DeliveryCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               _DetailLine(icon: Icons.schedule_outlined, text: dateLabel),
+              const SizedBox(height: AppSpacing.xs),
+              _DetailLine(
+                icon: Icons.person_pin_circle_outlined,
+                text:
+                    'Driver: ${_text(delivery['delivery_agent_name'], 'Unassigned')}',
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              _DetailLine(
+                icon: Icons.business_outlined,
+                text:
+                    'Provider: ${_text(delivery['delivery_provider'], 'Farm Estates')}',
+              ),
               const SizedBox(height: AppSpacing.xs),
               _DetailLine(
                 icon: Icons.directions_car_outlined,
