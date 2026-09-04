@@ -16,6 +16,7 @@ enum UserRole {
   qualityAssurance,
   salesManager,
   salesPersonnel,
+  driver,
   accountant;
 
   String get displayName {
@@ -42,6 +43,8 @@ enum UserRole {
         return 'Sales Manager';
       case UserRole.salesPersonnel:
         return 'Sales Personnel';
+      case UserRole.driver:
+        return 'Driver';
       case UserRole.accountant:
         return 'Accountant';
     }
@@ -90,6 +93,10 @@ enum UserRole {
       case 'sales_person':
       case 'sales personnel':
         return UserRole.salesPersonnel;
+      case 'driver':
+      case 'delivery_agent':
+      case 'delivery agent':
+        return UserRole.driver;
       case 'accountant':
         return UserRole.accountant;
       default:

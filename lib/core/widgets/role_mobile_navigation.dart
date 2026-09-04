@@ -627,6 +627,27 @@ const salesPersonnelNavigationItems = [
       primary: true),
 ];
 
+const driverNavigationItems = [
+  RoleNavigationItem(
+      icon: Icons.dashboard_outlined,
+      activeIcon: Icons.dashboard_rounded,
+      label: 'Home',
+      route: '/driver_dashboard',
+      primary: true),
+  RoleNavigationItem(
+      icon: Icons.local_shipping_outlined,
+      activeIcon: Icons.local_shipping_rounded,
+      label: 'Deliveries',
+      route: '/driver-deliveries',
+      primary: true),
+  RoleNavigationItem(
+      icon: Icons.history_outlined,
+      activeIcon: Icons.history_rounded,
+      label: 'History',
+      route: '/driver-history',
+      primary: true),
+];
+
 const accountantNavigationItems = [
   RoleNavigationItem(
       icon: Icons.dashboard_outlined,

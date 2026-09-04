@@ -74,6 +74,8 @@ class _SalesManagerDashboardRedesignedState
         .where((sale) => sale['paid'] != true)
         .fold<double>(0, (sum, sale) => sum + _number(sale['total_amount']));
     final pending = _sales.where((sale) => _status(sale) == 'pending').length;
+    final inTransit =
+        _sales.where((sale) => _status(sale) == 'in transit').length;
     final paidAmount = validSales
         .where((sale) => sale['paid'] == true)
         .fold<double>(0, (sum, sale) => sum + _number(sale['total_amount']));
@@ -102,7 +104,7 @@ class _SalesManagerDashboardRedesignedState
         'title': 'Deliveries',
         'subtitle': 'Dispatch commitments and buyer handoff',
         'metric': '${_releasedBatches.length} from QA',
-        'status': '$pending pending',
+        'status': '$pending pending | $inTransit in transit',
         'route': '/sales-deliveries',
         'icon': Icons.local_shipping_outlined,
         'color': AppColors.warning,
@@ -128,9 +130,11 @@ class _SalesManagerDashboardRedesignedState
       final quantity = _number(sale['quantity_delivered']);
       final color = status == 'delivered'
           ? AppColors.success
-          : status == 'cancelled'
-              ? AppColors.error
-              : AppColors.warning;
+          : status == 'in transit'
+              ? AppColors.info
+              : status == 'cancelled'
+                  ? AppColors.error
+                  : AppColors.warning;
       return <String, Object>{
         'title': '$buyer sale ${_titleCase(status)}',
         'subtitle': '${_formatQuantity(quantity)} kg recorded for delivery',
@@ -360,6 +364,8 @@ class _SalesManagerDashboardRedesignedState
         .fold<double>(0, (sum, sale) => sum + _number(sale['total_amount']));
     final paidRate = revenue == 0 ? 0 : ((paidAmount / revenue) * 100).round();
     final pending = _sales.where((sale) => _status(sale) == 'pending').length;
+    final inTransit =
+        _sales.where((sale) => _status(sale) == 'in transit').length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,8 +392,8 @@ class _SalesManagerDashboardRedesignedState
             ),
             _SalesKpi(
               title: 'Deliveries',
-              value: '$pending',
-              subtitle: 'Pending dispatch',
+              value: '${pending + inTransit}',
+              subtitle: '$pending pending | $inTransit in transit',
               icon: Icons.local_shipping_outlined,
               color: AppColors.warning,
             ),
@@ -519,7 +525,7 @@ class _SalesManagerDashboardRedesignedState
                   icon: Icons.people_outlined),
               _HeroChip(
                   label:
-                      '${_sales.where((sale) => _status(sale) == 'pending').length} deliveries pending',
+                      '${_sales.where((sale) => _status(sale) == 'in transit').length} deliveries in transit',
                   icon: Icons.local_shipping_outlined),
               _HeroChip(
                   label: '${_releasedBatches.length} batches from QA',
@@ -648,7 +654,7 @@ class _SalesManagerDashboardRedesignedState
           _ActionTile(
             title: 'Check delivery commitments',
             subtitle:
-                '${_sales.where((sale) => _status(sale) == 'pending').length} dispatches need follow-up',
+                '${_sales.where((sale) => _status(sale) == 'in transit').length} in transit | ${_sales.where((sale) => _status(sale) == 'pending').length} awaiting dispatch',
             icon: Icons.local_shipping_outlined,
             color: AppColors.warning,
             route: '/sales-deliveries',

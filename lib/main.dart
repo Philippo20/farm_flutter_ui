@@ -74,6 +74,7 @@ import 'screens/sales/sales_personnel_nav_screens.dart';
 import 'screens/accountant/accountant_dashboard.dart';
 import 'screens/accountant/accountant_dashboard_redesigned.dart';
 import 'screens/accountant/accountant_nav_screens.dart';
+import 'screens/driver/driver_dashboard_screen.dart';
 import 'screens/superadmin/superadmin_dashboard.dart';
 import 'screens/superadmin/user_management_screen.dart';
 import 'screens/superadmin/farm_management_screen.dart';
@@ -383,6 +384,11 @@ class MyApp extends ConsumerWidget {
             const SalesPersonnelSettingsScreen(),
         '/sales-personnel/sync': (context) =>
             const SalesPersonnelExpensesScreen(),
+        '/driver_dashboard': (context) => const DriverDashboardScreen(),
+        '/driver-deliveries': (context) =>
+            const DriverDashboardScreen(initialTab: 1),
+        '/driver-history': (context) =>
+            const DriverDashboardScreen(initialTab: 2),
         '/accountant_dashboard': (context) =>
             const AccountantDashboardRedesigned(),
         '/accountant-dashboard': (context) =>

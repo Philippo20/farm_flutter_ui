@@ -33,7 +33,7 @@ class _SalesPersonnelDashboardRedesignedState
           'title': 'Record Delivery',
           'subtitle': 'Capture proof, quantity, buyer handoff, and exceptions.',
           'metric':
-              '${_sales.where((s) => _status(s) == 'pending').length} pending',
+              '${_sales.where((s) => _status(s) == 'in transit').length} in transit',
           'status': '${_sales.length} personal sales',
           'route': '/sales-personnel-record-delivery',
           'icon': Icons.local_shipping_outlined,
@@ -80,7 +80,9 @@ class _SalesPersonnelDashboardRedesignedState
               'time': _relative(_date(sale)),
               'color': _status(sale) == 'delivered'
                   ? AppColors.success
-                  : AppColors.warning,
+                  : _status(sale) == 'in transit'
+                      ? AppColors.info
+                      : AppColors.warning,
             })
         .toList();
   }
@@ -218,8 +220,10 @@ class _SalesPersonnelDashboardRedesignedState
             children: [
               _KpiCard(
                 title: 'Today deliveries',
-                value: '${_sales.where((s) => _status(s) == 'pending').length}',
-                subtitle: 'Pending sales deliveries',
+                value:
+                    '${_sales.where((s) => _status(s) == 'pending' || _status(s) == 'in transit').length}',
+                subtitle:
+                    '${_sales.where((s) => _status(s) == 'in transit').length} in transit',
                 icon: Icons.local_shipping_outlined,
                 color: AppColors.primary,
               ),
@@ -357,7 +361,7 @@ class _SalesPersonnelDashboardRedesignedState
             children: [
               _HeroChip(
                   label:
-                      '${_sales.where((s) => _status(s) == 'pending').length} deliveries pending',
+                      '${_sales.where((s) => _status(s) == 'in transit').length} deliveries in transit',
                   icon: Icons.today_outlined),
               _HeroChip(
                   label: '$_prospectCount off-taker prospects',
@@ -396,7 +400,7 @@ class _SalesPersonnelDashboardRedesignedState
           _ActionTile(
             title: 'Record delivery proof',
             subtitle:
-                '${_sales.where((s) => _status(s) == 'pending').length} sales need delivery follow-up',
+                '${_sales.where((s) => _status(s) != 'delivered' && _status(s) != 'cancelled').length} deliveries need follow-up',
             icon: Icons.add_photo_alternate_outlined,
             color: AppColors.primary,
             route: '/sales-personnel-record-delivery',

@@ -104,6 +104,8 @@ class UserModel {
 
   bool get isSalesPersonnel => role == UserRole.salesPersonnel;
 
+  bool get isDriver => role == UserRole.driver;
+
   bool get isAccountant => role == UserRole.accountant;
 
   /// Get user initials for avatar

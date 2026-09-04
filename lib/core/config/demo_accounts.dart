@@ -130,6 +130,16 @@ class DemoAccounts {
     dashboardRoute: '/sales_personnel_dashboard',
   );
 
+  // Driver - Assigned dispatches and delivery history
+  static const driver = DemoAccount(
+    email: 'driver@farmestates.com',
+    password: 'FarmDemo#2026Driver',
+    role: 'driver',
+    displayName: 'Demo Driver',
+    description: 'Assigned dispatches & delivery history',
+    dashboardRoute: '/driver_dashboard',
+  );
+
   // Accountant - Financial transactions & reporting
   static const accountant = DemoAccount(
     email: 'accountant@farmestates.com',
@@ -153,6 +163,7 @@ class DemoAccounts {
         qualityAssurance,
         salesManager,
         salesPersonnel,
+        driver,
         accountant,
       ];
 

@@ -20,6 +20,9 @@ class SalesPersonnelHeader extends ConsumerWidget {
   final List<String>? farms;
   final String? selectedFarm;
   final ValueChanged<String?>? onFarmChanged;
+  final String roleLabel;
+  final IconData roleIcon;
+  final String? settingsRoute;
 
   const SalesPersonnelHeader({
     super.key,
@@ -31,6 +34,9 @@ class SalesPersonnelHeader extends ConsumerWidget {
     this.farms,
     this.selectedFarm,
     this.onFarmChanged,
+    this.roleLabel = 'Sales Personnel',
+    this.roleIcon = Icons.shopping_cart_outlined,
+    this.settingsRoute = '/sales-personnel-settings',
   });
 
   String _getGreeting() {
@@ -245,7 +251,7 @@ class SalesPersonnelHeader extends ConsumerWidget {
                   Row(
                     children: [
                       Icon(
-                        Icons.shopping_cart_outlined,
+                        roleIcon,
                         size: 12,
                         color: isDark
                             ? Colors.white.withOpacity(0.6)
@@ -253,7 +259,7 @@ class SalesPersonnelHeader extends ConsumerWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Sales Personnel',
+                        roleLabel,
                         style: AppTypography.bodySmall.copyWith(
                           fontSize: 11,
                           color: isDark
@@ -478,16 +484,17 @@ class SalesPersonnelHeader extends ConsumerWidget {
                 ],
               ),
             ),
-            PopupMenuItem(
-              value: 'settings',
-              child: Row(
-                children: const [
-                  Icon(Icons.settings_outlined, size: 18),
-                  SizedBox(width: AppSpacing.sm),
-                  Text('Settings'),
-                ],
+            if (settingsRoute != null)
+              const PopupMenuItem(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings_outlined, size: 18),
+                    SizedBox(width: AppSpacing.sm),
+                    Text('Settings'),
+                  ],
+                ),
               ),
-            ),
             const PopupMenuDivider(),
             PopupMenuItem(
               value: 'logout',
@@ -514,8 +521,8 @@ class SalesPersonnelHeader extends ConsumerWidget {
                       .pushNamedAndRemoveUntil('/login', (route) => false);
                 }
               }
-            } else if (value == 'settings') {
-              Navigator.of(context).pushNamed('/sales-personnel-settings');
+            } else if (value == 'settings' && settingsRoute != null) {
+              Navigator.of(context).pushNamed(settingsRoute!);
             } else if (value == 'profile') {
               if (onProfileTap != null) {
                 onProfileTap!();
@@ -618,16 +625,17 @@ class SalesPersonnelHeader extends ConsumerWidget {
                 ],
               ),
             ),
-            PopupMenuItem(
-              value: 'settings',
-              child: Row(
-                children: const [
-                  Icon(Icons.settings_outlined, size: 18),
-                  SizedBox(width: AppSpacing.sm),
-                  Text('Settings'),
-                ],
+            if (settingsRoute != null)
+              const PopupMenuItem(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings_outlined, size: 18),
+                    SizedBox(width: AppSpacing.sm),
+                    Text('Settings'),
+                  ],
+                ),
               ),
-            ),
             const PopupMenuDivider(),
             PopupMenuItem(
               value: 'logout',
@@ -654,8 +662,8 @@ class SalesPersonnelHeader extends ConsumerWidget {
                       .pushNamedAndRemoveUntil('/login', (route) => false);
                 }
               }
-            } else if (value == 'settings') {
-              Navigator.of(context).pushNamed('/sales-personnel-settings');
+            } else if (value == 'settings' && settingsRoute != null) {
+              Navigator.of(context).pushNamed(settingsRoute!);
             } else if (value == 'profile') {
               if (onProfileTap != null) {
                 onProfileTap!();

@@ -1758,6 +1758,8 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
         .length;
     final delivered =
         _sales.where((item) => _text(item, ['status']) == 'Delivered').length;
+    final inTransit =
+        _sales.where((item) => _text(item, ['status']) == 'In Transit').length;
     final availablePacks = _releasedBatches.fold<int>(
       0,
       (sum, item) => sum + _availablePacks(item),
@@ -1788,12 +1790,16 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
                       AppColors.primary),
                 ),
                 _KpiCard(
+                  data: _KpiData('Scheduled', '$pending', 'Awaiting dispatch',
+                      Icons.schedule_outlined, AppColors.warning),
+                ),
+                _KpiCard(
                   data: _KpiData(
-                      'Scheduled',
-                      '$pending',
-                      'Awaiting delivery completion',
-                      Icons.schedule_outlined,
-                      AppColors.warning),
+                      'In Transit',
+                      '$inTransit',
+                      'On the way to off-takers',
+                      Icons.local_shipping_outlined,
+                      AppColors.info),
                 ),
                 _KpiCard(
                   data: _KpiData(
@@ -1849,7 +1855,13 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
             ),
             const SizedBox(height: AppSpacing.md),
             LayoutBuilder(builder: (_, constraints) {
-              final filters = ['All', 'Pending', 'Delivered', 'Cancelled'];
+              final filters = [
+                'All',
+                'Pending',
+                'In Transit',
+                'Delivered',
+                'Cancelled'
+              ];
               return Wrap(
                 spacing: AppSpacing.sm,
                 runSpacing: AppSpacing.sm,
@@ -2246,9 +2258,11 @@ class _SalesDeliveryRecordCard extends StatelessWidget {
     final status = _value(['status'], 'Pending');
     final color = status == 'Delivered'
         ? AppColors.success
-        : status == 'Cancelled'
-            ? AppColors.error
-            : AppColors.warning;
+        : status == 'In Transit'
+            ? AppColors.info
+            : status == 'Cancelled'
+                ? AppColors.error
+                : AppColors.warning;
     final weight = double.tryParse(_value(['quantity_delivered'], '0')) ?? 0;
     final amount = double.tryParse(_value(['total_amount'], '0')) ?? 0;
     return Material(
@@ -2648,7 +2662,8 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
         .contains(_paymentMode)) {
       _paymentMode = 'Bank Transfer';
     }
-    if (!const ['Pending', 'Delivered', 'Cancelled'].contains(_status)) {
+    if (!const ['Pending', 'In Transit', 'Delivered', 'Cancelled']
+        .contains(_status)) {
       _status = 'Pending';
     }
     _paid = sale?['paid'] == true;
@@ -3226,7 +3241,12 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                           initialValue: _status,
                           decoration: _decoration(
                               'Delivery status', Icons.flag_outlined),
-                          items: const ['Pending', 'Delivered', 'Cancelled']
+                          items: const [
+                            'Pending',
+                            'In Transit',
+                            'Delivered',
+                            'Cancelled'
+                          ]
                               .map((item) => DropdownMenuItem(
                                   value: item, child: Text(item)))
                               .toList(),
@@ -3616,9 +3636,11 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
       final statusLower = status.toLowerCase();
       final color = statusLower == 'delivered'
           ? AppColors.success
-          : statusLower == 'cancelled'
-              ? AppColors.warning
-              : AppColors.primary;
+          : statusLower == 'in transit'
+              ? AppColors.info
+              : statusLower == 'cancelled'
+                  ? AppColors.warning
+                  : AppColors.primary;
       final buyer = _text(sale, ['buyer_name', 'buyer_id', 'off_taker_id'],
           fallback: 'Unnamed buyer');
       final batch = _text(sale, ['batch_id'], fallback: 'Batch not set');
@@ -3672,6 +3694,9 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
         .length;
     final pending =
         sales.where((sale) => _status(sale).toLowerCase() == 'pending').length;
+    final inTransit = sales
+        .where((sale) => _status(sale).toLowerCase() == 'in transit')
+        .length;
     final activeBuyers = _offTakers
         .where((buyer) =>
             _text(buyer, ['status'], fallback: 'Active').toLowerCase() ==
@@ -3701,6 +3726,8 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
               AppColors.primary),
           _KpiData('Pending', '$pending', 'Sales awaiting delivery',
               Icons.local_shipping_outlined, AppColors.warning),
+          _KpiData('In Transit', '$inTransit', 'On the way to off-takers',
+              Icons.route_outlined, AppColors.info),
           _KpiData('Delivered', '$delivered', 'Recorded sales',
               Icons.task_alt_outlined, AppColors.success),
         ];

@@ -111,8 +111,18 @@ class AuthService {
       // Normalize email
       final normalizedEmail = email.toLowerCase().trim();
 
+      final exactDemoAccount = DemoAccounts.getByEmail(normalizedEmail);
+
       final apiResult = await _loginWithApi(normalizedEmail, password);
       if (apiResult != null) {
+        // Demo credentials are intentionally displayed on the login screen.
+        // Keep them usable when the corresponding account has not been seeded,
+        // while preferring the real backend identity whenever login succeeds.
+        if (!apiResult.success &&
+            exactDemoAccount != null &&
+            exactDemoAccount.password == password) {
+          return _loginWithDemoAccount(exactDemoAccount);
+        }
         return apiResult;
       }
 
@@ -134,37 +144,35 @@ class AuthService {
         );
       }
 
-      // Store dashboard route
-      _dashboardRoute = demoAccount.dashboardRoute;
-
-      // Create user model (use role from demo account)
-      _currentUser = UserModel(
-        id: demoAccount.role,
-        name: demoAccount.displayName,
-        email: demoAccount.email,
-        role: _mapRoleStringToEnum(demoAccount.role),
-        address: 'Farm Estates',
-        farmId: 'F001',
-        createdAt: DateTime.now(),
-      );
-
-      // Save session
-      await _saveSession();
-
-      // Log login activity
-      await _logActivity('User logged in', _currentUser!);
-
-      return AuthResult(
-        success: true,
-        message: 'Login successful',
-        user: _currentUser,
-      );
+      return _loginWithDemoAccount(demoAccount);
     } catch (e) {
       return AuthResult(
         success: false,
         message: 'An error occurred during login: $e',
       );
     }
+  }
+
+  Future<AuthResult> _loginWithDemoAccount(DemoAccount account) async {
+    _dashboardRoute = account.dashboardRoute;
+    _jwt = null;
+    _sessionId = null;
+    _currentUser = UserModel(
+      id: account.role,
+      name: account.displayName,
+      email: account.email,
+      role: _mapRoleStringToEnum(account.role),
+      address: 'Farm Estates',
+      farmId: 'F001',
+      createdAt: DateTime.now(),
+    );
+    await _saveSession();
+    await _logActivity('User logged in with demo account', _currentUser!);
+    return AuthResult(
+      success: true,
+      message: 'Login successful',
+      user: _currentUser,
+    );
   }
 
   Future<AuthResult?> _loginWithApi(String email, String password) async {
@@ -285,6 +293,9 @@ class AuthService {
       case 'sales_personnel':
       case 'sales_person':
         return UserRole.salesPersonnel;
+      case 'driver':
+      case 'delivery_agent':
+        return UserRole.driver;
       case 'accountant':
         return UserRole.accountant;
       default:
@@ -432,6 +443,7 @@ class AuthService {
       case UserRole.qualityAssurance:
       case UserRole.salesManager:
       case UserRole.salesPersonnel:
+      case UserRole.driver:
       case UserRole.accountant:
         return permission == Permission.viewDashboard ||
             permission == Permission.viewReports ||
@@ -473,6 +485,8 @@ class AuthService {
         return '/sales_dashboard';
       case UserRole.salesPersonnel:
         return '/sales_personnel_dashboard';
+      case UserRole.driver:
+        return '/driver_dashboard';
       case UserRole.accountant:
         return '/accountant_dashboard';
     }
@@ -502,6 +516,8 @@ class AuthService {
         return '/sales_dashboard';
       case UserRole.salesPersonnel:
         return '/sales_personnel_dashboard';
+      case UserRole.driver:
+        return '/driver_dashboard';
       case UserRole.accountant:
         return '/accountant_dashboard';
     }

@@ -175,10 +175,17 @@ class _SalesPersonnelRecordDeliveryScreenState
 
     final pending =
         _sales.where((sale) => _saleStatus(sale) == 'pending').length;
+    final inTransit =
+        _sales.where((sale) => _saleStatus(sale) == 'in transit').length;
     final cards = _sales.map<Map<String, Object>>((sale) {
       final status = '${sale['status'] ?? 'Pending'}';
-      final color =
-          status == 'Delivered' ? AppColors.success : AppColors.warning;
+      final color = status == 'Delivered'
+          ? AppColors.success
+          : status == 'In Transit'
+              ? AppColors.info
+              : status == 'Cancelled'
+                  ? AppColors.error
+                  : AppColors.warning;
       return {
         'title': '${sale['buyer_name'] ?? 'Buyer'}',
         'subtitle':
@@ -189,8 +196,11 @@ class _SalesPersonnelRecordDeliveryScreenState
         'metricLabel': 'Scheduled',
         'status': status,
         'color': color,
-        'actionLabel':
-            status == 'Delivered' ? 'View handover' : 'Record handover',
+        'actionLabel': status == 'Delivered'
+            ? 'View handover'
+            : status == 'In Transit'
+                ? 'Update delivery'
+                : 'Start delivery',
         'actionIcon': status == 'Delivered'
             ? Icons.visibility_outlined
             : Icons.fact_check_outlined,
@@ -206,8 +216,10 @@ class _SalesPersonnelRecordDeliveryScreenState
       icon: Icons.local_shipping_outlined,
       colors: const [Color(0xFF1D4ED8), Color(0xFF0F766E)],
       kpis: [
-        _KpiData('Pending', '$pending', 'Awaiting completion',
+        _KpiData('Pending', '$pending', 'Awaiting dispatch',
             Icons.today_outlined, AppColors.primary),
+        _KpiData('In Transit', '$inTransit', 'On the way to off-takers',
+            Icons.local_shipping_outlined, AppColors.info),
         _KpiData(
             'Completed',
             '${_sales.where((sale) => _saleStatus(sale) == 'delivered').length}',
@@ -1172,9 +1184,11 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
     _notesController = TextEditingController(
       text: '${widget.sale['delivery_notes'] ?? ''}',
     );
-    _status = '${widget.sale['status'] ?? 'Pending'}' == 'Delivered'
-        ? 'Delivered'
-        : 'Pending';
+    final storedStatus = '${widget.sale['status'] ?? 'Pending'}';
+    _status =
+        const ['Pending', 'In Transit', 'Delivered'].contains(storedStatus)
+            ? storedStatus
+            : 'Pending';
     _paid = widget.sale['paid'] == true;
     final storedMode = '${widget.sale['payment_mode'] ?? ''}'.trim();
     _paymentMode = _paymentModes.contains(storedMode) ? storedMode : 'Cash';
@@ -1520,6 +1534,10 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                           DropdownMenuItem(
                             value: 'Pending',
                             child: Text('Pending'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'In Transit',
+                            child: Text('In Transit'),
                           ),
                           DropdownMenuItem(
                             value: 'Delivered',
