@@ -224,6 +224,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         phone: _phoneController.text.trim(),
         department: _userDepartment,
         status: _userStatus,
+        actorId: _userId,
+        actorRole: _userRole,
       );
       final updated = response['user'];
       if (!mounted) return;
