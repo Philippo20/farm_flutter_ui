@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/utils/sales_assignment.dart';
 import '../../core/widgets/sales_personnel_screen_shell.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/superadmin_api_service.dart';
@@ -32,48 +35,58 @@ class _SalesPersonnelRecordDeliveryScreenState
   final _api = SuperAdminApiService();
   List<Map<String, dynamic>> _sales = const [];
   bool _loading = true;
+  bool _loadingRequest = false;
   String? _error;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _load(silent: true),
+    );
   }
 
-  Future<void> _load() async {
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (_loadingRequest) return;
+    _loadingRequest = true;
     try {
       final allSales = await _api.getSales();
       final user = ref.read(authProvider).user;
-      final identity = {
-        user?.id.toLowerCase() ?? '',
-        user?.email.toLowerCase() ?? '',
-        user?.name.toLowerCase() ?? '',
-      }..removeWhere((value) => value.trim().isEmpty);
-      final sales = allSales.where((sale) {
-        final assignedIdentity = {
-          '${sale['sales_person_id'] ?? ''}',
-          '${sale['sales_person_name'] ?? ''}',
-          '${sale['sales_person_email'] ?? ''}',
-        }..removeWhere((value) => value.trim().isEmpty);
-        final assigned = assignedIdentity
-            .any((value) => identity.contains(value.toLowerCase()));
-        final legacyOwner =
-            identity.contains('${sale['created_by'] ?? ''}'.toLowerCase());
-        return assigned || legacyOwner;
-      }).toList()
+      final identity = salesUserIdentity(
+        id: user?.id,
+        email: user?.email,
+        name: user?.name,
+      );
+      final sales = allSales
+          .where((sale) => isSaleAssignedToIdentity(sale, identity))
+          .toList()
         ..sort((a, b) => '${b['scheduled_for'] ?? b['delivered_at'] ?? ''}'
             .compareTo('${a['scheduled_for'] ?? a['delivered_at'] ?? ''}'));
       if (!mounted) return;
       setState(() {
         _sales = sales;
         _loading = false;
+        _error = null;
       });
     } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _error = error.toString();
-      });
+      if (!silent || _sales.isEmpty) {
+        setState(() {
+          _loading = false;
+          _error = error.toString();
+        });
+      }
+    } finally {
+      _loadingRequest = false;
     }
   }
 
@@ -91,6 +104,52 @@ class _SalesPersonnelRecordDeliveryScreenState
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Unable to open invoice: $error')),
+      );
+    }
+  }
+
+  Future<void> _openHandover(Map<String, dynamic> sale) async {
+    final user = ref.read(authProvider).user;
+    final saleId = '${sale[r'$id'] ?? sale['id'] ?? ''}'.trim();
+    if (user == null || saleId.isEmpty) return;
+
+    final modal = _DeliveryHandoverModal(
+      sale: sale,
+      onPrintInvoice: () => _openInvoice(sale),
+      onSubmit: (values) => _api.updateSalesHandover(saleId, {
+        ...values,
+        'actor_id': user.id,
+        'actor_name': user.name,
+      }),
+    );
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final updated = isMobile
+        ? await showModalBottomSheet<bool>(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) => modal,
+          )
+        : await showDialog<bool>(
+            context: context,
+            builder: (_) => Dialog(
+              insetPadding: const EdgeInsets.all(24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              ),
+              child: ConstrainedBox(
+                constraints:
+                    const BoxConstraints(maxWidth: 640, maxHeight: 760),
+                child: modal,
+              ),
+            ),
+          );
+    if (updated == true) {
+      await _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Delivery handover updated.')),
       );
     }
   }
@@ -128,8 +187,12 @@ class _SalesPersonnelRecordDeliveryScreenState
         'metricLabel': 'Scheduled',
         'status': status,
         'color': color,
-        'actionLabel': 'Print invoice',
-        'action': () => _openInvoice(sale),
+        'actionLabel':
+            status == 'Delivered' ? 'View handover' : 'Record handover',
+        'actionIcon': status == 'Delivered'
+            ? Icons.visibility_outlined
+            : Icons.fact_check_outlined,
+        'action': () => _openHandover(sale),
       };
     }).toList();
 
@@ -350,37 +413,57 @@ class _SalesPersonnelMySalesScreenState
   final _api = SuperAdminApiService();
   List<Map<String, Object>> _sales = const [];
   bool _loading = true;
+  bool _loadingRequest = false;
   String? _error;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _load(silent: true),
+    );
   }
 
-  Future<void> _load() async {
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (_loadingRequest) return;
+    _loadingRequest = true;
     try {
       final allSales = await _api.getSales();
       final user = ref.read(authProvider).user;
-      final identity = {user?.id ?? '', user?.email ?? '', user?.name ?? ''}
-        ..removeWhere((value) => value.trim().isEmpty);
+      final identity = salesUserIdentity(
+        id: user?.id,
+        email: user?.email,
+        name: user?.name,
+      );
       final records = allSales
-          .where((sale) {
-            return identity.contains('${sale['created_by'] ?? ''}');
-          })
+          .where((sale) => isSaleAssignedToIdentity(sale, identity))
           .map<Map<String, Object>>(_mapSale)
           .toList();
       if (!mounted) return;
       setState(() {
         _sales = records;
         _loading = false;
+        _error = null;
       });
     } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _error = error.toString();
-      });
+      if (!silent || _sales.isEmpty) {
+        setState(() {
+          _loading = false;
+          _error = error.toString();
+        });
+      }
+    } finally {
+      _loadingRequest = false;
     }
   }
 
@@ -602,34 +685,56 @@ class _SalesPersonnelReportsScreenState
   final _api = SuperAdminApiService();
   List<Map<String, dynamic>> _sales = const [];
   bool _loading = true;
+  bool _loadingRequest = false;
   String? _error;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _load(silent: true),
+    );
   }
 
-  Future<void> _load() async {
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (_loadingRequest) return;
+    _loadingRequest = true;
     try {
       final allSales = await _api.getSales();
       final user = ref.read(authProvider).user;
-      final identity = {user?.id ?? '', user?.email ?? '', user?.name ?? ''}
-        ..removeWhere((value) => value.trim().isEmpty);
+      final identity = salesUserIdentity(
+        id: user?.id,
+        email: user?.email,
+        name: user?.name,
+      );
       final sales = allSales
-          .where((sale) => identity.contains('${sale['created_by'] ?? ''}'))
+          .where((sale) => isSaleAssignedToIdentity(sale, identity))
           .toList();
       if (!mounted) return;
       setState(() {
         _sales = sales;
         _loading = false;
+        _error = null;
       });
     } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _error = error.toString();
-      });
+      if (!silent || _sales.isEmpty) {
+        setState(() {
+          _loading = false;
+          _error = error.toString();
+        });
+      }
+    } finally {
+      _loadingRequest = false;
     }
   }
 
@@ -866,6 +971,47 @@ class _ResponsiveGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (itemCount == 0) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xl,
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(
+            color: isDark ? AppColors.neutral700 : AppColors.neutral200,
+          ),
+        ),
+        child: Column(
+          children: [
+            const _IconBox(
+              icon: Icons.inbox_outlined,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'No assigned records yet',
+              style: AppTypography.h6.copyWith(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'New records assigned to your account will appear here automatically.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
         final isMobile = MediaQuery.of(context).size.width < 600;
@@ -968,12 +1114,434 @@ class _SalesPersonnelCard extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: item['action'] as VoidCallback,
-                icon: const Icon(Icons.print_outlined, size: 18),
+                icon: Icon(
+                  item['actionIcon'] as IconData? ?? Icons.open_in_new_outlined,
+                  size: 18,
+                ),
                 label: Text('${item['actionLabel'] ?? 'Open'}'),
               ),
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _DeliveryHandoverModal extends StatefulWidget {
+  final Map<String, dynamic> sale;
+  final VoidCallback onPrintInvoice;
+  final Future<Map<String, dynamic>> Function(Map<String, dynamic> values)
+      onSubmit;
+
+  const _DeliveryHandoverModal({
+    required this.sale,
+    required this.onPrintInvoice,
+    required this.onSubmit,
+  });
+
+  @override
+  State<_DeliveryHandoverModal> createState() => _DeliveryHandoverModalState();
+}
+
+class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
+  late final TextEditingController _receiptController;
+  late final TextEditingController _notesController;
+  late String _status;
+  late String _paymentMode;
+  late bool _paid;
+  bool _saving = false;
+  String? _error;
+
+  static const _paymentModes = [
+    'Cash',
+    'Mobile Money',
+    'Bank Transfer',
+    'Credit',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _receiptController = TextEditingController(
+      text:
+          '${widget.sale['receipt_number'] ?? widget.sale['invoice_number'] ?? ''}',
+    );
+    _notesController = TextEditingController(
+      text: '${widget.sale['delivery_notes'] ?? ''}',
+    );
+    _status = '${widget.sale['status'] ?? 'Pending'}' == 'Delivered'
+        ? 'Delivered'
+        : 'Pending';
+    _paid = widget.sale['paid'] == true;
+    final storedMode = '${widget.sale['payment_mode'] ?? ''}'.trim();
+    _paymentMode = _paymentModes.contains(storedMode) ? storedMode : 'Cash';
+  }
+
+  @override
+  void dispose() {
+    _receiptController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_saving) return;
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.onSubmit({
+        'status_value': _status,
+        'delivery_notes': _notesController.text.trim(),
+        'receipt_number': _receiptController.text.trim(),
+        'paid': _paid,
+        'payment_mode': _paid ? _paymentMode : '',
+      });
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = error.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  InputDecoration _decoration(String label, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, size: 20),
+      filled: true,
+      fillColor: isDark ? AppColors.surfaceDark : const Color(0xFFF8FAFC),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        borderSide: BorderSide(
+          color: isDark ? AppColors.neutral700 : AppColors.neutral200,
+        ),
+      ),
+    );
+  }
+
+  Widget _summaryItem(String label, String value, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(
+          color: isDark ? AppColors.neutral700 : AppColors.neutral200,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 19, color: AppColors.primary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white70 : AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sale = widget.sale;
+
+    return Material(
+      color: isDark ? AppColors.backgroundDark : Colors.white,
+      borderRadius: BorderRadius.vertical(
+        top: const Radius.circular(AppSpacing.radiusLg),
+        bottom: Radius.circular(isMobile ? 0 : AppSpacing.radiusLg),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        height: isMobile ? MediaQuery.sizeOf(context).height * 0.88 : null,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.md,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                    child: const Icon(
+                      Icons.fact_check_outlined,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Delivery Handover',
+                          style: AppTypography.h5.copyWith(
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Confirm the off-taker receipt and payment status',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: isDark
+                                ? Colors.white70
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close',
+                    onPressed:
+                        _saving ? null : () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            Divider(
+              height: 1,
+              color: isDark ? AppColors.neutral700 : AppColors.neutral200,
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final items = [
+                          _summaryItem(
+                            'Off-taker',
+                            '${sale['buyer_name'] ?? 'Not set'}',
+                            Icons.storefront_outlined,
+                          ),
+                          _summaryItem(
+                            'Batch and packs',
+                            '${sale['batch_number'] ?? sale['batch_id'] ?? 'Not set'} | ${_saleNumber(sale['package_count'])} packs',
+                            Icons.inventory_2_outlined,
+                          ),
+                          _summaryItem(
+                            'Driver',
+                            '${sale['delivery_agent_name'] ?? 'Unassigned'}',
+                            Icons.person_outline,
+                          ),
+                          _summaryItem(
+                            'Vehicle',
+                            '${sale['delivery_plate_number'] ?? sale['delivery_vehicle'] ?? 'Pending'}',
+                            Icons.local_shipping_outlined,
+                          ),
+                        ];
+                        if (constraints.maxWidth < 520) {
+                          return Column(
+                            children: [
+                              for (var i = 0; i < items.length; i++) ...[
+                                items[i],
+                                if (i < items.length - 1)
+                                  const SizedBox(height: AppSpacing.sm),
+                              ],
+                            ],
+                          );
+                        }
+                        return Wrap(
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.sm,
+                          children: items
+                              .map((item) => SizedBox(
+                                    width:
+                                        (constraints.maxWidth - AppSpacing.sm) /
+                                            2,
+                                    child: item,
+                                  ))
+                              .toList(),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    DropdownButtonFormField<String>(
+                      initialValue: _status,
+                      decoration: _decoration(
+                        'Delivery status',
+                        Icons.flag_outlined,
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'Pending', child: Text('Pending')),
+                        DropdownMenuItem(
+                            value: 'Delivered', child: Text('Delivered')),
+                      ],
+                      onChanged: _saving
+                          ? null
+                          : (value) =>
+                              setState(() => _status = value ?? _status),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextFormField(
+                      controller: _receiptController,
+                      enabled: !_saving,
+                      decoration: _decoration(
+                        'Signed invoice / receipt reference',
+                        Icons.receipt_long_outlined,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Payment received'),
+                      subtitle:
+                          const Text('Confirm only after payment is verified'),
+                      value: _paid,
+                      onChanged: _saving
+                          ? null
+                          : (value) => setState(() => _paid = value),
+                    ),
+                    if (_paid) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      DropdownButtonFormField<String>(
+                        initialValue: _paymentMode,
+                        decoration: _decoration(
+                          'Payment method',
+                          Icons.account_balance_wallet_outlined,
+                        ),
+                        items: _paymentModes
+                            .map((mode) => DropdownMenuItem(
+                                  value: mode,
+                                  child: Text(mode),
+                                ))
+                            .toList(),
+                        onChanged: _saving
+                            ? null
+                            : (value) => setState(
+                                  () => _paymentMode = value ?? _paymentMode,
+                                ),
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.md),
+                    TextFormField(
+                      controller: _notesController,
+                      enabled: !_saving,
+                      minLines: 3,
+                      maxLines: 5,
+                      decoration: _decoration(
+                        'Handover notes or delivery exception',
+                        Icons.notes_outlined,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Divider(
+              height: 1,
+              color: isDark ? AppColors.neutral700 : AppColors.neutral200,
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.md,
+                AppSpacing.lg,
+                isMobile ? AppSpacing.lg : AppSpacing.md,
+              ),
+              child: Column(
+                children: [
+                  if (_error != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withOpacity(0.08),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
+                        border: Border.all(
+                            color: AppColors.error.withOpacity(0.25)),
+                      ),
+                      child: Text(
+                        _error!,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.error,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                  ],
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _saving ? null : widget.onPrintInvoice,
+                          icon: const Icon(Icons.print_outlined),
+                          label: const Text('Print invoice'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: _saving ? null : _submit,
+                          icon: _saving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.check_circle_outline),
+                          label: Text(_saving ? 'Saving...' : 'Save handover'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

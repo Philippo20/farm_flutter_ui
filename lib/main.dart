@@ -67,6 +67,7 @@ import 'screens/sales/sales_manager_dashboard.dart';
 import 'screens/sales/sales_manager_dashboard_redesigned.dart';
 import 'screens/sales/sales_manager_nav_screens.dart';
 import 'screens/sales/sales_pricing_screen.dart';
+import 'screens/sales/sales_invoice_screen.dart';
 import 'screens/sales/sales_personnel_dashboard.dart';
 import 'screens/sales/sales_personnel_dashboard_redesigned.dart';
 import 'screens/sales/sales_personnel_nav_screens.dart';
@@ -114,12 +115,15 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
+    final requestedRoute = Uri.base.fragment.startsWith('/sales-invoice')
+        ? Uri.base.fragment
+        : '/login';
 
     return MaterialApp(
       title: 'Room Dashboard',
       debugShowCheckedModeBanner: false,
       //home: AdminDashboardScreen(),
-      initialRoute: '/login',
+      initialRoute: requestedRoute,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
@@ -142,6 +146,18 @@ class MyApp extends ConsumerWidget {
           ),
           child: child ?? const SizedBox.shrink(),
         );
+      },
+      onGenerateRoute: (settings) {
+        final uri = Uri.tryParse(settings.name ?? '');
+        if (uri?.path == '/sales-invoice') {
+          return MaterialPageRoute<void>(
+            settings: settings,
+            builder: (_) => SalesInvoiceScreen(
+              saleId: uri?.queryParameters['id'] ?? '',
+            ),
+          );
+        }
+        return null;
       },
       routes: {
         // Auth

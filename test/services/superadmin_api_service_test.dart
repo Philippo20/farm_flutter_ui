@@ -185,13 +185,12 @@ void main() {
     expect(request.bodyFields['delivery_plate_number'], 'GT 1234-26');
   });
 
-  test('salesInvoiceUrl targets the printable invoice endpoint', () {
+  test('salesInvoiceUrl targets the public UI invoice route', () {
     final service = SuperAdminApiService();
 
-    expect(
-      service.salesInvoiceUrl('sale 1').path,
-      '/sales/sale%201/invoice',
-    );
+    final uri = service.salesInvoiceUrl('sale 1');
+    expect(uri.host, 'apps.farmestates.farm');
+    expect(uri.fragment, '/sales-invoice?id=sale+1');
   });
 
   test('updateSale targets the selected sales delivery document', () async {
@@ -210,6 +209,29 @@ void main() {
     expect(request.url.path, '/sales/sale-1');
     expect(request.bodyFields['package_count'], '40');
     expect(request.bodyFields['status'], 'Delivered');
+  });
+
+  test('updateSalesHandover sends the personnel delivery update', () async {
+    final client = _RecordingClient();
+    final service = SuperAdminApiService(client: client);
+
+    await service.updateSalesHandover('sale-1', {
+      'actor_id': 'sales-person-1',
+      'actor_name': 'Ama Sales',
+      'status_value': 'Delivered',
+      'receipt_number': 'INV-001',
+      'paid': true,
+      'payment_mode': 'Mobile Money',
+      'delivery_notes': 'Signed by the receiving officer.',
+    });
+
+    expect(client.request, isA<http.Request>());
+    final request = client.request! as http.Request;
+    expect(request.method, 'PATCH');
+    expect(request.url.path, '/sales/sale-1/handover');
+    expect(request.bodyFields['actor_id'], 'sales-person-1');
+    expect(request.bodyFields['status_value'], 'Delivered');
+    expect(request.bodyFields['paid'], 'true');
   });
 
   test('createUser sends driver ownership and vehicle details', () async {

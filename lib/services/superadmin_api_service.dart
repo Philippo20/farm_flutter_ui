@@ -12,6 +12,10 @@ class SuperAdminApiService {
     'API_BASE_URL',
     defaultValue: 'https://api-5u45d.ondigitalocean.app',
   );
+  static const String uiBaseUrl = String.fromEnvironment(
+    'UI_BASE_URL',
+    defaultValue: 'https://apps.farmestates.farm',
+  );
 
   final http.Client _client;
 
@@ -38,6 +42,35 @@ class SuperAdminApiService {
         data,
       );
 
+  Future<Map<String, dynamic>> updateSalesHandover(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    final request = http.Request(
+      'PATCH',
+      Uri.parse('$baseUrl/sales/${Uri.encodeComponent(id)}/handover'),
+    )
+      ..headers['Content-Type'] = 'application/x-www-form-urlencoded'
+      ..bodyFields = data.map(
+        (key, value) => MapEntry(key, value?.toString() ?? ''),
+      );
+    final streamed = await _client.send(request).withApiTimeout();
+    final response = await http.Response.fromStream(streamed);
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to update delivery (${response.statusCode})',
+        ),
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid delivery update response');
+    }
+    return decoded;
+  }
+
   Future<void> deleteSale(String id) async {
     final response = await _client
         .delete(Uri.parse('$baseUrl/sales/${Uri.encodeComponent(id)}'))
@@ -52,8 +85,28 @@ class SuperAdminApiService {
     }
   }
 
-  Uri salesInvoiceUrl(String id) =>
-      Uri.parse('$baseUrl/sales/${Uri.encodeComponent(id)}/invoice');
+  Future<Map<String, dynamic>> getSale(String id) async {
+    final response = await _client
+        .get(Uri.parse('$baseUrl/sale/${Uri.encodeComponent(id)}'))
+        .withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(
+        _extractErrorMessage(
+          response.body,
+          fallback: 'Failed to load invoice (${response.statusCode})',
+        ),
+      );
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) {
+      throw const SuperAdminApiException('Invalid invoice response');
+    }
+    return decoded;
+  }
+
+  Uri salesInvoiceUrl(String id) => Uri.parse(
+        '$uiBaseUrl/#/sales-invoice?id=${Uri.encodeQueryComponent(id)}',
+      );
 
   Future<Map<String, dynamic>> _submitSalesRecord(
     String method,

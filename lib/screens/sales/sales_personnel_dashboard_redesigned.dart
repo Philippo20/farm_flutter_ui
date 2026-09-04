@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../core/utils/sales_assignment.dart';
 import '../../core/widgets/sales_personnel_screen_shell.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/superadmin_api_service.dart';
@@ -21,13 +24,16 @@ class _SalesPersonnelDashboardRedesignedState
   List<Map<String, dynamic>> _sales = const [];
   List<Map<String, dynamic>> _offTakers = const [];
   bool _loading = true;
+  bool _loadingRequest = false;
   String? _error;
+  Timer? _refreshTimer;
 
   List<Map<String, Object>> get _workItems => [
         {
           'title': 'Record Delivery',
           'subtitle': 'Capture proof, quantity, buyer handoff, and exceptions.',
-          'metric': '${_sales.where((s) => _status(s) == 'pending').length} pending',
+          'metric':
+              '${_sales.where((s) => _status(s) == 'pending').length} pending',
           'status': '${_sales.length} personal sales',
           'route': '/sales-personnel-record-delivery',
           'icon': Icons.local_shipping_outlined,
@@ -63,14 +69,20 @@ class _SalesPersonnelDashboardRedesignedState
       ];
 
   List<Map<String, Object>> get _activity {
-    final records = [..._sales]
-      ..sort((a, b) => _date(b).compareTo(_date(a)));
-    return records.take(3).map((sale) => <String, Object>{
-          'title': '${_text(sale['buyer_name'], 'Buyer')} sale ${_title(_status(sale))}',
-          'subtitle': '${_number(sale['quantity_delivered'])} kg delivery record',
-          'time': _relative(_date(sale)),
-          'color': _status(sale) == 'delivered' ? AppColors.success : AppColors.warning,
-        }).toList();
+    final records = [..._sales]..sort((a, b) => _date(b).compareTo(_date(a)));
+    return records
+        .take(3)
+        .map((sale) => <String, Object>{
+              'title':
+                  '${_text(sale['buyer_name'], 'Buyer')} sale ${_title(_status(sale))}',
+              'subtitle':
+                  '${_number(sale['quantity_delivered'])} kg delivery record',
+              'time': _relative(_date(sale)),
+              'color': _status(sale) == 'delivered'
+                  ? AppColors.success
+                  : AppColors.warning,
+            })
+        .toList();
   }
 
   double get _revenue => _sales
@@ -78,42 +90,63 @@ class _SalesPersonnelDashboardRedesignedState
       .fold<double>(0, (sum, sale) => sum + _number(sale['total_amount']));
 
   int get _prospectCount => _offTakers
-      .where((item) => _text(item['status'], 'Active').toLowerCase() == 'prospect')
+      .where(
+          (item) => _text(item['status'], 'Active').toLowerCase() == 'prospect')
       .length;
 
   int get _activeOffTakers => _offTakers
-      .where((item) => _text(item['status'], 'Active').toLowerCase() == 'active')
+      .where(
+          (item) => _text(item['status'], 'Active').toLowerCase() == 'active')
       .length;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _load(silent: true),
+    );
   }
 
-  Future<void> _load() async {
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (_loadingRequest) return;
+    _loadingRequest = true;
     try {
       final allSales = await _api.getSales();
       final offTakers = await _api.getOffTakers();
       final user = ref.read(authProvider).user;
-      final identity = {user?.id ?? '', user?.email ?? '', user?.name ?? ''}
-        ..removeWhere((value) => value.trim().isEmpty);
-      final personalSales = allSales.where((sale) {
-        final creator = _text(sale['created_by'], '');
-        return identity.contains(creator);
-      }).toList();
+      final identity = salesUserIdentity(
+        id: user?.id,
+        email: user?.email,
+        name: user?.name,
+      );
+      final personalSales = allSales
+          .where((sale) => isSaleAssignedToIdentity(sale, identity))
+          .toList();
       if (!mounted) return;
       setState(() {
         _sales = personalSales;
         _offTakers = offTakers;
         _loading = false;
+        _error = null;
       });
     } catch (error) {
       if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _error = error.toString();
-      });
+      if (!silent || _sales.isEmpty) {
+        setState(() {
+          _loading = false;
+          _error = error.toString();
+        });
+      }
+    } finally {
+      _loadingRequest = false;
     }
   }
 
@@ -125,7 +158,8 @@ class _SalesPersonnelDashboardRedesignedState
     return value == null || text == 'null' || text.isEmpty ? fallback : text;
   }
 
-  double _number(Object? value) => value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
+  double _number(Object? value) =>
+      value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
 
   DateTime _date(Map<String, dynamic> sale) =>
       DateTime.tryParse(_text(sale['delivered_at'], '')) ??
@@ -144,7 +178,8 @@ class _SalesPersonnelDashboardRedesignedState
     return '${difference.inHours} hr ago';
   }
 
-  String _title(String value) => value.isEmpty ? value : '${value[0].toUpperCase()}${value.substring(1)}';
+  String _title(String value) =>
+      value.isEmpty ? value : '${value[0].toUpperCase()}${value.substring(1)}';
 
   @override
   Widget build(BuildContext context) {
@@ -321,7 +356,8 @@ class _SalesPersonnelDashboardRedesignedState
             runSpacing: AppSpacing.sm,
             children: [
               _HeroChip(
-                  label: '${_sales.where((s) => _status(s) == 'pending').length} deliveries pending',
+                  label:
+                      '${_sales.where((s) => _status(s) == 'pending').length} deliveries pending',
                   icon: Icons.today_outlined),
               _HeroChip(
                   label: '$_prospectCount off-taker prospects',
@@ -359,7 +395,8 @@ class _SalesPersonnelDashboardRedesignedState
         children: [
           _ActionTile(
             title: 'Record delivery proof',
-            subtitle: '${_sales.where((s) => _status(s) == 'pending').length} sales need delivery follow-up',
+            subtitle:
+                '${_sales.where((s) => _status(s) == 'pending').length} sales need delivery follow-up',
             icon: Icons.add_photo_alternate_outlined,
             color: AppColors.primary,
             route: '/sales-personnel-record-delivery',
