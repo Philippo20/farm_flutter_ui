@@ -19,6 +19,7 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
   final _api = SuperAdminApiService();
   Map<String, dynamic>? _sale;
   String? _error;
+  bool _printing = false;
 
   @override
   void initState() {
@@ -59,11 +60,22 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
     return '${parsed.day.toString().padLeft(2, '0')}/${parsed.month.toString().padLeft(2, '0')}/${parsed.year}';
   }
 
+  Future<void> _printInvoice() async {
+    if (!canPrintBrowserPage || _printing) return;
+    setState(() => _printing = true);
+    await WidgetsBinding.instance.endOfFrame;
+    printA4BrowserPage();
+    if (mounted) setState(() => _printing = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final background =
-        dark ? AppColors.backgroundDark : const Color(0xFFF1F5F2);
+    final background = _printing
+        ? Colors.white
+        : dark
+            ? AppColors.backgroundDark
+            : const Color(0xFFF1F5F2);
     return Scaffold(
       backgroundColor: background,
       body: SafeArea(
@@ -78,15 +90,21 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : SelectionArea(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      padding: _printing
+                          ? EdgeInsets.zero
+                          : const EdgeInsets.all(AppSpacing.lg),
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 920),
+                          constraints: BoxConstraints(
+                            maxWidth: _printing ? 794 : 920,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              _toolbar(context),
-                              const SizedBox(height: AppSpacing.md),
+                              if (!_printing) ...[
+                                _toolbar(context),
+                                const SizedBox(height: AppSpacing.md),
+                              ],
                               _invoiceSheet(context),
                             ],
                           ),
@@ -109,7 +127,7 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
           ),
         ),
         FilledButton.icon(
-          onPressed: canPrintBrowserPage ? printBrowserPage : null,
+          onPressed: canPrintBrowserPage ? _printInvoice : null,
           icon: const Icon(Icons.print_outlined, size: 18),
           label: const Text('Print'),
         ),
@@ -128,17 +146,25 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
     final weight = _number('quantity_delivered');
 
     return Container(
-      padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 600 ? 20 : 40),
+      padding: EdgeInsets.all(
+        _printing
+            ? 32
+            : MediaQuery.sizeOf(context).width < 600
+                ? 20
+                : 40,
+      ),
       decoration: BoxDecoration(
         color: surface,
-        borderRadius: BorderRadius.circular(6),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: dark ? .22 : .08),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(_printing ? 0 : 6),
+        boxShadow: _printing
+            ? const []
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: dark ? .22 : .08),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -215,44 +241,44 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: 790,
-              child: Table(
-                columnWidths: const {
-                  0: FlexColumnWidth(2.3),
-                  1: FlexColumnWidth(1.4),
-                  2: FlexColumnWidth(.8),
-                  3: FlexColumnWidth(1.1),
-                  4: FlexColumnWidth(1.2),
-                },
-                children: [
-                  _tableRow(
-                    const [
-                      'Batch / Product',
-                      'Package',
-                      'Packs',
-                      'Unit price',
-                      'Amount'
-                    ],
-                    header: true,
+          if (_printing)
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(2.3),
+                1: FlexColumnWidth(1.4),
+                2: FlexColumnWidth(.8),
+                3: FlexColumnWidth(1.1),
+                4: FlexColumnWidth(1.2),
+              },
+              children: _invoiceTableRows(
+                packageCount: packageCount,
+                unitPrice: unitPrice,
+                total: total,
+                weight: weight,
+              ),
+            )
+          else
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: 790,
+                child: Table(
+                  columnWidths: const {
+                    0: FlexColumnWidth(2.3),
+                    1: FlexColumnWidth(1.4),
+                    2: FlexColumnWidth(.8),
+                    3: FlexColumnWidth(1.1),
+                    4: FlexColumnWidth(1.2),
+                  },
+                  children: _invoiceTableRows(
+                    packageCount: packageCount,
+                    unitPrice: unitPrice,
+                    total: total,
+                    weight: weight,
                   ),
-                  _tableRow([
-                    '${_text(['batch_number', 'batch_id'])}\n${_text([
-                          'crop_variety'
-                        ])} | ${weight.toStringAsFixed(2)} kg',
-                    '${_text(['package_type'])}\n${_text([
-                          'price_tier'
-                        ], 'Regular')} price',
-                    '$packageCount',
-                    'GHS ${unitPrice.toStringAsFixed(2)}',
-                    'GHS ${total.toStringAsFixed(2)}',
-                  ]),
-                ],
+                ),
               ),
             ),
-          ),
           const SizedBox(height: AppSpacing.lg),
           Align(
             alignment: Alignment.centerRight,
@@ -314,6 +340,35 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
         ],
       ),
     );
+  }
+
+  List<TableRow> _invoiceTableRows({
+    required int packageCount,
+    required double unitPrice,
+    required double total,
+    required double weight,
+  }) {
+    return [
+      _tableRow(
+        const [
+          'Batch / Product',
+          'Package',
+          'Packs',
+          'Unit price',
+          'Amount',
+        ],
+        header: true,
+      ),
+      _tableRow([
+        '${_text(['batch_number', 'batch_id'])}\n${_text([
+              'crop_variety'
+            ])} | ${weight.toStringAsFixed(2)} kg',
+        '${_text(['package_type'])}\n${_text(['price_tier'], 'Regular')} price',
+        '$packageCount',
+        'GHS ${unitPrice.toStringAsFixed(2)}',
+        'GHS ${total.toStringAsFixed(2)}',
+      ]),
+    ];
   }
 
   TableRow _tableRow(List<String> values, {bool header = false}) {

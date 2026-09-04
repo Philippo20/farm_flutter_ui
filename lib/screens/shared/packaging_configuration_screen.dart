@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -122,10 +123,12 @@ class _PackagingConfigurationScreenState
             builder: (_) => Dialog(
               backgroundColor: Colors.transparent,
               insetPadding:
-                  const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: ConstrainedBox(
-                constraints:
-                    const BoxConstraints(maxWidth: 700, maxHeight: 760),
+                constraints: BoxConstraints(
+                  maxWidth: 500,
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+                ),
                 child: panel,
               ),
             ),
@@ -536,264 +539,305 @@ class _PackageConfigurationPanelState
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final mobile = MediaQuery.sizeOf(context).width < 600;
-    return Material(
-      color: dark ? AppColors.surfaceDark : Colors.white,
-      borderRadius: BorderRadius.vertical(
-        top: const Radius.circular(18),
-        bottom: Radius.circular(mobile ? 0 : 18),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            if (mobile)
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(top: 10),
-                decoration: BoxDecoration(
-                  color: dark ? Colors.white24 : AppColors.neutral300,
-                  borderRadius: BorderRadius.circular(4),
+    final surface = dark ? AppColors.surfaceDark : Colors.white;
+    final textColor = dark ? Colors.white : AppColors.textPrimary;
+    final secondaryColor = dark ? Colors.white60 : AppColors.textSecondary;
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * (mobile ? .9 : .86),
+      child: Material(
+        color: surface,
+        elevation: mobile ? 0 : 12,
+        shadowColor: Colors.black.withValues(alpha: .26),
+        borderRadius: BorderRadius.vertical(
+          top: const Radius.circular(16),
+          bottom: Radius.circular(mobile ? 0 : 16),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primary.withValues(alpha: .75),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        _editing ? Icons.edit_outlined : Icons.add_box_outlined,
+                        size: 20,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _editing
+                                ? 'Edit Variety Packaging'
+                                : 'Configure Variety Packaging',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: textColor,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Define packaging for a specific crop variety',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: secondaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Tooltip(
+                      message: 'Close',
+                      child: InkWell(
+                        onTap: _saving ? null : () => Navigator.pop(context),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(6),
+                          child: Icon(Icons.close_rounded,
+                              size: 16, color: secondaryColor),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 16, 20),
-              child: Row(
-                children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: .1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      _editing ? Icons.edit_outlined : Icons.add_box_outlined,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  physics: const BouncingScrollPhysics(),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  child: Form(
+                    key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          _editing
-                              ? 'Edit Variety Packaging'
-                              : 'Configure Variety Packaging',
-                          style: AppTypography.titleSmall.copyWith(
-                            color: dark ? Colors.white : AppColors.textPrimary,
+                        _LabeledField(
+                          label: 'Crop variety',
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _cropVarietyId,
+                            isExpanded: true,
+                            style: _modalInputStyle(context),
+                            dropdownColor: surface,
+                            decoration: _fieldDecoration(context,
+                                Icons.grass_outlined, 'Select variety'),
+                            items: widget.cropVarieties.map((variety) {
+                              final name = _cropVarietyLabel(variety);
+                              return DropdownMenuItem(
+                                value: _docId(variety),
+                                child:
+                                    Text(name, overflow: TextOverflow.ellipsis),
+                              );
+                            }).toList(),
+                            onChanged: _saving
+                                ? null
+                                : (value) =>
+                                    setState(() => _cropVarietyId = value),
+                            validator: (value) => value == null
+                                ? 'Select the crop variety this package supports.'
+                                : null,
                           ),
                         ),
-                        Text(
-                          'Define the package used for one crop variety',
-                          style: AppTypography.bodySmall.copyWith(
-                            color:
-                                dark ? Colors.white60 : AppColors.textSecondary,
+                        _LabeledField(
+                          label: 'Package name',
+                          child: TextFormField(
+                            controller: _nameController,
+                            enabled: !_saving,
+                            style: _modalInputStyle(context),
+                            decoration: _fieldDecoration(
+                                context,
+                                Icons.inventory_2_outlined,
+                                'e.g. 250 g produce pouch'),
+                            validator: _requiredText,
                           ),
                         ),
+                        _responsivePair(
+                          mobile,
+                          _LabeledField(
+                            label: 'Product capacity',
+                            child: TextFormField(
+                              controller: _capacityController,
+                              enabled: !_saving,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              style: _modalInputStyle(context),
+                              decoration: _fieldDecoration(
+                                  context, Icons.scale_outlined, 'e.g. 250'),
+                              validator: _positiveNumber,
+                            ),
+                          ),
+                          _LabeledField(
+                            label: 'Capacity unit',
+                            child: _select(
+                              context,
+                              value: _unit,
+                              icon: Icons.straighten_rounded,
+                              values: const ['g', 'kg', 'lbs', 'oz'],
+                              onChanged: (value) =>
+                                  setState(() => _unit = value!),
+                            ),
+                          ),
+                        ),
+                        _responsivePair(
+                          mobile,
+                          _LabeledField(
+                            label: 'Material',
+                            child: _select(
+                              context,
+                              value: _material,
+                              icon: Icons.category_outlined,
+                              values: const [
+                                'Biodegradable',
+                                'Cardboard',
+                                'Paper',
+                                'Plastic',
+                                'Glass'
+                              ],
+                              onChanged: (value) =>
+                                  setState(() => _material = value!),
+                            ),
+                          ),
+                          _LabeledField(
+                            label: 'Status',
+                            child: _select(
+                              context,
+                              value: _status,
+                              icon: Icons.toggle_on_outlined,
+                              values: const [
+                                'Active',
+                                'Damaged',
+                                'Out_of_stock',
+                                'Archived'
+                              ],
+                              onChanged: (value) =>
+                                  setState(() => _status = value!),
+                            ),
+                          ),
+                        ),
+                        _responsivePair(
+                          mobile,
+                          _LabeledField(
+                            label: 'Available package units',
+                            child: TextFormField(
+                              controller: _stockController,
+                              enabled: !_saving,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              style: _modalInputStyle(context),
+                              decoration: _fieldDecoration(context,
+                                  Icons.warehouse_outlined, 'e.g. 1000'),
+                              validator: _wholeUnitNumber,
+                            ),
+                          ),
+                          _LabeledField(
+                            label: 'Cost per package (GHS)',
+                            child: TextFormField(
+                              controller: _costController,
+                              enabled: !_saving,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              style: _modalInputStyle(context),
+                              decoration: _fieldDecoration(context,
+                                  Icons.payments_outlined, 'e.g. 0.50'),
+                              validator: _nonNegativeNumber,
+                            ),
+                          ),
+                        ),
+                        if (_error != null) ...[
+                          _PackageFormError(message: _error!),
+                          const SizedBox(height: 14),
+                        ],
                       ],
                     ),
-                  ),
-                  IconButton(
-                    tooltip: 'Close',
-                    onPressed: _saving ? null : () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                ],
-              ),
-            ),
-            Divider(
-                height: 1, color: dark ? Colors.white10 : AppColors.neutral200),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      if (_error != null) ...[
-                        _PackageFormError(message: _error!),
-                        const SizedBox(height: AppSpacing.md),
-                      ],
-                      _LabeledField(
-                        label: 'Crop variety',
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _cropVarietyId,
-                          isExpanded: true,
-                          decoration: _fieldDecoration(
-                              context, Icons.grass_outlined, 'Select variety'),
-                          items: widget.cropVarieties.map((variety) {
-                            final name = _cropVarietyLabel(variety);
-                            return DropdownMenuItem(
-                              value: _docId(variety),
-                              child:
-                                  Text(name, overflow: TextOverflow.ellipsis),
-                            );
-                          }).toList(),
-                          onChanged: _saving
-                              ? null
-                              : (value) =>
-                                  setState(() => _cropVarietyId = value),
-                          validator: (value) => value == null
-                              ? 'Select the crop variety this package supports.'
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _LabeledField(
-                        label: 'Package name',
-                        child: TextFormField(
-                          controller: _nameController,
-                          enabled: !_saving,
-                          decoration: _fieldDecoration(
-                              context,
-                              Icons.inventory_2_outlined,
-                              'e.g. 250 g produce pouch'),
-                          validator: _requiredText,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _responsivePair(
-                        mobile,
-                        _LabeledField(
-                          label: 'Product capacity',
-                          child: TextFormField(
-                            controller: _capacityController,
-                            enabled: !_saving,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            decoration: _fieldDecoration(
-                                context, Icons.scale_outlined, 'e.g. 250'),
-                            validator: _positiveNumber,
-                          ),
-                        ),
-                        _LabeledField(
-                          label: 'Capacity unit',
-                          child: _select(
-                            context,
-                            value: _unit,
-                            icon: Icons.straighten_rounded,
-                            values: const ['g', 'kg', 'lbs', 'oz'],
-                            onChanged: (value) =>
-                                setState(() => _unit = value!),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _responsivePair(
-                        mobile,
-                        _LabeledField(
-                          label: 'Material',
-                          child: _select(
-                            context,
-                            value: _material,
-                            icon: Icons.category_outlined,
-                            values: const [
-                              'Biodegradable',
-                              'Cardboard',
-                              'Paper',
-                              'Plastic',
-                              'Glass'
-                            ],
-                            onChanged: (value) =>
-                                setState(() => _material = value!),
-                          ),
-                        ),
-                        _LabeledField(
-                          label: 'Status',
-                          child: _select(
-                            context,
-                            value: _status,
-                            icon: Icons.toggle_on_outlined,
-                            values: const [
-                              'Active',
-                              'Damaged',
-                              'Out_of_stock',
-                              'Archived'
-                            ],
-                            onChanged: (value) =>
-                                setState(() => _status = value!),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      _responsivePair(
-                        mobile,
-                        _LabeledField(
-                          label: 'Available package units',
-                          child: TextFormField(
-                            controller: _stockController,
-                            enabled: !_saving,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            decoration: _fieldDecoration(
-                                context, Icons.warehouse_outlined, 'e.g. 1000'),
-                            validator: _wholeUnitNumber,
-                          ),
-                        ),
-                        _LabeledField(
-                          label: 'Cost per package (GHS)',
-                          child: TextFormField(
-                            controller: _costController,
-                            enabled: !_saving,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            decoration: _fieldDecoration(
-                                context, Icons.payments_outlined, 'e.g. 0.50'),
-                            validator: _nonNegativeNumber,
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ),
-            ),
-            Divider(
-                height: 1, color: dark ? Colors.white10 : AppColors.neutral200),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _saving ? null : () => Navigator.pop(context),
-                      style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(50)),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: _saving ? null : _save,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        minimumSize: const Size.fromHeight(50),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed:
+                            _saving ? null : () => Navigator.pop(context),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          textStyle: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        child: const Text('Cancel'),
                       ),
-                      icon: _saving
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : Icon(_editing
-                              ? Icons.save_outlined
-                              : Icons.add_circle_outline_rounded),
-                      label: Text(_saving
-                          ? 'Saving...'
-                          : _editing
-                              ? 'Save changes'
-                              : 'Add packaging'),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: _saving ? null : _save,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          textStyle: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        icon: _saving
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
+                              )
+                            : Icon(
+                                _editing
+                                    ? Icons.save_outlined
+                                    : Icons.add_circle_outline_rounded,
+                                size: 16),
+                        label: Text(_saving
+                            ? 'Saving...'
+                            : _editing
+                                ? 'Save changes'
+                                : 'Add packaging'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -801,15 +845,11 @@ class _PackageConfigurationPanelState
 
   Widget _responsivePair(bool mobile, Widget first, Widget second) {
     if (mobile) {
-      return Column(children: [
-        first,
-        const SizedBox(height: AppSpacing.md),
-        second,
-      ]);
+      return Column(children: [first, second]);
     }
     return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Expanded(child: first),
-      const SizedBox(width: AppSpacing.md),
+      const SizedBox(width: 10),
       Expanded(child: second),
     ]);
   }
@@ -820,16 +860,20 @@ class _PackageConfigurationPanelState
     required IconData icon,
     required List<String> values,
     required ValueChanged<String?> onChanged,
-  }) =>
-      DropdownButtonFormField<String>(
-        initialValue: value,
-        isExpanded: true,
-        decoration: _fieldDecoration(context, icon, ''),
-        items: values
-            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-            .toList(),
-        onChanged: _saving ? null : onChanged,
-      );
+  }) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      isExpanded: true,
+      style: _modalInputStyle(context),
+      dropdownColor: dark ? AppColors.surfaceDark : Colors.white,
+      decoration: _fieldDecoration(context, icon, ''),
+      items: values
+          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .toList(),
+      onChanged: _saving ? null : onChanged,
+    );
+  }
 
   String? _requiredText(String? value) =>
       value == null || value.trim().isEmpty ? 'This field is required.' : null;
@@ -1185,13 +1229,25 @@ class _LabeledField extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: AppTypography.label),
-          const SizedBox(height: 7),
-          child,
-        ],
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(bottom: 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white70
+                    : AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            child,
+          ],
+        ),
       );
 }
 
@@ -1205,7 +1261,7 @@ class _PackageFormError extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.error.withValues(alpha: .08),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: AppColors.error.withValues(alpha: .25)),
         ),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -1214,8 +1270,11 @@ class _PackageFormError extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
               child: Text(message,
-                  style: AppTypography.bodySmall
-                      .copyWith(color: AppColors.error))),
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.error,
+                  ))),
         ]),
       );
 }
@@ -1262,22 +1321,43 @@ InputDecoration _fieldDecoration(
     BuildContext context, IconData icon, String hint) {
   final dark = Theme.of(context).brightness == Brightness.dark;
   final border = OutlineInputBorder(
-    borderRadius: BorderRadius.circular(8),
-    borderSide: BorderSide(color: dark ? Colors.white12 : AppColors.neutral300),
+    borderRadius: BorderRadius.circular(10),
+    borderSide: BorderSide(
+      color: dark
+          ? Colors.white.withValues(alpha: .08)
+          : Colors.black.withValues(alpha: .06),
+    ),
   );
   return InputDecoration(
     hintText: hint,
-    prefixIcon: Icon(icon, size: 20),
+    hintStyle: GoogleFonts.inter(
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      color: dark ? Colors.white38 : AppColors.textSecondary,
+    ),
+    prefixIcon: Icon(
+      icon,
+      size: 16,
+      color: dark ? Colors.white54 : AppColors.textSecondary,
+    ),
     filled: true,
     fillColor:
         dark ? Colors.white.withValues(alpha: .045) : AppColors.neutral50,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
     border: border,
     enabledBorder: border,
     focusedBorder: border.copyWith(
-        borderSide: const BorderSide(color: AppColors.primary, width: 1.4)),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
   );
 }
+
+TextStyle _modalInputStyle(BuildContext context) => GoogleFonts.inter(
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      color: Theme.of(context).brightness == Brightness.dark
+          ? Colors.white
+          : AppColors.textPrimary,
+    );
 
 String _text(Map<String, dynamic> item, List<String> keys,
     [String fallback = '']) {
