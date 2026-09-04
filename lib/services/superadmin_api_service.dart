@@ -52,6 +52,9 @@ class SuperAdminApiService {
     }
   }
 
+  Uri salesInvoiceUrl(String id) =>
+      Uri.parse('$baseUrl/sales/${Uri.encodeComponent(id)}/invoice');
+
   Future<Map<String, dynamic>> _submitSalesRecord(
     String method,
     String path,

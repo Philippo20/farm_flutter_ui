@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -11,7 +12,8 @@ String _saleStatus(Map<String, dynamic> sale) =>
     '${sale['status'] ?? 'Pending'}'.toLowerCase();
 
 String _saleNumber(Object? value) {
-  final number = value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
+  final number =
+      value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
   return number == number.roundToDouble()
       ? number.toStringAsFixed(0)
       : number.toStringAsFixed(1);
@@ -42,11 +44,25 @@ class _SalesPersonnelRecordDeliveryScreenState
     try {
       final allSales = await _api.getSales();
       final user = ref.read(authProvider).user;
-      final identity = {user?.id ?? '', user?.email ?? '', user?.name ?? ''}
-        ..removeWhere((value) => value.trim().isEmpty);
-      final sales = allSales
-          .where((sale) => identity.contains('${sale['created_by'] ?? ''}'))
-          .toList();
+      final identity = {
+        user?.id.toLowerCase() ?? '',
+        user?.email.toLowerCase() ?? '',
+        user?.name.toLowerCase() ?? '',
+      }..removeWhere((value) => value.trim().isEmpty);
+      final sales = allSales.where((sale) {
+        final assignedIdentity = {
+          '${sale['sales_person_id'] ?? ''}',
+          '${sale['sales_person_name'] ?? ''}',
+          '${sale['sales_person_email'] ?? ''}',
+        }..removeWhere((value) => value.trim().isEmpty);
+        final assigned = assignedIdentity
+            .any((value) => identity.contains(value.toLowerCase()));
+        final legacyOwner =
+            identity.contains('${sale['created_by'] ?? ''}'.toLowerCase());
+        return assigned || legacyOwner;
+      }).toList()
+        ..sort((a, b) => '${b['scheduled_for'] ?? b['delivered_at'] ?? ''}'
+            .compareTo('${a['scheduled_for'] ?? a['delivered_at'] ?? ''}'));
       if (!mounted) return;
       setState(() {
         _sales = sales;
@@ -58,6 +74,24 @@ class _SalesPersonnelRecordDeliveryScreenState
         _loading = false;
         _error = error.toString();
       });
+    }
+  }
+
+  Future<void> _openInvoice(Map<String, dynamic> sale) async {
+    final saleId = '${sale[r'$id'] ?? sale['id'] ?? ''}'.trim();
+    if (saleId.isEmpty) return;
+    try {
+      final opened = await launchUrl(
+        _api.salesInvoiceUrl(saleId),
+        mode: LaunchMode.externalApplication,
+        webOnlyWindowName: '_blank',
+      );
+      if (!opened) throw StateError('The invoice could not be opened.');
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to open invoice: $error')),
+      );
     }
   }
 
@@ -78,16 +112,24 @@ class _SalesPersonnelRecordDeliveryScreenState
       );
     }
 
-    final pending = _sales.where((sale) => _saleStatus(sale) == 'pending').length;
+    final pending =
+        _sales.where((sale) => _saleStatus(sale) == 'pending').length;
     final cards = _sales.map<Map<String, Object>>((sale) {
       final status = '${sale['status'] ?? 'Pending'}';
-      final color = status == 'Delivered' ? AppColors.success : AppColors.warning;
+      final color =
+          status == 'Delivered' ? AppColors.success : AppColors.warning;
       return {
         'title': '${sale['buyer_name'] ?? 'Buyer'}',
-        'subtitle': '${sale['batch_id'] ?? 'Batch'} | ${_saleNumber(sale['quantity_delivered'])} kg',
-        'metric': '${sale['delivered_at'] ?? sale['payment_date'] ?? 'No date'}'.split('T').first,
+        'subtitle':
+            '${sale['invoice_number'] ?? 'Invoice pending'} | ${sale['batch_number'] ?? sale['batch_id'] ?? 'Batch'} | ${_saleNumber(sale['package_count'])} packs',
+        'metric': '${sale['delivered_at'] ?? sale['payment_date'] ?? 'No date'}'
+            .split('T')
+            .first,
+        'metricLabel': 'Scheduled',
         'status': status,
         'color': color,
+        'actionLabel': 'Print invoice',
+        'action': () => _openInvoice(sale),
       };
     }).toList();
 
@@ -99,12 +141,20 @@ class _SalesPersonnelRecordDeliveryScreenState
       icon: Icons.local_shipping_outlined,
       colors: const [Color(0xFF1D4ED8), Color(0xFF0F766E)],
       kpis: [
-        _KpiData('Pending', '$pending', 'Awaiting completion', Icons.today_outlined,
-            AppColors.primary),
-        _KpiData('Completed', '${_sales.where((sale) => _saleStatus(sale) == 'delivered').length}', 'Backend sales records', Icons.task_alt_outlined,
+        _KpiData('Pending', '$pending', 'Awaiting completion',
+            Icons.today_outlined, AppColors.primary),
+        _KpiData(
+            'Completed',
+            '${_sales.where((sale) => _saleStatus(sale) == 'delivered').length}',
+            'Backend sales records',
+            Icons.task_alt_outlined,
             AppColors.success),
-        _KpiData('Exceptions', '${_sales.where((sale) => _saleStatus(sale) == 'cancelled').length}', 'Cancelled records',
-            Icons.report_problem_outlined, AppColors.warning),
+        _KpiData(
+            'Exceptions',
+            '${_sales.where((sale) => _saleStatus(sale) == 'cancelled').length}',
+            'Cancelled records',
+            Icons.report_problem_outlined,
+            AppColors.warning),
       ],
       sectionTitle: 'Delivery Queue',
       cards: cards,
@@ -314,9 +364,12 @@ class _SalesPersonnelMySalesScreenState
       final user = ref.read(authProvider).user;
       final identity = {user?.id ?? '', user?.email ?? '', user?.name ?? ''}
         ..removeWhere((value) => value.trim().isEmpty);
-      final records = allSales.where((sale) {
-        return identity.contains('${sale['created_by'] ?? ''}');
-      }).map<Map<String, Object>>(_mapSale).toList();
+      final records = allSales
+          .where((sale) {
+            return identity.contains('${sale['created_by'] ?? ''}');
+          })
+          .map<Map<String, Object>>(_mapSale)
+          .toList();
       if (!mounted) return;
       setState(() {
         _sales = records;
@@ -343,22 +396,28 @@ class _SalesPersonnelMySalesScreenState
       'amount': _money(amount),
       'payment': paid ? 'Collected' : 'Due',
       'delivery': status,
-      'date': '${sale['delivered_at'] ?? sale['payment_date'] ?? 'No date'}'.split('T').first,
+      'date': '${sale['delivered_at'] ?? sale['payment_date'] ?? 'No date'}'
+          .split('T')
+          .first,
       'margin': 'N/A',
       'color': paid ? AppColors.success : AppColors.warning,
     };
   }
 
-  double _number(Object? value) => value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
+  double _number(Object? value) =>
+      value is num ? value.toDouble() : double.tryParse('$value') ?? 0;
 
   String _money(double value) => value >= 1000
       ? 'GHS ${(value / 1000).toStringAsFixed(1)}K'
       : 'GHS ${value.toStringAsFixed(0)}';
 
   double get _gross => _sales.fold<double>(0, (sum, sale) {
-    final value = '${sale['amount']}'.replaceAll('GHS ', '').replaceAll('K', '');
-    return sum + (double.tryParse(value) ?? 0) * (sale['amount'].toString().contains('K') ? 1000 : 1);
-  });
+        final value =
+            '${sale['amount']}'.replaceAll('GHS ', '').replaceAll('K', '');
+        return sum +
+            (double.tryParse(value) ?? 0) *
+                (sale['amount'].toString().contains('K') ? 1000 : 1);
+      });
 
   @override
   Widget build(BuildContext context) {
@@ -379,7 +438,8 @@ class _SalesPersonnelMySalesScreenState
       );
     }
 
-    final collected = _sales.where((sale) => sale['payment'] == 'Collected').length;
+    final collected =
+        _sales.where((sale) => sale['payment'] == 'Collected').length;
     final receivables = _sales.length - collected;
 
     return SalesPersonnelScreenShell(
@@ -520,8 +580,8 @@ class SalesPersonnelExpensesScreen extends StatelessWidget {
             Icons.receipt_long_outlined, AppColors.primary),
         _KpiData('Approved', 'N/A', 'Expense API not available',
             Icons.verified_outlined, AppColors.success),
-        _KpiData('Pending', 'N/A', 'Expense API not available', Icons.schedule_outlined,
-            AppColors.warning),
+        _KpiData('Pending', 'N/A', 'Expense API not available',
+            Icons.schedule_outlined, AppColors.warning),
       ],
       sectionTitle: 'Expense Records',
       cards: _cards,
@@ -629,12 +689,16 @@ class _SalesPersonnelReportsScreenState
       icon: Icons.assessment_outlined,
       colors: const [Color(0xFF1E3A8A), Color(0xFF0F766E)],
       kpis: [
-        _KpiData('Sales records', '${_sales.length}', 'From backend', Icons.assessment_outlined,
-            AppColors.primary),
-        _KpiData('Revenue', revenueLabel, 'Personal records', Icons.file_download_outlined,
-            AppColors.success),
-        _KpiData('Unpaid', '${_sales.where((sale) => sale['paid'] != true).length}', 'Needs collection',
-            Icons.report_problem_outlined, AppColors.warning),
+        _KpiData('Sales records', '${_sales.length}', 'From backend',
+            Icons.assessment_outlined, AppColors.primary),
+        _KpiData('Revenue', revenueLabel, 'Personal records',
+            Icons.file_download_outlined, AppColors.success),
+        _KpiData(
+            'Unpaid',
+            '${_sales.where((sale) => sale['paid'] != true).length}',
+            'Needs collection',
+            Icons.report_problem_outlined,
+            AppColors.warning),
       ],
       sectionTitle: 'Report Library',
       cards: cards,
@@ -894,7 +958,21 @@ class _SalesPersonnelCard extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          _MetricPill(label: 'Metric', value: item['metric']! as String),
+          _MetricPill(
+            label: '${item['metricLabel'] ?? 'Metric'}',
+            value: item['metric']! as String,
+          ),
+          if (item['action'] is VoidCallback) ...[
+            const SizedBox(height: AppSpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: item['action'] as VoidCallback,
+                icon: const Icon(Icons.print_outlined, size: 18),
+                label: Text('${item['actionLabel'] ?? 'Open'}'),
+              ),
+            ),
+          ],
         ],
       ),
     );

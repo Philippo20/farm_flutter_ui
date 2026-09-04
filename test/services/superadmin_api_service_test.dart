@@ -107,6 +107,8 @@ void main() {
       'buyer_id': 'off-taker-1',
       'off_taker_id': 'off-taker-1',
       'buyer_name': 'Fresh Market',
+      'sales_person_id': 'sales-person-1',
+      'delivery_agent_id': 'driver-1',
       'delivered_by': 'Sales Manager',
       'delivered_at': '2026-09-05T12:00:00.000',
       'scheduled_for': '2026-09-05T12:00:00.000',
@@ -135,6 +137,8 @@ void main() {
     expect(request.bodyFields['batch_number'], 'BATCH-2026-001');
     expect(request.bodyFields['fulfillment_id'], 'fulfillment-1');
     expect(request.bodyFields['off_taker_id'], 'off-taker-1');
+    expect(request.bodyFields['sales_person_id'], 'sales-person-1');
+    expect(request.bodyFields['delivery_agent_id'], 'driver-1');
     expect(request.bodyFields['package_count'], '60');
     expect(request.bodyFields['pricing_id'], 'price-1');
     expect(request.bodyFields['price_tier'], 'Bulk');
@@ -142,6 +146,15 @@ void main() {
     expect(request.bodyFields['quantity_delivered'], '30');
     expect(request.bodyFields['scheduled_for'], '2026-09-05T12:00:00.000');
     expect(request.bodyFields['delivery_address'], 'Accra');
+  });
+
+  test('salesInvoiceUrl targets the printable invoice endpoint', () {
+    final service = SuperAdminApiService();
+
+    expect(
+      service.salesInvoiceUrl('sale 1').path,
+      '/sales/sale%201/invoice',
+    );
   });
 
   test('updateSale targets the selected sales delivery document', () async {

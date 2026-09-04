@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -1381,6 +1382,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
   List<Map<String, dynamic>> _offTakers = const [];
   List<Map<String, dynamic>> _fulfillments = const [];
   List<Map<String, dynamic>> _pricing = const [];
+  List<Map<String, dynamic>> _users = const [];
   bool _loading = true;
   String? _error;
   String _search = '';
@@ -1464,6 +1466,22 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
           _text(item, ['status'], fallback: 'Active').toLowerCase() == 'active')
       .toList();
 
+  List<Map<String, dynamic>> get _salesPersonnel => _users.where((user) {
+        final role = _text(user, ['role']).toLowerCase().replaceAll('-', '_');
+        final userStatus =
+            _text(user, ['status'], fallback: 'Active').toLowerCase();
+        return userStatus == 'active' &&
+            (role == 'sales_person' || role == 'sales_personnel');
+      }).toList();
+
+  List<Map<String, dynamic>> get _deliveryAgents => _users.where((user) {
+        final role = _text(user, ['role']).toLowerCase().replaceAll('-', '_');
+        final userStatus =
+            _text(user, ['status'], fallback: 'Active').toLowerCase();
+        return userStatus == 'active' &&
+            (role == 'driver' || role == 'delivery_agent');
+      }).toList();
+
   List<Map<String, dynamic>> get _filteredSales {
     final query = _search.trim().toLowerCase();
     final records = _sales.where((sale) {
@@ -1520,6 +1538,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
         _api.getOffTakers(),
         _api.getFulfillments(),
         _api.getPricing(),
+        _api.getUsers(),
       ]);
       if (!mounted) return;
       setState(() {
@@ -1527,6 +1546,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
         _offTakers = result[1];
         _fulfillments = result[2];
         _pricing = result[3];
+        _users = result[4];
         _loading = false;
       });
     } catch (error) {
@@ -1548,22 +1568,45 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
       offTakers: _activeOffTakers,
       sales: _sales,
       pricing: _pricing,
+      salesPersonnel: _salesPersonnel,
+      deliveryAgents: _deliveryAgents,
       initialFulfillment: fulfillment,
       sale: sale,
       currentUserId: ref.read(authProvider).user?.id ?? 'sales-manager',
       currentUserName: ref.read(authProvider).user?.name ?? 'Sales Manager',
     );
     final mobile = MediaQuery.sizeOf(context).width < 600;
-    final changed = mobile
-        ? await showModalBottomSheet<bool>(
+    final result = mobile
+        ? await showModalBottomSheet<Object?>(
             context: context,
             isScrollControlled: true,
             useSafeArea: true,
             backgroundColor: Colors.transparent,
             builder: (_) => modal,
           )
-        : await showDialog<bool>(context: context, builder: (_) => modal);
-    if (changed == true) await _load();
+        : await showDialog<Object?>(context: context, builder: (_) => modal);
+    if (result == true || result is String) {
+      await _load();
+    }
+    if (result is String && result.isNotEmpty && mounted) {
+      await _openInvoice(result);
+    }
+  }
+
+  Future<void> _openInvoice(String saleId) async {
+    try {
+      final opened = await launchUrl(
+        _api.salesInvoiceUrl(saleId),
+        mode: LaunchMode.externalApplication,
+        webOnlyWindowName: '_blank',
+      );
+      if (!opened) throw StateError('The invoice could not be opened.');
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to open invoice: $error')),
+      );
+    }
   }
 
   Future<void> _delete(Map<String, dynamic> sale) async {
@@ -1860,6 +1903,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
                     .map((sale) => _SalesDeliveryRecordCard(
                           sale: sale,
                           dateLabel: _dateLabel(sale),
+                          onInvoice: () => _openInvoice(_id(sale)),
                           onEdit: () => _openEditor(sale: sale),
                           onDelete: () => _delete(sale),
                         ))
@@ -2177,12 +2221,14 @@ class _SalesDeliveryRecordCard extends StatelessWidget {
   const _SalesDeliveryRecordCard({
     required this.sale,
     required this.dateLabel,
+    required this.onInvoice,
     required this.onEdit,
     required this.onDelete,
   });
 
   final Map<String, dynamic> sale;
   final String dateLabel;
+  final VoidCallback onInvoice;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -2276,6 +2322,12 @@ class _SalesDeliveryRecordCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
+                  tooltip: 'Print invoice',
+                  onPressed: onInvoice,
+                  color: AppColors.primary,
+                  icon: const Icon(Icons.print_outlined, size: 19),
+                ),
+                IconButton(
                   tooltip: 'Edit delivery',
                   onPressed: onEdit,
                   icon: const Icon(Icons.edit_outlined, size: 19),
@@ -2302,6 +2354,8 @@ class _SalesDeliveryEditor extends StatefulWidget {
     required this.offTakers,
     required this.sales,
     required this.pricing,
+    required this.salesPersonnel,
+    required this.deliveryAgents,
     required this.currentUserId,
     required this.currentUserName,
     this.initialFulfillment,
@@ -2313,6 +2367,8 @@ class _SalesDeliveryEditor extends StatefulWidget {
   final List<Map<String, dynamic>> offTakers;
   final List<Map<String, dynamic>> sales;
   final List<Map<String, dynamic>> pricing;
+  final List<Map<String, dynamic>> salesPersonnel;
+  final List<Map<String, dynamic>> deliveryAgents;
   final String currentUserId;
   final String currentUserName;
   final Map<String, dynamic>? initialFulfillment;
@@ -2331,6 +2387,8 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
   String? _batchId;
   String? _offTakerId;
   String? _pricingId;
+  String? _salesPersonId;
+  String? _deliveryAgentId;
   String _priceTier = 'Regular';
   String _paymentMode = 'Bank Transfer';
   String _status = 'Pending';
@@ -2367,6 +2425,20 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
   Map<String, dynamic>? get _selectedOffTaker {
     for (final item in widget.offTakers) {
       if (_id(item) == _offTakerId) return item;
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? get _selectedSalesPerson {
+    for (final user in widget.salesPersonnel) {
+      if (_id(user) == _salesPersonId) return user;
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? get _selectedDeliveryAgent {
+    for (final user in widget.deliveryAgents) {
+      if (_id(user) == _deliveryAgentId) return user;
     }
     return null;
   }
@@ -2481,6 +2553,16 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
     final buyerId = _text(sale, ['off_taker_id', 'buyer_id']);
     _offTakerId =
         widget.offTakers.any((item) => _id(item) == buyerId) ? buyerId : null;
+    final salesPersonId = _text(sale, ['sales_person_id']);
+    _salesPersonId =
+        widget.salesPersonnel.any((item) => _id(item) == salesPersonId)
+            ? salesPersonId
+            : null;
+    final deliveryAgentId = _text(sale, ['delivery_agent_id']);
+    _deliveryAgentId =
+        widget.deliveryAgents.any((item) => _id(item) == deliveryAgentId)
+            ? deliveryAgentId
+            : null;
     _packsController =
         TextEditingController(text: _text(sale, ['package_count'], ''));
     _addressController =
@@ -2541,6 +2623,11 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
           () => _error = 'Select a QA-approved batch and an active off-taker.');
       return;
     }
+    if (_selectedSalesPerson == null || _selectedDeliveryAgent == null) {
+      setState(() => _error =
+          'Assign active Sales Personnel and a Delivery Agent before creating the delivery.');
+      return;
+    }
     final pricing = _selectedPricing;
     if (pricing == null || _unitPrice <= 0) {
       setState(() => _error =
@@ -2567,6 +2654,8 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
       'buyer_id': _id(buyer),
       'off_taker_id': _id(buyer),
       'buyer_name': _text(buyer, ['name'], 'Off-taker'),
+      'sales_person_id': _salesPersonId,
+      'delivery_agent_id': _deliveryAgentId,
       'delivered_by': widget.currentUserName,
       'delivered_at': dateTime.toIso8601String(),
       'scheduled_for': dateTime.toIso8601String(),
@@ -2590,12 +2679,19 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
       'delivery_notes': _notesController.text.trim(),
     };
     try {
+      final response = _editing
+          ? await widget.api.updateSale(_id(widget.sale!), payload)
+          : await widget.api.createSale(payload);
+      if (!mounted) return;
       if (_editing) {
-        await widget.api.updateSale(_id(widget.sale!), payload);
+        Navigator.pop(context, true);
       } else {
-        await widget.api.createSale(payload);
+        final sale = response['sale'];
+        final saleId = sale is Map
+            ? '${sale[r'$id'] ?? sale['id'] ?? response['sales_id'] ?? ''}'
+            : '${response['sales_id'] ?? ''}';
+        Navigator.pop(context, saleId.isEmpty ? true : saleId);
       }
-      if (mounted) Navigator.pop(context, true);
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -2707,21 +2803,6 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                       spacing: 14,
                       runSpacing: 16,
                       children: [
-                        if (widget.batches.isEmpty)
-                          sized(
-                              const _SalesDeliveryError(
-                                  message:
-                                      'No QA-approved batch is available for allocation.'),
-                              full: true),
-                        if (widget.offTakers.isEmpty)
-                          sized(
-                              const _SalesDeliveryError(
-                                  message:
-                                      'Create or activate an off-taker before scheduling a delivery.'),
-                              full: true),
-                        if (_error != null)
-                          sized(_SalesDeliveryError(message: _error!),
-                              full: true),
                         sized(DropdownButtonFormField<String>(
                           initialValue: _batchId,
                           isExpanded: true,
@@ -2779,6 +2860,50 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                               ? 'Select an active off-taker.'
                               : null,
                         )),
+                        sized(DropdownButtonFormField<String>(
+                          initialValue: _salesPersonId,
+                          isExpanded: true,
+                          decoration: _decoration(
+                              'Sales Personnel', Icons.badge_outlined),
+                          items: widget.salesPersonnel
+                              .map((user) => DropdownMenuItem(
+                                    value: _id(user),
+                                    child: Text(
+                                      _text(user, ['name'], 'Sales Personnel'),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ))
+                              .toList(),
+                          onChanged: _saving
+                              ? null
+                              : (value) =>
+                                  setState(() => _salesPersonId = value),
+                          validator: (value) => value == null
+                              ? 'Assign Sales Personnel for the handover.'
+                              : null,
+                        )),
+                        sized(DropdownButtonFormField<String>(
+                          initialValue: _deliveryAgentId,
+                          isExpanded: true,
+                          decoration: _decoration(
+                              'Delivery Agent', Icons.local_shipping_outlined),
+                          items: widget.deliveryAgents
+                              .map((user) => DropdownMenuItem(
+                                    value: _id(user),
+                                    child: Text(
+                                      _text(user, ['name'], 'Delivery Agent'),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ))
+                              .toList(),
+                          onChanged: _saving
+                              ? null
+                              : (value) =>
+                                  setState(() => _deliveryAgentId = value),
+                          validator: (value) => value == null
+                              ? 'Assign the Delivery Agent.'
+                              : null,
+                        )),
                         if (_selectedBatch != null)
                           sized(
                               Container(
@@ -2804,14 +2929,6 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                 ]),
                               ),
                               full: true),
-                        if (_selectedBatch != null && _matchingPrices.isEmpty)
-                          sized(
-                            const _SalesDeliveryError(
-                              message:
-                                  'No active Hub sale price matches this crop variety and package. Add one from Sales Pricing first.',
-                            ),
-                            full: true,
-                          ),
                         sized(DropdownButtonFormField<String>(
                           key: ValueKey('pricing-$_batchId-$_pricingId'),
                           initialValue: _pricingId,
@@ -2991,6 +3108,51 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                   : (value) => setState(() => _paid = value),
                             ),
                             full: true),
+                        if (widget.batches.isEmpty)
+                          sized(
+                            const _SalesDeliveryError(
+                              message:
+                                  'No QA-approved batch is available for allocation.',
+                            ),
+                            full: true,
+                          ),
+                        if (widget.offTakers.isEmpty)
+                          sized(
+                            const _SalesDeliveryError(
+                              message:
+                                  'Create or activate an off-taker before scheduling a delivery.',
+                            ),
+                            full: true,
+                          ),
+                        if (widget.salesPersonnel.isEmpty)
+                          sized(
+                            const _SalesDeliveryError(
+                              message:
+                                  'Create or activate a Sales Personnel user before scheduling a delivery.',
+                            ),
+                            full: true,
+                          ),
+                        if (widget.deliveryAgents.isEmpty)
+                          sized(
+                            const _SalesDeliveryError(
+                              message:
+                                  'Create or activate a Driver or Delivery Agent user before scheduling a delivery.',
+                            ),
+                            full: true,
+                          ),
+                        if (_selectedBatch != null && _matchingPrices.isEmpty)
+                          sized(
+                            const _SalesDeliveryError(
+                              message:
+                                  'No active Hub sale price matches this crop variety and package. Add one from Sales Pricing first.',
+                            ),
+                            full: true,
+                          ),
+                        if (_error != null)
+                          sized(
+                            _SalesDeliveryError(message: _error!),
+                            full: true,
+                          ),
                       ],
                     );
                   }),
