@@ -60,6 +60,12 @@ class _SalesManagerSidebarState extends State<SalesManagerSidebar>
       route: '/sales-deliveries',
     ),
     _NavItem(
+      icon: Icons.price_change_outlined,
+      activeIcon: Icons.price_change_rounded,
+      label: 'Pricing',
+      route: '/sales-pricing',
+    ),
+    _NavItem(
       icon: Icons.attach_money_outlined,
       activeIcon: Icons.attach_money_rounded,
       label: 'Financial',

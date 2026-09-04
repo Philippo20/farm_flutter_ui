@@ -1380,6 +1380,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
   List<Map<String, dynamic>> _sales = const [];
   List<Map<String, dynamic>> _offTakers = const [];
   List<Map<String, dynamic>> _fulfillments = const [];
+  List<Map<String, dynamic>> _pricing = const [];
   bool _loading = true;
   String? _error;
   String _search = '';
@@ -1518,12 +1519,14 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
         _api.getSales(),
         _api.getOffTakers(),
         _api.getFulfillments(),
+        _api.getPricing(),
       ]);
       if (!mounted) return;
       setState(() {
         _sales = result[0];
         _offTakers = result[1];
         _fulfillments = result[2];
+        _pricing = result[3];
         _loading = false;
       });
     } catch (error) {
@@ -1544,6 +1547,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
       batches: _releasedBatches,
       offTakers: _activeOffTakers,
       sales: _sales,
+      pricing: _pricing,
       initialFulfillment: fulfillment,
       sale: sale,
       currentUserId: ref.read(authProvider).user?.id ?? 'sales-manager',
@@ -2297,6 +2301,7 @@ class _SalesDeliveryEditor extends StatefulWidget {
     required this.batches,
     required this.offTakers,
     required this.sales,
+    required this.pricing,
     required this.currentUserId,
     required this.currentUserName,
     this.initialFulfillment,
@@ -2307,6 +2312,7 @@ class _SalesDeliveryEditor extends StatefulWidget {
   final List<Map<String, dynamic>> batches;
   final List<Map<String, dynamic>> offTakers;
   final List<Map<String, dynamic>> sales;
+  final List<Map<String, dynamic>> pricing;
   final String currentUserId;
   final String currentUserName;
   final Map<String, dynamic>? initialFulfillment;
@@ -2319,12 +2325,13 @@ class _SalesDeliveryEditor extends StatefulWidget {
 class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _packsController;
-  late final TextEditingController _amountController;
   late final TextEditingController _addressController;
   late final TextEditingController _receiptController;
   late final TextEditingController _notesController;
   String? _batchId;
   String? _offTakerId;
+  String? _pricingId;
+  String _priceTier = 'Regular';
   String _paymentMode = 'Bank Transfer';
   String _status = 'Pending';
   bool _paid = false;
@@ -2362,6 +2369,62 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
       if (_id(item) == _offTakerId) return item;
     }
     return null;
+  }
+
+  String _catalogKey(dynamic value) =>
+      value.toString().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '');
+
+  bool _priceMatchesBatch(
+    Map<String, dynamic> pricing,
+    Map<String, dynamic> batch,
+  ) {
+    if (_text(pricing, ['pricing_type']).toLowerCase() != 'hub_sale' ||
+        _text(pricing, ['status'], 'Active').toLowerCase() != 'active') {
+      return false;
+    }
+    final variety = _catalogKey(_text(batch, ['plant_variety', 'plant_type']));
+    final pricedVariety = _catalogKey(_text(pricing, ['crop_variety']));
+    final package = _catalogKey(_text(batch, ['packaging_type']));
+    final pricedPackage = _catalogKey(_text(pricing, ['packaging']));
+    return variety.isNotEmpty &&
+        variety == pricedVariety &&
+        package.isNotEmpty &&
+        pricedPackage.isNotEmpty &&
+        (package == pricedPackage ||
+            package.contains(pricedPackage) ||
+            pricedPackage.contains(package));
+  }
+
+  List<Map<String, dynamic>> get _matchingPrices {
+    final batch = _selectedBatch;
+    if (batch == null) return const [];
+    return widget.pricing
+        .where((price) => _priceMatchesBatch(price, batch))
+        .toList();
+  }
+
+  Map<String, dynamic>? get _selectedPricing {
+    for (final price in _matchingPrices) {
+      if (_id(price) == _pricingId) return price;
+    }
+    return null;
+  }
+
+  double get _unitPrice => _number(
+        _selectedPricing,
+        [_priceTier == 'Bulk' ? 'bulk_price' : 'regular_price'],
+      );
+
+  double get _totalAmount => _requestedPacks * _unitPrice;
+
+  void _selectDefaultPrice({String? preferredId}) {
+    final prices = _matchingPrices;
+    if (preferredId != null &&
+        prices.any((price) => _id(price) == preferredId)) {
+      _pricingId = preferredId;
+    } else {
+      _pricingId = prices.isEmpty ? null : _id(prices.first);
+    }
   }
 
   int _totalPacks(Map<String, dynamic> batch) {
@@ -2420,8 +2483,6 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
         widget.offTakers.any((item) => _id(item) == buyerId) ? buyerId : null;
     _packsController =
         TextEditingController(text: _text(sale, ['package_count'], ''));
-    _amountController =
-        TextEditingController(text: _text(sale, ['total_amount'], ''));
     _addressController =
         TextEditingController(text: _text(sale, ['delivery_address'], ''));
     _receiptController =
@@ -2430,6 +2491,11 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
         TextEditingController(text: _text(sale, ['delivery_notes'], ''));
     _paymentMode = _text(sale, ['payment_mode'], 'Bank Transfer');
     _status = _text(sale, ['status'], 'Pending');
+    _priceTier = _text(sale, ['price_tier'], 'Regular');
+    if (!const ['Regular', 'Bulk'].contains(_priceTier)) {
+      _priceTier = 'Regular';
+    }
+    _selectDefaultPrice(preferredId: _text(sale, ['pricing_id']));
     if (!const ['Bank Transfer', 'Mobile Money', 'Cash', 'Credit']
         .contains(_paymentMode)) {
       _paymentMode = 'Bank Transfer';
@@ -2446,7 +2512,6 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
   @override
   void dispose() {
     _packsController.dispose();
-    _amountController.dispose();
     _addressController.dispose();
     _receiptController.dispose();
     _notesController.dispose();
@@ -2476,6 +2541,12 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
           () => _error = 'Select a QA-approved batch and an active off-taker.');
       return;
     }
+    final pricing = _selectedPricing;
+    if (pricing == null || _unitPrice <= 0) {
+      setState(() => _error =
+          'Configure and select an active Hub sale price for this crop variety and package.');
+      return;
+    }
     if (_requestedPacks > _availablePacks) {
       setState(() =>
           _error = 'Only $_availablePacks packs are available for allocation.');
@@ -2501,7 +2572,10 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
       'scheduled_for': dateTime.toIso8601String(),
       'quantity_delivered': _allocatedWeight,
       'package_count': _requestedPacks,
-      'total_amount': double.tryParse(_amountController.text.trim()) ?? 0,
+      'pricing_id': _id(pricing),
+      'price_tier': _priceTier,
+      'unit_price': _unitPrice,
+      'total_amount': _totalAmount,
       'paid': _paid,
       'payment_mode': _paymentMode,
       'receipt_image': _text(widget.sale, ['receipt_image']),
@@ -2672,6 +2746,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                               : (value) => setState(() {
                                     _batchId = value;
                                     _packsController.clear();
+                                    _selectDefaultPrice();
                                   }),
                           validator: (value) => value == null
                               ? 'Select a batch released by QA.'
@@ -2729,6 +2804,50 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                 ]),
                               ),
                               full: true),
+                        if (_selectedBatch != null && _matchingPrices.isEmpty)
+                          sized(
+                            const _SalesDeliveryError(
+                              message:
+                                  'No active Hub sale price matches this crop variety and package. Add one from Sales Pricing first.',
+                            ),
+                            full: true,
+                          ),
+                        sized(DropdownButtonFormField<String>(
+                          key: ValueKey('pricing-$_batchId-$_pricingId'),
+                          initialValue: _pricingId,
+                          isExpanded: true,
+                          decoration: _decoration(
+                              'Sales pricing', Icons.price_change_outlined),
+                          items: _matchingPrices
+                              .map((price) => DropdownMenuItem(
+                                    value: _id(price),
+                                    child: Text(
+                                      '${_text(price, [
+                                            'crop_variety'
+                                          ])} - ${_text(price, ['packaging'])}',
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ))
+                              .toList(),
+                          onChanged: _saving
+                              ? null
+                              : (value) => setState(() => _pricingId = value),
+                          validator: (value) => value == null
+                              ? 'Select the approved price for these packs.'
+                              : null,
+                        )),
+                        sized(DropdownButtonFormField<String>(
+                          initialValue: _priceTier,
+                          decoration: _decoration(
+                              'Price tier', Icons.local_offer_outlined),
+                          items: const ['Regular', 'Bulk']
+                              .map((tier) => DropdownMenuItem(
+                                  value: tier, child: Text(tier)))
+                              .toList(),
+                          onChanged: _saving
+                              ? null
+                              : (value) => setState(() => _priceTier = value!),
+                        )),
                         sized(TextFormField(
                           controller: _packsController,
                           keyboardType: TextInputType.number,
@@ -2753,20 +2872,45 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                           child:
                               Text('${_allocatedWeight.toStringAsFixed(2)} kg'),
                         )),
-                        sized(TextFormField(
-                          controller: _amountController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true),
+                        sized(InputDecorator(
                           decoration: _decoration(
-                              'Total amount (GHS)', Icons.payments_outlined,
-                              hint: '0.00'),
-                          validator: (value) {
-                            final amount = double.tryParse(value?.trim() ?? '');
-                            return amount == null || amount < 0
-                                ? 'Enter a valid amount.'
-                                : null;
-                          },
+                              'Price per pack', Icons.sell_outlined),
+                          child: Text('GHS ${_unitPrice.toStringAsFixed(2)}'),
                         )),
+                        sized(
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withValues(alpha: .08),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: AppColors.success.withValues(alpha: .22),
+                              ),
+                            ),
+                            child: Row(children: [
+                              const Icon(Icons.calculate_outlined,
+                                  color: AppColors.success),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Calculated total',
+                                        style: AppTypography.bodySmall),
+                                    Text(
+                                      '$_requestedPacks packs x GHS ${_unitPrice.toStringAsFixed(2)} = GHS ${_totalAmount.toStringAsFixed(2)}',
+                                      style: AppTypography.titleMedium.copyWith(
+                                        color: AppColors.success,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ]),
+                          ),
+                          full: true,
+                        ),
                         sized(InkWell(
                           onTap: _saving ? null : _pickDate,
                           borderRadius: BorderRadius.circular(10),
@@ -3003,7 +3147,7 @@ class SalesReportsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const _SalesManagerDataPage(
         kind: _SalesManagerPageKind.reports,
-        selectedIndex: 4,
+        selectedIndex: 6,
       );
 }
 
@@ -3364,7 +3508,7 @@ class SalesManagerSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SalesManagerScreenShell(
-      selectedIndex: 6,
+      selectedIndex: 7,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [

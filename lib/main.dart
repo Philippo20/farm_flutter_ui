@@ -66,6 +66,7 @@ import 'screens/quality/quality_assurance_nav_screens.dart';
 import 'screens/sales/sales_manager_dashboard.dart';
 import 'screens/sales/sales_manager_dashboard_redesigned.dart';
 import 'screens/sales/sales_manager_nav_screens.dart';
+import 'screens/sales/sales_pricing_screen.dart';
 import 'screens/sales/sales_personnel_dashboard.dart';
 import 'screens/sales/sales_personnel_dashboard_redesigned.dart';
 import 'screens/sales/sales_personnel_nav_screens.dart';
@@ -325,6 +326,7 @@ class MyApp extends ConsumerWidget {
         '/sales-performance': (context) => const SalesPerformanceScreen(),
         '/performance': (context) => const SalesPerformanceScreen(),
         '/sales-deliveries': (context) => const SalesDeliveriesScreen(),
+        '/sales-pricing': (context) => const SalesPricingScreen(),
         '/deliveries': (context) => const SalesDeliveriesScreen(),
         '/sales-financial': (context) => const SalesFinancialScreen(),
         '/financial': (context) => const SalesFinancialScreen(),

@@ -572,11 +572,26 @@ const salesManagerNavigationItems = [
       route: '/sales-deliveries',
       primary: true),
   RoleNavigationItem(
+      icon: Icons.price_change_outlined,
+      activeIcon: Icons.price_change_rounded,
+      label: 'Pricing',
+      route: '/sales-pricing',
+      primary: true),
+  RoleNavigationItem(
+      icon: Icons.attach_money_outlined,
+      activeIcon: Icons.attach_money_rounded,
+      label: 'Financial',
+      route: '/sales-financial'),
+  RoleNavigationItem(
       icon: Icons.assessment_outlined,
       activeIcon: Icons.assessment_rounded,
       label: 'Reports',
-      route: '/sales-reports',
-      primary: true),
+      route: '/sales-reports'),
+  RoleNavigationItem(
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings_rounded,
+      label: 'Settings',
+      route: '/sales-settings'),
 ];
 
 const salesPersonnelNavigationItems = [

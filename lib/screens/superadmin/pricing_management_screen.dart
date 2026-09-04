@@ -1410,7 +1410,7 @@ class _PricingManagementScreenState
         ? item!.cropVariety
         : initialVarietyOptions.first;
     String selectedPackaging = item?.packaging ?? packagingOptions.first;
-    String selectedUnit = item?.unit ?? 'kg';
+    String selectedUnit = isSalePricing ? 'pack' : (item?.unit ?? 'kg');
     String selectedStatus = item?.status ?? 'Active';
     var saving = false;
 
@@ -1526,18 +1526,29 @@ class _PricingManagementScreenState
                             ),
                             const SizedBox(height: AppSpacing.lg),
                           ],
-                          _buildFormLabel('Unit', isDark),
+                          _buildFormLabel(
+                              isSalePricing ? 'Pricing Unit' : 'Unit', isDark),
                           const SizedBox(height: AppSpacing.sm),
-                          _buildDropdownField(
-                            value: selectedUnit,
-                            items: const ['kg', 'g', 'crate', 'box', 'bunch'],
-                            icon: Icons.scale_rounded,
-                            isDark: isDark,
-                            onChanged: saving
-                                ? null
-                                : (value) =>
-                                    setDialogState(() => selectedUnit = value!),
-                          ),
+                          if (isSalePricing)
+                            _buildDropdownField(
+                              value: 'pack',
+                              items: const ['pack'],
+                              labels: const {'pack': 'Per pack'},
+                              icon: Icons.inventory_2_outlined,
+                              isDark: isDark,
+                              onChanged: null,
+                            )
+                          else
+                            _buildDropdownField(
+                              value: selectedUnit,
+                              items: const ['kg', 'g', 'crate', 'box', 'bunch'],
+                              icon: Icons.scale_rounded,
+                              isDark: isDark,
+                              onChanged: saving
+                                  ? null
+                                  : (value) => setDialogState(
+                                      () => selectedUnit = value!),
+                            ),
                           const SizedBox(height: AppSpacing.lg),
                           if (isMobile)
                             Column(

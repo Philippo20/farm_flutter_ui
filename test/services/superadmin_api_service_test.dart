@@ -112,6 +112,9 @@ void main() {
       'scheduled_for': '2026-09-05T12:00:00.000',
       'quantity_delivered': 30,
       'package_count': 60,
+      'pricing_id': 'price-1',
+      'price_tier': 'Bulk',
+      'unit_price': 15,
       'total_amount': 900,
       'paid': false,
       'payment_mode': 'Bank Transfer',
@@ -133,6 +136,9 @@ void main() {
     expect(request.bodyFields['fulfillment_id'], 'fulfillment-1');
     expect(request.bodyFields['off_taker_id'], 'off-taker-1');
     expect(request.bodyFields['package_count'], '60');
+    expect(request.bodyFields['pricing_id'], 'price-1');
+    expect(request.bodyFields['price_tier'], 'Bulk');
+    expect(request.bodyFields['unit_price'], '15');
     expect(request.bodyFields['quantity_delivered'], '30');
     expect(request.bodyFields['scheduled_for'], '2026-09-05T12:00:00.000');
     expect(request.bodyFields['delivery_address'], 'Accra');
