@@ -121,7 +121,7 @@ class _SalesPersonnelRecordDeliveryScreenState
       return {
         'title': '${sale['buyer_name'] ?? 'Buyer'}',
         'subtitle':
-            '${sale['invoice_number'] ?? 'Invoice pending'} | ${sale['batch_number'] ?? sale['batch_id'] ?? 'Batch'} | ${_saleNumber(sale['package_count'])} packs',
+            '${sale['invoice_number'] ?? 'Invoice pending'} | ${sale['batch_number'] ?? sale['batch_id'] ?? 'Batch'} | ${_saleNumber(sale['package_count'])} packs\n${sale['delivery_agent_name'] ?? 'Driver unassigned'} | ${sale['delivery_plate_number'] ?? sale['delivery_vehicle'] ?? 'Plate pending'}',
         'metric': '${sale['delivered_at'] ?? sale['payment_date'] ?? 'No date'}'
             .split('T')
             .first,

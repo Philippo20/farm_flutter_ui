@@ -108,6 +108,8 @@ void main() {
       'off_taker_id': 'off-taker-1',
       'buyer_name': 'Fresh Market',
       'sales_person_id': 'sales-person-1',
+      'delivery_type': 'internal',
+      'delivery_provider': 'Farm Estates',
       'delivery_agent_id': 'driver-1',
       'delivered_by': 'Sales Manager',
       'delivered_at': '2026-09-05T12:00:00.000',
@@ -138,6 +140,8 @@ void main() {
     expect(request.bodyFields['fulfillment_id'], 'fulfillment-1');
     expect(request.bodyFields['off_taker_id'], 'off-taker-1');
     expect(request.bodyFields['sales_person_id'], 'sales-person-1');
+    expect(request.bodyFields['delivery_type'], 'internal');
+    expect(request.bodyFields['delivery_provider'], 'Farm Estates');
     expect(request.bodyFields['delivery_agent_id'], 'driver-1');
     expect(request.bodyFields['package_count'], '60');
     expect(request.bodyFields['pricing_id'], 'price-1');
@@ -146,6 +150,39 @@ void main() {
     expect(request.bodyFields['quantity_delivered'], '30');
     expect(request.bodyFields['scheduled_for'], '2026-09-05T12:00:00.000');
     expect(request.bodyFields['delivery_address'], 'Accra');
+  });
+
+  test('createSale sends third-party driver and plate details', () async {
+    final client = _RecordingClient();
+    final service = SuperAdminApiService(client: client);
+
+    await service.createSale({
+      'batch_id': 'fulfillment-1',
+      'buyer_id': 'off-taker-1',
+      'buyer_name': 'Fresh Market',
+      'sales_person_id': 'sales-person-1',
+      'delivery_type': 'third_party',
+      'delivery_provider': 'Bolt',
+      'delivery_agent_id': '',
+      'third_party_driver_name': 'Kwame Mensah',
+      'delivery_plate_number': 'GT 1234-26',
+      'delivered_by': 'Sales Manager',
+      'delivered_at': '2026-09-05T12:00:00.000',
+      'quantity_delivered': 30,
+      'total_amount': 900,
+      'paid': false,
+      'payment_mode': 'Bank Transfer',
+      'payment_date': '2026-09-05',
+      'created_by': 'sales-manager-1',
+      'status': 'Pending',
+    });
+
+    final request = client.request! as http.Request;
+    expect(request.bodyFields['delivery_type'], 'third_party');
+    expect(request.bodyFields['delivery_provider'], 'Bolt');
+    expect(request.bodyFields['delivery_agent_id'], '');
+    expect(request.bodyFields['third_party_driver_name'], 'Kwame Mensah');
+    expect(request.bodyFields['delivery_plate_number'], 'GT 1234-26');
   });
 
   test('salesInvoiceUrl targets the printable invoice endpoint', () {
@@ -173,5 +210,34 @@ void main() {
     expect(request.url.path, '/sales/sale-1');
     expect(request.bodyFields['package_count'], '40');
     expect(request.bodyFields['status'], 'Delivered');
+  });
+
+  test('createUser sends driver ownership and vehicle details', () async {
+    final client = _RecordingClient();
+    final service = SuperAdminApiService(client: client);
+
+    await service.createUser(
+      name: 'Kwame Driver',
+      email: 'driver@farm.test',
+      password: 'FarmDemo#2026New',
+      address: 'Accra',
+      role: 'driver',
+      phone: '+233200000000',
+      department: 'Logistics',
+      status: 'Active',
+      actorId: 'admin-1',
+      actorRole: 'admin',
+      driverLicenseNumber: 'DVLA-1234567',
+      vehicle: 'GT 1234-26',
+      vehicleType: 'Refrigerated van',
+      vehicleCapacityKg: 1500,
+    );
+
+    final request = client.request! as http.Request;
+    expect(request.url.path, '/users/signup');
+    expect(request.bodyFields['actor_role'], 'admin');
+    expect(request.bodyFields['driver_license_number'], 'DVLA-1234567');
+    expect(request.bodyFields['vehicle'], 'GT 1234-26');
+    expect(request.bodyFields['vehicle_capacity_kg'], '1500.0');
   });
 }

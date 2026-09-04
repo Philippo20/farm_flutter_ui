@@ -2308,7 +2308,36 @@ class _SalesDeliveryRecordCard extends StatelessWidget {
                         label: 'Amount',
                         value: 'GHS ${amount.toStringAsFixed(2)}')),
               ]),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.sm),
+              Row(children: [
+                Icon(
+                  _value(['delivery_type'], 'internal') == 'third_party'
+                      ? Icons.local_taxi_outlined
+                      : Icons.badge_outlined,
+                  size: 17,
+                  color: color,
+                ),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    '${_value([
+                          'delivery_agent_name'
+                        ], 'Driver unassigned')} | ${_value([
+                          'delivery_plate_number',
+                          'delivery_vehicle'
+                        ], 'Plate pending')} | ${_value([
+                          'delivery_provider'
+                        ], 'Farm Estates')}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: dark ? Colors.white70 : AppColors.textSecondary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ]),
+              const SizedBox(height: AppSpacing.sm),
               Row(children: [
                 Expanded(
                   child: Text(
@@ -2384,11 +2413,15 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
   late final TextEditingController _addressController;
   late final TextEditingController _receiptController;
   late final TextEditingController _notesController;
+  late final TextEditingController _thirdPartyDriverController;
+  late final TextEditingController _plateNumberController;
   String? _batchId;
   String? _offTakerId;
   String? _pricingId;
   String? _salesPersonId;
   String? _deliveryAgentId;
+  String _deliveryType = 'internal';
+  String _deliveryProvider = 'Uber';
   String _priceTier = 'Regular';
   String _paymentMode = 'Bank Transfer';
   String _status = 'Pending';
@@ -2398,6 +2431,16 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
   late DateTime _scheduledDate;
 
   bool get _editing => widget.sale != null;
+  bool get _isThirdParty => _deliveryType == 'third_party';
+
+  List<String> get _deliveryProviders {
+    final providers = <String>['Uber', 'Bolt', 'Yango', 'Other'];
+    if (_deliveryProvider.isNotEmpty &&
+        !providers.contains(_deliveryProvider)) {
+      providers.add(_deliveryProvider);
+    }
+    return providers;
+  }
 
   String _id(Map<String, dynamic> item) =>
       '${item[r'$id'] ?? item['id'] ?? item['fulfillment_id'] ?? ''}'.trim();
@@ -2563,6 +2606,19 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
         widget.deliveryAgents.any((item) => _id(item) == deliveryAgentId)
             ? deliveryAgentId
             : null;
+    _deliveryType = _text(sale, ['delivery_type'], 'internal')
+        .toLowerCase()
+        .replaceAll('-', '_')
+        .replaceAll(' ', '_');
+    if (!const ['internal', 'third_party'].contains(_deliveryType)) {
+      _deliveryType = 'internal';
+    }
+    _deliveryProvider = _text(sale, ['delivery_provider'],
+        _deliveryType == 'third_party' ? 'Uber' : 'Farm Estates');
+    if (_deliveryProvider.isEmpty) {
+      _deliveryProvider =
+          _deliveryType == 'third_party' ? 'Uber' : 'Farm Estates';
+    }
     _packsController =
         TextEditingController(text: _text(sale, ['package_count'], ''));
     _addressController =
@@ -2571,6 +2627,16 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
         TextEditingController(text: _text(sale, ['receipt_number'], ''));
     _notesController =
         TextEditingController(text: _text(sale, ['delivery_notes'], ''));
+    _thirdPartyDriverController = TextEditingController(
+      text: _deliveryType == 'third_party'
+          ? _text(sale, ['delivery_agent_name'])
+          : '',
+    );
+    _plateNumberController = TextEditingController(
+      text: _deliveryType == 'third_party'
+          ? _text(sale, ['delivery_plate_number', 'delivery_vehicle'])
+          : '',
+    );
     _paymentMode = _text(sale, ['payment_mode'], 'Bank Transfer');
     _status = _text(sale, ['status'], 'Pending');
     _priceTier = _text(sale, ['price_tier'], 'Regular');
@@ -2597,6 +2663,8 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
     _addressController.dispose();
     _receiptController.dispose();
     _notesController.dispose();
+    _thirdPartyDriverController.dispose();
+    _plateNumberController.dispose();
     super.dispose();
   }
 
@@ -2623,9 +2691,22 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
           () => _error = 'Select a QA-approved batch and an active off-taker.');
       return;
     }
-    if (_selectedSalesPerson == null || _selectedDeliveryAgent == null) {
+    if (_selectedSalesPerson == null) {
       setState(() => _error =
-          'Assign active Sales Personnel and a Delivery Agent before creating the delivery.');
+          'Assign active Sales Personnel before creating the delivery.');
+      return;
+    }
+    if (!_isThirdParty && _selectedDeliveryAgent == null) {
+      setState(() => _error =
+          'Assign an active internal Driver before creating the delivery.');
+      return;
+    }
+    if (_isThirdParty &&
+        (_deliveryProvider.trim().isEmpty ||
+            _thirdPartyDriverController.text.trim().isEmpty ||
+            _plateNumberController.text.trim().isEmpty)) {
+      setState(() => _error =
+          'Enter the third-party provider, driver name, and plate number.');
       return;
     }
     final pricing = _selectedPricing;
@@ -2655,7 +2736,14 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
       'off_taker_id': _id(buyer),
       'buyer_name': _text(buyer, ['name'], 'Off-taker'),
       'sales_person_id': _salesPersonId,
-      'delivery_agent_id': _deliveryAgentId,
+      'delivery_type': _deliveryType,
+      'delivery_provider':
+          _isThirdParty ? _deliveryProvider.trim() : 'Farm Estates',
+      'delivery_agent_id': _isThirdParty ? '' : _deliveryAgentId,
+      'third_party_driver_name':
+          _isThirdParty ? _thirdPartyDriverController.text.trim() : '',
+      'delivery_plate_number':
+          _isThirdParty ? _plateNumberController.text.trim().toUpperCase() : '',
       'delivered_by': widget.currentUserName,
       'delivered_at': dateTime.toIso8601String(),
       'scheduled_for': dateTime.toIso8601String(),
@@ -2883,27 +2971,105 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                               : null,
                         )),
                         sized(DropdownButtonFormField<String>(
-                          initialValue: _deliveryAgentId,
+                          initialValue: _deliveryType,
                           isExpanded: true,
                           decoration: _decoration(
-                              'Delivery Agent', Icons.local_shipping_outlined),
-                          items: widget.deliveryAgents
-                              .map((user) => DropdownMenuItem(
-                                    value: _id(user),
-                                    child: Text(
-                                      _text(user, ['name'], 'Delivery Agent'),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ))
-                              .toList(),
+                              'Delivery method', Icons.route_outlined),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'internal',
+                              child: Text('Internal Driver'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'third_party',
+                              child: Text('Third-Party Delivery'),
+                            ),
+                          ],
                           onChanged: _saving
                               ? null
-                              : (value) =>
-                                  setState(() => _deliveryAgentId = value),
-                          validator: (value) => value == null
-                              ? 'Assign the Delivery Agent.'
-                              : null,
+                              : (value) => setState(() {
+                                    _deliveryType = value ?? 'internal';
+                                    _error = null;
+                                    if (_isThirdParty &&
+                                        _deliveryProvider == 'Farm Estates') {
+                                      _deliveryProvider = 'Uber';
+                                    }
+                                  }),
                         )),
+                        if (!_isThirdParty)
+                          sized(DropdownButtonFormField<String>(
+                            initialValue: _deliveryAgentId,
+                            isExpanded: true,
+                            decoration: _decoration('Delivery Agent',
+                                Icons.local_shipping_outlined),
+                            items: widget.deliveryAgents
+                                .map((user) => DropdownMenuItem(
+                                      value: _id(user),
+                                      child: Text(
+                                        '${_text(user, ['name'], 'Delivery Agent')} - ${_text(user, [
+                                              'vehicle'
+                                            ], 'Vehicle pending')}',
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ))
+                                .toList(),
+                            onChanged: _saving
+                                ? null
+                                : (value) =>
+                                    setState(() => _deliveryAgentId = value),
+                            validator: (value) => value == null
+                                ? 'Assign the Delivery Agent.'
+                                : null,
+                          )),
+                        if (_isThirdParty)
+                          sized(DropdownButtonFormField<String>(
+                            key: ValueKey(_deliveryProvider),
+                            initialValue: _deliveryProvider,
+                            isExpanded: true,
+                            decoration: _decoration(
+                                'Delivery provider', Icons.local_taxi_outlined),
+                            items: _deliveryProviders
+                                .map((provider) => DropdownMenuItem(
+                                      value: provider,
+                                      child: Text(provider),
+                                    ))
+                                .toList(),
+                            onChanged: _saving
+                                ? null
+                                : (value) => setState(
+                                    () => _deliveryProvider = value ?? 'Uber'),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Select the delivery provider.'
+                                : null,
+                          )),
+                        if (_isThirdParty)
+                          sized(TextFormField(
+                            controller: _thirdPartyDriverController,
+                            textCapitalization: TextCapitalization.words,
+                            decoration: _decoration(
+                              'Driver name',
+                              Icons.person_outline_rounded,
+                              hint: 'Name shown by the delivery provider',
+                            ),
+                            validator: (value) =>
+                                value == null || value.trim().isEmpty
+                                    ? 'Enter the driver name.'
+                                    : null,
+                          )),
+                        if (_isThirdParty)
+                          sized(TextFormField(
+                            controller: _plateNumberController,
+                            textCapitalization: TextCapitalization.characters,
+                            decoration: _decoration(
+                              'Plate number',
+                              Icons.pin_outlined,
+                              hint: 'e.g. GT 1234-26',
+                            ),
+                            validator: (value) =>
+                                value == null || value.trim().isEmpty
+                                    ? 'Enter the vehicle plate number.'
+                                    : null,
+                          )),
                         if (_selectedBatch != null)
                           sized(
                               Container(
@@ -3132,7 +3298,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                             ),
                             full: true,
                           ),
-                        if (widget.deliveryAgents.isEmpty)
+                        if (!_isThirdParty && widget.deliveryAgents.isEmpty)
                           sized(
                             const _SalesDeliveryError(
                               message:

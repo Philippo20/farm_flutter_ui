@@ -1354,6 +1354,12 @@ class SuperAdminApiService {
     required String phone,
     required String department,
     required String status,
+    required String actorId,
+    required String actorRole,
+    String driverLicenseNumber = '',
+    String vehicle = '',
+    String vehicleType = '',
+    double vehicleCapacityKg = 0,
   }) async {
     final response = await _client.put(
       Uri.parse('$baseUrl/users/${Uri.encodeComponent(id)}'),
@@ -1367,6 +1373,12 @@ class SuperAdminApiService {
         'phone': phone,
         'department': department,
         'status': status,
+        'actor_id': actorId,
+        'actor_role': actorRole,
+        'driver_license_number': driverLicenseNumber,
+        'vehicle': vehicle,
+        'vehicle_type': vehicleType,
+        'vehicle_capacity_kg': vehicleCapacityKg.toString(),
       },
     ).withApiTimeout();
 
@@ -1436,6 +1448,12 @@ class SuperAdminApiService {
     required String phone,
     required String department,
     required String status,
+    required String actorId,
+    required String actorRole,
+    String driverLicenseNumber = '',
+    String vehicle = '',
+    String vehicleType = '',
+    double vehicleCapacityKg = 0,
   }) async {
     final response = await _client.post(
       Uri.parse('$baseUrl/users/signup'),
@@ -1449,6 +1467,12 @@ class SuperAdminApiService {
         'phone': phone,
         'department': department,
         'status': status,
+        'actor_id': actorId,
+        'actor_role': actorRole,
+        'driver_license_number': driverLicenseNumber,
+        'vehicle': vehicle,
+        'vehicle_type': vehicleType,
+        'vehicle_capacity_kg': vehicleCapacityKg.toString(),
       },
     ).withApiTimeout();
 

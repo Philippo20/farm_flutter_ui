@@ -94,6 +94,10 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       'address': _text(doc['address']),
       'phone': _text(doc['phone']),
       'password': _text(doc['password']),
+      'driverLicenseNumber': _text(doc['driver_license_number']),
+      'vehicle': _text(doc['vehicle']),
+      'vehicleType': _text(doc['vehicle_type']),
+      'vehicleCapacityKg': _text(doc['vehicle_capacity_kg'], fallback: '0'),
       'joined': _dateLabel(doc[r'$createdAt'] ?? doc['created_at']),
       'lastActive': _dateLabel(doc[r'$updatedAt'] ?? doc['updated_at']),
       'avatar': _initials(name),
@@ -752,6 +756,18 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          if (user['role'] == 'Driver') ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              '${user['vehicle'].toString().isEmpty ? 'Vehicle pending' : user['vehicle']} | ${user['vehicleType'].toString().isEmpty ? 'Type pending' : user['vehicleType']} | ${user['vehicleCapacityKg']} kg',
+              style: TextStyle(
+                fontSize: 11,
+                color: isDark ? Colors.white70 : AppColors.textSecondary,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ],
       ),
     );
@@ -1219,7 +1235,12 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     required String role,
     required String department,
     required String status,
+    required String driverLicenseNumber,
+    required String vehicle,
+    required String vehicleType,
+    required double vehicleCapacityKg,
   }) async {
+    final actor = ref.read(authProvider).user;
     await _api.createUser(
       name: name,
       email: email,
@@ -1229,6 +1250,12 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       phone: phone,
       department: department,
       status: status,
+      actorId: actor?.id ?? '',
+      actorRole: 'admin',
+      driverLicenseNumber: driverLicenseNumber,
+      vehicle: vehicle,
+      vehicleType: vehicleType,
+      vehicleCapacityKg: vehicleCapacityKg,
     );
     await _loadUsers();
   }
@@ -1243,7 +1270,12 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     required String role,
     required String department,
     required String status,
+    required String driverLicenseNumber,
+    required String vehicle,
+    required String vehicleType,
+    required double vehicleCapacityKg,
   }) async {
+    final actor = ref.read(authProvider).user;
     await _api.updateUser(
       id: user['id'].toString(),
       name: name,
@@ -1254,6 +1286,12 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       phone: phone,
       department: department,
       status: status,
+      actorId: actor?.id ?? '',
+      actorRole: 'admin',
+      driverLicenseNumber: driverLicenseNumber,
+      vehicle: vehicle,
+      vehicleType: vehicleType,
+      vehicleCapacityKg: vehicleCapacityKg,
     );
     await _loadUsers();
   }
@@ -1287,6 +1325,14 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
         TextEditingController(text: isEdit ? user['phone'] : '');
     final addressController =
         TextEditingController(text: isEdit ? user['address'] : '');
+    final licenseController =
+        TextEditingController(text: isEdit ? user['driverLicenseNumber'] : '');
+    final vehicleController =
+        TextEditingController(text: isEdit ? user['vehicle'] : '');
+    final vehicleTypeController =
+        TextEditingController(text: isEdit ? user['vehicleType'] : '');
+    final vehicleCapacityController =
+        TextEditingController(text: isEdit ? user['vehicleCapacityKg'] : '');
     String selectedRole = isEdit ? user['role'] : 'Caretaker';
     String selectedStatus = isEdit ? user['status'] : 'Pending';
     String? errorText;
@@ -1306,6 +1352,12 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
             final password = passwordController.text.trim();
             final phone = phoneController.text.trim();
             final address = addressController.text.trim();
+            final isDriver = selectedRole == 'Driver';
+            final driverLicenseNumber = licenseController.text.trim();
+            final vehicle = vehicleController.text.trim();
+            final vehicleType = vehicleTypeController.text.trim();
+            final vehicleCapacityKg =
+                double.tryParse(vehicleCapacityController.text.trim()) ?? 0;
 
             if (name.isEmpty || email.isEmpty || password.isEmpty) {
               setDialogState(
@@ -1315,6 +1367,14 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
             }
             if (!email.contains('@')) {
               setDialogState(() => errorText = 'Enter a valid email address.');
+              return;
+            }
+            if (isDriver &&
+                (driverLicenseNumber.isEmpty ||
+                    vehicle.isEmpty ||
+                    vehicleType.isEmpty)) {
+              setDialogState(() => errorText =
+                  'Driver license number, vehicle registration, and vehicle type are required.');
               return;
             }
 
@@ -1336,6 +1396,10 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                   role: selectedRole,
                   department: department,
                   status: selectedStatus,
+                  driverLicenseNumber: driverLicenseNumber,
+                  vehicle: vehicle,
+                  vehicleType: vehicleType,
+                  vehicleCapacityKg: vehicleCapacityKg,
                 );
               } else {
                 await _createUser(
@@ -1347,6 +1411,10 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                   role: selectedRole,
                   department: department,
                   status: selectedStatus,
+                  driverLicenseNumber: driverLicenseNumber,
+                  vehicle: vehicle,
+                  vehicleType: vehicleType,
+                  vehicleCapacityKg: vehicleCapacityKg,
                 );
               }
               if (!mounted || !dialogContext.mounted) return;
@@ -1405,10 +1473,6 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (errorText != null) ...[
-                            _buildModalError(errorText!, isDark),
-                            const SizedBox(height: AppSpacing.lg),
-                          ],
                           _buildFormLabel('Full Name', isDark),
                           const SizedBox(height: AppSpacing.sm),
                           _buildFormTextField(
@@ -1505,6 +1569,49 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                             value: department,
                             isDark: isDark,
                           ),
+                          if (selectedRole == 'Driver') ...[
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildFormLabel('Driver License Number', isDark),
+                            const SizedBox(height: AppSpacing.sm),
+                            _buildFormTextField(
+                              controller: licenseController,
+                              hint: 'e.g., DVLA-1234567',
+                              icon: Icons.badge_outlined,
+                              isDark: isDark,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildFormLabel('Vehicle Registration', isDark),
+                            const SizedBox(height: AppSpacing.sm),
+                            _buildFormTextField(
+                              controller: vehicleController,
+                              hint: 'e.g., GT 1234-26',
+                              icon: Icons.local_shipping_outlined,
+                              isDark: isDark,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildFormLabel('Vehicle Type', isDark),
+                            const SizedBox(height: AppSpacing.sm),
+                            _buildFormTextField(
+                              controller: vehicleTypeController,
+                              hint: 'e.g., Refrigerated van',
+                              icon: Icons.fire_truck_outlined,
+                              isDark: isDark,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildFormLabel('Capacity (kg)', isDark),
+                            const SizedBox(height: AppSpacing.sm),
+                            _buildFormTextField(
+                              controller: vehicleCapacityController,
+                              hint: 'e.g., 1500',
+                              icon: Icons.scale_outlined,
+                              isDark: isDark,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ],
+                          if (errorText != null) ...[
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildModalError(errorText!, isDark),
+                          ],
                         ],
                       ),
                     ),
@@ -1814,9 +1921,11 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     required String hint,
     required IconData icon,
     required bool isDark,
+    TextInputType? keyboardType,
   }) {
     return TextFormField(
       controller: controller,
+      keyboardType: keyboardType,
       style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
       decoration: InputDecoration(
         hintText: hint,

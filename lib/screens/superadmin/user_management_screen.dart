@@ -177,6 +177,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       'password': (doc['password'] ?? '').toString(),
       'address': (doc['address'] ?? '').toString(),
       'phone': (doc['phone'] ?? '').toString(),
+      'driverLicenseNumber': (doc['driver_license_number'] ?? '').toString(),
+      'vehicle': (doc['vehicle'] ?? '').toString(),
+      'vehicleType': (doc['vehicle_type'] ?? '').toString(),
+      'vehicleCapacityKg': (doc['vehicle_capacity_kg'] ?? 0).toString(),
     };
   }
 
@@ -1029,6 +1033,20 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               _buildInfoPill('Role', user['role'], isDark),
               _buildInfoPill('Dept', user['department'], isDark),
               _buildInfoPill('Joined', user['joined'], isDark),
+              if (user['role'] == 'Driver')
+                _buildInfoPill(
+                  'Vehicle',
+                  user['vehicle'].toString().isEmpty
+                      ? 'Pending'
+                      : user['vehicle'],
+                  isDark,
+                ),
+              if (user['role'] == 'Driver')
+                _buildInfoPill(
+                  'Capacity',
+                  '${user['vehicleCapacityKg']} kg',
+                  isDark,
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -1147,6 +1165,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     String action,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
+    final actor = ref.read(authProvider).user;
     try {
       await _api.updateUser(
         id: user['id'].toString(),
@@ -1158,6 +1177,13 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         phone: user['phone']?.toString() ?? '',
         department: _departmentFromUser(user),
         status: status,
+        actorId: actor?.id ?? '',
+        actorRole: 'superadmin',
+        driverLicenseNumber: user['driverLicenseNumber']?.toString() ?? '',
+        vehicle: user['vehicle']?.toString() ?? '',
+        vehicleType: user['vehicleType']?.toString() ?? '',
+        vehicleCapacityKg:
+            double.tryParse(user['vehicleCapacityKg']?.toString() ?? '') ?? 0,
       );
       if (!mounted) return;
       await _loadUsers();
@@ -1212,8 +1238,13 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     required String email,
     required String role,
     required String department,
+    required String driverLicenseNumber,
+    required String vehicle,
+    required String vehicleType,
+    required double vehicleCapacityKg,
   }) async {
     final messenger = ScaffoldMessenger.of(context);
+    final actor = ref.read(authProvider).user;
     try {
       await _api.createUser(
         name: name,
@@ -1224,6 +1255,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         phone: '+233000000000',
         department: department,
         status: 'Pending',
+        actorId: actor?.id ?? '',
+        actorRole: 'superadmin',
+        driverLicenseNumber: driverLicenseNumber,
+        vehicle: vehicle,
+        vehicleType: vehicleType,
+        vehicleCapacityKg: vehicleCapacityKg,
       );
       if (!mounted) return;
       await _loadUsers();
@@ -1262,6 +1299,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       'sales_manager',
       'sales_person',
       'accountant',
+      'driver',
     };
     if (backendRoles.contains(rawRole)) return rawRole;
     return _roleValue(rawRole);
@@ -1288,16 +1326,41 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     required String selectedDepartment,
     required String selectedStatus,
     required void Function(bool value) setSaving,
+    required TextEditingController licenseController,
+    required TextEditingController vehicleController,
+    required TextEditingController vehicleTypeController,
+    required TextEditingController vehicleCapacityController,
   }) async {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(dialogContext);
     final name = nameController.text.trim();
     final email = emailController.text.trim();
+    final actor = ref.read(authProvider).user;
+    final isDriver = selectedRole == 'Driver';
+    final driverLicenseNumber = licenseController.text.trim();
+    final vehicle = vehicleController.text.trim();
+    final vehicleType = vehicleTypeController.text.trim();
+    final vehicleCapacityKg =
+        double.tryParse(vehicleCapacityController.text.trim()) ?? 0;
 
     if (name.isEmpty || email.isEmpty) {
       messenger.showSnackBar(
         SnackBar(
           content: const Text('Name and email are required.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (isDriver &&
+        (driverLicenseNumber.isEmpty ||
+            vehicle.isEmpty ||
+            vehicleType.isEmpty)) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Driver license number, vehicle registration, and vehicle type are required.'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),
@@ -1318,6 +1381,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         phone: _safeRequired(user['phone']?.toString(), '+233000000000'),
         department: selectedDepartment,
         status: selectedStatus,
+        actorId: actor?.id ?? '',
+        actorRole: 'superadmin',
+        driverLicenseNumber: driverLicenseNumber,
+        vehicle: vehicle,
+        vehicleType: vehicleType,
+        vehicleCapacityKg: vehicleCapacityKg,
       );
       if (!mounted) return;
       await _loadUsers();
@@ -1346,6 +1415,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   void _showAddUserDialog(BuildContext context, bool isDark) {
     final nameController = TextEditingController();
     final emailController = TextEditingController();
+    final licenseController = TextEditingController();
+    final vehicleController = TextEditingController();
+    final vehicleTypeController = TextEditingController();
+    final vehicleCapacityController = TextEditingController();
     String selectedRole = 'Caretaker';
     String selectedDepartment = 'Field Work';
     final screenWidth = MediaQuery.of(context).size.width;
@@ -1462,8 +1535,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           items: _roleOptions,
                           icon: Icons.badge_outlined,
                           isDark: isDark,
-                          onChanged: (value) =>
-                              setDialogState(() => selectedRole = value!),
+                          onChanged: (value) => setDialogState(() {
+                            selectedRole = value!;
+                            selectedDepartment =
+                                _departmentForRole(selectedRole);
+                          }),
                         ),
                         const SizedBox(height: AppSpacing.lg),
 
@@ -1478,6 +1554,45 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           onChanged: (value) =>
                               setDialogState(() => selectedDepartment = value!),
                         ),
+                        if (selectedRole == 'Driver') ...[
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Driver License Number', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                            controller: licenseController,
+                            hint: 'e.g., DVLA-1234567',
+                            icon: Icons.badge_outlined,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Vehicle Registration', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                            controller: vehicleController,
+                            hint: 'e.g., GT 1234-26',
+                            icon: Icons.local_shipping_outlined,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Vehicle Type', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                            controller: vehicleTypeController,
+                            hint: 'e.g., Refrigerated van',
+                            icon: Icons.fire_truck_outlined,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Capacity (kg)', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                            controller: vehicleCapacityController,
+                            hint: 'e.g., 1500',
+                            icon: Icons.scale_outlined,
+                            isDark: isDark,
+                            keyboardType: TextInputType.number,
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -1536,12 +1651,35 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                               );
                               return;
                             }
+                            if (selectedRole == 'Driver' &&
+                                (licenseController.text.trim().isEmpty ||
+                                    vehicleController.text.trim().isEmpty ||
+                                    vehicleTypeController.text
+                                        .trim()
+                                        .isEmpty)) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Complete the driver license and vehicle details.'),
+                                  backgroundColor: AppColors.error,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                              return;
+                            }
                             Navigator.pop(context);
                             await _createUser(
                               name: name,
                               email: email,
                               role: selectedRole,
                               department: selectedDepartment,
+                              driverLicenseNumber:
+                                  licenseController.text.trim(),
+                              vehicle: vehicleController.text.trim(),
+                              vehicleType: vehicleTypeController.text.trim(),
+                              vehicleCapacityKg: double.tryParse(
+                                      vehicleCapacityController.text.trim()) ??
+                                  0,
                             );
                           },
                           icon: const Icon(Icons.add, size: 18),
@@ -1572,6 +1710,13 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       BuildContext context, Map<String, dynamic> user, bool isDark) {
     final nameController = TextEditingController(text: user['name']);
     final emailController = TextEditingController(text: user['email']);
+    final licenseController =
+        TextEditingController(text: user['driverLicenseNumber']);
+    final vehicleController = TextEditingController(text: user['vehicle']);
+    final vehicleTypeController =
+        TextEditingController(text: user['vehicleType']);
+    final vehicleCapacityController =
+        TextEditingController(text: user['vehicleCapacityKg']);
     String selectedRole = _roleLabel(user['role']);
     String selectedDepartment = _departmentOptions.contains(user['department'])
         ? user['department']
@@ -1756,8 +1901,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                       items: _roleOptions,
                                       icon: Icons.badge_outlined,
                                       isDark: isDark,
-                                      onChanged: (value) => setDialogState(
-                                          () => selectedRole = value!),
+                                      onChanged: (value) => setDialogState(() {
+                                        selectedRole = value!;
+                                        selectedDepartment =
+                                            _departmentForRole(selectedRole);
+                                      }),
                                     ),
                                   ],
                                 ),
@@ -1790,8 +1938,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                             items: _roleOptions,
                             icon: Icons.badge_outlined,
                             isDark: isDark,
-                            onChanged: (value) =>
-                                setDialogState(() => selectedRole = value!),
+                            onChanged: (value) => setDialogState(() {
+                              selectedRole = value!;
+                              selectedDepartment =
+                                  _departmentForRole(selectedRole);
+                            }),
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           _buildFormLabel('Status', isDark),
@@ -1818,6 +1969,45 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           onChanged: (value) =>
                               setDialogState(() => selectedDepartment = value!),
                         ),
+                        if (selectedRole == 'Driver') ...[
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Driver License Number', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                            controller: licenseController,
+                            hint: 'e.g., DVLA-1234567',
+                            icon: Icons.badge_outlined,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Vehicle Registration', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                            controller: vehicleController,
+                            hint: 'e.g., GT 1234-26',
+                            icon: Icons.local_shipping_outlined,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Vehicle Type', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                            controller: vehicleTypeController,
+                            hint: 'e.g., Refrigerated van',
+                            icon: Icons.fire_truck_outlined,
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _buildFormLabel('Capacity (kg)', isDark),
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildTextField(
+                            controller: vehicleCapacityController,
+                            hint: 'e.g., 1500',
+                            icon: Icons.scale_outlined,
+                            isDark: isDark,
+                            keyboardType: TextInputType.number,
+                          ),
+                        ],
                         const SizedBox(height: AppSpacing.lg),
                       ],
                     ),
@@ -1896,6 +2086,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                                     selectedDepartment: selectedDepartment,
                                     selectedStatus: selectedStatus,
                                     setSaving: (value) => isSaving = value,
+                                    licenseController: licenseController,
+                                    vehicleController: vehicleController,
+                                    vehicleTypeController:
+                                        vehicleTypeController,
+                                    vehicleCapacityController:
+                                        vehicleCapacityController,
                                   );
                                 },
                           icon: isSaving
