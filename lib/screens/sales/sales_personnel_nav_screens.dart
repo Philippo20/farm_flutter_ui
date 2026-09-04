@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -134,13 +135,14 @@ class _SalesPersonnelRecordDeliveryScreenState
         : await showDialog<bool>(
             context: context,
             builder: (_) => Dialog(
-              insetPadding: const EdgeInsets.all(24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              ),
+              backgroundColor: Colors.transparent,
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               child: ConstrainedBox(
-                constraints:
-                    const BoxConstraints(maxWidth: 640, maxHeight: 760),
+                constraints: BoxConstraints(
+                  maxWidth: 500,
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+                ),
                 child: modal,
               ),
             ),
@@ -1210,65 +1212,128 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
     }
   }
 
-  InputDecoration _decoration(String label, IconData icon) {
+  InputDecoration _decoration(IconData icon, {String? hint}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, size: 20),
+      hintText: hint,
+      hintStyle: GoogleFonts.inter(
+        fontSize: 12,
+        color: isDark ? Colors.white24 : AppColors.textSecondary,
+      ),
+      prefixIcon: Icon(
+        icon,
+        size: 16,
+        color: isDark ? Colors.white24 : AppColors.textSecondary,
+      ),
       filled: true,
-      fillColor: isDark ? AppColors.surfaceDark : const Color(0xFFF8FAFC),
+      fillColor: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(
+          color: isDark
+              ? Colors.white.withOpacity(0.06)
+              : Colors.black.withOpacity(0.06),
+        ),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(
-          color: isDark ? AppColors.neutral700 : AppColors.neutral200,
+          color: isDark
+              ? Colors.white.withOpacity(0.06)
+              : Colors.black.withOpacity(0.06),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+    );
+  }
+
+  Widget _label(String label) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Text(
+      label,
+      style: GoogleFonts.inter(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: isDark ? Colors.white54 : AppColors.textSecondary,
+      ),
+    );
+  }
+
+  Widget _field({
+    required String label,
+    required Widget child,
+    double bottom = 14,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottom),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label(label),
+          const SizedBox(height: 6),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _readOnlyField(String label, String value, IconData icon) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return _field(
+      label: label,
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 42),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withOpacity(0.06)
+                : Colors.black.withOpacity(0.06),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isDark ? Colors.white24 : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                value,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _summaryItem(String label, String value, IconData icon) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: isDark ? AppColors.neutral700 : AppColors.neutral200,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 19, color: AppColors.primary),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: isDark ? Colors.white70 : AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+  Widget _pair(Widget first, Widget second) {
+    if (MediaQuery.sizeOf(context).width < 700) {
+      return Column(children: [first, second]);
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(child: first),
+        const SizedBox(width: 10),
+        Expanded(child: second),
+      ],
     );
   }
 
@@ -1278,181 +1343,271 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sale = widget.sale;
 
-    return Material(
-      color: isDark ? AppColors.backgroundDark : Colors.white,
-      borderRadius: BorderRadius.vertical(
-        top: const Radius.circular(AppSpacing.radiusLg),
-        bottom: Radius.circular(isMobile ? 0 : AppSpacing.radiusLg),
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 500),
+      height: MediaQuery.sizeOf(context).height * (isMobile ? 0.9 : 0.86),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.vertical(
+          top: const Radius.circular(AppSpacing.radiusXl),
+          bottom: Radius.circular(isMobile ? 0 : AppSpacing.radiusXl),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 24,
+            offset: Offset(0, 12),
+          ),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: SizedBox(
-        height: isMobile ? MediaQuery.sizeOf(context).height * 0.88 : null,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.md,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary,
+                        AppColors.primary.withOpacity(0.75),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.fact_check_outlined,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Delivery Handover',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        'Confirm the off-taker receipt and payment status',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color:
+                              isDark ? Colors.white38 : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                InkWell(
+                  onTap: _saving ? null : () => Navigator.of(context).pop(),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      color: isDark
+                          ? Colors.white.withOpacity(0.04)
+                          : Colors.black.withOpacity(0.04),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      Icons.fact_check_outlined,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Delivery Handover',
-                          style: AppTypography.h5.copyWith(
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          'Confirm the off-taker receipt and payment status',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: isDark
-                                ? Colors.white70
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 16,
+                      color: isDark ? Colors.white38 : AppColors.textSecondary,
                     ),
                   ),
-                  IconButton(
-                    tooltip: 'Close',
-                    onPressed:
-                        _saving ? null : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Divider(
-              height: 1,
-              color: isDark ? AppColors.neutral700 : AppColors.neutral200,
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final items = [
-                          _summaryItem(
-                            'Off-taker',
-                            '${sale['buyer_name'] ?? 'Not set'}',
-                            Icons.storefront_outlined,
-                          ),
-                          _summaryItem(
-                            'Batch and packs',
-                            '${sale['batch_number'] ?? sale['batch_id'] ?? 'Not set'} | ${_saleNumber(sale['package_count'])} packs',
-                            Icons.inventory_2_outlined,
-                          ),
-                          _summaryItem(
-                            'Driver',
-                            '${sale['delivery_agent_name'] ?? 'Unassigned'}',
-                            Icons.person_outline,
-                          ),
-                          _summaryItem(
-                            'Vehicle',
-                            '${sale['delivery_plate_number'] ?? sale['delivery_vehicle'] ?? 'Pending'}',
-                            Icons.local_shipping_outlined,
-                          ),
-                        ];
-                        if (constraints.maxWidth < 520) {
-                          return Column(
-                            children: [
-                              for (var i = 0; i < items.length; i++) ...[
-                                items[i],
-                                if (i < items.length - 1)
-                                  const SizedBox(height: AppSpacing.sm),
-                              ],
-                            ],
-                          );
-                        }
-                        return Wrap(
-                          spacing: AppSpacing.sm,
-                          runSpacing: AppSpacing.sm,
-                          children: items
-                              .map((item) => SizedBox(
-                                    width:
-                                        (constraints.maxWidth - AppSpacing.sm) /
-                                            2,
-                                    child: item,
-                                  ))
-                              .toList(),
-                        );
-                      },
+          ),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              physics: const BouncingScrollPhysics(),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _pair(
+                    _readOnlyField(
+                      'Off-taker',
+                      '${sale['buyer_name'] ?? 'Not set'}',
+                      Icons.storefront_outlined,
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    DropdownButtonFormField<String>(
-                      initialValue: _status,
-                      decoration: _decoration(
-                        'Delivery status',
-                        Icons.flag_outlined,
+                    _readOnlyField(
+                      'Batch',
+                      '${sale['batch_number'] ?? sale['batch_id'] ?? 'Not set'}',
+                      Icons.qr_code_2_outlined,
+                    ),
+                  ),
+                  _pair(
+                    _readOnlyField(
+                      'Allocated packs',
+                      '${_saleNumber(sale['package_count'])} packs',
+                      Icons.inventory_2_outlined,
+                    ),
+                    _readOnlyField(
+                      'Scheduled date',
+                      '${sale['scheduled_for'] ?? sale['delivered_at'] ?? 'Not set'}'
+                          .split('T')
+                          .first,
+                      Icons.calendar_today_outlined,
+                    ),
+                  ),
+                  _pair(
+                    _readOnlyField(
+                      'Driver',
+                      '${sale['delivery_agent_name'] ?? 'Unassigned'}',
+                      Icons.person_outline_rounded,
+                    ),
+                    _readOnlyField(
+                      'Vehicle',
+                      '${sale['delivery_plate_number'] ?? sale['delivery_vehicle'] ?? 'Pending'}',
+                      Icons.local_shipping_outlined,
+                    ),
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _saving ? null : widget.onPrintInvoice,
+                      icon: const Icon(Icons.print_outlined, size: 16),
+                      label: Text(
+                        'Open printable invoice',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      items: const [
-                        DropdownMenuItem(
-                            value: 'Pending', child: Text('Pending')),
-                        DropdownMenuItem(
-                            value: 'Delivered', child: Text('Delivered')),
-                      ],
-                      onChanged: _saving
-                          ? null
-                          : (value) =>
-                              setState(() => _status = value ?? _status),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    TextFormField(
-                      controller: _receiptController,
-                      enabled: !_saving,
-                      decoration: _decoration(
-                        'Signed invoice / receipt reference',
-                        Icons.receipt_long_outlined,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        side: BorderSide(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.1)
+                              : Colors.black.withOpacity(0.08),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    SwitchListTile.adaptive(
+                  ),
+                  const SizedBox(height: 14),
+                  _pair(
+                    _field(
+                      label: 'Delivery status',
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _status,
+                        isExpanded: true,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                        dropdownColor:
+                            isDark ? AppColors.surfaceDark : Colors.white,
+                        decoration: _decoration(Icons.flag_outlined),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'Pending',
+                            child: Text('Pending'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Delivered',
+                            child: Text('Delivered'),
+                          ),
+                        ],
+                        onChanged: _saving
+                            ? null
+                            : (value) =>
+                                setState(() => _status = value ?? _status),
+                      ),
+                    ),
+                    _field(
+                      label: 'Signed invoice / receipt reference',
+                      child: TextFormField(
+                        controller: _receiptController,
+                        enabled: !_saving,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                        decoration: _decoration(
+                          Icons.receipt_long_outlined,
+                          hint: 'Enter receipt reference',
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.04)
+                          : AppColors.neutral50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.06)
+                            : Colors.black.withOpacity(0.06),
+                      ),
+                    ),
+                    child: SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Payment received'),
-                      subtitle:
-                          const Text('Confirm only after payment is verified'),
+                      title: Text(
+                        'Payment received',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Confirm only after payment is verified',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color:
+                              isDark ? Colors.white38 : AppColors.textSecondary,
+                        ),
+                      ),
                       value: _paid,
                       onChanged: _saving
                           ? null
                           : (value) => setState(() => _paid = value),
                     ),
-                    if (_paid) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      DropdownButtonFormField<String>(
+                  ),
+                  if (_paid)
+                    _field(
+                      label: 'Payment method',
+                      child: DropdownButtonFormField<String>(
                         initialValue: _paymentMode,
+                        isExpanded: true,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
+                        dropdownColor:
+                            isDark ? AppColors.surfaceDark : Colors.white,
                         decoration: _decoration(
-                          'Payment method',
                           Icons.account_balance_wallet_outlined,
                         ),
                         items: _paymentModes
-                            .map((mode) => DropdownMenuItem(
-                                  value: mode,
-                                  child: Text(mode),
-                                ))
+                            .map(
+                              (mode) => DropdownMenuItem(
+                                value: mode,
+                                child: Text(mode),
+                              ),
+                            )
                             .toList(),
                         onChanged: _saving
                             ? null
@@ -1460,88 +1615,101 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                                   () => _paymentMode = value ?? _paymentMode,
                                 ),
                       ),
-                    ],
-                    const SizedBox(height: AppSpacing.md),
-                    TextFormField(
+                    ),
+                  _field(
+                    label: 'Handover notes or delivery exception',
+                    child: TextFormField(
                       controller: _notesController,
                       enabled: !_saving,
                       minLines: 3,
                       maxLines: 5,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
                       decoration: _decoration(
-                        'Handover notes or delivery exception',
                         Icons.notes_outlined,
+                        hint: 'Enter notes',
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-            Divider(
-              height: 1,
-              color: isDark ? AppColors.neutral700 : AppColors.neutral200,
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                isMobile ? AppSpacing.lg : AppSpacing.md,
-              ),
-              child: Column(
-                children: [
-                  if (_error != null) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withOpacity(0.08),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusSm),
-                        border: Border.all(
-                            color: AppColors.error.withOpacity(0.25)),
-                      ),
+                  ),
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
                         _error!,
-                        style: AppTypography.bodySmall.copyWith(
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                           color: AppColors.error,
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.sm),
-                  ],
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _saving ? null : widget.onPrintInvoice,
-                          icon: const Icon(Icons.print_outlined),
-                          label: const Text('Print invoice'),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: _saving ? null : _submit,
-                          icon: _saving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.check_circle_outline),
-                          label: Text(_saving ? 'Saving...' : 'Save handover'),
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(24, 12, 24, isMobile ? 20 : 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed:
+                        _saving ? null : () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      side: BorderSide(
+                        color: isDark
+                            ? Colors.white.withOpacity(0.1)
+                            : Colors.black.withOpacity(0.08),
+                      ),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _saving ? null : _submit,
+                    icon: _saving
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.save_outlined, size: 18),
+                    label: Text(
+                      _saving ? 'Saving...' : 'Save Handover',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
