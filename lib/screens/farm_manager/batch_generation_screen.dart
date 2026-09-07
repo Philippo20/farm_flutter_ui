@@ -1570,6 +1570,10 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
               ),
               SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.lg),
               GridView.builder(
+                padding:
+                    widget.access == BatchScreenAccess.superAdmin && isMobile
+                        ? EdgeInsets.zero
+                        : null,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -1585,7 +1589,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 },
               ),
               // Add bottom padding for mobile to match spacing
-              if (isMobile) SizedBox(height: AppSpacing.xs),
+              if (isMobile && widget.access != BatchScreenAccess.superAdmin)
+                SizedBox(height: AppSpacing.xs),
             ],
           ),
         );
@@ -1657,6 +1662,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       bool isDark, bool isMobile, List<BatchModel> batches) {
     if (isMobile) {
       return ListView.separated(
+        padding: widget.access == BatchScreenAccess.superAdmin
+            ? EdgeInsets.zero
+            : null,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: batches.length,
@@ -1953,6 +1961,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   // ============================================
 
   Widget _buildBatchCard(BatchModel batch, bool isDark) {
+    if (widget.access == BatchScreenAccess.superAdmin) {
+      return _buildSuperAdminBatchCard(batch, isDark);
+    }
     final pct = batch.progressPercentage;
     final pctColor = pct >= 75
         ? AppColors.success
@@ -2139,6 +2150,179 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(9)),
             ),
+          )),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _buildSuperAdminBatchCard(BatchModel batch, bool isDark) {
+    final foreground = isDark ? Colors.white : AppColors.textPrimary;
+    final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
+    final progress = batch.progressPercentage.clamp(0, 100).toDouble();
+    Widget detail(String label, String value, IconData icon) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 16, color: secondary),
+            const SizedBox(width: 8),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(label,
+                      style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+                  const SizedBox(height: 4),
+                  Text(value.trim().isEmpty ? 'Not provided' : value,
+                      style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: foreground)),
+                ])),
+          ],
+        );
+    Widget pair(Widget first, Widget second) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: first),
+            const SizedBox(width: 12),
+            Expanded(child: second)
+          ],
+        );
+    Widget stage(String label, int count, Color color) => Expanded(
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(NumberFormat.decimalPattern().format(count),
+                style: GoogleFonts.inter(
+                    fontSize: 16, fontWeight: FontWeight.w700, color: color)),
+            const SizedBox(height: 4),
+            Text(label,
+                style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+          ]),
+        );
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? .1 : .03),
+              blurRadius: 16,
+              offset: const Offset(0, 4))
+        ],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.layers_outlined,
+                  size: 22, color: AppColors.primary)),
+          const SizedBox(width: 12),
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(batch.batchNumber,
+                    style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: foreground)),
+                const SizedBox(height: 4),
+                Text(batch.farmName,
+                    style: GoogleFonts.inter(fontSize: 12, color: secondary)),
+              ])),
+        ]),
+        const SizedBox(height: 12),
+        StatusBadge(status: batch.status),
+        const SizedBox(height: 14),
+        pair(detail('Crop', batch.plantType, Icons.eco_outlined),
+            detail('Variety', batch.plantVariety, Icons.spa_outlined)),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: .04)
+                  : AppColors.neutral50,
+              borderRadius: BorderRadius.circular(10)),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              stage('Nursed', batch.nursedSeeds, AppColors.info),
+              const SizedBox(width: 8),
+              stage(
+                  'Transplanted', batch.transplantedPlants, AppColors.primary),
+              const SizedBox(width: 8),
+              stage('Harvested', batch.harvestedHeads, AppColors.success),
+            ]),
+            const SizedBox(height: 12),
+            Text('Batch progress · ${progress.toStringAsFixed(0)}%',
+                style: GoogleFonts.inter(fontSize: 11, color: secondary)),
+            const SizedBox(height: 6),
+            ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                    value: progress / 100,
+                    minHeight: 5,
+                    color: AppColors.primary,
+                    backgroundColor: AppColors.primary.withValues(alpha: .1))),
+          ]),
+        ),
+        const SizedBox(height: 14),
+        pair(
+            detail('Started', DateFormat('dd MMM yyyy').format(batch.startDate),
+                Icons.calendar_today_outlined),
+            detail(
+                'Expected harvest',
+                DateFormat('dd MMM yyyy').format(batch.expectedHarvestDate),
+                Icons.event_outlined)),
+        const SizedBox(height: 14),
+        pair(
+            detail('Caretaker', batch.caretakerName ?? 'Unassigned',
+                Icons.person_outline),
+            detail('Survival rate', '${batch.survivalRate.toStringAsFixed(0)}%',
+                Icons.trending_up_rounded)),
+        const SizedBox(height: 16),
+        Row(children: [
+          Expanded(
+              child: OutlinedButton.icon(
+            onPressed: () => _viewBatchDetails(batch),
+            icon: const Icon(Icons.visibility_outlined, size: 16),
+            label: const Text('View details'),
+            style: OutlinedButton.styleFrom(
+                minimumSize: const Size(0, 44),
+                foregroundColor: AppColors.primary,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                textStyle: GoogleFonts.inter(
+                    fontSize: 12, fontWeight: FontWeight.w600),
+                side:
+                    BorderSide(color: AppColors.primary.withValues(alpha: .25)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
+          )),
+          const SizedBox(width: 10),
+          Expanded(
+              child: FilledButton.icon(
+            onPressed: () => _editBatch(batch),
+            icon: const Icon(Icons.edit_outlined, size: 16),
+            label: const Text('Edit batch'),
+            style: FilledButton.styleFrom(
+                minimumSize: const Size(0, 44),
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                textStyle: GoogleFonts.inter(
+                    fontSize: 12, fontWeight: FontWeight.w600),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
           )),
         ]),
       ]),
