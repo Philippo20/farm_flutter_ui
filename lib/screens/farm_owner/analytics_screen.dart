@@ -650,7 +650,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color:
               isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
@@ -889,7 +889,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       {
         'title': 'Profit Margin',
         'value': '${_profitMargin.toStringAsFixed(1)}%',
-        'change': _formatCompactMoney(_totalInputCost),
+        'change': 'Input cost: ' + _formatCompactMoney(_totalInputCost),
         'isPositive': _profitMargin >= 0,
         'icon': Icons.percent,
         'color': AppColors.primary,
@@ -897,7 +897,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       {
         'title': 'Avg. Daily Revenue',
         'value': _formatCompactMoney(_averageDailyRevenue),
-        'change': '${_averageYieldLoss.toStringAsFixed(1)}% loss',
+        'change': '${_averageYieldLoss.toStringAsFixed(1)}% yield loss',
         'isPositive': _averageYieldLoss <= 10,
         'icon': Icons.show_chart,
         'color': AppColors.warning,
@@ -910,113 +910,55 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         final childAspectRatio = isMobile ? 1.3 : (isTablet ? 1.6 : 1.8);
 
         return ResponsiveMetricGrid(
-          useContentHeight: isMobile,
+          useContentHeight: true,
           crossAxisCount: crossAxisCount,
           childAspectRatio: childAspectRatio,
           crossAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
           mainAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
           children: metrics.map((metric) {
+            final color = metric['color'] as Color;
             return Container(
-              padding: EdgeInsets.all(isMobile
-                  ? AppSpacing.sm
-                  : (isTablet ? AppSpacing.sm : AppSpacing.md)),
+              padding: EdgeInsets.all(isMobile ? 14 : 20),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.surfaceDark : Colors.white,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : AppColors.neutral200,
-                ),
+                    color: isDark ? Colors.white10 : AppColors.neutral200),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      Container(
-                        padding:
-                            EdgeInsets.all(isMobile ? 6 : (isTablet ? 7 : 8)),
-                        decoration: BoxDecoration(
-                          color: (metric['color'] as Color).withOpacity(0.1),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusSm),
-                        ),
-                        child: Icon(
-                          metric['icon'] as IconData,
-                          color: metric['color'] as Color,
-                          size: isMobile ? 18 : (isTablet ? 19 : 20),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: (metric['isPositive'] as bool)
-                              ? AppColors.success.withOpacity(0.1)
-                              : AppColors.error.withOpacity(0.1),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusFull),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              (metric['isPositive'] as bool)
-                                  ? Icons.trending_up
-                                  : Icons.trending_down,
-                              size: isMobile ? 10 : 12,
-                              color: (metric['isPositive'] as bool)
-                                  ? AppColors.success
-                                  : AppColors.error,
-                            ),
-                            const SizedBox(width: 2),
-                            Flexible(
-                              child: Text(
-                                metric['change'] as String,
-                                style: AppTypography.caption.copyWith(
-                                  color: (metric['isPositive'] as bool)
-                                      ? AppColors.success
-                                      : AppColors.error,
-                                  fontSize: isMobile ? 9 : 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10)),
+                    child: Icon(metric['icon'] as IconData,
+                        color: color, size: 20),
                   ),
-                  SizedBox(height: isMobile ? AppSpacing.xs : AppSpacing.sm),
-                  Text(
-                    metric['value'] as String,
-                    style: AppTypography.h5.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontSize: isMobile ? 20 : (isTablet ? 22 : 24),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    metric['title'] as String,
-                    style: AppTypography.caption.copyWith(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.6)
-                          : AppColors.textSecondary,
-                      fontSize: isMobile ? 11 : (isTablet ? 11.5 : 12),
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  const SizedBox(height: 12),
+                  Text(metric['title'] as String,
+                      style: AppTypography.bodySmall.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? Colors.white70
+                              : AppColors.textSecondary)),
+                  const SizedBox(height: 6),
+                  Text(metric['value'] as String,
+                      style: AppTypography.h5.copyWith(
+                          fontSize: isMobile ? 22 : 26,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              isDark ? Colors.white : AppColors.textPrimary)),
+                  const SizedBox(height: 10),
+                  Text(metric['change'] as String,
+                      style: AppTypography.caption.copyWith(
+                          fontSize: 11,
+                          color: isDark
+                              ? Colors.white60
+                              : AppColors.textSecondary)),
                 ],
               ),
             );
@@ -1029,7 +971,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   Widget _buildFarmDetailsCard(bool isDark) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final isTablet = screenWidth < 1200 && screenWidth >= 600;
 
     final primaryFarm = _ownerFarms.isNotEmpty ? _ownerFarms.first : null;
     final cropSummary = _cropFilterItems.length > 1
@@ -1065,12 +1006,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     ];
 
     return Container(
-      padding: EdgeInsets.all(isMobile
-          ? AppSpacing.md
-          : (isTablet ? AppSpacing.lg : AppSpacing.xl)),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color:
               isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
@@ -1387,19 +1326,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final isTablet = screenWidth < 1200 && screenWidth >= 600;
     final safeIndex = _touchedPieIndex[title];
     final isValidIndex =
         safeIndex != null && safeIndex >= 0 && safeIndex < slices.length;
     final selectedFilter = _cardFilters[title] ?? 'All';
 
     return Container(
-      padding: EdgeInsets.all(isMobile
-          ? AppSpacing.md
-          : (isTablet ? AppSpacing.lg : AppSpacing.xl)),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color:
               isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
@@ -1408,30 +1344,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              _buildCardFilter(
-                isDark,
-                title: title,
-                value: selectedFilter,
-                options: const [
-                  'All',
-                  'Last 7 days',
-                  'Last 30 days',
-                  'This season'
-                ],
-              ),
-            ],
-          ),
+          _analyticsCardHeader(isDark, title, selectedFilter,
+              const ['All', 'Last 7 days', 'Last 30 days', 'This season']),
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
@@ -1589,6 +1503,31 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
+  Widget _analyticsCardHeader(
+      bool isDark, String title, String selectedFilter, List<String> options) {
+    final heading = Text(title,
+        style: AppTypography.h6.copyWith(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : AppColors.textPrimary));
+    final filter = _buildCardFilter(isDark,
+        title: title, value: selectedFilter, options: options);
+    return LayoutBuilder(builder: (context, constraints) {
+      if (constraints.maxWidth < 380) {
+        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          heading,
+          const SizedBox(height: 8),
+          filter,
+        ]);
+      }
+      return Row(children: [
+        Expanded(child: heading),
+        const SizedBox(width: 12),
+        filter
+      ]);
+    });
+  }
+
   Widget _buildCardFilter(
     bool isDark, {
     required String title,
@@ -1667,18 +1606,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final isTablet = screenWidth < 1200 && screenWidth >= 600;
     final maxValue =
         bars.map((b) => b.value).reduce((a, b) => a > b ? a : b).toDouble();
     final selectedFilter = _cardFilters[title] ?? 'All';
 
     return Container(
-      padding: EdgeInsets.all(isMobile
-          ? AppSpacing.md
-          : (isTablet ? AppSpacing.lg : AppSpacing.xl)),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color:
               isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
@@ -1687,25 +1623,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              _buildCardFilter(
-                isDark,
-                title: title,
-                value: selectedFilter,
-                options: const ['All', 'This month', 'Last month', 'YTD'],
-              ),
-            ],
-          ),
+          _analyticsCardHeader(isDark, title, selectedFilter,
+              const ['All', 'This month', 'Last month', 'YTD']),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
@@ -1837,7 +1756,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final isTablet = screenWidth < 1200 && screenWidth >= 600;
     final selectedFilter = _cardFilters[title] ?? 'All';
     final maxPoint = points.isEmpty
         ? 0.0
@@ -1845,12 +1763,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     final chartMaxY = maxPoint <= 0 ? 1.0 : maxPoint * 1.2;
 
     return Container(
-      padding: EdgeInsets.all(isMobile
-          ? AppSpacing.md
-          : (isTablet ? AppSpacing.lg : AppSpacing.xl)),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color:
               isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
@@ -1859,25 +1775,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              _buildCardFilter(
-                isDark,
-                title: title,
-                value: selectedFilter,
-                options: const ['All', '7 days', '14 days', '30 days'],
-              ),
-            ],
-          ),
+          _analyticsCardHeader(isDark, title, selectedFilter,
+              const ['All', '7 days', '14 days', '30 days']),
           const SizedBox(height: 4),
           Text(
             subtitle,
@@ -1998,18 +1897,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final isTablet = screenWidth < 1200 && screenWidth >= 600;
     final maxValue =
         values.map((v) => v.value).reduce((a, b) => a > b ? a : b).toDouble();
     final selectedFilter = _cardFilters[title] ?? 'All';
 
     return Container(
-      padding: EdgeInsets.all(isMobile
-          ? AppSpacing.md
-          : (isTablet ? AppSpacing.lg : AppSpacing.xl)),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color:
               isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
@@ -2018,25 +1914,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              _buildCardFilter(
-                isDark,
-                title: title,
-                value: selectedFilter,
-                options: const ['6 months', 'YTD', '12 months'],
-              ),
-            ],
-          ),
+          _analyticsCardHeader(isDark, title, selectedFilter,
+              const ['6 months', 'YTD', '12 months']),
           const SizedBox(height: AppSpacing.md),
           SizedBox(
             height: isMobile ? 140 : 160,
