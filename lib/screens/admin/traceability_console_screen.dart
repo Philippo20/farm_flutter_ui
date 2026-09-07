@@ -376,14 +376,14 @@ class _TraceabilityConsoleScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _hero(mobile),
-              SizedBox(height: mobile && widget.isSuperAdmin ? 12 : 20),
+              SizedBox(height: mobile ? 12 : 20),
               if (_loading)
                 const AdminDataSkeleton(rowCount: 5)
               else if (_error != null)
                 _errorState()
               else ...[
                 _metricGrid(mobile),
-                SizedBox(height: mobile && widget.isSuperAdmin ? 12 : 20),
+                SizedBox(height: mobile ? 12 : 20),
                 _tabs(),
                 const SizedBox(height: 16),
                 if (_tab == 0) _products(mobile),
@@ -503,7 +503,7 @@ class _TraceabilityConsoleScreenState
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = mobile ? 2 : (constraints.maxWidth < 900 ? 3 : 6);
-        if (mobile && widget.isSuperAdmin) {
+        if (mobile) {
           return Wrap(spacing: 10, runSpacing: 10, children: [
             for (final item in items)
               SizedBox(
@@ -601,9 +601,7 @@ class _TraceabilityConsoleScreenState
           title: 'Published product records',
           subtitle: '${rows.length} production batches available',
           action: SizedBox(
-            width: mobile && widget.isSuperAdmin
-                ? double.infinity
-                : (mobile ? 190 : 280),
+            width: mobile ? double.infinity : (mobile ? 190 : 280),
             child: TextField(
               controller: _searchController,
               style: GoogleFonts.poppins(fontSize: 13),
@@ -617,12 +615,8 @@ class _TraceabilityConsoleScreenState
         else
           ...rows.map((batch) => Padding(
                 padding: EdgeInsets.only(
-                    bottom: mobile &&
-                            widget.isSuperAdmin &&
-                            identical(batch, rows.last)
-                        ? 0
-                        : 10),
-                child: mobile && widget.isSuperAdmin
+                    bottom: mobile && identical(batch, rows.last) ? 0 : 10),
+                child: mobile
                     ? _mobileProductCard(batch)
                     : _BatchCard(
                         batch: batch,
@@ -880,13 +874,11 @@ class _TraceabilityConsoleScreenState
           else
             ..._promotions.map((promotion) => Padding(
                   padding: EdgeInsets.only(
-                      bottom: mobile &&
-                              widget.isSuperAdmin &&
-                              identical(promotion, _promotions.last)
+                      bottom: mobile && identical(promotion, _promotions.last)
                           ? 0
                           : 10),
                   child: _PromotionCard(
-                    compact: mobile && widget.isSuperAdmin,
+                    compact: mobile,
                     promotion: promotion,
                     onEdit: () => _openPromotion(promotion),
                     onDelete: widget.isSuperAdmin
@@ -1071,11 +1063,7 @@ class _TraceabilityConsoleScreenState
         else
           ...rows.map((item) => Padding(
                 padding: EdgeInsets.only(
-                    bottom: mobile &&
-                            widget.isSuperAdmin &&
-                            identical(item, rows.last)
-                        ? 0
-                        : 10),
+                    bottom: mobile && identical(item, rows.last) ? 0 : 10),
                 child: _FeedbackCard(
                   feedback: item,
                   onTap: () => _openFeedback(item),
@@ -1145,7 +1133,7 @@ class _TraceabilityConsoleScreenState
       );
 
   Widget _responsiveFields(bool mobile, List<Widget> fields) => GridView.count(
-        padding: mobile && widget.isSuperAdmin ? EdgeInsets.zero : null,
+        padding: mobile ? EdgeInsets.zero : null,
         crossAxisCount: mobile ? 1 : 2,
         crossAxisSpacing: 14,
         mainAxisSpacing: 14,

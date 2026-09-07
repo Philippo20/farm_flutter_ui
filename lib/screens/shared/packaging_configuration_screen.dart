@@ -253,7 +253,7 @@ class _PackagingConfigurationScreenState
   Widget _content() {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final mobile = MediaQuery.sizeOf(context).width < 600;
-    final compact = mobile && _isSuperAdmin;
+    final compact = mobile && (_isSuperAdmin || _isAdmin);
     if (_loading) {
       return const AdminDataSkeleton(rowCount: 5, compact: true);
     }
@@ -383,7 +383,8 @@ class _PackagingConfigurationScreenState
 
   Widget _catalogGrid() => LayoutBuilder(
         builder: (context, constraints) {
-          if (_isSuperAdmin && MediaQuery.sizeOf(context).width < 600) {
+          if ((_isSuperAdmin || _isAdmin) &&
+              MediaQuery.sizeOf(context).width < 600) {
             final packages = _visiblePackages;
             return Column(children: [
               for (var index = 0; index < packages.length; index++) ...[

@@ -113,6 +113,7 @@ class _AdminDeliveryControlScreenState
                   'Control delivery operations across all farms with approval, assignment, hold, cancellation, and traceable activity logs.',
               isMobile: true,
               allowCreateDelivery: true,
+              useMobileDataCards: true,
             ),
           ),
         ),

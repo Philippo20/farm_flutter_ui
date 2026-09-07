@@ -1571,7 +1571,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
               SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.lg),
               GridView.builder(
                 padding:
-                    widget.access == BatchScreenAccess.superAdmin && isMobile
+                    widget.access != BatchScreenAccess.farmManager && isMobile
                         ? EdgeInsets.zero
                         : null,
                 shrinkWrap: true,
@@ -1589,7 +1589,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 },
               ),
               // Add bottom padding for mobile to match spacing
-              if (isMobile && widget.access != BatchScreenAccess.superAdmin)
+              if (isMobile && widget.access == BatchScreenAccess.farmManager)
                 SizedBox(height: AppSpacing.xs),
             ],
           ),
@@ -1662,7 +1662,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       bool isDark, bool isMobile, List<BatchModel> batches) {
     if (isMobile) {
       return ListView.separated(
-        padding: widget.access == BatchScreenAccess.superAdmin
+        padding: widget.access != BatchScreenAccess.farmManager
             ? EdgeInsets.zero
             : null,
         shrinkWrap: true,
@@ -1961,8 +1961,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   // ============================================
 
   Widget _buildBatchCard(BatchModel batch, bool isDark) {
-    if (widget.access == BatchScreenAccess.superAdmin) {
-      return _buildSuperAdminBatchCard(batch, isDark);
+    if (widget.access != BatchScreenAccess.farmManager) {
+      return _buildAdminBatchCard(batch, isDark);
     }
     final pct = batch.progressPercentage;
     final pctColor = pct >= 75
@@ -2156,7 +2156,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     );
   }
 
-  Widget _buildSuperAdminBatchCard(BatchModel batch, bool isDark) {
+  Widget _buildAdminBatchCard(BatchModel batch, bool isDark) {
     final foreground = isDark ? Colors.white : AppColors.textPrimary;
     final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
     final progress = batch.progressPercentage.clamp(0, 100).toDouble();
