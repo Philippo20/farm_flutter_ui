@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:math';
+import 'package:intl/intl.dart';
+import '../../services/messaging_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -17,58 +21,202 @@ class ChatScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen>
+    with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedNavIndex = 3;
   String? _selectedChat;
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  final _messageScrollController = ScrollController();
+  final Map<String, String> _drafts = {};
+  final Map<String, List<Map<String, dynamic>>> _threads = {};
+  bool _unreadOnly = false;
 
-  final List<Map<String, dynamic>> _chats = [
-    {
-      'id': 'CHAT001',
-      'name': 'Farm Owner',
-      'lastMessage': 'How are the plants doing today?',
-      'time': '10:30 AM',
-      'unread': 2,
-      'avatar': 'O',
-    },
-    {
-      'id': 'CHAT002',
-      'name': 'Farm Manager',
-      'lastMessage': 'Please confirm the input delivery',
-      'time': '9:15 AM',
-      'unread': 0,
-      'avatar': 'M',
-    },
-    {
-      'id': 'CHAT003',
-      'name': 'Technician',
-      'lastMessage': 'Equipment maintenance scheduled',
-      'time': 'Yesterday',
-      'unread': 1,
-      'avatar': 'T',
-    },
-  ];
+  List<Map<String, dynamic>> get _messages =>
+      _threads.putIfAbsent(_selectedChat ?? '', () => []);
 
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'id': 'MSG001',
-      'text': 'Hello! How can I help you today?',
-      'sender': 'other',
-      'time': '10:00 AM',
-    },
-    {
-      'id': 'MSG002',
-      'text': 'How are the plants doing today?',
-      'sender': 'other',
-      'time': '10:30 AM',
-    },
-  ];
+  final _api = MessagingService();
+  Timer? _poll;
+  bool _refreshing = false;
+  bool _sending = false;
+  bool _loading = true;
+  String? _syncError;
+  String? _sendError;
+  String? _requestId;
+  String? _requestText;
+  String? _requestPeer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _refresh();
+    });
+    _poll = Timer.periodic(const Duration(seconds: 5), (_) => _refresh());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _poll?.cancel();
+    if (state == AppLifecycleState.resumed) {
+      _refresh();
+      _poll = Timer.periodic(const Duration(seconds: 5), (_) => _refresh());
+    }
+  }
+
+  String _time(dynamic raw) {
+    final date = DateTime.tryParse(raw?.toString() ?? '')?.toLocal();
+    if (date == null) return '';
+    final now = DateTime.now();
+    return DateFormat(date.year == now.year &&
+                date.month == now.month &&
+                date.day == now.day
+            ? 'HH:mm'
+            : 'MMM d')
+        .format(date);
+  }
+
+  Future<void> _refresh() async {
+    if (!mounted ||
+        _refreshing ||
+        _sending ||
+        ModalRoute.of(context)?.isCurrent == false) return;
+    _refreshing = true;
+    final peer = _selectedChat;
+    try {
+      final chats = await _api.conversations();
+      final messages = peer == null ? null : await _api.messages(peer);
+      if (!mounted) return;
+      final wasNearEnd = !_messageScrollController.hasClients ||
+          _messageScrollController.position.extentAfter < 100;
+      setState(() {
+        _chats
+          ..clear()
+          ..addAll(chats.map((chat) => {
+                ...chat,
+                'avatar': (chat['name'] as String).trim().isEmpty
+                    ? '?'
+                    : (chat['name'] as String).trim()[0].toUpperCase(),
+                'time': _time(chat['updated_at']),
+              }));
+        if (peer != null && messages != null) {
+          _threads[peer] = messages
+              .map((message) => {
+                    ...message,
+                    'time': _time(message['created_at']) +
+                        (message['sender'] == 'me'
+                            ? (message['read_at'] == '' ? ' · Sent' : ' · Read')
+                            : '')
+                  })
+              .toList();
+        }
+        if (_selectedChat != null &&
+            !_chats.any((chat) => chat['id'] == _selectedChat))
+          _selectedChat = null;
+        _loading = false;
+        _syncError = null;
+      });
+      if (peer == _selectedChat &&
+          messages != null &&
+          ModalRoute.of(context)?.isCurrent != false) {
+        if (wasNearEnd) _scrollToLatest();
+        final unread = messages
+            .where((item) => item['sender'] == 'other' && item['read_at'] == '')
+            .map((item) => item['id'] as String)
+            .toList();
+        if (unread.isNotEmpty) await _api.markRead(peer!, unread);
+      }
+    } catch (error) {
+      if (mounted)
+        setState(() {
+          _syncError = error.toString().replaceFirst('Exception: ', '');
+          _loading = false;
+        });
+    } finally {
+      _refreshing = false;
+      if (mounted && peer != _selectedChat) unawaited(_refresh());
+    }
+  }
+
+  void _selectChat(String? id) {
+    if (_sending) return;
+    if (_selectedChat != null)
+      _drafts[_selectedChat!] = _messageController.text;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _selectedChat = id;
+      _messageController.text = _drafts[id] ?? '';
+      if (id != null)
+        _chats.firstWhere((chat) => chat['id'] == id)['unread'] = 0;
+    });
+    _sendError = null;
+    _refresh();
+    _scrollToLatest();
+  }
+
+  void _scrollToLatest() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _messageScrollController.hasClients) {
+        _messageScrollController
+            .jumpTo(_messageScrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
+  final List<Map<String, dynamic>> _chats = [];
+
+  Future<void> _sendMessage() async {
+    final text = _messageController.text.trim();
+    final peer = _selectedChat;
+    if (text.isEmpty || peer == null || _sending) return;
+    if (_requestId == null || _requestText != text || _requestPeer != peer) {
+      _requestId = List.generate(
+          24,
+          (_) => Random.secure()
+              .nextInt(256)
+              .toRadixString(16)
+              .padLeft(2, '0')).join();
+      _requestText = text;
+      _requestPeer = peer;
+    }
+    setState(() {
+      _sending = true;
+      _sendError = null;
+    });
+    try {
+      final saved = await _api.send(peer, text, _requestId!);
+      if (!mounted) return;
+      setState(() {
+        final thread = _threads.putIfAbsent(peer, () => []);
+        if (!thread.any((message) => message['id'] == saved['id']))
+          thread
+              .add({...saved, 'time': _time(saved['created_at']) + ' · Sent'});
+        _drafts.remove(peer);
+        _messageController.clear();
+        _requestId = null;
+      });
+      _scrollToLatest();
+    } catch (error) {
+      if (mounted)
+        setState(() =>
+            _sendError = error.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) {
+        setState(() => _sending = false);
+        _refresh();
+      }
+    }
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _poll?.cancel();
+    _api.dispose();
+    _messageScrollController.dispose();
     _messageController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -78,11 +226,32 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final isMobile = screenWidth < 900;
     final authState = ref.watch(authProvider);
     final userName = authState.user?.name ?? 'Caretaker';
     final userEmail = authState.user?.email ?? 'caretaker@farmestates.com';
     final userRole = 'Caretaker';
+
+    if (authState.user?.role.displayName.toLowerCase() != 'caretaker') {
+      return PopScope(
+        canPop: _selectedChat == null,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _selectChat(null);
+        },
+        child: Scaffold(
+          appBar: AppBar(
+              title: const Text('Messages'),
+              leading: BackButton(
+                  onPressed: () => _selectedChat == null
+                      ? Navigator.of(context).maybePop()
+                      : _selectChat(null))),
+          body: SafeArea(
+              child: Padding(
+                  padding: EdgeInsets.all(isMobile ? 0 : 20),
+                  child: _buildWorkspace(isDark))),
+        ),
+      );
+    }
 
     return Scaffold(
       key: _scaffoldKey,
@@ -100,93 +269,93 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: isMobile
           ? _buildMobileLayout(isDark, userName)
           : _buildDesktopLayout(isDark, userName, userEmail, userRole),
-      bottomNavigationBar: isMobile
-          ? CaretakerMobileBottomNav(
-              selectedIndex: _selectedNavIndex,
-              onItemSelected: (index) =>
-                  setState(() => _selectedNavIndex = index),
-            )
-          : null,
+      bottomNavigationBar:
+          isMobile && MediaQuery.viewInsetsOf(context).bottom == 0
+              ? CaretakerMobileBottomNav(
+                  selectedIndex: _selectedNavIndex,
+                  onItemSelected: (index) =>
+                      setState(() => _selectedNavIndex = index),
+                )
+              : null,
     );
   }
 
   Widget _buildDesktopLayout(
       bool isDark, String userName, String userEmail, String userRole) {
-    return Row(
-      children: [
-        CaretakerSidebar(
+    return Row(children: [
+      CaretakerSidebar(
           selectedIndex: _selectedNavIndex,
-          onItemSelected: (index) {
-            setState(() => _selectedNavIndex = index);
-          },
+          onItemSelected: (index) => setState(() => _selectedNavIndex = index),
           userName: userName,
           userEmail: userEmail,
-          userRole: userRole,
-        ),
+          userRole: userRole),
+      Expanded(
+          child: Column(children: [
+        CaretakerHeader(userName: userName, onNotificationTap: () {}),
         Expanded(
-          child: Column(
-            children: [
-              CaretakerHeader(
-                userName: userName,
-                onNotificationTap: () {},
-              ),
-              Expanded(
-                child: Row(
-                  children: [
-                    Container(
-                      width: 360,
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.surfaceDark : Colors.white,
-                        border: Border(
-                          right: BorderSide(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.1)
-                                : AppColors.neutral200,
-                          ),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          _buildConversationHeader(isDark),
-                          Expanded(
-                            child: _buildChatList(isDark),
-                          ),
-                        ],
-                      ),
-                    ),
+            child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                child: _buildWorkspace(isDark))),
+      ])),
+    ]);
+  }
+
+  Widget _buildWorkspace(bool isDark) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final split = constraints.maxWidth >= 720;
+      return DecoratedBox(
+        decoration: BoxDecoration(
+            color: isDark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+                color: isDark ? Colors.white10 : AppColors.neutral200)),
+        child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: split
+                ? Row(children: [
+                    SizedBox(
+                        width: constraints.maxWidth >= 1000 ? 320 : 280,
+                        child: _buildChatListMobile(isDark)),
+                    const VerticalDivider(width: 1),
                     Expanded(
-                      child: _selectedChat != null
-                          ? _buildChatMessages(isDark)
-                          : _buildEmptyChat(isDark),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+                        child: _selectedChat == null
+                            ? _buildEmptyChat(isDark)
+                            : _buildChatMessages(isDark, showBack: false)),
+                  ])
+                : _selectedChat == null
+                    ? _buildChatListMobile(isDark)
+                    : _buildChatMessages(isDark)),
+      );
+    });
   }
 
   Widget _buildMobileLayout(bool isDark, String userName) {
-    return Column(
-      children: [
-        CaretakerHeader(
-          userName: userName,
-          onNotificationTap: () {},
-        ),
+    return PopScope(
+      canPop: _selectedChat == null,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _selectChat(null);
+      },
+      child: Column(children: [
+        if (_selectedChat == null)
+          CaretakerHeader(
+            userName: userName,
+            onNotificationTap: () {},
+          ),
         Expanded(
-          child: _selectedChat != null
-              ? _buildChatMessages(isDark)
-              : _buildChatListMobile(isDark),
-        ),
-      ],
+            child: SafeArea(
+                bottom: false,
+                top: _selectedChat != null,
+                child: _buildWorkspace(isDark))),
+      ]),
     );
   }
 
   Widget _buildChatList(bool isDark) {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_syncError != null && _chats.isEmpty)
+      return _connectionNotice(_syncError!);
     final chats = _chats.where((chat) {
+      if (_unreadOnly && (chat['unread'] as int) == 0) return false;
       final query = _searchQuery.trim().toLowerCase();
       if (query.isEmpty) return true;
       return (chat['name'] as String).toLowerCase().contains(query) ||
@@ -217,7 +386,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
         return InkWell(
           onTap: () {
-            setState(() => _selectedChat = chat['id']);
+            _selectChat(chat['id'] as String);
           },
           child: Container(
             margin: const EdgeInsets.only(bottom: 4),
@@ -242,24 +411,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         chat['avatar'] as String,
                         style: const TextStyle(
                           color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: -1,
-                      bottom: -1,
-                      child: Container(
-                        width: 11,
-                        height: 11,
-                        decoration: BoxDecoration(
-                          color: AppColors.success,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color:
-                                isDark ? AppColors.surfaceDark : Colors.white,
-                            width: 2,
-                          ),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -349,7 +501,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Messages',
+                      'Message Center',
                       style: AppTypography.h5.copyWith(
                         fontWeight: FontWeight.w700,
                         color: isDark ? Colors.white : AppColors.textPrimary,
@@ -357,7 +509,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${_chats.length} conversations',
+                      _syncError == null
+                          ? 'Farm team messages'
+                          : 'Connection interrupted',
                       style: AppTypography.caption.copyWith(
                         color:
                             isDark ? Colors.white54 : AppColors.textSecondary,
@@ -366,17 +520,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ],
                 ),
               ),
-              IconButton(
-                tooltip: 'New message',
-                onPressed: () {},
-                icon: const Icon(Icons.edit_outlined, size: 20),
-                style: IconButton.styleFrom(
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
-                  foregroundColor: AppColors.primary,
-                ),
-              ),
             ],
           ),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, children: [
+            ChoiceChip(
+                label: const Text('All'),
+                showCheckmark: false,
+                selected: !_unreadOnly,
+                onSelected: (_) => setState(() => _unreadOnly = false)),
+            ChoiceChip(
+                label: const Text('Unread'),
+                showCheckmark: false,
+                selected: _unreadOnly,
+                onSelected: (_) => setState(() => _unreadOnly = true)),
+          ]),
           const SizedBox(height: 16),
           TextField(
             controller: _searchController,
@@ -420,11 +578,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildChatMessages(bool isDark) {
+  Widget _buildChatMessages(bool isDark, {bool showBack = true}) {
     final selectedChatData =
         _chats.firstWhere((chat) => chat['id'] == _selectedChat);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final isMobile = screenWidth < 900;
 
     return Column(
       children: [
@@ -443,11 +601,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           child: Row(
             children: [
-              if (isMobile)
+              if (showBack)
                 IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () {
-                    setState(() => _selectedChat = null);
+                    _selectChat(null);
                   },
                 ),
               CircleAvatar(
@@ -474,27 +632,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                            color: AppColors.success,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Active now',
-                          style: AppTypography.caption.copyWith(
+                    Text(selectedChatData['role']?.toString() ?? 'Farm team',
+                        style: AppTypography.caption.copyWith(
+                            fontSize: 11,
                             color: isDark
-                                ? Colors.white54
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
+                                ? Colors.white60
+                                : AppColors.textSecondary)),
                   ],
                 ),
               ),
@@ -505,20 +648,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
                 ),
-              IconButton(
-                tooltip: 'Conversation options',
-                icon: const Icon(Icons.more_horiz_rounded),
-                onPressed: () {},
-              ),
             ],
           ),
         ),
+        if (_syncError != null) _connectionNotice(_syncError!),
         // Messages
         Expanded(
           child: Container(
             color:
                 isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
             child: ListView.builder(
+              controller: _messageScrollController,
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: EdgeInsets.symmetric(
                 horizontal: isMobile ? 16 : 36,
                 vertical: 24,
@@ -534,7 +675,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
-                            'Today',
+                            'Conversation history',
                             style: AppTypography.caption.copyWith(
                               color: isDark
                                   ? Colors.white38
@@ -559,7 +700,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 9),
                     constraints: BoxConstraints(
                       maxWidth: isMobile
-                          ? MediaQuery.of(context).size.width * 0.78
+                          ? (MediaQuery.of(context).size.width - 32) * 0.88
                           : 520,
                     ),
                     decoration: BoxDecoration(
@@ -619,6 +760,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ),
         ),
+        if (_sendError != null) _connectionNotice(_sendError!, retrySend: true),
         // Message Input
         Container(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
@@ -634,20 +776,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
           child: Row(
             children: [
-              IconButton(
-                tooltip: 'Attach file',
-                onPressed: () {},
-                icon: const Icon(Icons.attach_file_rounded),
-                color: isDark ? Colors.white60 : AppColors.textSecondary,
-              ),
               Expanded(
                 child: TextField(
                   controller: _messageController,
+                  readOnly: _sending,
+                  maxLength: 4000,
+                  onChanged: (_) => setState(() {}),
                   minLines: 1,
                   maxLines: 4,
                   textInputAction: TextInputAction.newline,
                   decoration: InputDecoration(
-                    hintText: 'Write a message to the farm team',
+                    hintText: 'Write a message…',
+                    counterText: '',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -665,21 +805,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               const SizedBox(width: AppSpacing.sm),
               IconButton(
                 tooltip: 'Send message',
-                onPressed: () {
-                  final text = _messageController.text.trim();
-                  if (text.isNotEmpty) {
-                    setState(() {
-                      _messages.add({
-                        'id': 'MSG${_messages.length + 1}',
-                        'text': text,
-                        'sender': 'me',
-                        'time': 'Now',
-                      });
-                      _messageController.clear();
-                    });
-                  }
-                },
-                icon: const Icon(Icons.send),
+                onPressed: _sending || _messageController.text.trim().isEmpty
+                    ? null
+                    : _sendMessage,
+                icon: _sending
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.send),
                 color: AppColors.primary,
                 style: IconButton.styleFrom(
                   backgroundColor: AppColors.primary.withOpacity(0.1),
@@ -690,6 +824,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
       ],
     );
+  }
+
+  Widget _connectionNotice(String message, {bool retrySend = false}) {
+    return Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(children: [
+          const Icon(Icons.info_outline, size: 18, color: AppColors.error),
+          const SizedBox(width: 8),
+          Expanded(child: Text(message, style: const TextStyle(fontSize: 12))),
+          TextButton(
+              onPressed: _sending
+                  ? null
+                  : () => retrySend ? _sendMessage() : _refresh(),
+              child: const Text('Retry')),
+        ]));
   }
 
   Widget _buildEmptyChat(bool isDark) {
@@ -714,128 +863,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigation(bool isDark) {
-    final navItems = [
-      {
-        'icon': Icons.dashboard_outlined,
-        'label': 'Dashboard',
-        'index': 0,
-        'route': '/caretaker_dashboard'
-      },
-      {
-        'icon': Icons.edit_note_outlined,
-        'label': 'Record',
-        'index': 1,
-        'route': '/record-entry'
-      },
-      {
-        'icon': Icons.check_circle_outline,
-        'label': 'Confirm',
-        'index': 2,
-        'route': '/input-confirmation'
-      },
-      {
-        'icon': Icons.chat_bubble_outline,
-        'label': 'Chat',
-        'index': 3,
-        'route': '/chat'
-      },
-      {
-        'icon': Icons.calendar_today_outlined,
-        'label': 'Calendar',
-        'index': 4,
-        'route': '/calendar'
-      },
-    ];
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-        border: Border(
-          top: BorderSide(
-            color: isDark
-                ? Colors.white.withOpacity(0.08)
-                : Colors.black.withOpacity(0.08),
-            width: 1,
-          ),
-        ),
-      ),
-      child: SafeArea(
-        child: SizedBox(
-          height: 70,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: navItems.map((item) {
-              final index = item['index'] as int;
-              final route = item['route'] as String;
-              final isSelected = index == _selectedNavIndex;
-
-              return Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      if (_selectedNavIndex != index) {
-                        setState(() => _selectedNavIndex = index);
-                        try {
-                          Navigator.pushReplacementNamed(context, route);
-                        } catch (e) {
-                          try {
-                            Navigator.pushNamed(context, route);
-                          } catch (e2) {
-                            debugPrint('Navigation error: $e2');
-                          }
-                        }
-                      }
-                    },
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          item['icon'] as IconData,
-                          size: 24,
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark
-                                  ? Colors.white.withOpacity(0.5)
-                                  : AppColors.textSecondary),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item['label'] as String,
-                          style: AppTypography.caption.copyWith(
-                            color: isSelected
-                                ? AppColors.primary
-                                : (isDark
-                                    ? Colors.white.withOpacity(0.5)
-                                    : AppColors.textSecondary),
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
       ),
     );
   }

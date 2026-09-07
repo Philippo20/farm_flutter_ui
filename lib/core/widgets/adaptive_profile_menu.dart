@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../screens/caretaker/chat_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
@@ -35,8 +36,16 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
-        itemBuilder: itemBuilder,
-        onSelected: onSelected,
+        itemBuilder: (context) => [
+          ...itemBuilder(context),
+          const PopupMenuItem(
+              value: 'team_messages',
+              child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.chat_bubble_outline),
+                  title: Text('Messages'))),
+        ],
+        onSelected: (value) => _handleSelection(context, value),
         child: child,
       );
     }
@@ -105,7 +114,8 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodyLarge.copyWith(
-                            color: isDark ? Colors.white : AppColors.textPrimary,
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -124,17 +134,32 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              _sheetAction(sheetContext, Icons.person_outline, 'Profile', 'profile', isDark),
-              _sheetAction(sheetContext, Icons.settings_outlined, 'Settings', 'settings', isDark),
+              _sheetAction(sheetContext, Icons.person_outline, 'Profile',
+                  'profile', isDark),
+              _sheetAction(sheetContext, Icons.settings_outlined, 'Settings',
+                  'settings', isDark),
+              _sheetAction(sheetContext, Icons.chat_bubble_outline, 'Messages',
+                  'team_messages', isDark),
               const Divider(height: AppSpacing.lg),
-              _sheetAction(sheetContext, Icons.logout_rounded, 'Logout', 'logout', isDark,
+              _sheetAction(sheetContext, Icons.logout_rounded, 'Logout',
+                  'logout', isDark,
                   color: AppColors.error),
             ],
           ),
         ),
       ),
     );
-    if (selected != null && context.mounted) onSelected?.call(selected);
+    if (selected != null && context.mounted)
+      _handleSelection(context, selected);
+  }
+
+  void _handleSelection(BuildContext context, String value) {
+    if (value == 'team_messages') {
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => const ChatScreen()));
+    } else {
+      onSelected?.call(value);
+    }
   }
 
   Widget _sheetAction(
