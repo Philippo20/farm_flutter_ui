@@ -343,23 +343,10 @@ class _DeliveryManagementScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPageHeader(isDark, isMobile),
-        if (isMobile)
-          Transform.translate(
-            offset: const Offset(0, -48),
-            child: Column(
-              children: [
-                _buildStatsRow(isDark, true),
-                const SizedBox(height: 16),
-                _buildDeliveriesSection(isDark, true),
-              ],
-            ),
-          )
-        else ...[
-          const SizedBox(height: 24),
-          _buildStatsRow(isDark, false),
-          const SizedBox(height: 24),
-          _buildDeliveriesSection(isDark, false),
-        ],
+        SizedBox(height: isMobile ? 12 : 24),
+        _buildStatsRow(isDark, isMobile),
+        SizedBox(height: isMobile ? 16 : 24),
+        _buildDeliveriesSection(isDark, isMobile),
       ],
     );
   }
@@ -500,19 +487,16 @@ class _DeliveryManagementScreenState
     ];
 
     return LayoutBuilder(builder: (context, constraints) {
-      final cols = isMobile ? 2 : 4;
+      final cols = constraints.maxWidth >= 900 ? 4 : 2;
       final spacing = isMobile ? 10.0 : 14.0;
-
-      return GridView.count(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: cols,
-        crossAxisSpacing: spacing,
-        mainAxisSpacing: spacing,
-        childAspectRatio: isMobile ? 2.4 : 2.8,
-        children:
-            stats.map((s) => _buildStatCard(s, isDark, isMobile)).toList(),
-      );
+      final width = (constraints.maxWidth - spacing * (cols - 1)) / cols;
+      return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: stats
+              .map((stat) => SizedBox(
+                  width: width, child: _buildStatCard(stat, isDark, isMobile)))
+              .toList());
     });
   }
 
@@ -801,6 +785,7 @@ class _DeliveryManagementScreenState
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: ListView.separated(
+                padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: deliveries.length,
@@ -1215,6 +1200,8 @@ class _DeliveryManagementScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(d['id'] as String,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -1225,29 +1212,32 @@ class _DeliveryManagementScreenState
                         style: GoogleFonts.inter(
                             fontSize: 11,
                             color: isDark
-                                ? Colors.white38
+                                ? Colors.white70
                                 : AppColors.textSecondary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
-              // Status badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: sColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: sColor.withOpacity(0.2)),
-                ),
-                child: Text(status,
-                    style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: sColor)),
-              ),
             ],
           ),
+          const SizedBox(height: 10),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            // Status badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: sColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: sColor.withOpacity(0.2)),
+              ),
+              child: Text(status,
+                  style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: sColor)),
+            ),
+          ]),
           const SizedBox(height: 12),
 
           // Info grid
@@ -1282,8 +1272,10 @@ class _DeliveryManagementScreenState
           ),
           const SizedBox(height: 10),
 
-          // Footer: priority + actions
-          Row(
+          // Delivery conditions
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -1305,7 +1297,6 @@ class _DeliveryManagementScreenState
                 ),
               ),
               if (d['temperature'] != 'N/A') ...[
-                const SizedBox(width: 6),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -1328,12 +1319,16 @@ class _DeliveryManagementScreenState
                   ),
                 ),
               ],
-              const Spacer(),
-              OutlinedButton(
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
                 onPressed: () => _showDeliveryDetails(d),
                 style: OutlinedButton.styleFrom(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),
                   side: BorderSide(
@@ -1341,12 +1336,10 @@ class _DeliveryManagementScreenState
                           ? Colors.white.withOpacity(0.1)
                           : Colors.black.withOpacity(0.08)),
                 ),
-                child: Text('Details',
+                child: Text('View delivery',
                     style: GoogleFonts.inter(
                         fontSize: 11, fontWeight: FontWeight.w500)),
-              ),
-            ],
-          ),
+              )),
         ],
       ),
     );
@@ -1358,7 +1351,7 @@ class _DeliveryManagementScreenState
         children: [
           Icon(icon,
               size: 13,
-              color: isDark ? Colors.white24 : AppColors.textSecondary),
+              color: isDark ? Colors.white60 : AppColors.textSecondary),
           const SizedBox(width: 5),
           Expanded(
             child: Column(
@@ -1366,15 +1359,15 @@ class _DeliveryManagementScreenState
               children: [
                 Text(label,
                     style: GoogleFonts.inter(
-                        fontSize: 9,
+                        fontSize: 10,
                         color:
-                            isDark ? Colors.white24 : AppColors.textSecondary)),
+                            isDark ? Colors.white60 : AppColors.textSecondary)),
                 Text(value,
                     style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white : AppColors.textPrimary),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis),
               ],
             ),
