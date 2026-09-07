@@ -220,19 +220,37 @@ class _TraceabilityConsoleScreenState
       return showModalBottomSheet<T>(
         context: context,
         isScrollControlled: true,
+        useSafeArea: true,
         backgroundColor: Colors.transparent,
-        builder: (_) => child,
+        builder: (sheetContext) {
+          final media = MediaQuery.of(sheetContext);
+          // Apply the inset at the route boundary so the footer and form share
+          // the same visible viewport, including during keyboard transitions.
+          return Padding(
+            padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
+            child: LayoutBuilder(builder: (context, constraints) {
+              final maxHeight = (media.size.height * .9)
+                  .clamp(0.0, constraints.maxHeight)
+                  .toDouble();
+              return ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: maxHeight),
+                child: child,
+              );
+            }),
+          );
+        },
       );
     }
     return showDialog<T>(
       context: context,
       barrierColor: Colors.black54,
       builder: (_) => Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         backgroundColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560, maxHeight: 760),
+          constraints: BoxConstraints(
+              maxWidth: 500, maxHeight: MediaQuery.sizeOf(context).height * .9),
           child: child,
         ),
       ),
@@ -358,14 +376,14 @@ class _TraceabilityConsoleScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _hero(mobile),
-              const SizedBox(height: 20),
+              SizedBox(height: mobile && widget.isSuperAdmin ? 12 : 20),
               if (_loading)
                 const AdminDataSkeleton(rowCount: 5)
               else if (_error != null)
                 _errorState()
               else ...[
                 _metricGrid(mobile),
-                const SizedBox(height: 20),
+                SizedBox(height: mobile && widget.isSuperAdmin ? 12 : 20),
                 _tabs(),
                 const SizedBox(height: 16),
                 if (_tab == 0) _products(mobile),
@@ -485,6 +503,33 @@ class _TraceabilityConsoleScreenState
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = mobile ? 2 : (constraints.maxWidth < 900 ? 3 : 6);
+        if (mobile && widget.isSuperAdmin) {
+          return Wrap(spacing: 10, runSpacing: 10, children: [
+            for (final item in items)
+              SizedBox(
+                width: (constraints.maxWidth - 10) / 2,
+                child: _Panel(
+                    padding: 12,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(item.$3, color: item.$4, size: 20),
+                        const SizedBox(height: 8),
+                        Text('${item.$2}',
+                            style: GoogleFonts.inter(
+                                fontSize: 22, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 2),
+                        Text(item.$1,
+                            style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant)),
+                      ],
+                    )),
+              ),
+          ]);
+        }
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -525,6 +570,7 @@ class _TraceabilityConsoleScreenState
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
+              showCheckmark: false,
               selected: selected,
               onSelected: (_) => setState(() => _tab = index),
               avatar: Icon(tabs[index].$2,
@@ -555,7 +601,9 @@ class _TraceabilityConsoleScreenState
           title: 'Published product records',
           subtitle: '${rows.length} production batches available',
           action: SizedBox(
-            width: mobile ? 190 : 280,
+            width: mobile && widget.isSuperAdmin
+                ? double.infinity
+                : (mobile ? 190 : 280),
             child: TextField(
               controller: _searchController,
               style: GoogleFonts.poppins(fontSize: 13),
@@ -568,19 +616,143 @@ class _TraceabilityConsoleScreenState
           _empty(Icons.inventory_2_outlined, 'No matching batches')
         else
           ...rows.map((batch) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _BatchCard(
-                  batch: batch,
-                  onConfigure: () => _openPublication(batch),
-                  onCopy: () async {
+                padding: EdgeInsets.only(
+                    bottom: mobile &&
+                            widget.isSuperAdmin &&
+                            identical(batch, rows.last)
+                        ? 0
+                        : 10),
+                child: mobile && widget.isSuperAdmin
+                    ? _mobileProductCard(batch)
+                    : _BatchCard(
+                        batch: batch,
+                        onConfigure: () => _openPublication(batch),
+                        onCopy: () async {
+                          await Clipboard.setData(ClipboardData(
+                              text: '${batch['public_url'] ?? ''}'));
+                          if (mounted) _notice('Public product link copied');
+                        },
+                      ),
+              )),
+      ],
+    );
+  }
+
+  Widget _mobileProductCard(Map<String, dynamic> batch) {
+    final published = batch['published'] == true;
+    final recall = '${batch['recall_status'] ?? 'none'}';
+    final secondary = Theme.of(context).colorScheme.onSurfaceVariant;
+    Widget detail(String label, String value, IconData icon) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 16, color: secondary),
+            const SizedBox(width: 8),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(label,
+                      style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+                  const SizedBox(height: 4),
+                  Text(value.trim().isEmpty ? 'Not provided' : value,
+                      style: GoogleFonts.inter(
+                          fontSize: 12, fontWeight: FontWeight.w600)),
+                ])),
+          ],
+        );
+    return _Panel(
+        padding: 16,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: .1),
+                      borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.qr_code_2_rounded,
+                      color: AppColors.primary, size: 24)),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text('${batch['product_name'] ?? 'Product'}',
+                        style: GoogleFonts.inter(
+                            fontSize: 15, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    Text('${batch['batch_number'] ?? 'No batch number'}',
+                        style:
+                            GoogleFonts.inter(fontSize: 11, color: secondary)),
+                  ])),
+            ]),
+            const SizedBox(height: 12),
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              _StatusPill(
+                  text: published ? 'Published' : 'Private',
+                  color: published ? AppColors.primary : Colors.grey),
+              if (recall.isNotEmpty && recall != 'none')
+                _StatusPill(text: _friendly(recall), color: Colors.red),
+            ]),
+            const SizedBox(height: 14),
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(
+                  child: detail('Variety', '${batch['variety'] ?? ''}',
+                      Icons.spa_outlined)),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: detail('Farm', '${batch['farm_name'] ?? ''}',
+                      Icons.agriculture_outlined)),
+            ]),
+            if (published) ...[
+              const SizedBox(height: 14),
+              detail('Product checks', '${batch['scan_count'] ?? 0}',
+                  Icons.qr_code_scanner_rounded),
+            ],
+            const SizedBox(height: 16),
+            Row(children: [
+              if (published) ...[
+                Expanded(
+                    child: OutlinedButton.icon(
+                  onPressed: () async {
                     await Clipboard.setData(
                         ClipboardData(text: '${batch['public_url'] ?? ''}'));
                     if (mounted) _notice('Public product link copied');
                   },
-                ),
+                  icon: const Icon(Icons.copy_rounded, size: 16),
+                  label: const Text('Copy link'),
+                  style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 44),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 12),
+                      textStyle: GoogleFonts.inter(
+                          fontSize: 12, fontWeight: FontWeight.w600),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10))),
+                )),
+                const SizedBox(width: 10),
+              ],
+              Expanded(
+                  child: FilledButton.icon(
+                onPressed: () => _openPublication(batch),
+                icon: const Icon(Icons.tune_rounded, size: 16),
+                label: const Text('Configure'),
+                style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 44),
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                    textStyle: GoogleFonts.inter(
+                        fontSize: 12, fontWeight: FontWeight.w600),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10))),
               )),
-      ],
-    );
+            ]),
+          ],
+        ));
   }
 
   Widget _experience(bool mobile) => _Panel(
@@ -707,8 +879,14 @@ class _TraceabilityConsoleScreenState
             _empty(Icons.campaign_outlined, 'No promotions created')
           else
             ..._promotions.map((promotion) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: EdgeInsets.only(
+                      bottom: mobile &&
+                              widget.isSuperAdmin &&
+                              identical(promotion, _promotions.last)
+                          ? 0
+                          : 10),
                   child: _PromotionCard(
+                    compact: mobile && widget.isSuperAdmin,
                     promotion: promotion,
                     onEdit: () => _openPromotion(promotion),
                     onDelete: widget.isSuperAdmin
@@ -876,6 +1054,7 @@ class _TraceabilityConsoleScreenState
                 .map((entry) => Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ChoiceChip(
+                        showCheckmark: false,
                         label: Text(entry.value,
                             style: GoogleFonts.poppins(fontSize: 12)),
                         selected: _feedbackFilter == entry.key,
@@ -891,7 +1070,12 @@ class _TraceabilityConsoleScreenState
           _empty(Icons.rate_review_outlined, 'No matching feedback or issues')
         else
           ...rows.map((item) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
+                padding: EdgeInsets.only(
+                    bottom: mobile &&
+                            widget.isSuperAdmin &&
+                            identical(item, rows.last)
+                        ? 0
+                        : 10),
                 child: _FeedbackCard(
                   feedback: item,
                   onTap: () => _openFeedback(item),
@@ -961,6 +1145,7 @@ class _TraceabilityConsoleScreenState
       );
 
   Widget _responsiveFields(bool mobile, List<Widget> fields) => GridView.count(
+        padding: mobile && widget.isSuperAdmin ? EdgeInsets.zero : null,
         crossAxisCount: mobile ? 1 : 2,
         crossAxisSpacing: 14,
         mainAxisSpacing: 14,
@@ -1052,13 +1237,14 @@ class _TraceabilityConsoleScreenState
 }
 
 class _Panel extends StatelessWidget {
-  const _Panel({required this.child});
+  const _Panel({required this.child, this.padding = 20});
   final Widget child;
+  final double padding;
 
   @override
   Widget build(BuildContext context) => Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(padding),
         decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.dark
               ? AppColors.surfaceDark
@@ -1197,55 +1383,101 @@ class _BatchCard extends StatelessWidget {
 
 class _PromotionCard extends StatelessWidget {
   const _PromotionCard(
-      {required this.promotion, required this.onEdit, this.onDelete});
+      {required this.promotion,
+      required this.onEdit,
+      this.onDelete,
+      this.compact = false});
   final Map<String, dynamic> promotion;
   final VoidCallback onEdit;
   final VoidCallback? onDelete;
+  final bool compact;
 
   @override
-  Widget build(BuildContext context) => _Panel(
-        child: Row(
-          children: [
-            const Icon(Icons.campaign_outlined, color: Colors.orange, size: 28),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      Text('${promotion['title'] ?? ''}',
-                          style:
-                              GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-                      _StatusPill(
-                        text: '${promotion['status'] ?? 'draft'}',
-                        color: promotion['status'] == 'active'
-                            ? AppColors.primary
-                            : Colors.grey,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text('${promotion['message'] ?? ''}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant)),
-                ],
+  Widget build(BuildContext context) => compact
+      ? _Panel(
+          padding: 16,
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Icon(Icons.campaign_outlined,
+                  color: Colors.orange, size: 24),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Text('${promotion['title'] ?? ''}',
+                      style: GoogleFonts.inter(
+                          fontSize: 15, fontWeight: FontWeight.w700))),
+            ]),
+            const SizedBox(height: 10),
+            _StatusPill(
+                text: '${promotion['status'] ?? 'draft'}',
+                color: promotion['status'] == 'active'
+                    ? AppColors.primary
+                    : Colors.grey),
+            const SizedBox(height: 12),
+            Text('${promotion['message'] ?? ''}',
+                style: GoogleFonts.inter(
+                    fontSize: 12,
+                    height: 1.5,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 14),
+            Wrap(spacing: 10, runSpacing: 8, children: [
+              OutlinedButton.icon(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: const Text('Edit promotion')),
+              if (onDelete != null)
+                TextButton.icon(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline, size: 16),
+                    label: const Text('Delete'),
+                    style: TextButton.styleFrom(foregroundColor: Colors.red)),
+            ]),
+          ]))
+      : _Panel(
+          child: Row(
+            children: [
+              const Icon(Icons.campaign_outlined,
+                  color: Colors.orange, size: 28),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        Text('${promotion['title'] ?? ''}',
+                            style: GoogleFonts.poppins(
+                                fontWeight: FontWeight.w600)),
+                        _StatusPill(
+                          text: '${promotion['status'] ?? 'draft'}',
+                          color: promotion['status'] == 'active'
+                              ? AppColors.primary
+                              : Colors.grey,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text('${promotion['message'] ?? ''}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant)),
+                  ],
+                ),
               ),
-            ),
-            IconButton(
-                onPressed: onEdit, icon: const Icon(Icons.edit_outlined)),
-            if (onDelete != null)
               IconButton(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline, color: Colors.red)),
-          ],
-        ),
-      );
+                  onPressed: onEdit, icon: const Icon(Icons.edit_outlined)),
+              if (onDelete != null)
+                IconButton(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline, color: Colors.red)),
+            ],
+          ),
+        );
 }
 
 class _FeedbackCard extends StatelessWidget {
@@ -2020,14 +2252,16 @@ class _ModalFrame extends StatelessWidget {
           ? AppColors.surfaceDark
           : Colors.white,
       borderRadius: mobile
-          ? const BorderRadius.vertical(top: Radius.circular(18))
+          ? const BorderRadius.vertical(top: Radius.circular(16))
           : BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          height: mobile ? MediaQuery.sizeOf(context).height * .9 : null,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+              maxWidth: 500, maxHeight: MediaQuery.sizeOf(context).height * .9),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (mobile)
                 Container(
@@ -2039,7 +2273,7 @@ class _ModalFrame extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4)),
                 ),
               Padding(
-                padding: EdgeInsets.fromLTRB(24, mobile ? 16 : 24, 16, 16),
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
                 child: Row(
                   children: [
                     Container(
@@ -2061,12 +2295,12 @@ class _ModalFrame extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(title,
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.inter(
                                   fontSize: 16, fontWeight: FontWeight.w700)),
                           Text(subtitle,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.inter(
                                   fontSize: 12,
                                   color: Theme.of(context)
                                       .colorScheme
@@ -2076,7 +2310,10 @@ class _ModalFrame extends StatelessWidget {
                     ),
                     IconButton(
                         onPressed: saving ? null : () => Navigator.pop(context),
-                        icon: const Icon(Icons.close_rounded, size: 18)),
+                        constraints: const BoxConstraints.tightFor(
+                            width: 32, height: 32),
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.close_rounded, size: 16)),
                   ],
                 ),
               ),
@@ -2086,11 +2323,15 @@ class _ModalFrame extends StatelessWidget {
                     ? Colors.white.withValues(alpha: .05)
                     : Colors.black.withValues(alpha: .05),
               ),
-              Expanded(
+              Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  physics: const BouncingScrollPhysics(),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 14),
                   child: Column(
                     children: [
+                      child,
                       if (error != null) ...[
                         Container(
                           width: double.infinity,
@@ -2101,12 +2342,11 @@ class _ModalFrame extends StatelessWidget {
                                   color: Colors.red.withValues(alpha: .2)),
                               borderRadius: BorderRadius.circular(10)),
                           child: Text(error!,
-                              style: GoogleFonts.poppins(
+                              style: GoogleFonts.inter(
                                   fontSize: 12, color: Colors.red.shade700)),
                         ),
                         const SizedBox(height: 14),
                       ],
-                      child,
                     ],
                   ),
                 ),
@@ -2118,16 +2358,22 @@ class _ModalFrame extends StatelessWidget {
                     : Colors.black.withValues(alpha: .05),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
                 child: Row(
                   children: [
                     Expanded(
                         child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                textStyle: GoogleFonts.inter(fontSize: 13),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10))),
                             onPressed:
                                 saving ? null : () => Navigator.pop(context),
-                            child:
-                                Text('Cancel', style: GoogleFonts.poppins()))),
-                    const SizedBox(width: 8),
+                            child: Text('Cancel',
+                                style: GoogleFonts.inter(fontSize: 13)))),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: saving ? null : onSave,
@@ -2139,8 +2385,12 @@ class _ModalFrame extends StatelessWidget {
                                     strokeWidth: 2, color: Colors.white))
                             : const Icon(Icons.check_rounded, size: 18),
                         label: Text(saving ? 'Saving...' : 'Save',
-                            style: GoogleFonts.poppins()),
+                            style: GoogleFonts.inter(fontSize: 13)),
                         style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          textStyle: GoogleFonts.inter(fontSize: 13),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                         ),
@@ -2189,7 +2439,7 @@ Widget _modalField(
           TextFormField(
             controller: controller,
             maxLines: lines,
-            style: GoogleFonts.poppins(fontSize: 12),
+            style: GoogleFonts.inter(fontSize: 12),
             decoration: _modalDecoration(context, hint, icon),
           ),
         ],
@@ -2212,7 +2462,7 @@ Widget _modalDropdown({
           DropdownButtonFormField<String>(
             initialValue: values.containsKey(value) ? value : values.keys.first,
             isExpanded: true,
-            style: GoogleFonts.poppins(
+            style: GoogleFonts.inter(
               fontSize: 12,
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.white
@@ -2238,7 +2488,7 @@ Widget _modalDropdown({
 
 Widget _modalLabel(BuildContext context, String label) => Text(
       label,
-      style: GoogleFonts.poppins(
+      style: GoogleFonts.inter(
         fontSize: 11,
         fontWeight: FontWeight.w600,
         color: Theme.of(context).brightness == Brightness.dark
@@ -2251,7 +2501,7 @@ InputDecoration _modalDecoration(
         BuildContext context, String hint, IconData icon) =>
     InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.poppins(
+      hintStyle: GoogleFonts.inter(
         fontSize: 12,
         color: Theme.of(context).brightness == Brightness.dark
             ? Colors.white24
