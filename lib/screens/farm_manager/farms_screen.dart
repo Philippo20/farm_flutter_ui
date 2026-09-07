@@ -520,18 +520,12 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPageHeader(isDark, isMobile),
-        if (isMobile)
-          Transform.translate(
-            offset: const Offset(0, -48),
-            child: Column(
-              children: [
-                _buildStatsRow(isDark, true),
-                const SizedBox(height: 16),
-                _buildFarmsSection(isDark, true),
-              ],
-            ),
-          )
-        else ...[
+        if (isMobile) ...[
+          const SizedBox(height: 12),
+          _buildStatsRow(isDark, true),
+          const SizedBox(height: 16),
+          _buildFarmsSection(isDark, true),
+        ] else ...[
           const SizedBox(height: 24),
           _buildStatsRow(isDark, false),
           const SizedBox(height: 24),
@@ -653,6 +647,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
     ];
 
     return GridView.count(
+      padding: isMobile ? EdgeInsets.zero : null,
       crossAxisCount: isMobile ? 2 : 4,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -701,6 +696,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               children: [
                 Text(
                   stat['value'] as String,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
                       fontSize: isMobile ? 20 : 24,
                       fontWeight: FontWeight.w800,
@@ -857,7 +854,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             ],
           ),
         ),
-        SizedBox(height: isMobile ? 0 : 14),
+        SizedBox(height: isMobile ? 12 : 14),
         if (filtered.isEmpty)
           Container(
             width: double.infinity,
@@ -873,36 +870,33 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             child: _buildEmptyState(isDark),
           )
         else
-          Transform.translate(
-            offset: Offset(0, isMobile ? 16 : 0),
-            child: ListView.separated(
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filtered.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (_, i) => Container(
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.surfaceDark : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.06)
-                        : AppColors.neutral200,
-                  ),
-                  boxShadow: isDark
-                      ? null
-                      : [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.035),
-                            blurRadius: 18,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+          ListView.separated(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: filtered.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (_, i) => Container(
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.surfaceDark : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.white.withOpacity(0.06)
+                      : AppColors.neutral200,
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: _buildFarmDataCard(filtered[i], isDark, isMobile),
+                boxShadow: isDark
+                    ? null
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.035),
+                          blurRadius: 18,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
               ),
+              clipBehavior: Clip.antiAlias,
+              child: _buildFarmDataCard(filtered[i], isDark, isMobile),
             ),
           ),
       ],
@@ -1129,7 +1123,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Text(
+                        Expanded(
+                            child: Text(
                           'Operational progress',
                           style: GoogleFonts.inter(
                             fontSize: 12,
@@ -1138,8 +1133,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                 ? Colors.white60
                                 : AppColors.textSecondary,
                           ),
-                        ),
-                        const Spacer(),
+                        )),
+                        const SizedBox(width: 8),
                         Text(
                           '${(progress * 100).round()}%',
                           style: GoogleFonts.inter(
@@ -1232,13 +1227,14 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
           color: isDark ? Colors.white38 : AppColors.textSecondary,
         ),
         const SizedBox(width: 4),
-        Text(
+        Flexible(
+            child: Text(
           label,
           style: GoogleFonts.inter(
             fontSize: 12,
             color: isDark ? Colors.white54 : AppColors.textSecondary,
           ),
-        ),
+        )),
       ],
     );
   }
@@ -2498,6 +2494,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
       builder: (context, constraints) {
         final columns = constraints.maxWidth < 680 ? 2 : 4;
         return GridView.builder(
+          padding:
+              MediaQuery.sizeOf(context).width < 600 ? EdgeInsets.zero : null,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: metrics.length,
@@ -2866,6 +2864,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             builder: (context, constraints) {
               final twoColumns = constraints.maxWidth >= 420;
               return GridView.builder(
+                padding: MediaQuery.sizeOf(context).width < 600
+                    ? EdgeInsets.zero
+                    : null,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: items.length,
