@@ -431,8 +431,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   Widget _buildCards(bool isDark) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final useMobileCards =
-            widget.isSuperAdmin && MediaQuery.sizeOf(context).width < 700;
+        final useMobileCards = MediaQuery.sizeOf(context).width < 700;
         final columns = constraints.maxWidth >= 1100
             ? 3
             : constraints.maxWidth >= 720
