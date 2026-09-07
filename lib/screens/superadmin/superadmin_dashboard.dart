@@ -517,21 +517,18 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHero(isDark, isMobile),
-        Transform.translate(
-          offset: Offset(0, isMobile ? -56 : 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.lg),
-              _buildMetricGrid(isDark, isMobile, isTablet),
-              const SizedBox(height: AppSpacing.lg),
-              _buildOperationsGrid(isDark, isMobile, isTablet),
-              const SizedBox(height: AppSpacing.lg),
-              _buildGovernanceRow(isDark, isMobile),
-              const SizedBox(height: AppSpacing.lg),
-              _buildActivityPanel(isDark),
-            ],
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.lg),
+            _buildMetricGrid(isDark, isMobile, isTablet),
+            const SizedBox(height: AppSpacing.lg),
+            _buildOperationsGrid(isDark, isMobile, isTablet),
+            const SizedBox(height: AppSpacing.lg),
+            _buildGovernanceRow(isDark, isMobile),
+            const SizedBox(height: AppSpacing.lg),
+            _buildActivityPanel(isDark),
+          ],
         ),
       ],
     );
@@ -740,77 +737,136 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
 
   Widget _buildMetricGrid(bool isDark, bool isMobile, bool isTablet) {
     return GridView.builder(
+      padding: isMobile ? EdgeInsets.zero : null,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _metrics.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisSpacing: AppSpacing.md,
+        crossAxisCount: isMobile || isTablet ? 2 : 3,
+        crossAxisSpacing: isMobile ? 10 : AppSpacing.md,
+        mainAxisSpacing: isMobile ? 10 : AppSpacing.md,
+        mainAxisExtent: isMobile
+            ? 60 + 112 * MediaQuery.textScalerOf(context).scale(12) / 12
+            : null,
         childAspectRatio: isMobile ? 2.7 : 2.45,
       ),
       itemBuilder: (context, index) =>
-          _buildMetricCard(_metrics[index], isDark),
+          _buildMetricCard(_metrics[index], isDark, isMobile: isMobile),
     );
   }
 
-  Widget _buildMetricCard(_DashboardMetric metric, bool isDark) {
+  Widget _buildMetricCard(_DashboardMetric metric, bool isDark,
+      {bool isMobile = false}) {
     return InkWell(
       onTap: () => Navigator.pushNamed(context, metric.route),
       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(isMobile ? 12 : AppSpacing.lg),
         decoration: _panelDecoration(isDark),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: metric.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              ),
-              child: Icon(metric.icon, color: metric.color, size: 24),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
+        child: isMobile
+            ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    metric.value,
-                    style: AppTypography.h5.copyWith(
-                      color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: metric.color.withValues(alpha: 0.12),
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMd),
+                        ),
+                        child: Icon(metric.icon, color: metric.color, size: 22),
+                      ),
+                      Icon(Icons.chevron_right_rounded,
+                          color: metric.color, size: 20),
+                    ],
                   ),
-                  Text(
-                    metric.label,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: isDark ? Colors.white70 : AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                  const SizedBox(height: 8),
+                  Text(metric.value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.h5.copyWith(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          color:
+                              isDark ? Colors.white : AppColors.textPrimary)),
+                  const SizedBox(height: 4),
+                  Text(metric.label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: isDark
+                              ? Colors.white70
+                              : AppColors.textSecondary)),
+                  const SizedBox(height: 4),
+                  Text(metric.detail,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall.copyWith(
+                          fontSize: 11,
+                          color: isDark
+                              ? Colors.white54
+                              : AppColors.textSecondary)),
+                ],
+              )
+            : Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: metric.color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    child: Icon(metric.icon, color: metric.color, size: 24),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    metric.detail,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: isDark ? Colors.white54 : AppColors.textSecondary,
-                      fontSize: 11,
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          metric.value,
+                          style: AppTypography.h5.copyWith(
+                            color:
+                                isDark ? Colors.white : AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          metric.label,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: isDark
+                                ? Colors.white70
+                                : AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          metric.detail,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: isDark
+                                ? Colors.white54
+                                : AppColors.textSecondary,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
+                  Icon(Icons.chevron_right_rounded, color: metric.color),
                 ],
               ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: metric.color),
-          ],
-        ),
       ),
     );
   }
@@ -826,6 +882,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
         ),
         const SizedBox(height: AppSpacing.md),
         GridView.builder(
+          padding: isMobile ? EdgeInsets.zero : null,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _actions.length,

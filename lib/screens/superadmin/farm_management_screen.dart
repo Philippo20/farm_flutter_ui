@@ -621,11 +621,12 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeaderSection(isDark, isCompact),
-        SizedBox(height: isMobile ? 0 : sectionSpacing),
+        SizedBox(height: isMobile ? 16 : sectionSpacing),
         _buildStats(
           isDark,
           crossAxisCount: statsColumns,
           childAspectRatio: statsRatio,
+          isMobile: isMobile,
         ),
         SizedBox(height: sectionSpacing),
         _buildFilters(isDark),
@@ -966,6 +967,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
     bool isDark, {
     required int crossAxisCount,
     required double childAspectRatio,
+    bool isMobile = false,
   }) {
     final totalFarms = _farms.length;
     final activeFarms =
@@ -1002,6 +1004,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
     ];
 
     return GridView.builder(
+      padding: isMobile ? EdgeInsets.zero : null,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -1009,6 +1012,9 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
         crossAxisSpacing: AppSpacing.sm,
         mainAxisSpacing: AppSpacing.sm,
         childAspectRatio: childAspectRatio,
+        mainAxisExtent: isMobile
+            ? 32 + 68 * MediaQuery.textScalerOf(context).scale(12) / 12
+            : null,
       ),
       itemCount: stats.length,
       itemBuilder: (context, index) {
@@ -1041,7 +1047,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                     Text(
                       stat['value'] as String,
                       style: TextStyle(
-                          fontSize: 16,
+                          fontSize: isMobile ? 22 : 16,
                           fontWeight: FontWeight.w500,
                           color: statColor),
                       maxLines: 1,
@@ -1050,9 +1056,9 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                     Text(
                       stat['title'] as String,
                       style: TextStyle(
-                          fontSize: 10,
+                          fontSize: isMobile ? 12 : 10,
                           color: statColor.withValues(alpha: 0.8)),
-                      maxLines: 1,
+                      maxLines: isMobile ? 2 : 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -1201,185 +1207,212 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
   }
 
   Widget _buildMobileFarmCard(Map<String, dynamic> farm, bool isDark) {
+    final stats = _productionStatsForFarm(farm);
+    final revenue = _revenueStatsForFarm(farm);
     final statusColor = _statusColor(farm['status']);
-    final tierColor = _tierColor(farm['tier']);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _openFarmDetails(farm),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: AppSpacing.md),
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            border: Border.all(
-                color: isDark
-                    ? Colors.white10
-                    : Colors.black.withValues(alpha: 0.08)),
-          ),
+    final foreground = isDark ? Colors.white : AppColors.textPrimary;
+    final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
+    String value(String key) {
+      final text = (farm[key] ?? '').toString().trim();
+      return text.isEmpty || text == '-' ? 'Not available' : text;
+    }
+
+    Widget detail(IconData icon, String text) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 16, color: secondary),
+            const SizedBox(width: 8),
+            Expanded(
+                child: Text(text,
+                    style: AppTypography.bodySmall
+                        .copyWith(color: secondary, fontSize: 12))),
+          ],
+        );
+    Widget metric(String label, String amount, IconData icon, Color color) =>
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+              Row(children: [
+                Icon(icon, size: 16, color: color),
+                const SizedBox(width: 6),
+                Expanded(
+                    child: Text(label,
+                        style: AppTypography.bodySmall
+                            .copyWith(color: secondary, fontSize: 12))),
+              ]),
+              const SizedBox(height: 6),
+              Text(amount,
+                  style: AppTypography.bodyLarge.copyWith(
+                      color: foreground,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600)),
+            ],
+          ),
+        );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Material(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side:
+              BorderSide(color: isDark ? Colors.white10 : AppColors.neutral200),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _openFarmDetails(farm),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      color: AppColors.primary.withValues(alpha: .1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.agriculture,
-                        color: AppColors.success, size: 20),
+                    child: const Icon(Icons.agriculture_outlined,
+                        color: AppColors.primary, size: 24),
                   ),
-                  const SizedBox(width: AppSpacing.md),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          farm['name'],
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Manager: ${farm['farmManager']}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark
-                                ? Colors.white60
-                                : AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusFull),
-                    ),
-                    child: Text(
-                      farm['status'],
-                      style: TextStyle(
-                          color: statusColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
-                children: [
-                  _buildInfoPill('Location', farm['location'], isDark),
-                  _buildInfoPill('Technician', farm['technician'], isDark),
-                  _buildInfoPill('Caretaker', farm['caretaker'], isDark),
-                  _buildInfoPill('Tier', farm['tier'], isDark,
-                      valueColor: tierColor),
-                  _buildInfoPill(
-                      'Batches', '${farm['batches']} batches', isDark),
-                  _buildInfoPill('Created', farm['created'], isDark),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                      child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(value('name'),
+                          style: AppTypography.bodyLarge.copyWith(
+                              color: foreground,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      Wrap(spacing: 8, runSpacing: 6, children: [
+                        _buildBadge(value('status'), statusColor),
+                        Text('${value('tier')} farm',
+                            style: AppTypography.bodySmall
+                                .copyWith(color: secondary)),
+                      ]),
+                    ],
+                  )),
+                ]),
+                const SizedBox(height: 16),
+                detail(Icons.location_on_outlined, value('location')),
+                const SizedBox(height: 8),
+                detail(
+                    Icons.grass_outlined,
+                    [value('plantType'), value('plantVariety')]
+                            .where((text) => text != 'Not available')
+                            .join(' / ')
+                            .isEmpty
+                        ? 'Crop not available'
+                        : [value('plantType'), value('plantVariety')]
+                            .where((text) => text != 'Not available')
+                            .join(' / ')),
+                const Divider(height: 28),
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Expanded(
+                      child: metric('Active batches', '${stats['active']}',
+                          Icons.layers_outlined, AppColors.info)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                      child: metric(
+                          'Harvest',
+                          '${(stats['totalWeightKg'] as num).toStringAsFixed(1)} kg',
+                          Icons.agriculture_outlined,
+                          AppColors.success)),
+                ]),
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Expanded(
+                      child: metric(
+                          'Sales value',
+                          'GHS ${revenue.totalRevenue.toStringAsFixed(2)}',
+                          Icons.payments_outlined,
+                          AppColors.primary)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                      child: metric(
+                          'Completed batches',
+                          '${stats['completed']}',
+                          Icons.task_alt_outlined,
+                          AppColors.warning)),
+                ]),
+                const Divider(height: 28),
+                Text('Assigned team',
+                    style: AppTypography.bodySmall.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13)),
+                const SizedBox(height: 10),
+                detail(
+                    Icons.person_outline, 'Manager: ${value('farmManager')}'),
+                const SizedBox(height: 8),
+                detail(
+                    Icons.build_outlined, 'Technician: ${value('technician')}'),
+                const SizedBox(height: 8),
+                detail(
+                    Icons.badge_outlined, 'Caretaker: ${value('caretaker')}'),
+                const Divider(height: 28),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
+                    OutlinedButton.icon(
+                      onPressed: () => _openFarmDetails(farm),
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                      label: const Text('View Details'),
+                    ),
                     if (farm['status'] == 'Pending') ...[
                       IconButton(
-                        onPressed: () => _approveFarm(farm),
-                        icon: const Icon(Icons.check_circle, size: 20),
-                        color: AppColors.success,
-                        tooltip: 'Approve',
-                      ),
+                          tooltip: 'Approve farm',
+                          onPressed: () => _approveFarm(farm),
+                          icon: const Icon(Icons.check_circle_outline,
+                              color: AppColors.success)),
                       IconButton(
-                        onPressed: () => _rejectFarm(farm),
-                        icon: const Icon(Icons.cancel, size: 20),
-                        color: AppColors.error,
-                        tooltip: 'Reject',
-                      ),
+                          tooltip: 'Reject farm',
+                          onPressed: () => _rejectFarm(farm),
+                          icon: const Icon(Icons.cancel_outlined,
+                              color: AppColors.error)),
                     ] else ...[
                       IconButton(
-                        onPressed: () =>
-                            _showFarmSensorKeyDialog(context, farm, isDark),
-                        icon: const Icon(Icons.vpn_key_rounded, size: 18),
-                        color: AppColors.success,
-                        tooltip: 'Sensor API key',
-                      ),
+                          tooltip: 'Edit farm',
+                          onPressed: () =>
+                              _showEditFarmDialog(context, farm, isDark),
+                          icon: const Icon(Icons.edit_outlined,
+                              color: AppColors.primary)),
                       IconButton(
-                        onPressed: () =>
-                            _showEditFarmDialog(context, farm, isDark),
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                        color: AppColors.primary,
-                      ),
+                          tooltip: 'Sensor API key',
+                          onPressed: () =>
+                              _showFarmSensorKeyDialog(context, farm, isDark),
+                          icon: const Icon(Icons.vpn_key_outlined,
+                              color: AppColors.primary)),
                       IconButton(
-                        onPressed: () => _toggleSuspend(farm),
-                        icon: Icon(
-                            farm['status'] == 'Suspended'
-                                ? Icons.check_circle_outline
-                                : Icons.block,
-                            size: 18),
-                        color: farm['status'] == 'Suspended'
-                            ? AppColors.success
-                            : AppColors.error,
-                        tooltip: farm['status'] == 'Suspended'
-                            ? 'Activate'
-                            : 'Suspend',
-                      ),
+                          tooltip: farm['status'] == 'Suspended'
+                              ? 'Activate farm'
+                              : 'Suspend farm',
+                          onPressed: () => _toggleSuspend(farm),
+                          icon: Icon(
+                              farm['status'] == 'Suspended'
+                                  ? Icons.check_circle_outline
+                                  : Icons.block,
+                              color: farm['status'] == 'Suspended'
+                                  ? AppColors.success
+                                  : AppColors.error)),
                     ],
                   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildInfoPill(String label, String value, bool isDark,
-      {Color? valueColor}) {
-    return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 6),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : AppColors.neutral100,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        border: Border.all(
-          color: isDark ? Colors.white12 : Colors.black.withValues(alpha: 0.06),
-        ),
-      ),
-      child: Text(
-        '$label: $value',
-        style: TextStyle(
-          fontSize: 11,
-          color:
-              valueColor ?? (isDark ? Colors.white70 : AppColors.textSecondary),
-        ),
-      ),
-    );
-  }
 
   Color _statusColor(String status) {
     switch (status) {

@@ -349,24 +349,21 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildTitleRow(isDark, isMobile),
-            const SizedBox(height: AppSpacing.xl),
-            Transform.translate(
-              offset: Offset(0, isMobile ? -70 : 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  isMobile
-                      ? _buildMobileStatsCards(isDark)
-                      : _buildStatsCards(isDark),
-                  const SizedBox(height: AppSpacing.xl),
-                  _buildControls(isDark, isMobile),
-                  const SizedBox(height: AppSpacing.lg),
-                  if (isMobile)
-                    _buildMobileUsersList(filteredUsers, isDark)
-                  else
-                    _buildUsersTable(filteredUsers, isDark),
-                ],
-              ),
+            SizedBox(height: isMobile ? 8 : AppSpacing.xl),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                isMobile
+                    ? _buildMobileStatsCards(isDark)
+                    : _buildStatsCards(isDark),
+                SizedBox(height: isMobile ? 16 : AppSpacing.xl),
+                _buildControls(isDark, isMobile),
+                SizedBox(height: isMobile ? 12 : AppSpacing.lg),
+                if (isMobile)
+                  _buildMobileUsersList(filteredUsers, isDark)
+                else
+                  _buildUsersTable(filteredUsers, isDark),
+              ],
             ),
           ],
         ),
@@ -479,6 +476,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
 
   Widget _buildMobileStatsCards(bool isDark) {
     return GridView.count(
+      padding: EdgeInsets.zero,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
@@ -682,94 +680,208 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
   ) {
     if (filteredUsers.isEmpty) return _buildEmptyState(isDark);
     return Column(
-      children: filteredUsers
-          .map((user) => _buildMobileUserCard(user, isDark))
-          .toList(),
+      children: [
+        for (var index = 0; index < filteredUsers.length; index++) ...[
+          _buildMobileUserCard(filteredUsers[index], isDark),
+          if (index < filteredUsers.length - 1) const SizedBox(height: 12),
+        ],
+      ],
     );
   }
 
   Widget _buildMobileUserCard(Map<String, dynamic> user, bool isDark) {
-    final roleColor = _getRoleColor(user['role']);
-    final statusColor = _getStatusColor(user['status']);
+    final name = (user['name'] ?? '').toString().trim();
+    final initials = name.isEmpty
+        ? '?'
+        : name
+            .split(RegExp(r'\s+'))
+            .take(2)
+            .map((part) => part.characters.first)
+            .join()
+            .toUpperCase();
+    final status = (user['status'] ?? 'Active').toString();
+    final foreground = isDark ? Colors.white : AppColors.textPrimary;
+    final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
+
+    Widget detail(IconData icon, String label, dynamic value) {
+      final text = (value ?? '').toString().trim();
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: secondary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: AppTypography.bodySmall.copyWith(
+                        fontSize: 10,
+                        color: secondary,
+                        fontWeight: FontWeight.w500)),
+                const SizedBox(height: 3),
+                Text(text.isEmpty ? 'Not provided' : text,
+                    style: AppTypography.bodySmall.copyWith(
+                        fontSize: 12,
+                        color: foreground,
+                        fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
-        ),
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.10 : 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              _buildAvatar(user, roleColor, 40),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user['name'],
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      user['email'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        color:
-                            isDark ? Colors.white60 : AppColors.textSecondary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: Text(initials,
+                    style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.primary, fontWeight: FontWeight.w700)),
               ),
-              _buildUserActionButtons(user, isDark),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name.isEmpty ? 'Unnamed User' : name,
+                      style: AppTypography.bodyMedium.copyWith(
+                          fontSize: 14,
+                          color: foreground,
+                          fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text((user['email'] ?? '').toString(),
+                      style: AppTypography.bodySmall
+                          .copyWith(fontSize: 12, color: secondary)),
+                ],
+              )),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              Expanded(child: _buildBadge(user['role'], roleColor)),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(child: _buildBadge(user['status'], statusColor)),
+              _buildMobileUserBadge((user['role'] ?? '').toString(),
+                  _getRoleColor((user['role'] ?? '').toString())),
+              _buildMobileUserBadge(status, _getStatusColor(status)),
             ],
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            '${user['department']} - Joined ${user['joined']}',
-            style: TextStyle(
-              fontSize: 11,
-              color: isDark ? Colors.white70 : AppColors.textSecondary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Divider(
+                height: 1,
+                color: isDark ? Colors.white10 : AppColors.neutral200),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                  child: detail(Icons.business_outlined, 'Department',
+                      user['department'])),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: detail(
+                      Icons.calendar_today_outlined, 'Joined', user['joined'])),
+            ],
           ),
           if (user['role'] == 'Driver') ...[
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              '${user['vehicle'].toString().isEmpty ? 'Vehicle pending' : user['vehicle']} | ${user['vehicleType'].toString().isEmpty ? 'Type pending' : user['vehicleType']} | ${user['vehicleCapacityKg']} kg',
-              style: TextStyle(
-                fontSize: 11,
-                color: isDark ? Colors.white70 : AppColors.textSecondary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 14),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                    child: detail(Icons.local_shipping_outlined, 'Vehicle',
+                        user['vehicle'])),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: detail(Icons.scale_outlined, 'Capacity',
+                        '${user['vehicleCapacityKg'] ?? 0} kg')),
+              ],
             ),
+            const SizedBox(height: 12),
+            detail(Icons.local_shipping_outlined, 'Vehicle type',
+                user['vehicleType']),
           ],
+          const SizedBox(height: 16),
+          Row(children: [
+            Expanded(
+                child: OutlinedButton.icon(
+              onPressed: () => _showDeleteUserDialog(context, user, isDark),
+              icon: const Icon(Icons.delete_outline, size: 16),
+              label: const Text('Delete'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                minimumSize: const Size(0, 44),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                textStyle: AppTypography.bodySmall
+                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                side: BorderSide(
+                    color: isDark ? Colors.white12 : AppColors.neutral200),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            )),
+            const SizedBox(width: 10),
+            Expanded(
+                child: FilledButton.icon(
+              onPressed: () => _showEditUserDialog(context, user, isDark),
+              icon: const Icon(Icons.edit_outlined, size: 16),
+              label: const Text('Edit user'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 44),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                textStyle: AppTypography.bodySmall
+                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            )),
+          ]),
         ],
       ),
+    );
+  }
+
+  Widget _buildMobileUserBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(label,
+          style: AppTypography.bodySmall.copyWith(
+              fontSize: 11, fontWeight: FontWeight.w600, color: color)),
     );
   }
 

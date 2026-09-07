@@ -633,34 +633,16 @@ class _RedesignedAdminDashboardState
           _buildHero(isDark, isMobile),
           const SizedBox(height: AppSpacing.lg),
           _buildPeriodFilter(isDark, isMobile),
-          SizedBox(height: isMobile ? 0 : AppSpacing.lg),
-          Transform.translate(
-            offset: Offset(0, isMobile ? -40 : 0),
-            transformHitTests: false,
-            child: _buildMetricsGrid(isMobile),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Transform.translate(
-            offset: Offset(0, isMobile ? -40 : 0),
-            child: _buildOperationsGrid(isDark, isMobile),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Transform.translate(
-            offset: Offset(0, isMobile ? -70 : 0),
-            child: _buildInsightSection(isDark, isMobile),
-          ),
-          Transform.translate(
-            offset: Offset(0, isMobile ? -70 : 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: AppSpacing.xl),
-                _buildFarmPerformanceSection(isDark, isMobile),
-                const SizedBox(height: AppSpacing.xl),
-                _buildActivityFeed(isDark),
-              ],
-            ),
-          ),
+          SizedBox(height: isMobile ? 12 : AppSpacing.lg),
+          _buildMetricsGrid(isMobile),
+          SizedBox(height: isMobile ? 16 : AppSpacing.xl),
+          _buildOperationsGrid(isDark, isMobile),
+          SizedBox(height: isMobile ? 16 : AppSpacing.xl),
+          _buildInsightSection(isDark, isMobile),
+          SizedBox(height: isMobile ? 16 : AppSpacing.xl),
+          _buildFarmPerformanceSection(isDark, isMobile),
+          SizedBox(height: isMobile ? 16 : AppSpacing.xl),
+          _buildActivityFeed(isDark),
         ],
       ),
     );
@@ -991,6 +973,7 @@ class _RedesignedAdminDashboardState
                 childAspectRatio: width < 430 ? 1.35 : 1.72,
               );
         return GridView.builder(
+          padding: isMobile ? EdgeInsets.zero : null,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _metrics.length,
@@ -1009,6 +992,18 @@ class _RedesignedAdminDashboardState
       trailing: _buildTextButton('System Settings', '/settings'),
       child: LayoutBuilder(
         builder: (context, constraints) {
+          if (isMobile) {
+            return Column(children: [
+              for (var index = 0; index < _shortcuts.length; index++) ...[
+                _OperationCard(
+                    shortcut: _shortcuts[index],
+                    compact: true,
+                    onTap: () => Navigator.pushReplacementNamed(
+                        context, _shortcuts[index].route)),
+                if (index < _shortcuts.length - 1) const SizedBox(height: 10),
+              ],
+            ]);
+          }
           final width = constraints.maxWidth;
           final columns = width >= 1100
               ? 3
@@ -1040,12 +1035,7 @@ class _RedesignedAdminDashboardState
                   _shortcuts[index].route,
                 ),
               );
-              return isMobile
-                  ? Transform.translate(
-                      offset: const Offset(0, -50),
-                      child: card,
-                    )
-                  : card;
+              return card;
             },
           );
         },
@@ -1093,7 +1083,11 @@ class _RedesignedAdminDashboardState
               children: _alerts
                   .map(
                     (alert) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      padding: EdgeInsets.only(
+                          bottom: MediaQuery.sizeOf(context).width < 700 &&
+                                  identical(alert, _alerts.last)
+                              ? 0
+                              : AppSpacing.md),
                       child: _AlertRow(alert: alert),
                     ),
                   )
@@ -1109,7 +1103,11 @@ class _RedesignedAdminDashboardState
       child: Column(
         children: _priorities.map((priority) {
           return Container(
-            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+            margin: EdgeInsets.only(
+                bottom: MediaQuery.sizeOf(context).width < 700 &&
+                        priority == _priorities.last
+                    ? 0
+                    : AppSpacing.md),
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: _cardDecoration(context),
             child: Row(
@@ -1145,6 +1143,18 @@ class _RedesignedAdminDashboardState
             )
           : LayoutBuilder(
               builder: (context, constraints) {
+                if (isMobile) {
+                  return Column(children: [
+                    for (var index = 0;
+                        index < _farmPerformance.length;
+                        index++) ...[
+                      _FarmPerformanceCard(
+                          farm: _farmPerformance[index], compact: true),
+                      if (index < _farmPerformance.length - 1)
+                        const SizedBox(height: 12),
+                    ],
+                  ]);
+                }
                 final columns = constraints.maxWidth >= 920 ? 3 : 1;
                 final gridDelegate = isMobile
                     ? const SliverGridDelegateWithFixedCrossAxisCount(
@@ -1158,16 +1168,13 @@ class _RedesignedAdminDashboardState
                         childAspectRatio:
                             constraints.maxWidth < 430 ? 1.35 : 1.55,
                       );
-                return Transform.translate(
-                  offset: Offset(0, isMobile ? -50 : 0),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _farmPerformance.length,
-                    gridDelegate: gridDelegate,
-                    itemBuilder: (context, index) =>
-                        _FarmPerformanceCard(farm: _farmPerformance[index]),
-                  ),
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _farmPerformance.length,
+                  gridDelegate: gridDelegate,
+                  itemBuilder: (context, index) =>
+                      _FarmPerformanceCard(farm: _farmPerformance[index]),
                 );
               },
             ),
@@ -1187,7 +1194,11 @@ class _RedesignedAdminDashboardState
               children: _activities
                   .map(
                     (activity) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      padding: EdgeInsets.only(
+                          bottom: MediaQuery.sizeOf(context).width < 700 &&
+                                  identical(activity, _activities.last)
+                              ? 0
+                              : AppSpacing.md),
                       child: _ActivityRow(activity: activity),
                     ),
                   )
@@ -1377,7 +1388,9 @@ class _MetricCard extends StatelessWidget {
 }
 
 class _OperationCard extends StatelessWidget {
-  const _OperationCard({required this.shortcut, required this.onTap});
+  const _OperationCard(
+      {required this.shortcut, required this.onTap, this.compact = false});
+  final bool compact;
 
   final _OperationShortcut shortcut;
   final VoidCallback onTap;
@@ -1390,13 +1403,13 @@ class _OperationCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(22),
         child: Ink(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(compact ? 16 : AppSpacing.lg),
           decoration: _cardDecoration(context),
           child: Row(
             children: [
               Container(
-                width: 54,
-                height: 54,
+                width: compact ? 44 : 54,
+                height: compact ? 44 : 54,
                 decoration: BoxDecoration(
                   color: shortcut.color.withValues(alpha: .14),
                   borderRadius: BorderRadius.circular(18),
@@ -1411,7 +1424,7 @@ class _OperationCard extends StatelessWidget {
                   children: [
                     Text(
                       shortcut.title,
-                      maxLines: 1,
+                      maxLines: compact ? null : 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.titleSmall.copyWith(
                         color: _textColor(context),
@@ -1421,7 +1434,7 @@ class _OperationCard extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       shortcut.description,
-                      maxLines: 2,
+                      maxLines: compact ? null : 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodySmall.copyWith(
                         color: _mutedTextColor(context),
@@ -1446,14 +1459,15 @@ class _OperationCard extends StatelessWidget {
 }
 
 class _FarmPerformanceCard extends StatelessWidget {
-  const _FarmPerformanceCard({required this.farm});
+  const _FarmPerformanceCard({required this.farm, this.compact = false});
+  final bool compact;
 
   final _FarmPerformance farm;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(compact ? 16 : AppSpacing.lg),
       decoration: _cardDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1486,7 +1500,7 @@ class _FarmPerformanceCard extends StatelessWidget {
               _StatusBadge(label: farm.status, color: farm.color),
             ],
           ),
-          const Spacer(),
+          if (compact) const SizedBox(height: 16) else const Spacer(),
           _ScoreRow(
               label: 'Farm health', value: farm.health, color: farm.color),
           const SizedBox(height: AppSpacing.md),
@@ -1495,7 +1509,7 @@ class _FarmPerformanceCard extends StatelessWidget {
             value: farm.yieldScore,
             color: AppColors.chartBlue,
           ),
-          const Spacer(),
+          if (compact) const SizedBox(height: 16) else const Spacer(),
           Row(
             children: [
               Icon(
@@ -1767,7 +1781,8 @@ class _Panel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(
+          MediaQuery.sizeOf(context).width < 700 ? 16 : AppSpacing.lg),
       decoration: _cardDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

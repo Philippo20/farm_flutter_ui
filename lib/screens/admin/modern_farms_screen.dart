@@ -791,43 +791,47 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xl),
-        Transform.translate(
-          offset: Offset(0, isMobile ? -70 : 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildStats(isDark),
-              const SizedBox(height: AppSpacing.xl),
-              _buildControls(isDark),
-              const SizedBox(height: AppSpacing.lg),
-              Transform.translate(
-                offset: Offset(0, isMobile ? -50 : 0),
-                child: farms.isEmpty
-                    ? _buildEmptyState(isDark)
-                    : LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isWide = constraints.maxWidth >= 980;
-                          final cardHeight = isWide ? 320.0 : 330.0;
-                          return GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: farms.length,
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: isWide ? 2 : 1,
-                              crossAxisSpacing: AppSpacing.md,
-                              mainAxisSpacing: AppSpacing.md,
-                              mainAxisExtent: cardHeight,
-                            ),
-                            itemBuilder: (_, index) =>
-                                _buildFarmCard(farms[index], isDark),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
+        SizedBox(height: isMobile ? 12 : AppSpacing.xl),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildStats(isDark),
+            SizedBox(height: isMobile ? 16 : AppSpacing.xl),
+            _buildControls(isDark),
+            SizedBox(height: isMobile ? 12 : AppSpacing.lg),
+            farms.isEmpty
+                ? _buildEmptyState(isDark)
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (isMobile) {
+                        return Column(children: [
+                          for (var index = 0;
+                              index < farms.length;
+                              index++) ...[
+                            _buildMobileFarmCard(farms[index], isDark),
+                            if (index < farms.length - 1)
+                              const SizedBox(height: 12),
+                          ],
+                        ]);
+                      }
+                      final isWide = constraints.maxWidth >= 980;
+                      final cardHeight = isWide ? 320.0 : 330.0;
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: farms.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: isWide ? 2 : 1,
+                          crossAxisSpacing: AppSpacing.md,
+                          mainAxisSpacing: AppSpacing.md,
+                          mainAxisExtent: cardHeight,
+                        ),
+                        itemBuilder: (_, index) =>
+                            _buildFarmCard(farms[index], isDark),
+                      );
+                    },
+                  ),
+          ],
         ),
       ],
     );
@@ -849,6 +853,8 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
       builder: (context, constraints) {
         final columns = constraints.maxWidth < 700 ? 2 : 4;
         return GridView.builder(
+          padding:
+              MediaQuery.sizeOf(context).width < 700 ? EdgeInsets.zero : null,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: stats.length,
@@ -950,6 +956,193 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
         },
       ),
     );
+  }
+
+  Widget _buildMobileFarmCard(Map<String, dynamic> farm, bool isDark) {
+    final stats = _productionStatsForFarm(farm);
+    final revenue = _revenueStatsForFarm(farm);
+    final statusColor = _statusColor(farm['status']);
+    final foreground = isDark ? Colors.white : AppColors.textPrimary;
+    final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
+    String value(String key) {
+      final text = (farm[key] ?? '').toString().trim();
+      return text.isEmpty || text == '-' ? 'Not available' : text;
+    }
+
+    Widget detail(IconData icon, String text) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 16, color: secondary),
+            const SizedBox(width: 8),
+            Expanded(
+                child: Text(text,
+                    style: AppTypography.bodySmall
+                        .copyWith(color: secondary, fontSize: 12))),
+          ],
+        );
+    Widget metric(String label, String amount, IconData icon, Color color) =>
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Icon(icon, size: 16, color: color),
+                const SizedBox(width: 6),
+                Expanded(
+                    child: Text(label,
+                        style: AppTypography.bodySmall
+                            .copyWith(color: secondary, fontSize: 12))),
+              ]),
+              const SizedBox(height: 6),
+              Text(amount,
+                  style: AppTypography.bodyLarge.copyWith(
+                      color: foreground,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600)),
+            ],
+          ),
+        );
+
+    return Padding(
+      padding: EdgeInsets.zero,
+      child: Material(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side:
+              BorderSide(color: isDark ? Colors.white10 : AppColors.neutral200),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _openMobileFarmDetails(farm),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: .1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.agriculture_outlined,
+                        color: AppColors.primary, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(value('name'),
+                          style: AppTypography.bodyLarge.copyWith(
+                              color: foreground,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
+                      Wrap(spacing: 8, runSpacing: 6, children: [
+                        _badge(value('status'), statusColor),
+                        Text('${value('tier')} farm',
+                            style: AppTypography.bodySmall
+                                .copyWith(color: secondary)),
+                      ]),
+                    ],
+                  )),
+                ]),
+                const SizedBox(height: 16),
+                detail(Icons.location_on_outlined, value('location')),
+                const SizedBox(height: 8),
+                detail(
+                    Icons.grass_outlined,
+                    [value('plantType'), value('plantVariety')]
+                            .where((text) => text != 'Not available')
+                            .join(' / ')
+                            .isEmpty
+                        ? 'Crop not available'
+                        : [value('plantType'), value('plantVariety')]
+                            .where((text) => text != 'Not available')
+                            .join(' / ')),
+                const Divider(height: 28),
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Expanded(
+                      child: metric('Active batches', '${stats['active']}',
+                          Icons.layers_outlined, AppColors.info)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                      child: metric(
+                          'Harvest',
+                          '${(stats['totalWeightKg'] as num).toStringAsFixed(1)} kg',
+                          Icons.agriculture_outlined,
+                          AppColors.success)),
+                ]),
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Expanded(
+                      child: metric(
+                          'Sales value',
+                          'GHS ${revenue.totalRevenue.toStringAsFixed(2)}',
+                          Icons.payments_outlined,
+                          AppColors.primary)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                      child: metric(
+                          'Completed batches',
+                          '${stats['completed']}',
+                          Icons.task_alt_outlined,
+                          AppColors.warning)),
+                ]),
+                const Divider(height: 28),
+                Text('Assigned team',
+                    style: AppTypography.bodySmall.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13)),
+                const SizedBox(height: 10),
+                detail(
+                    Icons.person_outline, 'Manager: ${value('farmManager')}'),
+                const SizedBox(height: 8),
+                detail(
+                    Icons.build_outlined, 'Technician: ${value('technician')}'),
+                const SizedBox(height: 8),
+                detail(
+                    Icons.badge_outlined, 'Caretaker: ${value('caretaker')}'),
+                const SizedBox(height: 12),
+                Wrap(spacing: 12, runSpacing: 8, children: [
+                  _footerMetric(Icons.sensors_outlined,
+                      '${_sensorCountForFarm(farm)} sensors', isDark),
+                  _footerMetric(Icons.inventory_2_outlined,
+                      '${_inventoryCountForFarm(farm)} items', isDark),
+                ]),
+                const Divider(height: 28),
+                Wrap(spacing: 10, runSpacing: 8, children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _openMobileFarmDetails(farm),
+                    icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                    label: const Text('View Details'),
+                  ),
+                  FilledButton.icon(
+                    onPressed: () => _showEditFarmDialog(context, farm, isDark),
+                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    label: const Text('Edit farm'),
+                    style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white),
+                  ),
+                ]),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openMobileFarmDetails(Map<String, dynamic> farm) {
+    setState(() {
+      _selectedFarm = farm;
+      _showingDetails = true;
+    });
   }
 
   Widget _buildFarmCard(Map<String, dynamic> farm, bool isDark) {

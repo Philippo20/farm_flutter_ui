@@ -98,9 +98,18 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
       'category':
           (doc['category'] ?? doc['plant_type'] ?? 'Plant Types').toString(),
       'isCategory': doc['is_category'] == true,
-      'maturityMin': doc['maturity_min_value'] ?? doc['months_to_maturity'] ?? doc['maturity'] ?? 0,
-      'maturityMax': doc['maturity_max_value'] ?? doc['months_to_maturity'] ?? doc['maturity'] ?? 0,
-      'maturity': doc['maturity_max_value'] ?? doc['months_to_maturity'] ?? doc['maturity'] ?? 0,
+      'maturityMin': doc['maturity_min_value'] ??
+          doc['months_to_maturity'] ??
+          doc['maturity'] ??
+          0,
+      'maturityMax': doc['maturity_max_value'] ??
+          doc['months_to_maturity'] ??
+          doc['maturity'] ??
+          0,
+      'maturity': doc['maturity_max_value'] ??
+          doc['months_to_maturity'] ??
+          doc['maturity'] ??
+          0,
       'maturityUnit': (doc['maturity_unit'] ?? 'months').toString(),
       'imageUrl': (doc['image_url'] ?? '').toString(),
       'status': _statusLabel(doc['status']),
@@ -326,6 +335,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   }
 
   Widget _buildMobileContent(bool isDark) {
+    final plants = _filteredPlantTypes;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -359,12 +369,12 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
           ),
         ),
 
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: 12),
 
         // Stats - Mobile Grid
         _buildMobileStats(isDark),
 
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: 16),
 
         // Plant Types - Mobile Cards
         Text(
@@ -378,8 +388,19 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         const SizedBox(height: AppSpacing.sm),
         _buildCategoryFilters(isDark),
         const SizedBox(height: AppSpacing.md),
-        ..._filteredPlantTypes
-            .map((plant) => _buildMobilePlantCard(plant, isDark)),
+        if (_plantsError != null) _buildSyncStatus(isDark),
+        if (_isLoadingPlants && _plantTypes.isEmpty)
+          const AdminDataSkeleton(showStats: false)
+        else if (plants.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text('No plant types found', style: AppTypography.bodySmall),
+          )
+        else
+          for (var index = 0; index < plants.length; index++) ...[
+            _buildMobilePlantCard(plants[index], isDark),
+            if (index < plants.length - 1) const SizedBox(height: 12),
+          ],
       ],
     );
   }
@@ -586,6 +607,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   Widget _buildMobileStats(bool isDark) {
     final stats = _plantStats();
     return GridView.builder(
+      padding: EdgeInsets.zero,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -754,138 +776,123 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   }
 
   Widget _buildMobilePlantCard(Map<String, dynamic> plant, bool isDark) {
+    final foreground = isDark ? Colors.white : AppColors.textPrimary;
+    final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
+    Widget detail(String label, String value, IconData icon) => Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: .04)
+                  : AppColors.neutral50,
+              borderRadius: BorderRadius.circular(10)),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Icon(icon, size: 15, color: secondary),
+              const SizedBox(width: 6),
+              Expanded(
+                  child: Text(label,
+                      style: AppTypography.bodySmall
+                          .copyWith(fontSize: 11, color: secondary))),
+            ]),
+            const SizedBox(height: 6),
+            Text(value,
+                style: AppTypography.bodySmall.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: foreground)),
+          ]),
+        );
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-            color:
-                isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? .1 : .03),
+              blurRadius: 16,
+              offset: const Offset(0, 4))
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: const Icon(Icons.local_florist,
-                    color: AppColors.success, size: 18),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.local_florist_outlined,
+                  size: 22, color: AppColors.primary)),
+          const SizedBox(width: 12),
+          Expanded(
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      plant['name'],
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      plant['category'],
-                      style: TextStyle(
-                        fontSize: 11,
-                        color:
-                            isDark ? Colors.white60 : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                ),
-                child: Text(
-                  plant['status'],
-                  style: const TextStyle(
-                    color: AppColors.success,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              _buildInfoChip(
-                _maturityLabel(plant),
-                Icons.schedule,
-                isDark,
-                color: AppColors.warning,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              _buildInfoChip(
-                plant['created'],
-                Icons.calendar_today,
-                isDark,
-              ),
-              const Spacer(),
-              SizedBox(
-                width: 32,
-                height: 32,
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: () => _showEditPlantDialog(context, plant, isDark),
-                  icon: const Icon(Icons.edit_outlined, size: 18),
-                  color: AppColors.primary,
-                ),
-              ),
-              SizedBox(
-                width: 32,
-                height: 32,
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: () => _showDeleteDialog(context, plant, isDark),
-                  icon: const Icon(Icons.delete_outline, size: 18),
-                  color: AppColors.error,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoChip(String text, IconData icon, bool isDark,
-      {Color? color}) {
-    final chipColor =
-        color ?? (isDark ? Colors.white54 : AppColors.textSecondary);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: chipColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: chipColor),
-          const SizedBox(width: 3),
-          Text(
-            text,
-            style: TextStyle(
-                fontSize: 10, color: chipColor, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
+                Text('${plant['name'] ?? 'Unnamed plant'}',
+                    style: AppTypography.bodyMedium.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: foreground)),
+                const SizedBox(height: 4),
+                Text('${plant['category'] ?? 'Uncategorized'}',
+                    style: AppTypography.bodySmall
+                        .copyWith(fontSize: 12, color: secondary)),
+              ])),
+        ]),
+        const SizedBox(height: 12),
+        _buildStatusBadge('${plant['status'] ?? 'Inactive'}'),
+        const SizedBox(height: 14),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+              child: detail(
+                  'Maturity', _maturityLabel(plant), Icons.schedule_outlined)),
+          const SizedBox(width: 10),
+          Expanded(
+              child: detail('Created', '${plant['created'] ?? 'Not provided'}',
+                  Icons.calendar_today_outlined)),
+        ]),
+        const SizedBox(height: 14),
+        Row(children: [
+          Expanded(
+              child: OutlinedButton.icon(
+            onPressed: () => _showDeleteDialog(context, plant, isDark),
+            icon: const Icon(Icons.delete_outline, size: 16),
+            label: const Text('Delete'),
+            style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                minimumSize: const Size(0, 44),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                textStyle: AppTypography.bodySmall
+                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                side: BorderSide(
+                    color: isDark ? Colors.white12 : AppColors.neutral200),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
+          )),
+          const SizedBox(width: 10),
+          Expanded(
+              child: FilledButton.icon(
+            onPressed: () => _showEditPlantDialog(context, plant, isDark),
+            icon: const Icon(Icons.edit_outlined, size: 16),
+            label: const Text('Edit plant'),
+            style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 44),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                textStyle: AppTypography.bodySmall
+                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
+          )),
+        ]),
+      ]),
     );
   }
 
@@ -1505,10 +1512,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                                       final saved = await _savePlantType(
                                         name: nameController.text,
                                         category: selectedCategory,
-                                        maturityMin:
-                                            maturityMinController.text,
-                                        maturityMax:
-                                            maturityMaxController.text,
+                                        maturityMin: maturityMinController.text,
+                                        maturityMax: maturityMaxController.text,
                                         maturityUnit: selectedMaturityUnit,
                                         imageFileName: imageController.text,
                                         status: selectedStatus,

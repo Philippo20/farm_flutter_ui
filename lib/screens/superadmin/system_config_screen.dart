@@ -518,21 +518,13 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildConfigurationHero(isDark, isMobile),
-        Transform.translate(
-          offset: Offset(0, isMobile ? -74 : 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: AppSpacing.lg),
-              _buildConfigurationStats(isDark, isMobile),
-              const SizedBox(height: AppSpacing.xl),
-              _buildProfessionalConfigGrid(isDark, isMobile),
-              const SizedBox(height: AppSpacing.xl),
-              _buildProfessionalActionBar(isDark, isMobile),
-              const SizedBox(height: AppSpacing.xl),
-            ],
-          ),
-        ),
+        SizedBox(height: isMobile ? 12 : AppSpacing.lg),
+        _buildConfigurationStats(isDark, isMobile),
+        SizedBox(height: isMobile ? 16 : AppSpacing.xl),
+        _buildProfessionalConfigGrid(isDark, isMobile),
+        SizedBox(height: isMobile ? 16 : AppSpacing.xl),
+        _buildProfessionalActionBar(isDark, isMobile),
+        if (!isMobile) const SizedBox(height: AppSpacing.xl),
       ],
     );
   }
@@ -744,6 +736,14 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
       ),
     ];
 
+    if (isMobile) {
+      return Column(children: [
+        for (var index = 0; index < stats.length; index++) ...[
+          _buildConfigStatusCard(stats[index], isDark),
+          if (index < stats.length - 1) const SizedBox(height: 10),
+        ],
+      ]);
+    }
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -762,10 +762,11 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
   Widget _buildConfigStatusCard(_ConfigStatus stat, bool isDark) {
     final isMobile = MediaQuery.sizeOf(context).width < 600;
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(isMobile ? 16 : AppSpacing.lg),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        borderRadius:
+            BorderRadius.circular(isMobile ? 16 : AppSpacing.radiusLg),
         border: Border.all(
           color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
         ),
@@ -989,7 +990,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
         children: [
           for (int i = 0; i < cards.length; i++) ...[
             cards[i],
-            if (i != cards.length - 1) const SizedBox(height: AppSpacing.lg),
+            if (i != cards.length - 1) const SizedBox(height: 12),
           ],
         ],
       );
@@ -1043,8 +1044,9 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
 
   Widget _buildProfessionalSection(String title, String subtitle, IconData icon,
       Color color, bool isDark, List<Widget> children) {
+    final mobile = MediaQuery.sizeOf(context).width < 600;
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(mobile ? 16 : AppSpacing.lg),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -1054,8 +1056,8 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(isDark ? 0.18 : 0.04),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
+            blurRadius: mobile ? 16 : 18,
+            offset: Offset(0, mobile ? 4 : 10),
           ),
         ],
       ),
@@ -1081,6 +1083,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                     Text(
                       title,
                       style: AppTypography.h6.copyWith(
+                        fontSize: mobile ? 15 : null,
                         fontWeight: FontWeight.w600,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
@@ -1099,7 +1102,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: mobile ? 14 : AppSpacing.lg),
           ...children,
         ],
       ),
@@ -1110,6 +1113,41 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
       Function(bool) onChanged, bool isDark,
       {bool warning = false}) {
     final accent = warning ? AppColors.error : AppColors.primary;
+    if (MediaQuery.sizeOf(context).width < 600) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: .04)
+              : AppColors.neutral50,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+              color: warning
+                  ? AppColors.error.withValues(alpha: .3)
+                  : (isDark ? Colors.white10 : AppColors.neutral200)),
+        ),
+        child: SwitchListTile.adaptive(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          value: value,
+          onChanged: onChanged,
+          activeThumbColor: accent,
+          title: Text(title,
+              style: AppTypography.bodySmall.copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : AppColors.textPrimary)),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(subtitle,
+                style: AppTypography.bodySmall.copyWith(
+                    fontSize: 11,
+                    height: 1.4,
+                    color: isDark ? Colors.white60 : AppColors.textSecondary)),
+          ),
+        ),
+      );
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -1521,7 +1559,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
     );
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(isMobile ? 16 : AppSpacing.lg),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -1533,7 +1571,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 resetButton,
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: 10),
                 saveButton,
               ],
             )

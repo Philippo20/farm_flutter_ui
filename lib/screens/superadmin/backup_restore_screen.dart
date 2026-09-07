@@ -739,18 +739,18 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHero(isDark, isMobile),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: isMobile ? 12 : AppSpacing.lg),
         if (_loadError != null) ...[
           _buildSyncStatus(isDark),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: isMobile ? 16 : AppSpacing.lg),
         ],
         if (_isLoading)
           const AdminDataSkeleton(rowCount: 5)
         else ...[
           _buildScopeCards(isDark, isMobile),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: isMobile ? 16 : AppSpacing.lg),
           _buildOperationalPanel(isDark, isMobile),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: isMobile ? 16 : AppSpacing.lg),
           _buildBackupHistory(isDark, isMobile),
         ],
       ],
@@ -1045,39 +1045,49 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           isDark,
         ),
         const SizedBox(height: AppSpacing.md),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: cards.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isMobile ? 1 : 3,
-            crossAxisSpacing: AppSpacing.md,
-            mainAxisSpacing: AppSpacing.md,
-            childAspectRatio: isMobile ? 1.8 : 1.65,
+        if (isMobile)
+          Column(children: [
+            for (var index = 0; index < cards.length; index++) ...[
+              _buildFarmBackupCard(cards[index], isDark),
+              if (index < cards.length - 1) const SizedBox(height: 12),
+            ],
+          ])
+        else
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: cards.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: isMobile ? 1 : 3,
+              crossAxisSpacing: AppSpacing.md,
+              mainAxisSpacing: AppSpacing.md,
+              childAspectRatio: isMobile ? 1.8 : 1.65,
+            ),
+            itemBuilder: (context, index) {
+              final summary = cards[index];
+              return _buildFarmBackupCard(summary, isDark);
+            },
           ),
-          itemBuilder: (context, index) {
-            final summary = cards[index];
-            return _buildFarmBackupCard(summary, isDark);
-          },
-        ),
       ],
     );
   }
 
   Widget _buildFarmBackupCard(_FarmBackupSummary summary, bool isDark) {
     final isSelected = _selectedScope == summary.id;
+    final mobile = MediaQuery.sizeOf(context).width < 600;
 
     return InkWell(
       onTap: () => setState(() => _selectedScope = summary.id),
       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(mobile ? 16 : AppSpacing.lg),
         decoration: BoxDecoration(
           color: isSelected
               ? summary.color.withValues(alpha: isDark ? 0.2 : 0.12)
               : (isDark ? AppColors.surfaceDark : Colors.white),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          borderRadius:
+              BorderRadius.circular(mobile ? 16 : AppSpacing.radiusLg),
           border: Border.all(
             color: isSelected
                 ? summary.color.withValues(alpha: 0.65)
@@ -1135,7 +1145,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const Spacer(),
+            if (mobile) const SizedBox(height: 14) else const Spacer(),
             Row(
               children: [
                 Expanded(
@@ -1180,7 +1190,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(isMobile ? 16 : AppSpacing.lg),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -1202,7 +1212,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               children: actions
                   .map(
                     (action) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      padding: EdgeInsets.only(
+                          bottom: action == actions.last ? 0 : 10),
                       child: _buildActionTile(action, isDark),
                     ),
                   )
@@ -1311,7 +1322,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                 .name;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(isMobile ? 16 : AppSpacing.lg),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -1351,7 +1362,13 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           if (backups.isEmpty)
             _buildEmptyBackups(isDark)
           else if (isMobile)
-            ...backups.map((backup) => _buildMobileBackupCard(backup, isDark))
+            ...List.generate(
+                backups.length,
+                (index) => Padding(
+                      padding: EdgeInsets.only(
+                          bottom: index == backups.length - 1 ? 0 : 12),
+                      child: _buildMobileBackupCard(backups[index], isDark),
+                    ))
           else
             _buildBackupTable(backups, isDark),
         ],
@@ -1558,12 +1575,11 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
         backup.type == 'Automated' ? AppColors.info : AppColors.warning;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color:
             isDark ? Colors.white.withValues(alpha: 0.03) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
         ),
@@ -1633,37 +1649,41 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  backup.date,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: isDark ? Colors.white54 : AppColors.textSecondary,
-                  ),
-                ),
-              ),
-              _buildIconAction(
+          Text('Created ${backup.date}',
+              style: AppTypography.bodySmall.copyWith(
+                  fontSize: 11,
+                  color: isDark ? Colors.white60 : AppColors.textSecondary)),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            _buildMobileBackupAction(
+                'Restore',
                 Icons.restore_rounded,
                 AppColors.success,
-                () => _showRestoreDialog(context, backup, isDark),
-                'Restore',
-              ),
-              _buildIconAction(
-                Icons.download_rounded,
-                AppColors.primary,
-                () => _requestDownload(backup),
-                'Download',
-              ),
-              _buildIconAction(
-                Icons.delete_outline_rounded,
-                AppColors.error,
-                () => _confirmDeleteBackup(backup, isDark),
-                'Delete',
-              ),
-            ],
-          ),
+                () => _showRestoreDialog(context, backup, isDark)),
+            _buildMobileBackupAction('Download', Icons.download_rounded,
+                AppColors.primary, () => _requestDownload(backup)),
+            _buildMobileBackupAction('Delete', Icons.delete_outline_rounded,
+                AppColors.error, () => _confirmDeleteBackup(backup, isDark)),
+          ]),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMobileBackupAction(
+      String label, IconData icon, Color color, VoidCallback action) {
+    return OutlinedButton.icon(
+      onPressed: action,
+      icon: Icon(icon, size: 16),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: color,
+        minimumSize: const Size(0, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        textStyle: AppTypography.bodySmall
+            .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+        side: BorderSide(color: color.withValues(alpha: .25)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
