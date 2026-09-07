@@ -253,6 +253,7 @@ class _PackagingConfigurationScreenState
   Widget _content() {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final mobile = MediaQuery.sizeOf(context).width < 600;
+    final compact = mobile && _isSuperAdmin;
     if (_loading) {
       return const AdminDataSkeleton(rowCount: 5, compact: true);
     }
@@ -267,21 +268,25 @@ class _PackagingConfigurationScreenState
           roleLabel: _roleLabel,
           onAdd: _cropVarieties.isEmpty ? null : () => _openEditor(),
         ),
-        const SizedBox(height: AppSpacing.lg),
-        _PackageMetrics(packages: _packages),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: compact ? 12 : AppSpacing.lg),
+        _PackageMetrics(packages: _packages, compact: compact),
+        SizedBox(height: compact ? 16 : AppSpacing.lg),
         Row(
           children: [
             Expanded(
               child: Text(
                 'Variety Packaging Catalog',
                 style: AppTypography.h5.copyWith(
+                  fontSize: compact ? 16 : null,
                   color: dark ? Colors.white : AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            Text('${_visiblePackages.length} configurations',
+            Text(
+                compact
+                    ? '${_visiblePackages.length} items'
+                    : '${_visiblePackages.length} configurations',
                 style: AppTypography.caption),
           ],
         ),
@@ -378,6 +383,18 @@ class _PackagingConfigurationScreenState
 
   Widget _catalogGrid() => LayoutBuilder(
         builder: (context, constraints) {
+          if (_isSuperAdmin && MediaQuery.sizeOf(context).width < 600) {
+            final packages = _visiblePackages;
+            return Column(children: [
+              for (var index = 0; index < packages.length; index++) ...[
+                _PackageConfigurationCard(
+                    package: packages[index],
+                    compact: true,
+                    onEdit: () => _openEditor(packages[index])),
+                if (index < packages.length - 1) const SizedBox(height: 12),
+              ],
+            ]);
+          }
           final columns = constraints.maxWidth >= 1100
               ? 3
               : constraints.maxWidth >= 700
@@ -980,8 +997,9 @@ class _CatalogHero extends StatelessWidget {
 }
 
 class _PackageMetrics extends StatelessWidget {
-  const _PackageMetrics({required this.packages});
+  const _PackageMetrics({required this.packages, this.compact = false});
   final List<Map<String, dynamic>> packages;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -1018,6 +1036,7 @@ class _PackageMetrics extends StatelessWidget {
         ),
       ];
       return GridView.builder(
+        padding: compact ? EdgeInsets.zero : null,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: data.length,
@@ -1084,9 +1103,144 @@ class _MetricTile extends StatelessWidget {
 
 class _PackageConfigurationCard extends StatelessWidget {
   const _PackageConfigurationCard(
-      {required this.package, required this.onEdit});
+      {required this.package, required this.onEdit, this.compact = false});
   final Map<String, dynamic> package;
   final VoidCallback onEdit;
+  final bool compact;
+
+  Widget _mobileCard(bool dark, String status, Color statusColor) {
+    final foreground = dark ? Colors.white : AppColors.textPrimary;
+    final secondary = dark ? Colors.white60 : AppColors.textSecondary;
+    final stock = _number(package['quantity_available']);
+    Widget detail(IconData icon, String label, String value) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+            color: dark
+                ? Colors.white.withValues(alpha: .04)
+                : AppColors.neutral50,
+            borderRadius: BorderRadius.circular(10)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Icon(icon, size: 15, color: secondary),
+            const SizedBox(width: 6),
+            Expanded(
+                child: Text(label,
+                    style: AppTypography.caption
+                        .copyWith(fontSize: 11, color: secondary))),
+          ]),
+          const SizedBox(height: 6),
+          Text(value.isEmpty ? 'Not provided' : value,
+              style: AppTypography.bodySmall.copyWith(
+                  fontSize: 13,
+                  color: foreground,
+                  fontWeight: FontWeight.w600)),
+        ]),
+      );
+    }
+
+    Widget pair(Widget first, Widget second) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: first),
+            const SizedBox(width: 10),
+            Expanded(child: second)
+          ],
+        );
+    Widget badge(String label, Color color) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+              color: color.withValues(alpha: .1),
+              borderRadius: BorderRadius.circular(8)),
+          child: Text(label,
+              style: AppTypography.caption.copyWith(
+                  fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+        );
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: dark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: dark ? Colors.white10 : AppColors.neutral200),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: dark ? .1 : .03),
+              blurRadius: 16,
+              offset: const Offset(0, 4))
+        ],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.inventory_2_outlined,
+                  size: 22, color: AppColors.primary)),
+          const SizedBox(width: 12),
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(_text(package, ['package_name'], 'Package'),
+                    style: AppTypography.bodyMedium.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: foreground)),
+                const SizedBox(height: 4),
+                Text(_packageVarietyLabel(package),
+                    style: AppTypography.bodySmall
+                        .copyWith(fontSize: 12, color: secondary)),
+              ])),
+        ]),
+        const SizedBox(height: 12),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          badge(status.replaceAll('_', ' '), statusColor),
+          if (stock <= 100 && status != 'Out_of_stock')
+            badge(stock <= 0 ? 'No stock available' : 'Low stock',
+                AppColors.warning),
+        ]),
+        const SizedBox(height: 14),
+        pair(
+            detail(
+                Icons.scale_outlined,
+                'Capacity',
+                '${_numberText(package['weight_capacity'])} ${_text(package, [
+                      'unit'
+                    ])}'),
+            detail(Icons.category_outlined, 'Material',
+                _text(package, ['material_used']))),
+        const SizedBox(height: 10),
+        pair(
+            detail(Icons.warehouse_outlined, 'Available stock',
+                '${_numberText(package['quantity_available'])} units'),
+            detail(Icons.payments_outlined, 'Cost per unit',
+                'GHS ${_number(package['cost_per_unit']).toStringAsFixed(2)}')),
+        const SizedBox(height: 14),
+        SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined, size: 16),
+              label: const Text('Edit configuration'),
+              style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  minimumSize: const Size(0, 44),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  textStyle: AppTypography.bodySmall
+                      .copyWith(fontSize: 13, fontWeight: FontWeight.w600),
+                  side: BorderSide(
+                      color: AppColors.primary.withValues(alpha: .25)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10))),
+            )),
+      ]),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1099,6 +1253,7 @@ class _PackageConfigurationCard extends StatelessWidget {
             : status == 'Out_of_stock'
                 ? AppColors.warning
                 : AppColors.neutral500;
+    if (compact) return _mobileCard(dark, status, statusColor);
     return InkWell(
       onTap: onEdit,
       borderRadius: BorderRadius.circular(8),

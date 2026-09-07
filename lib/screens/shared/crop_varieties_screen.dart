@@ -431,6 +431,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   Widget _buildCards(bool isDark) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final useMobileCards =
+            widget.isSuperAdmin && MediaQuery.sizeOf(context).width < 700;
         final columns = constraints.maxWidth >= 1100
             ? 3
             : constraints.maxWidth >= 720
@@ -460,19 +462,29 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                crossAxisSpacing: AppSpacing.md,
-                mainAxisSpacing: AppSpacing.md,
-                mainAxisExtent: 360,
+            if (useMobileCards)
+              Column(
+                children: [
+                  for (var index = 0; index < _crops.length; index++) ...[
+                    _buildMobileCropCard(_crops[index], isDark),
+                    if (index < _crops.length - 1) const SizedBox(height: 12),
+                  ],
+                ],
+              )
+            else
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  crossAxisSpacing: AppSpacing.md,
+                  mainAxisSpacing: AppSpacing.md,
+                  mainAxisExtent: 360,
+                ),
+                itemCount: _crops.length,
+                itemBuilder: (context, index) =>
+                    _buildCard(_crops[index], isDark),
               ),
-              itemCount: _crops.length,
-              itemBuilder: (context, index) =>
-                  _buildCard(_crops[index], isDark),
-            ),
           ],
         );
       },
@@ -687,6 +699,160 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   String _initial(dynamic value) {
     final text = value?.toString().trim() ?? '';
     return text.isEmpty ? '?' : text.substring(0, 1).toUpperCase();
+  }
+
+  Widget _buildMobileCropCard(Map<String, dynamic> crop, bool isDark) {
+    final foreground = isDark ? Colors.white : AppColors.textPrimary;
+    final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
+    String value(String key) {
+      final text = (crop[key] ?? '').toString().trim();
+      return text.isEmpty || text == '-' || text == '- - -'
+          ? 'Not provided'
+          : text;
+    }
+
+    Widget metric(IconData icon, String label, String text) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.04)
+              : AppColors.neutral50,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Icon(icon, size: 15, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Expanded(
+                child: Text(label,
+                    style: AppTypography.caption
+                        .copyWith(fontSize: 11, color: secondary))),
+          ]),
+          const SizedBox(height: 7),
+          Text(text,
+              style: AppTypography.bodySmall.copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: foreground)),
+        ]),
+      );
+    }
+
+    Widget pair(Widget first, Widget second) {
+      return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(child: first),
+        const SizedBox(width: 10),
+        Expanded(child: second),
+      ]);
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.03),
+              blurRadius: 16,
+              offset: const Offset(0, 4))
+        ],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+                width: 72, height: 72, child: _buildCropImage(crop, isDark)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(value('crop'),
+                    style: AppTypography.bodyLarge.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: foreground)),
+                const SizedBox(height: 4),
+                Text(value('variety'),
+                    style: AppTypography.bodySmall.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primary)),
+                const SizedBox(height: 8),
+                Text('Company · ${value('company')}',
+                    style: AppTypography.bodySmall
+                        .copyWith(fontSize: 11, color: secondary)),
+              ])),
+        ]),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8)),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            const Icon(Icons.schedule_outlined,
+                size: 16, color: AppColors.primary),
+            const SizedBox(width: 8),
+            Flexible(
+                child: Text('Growing duration · ${value('duration')}',
+                    style: AppTypography.bodySmall.copyWith(
+                        fontSize: 11,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600))),
+          ]),
+        ),
+        const SizedBox(height: 16),
+        Text('Growing conditions',
+            style: AppTypography.bodySmall.copyWith(
+                fontSize: 12, fontWeight: FontWeight.w600, color: foreground)),
+        const SizedBox(height: 10),
+        pair(metric(Icons.science_outlined, 'pH range', value('ph')),
+            metric(Icons.bolt_outlined, 'EC range', value('ec'))),
+        const SizedBox(height: 10),
+        pair(
+            metric(
+                Icons.thermostat_outlined, 'Temperature', value('temperature')),
+            metric(Icons.water_drop_outlined, 'Humidity', value('humidity'))),
+        const SizedBox(height: 10),
+        pair(
+            metric(
+                Icons.spa_outlined,
+                'Sprouting ratio',
+                value('sproutingRatio') == 'Not provided'
+                    ? 'Not provided'
+                    : '${value('sproutingRatio')}%'),
+            metric(Icons.scale_outlined, 'Harvest weight',
+                value('harvestWeight'))),
+        const SizedBox(height: 16),
+        SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isSaving ? null : () => _showEditDialog(isDark, crop),
+              icon: const Icon(Icons.edit_outlined, size: 16),
+              label: const Text('Edit variety'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                minimumSize: const Size(0, 44),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                side: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.25)),
+                textStyle: AppTypography.bodySmall
+                    .copyWith(fontSize: 13, fontWeight: FontWeight.w600),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            )),
+      ]),
+    );
   }
 
   Widget _buildCard(Map<String, dynamic> crop, bool isDark) {

@@ -12,6 +12,7 @@ class OverallDeliveryControlModule extends StatefulWidget {
   final String subtitle;
   final bool isMobile;
   final bool allowCreateDelivery;
+  final bool useMobileDataCards;
 
   const OverallDeliveryControlModule({
     super.key,
@@ -19,6 +20,7 @@ class OverallDeliveryControlModule extends StatefulWidget {
     required this.subtitle,
     required this.isMobile,
     this.allowCreateDelivery = false,
+    this.useMobileDataCards = false,
   });
 
   @override
@@ -28,6 +30,7 @@ class OverallDeliveryControlModule extends StatefulWidget {
 
 class _OverallDeliveryControlModuleState
     extends State<OverallDeliveryControlModule> {
+  bool get _mobileCards => widget.isMobile && widget.useMobileDataCards;
   final TextEditingController _searchController = TextEditingController();
   final DateFormat _dateFormat = DateFormat('dd MMM yyyy, HH:mm');
   String _selectedFarm = 'All Farms';
@@ -388,7 +391,7 @@ class _OverallDeliveryControlModuleState
       children: [
         _buildHeader(isDark),
         Transform.translate(
-          offset: Offset(0, widget.isMobile ? -80 : 0),
+          offset: Offset(0, widget.isMobile && !_mobileCards ? -80 : 0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -686,6 +689,7 @@ class _OverallDeliveryControlModuleState
         final ratio = widget.isMobile ? 2.1 : (crossAxisCount == 4 ? 2.3 : 2.6);
 
         return GridView.builder(
+          padding: _mobileCards ? EdgeInsets.zero : null,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: cards.length,
@@ -763,6 +767,27 @@ class _OverallDeliveryControlModuleState
 
   Widget _buildFarmDeliveryOverview(bool isDark) {
     final summaries = _farmSummaries();
+    if (_mobileCards) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _mobileSectionHeading(isDark, Icons.agriculture_outlined,
+              'Farm Delivery Operations', '${summaries.length} farms'),
+          const SizedBox(height: 12),
+          if (summaries.isEmpty)
+            _buildEmptyState(
+                isDark: isDark,
+                icon: Icons.agriculture_outlined,
+                title: 'No farm deliveries yet',
+                subtitle:
+                    'Farm activity will appear when deliveries are created.'),
+          for (var index = 0; index < summaries.length; index++) ...[
+            _buildMobileFarmCard(summaries[index], isDark),
+            if (index < summaries.length - 1) const SizedBox(height: 12),
+          ],
+        ],
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -973,7 +998,7 @@ class _OverallDeliveryControlModuleState
 
   Widget _buildFilters(bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(_mobileCards ? 16 : AppSpacing.lg),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -983,27 +1008,46 @@ class _OverallDeliveryControlModuleState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  _selectedFarm == 'All Farms'
-                      ? 'Global Delivery Records'
-                      : '$_selectedFarm Delivery Records',
-                  style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
+          if (_mobileCards) ...[
+            _mobileSectionHeading(
+                isDark,
+                Icons.manage_search_rounded,
+                'Global Delivery Records',
+                '${_filteredDeliveries().length} results'),
+            const SizedBox(height: 6),
+            Text('Find deliveries by farm, status, or keyword.',
+                style: AppTypography.bodySmall.copyWith(
+                    fontSize: 12,
+                    color: isDark ? Colors.white60 : AppColors.textSecondary)),
+            if (_selectedFarm != 'All Farms')
+              TextButton.icon(
+                onPressed: () => setState(() => _selectedFarm = 'All Farms'),
+                icon: const Icon(Icons.close_rounded, size: 16),
+                label: const Text('Clear farm filter'),
+              ),
+          ] else
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _selectedFarm == 'All Farms'
+                        ? 'Global Delivery Records'
+                        : '$_selectedFarm Delivery Records',
+                    style: AppTypography.h6.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ),
                   ),
                 ),
-              ),
-              if (_selectedFarm != 'All Farms')
-                TextButton.icon(
-                  onPressed: () => setState(() => _selectedFarm = 'All Farms'),
-                  icon: const Icon(Icons.close_rounded, size: 16),
-                  label: const Text('Clear Farm'),
-                ),
-            ],
-          ),
+                if (_selectedFarm != 'All Farms')
+                  TextButton.icon(
+                    onPressed: () =>
+                        setState(() => _selectedFarm = 'All Farms'),
+                    icon: const Icon(Icons.close_rounded, size: 16),
+                    label: const Text('Clear Farm'),
+                  ),
+              ],
+            ),
           const SizedBox(height: AppSpacing.md),
           if (widget.isMobile)
             Column(
@@ -1215,6 +1259,26 @@ class _OverallDeliveryControlModuleState
   }
 
   Widget _buildDeliveryControlList(bool isDark, List<_DeliveryRecord> records) {
+    if (_mobileCards) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _mobileSectionHeading(isDark, Icons.local_shipping_outlined,
+              'Delivery Control Center', '${records.length} deliveries'),
+          const SizedBox(height: 12),
+          if (records.isEmpty)
+            _buildEmptyState(
+                isDark: isDark,
+                icon: Icons.local_shipping_outlined,
+                title: 'No deliveries found',
+                subtitle: 'Try changing farm, status, or search filters.'),
+          for (var index = 0; index < records.length; index++) ...[
+            _buildMobileDeliveryCard(isDark, records[index]),
+            if (index < records.length - 1) const SizedBox(height: 12),
+          ],
+        ],
+      );
+    }
     if (records.isEmpty) {
       return _buildEmptyState(
         isDark: isDark,
@@ -1246,6 +1310,243 @@ class _OverallDeliveryControlModuleState
           ...records.map((record) => _buildDeliveryCard(isDark, record)),
         ],
       ),
+    );
+  }
+
+  BoxDecoration _mobileCardDecoration(bool isDark, {bool selected = false}) {
+    return BoxDecoration(
+      color: isDark ? AppColors.surfaceDark : Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+          color: selected
+              ? AppColors.primary
+              : (isDark ? Colors.white10 : AppColors.neutral200)),
+      boxShadow: [
+        BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.1 : 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 4))
+      ],
+    );
+  }
+
+  Widget _mobileSectionHeading(
+      bool isDark, IconData icon, String title, String subtitle) {
+    return Row(children: [
+      Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10)),
+        child: Icon(icon, size: 20, color: AppColors.primary),
+      ),
+      const SizedBox(width: 10),
+      Expanded(
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(title,
+            style: AppTypography.bodyMedium.copyWith(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : AppColors.textPrimary)),
+        const SizedBox(height: 3),
+        Text(subtitle,
+            style: AppTypography.bodySmall.copyWith(
+                fontSize: 11,
+                color: isDark ? Colors.white60 : AppColors.textSecondary)),
+      ])),
+    ]);
+  }
+
+  Widget _mobileDetail(bool isDark, IconData icon, String label, String value) {
+    final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Icon(icon, size: 16, color: secondary),
+      const SizedBox(width: 8),
+      Expanded(
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label,
+            style:
+                AppTypography.caption.copyWith(fontSize: 10, color: secondary)),
+        const SizedBox(height: 3),
+        Text(value.trim().isEmpty ? 'Not provided' : value,
+            style: AppTypography.bodySmall.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : AppColors.textPrimary)),
+      ])),
+    ]);
+  }
+
+  Widget _buildMobileFarmCard(_FarmDeliverySummary summary, bool isDark) {
+    final selected = _selectedFarm == summary.farm;
+    final completion =
+        summary.total == 0 ? 0.0 : summary.delivered / summary.total;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: 'Filter deliveries for ${summary.farm}',
+      child: Material(
+        color: Colors.transparent,
+        child: Ink(
+          decoration: _mobileCardDecoration(isDark, selected: selected),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => setState(
+                () => _selectedFarm = selected ? 'All Farms' : summary.farm),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      Expanded(
+                          child: _mobileSectionHeading(
+                              isDark,
+                              Icons.agriculture_outlined,
+                              summary.farm,
+                              selected
+                                  ? 'Showing this farm'
+                                  : 'Tap to view deliveries')),
+                      const SizedBox(width: 8),
+                      Icon(
+                          selected
+                              ? Icons.check_circle_rounded
+                              : Icons.chevron_right_rounded,
+                          color: selected
+                              ? AppColors.primary
+                              : (isDark
+                                  ? Colors.white54
+                                  : AppColors.textSecondary),
+                          size: 20),
+                    ]),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.04)
+                              : AppColors.neutral50,
+                          borderRadius: BorderRadius.circular(10)),
+                      child: Row(children: [
+                        Expanded(
+                            child: _farmMetric(isDark, 'Total',
+                                '${summary.total}', AppColors.primary)),
+                        Expanded(
+                            child: _farmMetric(isDark, 'Active',
+                                '${summary.active}', AppColors.info)),
+                        Expanded(
+                            child: _farmMetric(isDark, 'Delivered',
+                                '${summary.delivered}', AppColors.success)),
+                      ]),
+                    ),
+                    const SizedBox(height: 14),
+                    Text('${(completion * 100).round()}% delivered',
+                        style: AppTypography.caption.copyWith(
+                            fontSize: 11,
+                            color: isDark
+                                ? Colors.white70
+                                : AppColors.textSecondary)),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                            value: completion,
+                            minHeight: 5,
+                            color: AppColors.success,
+                            backgroundColor:
+                                AppColors.success.withValues(alpha: 0.12))),
+                    const SizedBox(height: 12),
+                    Wrap(spacing: 8, runSpacing: 8, children: [
+                      if (summary.pendingApproval > 0)
+                        _pill('${summary.pendingApproval} pending approval',
+                            AppColors.warning),
+                      if (summary.onHold > 0)
+                        _pill('${summary.onHold} on hold', AppColors.error),
+                      if (summary.pendingApproval == 0 && summary.onHold == 0)
+                        _pill(
+                            summary.total == 0
+                                ? 'No deliveries yet'
+                                : 'No pending issues',
+                            AppColors.success),
+                    ]),
+                  ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileDeliveryCard(bool isDark, _DeliveryRecord record) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _mobileCardDecoration(isDark),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        _mobileSectionHeading(
+            isDark,
+            Icons.inventory_2_outlined,
+            '${record.crop} · ${record.quantity} ${record.unit}',
+            'Delivery ${record.id}'),
+        const SizedBox(height: 12),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          _pill(record.status.label, _statusColor(record.status)),
+          _pill('${record.priority.label} priority',
+              _priorityColor(record.priority)),
+        ]),
+        const SizedBox(height: 14),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : AppColors.neutral50,
+              borderRadius: BorderRadius.circular(10)),
+          child: Column(children: [
+            _mobileDetail(
+                isDark, Icons.agriculture_outlined, 'From farm', record.farm),
+            const SizedBox(height: 12),
+            _mobileDetail(isDark, Icons.location_on_outlined, 'Destination',
+                record.destination),
+          ]),
+        ),
+        const SizedBox(height: 14),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+              child: _mobileDetail(
+                  isDark, Icons.person_outline, 'Driver', record.driver)),
+          const SizedBox(width: 12),
+          Expanded(
+              child: _mobileDetail(isDark, Icons.local_shipping_outlined,
+                  'Vehicle', record.vehicle)),
+        ]),
+        const SizedBox(height: 14),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+              child: _mobileDetail(isDark, Icons.calendar_today_outlined,
+                  'Scheduled', record.scheduledAt)),
+          const SizedBox(width: 12),
+          Expanded(
+              child: _mobileDetail(isDark, Icons.schedule_outlined,
+                  'Expected arrival', record.eta)),
+        ]),
+        Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Divider(
+                height: 1,
+                color: isDark ? Colors.white10 : AppColors.neutral200)),
+        LayoutBuilder(builder: (context, constraints) {
+          final actions = _buildActionsFor(record, isDark);
+          final width = constraints.maxWidth < 290
+              ? constraints.maxWidth
+              : (constraints.maxWidth - 8) / 2;
+          return Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final action in actions) SizedBox(width: width, child: action),
+          ]);
+        }),
+      ]),
     );
   }
 
@@ -1436,7 +1737,8 @@ class _OverallDeliveryControlModuleState
     return Container(
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        borderRadius:
+            BorderRadius.circular(_mobileCards ? 10 : AppSpacing.radiusSm),
       ),
       child: TextButton.icon(
         onPressed: onPressed,
@@ -1451,7 +1753,7 @@ class _OverallDeliveryControlModuleState
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          minimumSize: Size.zero,
+          minimumSize: _mobileCards ? const Size(0, 44) : Size.zero,
         ),
       ),
     );
