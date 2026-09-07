@@ -236,7 +236,7 @@ class _CaretakerDashboardRedesignedState
       body: isMobile
           ? _mobileShell(isDark, userName)
           : _desktopShell(isDark, userName, userEmail),
-      floatingActionButton: _selectedDashboardTab == 1 || _showAllTasks
+      floatingActionButton: isMobile || _selectedDashboardTab == 1 || _showAllTasks
           ? null
           : FloatingActionButton.extended(
               onPressed: () => Navigator.pushNamed(context, '/record-entry'),
@@ -299,7 +299,7 @@ class _CaretakerDashboardRedesignedState
           onNotificationTap: () {}),
       Expanded(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
           child: _dashboardContent(isDark, narrow: true),
         ),
       ),
@@ -315,6 +315,31 @@ class _CaretakerDashboardRedesignedState
     }
     if (_errorMessage != null) {
       return _errorState(isDark);
+    }
+    if (narrow && _selectedDashboardTab == 0 && !_showAllTasks) {
+      return MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        removeBottom: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _dashboardTabs(isDark, narrow),
+            const SizedBox(height: 16),
+            _dashboardHeader(isDark, narrow),
+            const SizedBox(height: 16),
+            _kpiSection(isDark),
+            const SizedBox(height: 20),
+            const WeatherTimeWidget(),
+            const SizedBox(height: 20),
+            _alertsAndTasks(isDark, narrow),
+            const SizedBox(height: 24),
+            _sectionTitle(isDark, 'Quick Actions', Icons.grid_view_rounded),
+            const SizedBox(height: 12),
+            _quickActions(isDark),
+          ],
+        ),
+      );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
