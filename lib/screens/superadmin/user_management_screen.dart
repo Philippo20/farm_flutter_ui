@@ -428,11 +428,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeaderSection(isDark, isCompact),
-        SizedBox(height: sectionSpacing),
+        SizedBox(height: isMobile ? 8 : sectionSpacing),
         _buildStats(
           isDark,
           crossAxisCount: statsColumns,
           childAspectRatio: statsRatio,
+          isMobile: isMobile,
         ),
         SizedBox(height: sectionSpacing),
         _buildFilters(isDark),
@@ -444,7 +445,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         if (_isLoadingUsers && _users.isEmpty)
           const AdminDataSkeleton(showStats: false)
         else if (isCompact)
-          _buildUserCards(filteredUsers, isDark)
+          _buildUserCards(filteredUsers, isDark, isMobile: isMobile)
         else
           _buildUserTable(filteredUsers, isDark),
       ],
@@ -730,11 +731,18 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     );
   }
 
-  Widget _buildUserCards(
-      List<Map<String, dynamic>> filteredUsers, bool isDark) {
+  Widget _buildUserCards(List<Map<String, dynamic>> filteredUsers, bool isDark,
+      {required bool isMobile}) {
     return Column(
       children: [
-        for (final user in filteredUsers) _buildMobileUserCard(user, isDark),
+        for (var index = 0; index < filteredUsers.length; index++) ...[
+          if (isMobile)
+            _buildMobileUserCard(filteredUsers[index], isDark)
+          else
+            _buildCompactUserCard(filteredUsers[index], isDark),
+          if (isMobile && index < filteredUsers.length - 1)
+            const SizedBox(height: 12),
+        ],
       ],
     );
   }
@@ -743,6 +751,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     bool isDark, {
     required int crossAxisCount,
     required double childAspectRatio,
+    required bool isMobile,
   }) {
     final totalUsers = _users.length;
     final activeUsers =
@@ -779,6 +788,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     ];
 
     return GridView.builder(
+      padding: isMobile ? EdgeInsets.zero : null,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -955,6 +965,214 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   }
 
   Widget _buildMobileUserCard(Map<String, dynamic> user, bool isDark) {
+    final name = (user['name'] ?? '').toString().trim();
+    final initials = name.isEmpty
+        ? '?'
+        : name
+            .split(RegExp(r'\s+'))
+            .take(2)
+            .map((part) => part.characters.first)
+            .join()
+            .toUpperCase();
+    final status = (user['status'] ?? 'Active').toString();
+    final isPending = status == 'Pending';
+    final isSuspended = status == 'Suspended';
+    final foreground = isDark ? Colors.white : AppColors.textPrimary;
+    final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
+
+    Widget detail(IconData icon, String label, dynamic value) {
+      final text = (value ?? '').toString().trim();
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: secondary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: AppTypography.bodySmall.copyWith(
+                        fontSize: 10,
+                        color: secondary,
+                        fontWeight: FontWeight.w500)),
+                const SizedBox(height: 3),
+                Text(text.isEmpty ? 'Not provided' : text,
+                    style: AppTypography.bodySmall.copyWith(
+                        fontSize: 12,
+                        color: foreground,
+                        fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.10 : 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(initials,
+                    style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.primary, fontWeight: FontWeight.w700)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name.isEmpty ? 'Unnamed User' : name,
+                      style: AppTypography.bodyMedium.copyWith(
+                          fontSize: 14,
+                          color: foreground,
+                          fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Text((user['email'] ?? '').toString(),
+                      style: AppTypography.bodySmall
+                          .copyWith(fontSize: 12, color: secondary)),
+                ],
+              )),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildMobileUserBadge((user['role'] ?? '').toString(),
+                  _roleColor((user['role'] ?? '').toString())),
+              _buildMobileUserBadge(status, _statusColor(status)),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Divider(
+                height: 1,
+                color: isDark ? Colors.white10 : AppColors.neutral200),
+          ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                  child: detail(Icons.business_outlined, 'Department',
+                      user['department'])),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: detail(
+                      Icons.calendar_today_outlined, 'Joined', user['joined'])),
+            ],
+          ),
+          if (user['role'] == 'Driver') ...[
+            const SizedBox(height: 14),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                    child: detail(Icons.local_shipping_outlined, 'Vehicle',
+                        user['vehicle'])),
+                const SizedBox(width: 12),
+                Expanded(
+                    child: detail(Icons.scale_outlined, 'Capacity',
+                        '${user['vehicleCapacityKg'] ?? 0} kg')),
+              ],
+            ),
+          ],
+          const SizedBox(height: 16),
+          Row(children: [
+            Expanded(
+                child: OutlinedButton.icon(
+              onPressed: () =>
+                  isPending ? _rejectUser(user) : _toggleSuspend(user),
+              icon: Icon(
+                  isPending
+                      ? Icons.close_rounded
+                      : (isSuspended
+                          ? Icons.check_circle_outline
+                          : Icons.block),
+                  size: 16),
+              label: Text(isPending
+                  ? 'Reject'
+                  : (isSuspended ? 'Activate' : 'Suspend')),
+              style: OutlinedButton.styleFrom(
+                foregroundColor:
+                    isSuspended ? AppColors.success : AppColors.error,
+                minimumSize: const Size(0, 44),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                textStyle: AppTypography.bodySmall
+                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                side: BorderSide(
+                    color: isDark ? Colors.white12 : AppColors.neutral200),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            )),
+            const SizedBox(width: 10),
+            Expanded(
+                child: FilledButton.icon(
+              onPressed: () => isPending
+                  ? _approveUser(user)
+                  : _showEditUserDialog(context, user, isDark),
+              icon: Icon(isPending ? Icons.check_rounded : Icons.edit_outlined,
+                  size: 16),
+              label: Text(isPending ? 'Approve' : 'Edit user'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 44),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                textStyle: AppTypography.bodySmall
+                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            )),
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileUserBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(label,
+          style: AppTypography.bodySmall.copyWith(
+              fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+    );
+  }
+
+  Widget _buildCompactUserCard(Map<String, dynamic> user, bool isDark) {
     final statusColor = _statusColor(user['status']);
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
