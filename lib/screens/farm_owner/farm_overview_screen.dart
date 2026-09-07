@@ -1,3 +1,4 @@
+import '../../core/widgets/responsive_metric_grid.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -438,26 +439,20 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeader(isDark),
-        Transform.translate(
-          offset: Offset(0, isTabletOrMobile ? -64 : 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                  height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
-              _buildMonitoringCards(isDark),
-              SizedBox(
-                  height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
-              _buildTabBar(isDark),
-              SizedBox(
-                  height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
-              if (_selectedTab == 0) ...[
-                _buildOverviewTab(isDark, isTabletOrMobile),
-              ] else ...[
-                _buildIotDashboard(isDark, isTabletOrMobile),
-              ],
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
+            _buildMonitoringCards(isDark),
+            SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
+            _buildTabBar(isDark),
+            SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
+            if (_selectedTab == 0) ...[
+              _buildOverviewTab(isDark, isTabletOrMobile),
+            ] else ...[
+              _buildIotDashboard(isDark, isTabletOrMobile),
             ],
-          ),
+          ],
         ),
       ],
     );
@@ -603,9 +598,8 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
     final crossAxisCount = isMobile ? 2 : (isTablet ? 2 : 4);
     final childAspectRatio = isMobile ? 1.25 : (isTablet ? 1.6 : 1.8);
 
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+    return ResponsiveMetricGrid(
+      useContentHeight: isMobile,
       crossAxisCount: crossAxisCount,
       childAspectRatio: childAspectRatio,
       crossAxisSpacing: AppSpacing.md,
@@ -626,8 +620,9 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
@@ -1120,6 +1115,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
           ),
           const SizedBox(height: AppSpacing.md),
           GridView.count(
+            padding: EdgeInsets.zero,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: crossAxisCount,
@@ -1392,6 +1388,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 280),
           child: GridView.count(
+            padding: EdgeInsets.zero,
             key: ValueKey('$title-${sensorCards.length}'),
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),

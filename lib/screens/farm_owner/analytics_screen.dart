@@ -1,3 +1,4 @@
+import '../../core/widgets/responsive_metric_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -630,17 +631,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         _buildHeader(isDark),
         SizedBox(height: gap),
         _buildFarmDetailsCard(isDark),
-        Transform.translate(
-          offset: Offset(0, isMobile ? -76 : 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: gap),
-              _buildPerformanceCards(isDark),
-              SizedBox(height: gap),
-              _buildChartsSection(isDark),
-            ],
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: gap),
+            _buildPerformanceCards(isDark),
+            SizedBox(height: gap),
+            _buildChartsSection(isDark),
+          ],
         ),
       ],
     );
@@ -911,9 +909,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         final crossAxisCount = isMobile ? 2 : (isTablet ? 2 : 4);
         final childAspectRatio = isMobile ? 1.3 : (isTablet ? 1.6 : 1.8);
 
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+        return ResponsiveMetricGrid(
+          useContentHeight: isMobile,
           crossAxisCount: crossAxisCount,
           childAspectRatio: childAspectRatio,
           crossAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
@@ -937,8 +934,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
                     children: [
                       Container(
                         padding:

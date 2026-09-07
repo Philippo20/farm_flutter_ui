@@ -96,7 +96,7 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
               AppSpacing.md,
               AppSpacing.md,
               AppSpacing.md,
-              AppSpacing.md + MediaQuery.of(context).padding.bottom + 72,
+              AppSpacing.md,
             ),
             child: _buildContent(isDark, true),
           ),
@@ -123,7 +123,7 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
             color: isDark ? Colors.white60 : AppColors.textSecondary,
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
         _buildActionCard(
           isDark,
           title: 'Withdraw Funds',

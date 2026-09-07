@@ -288,19 +288,9 @@ class _FarmOwnerDashboardRedesignedState
 
         // Content
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final bottomInset = MediaQuery.of(context).padding.bottom;
-              return SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  AppSpacing.md + bottomInset + 72,
-                ),
-                child: _buildDashboardContent(isDark, true),
-              );
-            },
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: _buildDashboardContent(isDark, true),
           ),
         ),
       ],
@@ -320,10 +310,10 @@ class _FarmOwnerDashboardRedesignedState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildModernStatsRow(isDark, isMobile),
-        SizedBox(height: isMobile ? AppSpacing.lg : AppSpacing.xl),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
         if (isMobile) ...[
           _buildQuickActionsSection(isDark, isMobile),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           _buildActivityTimeline(isDark, isMobile),
         ] else ...[
           Row(
@@ -617,11 +607,8 @@ class _FarmOwnerDashboardRedesignedState
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Transform.translate(
-            offset: Offset(0, isMobile ? -60 : 0),
-            child: _buildFeaturesGrid(context),
-          ),
+          SizedBox(height: isMobile ? 12 : 20),
+          _buildFeaturesGrid(context),
         ],
       ),
     );
@@ -665,7 +652,7 @@ class _FarmOwnerDashboardRedesignedState
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: isMobile ? 12 : 20),
           if (activities.isEmpty)
             Text(
               'No recent farm activity yet.',
@@ -674,7 +661,12 @@ class _FarmOwnerDashboardRedesignedState
               ),
             )
           else
-            ...activities.map((a) => _buildActivityItem(a, isDark)),
+            ...activities.asMap().entries.map((entry) => _buildActivityItem(
+                  entry.value,
+                  isDark,
+                  bottomSpacing:
+                      isMobile && entry.key == activities.length - 1 ? 0 : 14,
+                )),
         ],
       ),
     );
@@ -739,10 +731,11 @@ class _FarmOwnerDashboardRedesignedState
     return activities.take(5).toList();
   }
 
-  Widget _buildActivityItem(Map<String, dynamic> activity, bool isDark) {
+  Widget _buildActivityItem(Map<String, dynamic> activity, bool isDark,
+      {double bottomSpacing = 14}) {
     final color = activity['color'] as Color;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: EdgeInsets.only(bottom: bottomSpacing),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -999,6 +992,7 @@ class _FarmOwnerDashboardRedesignedState
         final childAspectRatio = isMobile ? 1.1 : (isTablet ? 1.15 : 1.2);
 
         return GridView.count(
+          padding: EdgeInsets.zero,
           crossAxisCount: crossAxisCount,
           childAspectRatio: childAspectRatio,
           crossAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,

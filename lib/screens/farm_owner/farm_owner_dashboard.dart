@@ -579,6 +579,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
   }
 
   void _showWithdrawalDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final amountController = TextEditingController();
     
     showDialog(

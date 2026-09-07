@@ -1198,9 +1198,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         if (filteredReports.isEmpty)
           _buildEmptyReportsState(isDark)
         else
-          ...filteredReports.map((report) {
-            return _buildReportCard(report, isDark);
-          }),
+          for (var index = 0; index < filteredReports.length; index++) ...[
+            if (index > 0) const SizedBox(height: AppSpacing.sm),
+            _buildReportCard(filteredReports[index], isDark),
+          ],
       ],
     );
   }
@@ -1243,8 +1244,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final isMobile = screenWidth < 600;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
+      padding: EdgeInsets.all(isMobile ? 12 : AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),

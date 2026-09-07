@@ -1,3 +1,4 @@
+import '../../core/widgets/responsive_metric_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -475,7 +476,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
               AppSpacing.md,
               AppSpacing.md,
               AppSpacing.md,
-              AppSpacing.md + MediaQuery.of(context).padding.bottom + 72,
+              AppSpacing.md,
             ),
             child: _buildContent(isDark, true),
           ),
@@ -762,10 +763,8 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
         final crossAxisCount = isMobile ? 1 : (isTablet ? 2 : 3);
         final childAspectRatio = isMobile ? 3.4 : (isTablet ? 2.8 : 2.5);
 
-        return GridView.count(
-          shrinkWrap: true,
-          padding: EdgeInsets.zero,
-          physics: const NeverScrollableScrollPhysics(),
+        return ResponsiveMetricGrid(
+          useContentHeight: isMobile,
           crossAxisCount: crossAxisCount,
           childAspectRatio: childAspectRatio,
           crossAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
