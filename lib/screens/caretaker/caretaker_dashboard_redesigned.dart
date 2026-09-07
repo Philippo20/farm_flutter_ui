@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -308,6 +309,7 @@ class _CaretakerDashboardRedesignedState
   // ─── shared dashboard content ─────────────────────────────────────────────
 
   Widget _dashboardContent(bool isDark, {required bool narrow}) {
+    final useCompactOffsets = narrow && !kIsWeb;
     if (_isLoading) {
       return const AdminDataSkeleton(rowCount: 6);
     }
@@ -327,7 +329,7 @@ class _CaretakerDashboardRedesignedState
           _dashboardHeader(isDark, narrow),
           const SizedBox(height: 16),
           Transform.translate(
-            offset: Offset(0, narrow ? -66 : 0),
+            offset: Offset(0, useCompactOffsets ? -66 : 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -345,7 +347,7 @@ class _CaretakerDashboardRedesignedState
                 // ── KPI cards ──
                 const SizedBox(height: 24),
                 Transform.translate(
-                  offset: Offset(0, narrow ? -50 : 0),
+                  offset: Offset(0, useCompactOffsets ? -50 : 0),
                   child: _alertsAndTasks(isDark, narrow),
                 ),
 
@@ -353,7 +355,7 @@ class _CaretakerDashboardRedesignedState
 
                 // ── quick actions ──
                 Transform.translate(
-                  offset: Offset(0, narrow ? -50 : 0),
+                  offset: Offset(0, useCompactOffsets ? -50 : 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -361,7 +363,7 @@ class _CaretakerDashboardRedesignedState
                           isDark, 'Quick Actions', Icons.grid_view_rounded),
                       const SizedBox(height: 12),
                       Transform.translate(
-                        offset: Offset(0, narrow ? -50 : 0),
+                        offset: Offset(0, useCompactOffsets ? -50 : 0),
                         child: _quickActions(isDark),
                       ),
                     ],
@@ -1981,6 +1983,7 @@ class _CaretakerDashboardRedesignedState
       final ratio = cardW < 155 ? 2.2 : (cardW < 200 ? 2.6 : 3.0);
 
       return GridView.count(
+        padding: kIsWeb && w <= 700 ? EdgeInsets.zero : null,
         crossAxisCount: cols,
         childAspectRatio: ratio,
         crossAxisSpacing: gap,
