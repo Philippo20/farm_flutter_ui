@@ -1570,10 +1570,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
               ),
               SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.lg),
               GridView.builder(
-                padding:
-                    widget.access != BatchScreenAccess.farmManager && isMobile
-                        ? EdgeInsets.zero
-                        : null,
+                padding: isMobile ? EdgeInsets.zero : null,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -1588,9 +1585,6 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                   return _buildBatchStatCard(stat, isDark, isMobile);
                 },
               ),
-              // Add bottom padding for mobile to match spacing
-              if (isMobile && widget.access == BatchScreenAccess.farmManager)
-                SizedBox(height: AppSpacing.xs),
             ],
           ),
         );
@@ -1662,9 +1656,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       bool isDark, bool isMobile, List<BatchModel> batches) {
     if (isMobile) {
       return ListView.separated(
-        padding: widget.access != BatchScreenAccess.farmManager
-            ? EdgeInsets.zero
-            : null,
+        padding: EdgeInsets.zero,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: batches.length,
@@ -1961,202 +1953,6 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   // ============================================
 
   Widget _buildBatchCard(BatchModel batch, bool isDark) {
-    if (widget.access != BatchScreenAccess.farmManager) {
-      return _buildAdminBatchCard(batch, isDark);
-    }
-    final pct = batch.progressPercentage;
-    final pctColor = pct >= 75
-        ? AppColors.success
-        : (pct >= 40 ? AppColors.warning : AppColors.info);
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: isDark
-                ? Colors.white.withOpacity(0.06)
-                : Colors.black.withOpacity(0.06)),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2))
-              ],
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // Header row
-        Row(children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [
-                AppColors.primary,
-                AppColors.primary.withOpacity(0.75)
-              ]),
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child:
-                const Icon(Icons.layers_rounded, size: 16, color: Colors.white),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-              child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(batch.batchNumber,
-                  style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : AppColors.textPrimary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 1),
-              Row(children: [
-                Icon(Icons.location_on_outlined,
-                    size: 11,
-                    color: isDark ? Colors.white38 : AppColors.textSecondary),
-                const SizedBox(width: 3),
-                Expanded(
-                    child: Text(batch.farmName,
-                        style: GoogleFonts.inter(
-                            fontSize: 11,
-                            color: isDark
-                                ? Colors.white38
-                                : AppColors.textSecondary),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis)),
-              ]),
-            ],
-          )),
-          StatusBadge(status: batch.status),
-        ]),
-
-        const SizedBox(height: 14),
-
-        // Pipeline visual
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color:
-                isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(children: [
-            // Pipeline stages
-            Row(children: [
-              _mobilePipelineStage('Nursed', batch.nursedSeeds, AppColors.info,
-                  Icons.spa_rounded, isDark),
-              _mobilePipelineArrow(isDark),
-              _mobilePipelineStage('Transplant', batch.transplantedPlants,
-                  AppColors.success, Icons.eco_rounded, isDark),
-              _mobilePipelineArrow(isDark),
-              _mobilePipelineStage('Harvest', batch.harvestedHeads,
-                  AppColors.warning, Icons.agriculture_rounded, isDark),
-            ]),
-            const SizedBox(height: 10),
-            // Progress bar
-            Row(children: [
-              Expanded(
-                  child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: pct / 100,
-                  backgroundColor: isDark
-                      ? Colors.white.withOpacity(0.06)
-                      : Colors.black.withOpacity(0.06),
-                  valueColor: AlwaysStoppedAnimation<Color>(pctColor),
-                  minHeight: 5,
-                ),
-              )),
-              const SizedBox(width: 8),
-              Text('${pct.toStringAsFixed(0)}%',
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: pctColor)),
-            ]),
-          ]),
-        ),
-
-        const SizedBox(height: 12),
-
-        // Details row
-        Row(children: [
-          _mobileDetail(Icons.eco_outlined, batch.plantType, isDark),
-          const SizedBox(width: 10),
-          _mobileDetail(Icons.calendar_today_rounded,
-              DateFormat('MMM dd').format(batch.startDate), isDark),
-          const SizedBox(width: 10),
-          _mobileDetail(Icons.trending_up_rounded,
-              '${batch.survivalRate.toStringAsFixed(0)}%', isDark),
-        ]),
-
-        if (batch.caretakerName != null) ...[
-          const SizedBox(height: 8),
-          Row(children: [
-            Icon(Icons.person_outline_rounded,
-                size: 12,
-                color: isDark ? Colors.white24 : AppColors.textSecondary),
-            const SizedBox(width: 4),
-            Expanded(
-                child: Text(batch.caretakerName!,
-                    style: GoogleFonts.inter(
-                        fontSize: 11,
-                        color:
-                            isDark ? Colors.white38 : AppColors.textSecondary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis)),
-          ]),
-        ],
-
-        const SizedBox(height: 12),
-
-        // Action buttons
-        Row(children: [
-          Expanded(
-              child: OutlinedButton.icon(
-            onPressed: () => _viewBatchDetails(batch),
-            icon: const Icon(Icons.visibility_outlined, size: 14),
-            label: Text('View',
-                style: GoogleFonts.inter(
-                    fontSize: 12, fontWeight: FontWeight.w500)),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 7),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(9)),
-              side: BorderSide(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.black.withOpacity(0.08)),
-            ),
-          )),
-          const SizedBox(width: 8),
-          Expanded(
-              child: ElevatedButton.icon(
-            onPressed: () => _editBatch(batch),
-            icon: const Icon(Icons.edit_outlined, size: 14),
-            label: Text('Edit',
-                style: GoogleFonts.inter(
-                    fontSize: 12, fontWeight: FontWeight.w600)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 7),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(9)),
-            ),
-          )),
-        ]),
-      ]),
-    );
-  }
-
-  Widget _buildAdminBatchCard(BatchModel batch, bool isDark) {
     final foreground = isDark ? Colors.white : AppColors.textPrimary;
     final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
     final progress = batch.progressPercentage.clamp(0, 100).toDouble();
@@ -2327,68 +2123,6 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         ]),
       ]),
     );
-  }
-
-  Widget _mobilePipelineStage(
-      String label, int value, Color color, IconData icon, bool isDark) {
-    final isActive = value > 0;
-    return Expanded(
-        child: Column(children: [
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-        decoration: BoxDecoration(
-          color: isActive ? color.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: isActive
-                  ? color.withOpacity(0.2)
-                  : (isDark
-                      ? Colors.white.withOpacity(0.06)
-                      : Colors.black.withOpacity(0.06))),
-        ),
-        child: Column(children: [
-          Icon(icon,
-              size: 14,
-              color: isActive
-                  ? color
-                  : (isDark ? Colors.white24 : AppColors.neutral400)),
-          const SizedBox(height: 2),
-          Text('$value',
-              style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: isActive
-                      ? color
-                      : (isDark ? Colors.white24 : AppColors.neutral400))),
-        ]),
-      ),
-      const SizedBox(height: 3),
-      Text(label,
-          style: GoogleFonts.inter(
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white38 : AppColors.textSecondary)),
-    ]));
-  }
-
-  Widget _mobilePipelineArrow(bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Icon(Icons.chevron_right_rounded,
-          size: 16, color: isDark ? Colors.white12 : AppColors.neutral300),
-    );
-  }
-
-  Widget _mobileDetail(IconData icon, String text, bool isDark) {
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      Icon(icon,
-          size: 12, color: isDark ? Colors.white24 : AppColors.textSecondary),
-      const SizedBox(width: 4),
-      Text(text,
-          style: GoogleFonts.inter(
-              fontSize: 11,
-              color: isDark ? Colors.white54 : AppColors.textSecondary)),
-    ]);
   }
 
   TextStyle _tableHeaderStyle(bool isDark) {

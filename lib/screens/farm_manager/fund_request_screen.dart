@@ -41,6 +41,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
 
   final List<Map<String, dynamic>> _requests = [];
   final List<Map<String, dynamic>> _farms = [];
+  final List<Map<String, dynamic>> _users = [];
+  bool _openingRequest = false;
 
   @override
   void initState() {
@@ -73,10 +75,16 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
       final results = await Future.wait([
         _api.getFarms(),
         _api.getFundRequests(),
+        _api.getUsers(),
       ]);
       if (!mounted) return;
 
-      final assignedFarms = results[0].where(_isAssignedFarm).toList();
+      _users
+        ..clear()
+        ..addAll(results[2]);
+      final assignedFarms = results[0]
+          .where((farm) => _docId(farm).isNotEmpty && _isAssignedFarm(farm))
+          .toList();
       final assignedRequests = results[1]
           .where((request) => _matchesFarmAssignment(request, assignedFarms))
           .map(_mapFundRequest)
@@ -103,7 +111,7 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
   }
 
   String _docId(Map<String, dynamic> doc) =>
-      (doc[r'$id'] ?? doc['id'] ?? '').toString();
+      _value(doc, [r'$id', 'id', 'farm_id', 'farmID']).trim();
 
   String _value(Map<String, dynamic> doc, List<String> keys,
       {String fallback = ''}) {
@@ -132,14 +140,80 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
         '${date.day.toString().padLeft(2, '0')}';
   }
 
+  String _normaliseKey(dynamic value) =>
+      value?.toString().trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ') ??
+      '';
+
+  void _addIdentityToken(Set<String> tokens, dynamic value) {
+    final token = _normaliseKey(value);
+    if (token.isNotEmpty && token != 'unassigned' && token != 'system') {
+      tokens.add(token);
+    }
+  }
+
+  void _addFarmAssignmentToken(Set<String> tokens, dynamic value) {
+    if (value is Iterable) {
+      for (final item in value) {
+        _addFarmAssignmentToken(tokens, item);
+      }
+      return;
+    }
+    if (value is Map<String, dynamic>) {
+      _addIdentityToken(tokens, _docId(value));
+      _addIdentityToken(tokens, value['id']);
+      _addIdentityToken(tokens, value['email']);
+      _addIdentityToken(tokens, value['name']);
+      return;
+    }
+    _addIdentityToken(tokens, value);
+  }
+
   bool _isAssignedFarm(Map<String, dynamic> farm) {
     final user = ref.read(authProvider).user;
-    if (user == null) return true;
-    final managerId = _value(farm, ['farm_manager_id', 'farmManagerId']);
-    final managerName = _value(farm, ['farm_manager_name', 'farmManagerName']);
-    return managerId == user.id ||
-        managerId == user.email ||
-        managerName.toLowerCase() == user.name.toLowerCase();
+    if (user == null) return false;
+    final identityTokens = <String>{};
+    _addIdentityToken(identityTokens, user.id);
+    _addIdentityToken(identityTokens, user.email);
+    _addIdentityToken(identityTokens, user.name);
+    _addIdentityToken(identityTokens, user.farmId);
+
+    for (final backendUser in _users) {
+      final backendTokens = <String>{};
+      _addIdentityToken(backendTokens, _docId(backendUser));
+      _addIdentityToken(backendTokens, backendUser['id']);
+      _addIdentityToken(backendTokens, backendUser['email']);
+      _addIdentityToken(backendTokens, backendUser['name']);
+      if (backendTokens.intersection(identityTokens).isNotEmpty) {
+        identityTokens.addAll(backendTokens);
+      }
+    }
+
+    final assignmentTokens = <String>{};
+    _addFarmAssignmentToken(assignmentTokens, _docId(farm));
+    _addFarmAssignmentToken(assignmentTokens, farm['farmID']);
+    _addFarmAssignmentToken(assignmentTokens, farm['farm_id']);
+    for (final key in [
+      'farm_manager_id',
+      'farmManagerId',
+      'farmManagerID',
+      'farm_manager',
+      'farmManager',
+      'farm_manager_email',
+      'farmManagerEmail',
+      'farm_manager_name',
+      'farmManagerName',
+      'assigned_manager_id',
+      'assignedManagerId',
+      'assignedManagerID',
+      'assignedManagers',
+      'manager_ids',
+      'managerIds',
+      'managerIDs',
+    ]) {
+      _addFarmAssignmentToken(assignmentTokens, farm[key]);
+    }
+
+    return assignmentTokens.intersection(identityTokens).isNotEmpty;
   }
 
   bool _matchesFarmAssignment(
@@ -327,13 +401,6 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
               onItemSelected: (_) {},
             )
           : null,
-      floatingActionButton: isMobile
-          ? FloatingActionButton(
-              onPressed: () => _showCreateRequestDialog(context),
-              backgroundColor: AppColors.primary,
-              child: const Icon(Icons.add_rounded, color: Colors.white),
-            )
-          : null,
     );
   }
 
@@ -386,7 +453,7 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPageHeader(isDark, isMobile),
-        SizedBox(height: isMobile ? 0 : 24),
+        SizedBox(height: isMobile ? 12 : 24),
         if (_isLoading || _loadError != null) ...[
           _buildLoadingOrError(isDark, isMobile),
           SizedBox(height: isMobile ? 16 : 24),
@@ -453,6 +520,35 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
   // ══════════════════════════════════════════════════════════════════════
 
   Widget _buildPageHeader(bool isDark, bool isMobile) {
+    if (isMobile) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Fund Requests',
+            style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : AppColors.textPrimary)),
+        const SizedBox(height: 4),
+        Text('Request and track budget allocations for farm operations',
+            style: GoogleFonts.inter(
+                fontSize: 12,
+                color: isDark ? Colors.white60 : AppColors.textSecondary)),
+        const SizedBox(height: 12),
+        SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed:
+                  _isLoading ? null : () => _showCreateRequestDialog(context),
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('New Request'),
+              style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(0, 44),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10))),
+            )),
+      ]);
+    }
     return Row(children: [
       Expanded(
           child: Column(
@@ -482,7 +578,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
       if (!isMobile) ...[
         const SizedBox(width: 12),
         ElevatedButton.icon(
-          onPressed: () => _showCreateRequestDialog(context),
+          onPressed:
+              _isLoading ? null : () => _showCreateRequestDialog(context),
           icon: const Icon(Icons.add_rounded, size: 18),
           label: Text('New Request',
               style:
@@ -533,6 +630,7 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
     ];
 
     return GridView.count(
+      padding: isMobile ? EdgeInsets.zero : null,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: isMobile ? 2 : 4,
@@ -656,7 +754,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
               if (isMobile) ...[
                 const SizedBox(width: 8),
                 InkWell(
-                  onTap: () => _showCreateRequestDialog(context),
+                  onTap: _isLoading
+                      ? null
+                      : () => _showCreateRequestDialog(context),
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
                     padding: const EdgeInsets.all(6),
@@ -769,7 +869,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
               if (!isMobile) ...[
                 const SizedBox(width: 10),
                 ElevatedButton.icon(
-                  onPressed: () => _showCreateRequestDialog(context),
+                  onPressed: _isLoading
+                      ? null
+                      : () => _showCreateRequestDialog(context),
                   icon: const Icon(Icons.add_rounded, size: 16),
                   label: Text('New Request',
                       style: GoogleFonts.inter(
@@ -795,6 +897,7 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: ListView.separated(
+                padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: requests.length,
@@ -835,7 +938,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                 color: isDark ? Colors.white24 : AppColors.textSecondary)),
         const SizedBox(height: 16),
         ElevatedButton.icon(
-          onPressed: () => _showCreateRequestDialog(context),
+          onPressed:
+              _isLoading ? null : () => _showCreateRequestDialog(context),
           icon: const Icon(Icons.add_rounded, size: 16),
           label: Text('New Request',
               style:
@@ -1160,14 +1264,14 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                     Icon(Icons.location_on_outlined,
                         size: 11,
                         color:
-                            isDark ? Colors.white38 : AppColors.textSecondary),
+                            isDark ? Colors.white60 : AppColors.textSecondary),
                     const SizedBox(width: 3),
                     Expanded(
                         child: Text(r['farm'] as String,
                             style: GoogleFonts.inter(
                                 fontSize: 11,
                                 color: isDark
-                                    ? Colors.white38
+                                    ? Colors.white60
                                     : AppColors.textSecondary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis)),
@@ -1188,74 +1292,40 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
           ]),
           const SizedBox(height: 14),
 
-          // Amount row
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            Text(priority,
+                style: GoogleFonts.inter(
+                    fontSize: 11, color: pColor, fontWeight: FontWeight.w600)),
+            Text(r['category'] as String,
+                style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: isDark ? Colors.white60 : AppColors.textSecondary)),
+          ]),
+          const SizedBox(height: 12),
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color:
-                  isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(children: [
-              Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                    Text('Amount Requested',
-                        style: GoogleFonts.inter(
-                            fontSize: 10,
-                            color: isDark
-                                ? Colors.white24
-                                : AppColors.textSecondary)),
-                    const SizedBox(height: 2),
-                    Text('GHS ${_formatAmount(amount.toDouble())}',
-                        style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            height: 1.1)),
-                  ])),
-              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                      color: pColor.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(6)),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(Icons.flag_rounded, size: 10, color: pColor),
-                    const SizedBox(width: 3),
-                    Text(priority,
-                        style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: pColor)),
-                  ]),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.04)
-                          : Colors.black.withOpacity(0.04),
-                      borderRadius: BorderRadius.circular(6)),
-                  child: Text(r['category'] as String,
-                      style: GoogleFonts.inter(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w500,
-                          color: isDark
-                              ? Colors.white38
-                              : AppColors.textSecondary)),
-                ),
-              ]),
+                color: isDark
+                    ? Colors.white.withValues(alpha: .04)
+                    : AppColors.neutral50,
+                borderRadius: BorderRadius.circular(10)),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Amount requested',
+                  style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color:
+                          isDark ? Colors.white60 : AppColors.textSecondary)),
+              const SizedBox(height: 5),
+              Text('GHS ${_formatAmount(amount.toDouble())}',
+                  style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? Colors.white : AppColors.textPrimary)),
             ]),
           ),
-          const SizedBox(height: 10),
-
-          // Details row
+          const SizedBox(height: 12), // Details row
           Row(children: [
             _cardDetail(
                 Icons.label_outline_rounded, r['purpose'] as String, isDark),
@@ -1270,11 +1340,24 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
             r['description'] as String,
             style: GoogleFonts.inter(
                 fontSize: 11,
-                color: isDark ? Colors.white38 : AppColors.textSecondary,
+                color: isDark ? Colors.white60 : AppColors.textSecondary,
                 height: 1.4),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
+          const SizedBox(height: 12),
+          SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _showRequestDetails(r),
+                icon: const Icon(Icons.visibility_outlined, size: 16),
+                label: const Text('View request'),
+                style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 44),
+                    foregroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10))),
+              )),
         ]),
       ),
     );
@@ -1541,7 +1624,18 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
   // CREATE REQUEST DIALOG
   // ══════════════════════════════════════════════════════════════════════
 
-  void _showCreateRequestDialog(BuildContext ctx) {
+  Future<void> _showCreateRequestDialog(BuildContext ctx) async {
+    if (_openingRequest || _isLoading) return;
+    if (!mounted || !ctx.mounted) return;
+    if (_loadError != null || _farms.isEmpty) {
+      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+        content: Text(_loadError != null
+            ? 'Could not load assigned farms. Please retry.'
+            : 'No farms are assigned to your account.'),
+      ));
+      return;
+    }
+    _openingRequest = true;
     final isDark = Theme.of(ctx).brightness == Brightness.dark;
     String farmId = '';
     String farm = '';
@@ -1870,6 +1964,7 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
         ),
       ),
     ).then((_) {
+      _openingRequest = false;
       formError.dispose();
       isSubmitting.dispose();
     });

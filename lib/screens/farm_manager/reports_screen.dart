@@ -522,14 +522,14 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
         if (isMobile) ...[
           _buildMobileActionButtons(isDark),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: 12),
         ],
         _buildFilters(isDark),
-        SizedBox(height: isMobile ? 0 : AppSpacing.xl),
+        SizedBox(height: isMobile ? 12 : AppSpacing.xl),
         _buildSummaryCards(isDark),
-        SizedBox(height: isMobile ? AppSpacing.lg : AppSpacing.xl),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
         _buildChartsSection(isDark),
-        SizedBox(height: isMobile ? AppSpacing.lg : AppSpacing.xl),
+        SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
         _buildReportTable(isDark),
       ],
     );
@@ -827,6 +827,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 .map((item) => DropdownMenuItem(
                     value: item,
                     child: Text(item,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                             color: isDark
                                 ? Colors.white
@@ -845,28 +847,26 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   }
 
   Widget _buildSummaryCards(bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 800 ? 4 : 2;
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: crossAxisCount,
-          mainAxisSpacing: AppSpacing.sm,
-          crossAxisSpacing: AppSpacing.sm,
-          childAspectRatio: isMobile ? 2.5 : 3.0,
+        final cardWidth =
+            (constraints.maxWidth - AppSpacing.sm * (crossAxisCount - 1)) /
+                crossAxisCount;
+        return Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
           children: _summaryStats
-              .map((stat) => _buildSummaryCard(
+              .map((stat) => SizedBox(
+                  width: cardWidth,
+                  child: _buildSummaryCard(
                     stat['title'] as String,
                     stat['value'] as String,
                     stat['change'] as String,
                     stat['color'] as Color,
                     stat['icon'] as IconData,
                     isDark,
-                  ))
+                  )))
               .toList(),
         );
       },
@@ -879,6 +879,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final isMobile = screenWidth < 600;
 
     return Card(
+      margin: EdgeInsets.zero,
       elevation: 0,
       color: color.withOpacity(0.15),
       shape: RoundedRectangleBorder(
@@ -887,66 +888,100 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       ),
       child: Padding(
         padding: EdgeInsets.all(isMobile ? AppSpacing.sm : AppSpacing.md),
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(isMobile ? 6 : 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(isDark ? 0.15 : 0.9),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-              ),
-              child: Icon(icon, color: color, size: isMobile ? 18 : 22),
-            ),
-            SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
-            Expanded(
-              child: Column(
+        child: isMobile
+            ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    title,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: color.withOpacity(0.8),
-                      fontWeight: FontWeight.w600,
-                      fontSize: isMobile ? 9 : 11,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    value,
-                    style: AppTypography.h6.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                      fontSize: isMobile ? 14 : 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 4 : 6, vertical: isMobile ? 2 : 3),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(isDark ? 0.15 : 0.9),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.arrow_upward,
-                      size: isMobile ? 8 : 10, color: AppColors.success),
-                  SizedBox(width: isMobile ? 1 : 2),
+                  Icon(icon, color: color, size: 20),
+                  const SizedBox(height: 8),
+                  Text(title,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? Colors.white70
+                              : AppColors.textSecondary)),
+                  const SizedBox(height: 4),
+                  Text(value,
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              isDark ? Colors.white : AppColors.textPrimary)),
+                  const SizedBox(height: 6),
                   Text(change,
                       style: TextStyle(
-                          color: AppColors.success,
-                          fontWeight: FontWeight.w700,
-                          fontSize: isMobile ? 8 : 10)),
+                          fontSize: 10,
+                          color: isDark
+                              ? Colors.white70
+                              : AppColors.textSecondary)),
+                ],
+              )
+            : Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(isMobile ? 6 : 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(isDark ? 0.15 : 0.9),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    ),
+                    child: Icon(icon, color: color, size: isMobile ? 18 : 22),
+                  ),
+                  SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: color.withOpacity(0.8),
+                            fontWeight: FontWeight.w600,
+                            fontSize: isMobile ? 9 : 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          value,
+                          style: AppTypography.h6.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                            fontSize: isMobile ? 14 : 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Flexible(
+                      child: Container(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 4 : 6,
+                        vertical: isMobile ? 2 : 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(isDark ? 0.15 : 0.9),
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusFull),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.arrow_upward,
+                            size: isMobile ? 8 : 10, color: AppColors.success),
+                        SizedBox(width: isMobile ? 1 : 2),
+                        Flexible(
+                            child: Text(change,
+                                style: TextStyle(
+                                    color: AppColors.success,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: isMobile ? 8 : 10))),
+                      ],
+                    ),
+                  )),
                 ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -989,6 +1024,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     );
 
     return Card(
+      margin: isMobile ? EdgeInsets.zero : null,
       elevation: 0,
       color: isDark ? AppColors.surfaceDark : Colors.white,
       shape: RoundedRectangleBorder(
@@ -1102,6 +1138,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     ];
 
     return Card(
+      margin: isMobile ? EdgeInsets.zero : null,
       elevation: 0,
       color: isDark ? AppColors.surfaceDark : Colors.white,
       shape: RoundedRectangleBorder(
@@ -1175,10 +1212,11 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             decoration: BoxDecoration(
                 color: color, borderRadius: BorderRadius.circular(2))),
         const SizedBox(width: 4),
-        Text(label,
-            style: TextStyle(
-                fontSize: 10,
-                color: isDark ? Colors.white70 : AppColors.textSecondary)),
+        Flexible(
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: 10,
+                    color: isDark ? Colors.white70 : AppColors.textSecondary))),
       ],
     );
   }
@@ -1189,6 +1227,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final reports = _farmReportRows;
 
     return Card(
+      margin: isMobile ? EdgeInsets.zero : null,
       elevation: 0,
       color: isDark ? AppColors.surfaceDark : Colors.white,
       shape: RoundedRectangleBorder(
@@ -1204,14 +1243,15 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                Expanded(
+                    child: Text(
                   'Farm Performance Summary',
                   style: AppTypography.h6.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                     fontSize: isMobile ? 14 : 18,
                   ),
-                ),
+                )),
                 if (!isMobile)
                   TextButton.icon(
                     onPressed: _loadReportData,
@@ -1225,9 +1265,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               _buildEmptyState(isDark)
             else if (isMobile)
               Column(
-                children: reports
-                    .map((r) => _buildMobileReportCard(r, isDark))
-                    .toList(),
+                children: [
+                  for (var index = 0; index < reports.length; index++) ...[
+                    if (index > 0) const SizedBox(height: AppSpacing.sm),
+                    _buildMobileReportCard(reports[index], isDark),
+                  ],
+                ],
               )
             else
               Table(
@@ -1306,7 +1349,6 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   Widget _buildMobileReportCard(Map<String, dynamic> report, bool isDark) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,

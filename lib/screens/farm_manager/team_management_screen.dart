@@ -10,9 +10,10 @@ import '../../core/widgets/farm_manager_mobile_drawer.dart';
 import '../../core/widgets/skeleton_loader.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/superadmin_api_service.dart';
+import '../../core/utils/farm_team_assignment.dart';
 
 /// Team Management Screen for Farm Manager
-/// Manage staff across farms, roles, and performance
+/// Team assigned to your farms
 class TeamManagementScreen extends ConsumerStatefulWidget {
   const TeamManagementScreen({super.key});
 
@@ -61,28 +62,25 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
   }
 
   Map<String, dynamic>? _userByReference(String reference) {
-    final refValue = reference.trim();
-    if (refValue.isEmpty || refValue == 'Unassigned') return null;
+    final token = assignmentToken(reference);
     for (final user in _users) {
-      final id = _docId(user);
-      final email = _value(user, ['email']);
-      final name = _value(user, ['name']);
-      if (refValue == id || refValue == email || refValue == name) {
-        return user;
-      }
+      if (assignmentReferences(user).contains(token)) return user;
     }
     return null;
   }
 
   bool _isCurrentManagerFarm(Map<String, dynamic> farm) {
     final user = ref.read(authProvider).user;
-    if (user == null) return true;
-    final manager = _value(farm, ['farm_manager_id', 'farmManagerId']);
-    return manager.isEmpty ||
-        manager == 'Unassigned' ||
-        manager == user.id ||
-        manager == user.email ||
-        manager == user.name;
+    return isManagerTeamFarm(farm,
+        users: _users,
+        manager: user == null
+            ? null
+            : {
+                'id': user.id,
+                'email': user.email,
+                'name': user.name,
+                'farmID': user.farmId,
+              });
   }
 
   String _specialtyForRole(String role, Map<String, dynamic> farm) {
@@ -183,17 +181,21 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
     final rows = <Map<String, dynamic>>[];
     final assignedFarms = _farms.where(_isCurrentManagerFarm);
     for (final farm in assignedFarms) {
-      final assignments = {
-        'Farm Owner': _value(farm, ['ownerID']),
-        'Farm Manager': _value(farm, ['farm_manager_id', 'farmManagerId']),
-        'Caretaker': _value(farm, ['caretakerID', 'caretaker_id']),
-        'Technician': _value(farm, ['technician_id', 'technicianID']),
-      };
-      assignments.forEach((role, reference) {
-        if (reference.trim().isNotEmpty && reference != 'Unassigned') {
-          rows.add(_teamRow(farm: farm, role: role, userReference: reference));
+      for (final entry in farmTeamAssignmentKeys.entries) {
+        final seen = <String>{};
+        for (final reference
+            in entry.value.expand((key) => assignmentReferences(farm[key]))) {
+          final assignedUser = _userByReference(reference);
+          if (assignedUser == null) continue;
+          final identity = _docId(assignedUser).isNotEmpty
+              ? _docId(assignedUser)
+              : _value(assignedUser, ['email', 'name']);
+          if (seen.add(assignmentToken(identity))) {
+            rows.add(_teamRow(
+                farm: farm, role: entry.key, userReference: reference));
+          }
         }
-      });
+      }
     }
     _teamMembers
       ..clear()
@@ -378,21 +380,18 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildPageHeader(isDark, isMobile),
-        Transform.translate(
-          offset: Offset(0, isMobile ? -50 : 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: isMobile ? 0 : 24),
-              _buildStatsRow(isDark, isMobile),
-              SizedBox(height: isMobile ? 16 : 24),
-              _buildRoleQuickFilters(isDark),
-              SizedBox(height: isMobile ? 12 : 16),
-              _buildFilters(isDark),
-              SizedBox(height: isMobile ? 16 : 24),
-              _buildTeamSection(isDark, isMobile),
-            ],
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: isMobile ? 12 : 24),
+            _buildStatsRow(isDark, isMobile),
+            SizedBox(height: isMobile ? 16 : 24),
+            _buildRoleQuickFilters(isDark),
+            SizedBox(height: isMobile ? 12 : 16),
+            _buildFilters(isDark),
+            SizedBox(height: isMobile ? 16 : 24),
+            _buildTeamSection(isDark, isMobile),
+          ],
         ),
       ],
     );
@@ -477,15 +476,17 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
       },
     ];
 
-    return GridView.count(
-      crossAxisCount: isMobile ? 2 : 4,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: isMobile ? 2.0 : 2.6,
-      children: stats.map((s) => _buildStatCard(s, isDark, isMobile)).toList(),
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final columns = constraints.maxWidth >= 900 ? 4 : 2;
+      final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
+      return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: stats
+              .map((stat) => SizedBox(
+                  width: width, child: _buildStatCard(stat, isDark, isMobile)))
+              .toList());
+    });
   }
 
   Widget _buildStatCard(Map<String, dynamic> stat, bool isDark, bool isMobile) {
@@ -544,7 +545,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
 
   Widget _buildFilters(bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: EdgeInsets.all(MediaQuery.sizeOf(context).width < 600 ? 16 : 24),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -810,14 +811,15 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                     child: Icon(icon, size: 18, color: color),
                   ),
                   const SizedBox(width: 10),
-                  Text(
+                  Expanded(
+                      child: Text(
                     title,
                     style: AppTypography.titleSmall.copyWith(
                       fontSize: isMobile ? 15 : 17,
                       fontWeight: FontWeight.w700,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
-                  ),
+                  )),
                   const SizedBox(width: 8),
                   Container(
                     padding:
@@ -839,23 +841,26 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
               ),
             ),
             if (isMobile)
-              Transform.translate(
-                offset: const Offset(0, -60),
-                child: members.isEmpty
-                    ? _buildEmptyState(isDark)
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: members.length,
-                        separatorBuilder: (_, __) => Divider(
-                            height: 1,
-                            color: isDark
-                                ? Colors.white.withOpacity(0.06)
-                                : AppColors.neutral200),
-                        itemBuilder: (_, i) =>
-                            _buildMemberCard(members[i], isDark, isMobile),
+              members.isEmpty
+                  ? _buildEmptyState(isDark)
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: members.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (_, i) => Material(
+                        color: isDark ? AppColors.surfaceDark : Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                              color: isDark
+                                  ? Colors.white10
+                                  : AppColors.neutral200),
+                        ),
+                        child: _buildMemberCard(members[i], isDark, isMobile),
                       ),
-              )
+                    )
             else if (members.isEmpty)
               _buildEmptyState(isDark)
             else ...[
@@ -864,6 +869,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                 child: _buildTableHeader(isDark),
               ),
               ListView.builder(
+                padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: members.length,
