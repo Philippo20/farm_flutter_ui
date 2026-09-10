@@ -32,6 +32,53 @@ class AuthService {
   String? _dashboardRoute;
   String? _jwt;
   String? _sessionId;
+  DateTime? lastActivity;
+  int sessionTimeoutMinutes = 30;
+  int sessionWarningMinutes = 5;
+
+  Future<void> recordSessionActivity(DateTime time) async {
+    lastActivity = time;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('session_last_activity', time.toIso8601String());
+  }
+
+  Future<void> refreshSession() async {
+    final token = _jwt;
+    final session = _sessionId;
+    if (token == null) throw const SessionExpiredException();
+    try {
+      final claims = jsonDecode(utf8.decode(base64Url.decode(
+        base64Url.normalize(token.split('.')[1]),
+      ))) as Map<String, dynamic>;
+      final expires = (claims['exp'] as num).toInt();
+      if (DateTime.now().millisecondsSinceEpoch >= expires * 1000) {
+        throw const SessionExpiredException();
+      }
+    } catch (_) {
+      throw const SessionExpiredException();
+    }
+    final response = await http.post(Uri.parse('$_apiBaseUrl/account/session'),
+        headers: {
+          'Authorization': 'Bearer $token'
+        }).timeout(const Duration(seconds: 10));
+    if (session != _sessionId || token != _jwt) {
+      throw StateError('The signed-in session changed.');
+    }
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      throw const SessionExpiredException();
+    }
+    if (response.statusCode != 200)
+      throw Exception('Unable to verify your session. Try again.');
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    _jwt = data['jwt'] as String;
+    sessionTimeoutMinutes = (data['session_timeout'] as num).toInt();
+    sessionWarningMinutes =
+        (data['session_idle_warning_minutes'] as num).toInt();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyJwt, _jwt!);
+    await prefs.setInt('session_timeout_cached', sessionTimeoutMinutes);
+    await prefs.setInt('session_warning_cached', sessionWarningMinutes);
+  }
 
   UserModel? _currentUser;
 
@@ -39,6 +86,7 @@ class AuthService {
   UserModel? get currentUser => _currentUser;
 
   String? get jwt => _jwt;
+  String? get sessionId => _sessionId;
 
   /// Check if user is logged in
   bool get isLoggedIn => _currentUser != null;
@@ -67,7 +115,7 @@ class AuthService {
       address: address,
       updatedAt: DateTime.now(),
     );
-    await _saveSession();
+    await _saveSession(newLogin: false);
     return _currentUser;
   }
 
@@ -85,6 +133,12 @@ class AuthService {
         final userRole = prefs.getString(_keyUserRole);
         _jwt = prefs.getString(_keyJwt);
         _sessionId = prefs.getString(_keySessionId);
+        lastActivity = DateTime.tryParse(
+            prefs.getString('session_last_activity') ??
+                prefs.getString(_keyLoginTime) ??
+                '');
+        sessionTimeoutMinutes = prefs.getInt('session_timeout_cached') ?? 30;
+        sessionWarningMinutes = prefs.getInt('session_warning_cached') ?? 5;
 
         if (userId != null &&
             userName != null &&
@@ -311,6 +365,15 @@ class AuthService {
         await _logActivity('User logged out', _currentUser!);
       }
 
+      final token = _jwt;
+      if (token != null) {
+        unawaited(http
+            .post(Uri.parse('$_apiBaseUrl/logout'), headers: {
+              'Authorization': 'Bearer $token',
+            })
+            .timeout(const Duration(seconds: 5))
+            .then<void>((_) {}, onError: (_) {}));
+      }
       // Clear session
       await _clearSession();
 
@@ -324,7 +387,7 @@ class AuthService {
   }
 
   /// Save user session to SharedPreferences
-  Future<void> _saveSession() async {
+  Future<void> _saveSession({bool newLogin = true}) async {
     if (_currentUser == null) return;
 
     try {
@@ -334,7 +397,10 @@ class AuthService {
       await prefs.setString(_keyUserName, _currentUser!.name);
       await prefs.setString(_keyUserEmail, _currentUser!.email);
       await prefs.setString(_keyUserRole, _currentUser!.role.name);
-      await prefs.setString(_keyLoginTime, DateTime.now().toIso8601String());
+      if (newLogin) {
+        await recordSessionActivity(DateTime.now());
+        await prefs.setString(_keyLoginTime, lastActivity!.toIso8601String());
+      }
       if (_jwt != null) {
         await prefs.setString(_keyJwt, _jwt!);
       }
@@ -358,6 +424,7 @@ class AuthService {
       await prefs.remove(_keyLoginTime);
       await prefs.remove(_keyJwt);
       await prefs.remove(_keySessionId);
+      await prefs.remove('session_last_activity');
     } catch (e) {
       print('Error clearing session: $e');
     }
@@ -523,30 +590,15 @@ class AuthService {
     }
   }
 
-  /// Validate session (check if session is still valid)
   Future<bool> validateSession() async {
+    if (!isLoggedIn ||
+        lastActivity == null ||
+        DateTime.now().difference(lastActivity!) >=
+            Duration(minutes: sessionTimeoutMinutes)) return false;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final isLoggedIn = prefs.getBool(_keyIsLoggedIn) ?? false;
-      final loginTimeStr = prefs.getString(_keyLoginTime);
-
-      if (!isLoggedIn || loginTimeStr == null) {
-        return false;
-      }
-
-      final loginTime = DateTime.parse(loginTimeStr);
-      final now = DateTime.now();
-      final difference = now.difference(loginTime);
-
-      // Session expires after 24 hours
-      if (difference.inHours > 24) {
-        await logout();
-        return false;
-      }
-
+      await refreshSession();
       return true;
-    } catch (e) {
-      print('Error validating session: $e');
+    } catch (_) {
       return false;
     }
   }
@@ -593,4 +645,8 @@ enum Permission {
   managePlantTypes,
   managePackaging,
   managePricing,
+}
+
+class SessionExpiredException implements Exception {
+  const SessionExpiredException();
 }
