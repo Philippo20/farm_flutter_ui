@@ -675,7 +675,8 @@ class _MaintenanceScheduleScreenState
                       icon: stat['icon'] as IconData,
                       color: stat['color'] as Color))
                   .toList(),
-              minimumWidth: 125),
+              minimumWidth: 125,
+              columnCount: isMobile ? 2 : null),
         ],
       ),
     );
@@ -997,9 +998,10 @@ class _MaintenanceScheduleScreenState
                 minimumWidth: 350));
   }
 
-  Widget _responsiveCards(List<Widget> cards, {double minimumWidth = 170}) =>
+  Widget _responsiveCards(List<Widget> cards,
+          {double minimumWidth = 170, int? columnCount}) =>
       LayoutBuilder(builder: (context, constraints) {
-        final columns =
+        final columns = columnCount ??
             (constraints.maxWidth / minimumWidth).floor().clamp(1, 4);
         final rows = (cards.length / columns).ceil();
         return Column(children: [

@@ -1,3 +1,4 @@
+import 'core/widgets/api_connection_host.dart';
 import 'core/widgets/session_security_host.dart';
 import 'package:farmestates_ai_dashbaord/screens/farm_manager/batch_generation_screen.dart';
 import 'package:farmestates_ai_dashbaord/screens/farm_manager/delivery_management_screen.dart';
@@ -151,7 +152,8 @@ class MyApp extends ConsumerWidget {
           ),
           child: SessionSecurityHost(
               child: MessageNotificationHost(
-                  child: child ?? const SizedBox.shrink())),
+                  child: ApiConnectionHost(
+                      child: child ?? const SizedBox.shrink()))),
         );
       },
       onGenerateRoute: (settings) {

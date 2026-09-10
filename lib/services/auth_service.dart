@@ -1,3 +1,4 @@
+import 'api_connection.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -13,7 +14,7 @@ class AuthService {
   AuthService.forTesting(http.Client client) : _client = client;
   final http.Client _client;
   factory AuthService() => _instance;
-  AuthService._internal() : _client = http.Client();
+  AuthService._internal() : _client = ConnectedApiClient();
 
   // Session keys
   static const String _keyUserId = 'user_id';
@@ -157,7 +158,7 @@ class AuthService {
         AuthResult(
             success: false,
             message:
-                'Unable to reach the sign-in service. Check your connection and try again.');
+                connectionMessage);
   }
 
   Future<AuthResult?> _loginWithApi(String email, String password) async {

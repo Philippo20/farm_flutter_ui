@@ -1,3 +1,4 @@
+import 'api_connection.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -6,7 +7,7 @@ import 'package:http/http.dart' as http;
 
 class SuperAdminApiService {
   SuperAdminApiService({http.Client? client})
-      : _client = client ?? http.Client();
+      : _client = client ?? ConnectedApiClient();
 
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
@@ -1308,7 +1309,7 @@ class SuperAdminApiService {
         ),
       );
 
-    final streamed = await request.send().withApiTimeout();
+    final streamed = await _client.send(request).withApiTimeout();
     final response = await http.Response.fromStream(streamed);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw SuperAdminApiException(
@@ -1924,7 +1925,7 @@ class SuperAdminApiService {
         ),
       );
 
-    final streamed = await request.send().withApiTimeout();
+    final streamed = await _client.send(request).withApiTimeout();
     final response = await http.Response.fromStream(streamed);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw SuperAdminApiException(
@@ -1997,7 +1998,7 @@ class SuperAdminApiService {
       );
     }
 
-    final streamed = await request.send().withApiTimeout();
+    final streamed = await _client.send(request).withApiTimeout();
     final response = await http.Response.fromStream(streamed);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw SuperAdminApiException(
@@ -2465,14 +2466,15 @@ class SuperAdminApiException implements Exception {
 extension _ApiFuture<T> on Future<T> {
   Future<T> withApiTimeout() async {
     try {
-      return await timeout(const Duration(seconds: 8));
+      // The shared client bounds each attempt; recovery may wait for the user.
+      return await this;
     } on TimeoutException {
       throw const SuperAdminApiException(
-        'The service is temporarily unavailable. Check the API and database connection, then retry.',
+        connectionMessage,
       );
     } on http.ClientException {
       throw const SuperAdminApiException(
-        'Could not connect to the service. Check your network and API server, then retry.',
+        connectionMessage,
       );
     }
   }

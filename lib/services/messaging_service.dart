@@ -1,3 +1,4 @@
+import 'api_connection.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'auth_service.dart';
@@ -6,7 +7,7 @@ import 'superadmin_api_service.dart';
 class MessagingService {
   MessagingService(
       {http.Client? client, String? baseUrl, String? Function()? token})
-      : _client = client ?? http.Client(),
+      : _client = client ?? ConnectedApiClient(),
         _baseUrl = baseUrl ?? SuperAdminApiService.baseUrl,
         _token = token ?? (() => AuthService().jwt);
   final http.Client _client;
@@ -24,9 +25,8 @@ class MessagingService {
         'Content-Type': 'application/json'
       });
     if (data != null) request.body = jsonEncode(data);
-    final response = await http.Response.fromStream(
-            await _client.send(request).timeout(const Duration(seconds: 20)))
-        .timeout(const Duration(seconds: 20));
+    final response =
+        await http.Response.fromStream(await _client.send(request));
     dynamic body;
     try {
       body = jsonDecode(response.body);
