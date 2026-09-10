@@ -1,3 +1,4 @@
+import '../../core/widgets/audit_log_card.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -859,7 +860,9 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                   color: isSelected
                       ? AppColors.primary
                       : (isDark ? Colors.white70 : AppColors.textSecondary),
-                  fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
+                  fontWeight: isSelected
+                      ? AppTypography.headingWeight
+                      : AppTypography.labelWeight,
                 ),
               );
             }).toList(),
@@ -912,238 +915,41 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           const SizedBox(height: AppSpacing.md),
           if (filteredLogs.isEmpty)
             _buildEmptyState(isDark)
-          else if (isMobile)
-            ...filteredLogs.map((log) => _buildMobileLogCard(log, isDark))
           else
-            _buildLogTable(filteredLogs, isDark),
+            _buildLogCards(filteredLogs, isDark),
         ],
       ),
     );
   }
 
-  Widget _buildLogTable(List<_AuditLog> logs, bool isDark) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.04)
-                : AppColors.neutral50,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          ),
-          child: Row(
-            children: [
-              _buildTableHeader('Event', flex: 3, isDark: isDark),
-              _buildTableHeader('Scope', flex: 2, isDark: isDark),
-              _buildTableHeader('User', flex: 2, isDark: isDark),
-              _buildTableHeader('Severity', isDark: isDark),
-              _buildTableHeader('Time', isDark: isDark),
-              const SizedBox(width: 48),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        ...logs.map((log) => _buildLogRow(log, isDark)),
-      ],
-    );
-  }
-
-  Widget _buildLogRow(_AuditLog log, bool isDark) {
-    final category = _categoryStyle(log.category);
-    final severity = _severityStyle(log.severity);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color:
-            isDark ? Colors.white.withValues(alpha: 0.03) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.04),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: category.color.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(category.icon, color: category.color, size: 18),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        log.action,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: AppTypography.labelWeight,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '${log.id} | ${log.module} | ${log.ip}',
-                        style: AppTypography.bodySmall.copyWith(
-                          color:
-                              isDark ? Colors.white60 : AppColors.textSecondary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              log.farm,
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: AppTypography.labelWeight,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              log.user,
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: AppTypography.labelWeight,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Expanded(child: _buildPill(log.severity, severity.color)),
-          Expanded(
-            child: Text(
-              log.timestamp,
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark ? Colors.white60 : AppColors.textSecondary,
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 48,
-            child: IconButton(
-              onPressed: () => _showLogDetails(context, log, isDark),
-              icon: const Icon(Icons.visibility_outlined, size: 18),
-              color: AppColors.primary,
-              tooltip: 'View details',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMobileLogCard(_AuditLog log, bool isDark) {
-    final category = _categoryStyle(log.category);
-    final severity = _severityStyle(log.severity);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color:
-            isDark ? Colors.white.withValues(alpha: 0.03) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: category.color.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(category.icon, color: category.color, size: 18),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      log.action,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: AppTypography.labelWeight,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      '${log.farm} | ${log.module}',
-                      style: AppTypography.bodySmall.copyWith(
-                        color:
-                            isDark ? Colors.white60 : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              _buildPill(log.category, category.color),
-              _buildPill(log.severity, severity.color),
-              _buildPill(log.user, AppColors.primary),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${log.id} | ${log.timestamp}',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: isDark ? Colors.white54 : AppColors.textSecondary,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () => _showLogDetails(context, log, isDark),
-                icon: const Icon(Icons.visibility_outlined, size: 18),
-                color: AppColors.primary,
-                tooltip: 'View details',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildLogCards(List<_AuditLog> logs, bool isDark) =>
+      LayoutBuilder(builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 900 ? 2 : 1;
+        final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
+        return Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: logs.map((log) {
+              final category = _categoryStyle(log.category);
+              final severity = _severityStyle(log.severity);
+              return SizedBox(
+                  width: width,
+                  child: AuditLogCard(
+                    action: log.action,
+                    category: log.category,
+                    severity: log.severity,
+                    user: log.user,
+                    farm: log.farm,
+                    module: log.module,
+                    timestamp: log.timestamp,
+                    id: log.id,
+                    icon: category.icon,
+                    categoryColor: category.color,
+                    severityColor: severity.color,
+                    onDetails: () => _showLogDetails(context, log, isDark),
+                  ));
+            }).toList());
+      });
 
   Widget _buildSearchField(bool isDark) {
     return TextField(
@@ -1369,24 +1175,6 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTableHeader(
-    String label, {
-    int flex = 1,
-    required bool isDark,
-  }) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        label,
-        style: AppTypography.bodySmall.copyWith(
-          color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: AppTypography.labelWeight,
-          letterSpacing: 0.2,
         ),
       ),
     );
@@ -1841,7 +1629,9 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               format,
               style: TextStyle(
                 fontSize: AppTypography.captionSize,
-                fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
+                fontWeight: isSelected
+                    ? AppTypography.headingWeight
+                    : AppTypography.bodyWeight,
                 color: isSelected
                     ? AppColors.primary
                     : (isDark ? Colors.white : AppColors.textPrimary),
