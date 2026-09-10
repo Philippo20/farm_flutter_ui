@@ -141,7 +141,7 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
               AppSpacing.md,
               AppSpacing.md,
               AppSpacing.md,
-              100,
+              16,
             ),
             child: _buildContent(isDark, true),
           ),
@@ -159,13 +159,13 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeaderCard(isDark, isMobile),
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: 16),
         _buildFilterChips(isDark),
         const SizedBox(height: AppSpacing.md),
-        ...filteredRepairs.map((repair) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: _buildRepairCard(repair, isDark, isMobile),
-            )),
+        for (var i = 0; i < filteredRepairs.length; i++) ...[
+          if (i > 0) const SizedBox(height: 16),
+          _buildRepairCard(filteredRepairs[i], isDark, isMobile),
+        ],
       ],
     );
   }

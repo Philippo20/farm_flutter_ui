@@ -1,3 +1,7 @@
+import '../../core/utils/sensor_connection.dart';
+import '../../core/utils/sensor_calibration_policy.dart';
+import '../../core/widgets/sensor_inspect_modal.dart';
+import '../../core/widgets/sensor_overview_card.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'dart:async';
 
@@ -10,7 +14,6 @@ import '../../core/widgets/technician_header.dart';
 import '../../core/widgets/technician_mobile_bottom_nav.dart';
 import '../../core/widgets/technician_sidebar.dart';
 import '../../core/widgets/role_mobile_navigation.dart';
-import 'package:intl/intl.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/widgets/skeleton_loader.dart';
 import '../../services/superadmin_api_service.dart';
@@ -31,9 +34,15 @@ class _SensorManagementScreenState
   String _selectedType = 'All';
   String _selectedStatus = 'All';
   String _searchQuery = '';
+  int _searchReset = 0;
   String _selectedFarmId = 'All';
   final SuperAdminApiService _api = SuperAdminApiService();
   Timer? _refreshTimer;
+  Timer? _connectionTimer;
+  bool _fetching = false;
+  DateTime? _contextUpdated;
+  List<Map<String, dynamic>> _cachedFarms = [];
+  List<Map<String, dynamic>> _cachedUsers = [];
   bool _isLoading = true;
   String? _errorMessage;
   List<Map<String, dynamic>> _backendSensors = [];
@@ -43,9 +52,12 @@ class _SensorManagementScreenState
   @override
   void initState() {
     super.initState();
+    _connectionTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
     _loadSensorData();
     _refreshTimer = Timer.periodic(
-      const Duration(seconds: 30),
+      const Duration(seconds: 2),
       (_) => _loadSensorData(silent: true),
     );
   }
@@ -53,18 +65,29 @@ class _SensorManagementScreenState
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _connectionTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _loadSensorData({bool silent = false}) async {
+    if (_fetching) return;
+    _fetching = true;
     if (!silent && mounted) setState(() => _isLoading = true);
     try {
+      final refreshContext = !silent ||
+          _contextUpdated == null ||
+          DateTime.now().difference(_contextUpdated!).inSeconds >= 30;
       final results = await Future.wait([
         _api.getSensors(),
-        _api.getFarms(),
-        _api.getUsers(),
+        refreshContext ? _api.getFarms() : Future.value(_cachedFarms),
+        refreshContext ? _api.getUsers() : Future.value(_cachedUsers),
       ]);
       if (!mounted) return;
+      if (refreshContext) {
+        _cachedFarms = results[1];
+        _cachedUsers = results[2];
+        _contextUpdated = DateTime.now();
+      }
       final user = ref.read(currentUserProvider);
       Map<String, dynamic>? userRecord;
       for (final item in results[2]) {
@@ -106,6 +129,8 @@ class _SensorManagementScreenState
         _isLoading = false;
         _errorMessage = error.toString();
       });
+    } finally {
+      _fetching = false;
     }
   }
 
@@ -122,14 +147,16 @@ class _SensorManagementScreenState
   List<Map<String, dynamic>> _mappedSensors() {
     return _backendSensors.map((sensor) {
       final status = _value(sensor, ['status'], 'offline').toLowerCase();
-      final normalizedStatus =
-          status == 'online' || status == 'active' || status == 'operational'
+      final connection = SensorConnection(sensor);
+      final normalizedStatus = connection.state != 'online'
+          ? connection.state
+          : status == 'online' || status == 'active' || status == 'operational'
               ? 'normal'
-              : status == 'warning'
+              : (status == 'warning' || status == 'maintenance')
                   ? 'warning'
-                  : status == 'alert'
+                  : (status == 'alert' || status == 'faulty')
                       ? 'alert'
-                      : 'offline';
+                      : 'normal';
       final type = _value(sensor,
               ['sensor_type', 'sensortype', 'type', 'category'], 'sensor')
           .toLowerCase();
@@ -145,9 +172,8 @@ class _SensorManagementScreenState
       final farmName = farm == null
           ? _value(sensor, ['farm_name'], 'Assigned farm')
           : _value(farm, ['name', 'farm_name'], 'Assigned farm');
-      final last = DateTime.tryParse(
-              _value(sensor, ['last_seen_at', 'updated_at', r'$updatedAt'])) ??
-          DateTime.now();
+      final last =
+          DateTime.tryParse(_value(sensor, ['timestamp', 'last_seen_at']));
       final color = normalizedStatus == 'normal'
           ? AppColors.success
           : normalizedStatus == 'warning'
@@ -158,10 +184,17 @@ class _SensorManagementScreenState
       return {
         'id': _value(
             sensor, ['serial_number', 'serialNumber', 'id', r'$id'], 'Sensor'),
+        'serialNumber': _value(sensor, ['serial_number', 'serialNumber']),
+        'calibration_required': sensorRequiresCalibration(sensor),
         'name':
             _value(sensor, ['name', 'sensor_name', 'serial_number'], 'Sensor'),
         'type': type,
         'status': normalizedStatus,
+        'reported_status': status,
+        'timestamp': sensor['timestamp'] ?? sensor['last_seen_at'],
+        'offline_timeout_seconds': sensor['offline_timeout_seconds'],
+        'connection': connection.state,
+        'connection_reason': connection.reason,
         'color': color,
         'icon': Icons.sensors,
         'value': value,
@@ -169,10 +202,16 @@ class _SensorManagementScreenState
         'location': farmName,
         'farmId': farmId,
         'farmName': farmName,
+        'range_min': sensor['range_min'],
+        'range_max': sensor['range_max'],
+        'warning_min': sensor['warning_min'],
+        'warning_max': sensor['warning_max'],
         'lastReading': last,
-        'lastCalibrated': DateTime.tryParse(
-                _value(sensor, ['last_maintenance_date', 'created_at'])) ??
-            last,
+        'lastCalibrated': DateTime.tryParse(_value(sensor, [
+          'last_calibrated_at',
+          'last_calibration_date',
+          'last_maintenance_date'
+        ])),
       };
     }).toList();
   }
@@ -456,7 +495,7 @@ class _SensorManagementScreenState
                       ),
                       Flexible(
                         child: Text(
-                          '${sensors.where((s) => s['status'] == 'normal').length} Active',
+                          '${sensors.where((s) => s['connection'] == 'online').length} Online',
                           style: AppTypography.bodyMedium.copyWith(
                             color: AppColors.success,
                             fontWeight: FontWeight.w600,
@@ -507,26 +546,39 @@ class _SensorManagementScreenState
                     isMobile ? AppSpacing.md : AppSpacing.lg,
                     isMobile ? AppSpacing.md : AppSpacing.lg,
                   ),
-                  sliver: SliverGrid(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: isMobile ? 1 : (isTablet ? 2 : 3),
-                      mainAxisExtent: isMobile ? 330 : (isTablet ? 368 : 356),
-                      crossAxisSpacing:
-                          isMobile ? AppSpacing.sm : AppSpacing.md,
-                      mainAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        return _buildSensorCard(
-                          filteredSensors[index],
-                          isDark,
-                          isMobile: isMobile,
-                          isTablet: isTablet,
-                        );
-                      },
-                      childCount: filteredSensors.length,
-                    ),
-                  ),
+                  sliver: SliverLayoutBuilder(builder: (context, constraints) {
+                    final columns = constraints.crossAxisExtent < 620
+                        ? 1
+                        : constraints.crossAxisExtent < 1020
+                            ? 2
+                            : 3;
+                    final rows = (filteredSensors.length / columns).ceil();
+                    return SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                            (context, row) => Padding(
+                                padding: EdgeInsets.only(
+                                    bottom: row == rows - 1 ? 0 : 12),
+                                child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      for (var column = 0;
+                                          column < columns;
+                                          column++) ...[
+                                        if (column > 0)
+                                          const SizedBox(width: 12),
+                                        Expanded(
+                                            child: row * columns + column <
+                                                    filteredSensors.length
+                                                ? _buildSensorCard(
+                                                    filteredSensors[
+                                                        row * columns + column],
+                                                    isDark)
+                                                : const SizedBox()),
+                                      ],
+                                    ])),
+                            childCount: rows));
+                  }),
                 ),
             ],
           ),
@@ -536,768 +588,110 @@ class _SensorManagementScreenState
   }
 
   Widget _buildFilterPanel(bool isDark, bool isMobile) {
-    final searchTextStyle = TextStyle(
-      color: isDark ? Colors.white : AppColors.textPrimary,
-      fontSize: isMobile ? 13 : 14,
-    );
-
-    final activeFilterCount = [
-      if (_selectedType != 'All') _selectedType,
-      if (_selectedStatus != 'All') _selectedStatus,
-      if (_selectedFarmId != 'All') _selectedFarmId,
-      if (_searchQuery.trim().isNotEmpty) 'Search',
-    ].length;
-
-    return Container(
-      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.16 : 0.05),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
+    final active = _selectedType != 'All' ||
+        _selectedStatus != 'All' ||
+        _selectedFarmId != 'All' ||
+        _searchQuery.isNotEmpty;
+    Widget farm() => _buildFilterDropdown(
+        'Farm',
+        _selectedFarmId,
+        [
+          'All',
+          ..._farms
+              .map((farm) => _value(farm, ['id', r'$id']))
+              .where((id) => id.isNotEmpty)
+              .toSet()
         ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Filter Sensors',
-                      style: AppTypography.bodyLarge.copyWith(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Refine the sensor list by name, device type, or operating status.',
-                      style: AppTypography.bodySmall.copyWith(
-                        color:
-                            isDark ? Colors.white70 : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (activeFilterCount > 0)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(isDark ? 0.18 : 0.10),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                  child: Text(
-                    '$activeFilterCount active',
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
-          Text(
-            'Search',
-            style: AppTypography.bodySmall.copyWith(
-              color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          TextField(
-            onChanged: (value) => setState(() => _searchQuery = value),
-            style: searchTextStyle,
-            decoration: InputDecoration(
-              hintText: 'Search sensors by name',
-              hintStyle: TextStyle(
-                color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontSize: isMobile ? 13 : 14,
-              ),
-              prefixIcon: Icon(
-                Icons.search,
-                color: isDark ? Colors.white60 : AppColors.textSecondary,
-              ),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      onPressed: () => setState(() => _searchQuery = ''),
-                      icon: Icon(
-                        Icons.close_rounded,
-                        color:
-                            isDark ? Colors.white60 : AppColors.textSecondary,
-                        size: 18,
-                      ),
-                    )
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: BorderSide(
-                  color: isDark ? Colors.white10 : AppColors.neutral200,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: BorderSide(
-                  color: isDark ? Colors.white10 : AppColors.neutral200,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                borderSide: BorderSide(
-                  color: AppColors.primary.withOpacity(0.55),
-                  width: 1.2,
-                ),
-              ),
-              filled: true,
-              fillColor:
-                  isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: isMobile ? 14 : 16,
-              ),
-            ),
-          ),
-          SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
-          isMobile
-              ? Column(
-                  children: [
-                    _buildFilterDropdown(
-                      'Farm',
-                      _selectedFarmId,
-                      [
-                        'All',
-                        ..._farms
-                            .map((farm) => _value(farm, ['id', r'$id']))
-                            .where((id) => id.isNotEmpty),
-                      ],
-                      (value) =>
-                          setState(() => _selectedFarmId = value ?? 'All'),
-                      isDark,
-                      isMobile: true,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildFilterDropdown(
-                      'Sensor Type',
-                      _selectedType,
-                      [
-                        'All',
-                        'temperature',
-                        'humidity',
-                        'ph',
-                        'ec',
-                        'tds',
-                        'co2',
-                        'distance'
-                      ],
-                      (value) => setState(() => _selectedType = value!),
-                      isDark,
-                      isMobile: true,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _buildFilterDropdown(
-                      'Status',
-                      _selectedStatus,
-                      ['All', 'normal', 'warning', 'alert', 'offline'],
-                      (value) => setState(() => _selectedStatus = value!),
-                      isDark,
-                      isMobile: true,
-                    ),
-                  ],
-                )
-              : Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: _buildFilterDropdown(
-                        'Farm',
-                        _selectedFarmId,
-                        [
-                          'All',
-                          ..._farms
-                              .map((farm) => _value(farm, ['id', r'$id']))
-                              .where((id) => id.isNotEmpty),
-                        ],
-                        (value) =>
-                            setState(() => _selectedFarmId = value ?? 'All'),
-                        isDark,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: _buildFilterDropdown(
-                        'Sensor Type',
-                        _selectedType,
-                        [
-                          'All',
-                          'temperature',
-                          'humidity',
-                          'ph',
-                          'ec',
-                          'tds',
-                          'co2',
-                          'distance'
-                        ],
-                        (value) => setState(() => _selectedType = value!),
-                        isDark,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: _buildFilterDropdown(
-                        'Status',
-                        _selectedStatus,
-                        ['All', 'normal', 'warning', 'alert', 'offline'],
-                        (value) => setState(() => _selectedStatus = value!),
-                        isDark,
-                      ),
-                    ),
-                  ],
-                ),
+        (value) => setState(() => _selectedFarmId = value ?? 'All'),
+        isDark,
+        isMobile: isMobile);
+    Widget type() => _buildFilterDropdown(
+        'Type',
+        _selectedType,
+        [
+          'All',
+          'temperature',
+          'humidity',
+          'ph',
+          'ec',
+          'tds',
+          'co2',
+          'distance'
         ],
-      ),
-    );
-  }
-
-  Widget _buildSensorCard(Map<String, dynamic> sensor, bool isDark,
-      {bool isMobile = false, bool isTablet = false}) {
-    final color = sensor['color'] as Color;
-    final status = sensor['status'] as String;
-    final statusColor = _sensorStatusColor(status);
-    final lastCalibrated = sensor['lastCalibrated'] as DateTime;
-    final daysSinceCalibration =
-        DateTime.now().difference(lastCalibrated).inDays;
-    final verticalGap = isMobile ? 6.0 : AppSpacing.sm;
-    final sectionGap = isMobile ? 8.0 : AppSpacing.md;
-
-    return Card(
-      elevation: 0,
-      color: isDark ? AppColors.surfaceDark : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        side: BorderSide(
-          color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
-        ),
-      ),
-      child: InkWell(
-        onTap: () => _showSensorDetails(sensor, isDark),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        child: Padding(
-          padding: EdgeInsets.all(isMobile ? 9 : (isTablet ? 10 : 12)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: isMobile ? 38 : 48,
-                    height: isMobile ? 38 : 48,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          color.withOpacity(isDark ? 0.34 : 0.22),
-                          color.withOpacity(isDark ? 0.14 : 0.08),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      border: Border.all(
-                        color: color.withOpacity(isDark ? 0.35 : 0.18),
-                      ),
-                    ),
-                    child: Icon(
-                      sensor['icon'] as IconData,
-                      color: color,
-                      size: isMobile ? 18 : 22,
-                    ),
-                  ),
-                  SizedBox(width: isMobile ? 10 : AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          sensor['name'],
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            fontSize: isMobile ? 12 : 14,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: isMobile ? 3 : 4),
-                        if (isMobile)
-                          Row(
-                            children: [
-                              _buildMetaChip(
-                                sensor['id'] as String,
-                                isDark,
-                                isMobile: true,
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  _formatSensorType(sensor['type'] as String),
-                                  style: AppTypography.caption.copyWith(
-                                    color: isDark
-                                        ? Colors.white60
-                                        : AppColors.textSecondary,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          )
-                        else
-                          Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: [
-                              _buildMetaChip(
-                                sensor['id'] as String,
-                                isDark,
-                                isMobile: isMobile,
-                              ),
-                              _buildMetaChip(
-                                _formatSensorType(sensor['type'] as String),
-                                isDark,
-                                isMobile: isMobile,
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ),
-                  _buildStatusBadge(status, isDark,
-                      isMobile: isMobile, isTablet: isTablet),
-                ],
-              ),
-              SizedBox(height: sectionGap),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(isMobile ? 9 : 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isDark
-                        ? [
-                            color.withOpacity(0.20),
-                            AppColors.backgroundDark,
-                          ]
-                        : [
-                            color.withOpacity(0.10),
-                            Colors.white,
-                          ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(
-                    color: color.withOpacity(isDark ? 0.28 : 0.16),
-                  ),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: statusColor,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: statusColor.withOpacity(0.45),
-                                      blurRadius: 8,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Current reading',
-                                style: AppTypography.caption.copyWith(
-                                  color: isDark
-                                      ? Colors.white70
-                                      : AppColors.textSecondary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: isMobile ? 9 : 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: verticalGap - 2),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  '${sensor['value']}',
-                                  style: AppTypography.h4.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: color,
-                                    fontSize:
-                                        isMobile ? 20 : (isTablet ? 24 : 26),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 4),
-                                child: Text(
-                                  sensor['unit'],
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: color.withOpacity(0.82),
-                                    fontSize: isMobile ? 10 : 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!isMobile) ...[
-                      const SizedBox(width: AppSpacing.md),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isMobile ? 8 : 10,
-                          vertical: isMobile ? 6 : 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(isDark ? 0.16 : 0.03),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusMd),
-                        ),
-                        child: Text(
-                          'LIVE',
-                          style: AppTypography.caption.copyWith(
-                            color: statusColor,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.6,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              SizedBox(height: sectionGap),
-              Row(
-                children: [
-                  Icon(
-                    Icons.location_on_outlined,
-                    size: isMobile ? 11 : 14,
-                    color: isDark ? Colors.white60 : AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      sensor['location'],
-                      style: AppTypography.bodySmall.copyWith(
-                        color:
-                            isDark ? Colors.white60 : AppColors.textSecondary,
-                        fontSize: isMobile ? 9 : 11,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: sectionGap),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTelemetryTile(
-                      'Calibrated',
-                      '${daysSinceCalibration}d',
-                      Icons.tune_rounded,
-                      daysSinceCalibration < 14
-                          ? AppColors.success
-                          : daysSinceCalibration < 21
-                              ? AppColors.warning
-                              : AppColors.error,
-                      isDark,
-                      isMobile: isMobile,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: sectionGap),
-              Container(
-                padding: EdgeInsets.only(top: isMobile ? 6 : AppSpacing.sm),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: isDark
-                          ? Colors.white10
-                          : Colors.black.withOpacity(0.06),
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    if (isMobile) ...[
-                      Expanded(
-                        child: FilledButton.tonalIcon(
-                          onPressed: () => _showSensorDetails(sensor, isDark),
-                          icon: const Icon(Icons.memory_rounded, size: 14),
-                          label: const Text(
-                            'Inspect',
-                            style: TextStyle(fontSize: 11),
-                          ),
-                          style: FilledButton.styleFrom(
-                            foregroundColor:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            backgroundColor: isDark
-                                ? Colors.white.withOpacity(0.08)
-                                : AppColors.neutral100,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 7,
-                              horizontal: AppSpacing.xs,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      SizedBox(
-                        width: 42,
-                        height: 36,
-                        child: OutlinedButton(
-                          onPressed: () => _calibrateSensor(sensor),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: color,
-                            side: BorderSide(color: color.withOpacity(0.7)),
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd),
-                            ),
-                          ),
-                          child: const Icon(Icons.tune, size: 16),
-                        ),
-                      ),
-                    ] else ...[
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () => _calibrateSensor(sensor),
-                          icon: const Icon(Icons.tune, size: 16),
-                          label: const Text(
-                            'Calibrate',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: color,
-                            side: BorderSide(color: color.withOpacity(0.7)),
-                            padding: EdgeInsets.symmetric(
-                              vertical: isMobile ? 7 : 8,
-                              horizontal:
-                                  isMobile ? AppSpacing.xs : AppSpacing.sm,
-                            ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd),
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
-                      Expanded(
-                        child: FilledButton.tonalIcon(
-                          onPressed: () => _showSensorDetails(sensor, isDark),
-                          icon: Icon(Icons.memory_rounded,
-                              size: isMobile ? 14 : 16),
-                          label: Text(
-                            'Inspect',
-                            style: TextStyle(fontSize: isMobile ? 11 : 12),
-                          ),
-                          style: FilledButton.styleFrom(
-                            foregroundColor:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            backgroundColor: isDark
-                                ? Colors.white.withOpacity(0.08)
-                                : AppColors.neutral100,
-                            padding: EdgeInsets.symmetric(
-                              vertical: isMobile ? 7 : 8,
-                              horizontal:
-                                  isMobile ? AppSpacing.xs : AppSpacing.sm,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Color _sensorStatusColor(String status) {
-    switch (status) {
-      case 'normal':
-        return AppColors.success;
-      case 'warning':
-        return AppColors.warning;
-      case 'alert':
-        return AppColors.error;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _formatSensorType(String type) {
-    if (type.isEmpty) return type;
-    return '${type[0].toUpperCase()}${type.substring(1)}';
-  }
-
-  Widget _buildMetaChip(String text, bool isDark, {bool isMobile = false}) {
+        (value) => setState(() => _selectedType = value ?? 'All'),
+        isDark,
+        isMobile: isMobile);
+    Widget status() => _buildFilterDropdown(
+        'Status',
+        _selectedStatus,
+        ['All', 'normal', 'warning', 'alert', 'offline', 'unknown'],
+        (value) => setState(() => _selectedStatus = value ?? 'All'),
+        isDark,
+        isMobile: isMobile);
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 7 : 9,
-        vertical: isMobile ? 3 : 4,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.06) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        border: Border.all(
-          color: isDark ? Colors.white10 : AppColors.neutral200,
-        ),
-      ),
-      child: Text(
-        text,
-        style: AppTypography.caption.copyWith(
-          color: isDark ? Colors.white70 : AppColors.textSecondary,
-          fontWeight: FontWeight.w600,
-          fontSize: isMobile ? 9 : 11,
-        ),
-      ),
-    );
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+            color: isDark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+                color: isDark ? Colors.white10 : AppColors.neutral200)),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          TextFormField(
+              key: ValueKey(_searchReset),
+              initialValue: _searchQuery,
+              onChanged: (value) => setState(() => _searchQuery = value),
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                  hintText: 'Search sensors',
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  filled: true,
+                  fillColor: isDark
+                      ? Colors.white.withValues(alpha: .04)
+                      : AppColors.neutral50,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none))),
+          const SizedBox(height: 12),
+          LayoutBuilder(builder: (context, constraints) {
+            if (constraints.maxWidth < 540)
+              return Column(children: [
+                farm(),
+                const SizedBox(height: 12),
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Expanded(child: type()),
+                  const SizedBox(width: 10),
+                  Expanded(child: status())
+                ])
+              ]);
+            return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(child: farm()),
+              const SizedBox(width: 10),
+              Expanded(child: type()),
+              const SizedBox(width: 10),
+              Expanded(child: status())
+            ]);
+          }),
+          if (active)
+            Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                    onPressed: () => setState(() {
+                          _selectedFarmId = 'All';
+                          _selectedType = 'All';
+                          _selectedStatus = 'All';
+                          _searchQuery = '';
+                          _searchReset++;
+                        }),
+                    icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                    label: const Text('Clear filters'))),
+        ]));
   }
 
-  Widget _buildStatusBadge(String status, bool isDark,
-      {bool isMobile = false, bool isTablet = false}) {
-    final color = _sensorStatusColor(status);
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 7 : (isTablet ? 8 : 9),
-        vertical: isMobile ? 3 : 4,
-      ),
-      decoration: BoxDecoration(
-        color: color.withOpacity(isDark ? 0.18 : 0.12),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: AppTypography.bodySmall.copyWith(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: isMobile ? 7 : 9,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-    );
-  }
-
-  Widget _buildTelemetryTile(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-    bool isDark, {
-    bool isMobile = false,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 7 : 10,
-        vertical: isMobile ? 5 : 8,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: isDark ? Colors.white10 : AppColors.neutral200,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: isMobile ? 11 : 14, color: color),
-          SizedBox(height: isMobile ? 3 : 5),
-          Text(
-            value,
-            style: AppTypography.bodyMedium.copyWith(
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-              fontSize: isMobile ? 10 : 12,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 1),
-          Text(
-            label,
-            style: AppTypography.caption.copyWith(
-              color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontSize: isMobile ? 9 : 11,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildSensorCard(Map<String, dynamic> sensor, bool isDark) =>
+      SensorOverviewCard(
+          sensor: sensor,
+          onInspect: () => _showSensorDetails(sensor, isDark),
+          onCalibrate: () => _calibrateSensor(sensor));
 
   Widget _buildFilterDropdown(
     String label,
@@ -1373,395 +767,23 @@ class _SensorManagementScreenState
     );
   }
 
-  void _showSensorDetails(Map<String, dynamic> sensor, bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-    final accent = sensor['color'] as Color? ?? Colors.teal;
-    final statusColor = _sensorStatusColor(sensor['status'] as String);
-    final lastCalibrated = sensor['lastCalibrated'] as DateTime;
-    final daysSinceCalibration =
-        DateTime.now().difference(lastCalibrated).inDays;
-    final isCalibrationDue = daysSinceCalibration >= 14;
-
-    showAppDialog(
+  Future<void> _showSensorDetails(
+      Map<String, dynamic> sensor, bool isDark) async {
+    final calibrate = await showAppDialog<bool>(
       context: context,
-      builder: (context) => AppDialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.surfaceDark : Colors.white,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              border: Border.all(
-                color: isDark ? Colors.white10 : AppColors.neutral200,
-              ),
-            ),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSensorModalHeader(
-                    sensor: sensor,
-                    accent: accent,
-                    statusColor: statusColor,
-                    isDark: isDark,
-                    isMobile: isMobile,
-                    isCalibrationDue: isCalibrationDue,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(
-                        isMobile ? AppSpacing.md : AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.04)
-                          : accent.withOpacity(0.06),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                      border: Border.all(
-                        color: accent.withOpacity(isDark ? 0.22 : 0.14),
-                      ),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: isMobile ? 44 : 52,
-                          height: isMobile ? 44 : 52,
-                          decoration: BoxDecoration(
-                            color: accent.withOpacity(isDark ? 0.22 : 0.12),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusMd),
-                          ),
-                          child: Icon(
-                            sensor['icon'] as IconData,
-                            color: accent,
-                            size: isMobile ? 22 : 26,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Current Reading',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: isDark
-                                      ? Colors.white70
-                                      : AppColors.textSecondary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                '${sensor['value']} ${sensor['unit']}',
-                                style: AppTypography.h4.copyWith(
-                                  color: isDark
-                                      ? Colors.white
-                                      : AppColors.textPrimary,
-                                  fontWeight: FontWeight.w700,
-                                  height: 1,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              Text(
-                                'Last calibrated ${DateFormat('MMM dd, yyyy').format(lastCalibrated)}',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: isDark
-                                      ? Colors.white70
-                                      : AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildSensorInfoGrid(
-                    isDark,
-                    [
-                      _SensorDetailField('Sensor ID', sensor['id'] as String),
-                      _SensorDetailField(
-                          'Type', _formatSensorType(sensor['type'] as String)),
-                      _SensorDetailField(
-                          'Location', sensor['location'] as String),
-                      _SensorDetailField(
-                          'Status', (sensor['status'] as String).toUpperCase()),
-                      _SensorDetailField(
-                          'Calibration Age', '$daysSinceCalibration days ago'),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.04)
-                          : AppColors.neutral50,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      border: Border.all(
-                        color: isDark ? Colors.white10 : AppColors.neutral200,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Technician Notes',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          _buildSensorRecommendation(
-                            status: sensor['status'] as String,
-                            isCalibrationDue: isCalibrationDue,
-                          ),
-                          style: AppTypography.bodySmall.copyWith(
-                            color: isDark
-                                ? Colors.white70
-                                : AppColors.textSecondary,
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.tonal(
-                          onPressed: () => Navigator.pop(context),
-                          style: FilledButton.styleFrom(
-                            foregroundColor:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            backgroundColor: isDark
-                                ? Colors.white.withOpacity(0.08)
-                                : AppColors.neutral100,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: const Text('Close'),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _calibrateSensor(sensor);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: accent,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          icon: Icon(Icons.tune, size: isMobile ? 16 : 18),
-                          label: Text(
-                            'Calibrate',
-                            style: TextStyle(fontSize: isMobile ? 13 : 14),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
+      builder: (_) => SensorInspectModal(
+          sensor: sensor,
+          currentSensor: () => mounted
+              ? _mappedSensors().firstWhere(
+                  (item) => item['id'] == sensor['id'],
+                  orElse: () => sensor)
+              : sensor),
     );
-  }
-
-  Widget _buildSensorModalHeader({
-    required Map<String, dynamic> sensor,
-    required Color accent,
-    required Color statusColor,
-    required bool isDark,
-    required bool isMobile,
-    required bool isCalibrationDue,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.md),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [accent.withOpacity(0.20), AppColors.backgroundDark]
-              : [accent.withOpacity(0.10), Colors.white],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: accent.withOpacity(isDark ? 0.28 : 0.18)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: isMobile ? 46 : 52,
-                height: isMobile ? 46 : 52,
-                decoration: BoxDecoration(
-                  color: accent.withOpacity(isDark ? 0.22 : 0.14),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                child: Icon(
-                  sensor['icon'] as IconData,
-                  color: accent,
-                  size: isMobile ? 22 : 24,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      sensor['name'] as String,
-                      style: AppTypography.h5.copyWith(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: isMobile ? 18 : 20,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      '${sensor['id']} | ${sensor['location']}',
-                      style: AppTypography.bodySmall.copyWith(
-                        color:
-                            isDark ? Colors.white70 : AppColors.textSecondary,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              _buildSensorDetailBadge(
-                (sensor['status'] as String).toUpperCase(),
-                statusColor,
-                isDark,
-              ),
-              _buildSensorDetailBadge(
-                _formatSensorType(sensor['type'] as String),
-                accent,
-                isDark,
-              ),
-              _buildSensorDetailBadge(
-                isCalibrationDue ? 'Calibration Due' : 'Calibrated',
-                isCalibrationDue ? AppColors.warning : AppColors.success,
-                isDark,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSensorDetailBadge(String label, Color color, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withOpacity(isDark ? 0.18 : 0.10),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        border: Border.all(color: color.withOpacity(0.24)),
-      ),
-      child: Text(
-        label,
-        style: AppTypography.caption.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSensorInfoGrid(bool isDark, List<_SensorDetailField> fields) {
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: fields
-          .map(
-            (field) => SizedBox(
-              width: 184,
-              child: Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withOpacity(0.04)
-                      : AppColors.neutral50,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(
-                    color: isDark ? Colors.white10 : AppColors.neutral200,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      field.label,
-                      style: AppTypography.caption.copyWith(
-                        color:
-                            isDark ? Colors.white60 : AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      field.value,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-          .toList(),
-    );
-  }
-
-  String _buildSensorRecommendation({
-    required String status,
-    required bool isCalibrationDue,
-  }) {
-    if (status == 'alert') {
-      return 'Sensor is reporting an alert state. Inspect the probe installation, verify live readings against field conditions, and recalibrate before returning it to production monitoring.';
-    }
-    if (isCalibrationDue) {
-      return 'Calibration window has expired. Schedule service now to keep telemetry accurate and avoid drift in automated decisions.';
-    }
-    if (status == 'warning') {
-      return 'Sensor is stable but needs attention. Review the recent readings for drift and perform a spot-check on the mounting position and environment.';
-    }
-    return 'Sensor is operating within expected thresholds. Continue routine monitoring and keep the current calibration interval.';
+    if (calibrate == true && mounted) _calibrateSensor(sensor);
   }
 
   void _calibrateSensor(Map<String, dynamic> sensor) {
+    if (sensorRequiresCalibration(sensor) != true) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Calibrating ${sensor['name']}...'),
@@ -1816,11 +838,4 @@ class _SensorManagementScreenState
       ),
     );
   }
-}
-
-class _SensorDetailField {
-  const _SensorDetailField(this.label, this.value);
-
-  final String label;
-  final String value;
 }

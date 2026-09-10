@@ -143,7 +143,7 @@ class _TechnicianSettingsScreenState
               AppSpacing.md,
               AppSpacing.md,
               AppSpacing.md,
-              100,
+              16,
             ),
             child: _buildContent(isDark, true, themeMode),
           ),
@@ -171,7 +171,7 @@ class _TechnicianSettingsScreenState
             color: isDark ? Colors.white70 : AppColors.textSecondary,
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: 16),
         _buildSectionCard(
           isDark,
           child: Column(

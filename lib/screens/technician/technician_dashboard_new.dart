@@ -11,16 +11,19 @@ class TechnicianDashboardNew extends ConsumerStatefulWidget {
   const TechnicianDashboardNew({super.key});
 
   @override
-  ConsumerState<TechnicianDashboardNew> createState() => _TechnicianDashboardNewState();
+  ConsumerState<TechnicianDashboardNew> createState() =>
+      _TechnicianDashboardNewState();
 }
 
-class _TechnicianDashboardNewState extends ConsumerState<TechnicianDashboardNew> {
+class _TechnicianDashboardNewState
+    extends ConsumerState<TechnicianDashboardNew> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
         title: const Text('Technician Dashboard'),
         actions: [
@@ -85,12 +88,12 @@ class _TechnicianDashboardNewState extends ConsumerState<TechnicianDashboardNew>
               ),
               const SizedBox(height: AppSpacing.md),
               _buildFeaturesGrid(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Upcoming Maintenance
               _buildUpcomingMaintenance(isDark),
-              
+
               const SizedBox(height: AppSpacing.xl),
 
               // Recent Issues
@@ -205,7 +208,8 @@ class _TechnicianDashboardNewState extends ConsumerState<TechnicianDashboardNew>
     );
   }
 
-  Widget _buildStatusCard(String label, String count, IconData icon, Color color, bool isDark) {
+  Widget _buildStatusCard(
+      String label, String count, IconData icon, Color color, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -298,6 +302,8 @@ class _TechnicianDashboardNewState extends ConsumerState<TechnicianDashboardNew>
     ];
 
     return GridView.builder(
+      padding: EdgeInsets.zero,
+      primary: false,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -484,7 +490,8 @@ class _TechnicianDashboardNewState extends ConsumerState<TechnicianDashboardNew>
                       ),
                       decoration: BoxDecoration(
                         color: color.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Text(
                         frequency,
@@ -631,7 +638,8 @@ class _TechnicianDashboardNewState extends ConsumerState<TechnicianDashboardNew>
                       ),
                       decoration: BoxDecoration(
                         color: color,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
                       ),
                       child: Text(
                         status,

@@ -354,6 +354,8 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
     ];
 
     return GridView.builder(
+      padding: EdgeInsets.zero,
+      primary: false,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -458,6 +460,8 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
     ];
 
     return GridView.builder(
+      padding: EdgeInsets.zero,
+      primary: false,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(

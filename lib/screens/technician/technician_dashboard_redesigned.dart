@@ -213,17 +213,17 @@ class _TechnicianDashboardRedesignedState
                                 // Weather & Time Widget
                                 const WeatherTimeWidget(),
 
-                                const SizedBox(height: AppSpacing.lg),
+                                const SizedBox(height: 16),
 
                                 // Compact Stats Section
                                 _buildStatsSection(context),
 
-                                const SizedBox(height: AppSpacing.xl),
+                                const SizedBox(height: 16),
 
                                 // Alert Summary
                                 _buildAlertSummary(isDark),
 
-                                const SizedBox(height: AppSpacing.xl),
+                                const SizedBox(height: 16),
 
                                 // Section Title
                                 Text(
@@ -236,12 +236,12 @@ class _TechnicianDashboardRedesignedState
                                   ),
                                 ),
 
-                                const SizedBox(height: AppSpacing.md),
+                                const SizedBox(height: 8),
 
                                 // Asset Monitoring Grid
                                 _buildAssetMonitoringGrid(context),
 
-                                const SizedBox(height: AppSpacing.xl),
+                                const SizedBox(height: 16),
 
                                 // Section Title
                                 Text(
@@ -254,7 +254,7 @@ class _TechnicianDashboardRedesignedState
                                   ),
                                 ),
 
-                                const SizedBox(height: AppSpacing.md),
+                                const SizedBox(height: 8),
 
                                 // Features Grid
                                 _buildFeaturesGrid(context),
@@ -295,70 +295,29 @@ class _TechnicianDashboardRedesignedState
 
                           const SizedBox(height: AppSpacing.md),
 
-                          // Compact Stats Section
-                          Transform.translate(
-                            offset: const Offset(0, -90),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildStatsSection(context),
-
-                                const SizedBox(height: 12),
-
-                                // Alert Summary
-                                _buildAlertSummary(isDark),
-
-                                const SizedBox(height: 12),
-
-                                Text(
-                                  'Farm Asset Monitoring',
-                                  style: AppTypography.h5.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 18,
-                                    color: isDark
-                                        ? Colors.white
-                                        : AppColors.textPrimary,
-                                  ),
-                                ),
-
-                                const SizedBox(height: 8),
-
-                                Transform.translate(
-                                  offset: const Offset(0, -60),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Asset Monitoring Grid
-                                      _buildAssetMonitoringGrid(context),
-
-                                      const SizedBox(height: 12),
-
-                                      // Section Title
-                                      Text(
-                                        'Maintenance Tasks',
-                                        style: AppTypography.h5.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                          color: isDark
-                                              ? Colors.white
-                                              : AppColors.textPrimary,
-                                        ),
-                                      ),
-
-                                      const SizedBox(height: 8),
-
-                                      // Features Grid
-                                      Transform.translate(
-                                        offset: const Offset(0, 60),
-                                        child: _buildFeaturesGrid(context),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          _buildStatsSection(context),
+                          const SizedBox(height: 12),
+                          _buildAlertSummary(isDark),
+                          const SizedBox(height: 16),
+                          Text('Farm Asset Monitoring',
+                              style: AppTypography.h5.copyWith(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary)),
+                          const SizedBox(height: 8),
+                          _buildAssetMonitoringGrid(context),
+                          const SizedBox(height: 16),
+                          Text('Maintenance Tasks',
+                              style: AppTypography.h5.copyWith(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.textPrimary)),
+                          const SizedBox(height: 8),
+                          _buildFeaturesGrid(context),
                         ],
                       ),
           ),
@@ -618,6 +577,8 @@ class _TechnicianDashboardRedesignedState
         final isMobile = constraints.maxWidth < 600;
 
         return GridView.count(
+          padding: EdgeInsets.zero,
+          primary: false,
           crossAxisCount: crossAxisCount,
           childAspectRatio: isMobile ? 2.55 : 3.2,
           crossAxisSpacing: AppSpacing.sm,
@@ -709,6 +670,8 @@ class _TechnicianDashboardRedesignedState
         }
 
         return GridView.count(
+          padding: EdgeInsets.zero,
+          primary: false,
           crossAxisCount: crossAxisCount,
           childAspectRatio: childAspectRatio,
           crossAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,
@@ -857,6 +820,8 @@ class _TechnicianDashboardRedesignedState
         // Adjust aspect ratio for mobile to prevent overflow
         final childAspectRatio = isMobile ? 1.4 : 1.2;
         return GridView.count(
+          padding: EdgeInsets.zero,
+          primary: false,
           crossAxisCount: crossAxisCount,
           childAspectRatio: childAspectRatio,
           crossAxisSpacing: isMobile ? AppSpacing.sm : AppSpacing.md,

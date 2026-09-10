@@ -665,6 +665,8 @@ class _MaintenanceScheduleScreenState
               isMaintenanceTab: isMaintenanceTab),
           SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
           GridView.builder(
+            padding: EdgeInsets.zero,
+            primary: false,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -899,11 +901,12 @@ class _MaintenanceScheduleScreenState
     }).toList();
 
     return GridView.builder(
+      primary: false,
       padding: EdgeInsets.fromLTRB(
         isMobile ? AppSpacing.md : AppSpacing.lg,
         AppSpacing.sm,
         isMobile ? AppSpacing.md : AppSpacing.lg,
-        isMobile ? 96 : AppSpacing.lg,
+        isMobile ? 16 : AppSpacing.lg,
       ),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -1148,11 +1151,12 @@ class _MaintenanceScheduleScreenState
     }).toList();
 
     return GridView.builder(
+      primary: false,
       padding: EdgeInsets.fromLTRB(
         isMobile ? AppSpacing.md : AppSpacing.lg,
         AppSpacing.sm,
         isMobile ? AppSpacing.md : AppSpacing.lg,
-        isMobile ? 96 : AppSpacing.lg,
+        isMobile ? 16 : AppSpacing.lg,
       ),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
