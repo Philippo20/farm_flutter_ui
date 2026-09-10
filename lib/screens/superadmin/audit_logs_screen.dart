@@ -1,3 +1,5 @@
+import 'dart:convert';
+import '../../core/widgets/audit_event_details_modal.dart';
 import '../../core/widgets/audit_log_card.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
@@ -161,8 +163,8 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
       severity: _severityForStatus(doc['status']),
       module:
           role.isEmpty ? (doc['collection_name'] ?? 'System').toString() : role,
-      previousData: (doc['previous_data'] ?? '').toString(),
-      newData: (doc['new_data'] ?? '').toString(),
+      previousData: _auditPayload(doc['previous_data']),
+      newData: _auditPayload(doc['new_data']),
     );
   }
 
@@ -1209,142 +1211,31 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
     );
   }
 
+  String _auditPayload(dynamic data) => data == null
+      ? ''
+      : data is String
+          ? data
+          : jsonEncode(data);
+
   void _showLogDetails(BuildContext context, _AuditLog log, bool isDark) {
-    final category = _categoryStyle(log.category);
-
-    showAppDialog(
-      context: context,
-      builder: (context) => AppDialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        ),
-        child: Container(
-          width: 460,
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: category.color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                    child: Icon(category.icon, color: category.color, size: 24),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Audit Event Details',
-                          style: AppTypography.h6.copyWith(
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: AppTypography.headingWeight,
-                          ),
-                        ),
-                        Text(
-                          log.id,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: isDark
-                                ? Colors.white60
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(
-                      Icons.close_rounded,
-                      color: isDark ? Colors.white70 : AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                log.action,
-                style: AppTypography.bodyLarge.copyWith(
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: AppTypography.labelWeight,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _buildDetailRow('Farm / Scope', log.farm, isDark),
-              _buildDetailRow('User', log.user, isDark),
-              _buildDetailRow('Module', log.module, isDark),
-              _buildDetailRow('Category', log.category, isDark),
-              _buildDetailRow('Severity', log.severity, isDark),
-              _buildDetailRow('Timestamp', log.timestamp, isDark),
-              _buildDetailRow('IP Address', log.ip, isDark),
-              if (log.previousData.trim().isNotEmpty)
-                _buildDetailRow('Previous Data', log.previousData, isDark),
-              if (log.newData.trim().isNotEmpty)
-                _buildDetailRow('New Data', log.newData, isDark),
-              const SizedBox(height: AppSpacing.lg),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: _formatLog(log)));
-                    Navigator.pop(context);
-                    _showSnack('Audit event copied to clipboard.');
-                  },
-                  icon: const Icon(Icons.copy_rounded, size: 18),
-                  label: const Text('Copy Event'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding:
-                        const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark ? Colors.white54 : AppColors.textSecondary,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: AppTypography.labelWeight,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    showAppDialog<void>(
+        context: context,
+        builder: (_) => AuditEventDetailsModal(
+              id: log.id,
+              action: log.action,
+              previous: log.previousData,
+              current: log.newData,
+              copyText: _formatLog(log),
+              details: {
+                'Farm / Scope': log.farm,
+                'User': log.user,
+                'Module': log.module,
+                'Category': log.category,
+                'Severity': log.severity,
+                'Timestamp': log.timestamp,
+                'IP Address': log.ip,
+              },
+            ));
   }
 
   void _showExportDialog(
