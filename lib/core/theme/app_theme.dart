@@ -59,7 +59,7 @@ class AppTheme {
       textStyle: AppTypography.caption.copyWith(color: Colors.white),
     ),
   );
-  
+
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
@@ -81,11 +81,13 @@ class AppTheme {
       bodyMedium: AppTypography.bodyMedium,
       bodySmall: AppTypography.bodySmall,
       labelLarge: AppTypography.labelLarge,
-    ),
+    ).apply(
+        bodyColor: AppColors.textOnDark, displayColor: AppColors.textOnDark),
     // SnackBar theme for dark mode
     snackBarTheme: SnackBarThemeData(
       backgroundColor: AppColors.surfaceLight,
-      contentTextStyle: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
+      contentTextStyle:
+          AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
       actionTextColor: AppColors.primary,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(

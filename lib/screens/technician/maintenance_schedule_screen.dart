@@ -20,7 +20,8 @@ import '../../services/superadmin_api_service.dart';
 /// Maintenance Schedule Screen
 /// View and manage maintenance schedules and technical issues
 class MaintenanceScheduleScreen extends ConsumerStatefulWidget {
-  const MaintenanceScheduleScreen({super.key});
+  const MaintenanceScheduleScreen({super.key, this.loadData});
+  final Future<List<List<Map<String, dynamic>>>> Function()? loadData;
 
   @override
   ConsumerState<MaintenanceScheduleScreen> createState() =>
@@ -62,10 +63,11 @@ class _MaintenanceScheduleScreenState
   Future<void> _loadMaintenanceData({bool silent = false}) async {
     if (!silent && mounted) setState(() => _isLoading = true);
     try {
-      final results = await Future.wait([
-        _api.getFarmTasks(),
-        _api.getAlerts(),
-      ]);
+      final results = await (widget.loadData?.call() ??
+          Future.wait([
+            _api.getFarmTasks(),
+            _api.getAlerts(),
+          ]));
       if (!mounted) return;
       final user = ref.read(currentUserProvider);
       final assignedFarmIds =
@@ -361,6 +363,7 @@ class _MaintenanceScheduleScreenState
         ],
       ),
       child: TabBar(
+        onTap: (_) => setState(() => _selectedFilter = 'All'),
         controller: _tabController,
         labelColor: Colors.white,
         unselectedLabelColor: isDark ? Colors.white70 : AppColors.textSecondary,
@@ -664,109 +667,37 @@ class _MaintenanceScheduleScreenState
           _buildOperationsHero(isDark, isMobile,
               isMaintenanceTab: isMaintenanceTab),
           SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
-          GridView.builder(
-            padding: EdgeInsets.zero,
-            primary: false,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isMobile ? 2 : 4,
-              crossAxisSpacing: AppSpacing.sm,
-              mainAxisSpacing: AppSpacing.sm,
-              childAspectRatio: isMobile ? 1.42 : 1.95,
-            ),
-            itemCount: stats.length,
-            itemBuilder: (context, index) {
-              final stat = stats[index];
-              return _buildStatCard(
-                isDark,
-                isMobile,
-                title: stat['title'] as String,
-                value: stat['value'] as String,
-                icon: stat['icon'] as IconData,
-                color: stat['color'] as Color,
-              );
-            },
-          ),
+          _responsiveCards(
+              stats
+                  .map((stat) => _buildStatCard(isDark, isMobile,
+                      title: stat['title'] as String,
+                      value: stat['value'] as String,
+                      icon: stat['icon'] as IconData,
+                      color: stat['color'] as Color))
+                  .toList(),
+              minimumWidth: 125),
         ],
       ),
     );
   }
 
   Widget _buildOperationsHero(bool isDark, bool isMobile,
-      {required bool isMaintenanceTab}) {
-    final title = isMaintenanceTab
-        ? 'Maintenance Command Center'
-        : 'Issue Response Queue';
-    final subtitle = isMaintenanceTab
-        ? 'Track scheduled work, active repairs, and overdue equipment tasks across farms.'
-        : 'Prioritize faults, field incidents, and production risks before they escalate.';
-    final accent = isMaintenanceTab ? AppColors.primary : AppColors.error;
-    final badge = isMaintenanceTab
-        ? '${_tasks.where((task) => _value(task, [
-                  'status'
-                ]).toLowerCase() != 'completed').length} active tasks'
-        : 'Backend issue queue';
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [
-                  accent.withOpacity(0.24),
-                  AppColors.surfaceDark,
-                ]
-              : [
-                  accent.withOpacity(0.10),
-                  Colors.white,
-                ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: accent.withOpacity(isDark ? 0.28 : 0.18),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: accent.withOpacity(isDark ? 0.18 : 0.10),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-            ),
-            child: Text(
-              badge,
-              style: AppTypography.caption.copyWith(
-                color: accent,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            title,
-            style: AppTypography.h5.copyWith(
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              fontSize: isMobile ? 20 : 24,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            subtitle,
-            style: AppTypography.bodyMedium.copyWith(
-              color: isDark ? Colors.white70 : AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+          {required bool isMaintenanceTab}) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(isMaintenanceTab ? 'Maintenance overview' : 'Technical issues',
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : AppColors.textPrimary)),
+        const SizedBox(height: 5),
+        Text(
+            isMaintenanceTab
+                ? 'Scheduled work and active repairs'
+                : 'Review reported faults and follow-up work',
+            style: TextStyle(
+                fontSize: 12,
+                color: isDark ? Colors.white70 : AppColors.textSecondary)),
+      ]);
 
   Widget _buildStatCard(
     bool isDark,
@@ -800,12 +731,12 @@ class _MaintenanceScheduleScreenState
               color: color,
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 12),
           Text(
             value,
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
               fontSize: isMobile ? 18 : 22,
             ),
           ),
@@ -843,6 +774,7 @@ class _MaintenanceScheduleScreenState
           children: filters.map((filter) {
             final isSelected = _selectedFilter == filter;
             return ChoiceChip(
+              showCheckmark: false,
               label: Text(filter),
               selected: isSelected,
               onSelected: (_) => setState(() => _selectedFilter = filter),
@@ -867,7 +799,6 @@ class _MaintenanceScheduleScreenState
   }
 
   Widget _buildMaintenanceList(bool isDark) {
-    final isMobile = MediaQuery.of(context).size.width < 768;
     final maintenanceItems = _tasks.map((task) {
       final due = DateTime.tryParse(
           _value(task, ['due_date', 'scheduled_date', 'created_at']));
@@ -900,230 +831,10 @@ class _MaintenanceScheduleScreenState
       return _selectedFilter == 'All' || item['status'] == _selectedFilter;
     }).toList();
 
-    return GridView.builder(
-      primary: false,
-      padding: EdgeInsets.fromLTRB(
-        isMobile ? AppSpacing.md : AppSpacing.lg,
-        AppSpacing.sm,
-        isMobile ? AppSpacing.md : AppSpacing.lg,
-        isMobile ? 16 : AppSpacing.lg,
-      ),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isMobile ? 1 : 2,
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisSpacing: AppSpacing.md,
-        mainAxisExtent: isMobile ? 230 : 250,
-      ),
-      itemCount: maintenanceItems.length,
-      itemBuilder: (context, index) {
-        final item = maintenanceItems[index];
-        final statusColor = _getStatusColor(item['status'] as String);
-        final priorityColor = _getPriorityColor(item['priority'] as String);
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: AppSpacing.md),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(
-                color:
-                    isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.14 : 0.04),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: InkWell(
-            onTap: () => _showMaintenanceDetailsModal(item),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            child: Padding(
-              padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              statusColor.withOpacity(0.20),
-                              statusColor.withOpacity(0.08),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusMd),
-                          border:
-                              Border.all(color: statusColor.withOpacity(0.18)),
-                        ),
-                        child: Icon(Icons.build_rounded,
-                            color: statusColor, size: 24),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item['equipment'] as String,
-                              style: AppTypography.bodyLarge.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: isMobile ? 14 : 15,
-                                color: isDark
-                                    ? Colors.white
-                                    : AppColors.textPrimary,
-                              ),
-                            ),
-                            Text(
-                              '${item['type']} • ${item['farm']}',
-                              style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 11,
-                                color: isDark
-                                    ? Colors.white60
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusFull),
-                        ),
-                        child: Text(
-                          item['status'] as String,
-                          style: AppTypography.caption.copyWith(
-                            color: statusColor,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      Icon(Icons.calendar_today,
-                          size: 14,
-                          color: isDark
-                              ? Colors.white60
-                              : AppColors.textSecondary),
-                      const SizedBox(width: 4),
-                      Text(
-                        DateFormat('MMM d, yyyy')
-                            .format(item['scheduledDate'] as DateTime),
-                        style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 11,
-                          color:
-                              isDark ? Colors.white60 : AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Icon(Icons.access_time,
-                          size: 14,
-                          color: isDark
-                              ? Colors.white60
-                              : AppColors.textSecondary),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${item['estimatedDuration']} min',
-                        style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 11,
-                          color:
-                              isDark ? Colors.white60 : AppColors.textSecondary,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: priorityColor.withOpacity(0.1),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusFull),
-                          border:
-                              Border.all(color: priorityColor.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.flag, size: 10, color: priorityColor),
-                            const SizedBox(width: 2),
-                            Text(
-                              item['priority'] as String,
-                              style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 9,
-                                color: priorityColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Icon(Icons.person,
-                          size: 14,
-                          color: isDark
-                              ? Colors.white60
-                              : AppColors.textSecondary),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          'Assigned to: ${item['assignedTo']}',
-                          style: TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 11,
-                            color: isDark
-                                ? Colors.white60
-                                : AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Tasks: ${(item['tasks'] as List).length}',
-                    style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 10,
-                      color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    return _recordCards(isDark, maintenanceItems, false);
   }
 
   Widget _buildIssuesList(bool isDark) {
-    final isMobile = MediaQuery.of(context).size.width < 768;
     final issues = _alerts
         .where((alert) => _value(alert, ['status']).toLowerCase() != 'resolved')
         .map((alert) {
@@ -1133,6 +844,7 @@ class _MaintenanceScheduleScreenState
       return <String, dynamic>{
         'id': _value(alert, [r'$id', 'id']),
         'title': _value(alert, ['message', 'title'], 'Technical issue'),
+        'description': _value(alert, ['description', 'details'], ''),
         'category': _value(
             alert, ['sensorType', 'sensor_type', 'category'], 'Technical'),
         'severity': priority,
@@ -1150,219 +862,161 @@ class _MaintenanceScheduleScreenState
               _selectedFilter.toLowerCase();
     }).toList();
 
-    return GridView.builder(
-      primary: false,
-      padding: EdgeInsets.fromLTRB(
-        isMobile ? AppSpacing.md : AppSpacing.lg,
-        AppSpacing.sm,
-        isMobile ? AppSpacing.md : AppSpacing.lg,
-        isMobile ? 16 : AppSpacing.lg,
-      ),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isMobile ? 1 : 2,
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisSpacing: AppSpacing.md,
-        mainAxisExtent: isMobile ? 220 : 236,
-      ),
-      itemCount: issues.length,
-      itemBuilder: (context, index) {
-        final issue = issues[index];
-        final severityColor = _getSeverityColor(issue['severity'] as String);
-        final statusColor = _getIssueStatusColor(issue['status'] as String);
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: AppSpacing.md),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(
-              color: (issue['affectsProduction'] as bool)
-                  ? AppColors.error.withOpacity(0.3)
-                  : (isDark ? Colors.white10 : Colors.black.withOpacity(0.08)),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.14 : 0.04),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: InkWell(
-            onTap: () => _showIssueDetailsModal(issue),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            child: Padding(
-              padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              severityColor.withOpacity(0.20),
-                              severityColor.withOpacity(0.08),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusMd),
-                        ),
-                        child: Icon(Icons.warning_amber_rounded,
-                            color: severityColor, size: 24),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              issue['title'] as String,
-                              style: AppTypography.bodyLarge.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: isMobile ? 14 : 15,
-                                color: isDark
-                                    ? Colors.white
-                                    : AppColors.textPrimary,
-                              ),
-                            ),
-                            Text(
-                              '${issue['category']} • ${issue['farm']}',
-                              style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 11,
-                                color: isDark
-                                    ? Colors.white60
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: severityColor.withOpacity(0.1),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusFull),
-                        ),
-                        child: Text(
-                          issue['severity'] as String,
-                          style: AppTypography.caption.copyWith(
-                            color: severityColor,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.1),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusFull),
-                        ),
-                        child: Text(
-                          issue['status'] as String,
-                          style: AppTypography.caption.copyWith(
-                            color: statusColor,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      if (issue['affectsProduction'] as bool) ...[
-                        const SizedBox(width: AppSpacing.sm),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withOpacity(0.1),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusFull),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.production_quantity_limits,
-                                  size: 10, color: AppColors.error),
-                              SizedBox(width: 2),
-                              Text(
-                                'Affects Production',
-                                style: TextStyle(
-                                  fontFamily: 'Roboto',
-                                  fontSize: 9,
-                                  color: AppColors.error,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Icon(Icons.person,
-                          size: 14,
-                          color: isDark
-                              ? Colors.white60
-                              : AppColors.textSecondary),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          'Reported by: ${issue['reportedBy']}',
-                          style: TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 11,
-                            color: isDark
-                                ? Colors.white60
-                                : AppColors.textSecondary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Icon(Icons.access_time,
-                          size: 14,
-                          color: isDark
-                              ? Colors.white60
-                              : AppColors.textSecondary),
-                      const SizedBox(width: 4),
-                      Text(
-                        _getTimeAgo(issue['reportedAt'] as DateTime),
-                        style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 11,
-                          color:
-                              isDark ? Colors.white60 : AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
+    return _recordCards(isDark, issues, true);
   }
+
+  Widget _recordCards(
+      bool dark, List<Map<String, dynamic>> records, bool issues) {
+    final secondary = dark ? Colors.white70 : AppColors.textSecondary;
+    final foreground = dark ? Colors.white : AppColors.textPrimary;
+    return Padding(
+        padding: EdgeInsets.fromLTRB(
+            MediaQuery.sizeOf(context).width < 768 ? 16 : 24,
+            8,
+            MediaQuery.sizeOf(context).width < 768 ? 16 : 24,
+            16),
+        child: records.isEmpty
+            ? Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                    issues
+                        ? 'No issues match this filter.'
+                        : 'No maintenance tasks match this filter.',
+                    style: TextStyle(fontSize: 12, color: secondary)))
+            : _responsiveCards(
+                records.map((item) {
+                  final title =
+                      (issues ? item['title'] : item['equipment']).toString();
+                  final status = item['status'].toString();
+                  final priority =
+                      (issues ? item['severity'] : item['priority']).toString();
+                  final color = issues
+                      ? _getSeverityColor(priority)
+                      : _getStatusColor(status);
+                  final date =
+                      issues ? item['reportedAt'] : item['scheduledDate'];
+                  return Material(
+                      color: dark ? AppColors.surfaceDark : Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: BorderSide(
+                              color: dark
+                                  ? Colors.white10
+                                  : AppColors.neutral200)),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () => issues
+                            ? _showIssueDetailsModal(item)
+                            : _showMaintenanceDetailsModal(item),
+                        child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                                color:
+                                                    color.withValues(alpha: .1),
+                                                borderRadius:
+                                                    BorderRadius.circular(10)),
+                                            child: Icon(
+                                                issues
+                                                    ? Icons
+                                                        .warning_amber_rounded
+                                                    : Icons.build_outlined,
+                                                size: 18,
+                                                color: color)),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                            child: Text(title,
+                                                style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: foreground))),
+                                        const Icon(Icons.chevron_right,
+                                            size: 18)
+                                      ]),
+                                  const SizedBox(height: 12),
+                                  Wrap(spacing: 8, runSpacing: 6, children: [
+                                    Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 5),
+                                        decoration: BoxDecoration(
+                                            color: color.withValues(alpha: .1),
+                                            borderRadius:
+                                                BorderRadius.circular(6)),
+                                        child: Text(status,
+                                            style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: color))),
+                                    Text(priority + ' priority',
+                                        style: TextStyle(
+                                            fontSize: 11, color: secondary))
+                                  ]),
+                                  const SizedBox(height: 12),
+                                  Text(item['farm'].toString(),
+                                      style: TextStyle(
+                                          fontSize: 12, color: foreground)),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                      date is DateTime
+                                          ? DateFormat('d MMM yyyy')
+                                              .format(date.toLocal())
+                                          : 'Date not recorded',
+                                      style: TextStyle(
+                                          fontSize: 11, color: secondary)),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                      (issues
+                                              ? item['description']
+                                              : (item['tasks'] as List)
+                                                  .join(' '))
+                                          .toString(),
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          height: 1.4,
+                                          color: secondary)),
+                                  if (!issues) ...[
+                                    const SizedBox(height: 12),
+                                    Text(
+                                        'Assigned to: ' +
+                                            item['assignedTo'].toString(),
+                                        style: TextStyle(
+                                            fontSize: 11, color: secondary))
+                                  ],
+                                ])),
+                      ));
+                }).toList(),
+                minimumWidth: 350));
+  }
+
+  Widget _responsiveCards(List<Widget> cards, {double minimumWidth = 170}) =>
+      LayoutBuilder(builder: (context, constraints) {
+        final columns =
+            (constraints.maxWidth / minimumWidth).floor().clamp(1, 4);
+        final rows = (cards.length / columns).ceil();
+        return Column(children: [
+          for (var row = 0; row < rows; row++) ...[
+            if (row > 0) const SizedBox(height: 12),
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              for (var col = 0; col < columns; col++) ...[
+                if (col > 0) const SizedBox(width: 12),
+                Expanded(
+                    child: row * columns + col < cards.length
+                        ? cards[row * columns + col]
+                        : const SizedBox())
+              ]
+            ])
+          ]
+        ]);
+      });
 
   Color _getStatusColor(String status) {
     switch (status) {

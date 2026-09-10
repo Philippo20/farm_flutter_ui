@@ -153,124 +153,138 @@ class _TechnicianSettingsScreenState
   }
 
   Widget _buildContent(bool isDark, bool isMobile, ThemeMode themeMode) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Technician Settings',
-          style: AppTypography.h4.copyWith(
-            color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
-            fontSize: isMobile ? 24 : 28,
-          ),
+    final children = <Widget>[
+      Text(
+        'Technician Settings',
+        style: AppTypography.h4.copyWith(
+          color: isDark ? Colors.white : AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
+          fontSize: 20,
         ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Control alert behavior, display mode, and field-device preferences.',
-          style: AppTypography.bodyMedium.copyWith(
-            color: isDark ? Colors.white70 : AppColors.textSecondary,
-          ),
+      ),
+      const SizedBox(height: AppSpacing.xs),
+      Text(
+        'Control alert behavior, display mode, and field-device preferences.',
+        style: AppTypography.bodyMedium.copyWith(
+          color: isDark ? Colors.white70 : AppColors.textSecondary,
         ),
-        const SizedBox(height: 16),
-        _buildSectionCard(
-          isDark,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle('Appearance', Icons.palette_outlined, isDark),
-              const SizedBox(height: AppSpacing.md),
-              _buildThemeTile(
-                isDark,
-                'Light mode',
-                themeMode == ThemeMode.light,
-                () =>
-                    ref.read(themeProvider.notifier).setTheme(ThemeMode.light),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _buildThemeTile(
-                isDark,
-                'Dark mode',
-                themeMode == ThemeMode.dark,
-                () => ref.read(themeProvider.notifier).setTheme(ThemeMode.dark),
-              ),
-            ],
-          ),
+      ),
+      const SizedBox(height: 16),
+      _buildSectionCard(
+        isDark,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Appearance', Icons.palette_outlined, isDark),
+            const SizedBox(height: AppSpacing.md),
+            _buildThemeTile(
+              isDark,
+              'Light mode',
+              themeMode == ThemeMode.light,
+              () => ref.read(themeProvider.notifier).setTheme(ThemeMode.light),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildThemeTile(
+              isDark,
+              'Dark mode',
+              themeMode == ThemeMode.dark,
+              () => ref.read(themeProvider.notifier).setTheme(ThemeMode.dark),
+            ),
+          ],
         ),
-        const SizedBox(height: AppSpacing.md),
-        _buildSectionCard(
-          isDark,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle(
-                  'Alerts', Icons.notifications_outlined, isDark),
-              const SizedBox(height: AppSpacing.md),
-              _buildSwitchTile(
-                isDark,
-                'Push alerts',
-                'Show device and maintenance alerts immediately',
-                _pushAlerts,
-                (value) =>
-                    _setBool('pushAlerts', value, () => _pushAlerts = value),
+      ),
+      const SizedBox(height: AppSpacing.md),
+      _buildSectionCard(
+        isDark,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Alerts', Icons.notifications_outlined, isDark),
+            const SizedBox(height: AppSpacing.md),
+            _buildSwitchTile(
+              isDark,
+              'Push alerts',
+              'Show device and maintenance alerts immediately',
+              _pushAlerts,
+              (value) =>
+                  _setBool('pushAlerts', value, () => _pushAlerts = value),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildSwitchTile(
+              isDark,
+              'SMS alerts',
+              'Receive field alerts by text when offline',
+              _smsAlerts,
+              (value) => _setBool('smsAlerts', value, () => _smsAlerts = value),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildSwitchTile(
+              isDark,
+              'Critical only mode',
+              'Suppress low-priority notifications during active repairs',
+              _criticalOnlyMode,
+              (value) => _setBool(
+                'criticalOnlyMode',
+                value,
+                () => _criticalOnlyMode = value,
               ),
-              const SizedBox(height: AppSpacing.sm),
-              _buildSwitchTile(
-                isDark,
-                'SMS alerts',
-                'Receive field alerts by text when offline',
-                _smsAlerts,
-                (value) =>
-                    _setBool('smsAlerts', value, () => _smsAlerts = value),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _buildSwitchTile(
-                isDark,
-                'Critical only mode',
-                'Suppress low-priority notifications during active repairs',
-                _criticalOnlyMode,
-                (value) => _setBool(
-                  'criticalOnlyMode',
-                  value,
-                  () => _criticalOnlyMode = value,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-        const SizedBox(height: AppSpacing.md),
-        _buildSectionCard(
-          isDark,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionTitle(
-                  'Device', Icons.phone_android_outlined, isDark),
-              const SizedBox(height: AppSpacing.md),
-              _buildSwitchTile(
-                isDark,
-                'Offline drafts',
-                'Keep issue reports and inspections until sync returns',
-                _offlineDrafts,
-                (value) => _setBool(
-                    'offlineDrafts', value, () => _offlineDrafts = value),
+      ),
+      const SizedBox(height: AppSpacing.md),
+      _buildSectionCard(
+        isDark,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Device', Icons.phone_android_outlined, isDark),
+            const SizedBox(height: AppSpacing.md),
+            _buildSwitchTile(
+              isDark,
+              'Offline drafts',
+              'Keep issue reports and inspections until sync returns',
+              _offlineDrafts,
+              (value) => _setBool(
+                  'offlineDrafts', value, () => _offlineDrafts = value),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _buildSwitchTile(
+              isDark,
+              'Biometric unlock',
+              'Require device authentication before opening the app',
+              _biometricUnlock,
+              (value) => _setBool(
+                'biometricUnlock',
+                value,
+                () => _biometricUnlock = value,
               ),
-              const SizedBox(height: AppSpacing.sm),
-              _buildSwitchTile(
-                isDark,
-                'Biometric unlock',
-                'Require device authentication before opening the app',
-                _biometricUnlock,
-                (value) => _setBool(
-                  'biometricUnlock',
-                  value,
-                  () => _biometricUnlock = value,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
-    );
+      ),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      ...children.take(4),
+      LayoutBuilder(builder: (context, constraints) {
+        final cards = [children[4], children[6], children[8]];
+        if (constraints.maxWidth < 850) {
+          return Column(children: [
+            for (var i = 0; i < cards.length; i++) ...[
+              if (i > 0) const SizedBox(height: 12),
+              cards[i]
+            ]
+          ]);
+        }
+        return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(
+              child: Column(
+                  children: [cards[0], const SizedBox(height: 16), cards[2]])),
+          const SizedBox(width: 16),
+          Expanded(child: cards[1])
+        ]);
+      }),
+    ]);
   }
 
   Widget _buildSectionCard(bool isDark, {required Widget child}) {
@@ -297,7 +311,7 @@ class _TechnicianSettingsScreenState
           title,
           style: AppTypography.h6.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -338,7 +352,9 @@ class _TechnicianSettingsScreenState
               ),
             ),
             Icon(
-              isSelected ? Icons.check_circle_rounded : Icons.circle_outlined,
+              isSelected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_unchecked,
               color: isSelected
                   ? AppColors.primary
                   : (isDark ? Colors.white70 : AppColors.textSecondary),
@@ -357,7 +373,7 @@ class _TechnicianSettingsScreenState
     ValueChanged<bool> onChanged,
   ) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
