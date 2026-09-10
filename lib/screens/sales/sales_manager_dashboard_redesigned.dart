@@ -1,3 +1,4 @@
+import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -180,7 +181,7 @@ class _SalesManagerDashboardRedesignedState
       saleRecorded: _hasSaleForBatch(record),
     );
     if (MediaQuery.sizeOf(context).width < 600) {
-      await showModalBottomSheet<void>(
+      await showAppBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,

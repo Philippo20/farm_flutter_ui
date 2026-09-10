@@ -1,3 +1,4 @@
+import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -102,7 +103,7 @@ class _SalesPricingScreenState extends ConsumerState<SalesPricingScreen> {
     );
     final mobile = MediaQuery.sizeOf(context).width < 600;
     final changed = mobile
-        ? await showModalBottomSheet<bool>(
+        ? await showAppBottomSheet<bool>(
             context: context,
             isScrollControlled: true,
             useSafeArea: true,
@@ -217,7 +218,7 @@ class _SalesPricingScreenState extends ConsumerState<SalesPricingScreen> {
       );
     });
     final changed = mobile
-        ? await showModalBottomSheet<bool>(
+        ? await showAppBottomSheet<bool>(
             context: context,
             isScrollControlled: true,
             useSafeArea: true,

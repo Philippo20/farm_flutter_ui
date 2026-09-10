@@ -1,3 +1,4 @@
+import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -19,7 +20,7 @@ class AlertManagementScreen extends StatefulWidget {
 class _AlertManagementScreenState extends State<AlertManagementScreen> {
   List<AlertModel> _alerts = [];
   List<AlertModel> _filteredAlerts = [];
-  
+
   // Filters
   String _selectedFilter = 'all'; // all, active, resolved
   AlertSeverity? _selectedSeverity;
@@ -51,19 +52,23 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
 
     // Filter by severity
     if (_selectedSeverity != null) {
-      filtered = filtered.where((a) => a.severity == _selectedSeverity).toList();
+      filtered =
+          filtered.where((a) => a.severity == _selectedSeverity).toList();
     }
 
     // Filter by sensor type
     if (_selectedSensorType != null) {
-      filtered = filtered.where((a) => a.sensorType == _selectedSensorType).toList();
+      filtered =
+          filtered.where((a) => a.sensorType == _selectedSensorType).toList();
     }
 
     // Filter by search query
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((a) {
         return a.message.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-               a.sensorType.displayName.toLowerCase().contains(_searchQuery.toLowerCase());
+            a.sensorType.displayName
+                .toLowerCase()
+                .contains(_searchQuery.toLowerCase());
       }).toList();
     }
 
@@ -204,7 +209,8 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
     );
   }
 
-  Widget _buildStatItem(String label, String value, Color color, IconData icon, bool isDark) {
+  Widget _buildStatItem(
+      String label, String value, Color color, IconData icon, bool isDark) {
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
@@ -274,15 +280,17 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
                   }),
                   isDark,
                 ),
-                
+
                 const SizedBox(width: AppSpacing.md),
-                
+
                 // Severity Filter
                 _buildFilterChip(
                   'Critical',
                   _selectedSeverity == AlertSeverity.high,
                   () => setState(() {
-                    _selectedSeverity = _selectedSeverity == AlertSeverity.high ? null : AlertSeverity.high;
+                    _selectedSeverity = _selectedSeverity == AlertSeverity.high
+                        ? null
+                        : AlertSeverity.high;
                     _applyFilters();
                   }),
                   isDark,
@@ -292,7 +300,10 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
                   'Warning',
                   _selectedSeverity == AlertSeverity.medium,
                   () => setState(() {
-                    _selectedSeverity = _selectedSeverity == AlertSeverity.medium ? null : AlertSeverity.medium;
+                    _selectedSeverity =
+                        _selectedSeverity == AlertSeverity.medium
+                            ? null
+                            : AlertSeverity.medium;
                     _applyFilters();
                   }),
                   isDark,
@@ -302,7 +313,9 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
                   'Info',
                   _selectedSeverity == AlertSeverity.low,
                   () => setState(() {
-                    _selectedSeverity = _selectedSeverity == AlertSeverity.low ? null : AlertSeverity.low;
+                    _selectedSeverity = _selectedSeverity == AlertSeverity.low
+                        ? null
+                        : AlertSeverity.low;
                     _applyFilters();
                   }),
                   isDark,
@@ -316,9 +329,11 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
     );
   }
 
-  Widget _buildFilterChip(String label, bool selected, VoidCallback onTap, bool isDark, {Color? color}) {
+  Widget _buildFilterChip(
+      String label, bool selected, VoidCallback onTap, bool isDark,
+      {Color? color}) {
     final chipColor = color ?? AppColors.primary;
-    
+
     return Padding(
       padding: const EdgeInsets.only(right: AppSpacing.sm),
       child: FilterChip(
@@ -329,11 +344,14 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
         selectedColor: chipColor.withOpacity(0.2),
         checkmarkColor: chipColor,
         labelStyle: AppTypography.bodySmall.copyWith(
-          color: selected ? chipColor : (isDark ? Colors.white70 : AppColors.textPrimary),
+          color: selected
+              ? chipColor
+              : (isDark ? Colors.white70 : AppColors.textPrimary),
           fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
         ),
         side: BorderSide(
-          color: selected ? chipColor : (isDark ? Colors.white24 : Colors.black12),
+          color:
+              selected ? chipColor : (isDark ? Colors.white24 : Colors.black12),
         ),
       ),
     );
@@ -368,7 +386,8 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           ),
           filled: true,
-          fillColor: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral100,
+          fillColor:
+              isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral100,
         ),
       ),
     );
@@ -378,7 +397,8 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
     return ListView.separated(
       padding: const EdgeInsets.all(AppSpacing.md),
       itemCount: _filteredAlerts.length,
-      separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
         final alert = _filteredAlerts[index];
         return AlertCard(
@@ -424,16 +444,18 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
   }
 
   void _showAlertDetails(AlertModel alert) {
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _AlertDetailsSheet(
         alert: alert,
-        onResolve: alert.isActive ? () {
-          Navigator.pop(context);
-          _resolveAlert(alert);
-        } : null,
+        onResolve: alert.isActive
+            ? () {
+                Navigator.pop(context);
+                _resolveAlert(alert);
+              }
+            : null,
         onDismiss: () {
           Navigator.pop(context);
           _dismissAlert(alert);
@@ -538,7 +560,8 @@ class _AlertDetailsSheet extends StatelessWidget {
 
                 const SizedBox(height: AppSpacing.lg),
 
-                _buildDetailRow('Timestamp', alert.timestamp.toString(), isDark),
+                _buildDetailRow(
+                    'Timestamp', alert.timestamp.toString(), isDark),
                 _buildDetailRow('Time Ago', alert.timeAgo, isDark),
                 _buildDetailRow('Farm ID', alert.farmId, isDark),
                 _buildDetailRow('Alert ID', alert.id, isDark),
@@ -556,7 +579,8 @@ class _AlertDetailsSheet extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                            Icon(Icons.check_circle,
+                                color: AppColors.success, size: 20),
                             const SizedBox(width: AppSpacing.sm),
                             Text(
                               'Resolved',
@@ -606,7 +630,7 @@ class _AlertDetailsSheet extends StatelessWidget {
                       ),
                     ),
                   ),
-                
+
                 if (onDismiss != null) ...[
                   const SizedBox(height: AppSpacing.sm),
                   SizedBox(

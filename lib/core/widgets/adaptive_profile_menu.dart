@@ -1,3 +1,4 @@
+import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -60,26 +61,22 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
   Future<void> _showMobileSheet(BuildContext context, WidgetRef ref) async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = ref.read(currentUserProvider);
-    final selected = await showModalBottomSheet<String>(
+    final selected = await showAppBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       useSafeArea: true,
-      constraints: const BoxConstraints(maxWidth: 500),
+      constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width),
       builder: (sheetContext) => SafeArea(
         top: false,
         child: Container(
-          margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          width: double.infinity,
           constraints: BoxConstraints(
             maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.9,
           ),
           decoration: BoxDecoration(
             color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                  color: Colors.black26, blurRadius: 24, offset: Offset(0, 12)),
-            ],
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(

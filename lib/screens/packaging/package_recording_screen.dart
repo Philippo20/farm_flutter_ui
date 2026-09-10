@@ -1,3 +1,4 @@
+import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -126,7 +127,7 @@ class _PackageRecordingScreenState
     );
     final isMobile = MediaQuery.of(context).size.width < 600;
     final saved = isMobile
-        ? await showModalBottomSheet<bool>(
+        ? await showAppBottomSheet<bool>(
             context: context,
             isScrollControlled: true,
             useSafeArea: true,

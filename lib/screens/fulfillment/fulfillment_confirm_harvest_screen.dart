@@ -1,3 +1,4 @@
+import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -225,7 +226,7 @@ class _FulfillmentConfirmHarvestScreenState
       mobile: isMobile,
     );
     final saved = isMobile
-        ? await showModalBottomSheet<bool>(
+        ? await showAppBottomSheet<bool>(
             context: context,
             isScrollControlled: true,
             useSafeArea: true,
@@ -293,7 +294,7 @@ class _FulfillmentConfirmHarvestScreenState
       mobile: isMobile,
     );
     if (isMobile) {
-      return showModalBottomSheet<bool>(
+      return showAppBottomSheet<bool>(
         context: context,
         useSafeArea: true,
         backgroundColor: Colors.transparent,

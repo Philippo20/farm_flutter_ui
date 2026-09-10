@@ -1,3 +1,4 @@
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/responsive_metric_grid.dart';
 import 'dart:async';
 
@@ -2777,7 +2778,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
     }
 
     if (isMobile) {
-      showModalBottomSheet<void>(
+      showAppBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,

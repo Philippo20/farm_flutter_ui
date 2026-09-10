@@ -1,3 +1,4 @@
+import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/responsive_metric_grid.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -1617,7 +1618,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
     }
 
     if (isAndroid) {
-      showModalBottomSheet<void>(
+      showAppBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
@@ -1982,7 +1983,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
     }
 
     if (isAndroid) {
-      showModalBottomSheet<void>(
+      showAppBottomSheet<void>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,

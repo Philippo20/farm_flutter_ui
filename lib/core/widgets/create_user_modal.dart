@@ -1,3 +1,4 @@
+import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
@@ -23,7 +24,7 @@ Future<bool?> showCreateUserModal(
       onSubmit: onSubmit,
       mobile: mobile);
   if (mobile) {
-    return showModalBottomSheet<bool>(
+    return showAppBottomSheet<bool>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
@@ -152,13 +153,17 @@ class _CreateUserModalState extends State<_CreateUserModal> {
         widget.mobile ? MediaQuery.viewInsetsOf(context).bottom : 0.0;
     final body = Container(
       constraints: BoxConstraints(
-          maxWidth: 500, maxHeight: MediaQuery.sizeOf(context).height * 0.9),
+          maxWidth: widget.mobile ? double.infinity : 500,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.9),
       decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-                color: Colors.black26, blurRadius: 24, offset: Offset(0, 12))
+          borderRadius: widget.mobile
+              ? const BorderRadius.vertical(top: Radius.circular(24))
+              : BorderRadius.circular(16),
+          boxShadow: [
+            if (!widget.mobile)
+              const BoxShadow(
+                  color: Colors.black26, blurRadius: 24, offset: Offset(0, 12))
           ]),
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(

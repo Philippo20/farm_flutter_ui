@@ -1,3 +1,4 @@
+import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -17,7 +18,7 @@ Future<bool> showAdaptiveLogoutConfirmation(
       platform == TargetPlatform.iOS;
 
   if (useBottomSheet) {
-    return await showModalBottomSheet<bool>(
+    return await showAppBottomSheet<bool>(
           context: context,
           useSafeArea: true,
           isScrollControlled: true,

@@ -1,3 +1,4 @@
+import '../../core/widgets/app_bottom_sheet.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -1619,7 +1620,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     }
 
     if (isAndroid) {
-      showModalBottomSheet<void>(
+      showAppBottomSheet<void>(
         context: context,
         useSafeArea: true,
         isScrollControlled: true,

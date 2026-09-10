@@ -1,3 +1,4 @@
+import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:badges/badges.dart' as badges;
@@ -10,7 +11,7 @@ import '../../screens/caretaker/chat_screen.dart';
 void showNotificationDialog(BuildContext context) {
   final screenWidth = MediaQuery.sizeOf(context).width;
   if (screenWidth < 600) {
-    showModalBottomSheet<void>(
+    showAppBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

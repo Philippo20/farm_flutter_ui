@@ -1,3 +1,4 @@
+import '../../core/widgets/app_bottom_sheet.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -125,7 +126,7 @@ class _SalesPersonnelRecordDeliveryScreenState
     );
     final isMobile = MediaQuery.sizeOf(context).width < 600;
     final updated = isMobile
-        ? await showModalBottomSheet<bool>(
+        ? await showAppBottomSheet<bool>(
             context: context,
             isScrollControlled: true,
             useSafeArea: true,
@@ -2432,7 +2433,7 @@ class _PipelineDealCard extends StatelessWidget {
       return;
     }
 
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
       isScrollControlled: true,
       useRootNavigator: true,

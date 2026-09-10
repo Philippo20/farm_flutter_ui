@@ -1,3 +1,4 @@
+import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -26,7 +27,7 @@ Future<bool?> showBatchEditDialog({
     onUpdated: onUpdated,
   );
   if (isMobile) {
-    return showModalBottomSheet<bool>(
+    return showAppBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

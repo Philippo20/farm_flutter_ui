@@ -1,3 +1,4 @@
+import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -217,7 +218,7 @@ class _TraceabilityConsoleScreenState
 
   Future<T?> _showAdaptive<T>(Widget child) {
     if (MediaQuery.sizeOf(context).width < 600) {
-      return showModalBottomSheet<T>(
+      return showAppBottomSheet<T>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,

@@ -1,3 +1,4 @@
+import '../../core/widgets/app_bottom_sheet.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -271,7 +272,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     final changes = _buildReviewChanges(offTaker, proposal, label);
     var reviewing = false;
 
-    await showModalBottomSheet<void>(
+    await showAppBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -1577,7 +1578,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
     );
     final mobile = MediaQuery.sizeOf(context).width < 600;
     final result = mobile
-        ? await showModalBottomSheet<Object?>(
+        ? await showAppBottomSheet<Object?>(
             context: context,
             isScrollControlled: true,
             useSafeArea: true,
@@ -1711,7 +1712,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
       );
     });
     final changed = mobile
-        ? await showModalBottomSheet<bool>(
+        ? await showAppBottomSheet<bool>(
             context: context,
             isScrollControlled: true,
             backgroundColor: Colors.transparent,

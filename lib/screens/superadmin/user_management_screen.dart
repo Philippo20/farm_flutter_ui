@@ -1446,6 +1446,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   Future<void> _createUser({
     required String name,
     required String email,
+    required String password,
+    required String phone,
+    required String address,
+    required String status,
     required String role,
     required String department,
     required String driverLicenseNumber,
@@ -1457,12 +1461,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     await _api.createUser(
       name: name,
       email: email,
-      password: 'FarmDemo#2026New',
-      address: 'Farm Estates',
+      password: password,
+      address: address,
       role: _roleValue(role),
-      phone: '+233000000000',
+      phone: phone,
       department: department,
-      status: 'Pending',
+      status: status,
       actorId: actor?.id ?? '',
       actorRole: 'superadmin',
       driverLicenseNumber: driverLicenseNumber,
@@ -1508,10 +1512,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   Future<void> _showAddUserDialog(BuildContext context, bool isDark) async {
     final saved = await showCreateUserModal(context,
         roles: _roleOptions,
-        departments: _departmentOptions,
+        departments: _roleOptions.map(_departmentForRole).toSet().toList(),
+        includeAccountFields: true,
+        departmentForRole: _departmentForRole,
         onSubmit: (values) => _createUser(
               name: values['name'] as String,
               email: values['email'] as String,
+              password: values['password'] as String,
+              phone: _safeRequired(values['phone'] as String, '+233000000000'),
+              address:
+                  _safeRequired(values['address'] as String, 'Farm Estates'),
+              status: values['status'] as String,
               role: values['role'] as String,
               department: values['department'] as String,
               driverLicenseNumber: values['license'] as String,
@@ -1521,7 +1532,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             ));
     if (saved == true && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('User created successfully. Ready for approval.'),
+          content: Text('User created successfully.'),
           backgroundColor: AppColors.success));
     }
   }
