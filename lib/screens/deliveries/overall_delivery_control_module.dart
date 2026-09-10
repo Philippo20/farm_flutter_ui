@@ -1,3 +1,4 @@
+import '../../core/widgets/delivery_details_modal.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -2832,84 +2833,32 @@ class _OverallDeliveryControlModuleState
   }
 
   void _showDeliveryDetailsModal(_DeliveryRecord record) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    showAppDialog(
-      context: context,
-      builder: (dialogContext) => AppDialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 700),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : Colors.white,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            border: Border.all(
-              color: isDark ? Colors.white10 : Colors.black.withOpacity(0.08),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _modalHeader(
-                isDark: isDark,
-                title: 'Delivery Details',
-                subtitle: '${record.id} | ${record.farm}',
-                color: AppColors.info,
-                icon: Icons.receipt_long_rounded,
-                onClose: () => Navigator.of(dialogContext).pop(),
-              ),
-              Flexible(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withOpacity(0.04)
-                          : AppColors.neutral50,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      border: Border.all(
-                        color: isDark ? Colors.white10 : AppColors.neutral200,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _detailRow(isDark, 'Delivery ID', record.id),
-                        _detailRow(isDark, 'Farm', record.farm),
-                        _detailRow(isDark, 'Destination', record.destination),
-                        _detailRow(isDark, 'Crop',
-                            '${record.crop} (${record.quantity} ${record.unit})'),
-                        _detailRow(isDark, 'Status', record.status.label),
-                        _detailRow(isDark, 'Priority', record.priority.label),
-                        _detailRow(isDark, 'Driver', record.driver),
-                        _detailRow(isDark, 'Vehicle', record.vehicle),
-                        _detailRow(isDark, 'Scheduled At', record.scheduledAt),
-                        _detailRow(isDark, 'ETA', record.eta),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              _modalActions(
-                isDark: isDark,
-                cancelLabel: 'Close',
-                confirmLabel: 'Close',
-                confirmColor: AppColors.primary,
-                onCancel: () => Navigator.of(dialogContext).pop(),
-                onConfirm: () => Navigator.of(dialogContext).pop(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    showAppDialog<void>(
+        context: context,
+        builder: (_) => DeliveryDetailsModal(
+                reference: record.id,
+                status: record.status.label,
+                statusColor: _statusColor(record.status),
+                priority: record.priority.label,
+                sections: [
+                  DeliveryDetailSection('Route', Icons.route_outlined, [
+                    ('Farm', record.farm),
+                    ('Destination', record.destination)
+                  ]),
+                  DeliveryDetailSection(
+                      'Shipment', Icons.inventory_2_outlined, [
+                    ('Crop', record.crop),
+                    ('Quantity', '${record.quantity} ${record.unit}')
+                  ]),
+                  DeliveryDetailSection(
+                      'Transport',
+                      Icons.local_shipping_outlined,
+                      [('Driver', record.driver), ('Vehicle', record.vehicle)]),
+                  DeliveryDetailSection('Schedule', Icons.schedule, [
+                    ('Scheduled', record.scheduledAt),
+                    ('Estimated arrival', record.eta)
+                  ]),
+                ]));
   }
 
   Widget _textField({

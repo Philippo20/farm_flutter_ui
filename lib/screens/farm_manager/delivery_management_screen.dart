@@ -1,3 +1,4 @@
+import '../../core/widgets/delivery_details_modal.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1383,242 +1384,37 @@ class _DeliveryManagementScreenState
   // ══════════════════════════════════════════════════════════════════════
 
   void _showDeliveryDetails(Map<String, dynamic> d) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final status = d['status'] as String;
-    final sColor = _statusColor(status);
-
-    showAppDialog(
-      context: context,
-      builder: (_) => AppDialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(colors: [
-                            sColor,
-                            sColor.withOpacity(0.75),
-                          ]),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(_statusIcon(status),
-                            size: 20, color: Colors.white),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(d['id'] as String,
-                                style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark
-                                        ? Colors.white
-                                        : AppColors.textPrimary)),
-                            Text(d['batch'] as String,
-                                style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: isDark
-                                        ? Colors.white38
-                                        : AppColors.textSecondary)),
-                          ],
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () => Navigator.of(context).pop(),
-                        borderRadius: BorderRadius.circular(8),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white.withOpacity(0.04)
-                                : Colors.black.withOpacity(0.04),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(Icons.close_rounded,
-                              size: 16,
-                              color: isDark
-                                  ? Colors.white38
-                                  : AppColors.textSecondary),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Status
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: sColor.withOpacity(0.06),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: sColor.withOpacity(0.12)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(_statusIcon(status), size: 18, color: sColor),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Status',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      color: isDark
-                                          ? Colors.white24
-                                          : AppColors.textSecondary)),
-                              Text(status,
-                                  style: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: sColor)),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: _priorityColor(d['priority'] as String)
-                                .withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.flag_rounded,
-                                  size: 10,
-                                  color:
-                                      _priorityColor(d['priority'] as String)),
-                              const SizedBox(width: 3),
-                              Text(d['priority'] as String,
-                                  style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: _priorityColor(
-                                          d['priority'] as String))),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Detail rows
-                  _detailRow('Destination', d['destination'] as String,
-                      Icons.storefront_outlined, isDark),
-                  _detailRow('Address', d['address'] as String,
-                      Icons.location_on_outlined, isDark),
-                  _detailRow(
-                      'Crop', d['crop'] as String, Icons.eco_outlined, isDark),
-                  _detailRow('Quantity', '${d['quantity']} ${d['unit']}',
-                      Icons.scale_outlined, isDark),
-                  _detailRow('Driver', d['driver'] as String,
-                      Icons.person_outline_rounded, isDark),
-                  _detailRow('Vehicle', d['vehicle'] as String,
-                      Icons.directions_car_outlined, isDark),
-                  _detailRow('Scheduled', d['scheduledDate'] as String,
-                      Icons.calendar_today_outlined, isDark),
-                  _detailRow('ETA', d['estimatedArrival'] as String,
-                      Icons.access_time_rounded, isDark),
-                  _detailRow('Temperature', d['temperature'] as String,
-                      Icons.thermostat_outlined, isDark),
-                  const SizedBox(height: 20),
-
-                  // Actions
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                            side: BorderSide(
-                                color: isDark
-                                    ? Colors.white.withOpacity(0.1)
-                                    : Colors.black.withOpacity(0.08)),
-                          ),
-                          child: Text('Close',
-                              style: GoogleFonts.inter(
-                                  fontSize: 13, fontWeight: FontWeight.w500)),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                            _editDelivery(d);
-                          },
-                          icon: const Icon(Icons.edit_outlined, size: 15),
-                          label: Text('Edit Delivery',
-                              style: GoogleFonts.inter(
-                                  fontSize: 13, fontWeight: FontWeight.w600)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _detailRow(String label, String value, IconData icon, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Icon(icon,
-              size: 14,
-              color: isDark ? Colors.white24 : AppColors.textSecondary),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 100,
-            child: Text(label,
-                style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white38 : AppColors.textSecondary)),
-          ),
-          Expanded(
-            child: Text(value,
-                style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : AppColors.textPrimary)),
-          ),
-        ],
-      ),
-    );
+    String value(String key) => d[key]?.toString() ?? '';
+    showAppDialog<void>(
+        context: context,
+        builder: (_) => DeliveryDetailsModal(
+                reference: value('id'),
+                status: value('status'),
+                statusColor: _statusColor(value('status')),
+                priority: value('priority'),
+                onEdit: () => _editDelivery(d),
+                sections: [
+                  DeliveryDetailSection('Route', Icons.route_outlined, [
+                    ('Destination', value('destination')),
+                    ('Address', value('address'))
+                  ]),
+                  DeliveryDetailSection(
+                      'Shipment', Icons.inventory_2_outlined, [
+                    ('Batch', value('batch')),
+                    ('Crop', value('crop')),
+                    ('Quantity', '${value('quantity')} ${value('unit')}'),
+                    ('Temperature', value('temperature'))
+                  ]),
+                  DeliveryDetailSection(
+                      'Transport', Icons.local_shipping_outlined, [
+                    ('Driver', value('driver')),
+                    ('Vehicle', value('vehicle'))
+                  ]),
+                  DeliveryDetailSection('Schedule', Icons.schedule, [
+                    ('Scheduled', value('scheduledDate')),
+                    ('Estimated arrival', value('estimatedArrival'))
+                  ]),
+                ]));
   }
 
   // ══════════════════════════════════════════════════════════════════════
