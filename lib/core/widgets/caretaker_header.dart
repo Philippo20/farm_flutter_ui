@@ -210,20 +210,14 @@ class CaretakerHeader extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Greeting
-                  Row(
-                    children: [
-                      Text(
-                        _getGreeting(),
-                        style: AppTypography.h5.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 20,
-                          color: isDark ? Colors.white : AppColors.textPrimary,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                    ],
-                  ),
+                  Text(_getGreeting(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.h5.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color:
+                              isDark ? Colors.white : AppColors.textPrimary)),
                   const SizedBox(height: 2),
                   // User Name
                   Text(
@@ -251,15 +245,17 @@ class CaretakerHeader extends ConsumerWidget {
                             : AppColors.textSecondary,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        'Caretaker',
-                        style: AppTypography.bodySmall.copyWith(
-                          fontSize: 11,
-                          color: isDark
-                              ? Colors.white.withOpacity(0.6)
-                              : AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      Flexible(
+                        child: Text('Caretaker',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.bodySmall.copyWith(
+                              fontSize: 11,
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.6)
+                                  : AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            )),
                       ),
                     ],
                   ),
