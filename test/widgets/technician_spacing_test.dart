@@ -12,7 +12,15 @@ void main() {
     GoogleFonts.config.allowRuntimeFetching = false;
   });
   for (final page in [
-    const RepairHistoryScreen(),
+    RepairHistoryScreen(
+        loadRecords: () async => List.generate(
+            8,
+            (i) => {
+                  'title': 'Repair task $i',
+                  'status': 'Completed',
+                  'description': 'Recorded maintenance task',
+                  'farm_name': 'North farm'
+                })),
     const TechnicianSettingsScreen()
   ]) {
     testWidgets('${page.runtimeType} ends with a 16px mobile gap',

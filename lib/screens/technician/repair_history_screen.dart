@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'package:intl/intl.dart';
+import '../../services/superadmin_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -10,7 +13,8 @@ import '../../core/widgets/role_mobile_navigation.dart';
 import '../../providers/auth_provider.dart';
 
 class RepairHistoryScreen extends ConsumerStatefulWidget {
-  const RepairHistoryScreen({super.key});
+  const RepairHistoryScreen({super.key, this.loadRecords});
+  final Future<List<Map<String, dynamic>>> Function()? loadRecords;
 
   @override
   ConsumerState<RepairHistoryScreen> createState() =>
@@ -22,48 +26,74 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String _selectedFilter = 'All';
 
-  final List<Map<String, dynamic>> _repairs = [
-    {
-      'asset': 'Irrigation Pump A2',
-      'issue': 'Pressure drop and intermittent stoppage',
-      'status': 'Resolved',
-      'date': '2026-04-27',
-      'technician': 'Kwame Mensah',
-      'cost': 'GHS 420',
-      'priority': 'High',
-      'color': AppColors.error,
-    },
-    {
-      'asset': 'North Greenhouse Sensor Rack',
-      'issue': 'Faulty humidity probe replaced and recalibrated',
-      'status': 'Resolved',
-      'date': '2026-04-25',
-      'technician': 'Abena Owusu',
-      'cost': 'GHS 180',
-      'priority': 'Medium',
-      'color': AppColors.info,
-    },
-    {
-      'asset': 'Ventilation Fan F4',
-      'issue': 'Bearing wear detected during preventive inspection',
-      'status': 'Monitoring',
-      'date': '2026-04-22',
-      'technician': 'Kojo Asare',
-      'cost': 'GHS 95',
-      'priority': 'Medium',
-      'color': AppColors.warning,
-    },
-    {
-      'asset': 'Nutrient Doser Line 3',
-      'issue': 'Valve seal replaced and flow stabilized',
-      'status': 'Resolved',
-      'date': '2026-04-18',
-      'technician': 'Kwame Mensah',
-      'cost': 'GHS 250',
-      'priority': 'High',
-      'color': AppColors.success,
-    },
-  ];
+  final _api = SuperAdminApiService();
+  List<Map<String, dynamic>> _repairs = [];
+  bool _loading = true, _fetching = false;
+  String? _error;
+  String _search = '';
+  Timer? _timer;
+  @override
+  void initState() {
+    super.initState();
+    _load();
+    _timer =
+        Timer.periodic(const Duration(seconds: 30), (_) => _load(silent: true));
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (_fetching) return;
+    _fetching = true;
+    if (!silent)
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    try {
+      final user = ref.read(currentUserProvider);
+      if (widget.loadRecords == null && user == null)
+        throw StateError('Sign in to view your repair history.');
+      final rows = await (widget.loadRecords?.call() ??
+          _api.getTechnicianRepairHistory(user!.id));
+      rows.sort((a, b) => _date(b).compareTo(_date(a)));
+      if (mounted)
+        setState(() {
+          _repairs = rows;
+          _error = null;
+        });
+    } catch (_) {
+      if (mounted)
+        setState(
+            () => _error = 'Unable to load repair records. Please try again.');
+    } finally {
+      _fetching = false;
+      if (mounted && _loading) setState(() => _loading = false);
+    }
+  }
+
+  String _value(Map<String, dynamic> row, String key,
+          [String fallback = 'Not recorded']) =>
+      row[key]?.toString().trim().isNotEmpty == true
+          ? row[key].toString()
+          : fallback;
+  DateTime _date(Map<String, dynamic> row) =>
+      DateTime.tryParse(
+          _value(row, 'updated_at', _value(row, r'$updatedAt', ''))) ??
+      DateTime.tryParse(_value(row, 'created_at', '')) ??
+      DateTime(1970);
+  String _status(Map<String, dynamic> row) => _value(row, 'status', 'Unknown');
+  Color _statusColor(String status) => status == 'Completed'
+      ? AppColors.success
+      : status == 'Cancelled'
+          ? AppColors.textSecondary
+          : status == 'In Progress' || status == 'Started'
+              ? AppColors.info
+              : AppColors.warning;
 
   @override
   Widget build(BuildContext context) {
@@ -151,234 +181,275 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
   }
 
   Widget _buildContent(bool isDark, bool isMobile) {
-    final filteredRepairs = _selectedFilter == 'All'
-        ? _repairs
-        : _repairs.where((item) => item['status'] == _selectedFilter).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildHeaderCard(isDark, isMobile),
-        const SizedBox(height: 16),
-        _buildFilterChips(isDark),
-        const SizedBox(height: AppSpacing.md),
-        for (var i = 0; i < filteredRepairs.length; i++) ...[
-          if (i > 0) const SizedBox(height: 16),
-          _buildRepairCard(filteredRepairs[i], isDark, isMobile),
-        ],
+    final foreground = isDark ? Colors.white : AppColors.textPrimary;
+    final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
+    final completed = _repairs.where((r) => _status(r) == 'Completed').length;
+    final active = _repairs
+        .where((r) => !['Completed', 'Cancelled'].contains(_status(r)))
+        .length;
+    final filtered = _repairs
+        .where((row) =>
+            (_selectedFilter == 'All' || _status(row) == _selectedFilter) &&
+            ['title', 'description', 'farm_name', 'task_id', 'assigned_to_name']
+                .any((key) => _value(row, key, '')
+                    .toLowerCase()
+                    .contains(_search.trim().toLowerCase())))
+        .toList();
+    final statuses = {'All', ..._repairs.map(_status)}.toList();
+    if (!statuses.contains(_selectedFilter)) statuses.add(_selectedFilter);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Row(children: [
+        Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Repair history',
+              style: AppTypography.h5.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: foreground)),
+          const SizedBox(height: 4),
+          Text('Maintenance tasks assigned to you',
+              style: TextStyle(fontSize: 12, color: secondary)),
+        ])),
+        IconButton(
+            tooltip: 'Refresh repair history',
+            onPressed: _fetching ? null : _load,
+            icon: const Icon(Icons.refresh, size: 20))
+      ]),
+      const SizedBox(height: 16),
+      if (_loading && _repairs.isEmpty)
+        const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(child: CircularProgressIndicator()))
+      else if (_error != null && _repairs.isEmpty)
+        Container(
+            padding: const EdgeInsets.all(24),
+            decoration: _decoration(isDark),
+            child: Column(children: [
+              const Icon(Icons.cloud_off_outlined, size: 32),
+              const SizedBox(height: 12),
+              Text(_error!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: secondary)),
+              TextButton(onPressed: _load, child: const Text('Retry')),
+            ]))
+      else ...[
+        Row(children: [
+          for (final stat in [
+            ('Records', _repairs.length),
+            ('Completed', completed),
+            ('Open', active)
+          ]) ...[
+            if (stat.$1 != 'Records') const SizedBox(width: 10),
+            Expanded(
+                child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: _decoration(isDark),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(stat.$2.toString(),
+                              style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w600,
+                                  color: foreground)),
+                          const SizedBox(height: 4),
+                          Text(stat.$1,
+                              style: TextStyle(fontSize: 11, color: secondary)),
+                        ]))),
+          ],
+        ]),
+        const SizedBox(height: 12),
+        Container(
+            padding: const EdgeInsets.all(14),
+            decoration: _decoration(isDark),
+            child: Column(children: [
+              TextField(
+                  onChanged: (value) => setState(() => _search = value),
+                  style: const TextStyle(fontSize: 13),
+                  decoration: InputDecoration(
+                      hintText: 'Search repairs or farms',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      isDense: true,
+                      filled: true,
+                      fillColor: isDark
+                          ? Colors.white.withValues(alpha: .04)
+                          : AppColors.neutral50,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none))),
+              const SizedBox(height: 10),
+              Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: statuses
+                          .map((status) => ChoiceChip(
+                              showCheckmark: false,
+                              label: Text(status,
+                                  style: const TextStyle(fontSize: 11)),
+                              selected: _selectedFilter == status,
+                              onSelected: (_) =>
+                                  setState(() => _selectedFilter = status)))
+                          .toList())),
+            ])),
+        if (_error != null)
+          Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Row(children: [
+                Expanded(
+                    child: Text(_error!,
+                        style:
+                            TextStyle(fontSize: 12, color: AppColors.error))),
+                TextButton(onPressed: _load, child: const Text('Retry'))
+              ])),
+        const SizedBox(height: 12),
+        if (filtered.isEmpty)
+          Container(
+              padding: const EdgeInsets.all(24),
+              decoration: _decoration(isDark),
+              child: Column(children: [
+                Icon(Icons.build_circle_outlined, size: 32, color: secondary),
+                const SizedBox(height: 10),
+                Text(
+                    _repairs.isEmpty
+                        ? 'No repair records yet'
+                        : 'No matching records',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: foreground)),
+                const SizedBox(height: 6),
+                Text(
+                    _repairs.isEmpty
+                        ? 'Assigned maintenance tasks will appear here when recorded.'
+                        : 'Try another search or status.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: secondary))
+              ]))
+        else
+          LayoutBuilder(builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 800 ? 2 : 1;
+            final count = (filtered.length / columns).ceil();
+            return Column(children: [
+              for (var row = 0; row < count; row++) ...[
+                if (row > 0) const SizedBox(height: 12),
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  for (var col = 0; col < columns; col++) ...[
+                    if (col > 0) const SizedBox(width: 12),
+                    Expanded(
+                        child: row * columns + col < filtered.length
+                            ? _buildRepairCard(
+                                filtered[row * columns + col], isDark)
+                            : const SizedBox()),
+                  ]
+                ]),
+              ]
+            ]);
+          }),
       ],
-    );
+    ]);
   }
 
-  Widget _buildHeaderCard(bool isDark, bool isMobile) {
+  BoxDecoration _decoration(bool dark) => BoxDecoration(
+      color: dark ? AppColors.surfaceDark : Colors.white,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: dark ? Colors.white10 : AppColors.neutral200));
+
+  Widget _buildRepairCard(Map<String, dynamic> repair, bool dark) {
+    final foreground = dark ? Colors.white : AppColors.textPrimary;
+    final secondary = dark ? Colors.white60 : AppColors.textSecondary;
+    final status = _status(repair);
+    final color = _statusColor(status);
+    String date(String key) {
+      final parsed = DateTime.tryParse(_value(repair, key, ''));
+      return parsed == null
+          ? 'Not recorded'
+          : DateFormat('d MMM yyyy').format(parsed.toLocal());
+    }
+
+    Widget detail(String label, String value) => Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: TextStyle(fontSize: 10, color: secondary)),
+          const SizedBox(height: 5),
+          Text(value, style: TextStyle(fontSize: 12, color: foreground))
+        ]));
     return Container(
-      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isDark
-              ? [AppColors.warning.withOpacity(0.22), AppColors.surfaceDark]
-              : [AppColors.warning.withOpacity(0.12), Colors.white],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: AppColors.warning.withOpacity(isDark ? 0.3 : 0.18),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Repair History',
-            style: AppTypography.h4.copyWith(
-              fontWeight: FontWeight.w800,
-              fontSize: isMobile ? 24 : 28,
-              color: isDark ? Colors.white : AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Review completed repairs, maintenance cost, and technician notes across farm assets.',
-            style: AppTypography.bodyMedium.copyWith(
-              color: isDark ? Colors.white70 : AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              _buildMetricChip('Resolved', '3', AppColors.success, isDark),
-              const SizedBox(width: AppSpacing.sm),
-              _buildMetricChip('Monitoring', '1', AppColors.warning, isDark),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricChip(
-      String label, String value, Color color, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: color.withOpacity(isDark ? 0.18 : 0.10),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(value,
-              style: AppTypography.bodyLarge.copyWith(
-                color: color,
-                fontWeight: FontWeight.w700,
-              )),
-          Text(label,
-              style: AppTypography.caption.copyWith(
-                color: isDark ? Colors.white70 : AppColors.textSecondary,
-              )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChips(bool isDark) {
-    const filters = ['All', 'Resolved', 'Monitoring'];
-
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: filters.map((filter) {
-        final isSelected = _selectedFilter == filter;
-        return ChoiceChip(
-          label: Text(filter),
-          selected: isSelected,
-          onSelected: (_) => setState(() => _selectedFilter = filter),
-          selectedColor: AppColors.primary.withOpacity(0.18),
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          labelStyle: AppTypography.bodySmall.copyWith(
-            color: isSelected
-                ? AppColors.primary
-                : (isDark ? Colors.white : AppColors.textPrimary),
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-          ),
-          side: BorderSide(
-            color: isSelected
-                ? AppColors.primary.withOpacity(0.35)
-                : (isDark ? Colors.white12 : AppColors.neutral200),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildRepairCard(
-    Map<String, dynamic> repair,
-    bool isDark,
-    bool isMobile,
-  ) {
-    final color = repair['color'] as Color;
-
-    return Container(
-      padding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: isDark ? Colors.white.withOpacity(0.08) : AppColors.neutral200,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
+        padding: const EdgeInsets.all(16),
+        decoration: _decoration(dark),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                child:
-                    Icon(Icons.build_circle_outlined, color: color, size: 20),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
+                    color: color.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(10)),
+                child: Icon(Icons.build_outlined, size: 18, color: color)),
+            const SizedBox(width: 10),
+            Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      repair['asset'] as String,
-                      style: AppTypography.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      repair['issue'] as String,
-                      style: AppTypography.bodySmall.copyWith(
-                        color:
-                            isDark ? Colors.white70 : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(_value(repair, 'title', 'Maintenance task'),
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: foreground)),
+                  const SizedBox(height: 5),
+                  Text(_value(repair, 'farm_name'),
+                      style: TextStyle(fontSize: 12, color: secondary))
+                ]))
+          ]),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 6, children: [
+            Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                ),
-                child: Text(
-                  repair['status'] as String,
-                  style: AppTypography.caption.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+                    color: color.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(6)),
+                child: Text(status,
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: color))),
+            Text(_value(repair, 'task_id', 'Reference unavailable'),
+                style: TextStyle(fontSize: 11, color: secondary))
+          ]),
+          if (_value(repair, 'description', '').isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(_value(repair, 'description'),
+                style: TextStyle(fontSize: 12, height: 1.4, color: foreground))
+          ],
+          const SizedBox(height: 14),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            detail('Technician', _value(repair, 'assigned_to_name')),
+            const SizedBox(width: 10),
+            detail('Priority', _value(repair, 'priority'))
+          ]),
+          const SizedBox(height: 12),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            detail('Last updated', date('updated_at')),
+            const SizedBox(width: 10),
+            detail('Due date', date('due_date'))
+          ]),
+          for (final note in [
+            ('Manager note', 'manager_comment'),
+            ('Task update', 'caretaker_comment')
+          ])
+            if (_value(repair, note.$2, '').isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(note.$1,
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: secondary)),
+              const SizedBox(height: 5),
+              Text(_value(repair, note.$2),
+                  style:
+                      TextStyle(fontSize: 12, height: 1.4, color: foreground)),
             ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.sm,
-            children: [
-              _buildDetail('Date', repair['date'] as String, isDark),
-              _buildDetail(
-                  'Technician', repair['technician'] as String, isDark),
-              _buildDetail('Priority', repair['priority'] as String, isDark),
-              _buildDetail('Cost', repair['cost'] as String, isDark),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetail(String label, String value, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTypography.caption.copyWith(
-            color: isDark ? Colors.white60 : AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: AppTypography.bodySmall.copyWith(
-            color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
+        ]));
   }
 }

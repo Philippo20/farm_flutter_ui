@@ -93,31 +93,13 @@ class TechnicianHeader extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Text(
-                    _getGreeting(),
-                    style: AppTypography.h4.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 28,
-                      color: isDark ? Colors.white : AppColors.textPrimary,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    ', $userName',
-                    style: AppTypography.h4.copyWith(
+              Text(_getGreeting() + ', ' + userName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.h4.copyWith(
                       fontWeight: FontWeight.w600,
                       fontSize: 28,
-                      color: isDark
-                          ? Colors.white.withOpacity(0.9)
-                          : AppColors.textPrimary.withOpacity(0.8),
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
+                      color: isDark ? Colors.white : AppColors.textPrimary)),
               const SizedBox(height: AppSpacing.xs),
               Row(
                 children: [
@@ -129,16 +111,18 @@ class TechnicianHeader extends ConsumerWidget {
                         : AppColors.textSecondary,
                   ),
                   const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    _getFormattedDate(),
-                    style: AppTypography.bodyLarge.copyWith(
-                      fontSize: 14,
-                      color: isDark
-                          ? Colors.white.withOpacity(0.7)
-                          : AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.2,
-                    ),
+                  Flexible(
+                    child: Text(_getFormattedDate(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodyLarge.copyWith(
+                          fontSize: 14,
+                          color: isDark
+                              ? Colors.white.withOpacity(0.7)
+                              : AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.2,
+                        )),
                   ),
                 ],
               ),
@@ -259,15 +243,17 @@ class TechnicianHeader extends ConsumerWidget {
                             : AppColors.textSecondary,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        'Technician',
-                        style: AppTypography.bodySmall.copyWith(
-                          fontSize: 11,
-                          color: isDark
-                              ? Colors.white.withOpacity(0.6)
-                              : AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      Flexible(
+                        child: Text('Technician',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.bodySmall.copyWith(
+                              fontSize: 11,
+                              color: isDark
+                                  ? Colors.white.withOpacity(0.6)
+                                  : AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            )),
                       ),
                     ],
                   ),

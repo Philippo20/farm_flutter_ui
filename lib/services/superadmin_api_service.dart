@@ -362,6 +362,24 @@ class SuperAdminApiService {
   Future<List<Map<String, dynamic>>> getSensors() => _getDocuments('/sensors');
   Future<List<Map<String, dynamic>>> getFundRequests() =>
       _getDocuments('/fund-requests');
+  Future<List<Map<String, dynamic>>> getTechnicianRepairHistory(
+      String technicianId) async {
+    if (technicianId.trim().isEmpty) return [];
+    final records = <Map<String, dynamic>>[];
+    for (var offset = 0;; offset += 100) {
+      final query = Uri(queryParameters: {
+        'assigned_to_id': technicianId,
+        'offset': offset.toString(),
+        'limit': '100'
+      }).query;
+      final page = await _getDocuments('/farm-tasks?' + query);
+      records
+          .addAll(page.where((row) => row['assigned_to_id'] == technicianId));
+      if (page.length < 100) break;
+    }
+    return records;
+  }
+
   Future<List<Map<String, dynamic>>> getFarmTasks() =>
       _getDocuments('/farm-tasks');
   Future<List<Map<String, dynamic>>> getFarmRecords() =>
