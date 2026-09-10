@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'dart:convert';
 
@@ -153,7 +154,7 @@ class _QualityWorkflowScreenState extends ConsumerState<QualityWorkflowScreen> {
             backgroundColor: Colors.transparent,
             builder: (_) => form,
           )
-        : await showDialog<bool>(context: context, builder: (_) => form);
+        : await showAppDialog<bool>(context: context, builder: (_) => form);
     if (changed == true) await _load();
   }
 
@@ -965,7 +966,7 @@ class _WorkflowModalFrame extends StatelessWidget {
     );
     return mobile
         ? content
-        : Dialog(
+        : AppDialog(
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.all(24),
             child: content);

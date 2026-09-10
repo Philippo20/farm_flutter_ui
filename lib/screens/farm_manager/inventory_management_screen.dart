@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -1784,9 +1785,9 @@ class _InventoryManagementScreenState
   }
 
   void _showFilterDialog() {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: const Text('Filter Options'),
         content:
             const Text('Advanced filtering options will be implemented here.'),
@@ -1801,9 +1802,9 @@ class _InventoryManagementScreenState
   }
 
   void _showAddInventoryDialog() {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: const Text('Add Inventory Item'),
         content: const Text('Add inventory form will be implemented here.'),
         actions: [
@@ -1826,9 +1827,9 @@ class _InventoryManagementScreenState
   }
 
   void _showItemDetails(Map<String, dynamic> item) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: Text(item['name'] as String),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1864,10 +1865,10 @@ class _InventoryManagementScreenState
     var isSaving = false;
     String? dialogError;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+        builder: (context, setDialogState) => AppAlertDialog(
           title: const Text('Stock In'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1934,10 +1935,10 @@ class _InventoryManagementScreenState
     var isSaving = false;
     String? dialogError;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
+        builder: (context, setDialogState) => AppAlertDialog(
           title: const Text('Stock Out'),
           content: Column(
             mainAxisSize: MainAxisSize.min,

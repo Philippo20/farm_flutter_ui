@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -1416,9 +1417,9 @@ class _MaintenanceScheduleScreenState
   }
 
   void _showFilterDialog() {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: const Text('Filter Options'),
         content: const Text('Advanced filtering will be implemented here.'),
         actions: [
@@ -1432,9 +1433,9 @@ class _MaintenanceScheduleScreenState
   }
 
   void _showCreateDialog() {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: Text(_tabController.index == 0
             ? 'Schedule Maintenance'
             : 'Report Issue'),
@@ -1463,9 +1464,9 @@ class _MaintenanceScheduleScreenState
 
   void _showMaintenanceDetailsModal(Map<String, dynamic> item) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.all(AppSpacing.lg),
         child: ConstrainedBox(
@@ -1557,9 +1558,9 @@ class _MaintenanceScheduleScreenState
 
   void _showIssueDetailsModal(Map<String, dynamic> issue) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.all(AppSpacing.lg),
         child: ConstrainedBox(
@@ -1823,9 +1824,9 @@ class _MaintenanceScheduleScreenState
   }
 
   void _showMaintenanceDetails(Map<String, dynamic> item) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: Text(item['equipment'] as String),
         content: SingleChildScrollView(
           child: Column(
@@ -1856,9 +1857,9 @@ class _MaintenanceScheduleScreenState
   }
 
   void _showIssueDetails(Map<String, dynamic> issue) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: Text(issue['title'] as String),
         content: Column(
           mainAxisSize: MainAxisSize.min,

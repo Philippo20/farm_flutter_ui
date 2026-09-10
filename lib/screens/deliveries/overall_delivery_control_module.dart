@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -1876,11 +1877,11 @@ class _OverallDeliveryControlModuleState
 
     applySelectedBatchToFields();
 
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
@@ -1899,7 +1900,7 @@ class _OverallDeliveryControlModuleState
                 _modalHeader(
                   isDark: isDark,
                   title: 'Create Delivery',
-                  subtitle: 'Create a delivery control record in Appwrite',
+                  subtitle: 'Set the farm, batch, and delivery schedule',
                   color: AppColors.info,
                   icon: Icons.add_road_rounded,
                   onClose: isSaving
@@ -1908,6 +1909,9 @@ class _OverallDeliveryControlModuleState
                 ),
                 Flexible(
                   child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       children: [
@@ -1916,6 +1920,7 @@ class _OverallDeliveryControlModuleState
                           const SizedBox(height: AppSpacing.md),
                         ],
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           key: ValueKey('delivery-farm-$selectedFarm'),
                           initialValue: selectedFarm,
                           dropdownColor:
@@ -1957,6 +1962,7 @@ class _OverallDeliveryControlModuleState
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           key: ValueKey(
                               'delivery-plant-$selectedFarm-$selectedPlant'),
                           initialValue:
@@ -1998,6 +2004,7 @@ class _OverallDeliveryControlModuleState
                         ],
                         const SizedBox(height: AppSpacing.sm),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           key: ValueKey(
                               'delivery-batch-$selectedFarm-$selectedPlant-$selectedBatchNo'),
                           initialValue:
@@ -2060,6 +2067,7 @@ class _OverallDeliveryControlModuleState
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           key: ValueKey('delivery-driver-$selectedDriverId'),
                           initialValue: selectedDriverId.isEmpty
                               ? null
@@ -2097,6 +2105,7 @@ class _OverallDeliveryControlModuleState
                         ],
                         const SizedBox(height: AppSpacing.sm),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           key: ValueKey(
                               'delivery-vehicle-$selectedDriverId-$selectedVehicle'),
                           initialValue: selectedVehicle,
@@ -2148,6 +2157,7 @@ class _OverallDeliveryControlModuleState
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           initialValue: selectedPriority,
                           dropdownColor:
                               isDark ? AppColors.surfaceDark : Colors.white,
@@ -2354,11 +2364,11 @@ class _OverallDeliveryControlModuleState
     bool isDeleting = false;
     String? formError;
 
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
@@ -2467,10 +2477,10 @@ class _OverallDeliveryControlModuleState
     bool isSaving = false;
     String? formError;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => Dialog(
+        builder: (dialogContext, setDialogState) => AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
@@ -2498,6 +2508,9 @@ class _OverallDeliveryControlModuleState
                 ),
                 Flexible(
                   child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2641,10 +2654,10 @@ class _OverallDeliveryControlModuleState
     bool isSaving = false;
     String? formError;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
@@ -2672,6 +2685,9 @@ class _OverallDeliveryControlModuleState
                 ),
                 Flexible(
                   child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Column(
                       children: [
@@ -2680,6 +2696,7 @@ class _OverallDeliveryControlModuleState
                           const SizedBox(height: AppSpacing.md),
                         ],
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           key: ValueKey('assign-driver-$selectedDriverId'),
                           initialValue: selectedDriverId.isEmpty
                               ? null
@@ -2717,6 +2734,7 @@ class _OverallDeliveryControlModuleState
                         ],
                         const SizedBox(height: AppSpacing.sm),
                         DropdownButtonFormField<String>(
+                          isExpanded: true,
                           key: ValueKey(
                               'assign-vehicle-$selectedDriverId-$selectedVehicle'),
                           initialValue: selectedVehicle,
@@ -2815,9 +2833,9 @@ class _OverallDeliveryControlModuleState
 
   void _showDeliveryDetailsModal(_DeliveryRecord record) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (dialogContext) => Dialog(
+      builder: (dialogContext) => AppDialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
@@ -2843,6 +2861,9 @@ class _OverallDeliveryControlModuleState
               ),
               Flexible(
                 child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Container(
                     width: double.infinity,
@@ -2989,28 +3010,19 @@ class _OverallDeliveryControlModuleState
     required VoidCallback onClose,
   }) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppSpacing.radiusXl),
-        ),
-      ),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              gradient: const LinearGradient(
+                  colors: [AppColors.primary, Color(0xff15803d)]),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
-            child: Icon(icon, color: Colors.white, size: 24),
+            child: Icon(icon, color: Colors.white, size: 20),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3018,14 +3030,16 @@ class _OverallDeliveryControlModuleState
                 Text(
                   title,
                   style: AppTypography.h6.copyWith(
-                    color: Colors.white,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
                   subtitle,
                   style: AppTypography.bodySmall.copyWith(
-                    color: Colors.white.withOpacity(0.85),
+                    fontSize: 12,
+                    color: isDark ? Colors.white60 : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -3033,7 +3047,9 @@ class _OverallDeliveryControlModuleState
           ),
           IconButton(
             onPressed: onClose,
-            icon: const Icon(Icons.close_rounded, color: Colors.white70),
+            icon: Icon(Icons.close_rounded,
+                size: 16,
+                color: isDark ? Colors.white60 : AppColors.textSecondary),
           ),
         ],
       ),

@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 // ignore_for_file: deprecated_member_use
 
 import 'dart:math';
@@ -547,7 +548,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
     final sizeController = TextEditingController();
     String? selectedStatus = 'Active'; // Default status
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) {
         final cardColor = isDark ? AppColors.darkCard : AppColors.card;
@@ -557,7 +558,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
             : Colors.black.withOpacity(0.6);
         final primaryColor = AppColors.primary;
 
-        return Dialog(
+        return AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.all(20),
           child: Container(
@@ -877,7 +878,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
 
   // start of farm details
   void _showFarmDetailsModal(Farm farm) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) {
         final cardColor = isDark ? Colors.grey[900] : Colors.white;
@@ -891,7 +892,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
         final rightTabController =
             TabController(length: 2, vsync: Navigator.of(dialogContext));
 
-        return Dialog(
+        return AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.all(20),
           child: Container(

@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -356,9 +357,9 @@ class _SystemControlPanelState extends ConsumerState<SystemControlPanel>
   }
 
   void _manualDose(String controlId) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: Text('Manual ${controlId == "phUp" ? "pH Up" : "pH Down"} Dose'),
         content: const Text('Are you sure you want to manually dose the solution?'),
         actions: [
@@ -384,9 +385,9 @@ class _SystemControlPanelState extends ConsumerState<SystemControlPanel>
   }
 
   void _showScheduleDialog(String systemName) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: Text('Schedule $systemName'),
         content: const Text('Schedule configuration coming soon...'),
         actions: [
@@ -400,9 +401,9 @@ class _SystemControlPanelState extends ConsumerState<SystemControlPanel>
   }
 
   void _showEmergencyStop(BuildContext context) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: const Row(
           children: [
             Icon(Icons.emergency, color: Colors.red),

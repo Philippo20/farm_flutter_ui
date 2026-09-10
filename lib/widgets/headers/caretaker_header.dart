@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
@@ -38,7 +39,7 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
   // Add these methods to your CaretakerHeader class
 
   void _showUserProfilePopup(BuildContext context) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => UserProfilePopup(
         isDark: isDark,
@@ -88,9 +89,9 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
 
 // Edit Profile Dialog
   void _showEditProfileDialog(BuildContext context) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         title: Text(
           "Edit Profile",
@@ -173,9 +174,9 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
 
 // Help & Support Dialog
   void _showHelpSupportDialog(BuildContext context) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         title: Text(
           "Help & Support",
@@ -285,9 +286,9 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
 
 // About Dialog
   void _showAboutDialog(BuildContext context) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         title: Text(
           "About FarmCare",

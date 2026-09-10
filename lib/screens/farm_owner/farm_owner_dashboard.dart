@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -582,9 +583,9 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final amountController = TextEditingController();
     
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: const Text('Withdraw Funds'),
         content: Column(
           mainAxisSize: MainAxisSize.min,

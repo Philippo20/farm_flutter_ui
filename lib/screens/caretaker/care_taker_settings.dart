@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -285,7 +286,7 @@ class _CareTakerSettingsScreenState
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surface = isDark ? AppColors.darkCard : AppColors.card;
-    return Dialog(
+    return AppDialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(20),
       child: ConstrainedBox(
@@ -363,7 +364,7 @@ class _CareTakerSettingsScreenState
     final emailController = TextEditingController(text: user.email);
     final addressController = TextEditingController(text: user.address);
     final formKey = GlobalKey<FormState>();
-    final shouldSave = await showDialog<bool>(
+    final shouldSave = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => _settingsModal(
         modalContext: dialogContext,
@@ -449,7 +450,7 @@ class _CareTakerSettingsScreenState
     final passwordController = TextEditingController();
     final confirmController = TextEditingController();
     final formKey = GlobalKey<FormState>();
-    final shouldSave = await showDialog<bool>(
+    final shouldSave = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => _settingsModal(
         modalContext: dialogContext,
@@ -516,7 +517,7 @@ class _CareTakerSettingsScreenState
   }
 
   void _showHelpCenter() {
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (dialogContext) => _settingsModal(
         modalContext: dialogContext,

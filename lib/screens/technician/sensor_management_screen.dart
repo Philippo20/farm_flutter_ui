@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -1382,9 +1383,9 @@ class _SensorManagementScreenState
         DateTime.now().difference(lastCalibrated).inDays;
     final isCalibrationDue = daysSinceCalibration >= 14;
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: Colors.transparent,
         insetPadding: EdgeInsets.all(isMobile ? AppSpacing.md : AppSpacing.lg),
         child: ConstrainedBox(
@@ -1776,9 +1777,9 @@ class _SensorManagementScreenState
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         title: Text(
           'Add New Sensor',

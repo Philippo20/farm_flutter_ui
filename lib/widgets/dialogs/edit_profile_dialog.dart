@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -54,7 +55,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     double dialogWidth = screenWidth > 600 ? 500 : screenWidth * 0.9;
     final isSmallScreen = screenWidth < 400;
 
-    return Dialog(
+    return AppDialog(
       backgroundColor: widget.isDark ? Colors.grey[900] : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),

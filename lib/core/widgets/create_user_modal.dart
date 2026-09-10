@@ -1,3 +1,4 @@
+import 'app_dialog.dart';
 import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -33,10 +34,10 @@ Future<bool?> showCreateUserModal(
         backgroundColor: Colors.transparent,
         builder: (_) => modal);
   }
-  return showDialog<bool>(
+  return showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => Dialog(
+      builder: (_) => AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 20, vertical: 24),

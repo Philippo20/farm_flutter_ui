@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -599,9 +600,9 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
   }
 
   void _showCreateRecordDialog() {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: const Text('Create Farm Record'),
         content: const Text('Record creation form will be implemented here.'),
         actions: [

@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1608,9 +1609,9 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
 
   Future<bool> _showUnsavedChangesDialog(
       BuildContext context, bool isDark) async {
-    return await showDialog<bool>(
+    return await showAppDialog<bool>(
           context: context,
-          builder: (context) => AlertDialog(
+          builder: (context) => AppAlertDialog(
             backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
@@ -1647,9 +1648,9 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
   }
 
   void _showResetDialog(BuildContext context, bool isDark) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
@@ -1913,9 +1914,9 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
       return;
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
@@ -2175,9 +2176,9 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
 
   void _showValidationErrorsDialog(
       BuildContext context, bool isDark, List<String> errors) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),

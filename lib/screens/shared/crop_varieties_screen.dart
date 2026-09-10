@@ -1,3 +1,6 @@
+import '../../core/widgets/app_dialog.dart';
+import '../../core/widgets/crop_variety_modal_frame.dart';
+import '../../core/widgets/app_bottom_sheet.dart';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -33,6 +36,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   bool _isSaving = false;
   bool? _showCards;
   String? _error;
+  String? _varietySaveError;
 
   @override
   void initState() {
@@ -1113,7 +1117,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   void _showEditDialog(bool isDark, Map<String, dynamic> crop) =>
       _showVarietyDialog(isDark, crop: crop);
 
-  void _showVarietyDialog(bool isDark, {Map<String, dynamic>? crop}) {
+  Future<void> _showVarietyDialog(bool isDark,
+      {Map<String, dynamic>? crop}) async {
     final isEditing = crop != null;
     final formKey = GlobalKey<FormState>();
     final cropController = TextEditingController(text: _editText(crop, 'crop'));
@@ -1164,365 +1169,410 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     Uint8List? selectedImageBytes;
     var saving = false;
 
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          ),
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 20,
-          ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: 600,
-              maxHeight: MediaQuery.sizeOf(context).height * 0.9,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 18,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.success,
-                        AppColors.success.withValues(alpha: 0.82),
-                      ],
-                    ),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(AppSpacing.radiusLg),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(9),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusMd),
-                        ),
-                        child: const Icon(
-                          Icons.grass_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                                isEditing
-                                    ? 'Edit Crop Variety'
-                                    : 'Add Crop Variety',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                  height: 1.25,
-                                )),
-                            const SizedBox(height: 3),
-                            Text(
-                              isEditing
-                                  ? 'Update seed and production specifications'
-                                  : 'Define seed and production specifications',
-                              style: GoogleFonts.poppins(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white70,
-                                height: 1.35,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed:
-                            saving ? null : () => Navigator.pop(dialogContext),
-                        icon: const Icon(
-                          Icons.close_rounded,
-                          color: Colors.white70,
-                          size: 20,
-                        ),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ],
-                  ),
+    TransitionRoute<dynamic>? modalRoute;
+    final mobile = MediaQuery.sizeOf(context).width < 600 ||
+        Theme.of(context).platform == TargetPlatform.android;
+    Widget buildModal(BuildContext dialogContext) {
+      modalRoute = ModalRoute.of(dialogContext) as TransitionRoute<dynamic>?;
+      return StatefulBuilder(
+        builder: (context, setDialogState) => PopScope(
+            canPop: !saving,
+            child: CropVarietyModalFrame(
+              mobile: mobile,
+              isDark: isDark,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 500,
+                  maxHeight: double.infinity,
                 ),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
-                    child: Form(
-                      key: formKey,
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      child: Column(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 20,
+                      ),
+                      child: Row(
                         children: [
-                          _formFieldPair(
-                            firstController: cropController,
-                            firstLabel: 'Crop Name',
-                            firstHint: 'Enter crop name',
-                            firstIcon: Icons.eco_outlined,
-                            secondController: varietyController,
-                            secondLabel: 'Variety Name',
-                            secondHint: 'Enter variety name',
-                            secondIcon: Icons.grass_outlined,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: 16),
-                          _imagePickerField(
-                              imageController,
-                              'Image File Name',
-                              selectedImageBytes == null &&
-                                      imageController.text.trim().isEmpty
-                                  ? 'Select a crop image'
-                                  : imageController.text,
-                              Icons.image_outlined,
-                              isDark,
-                              previewBytes: selectedImageBytes,
-                              existingCrop: crop,
-                              saving: saving,
-                              hasImage: () =>
-                                  isEditing ||
-                                  selectedImageBytes != null ||
-                                  imageController.text.trim().isNotEmpty,
-                              onPick: () async {
-                                final result =
-                                    await FilePicker.platform.pickFiles(
-                                  type: FileType.image,
-                                  allowMultiple: false,
-                                  withData: true,
-                                );
-                                final file = result?.files.single;
-                                if (file == null) return;
-                                setDialogState(() {
-                                  selectedImageBytes = file.bytes;
-                                  imageController.text = file.name;
-                                });
-                                formKey.currentState?.validate();
-                              }),
-                          const SizedBox(height: 16),
-                          _widgetPair(
-                            first: _durationField(
-                              controller: durationController,
-                              selectedUnit: selectedDurationUnit,
-                              isDark: isDark,
-                              onUnitChanged: saving
-                                  ? null
-                                  : (value) => setDialogState(
-                                        () => selectedDurationUnit = value,
-                                      ),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [
+                                AppColors.success,
+                                Color(0xff15803d)
+                              ]),
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusMd),
                             ),
-                            second: _formField(
-                              companyController,
-                              'Seed Company',
-                              'Enter seed company',
-                              Icons.business_outlined,
-                              isDark,
+                            child: const Icon(
+                              Icons.grass_rounded,
+                              color: Colors.white,
+                              size: 20,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          _numberPair(
-                            harvestController,
-                            'Harvest weight',
-                            sproutingController,
-                            'Sprouting ratio',
-                            isDark,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    isEditing
+                                        ? 'Edit Crop Variety'
+                                        : 'Add Crop Variety',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark
+                                          ? Colors.white
+                                          : AppColors.textPrimary,
+                                      height: 1.25,
+                                    )),
+                                const SizedBox(height: 3),
+                                Text(
+                                  isEditing
+                                      ? 'Update seed and production specifications'
+                                      : 'Define seed and production specifications',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: isDark
+                                        ? Colors.white70
+                                        : AppColors.textSecondary,
+                                    height: 1.35,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 16),
-                          _numberPair(ecMinController, 'EC minimum',
-                              ecMaxController, 'EC maximum', isDark),
-                          const SizedBox(height: 16),
-                          _numberPair(phMinController, 'pH minimum',
-                              phMaxController, 'pH maximum', isDark),
-                          const SizedBox(height: 16),
-                          _numberPair(tempMinController, 'Temperature minimum',
-                              tempMaxController, 'Temperature maximum', isDark),
-                          const SizedBox(height: 16),
-                          _numberPair(
-                              humidityMinController,
-                              'Humidity minimum',
-                              humidityMaxController,
-                              'Humidity maximum',
-                              isDark),
+                          IconButton(
+                            onPressed: saving
+                                ? null
+                                : () => Navigator.pop(dialogContext),
+                            icon: Icon(
+                              Icons.close_rounded,
+                              color: isDark
+                                  ? Colors.white70
+                                  : AppColors.textSecondary,
+                              size: 16,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.03)
-                        : AppColors.neutral50,
-                    borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(AppSpacing.radiusLg),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Form(
+                          key: formKey,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          child: Column(
+                            children: [
+                              _formFieldPair(
+                                firstController: cropController,
+                                firstLabel: 'Crop Name',
+                                firstHint: 'Enter crop name',
+                                firstIcon: Icons.eco_outlined,
+                                secondController: varietyController,
+                                secondLabel: 'Variety Name',
+                                secondHint: 'Enter variety name',
+                                secondIcon: Icons.grass_outlined,
+                                isDark: isDark,
+                              ),
+                              const SizedBox(height: 14),
+                              _imagePickerField(
+                                  imageController,
+                                  'Image File Name',
+                                  selectedImageBytes == null &&
+                                          imageController.text.trim().isEmpty
+                                      ? 'Select a crop image'
+                                      : imageController.text,
+                                  Icons.image_outlined,
+                                  isDark,
+                                  previewBytes: selectedImageBytes,
+                                  existingCrop: crop,
+                                  saving: saving,
+                                  hasImage: () =>
+                                      isEditing ||
+                                      selectedImageBytes != null ||
+                                      imageController.text.trim().isNotEmpty,
+                                  onPick: () async {
+                                    final result =
+                                        await FilePicker.platform.pickFiles(
+                                      type: FileType.image,
+                                      allowMultiple: false,
+                                      withData: true,
+                                    );
+                                    final file = result?.files.single;
+                                    if (file == null) return;
+                                    setDialogState(() {
+                                      selectedImageBytes = file.bytes;
+                                      imageController.text = file.name;
+                                    });
+                                    formKey.currentState?.validate();
+                                  }),
+                              const SizedBox(height: 14),
+                              _widgetPair(
+                                first: _durationField(
+                                  controller: durationController,
+                                  selectedUnit: selectedDurationUnit,
+                                  isDark: isDark,
+                                  onUnitChanged: saving
+                                      ? null
+                                      : (value) => setDialogState(
+                                            () => selectedDurationUnit = value,
+                                          ),
+                                ),
+                                second: _formField(
+                                  companyController,
+                                  'Seed Company',
+                                  'Enter seed company',
+                                  Icons.business_outlined,
+                                  isDark,
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              _numberPair(
+                                harvestController,
+                                'Harvest weight',
+                                sproutingController,
+                                'Sprouting ratio',
+                                isDark,
+                              ),
+                              const SizedBox(height: 14),
+                              _numberPair(ecMinController, 'EC minimum',
+                                  ecMaxController, 'EC maximum', isDark),
+                              const SizedBox(height: 14),
+                              _numberPair(phMinController, 'pH minimum',
+                                  phMaxController, 'pH maximum', isDark),
+                              const SizedBox(height: 14),
+                              _numberPair(
+                                  tempMinController,
+                                  'Temperature minimum',
+                                  tempMaxController,
+                                  'Temperature maximum',
+                                  isDark),
+                              const SizedBox(height: 14),
+                              _numberPair(
+                                  humidityMinController,
+                                  'Humidity minimum',
+                                  humidityMaxController,
+                                  'Humidity maximum',
+                                  isDark),
+                              if (_varietySaveError != null)
+                                Padding(
+                                    padding: const EdgeInsets.only(top: 14),
+                                    child: Text(_varietySaveError!,
+                                        style: TextStyle(
+                                            color: AppColors.error,
+                                            fontSize: 12))),
+                              if (isEditing)
+                                Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextButton.icon(
+                                        onPressed: saving
+                                            ? null
+                                            : () {
+                                                Navigator.pop(dialogContext);
+                                                _showDeleteDialog(crop, isDark);
+                                              },
+                                        icon: const Icon(Icons.delete_outline,
+                                            size: 16),
+                                        label: const Text('Delete variety'),
+                                        style: TextButton.styleFrom(
+                                            foregroundColor: AppColors.error))),
+                              const SizedBox(height: 14),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: saving
-                              ? null
-                              : () => Navigator.pop(dialogContext),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                            textStyle: GoogleFonts.poppins(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          child: const Text('Cancel'),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.03)
+                            : AppColors.neutral50,
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(AppSpacing.radiusLg),
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.md),
-                      if (isEditing) ...[
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: saving
-                                ? null
-                                : () {
-                                    Navigator.pop(dialogContext);
-                                    _showDeleteDialog(crop, isDark);
-                                  },
-                            icon: const Icon(
-                              Icons.delete_outline_rounded,
-                              size: 17,
-                            ),
-                            label: const Text('Delete'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.error,
-                              side: BorderSide(
-                                color: AppColors.error.withValues(alpha: 0.45),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: saving
+                                  ? null
+                                  : () => Navigator.pop(dialogContext),
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                textStyle: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 13),
-                              textStyle: GoogleFonts.poppins(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
+                              child: const Text('Cancel'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: saving
+                                  ? null
+                                  : () async {
+                                      if (!(formKey.currentState?.validate() ??
+                                          false)) {
+                                        return;
+                                      }
+                                      setDialogState(() {
+                                        saving = true;
+                                        _varietySaveError = null;
+                                      });
+                                      final success = isEditing
+                                          ? await _updateCropVariety(
+                                              id: crop['id'].toString(),
+                                              cropName: cropController.text,
+                                              varietyName:
+                                                  varietyController.text,
+                                              imageFileName:
+                                                  imageController.text,
+                                              imageBytes: selectedImageBytes,
+                                              plantDurationValue:
+                                                  durationController.text,
+                                              plantDurationUnit:
+                                                  selectedDurationUnit,
+                                              company: companyController.text,
+                                              harvestingWeight:
+                                                  harvestController.text,
+                                              sproutingRatio:
+                                                  sproutingController.text,
+                                              ecMin: ecMinController.text,
+                                              ecMax: ecMaxController.text,
+                                              phMin: phMinController.text,
+                                              phMax: phMaxController.text,
+                                              tempMin: tempMinController.text,
+                                              tempMax: tempMaxController.text,
+                                              humidityMin:
+                                                  humidityMinController.text,
+                                              humidityMax:
+                                                  humidityMaxController.text,
+                                            )
+                                          : await _createCropVariety(
+                                              cropName: cropController.text,
+                                              varietyName:
+                                                  varietyController.text,
+                                              imageFileName:
+                                                  imageController.text,
+                                              imageBytes: selectedImageBytes!,
+                                              plantDurationValue:
+                                                  durationController.text,
+                                              plantDurationUnit:
+                                                  selectedDurationUnit,
+                                              company: companyController.text,
+                                              harvestingWeight:
+                                                  harvestController.text,
+                                              sproutingRatio:
+                                                  sproutingController.text,
+                                              ecMin: ecMinController.text,
+                                              ecMax: ecMaxController.text,
+                                              phMin: phMinController.text,
+                                              phMax: phMaxController.text,
+                                              tempMin: tempMinController.text,
+                                              tempMax: tempMaxController.text,
+                                              humidityMin:
+                                                  humidityMinController.text,
+                                              humidityMax:
+                                                  humidityMaxController.text,
+                                            );
+                                      if (!dialogContext.mounted) return;
+                                      if (success) {
+                                        Navigator.pop(dialogContext);
+                                      } else {
+                                        setDialogState(() => saving = false);
+                                      }
+                                    },
+                              icon: saving
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Icon(Icons.save_rounded, size: 18),
+                              label: Text(saving
+                                  ? 'Saving'
+                                  : isEditing
+                                      ? 'Update Variety'
+                                      : 'Add Variety'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.success,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                textStyle: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                      ],
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton.icon(
-                          onPressed: saving
-                              ? null
-                              : () async {
-                                  if (!(formKey.currentState?.validate() ??
-                                      false)) {
-                                    return;
-                                  }
-                                  setDialogState(() => saving = true);
-                                  final success = isEditing
-                                      ? await _updateCropVariety(
-                                          id: crop['id'].toString(),
-                                          cropName: cropController.text,
-                                          varietyName: varietyController.text,
-                                          imageFileName: imageController.text,
-                                          imageBytes: selectedImageBytes,
-                                          plantDurationValue:
-                                              durationController.text,
-                                          plantDurationUnit:
-                                              selectedDurationUnit,
-                                          company: companyController.text,
-                                          harvestingWeight:
-                                              harvestController.text,
-                                          sproutingRatio:
-                                              sproutingController.text,
-                                          ecMin: ecMinController.text,
-                                          ecMax: ecMaxController.text,
-                                          phMin: phMinController.text,
-                                          phMax: phMaxController.text,
-                                          tempMin: tempMinController.text,
-                                          tempMax: tempMaxController.text,
-                                          humidityMin:
-                                              humidityMinController.text,
-                                          humidityMax:
-                                              humidityMaxController.text,
-                                        )
-                                      : await _createCropVariety(
-                                          cropName: cropController.text,
-                                          varietyName: varietyController.text,
-                                          imageFileName: imageController.text,
-                                          imageBytes: selectedImageBytes!,
-                                          plantDurationValue:
-                                              durationController.text,
-                                          plantDurationUnit:
-                                              selectedDurationUnit,
-                                          company: companyController.text,
-                                          harvestingWeight:
-                                              harvestController.text,
-                                          sproutingRatio:
-                                              sproutingController.text,
-                                          ecMin: ecMinController.text,
-                                          ecMax: ecMaxController.text,
-                                          phMin: phMinController.text,
-                                          phMax: phMaxController.text,
-                                          tempMin: tempMinController.text,
-                                          tempMax: tempMaxController.text,
-                                          humidityMin:
-                                              humidityMinController.text,
-                                          humidityMax:
-                                              humidityMaxController.text,
-                                        );
-                                  if (!dialogContext.mounted) return;
-                                  if (success) {
-                                    Navigator.pop(dialogContext);
-                                  } else {
-                                    setDialogState(() => saving = false);
-                                  }
-                                },
-                          icon: saving
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.save_rounded, size: 18),
-                          label: Text(saving
-                              ? 'Saving'
-                              : isEditing
-                                  ? 'Update Variety'
-                                  : 'Add Variety'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.success,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                            textStyle: GoogleFonts.poppins(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+              ),
+            )),
+      );
+    }
+
+    _varietySaveError = null;
+    try {
+      if (mobile) {
+        await showAppBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            isDismissible: false,
+            enableDrag: false,
+            backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
+            builder: buildModal);
+      } else {
+        await showAppDialog<void>(
+            context: context, barrierDismissible: false, builder: buildModal);
+      }
+    } finally {
+      await modalRoute?.completed;
+      for (final controller in [
+        cropController,
+        varietyController,
+        imageController,
+        durationController,
+        companyController,
+        harvestController,
+        sproutingController,
+        ecMinController,
+        ecMaxController,
+        phMinController,
+        phMaxController,
+        tempMinController,
+        tempMaxController,
+        humidityMinController,
+        humidityMaxController
+      ]) {
+        controller.dispose();
+      }
+    }
   }
 
   Future<void> _showDeleteDialog(
@@ -1532,13 +1582,13 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     var deleting = false;
     String? deleteError;
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => PopScope(
           canPop: !deleting,
-          child: Dialog(
+          child: AppDialog(
             backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
             insetPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -1778,18 +1828,18 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.inter(
             fontSize: 12,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : AppColors.textPrimary,
             height: 1.35,
           ),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 6),
         TextFormField(
           controller: controller,
-          style: GoogleFonts.poppins(
-            fontSize: 13,
+          style: GoogleFonts.inter(
+            fontSize: 12,
             fontWeight: FontWeight.w400,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
@@ -1799,15 +1849,15 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
               : TextInputType.text,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.poppins(
-              fontSize: 12.5,
+            hintStyle: GoogleFonts.inter(
+              fontSize: 12,
               color: isDark ? Colors.white54 : AppColors.textSecondary,
             ),
-            errorStyle: GoogleFonts.poppins(fontSize: 10.5, height: 1.25),
-            prefixIcon: Icon(icon, size: 18),
+            errorStyle: GoogleFonts.inter(fontSize: 10.5, height: 1.25),
+            prefixIcon: Icon(icon, size: 16),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 13,
+              horizontal: 12,
+              vertical: 10,
             ),
             filled: true,
             fillColor: isDark
@@ -1857,14 +1907,14 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.inter(
             fontSize: 12,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : AppColors.textPrimary,
             height: 1.35,
           ),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 6),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1895,8 +1945,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
             Expanded(
               child: TextFormField(
                 controller: controller,
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
                   fontWeight: FontWeight.w400,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
@@ -1904,20 +1954,20 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                 onTap: saving ? null : onPick,
                 decoration: InputDecoration(
                   hintText: hint,
-                  hintStyle: GoogleFonts.poppins(
-                    fontSize: 12.5,
+                  hintStyle: GoogleFonts.inter(
+                    fontSize: 12,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
-                  errorStyle: GoogleFonts.poppins(fontSize: 10.5, height: 1.25),
-                  prefixIcon: Icon(icon, size: 18),
+                  errorStyle: GoogleFonts.inter(fontSize: 10.5, height: 1.25),
+                  prefixIcon: Icon(icon, size: 16),
                   suffixIcon: IconButton(
                     tooltip: 'Choose image',
                     onPressed: saving ? null : onPick,
                     icon: const Icon(Icons.upload_file_rounded, size: 18),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 13,
+                    horizontal: 12,
+                    vertical: 10,
                   ),
                   filled: true,
                   fillColor: isDark
@@ -2008,7 +2058,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
           isDark,
         );
 
-        if (constraints.maxWidth < 500) {
+        if (constraints.maxWidth < 420) {
           return Column(
             children: [
               firstField,
@@ -2021,7 +2071,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(child: firstField),
-            const SizedBox(width: 16),
+            const SizedBox(width: 10),
             Expanded(child: secondField),
           ],
         );
@@ -2032,7 +2082,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   Widget _widgetPair({required Widget first, required Widget second}) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 500) {
+        if (constraints.maxWidth < 420) {
           return Column(
             children: [
               first,
@@ -2045,7 +2095,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(child: first),
-            const SizedBox(width: 16),
+            const SizedBox(width: 10),
             Expanded(child: second),
           ],
         );
@@ -2062,15 +2112,15 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     InputDecoration decoration({String? hint, IconData? icon}) {
       return InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.poppins(
-          fontSize: 12.5,
+        hintStyle: GoogleFonts.inter(
+          fontSize: 12,
           color: isDark ? Colors.white54 : AppColors.textSecondary,
         ),
-        errorStyle: GoogleFonts.poppins(fontSize: 10.5, height: 1.25),
-        prefixIcon: icon == null ? null : Icon(icon, size: 18),
+        errorStyle: GoogleFonts.inter(fontSize: 10.5, height: 1.25),
+        prefixIcon: icon == null ? null : Icon(icon, size: 16),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
-          vertical: 13,
+          vertical: 10,
         ),
         filled: true,
         fillColor:
@@ -2091,8 +2141,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       );
     }
 
-    final textStyle = GoogleFonts.poppins(
-      fontSize: 13,
+    final textStyle = GoogleFonts.inter(
+      fontSize: 12,
       fontWeight: FontWeight.w400,
       color: isDark ? Colors.white : AppColors.textPrimary,
     );
@@ -2101,14 +2151,14 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       children: [
         Text(
           'Plant Duration',
-          style: GoogleFonts.poppins(
+          style: GoogleFonts.inter(
             fontSize: 12,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
             color: isDark ? Colors.white : AppColors.textPrimary,
             height: 1.35,
           ),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 6),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2165,7 +2215,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 500) {
+        if (constraints.maxWidth < 260 ||
+            MediaQuery.textScalerOf(context).scale(12) > 18) {
           return Column(
             children: [
               _formField(
@@ -2179,12 +2230,13 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
           );
         }
         return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
                 child: _formField(
                     first, firstLabel, '0.0', Icons.straighten_rounded, isDark,
                     numeric: true)),
-            const SizedBox(width: AppSpacing.md),
+            const SizedBox(width: 10),
             Expanded(
                 child: _formField(second, secondLabel, '0.0',
                     Icons.straighten_rounded, isDark,
@@ -2256,7 +2308,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       return true;
     } catch (error) {
       if (!mounted) return false;
-      _showMessage(error.toString(), isError: true);
+      _varietySaveError = error.toString();
       return false;
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -2326,7 +2378,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       return true;
     } catch (error) {
       if (!mounted) return false;
-      _showMessage(error.toString(), isError: true);
+      _varietySaveError = error.toString();
       return false;
     } finally {
       if (mounted) setState(() => _isSaving = false);

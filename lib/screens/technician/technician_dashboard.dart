@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -1078,7 +1079,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
     bool submitting = false;
     String? formError;
 
-    final result = await showDialog<bool>(
+    final result = await showAppDialog<bool>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setModalState) {
@@ -1128,7 +1129,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
             }
           }
 
-          return Dialog(
+          return AppDialog(
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.all(20),
             child: ConstrainedBox(

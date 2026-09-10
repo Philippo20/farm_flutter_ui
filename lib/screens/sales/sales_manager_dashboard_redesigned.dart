@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -190,7 +191,7 @@ class _SalesManagerDashboardRedesignedState
       );
       return;
     }
-    await showDialog<void>(context: context, builder: (_) => modal);
+    await showAppDialog<void>(context: context, builder: (_) => modal);
   }
 
   bool _isCancelled(Map<String, dynamic> sale) => _status(sale) == 'cancelled';
@@ -1062,7 +1063,7 @@ class _SalesBatchDetailModal extends StatelessWidget {
 
     return mobile
         ? content
-        : Dialog(
+        : AppDialog(
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.all(24),
             child: content,

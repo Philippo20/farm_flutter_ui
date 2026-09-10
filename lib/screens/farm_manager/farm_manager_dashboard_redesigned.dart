@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -2135,9 +2136,9 @@ class _FarmManagerDashboardRedesignedState
       'weatherCondition': 'Optimal',
     };
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: Colors.transparent,
         insetPadding: EdgeInsets.symmetric(
           horizontal: isMobile ? 16 : 40,
@@ -4238,10 +4239,10 @@ class _FarmManagerDashboardRedesignedState
     String selectedFarm = 'Green Valley Farm';
     String selectedPriority = 'Medium';
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),

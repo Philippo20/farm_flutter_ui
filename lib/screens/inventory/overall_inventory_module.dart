@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 // ignore_for_file: unused_field, unused_element_parameter
 
 import 'package:flutter/material.dart';
@@ -1303,11 +1304,11 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
     String? formError;
     bool isSaving = false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
@@ -1554,9 +1555,9 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
     final qtyController = TextEditingController();
     final noteController = TextEditingController();
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (dialogContext) => Dialog(
+      builder: (dialogContext) => AppDialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
@@ -1693,11 +1694,11 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
     String? formError;
     bool isDeleting = false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg,
@@ -1825,9 +1826,9 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
         : entry.isLowStock
             ? 'Low Stock'
             : 'Healthy';
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (dialogContext) => Dialog(
+      builder: (dialogContext) => AppDialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.lg, vertical: AppSpacing.xl),

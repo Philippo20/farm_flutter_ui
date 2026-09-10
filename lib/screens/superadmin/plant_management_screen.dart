@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -1084,10 +1085,10 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     final isMobile = MediaQuery.of(context).size.width < 600;
     var saving = false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -1266,9 +1267,9 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   ) {
     final hasPlants = _plantTypes.any((plant) => plant['category'] == category);
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => AppAlertDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         title: const Text('Delete Category?'),
         content: Text(
@@ -1326,10 +1327,10 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
@@ -1572,10 +1573,10 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
@@ -1878,9 +1879,9 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
 
   void _showDeleteDialog(
       BuildContext context, Map<String, dynamic> plant, bool isDark) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),

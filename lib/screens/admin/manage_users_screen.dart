@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
@@ -1040,12 +1041,12 @@ class _UsersScreenState extends State<UsersScreen>
     int currentStep = 0;
     String tempPassword = '';
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
-            return Dialog(
+            return AppDialog(
               backgroundColor: Colors.transparent,
               insetPadding: const EdgeInsets.all(20),
               child: Container(
@@ -1369,11 +1370,11 @@ class _UsersScreenState extends State<UsersScreen>
   void _showUserDetailsDialog(User user) {
     final isSmallScreen = MediaQuery.of(context).size.width < 800;
 
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return Dialog(
+        return AppDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -1908,7 +1909,7 @@ class _UsersScreenState extends State<UsersScreen>
     String selectedDepartment = user.department;
     Set<String> selectedPermissions = Set.from(user.permissions);
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) {
         final primaryColor = AppColors.primary;
@@ -1922,7 +1923,7 @@ class _UsersScreenState extends State<UsersScreen>
             : Colors.black.withOpacity(0.1);
         final buttonTextColor = isDark ? Colors.black : Colors.white;
 
-        return Dialog(
+        return AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding: const EdgeInsets.all(20),
           child: Container(
@@ -2525,10 +2526,10 @@ class _UsersScreenState extends State<UsersScreen>
     final dialogCardColor = isDark ? AppColors.darkCard : AppColors.card;
     final dialogActiveColor = isDark ? Colors.tealAccent : Colors.green;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return AppAlertDialog(
           backgroundColor: dialogCardColor,
           title: Text(
             'Delete User',

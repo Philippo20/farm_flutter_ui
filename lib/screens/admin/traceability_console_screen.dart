@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -242,10 +243,10 @@ class _TraceabilityConsoleScreenState
         },
       );
     }
-    return showDialog<T>(
+    return showAppDialog<T>(
       context: context,
       barrierColor: Colors.black54,
-      builder: (_) => Dialog(
+      builder: (_) => AppDialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         backgroundColor: Colors.transparent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -892,9 +893,9 @@ class _TraceabilityConsoleScreenState
 
   Future<void> _deletePromotion(Map<String, dynamic> promotion) async {
     final user = ref.read(currentUserProvider);
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
           context: context,
-          builder: (dialogContext) => AlertDialog(
+          builder: (dialogContext) => AppAlertDialog(
             title: Text('Delete promotion?', style: GoogleFonts.poppins()),
             content: Text(
               'This removes ${promotion['title']} from the consumer experience.',

@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -274,10 +275,10 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
   void _confirmDeleteBackup(_BackupRecord backup, bool isDark) {
     var isDeleting = false;
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => Dialog(
+        builder: (dialogContext, setDialogState) => AppDialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -549,9 +550,9 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           : '90',
     );
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => AppAlertDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         title: Text(
           'Retention Rules',
@@ -1893,10 +1894,10 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -2199,9 +2200,9 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     _BackupRecord backup,
     bool isDark,
   ) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusXl),

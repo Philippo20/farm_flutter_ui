@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/responsive_metric_grid.dart';
 import 'dart:async';
@@ -2795,9 +2796,9 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
       return;
     }
 
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
-      builder: (_) => Dialog(
+      builder: (_) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: ConstrainedBox(

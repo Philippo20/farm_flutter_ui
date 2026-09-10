@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -329,9 +330,9 @@ abstract class BaseDashboardState<T extends BaseDashboard>
   }
   
   void _showProfileMenu() {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: Text('Profile - ${userData['name']}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,

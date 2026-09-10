@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -2407,10 +2408,10 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
@@ -2778,10 +2779,10 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
@@ -3229,7 +3230,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
   void _showFarmSensorKeyDialog(
       BuildContext context, Map<String, dynamic> sourceFarm, bool isDark) {
     final farm = Map<String, dynamic>.from(sourceFarm);
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) {
@@ -3237,7 +3238,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
           final hasKey = key.isNotEmpty;
           final isGenerating = farm['isGeneratingSensorKey'] == true;
 
-          return Dialog(
+          return AppDialog(
             backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -3400,9 +3401,9 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
 
   void _showDeleteFarmDialog(
       BuildContext context, Map<String, dynamic> farm, bool isDark) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),

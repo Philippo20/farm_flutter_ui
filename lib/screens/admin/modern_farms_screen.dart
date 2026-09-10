@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -2211,11 +2212,11 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
     bool isSaving = false;
     String? formError;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
-          return Dialog(
+          return AppDialog(
             backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -2542,14 +2543,14 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
     Map<String, dynamic> farm,
     bool isDark,
   ) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
           final currentFarm = _selectedFarm ?? farm;
           final apiKey = currentFarm['sensorApiKey']?.toString() ?? '';
           final hasKey = apiKey.isNotEmpty;
-          return Dialog(
+          return AppDialog(
             backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),

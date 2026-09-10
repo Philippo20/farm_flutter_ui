@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'dart:convert';
 
@@ -140,10 +141,10 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     final changes = _buildReviewChanges(offTaker, proposal, label);
     var reviewing = false;
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => Dialog(
+        builder: (dialogContext, setDialogState) => AppDialog(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560, maxHeight: 720),
             child: SingleChildScrollView(
@@ -424,9 +425,9 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
 
   Future<void> _deleteOffTaker(Map<String, dynamic> item) async {
     final name = '${item['name'] ?? 'this off-taker'}';
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => AppAlertDialog(
         title: const Text('Delete off-taker?'),
         content:
             Text('This will permanently remove $name from the buyer list.'),
@@ -486,10 +487,10 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     }
 
     try {
-      final saved = await showDialog<bool>(
+      final saved = await showAppDialog<bool>(
         context: context,
         builder: (dialogContext) => StatefulBuilder(
-          builder: (context, setModalState) => Dialog(
+          builder: (context, setModalState) => AppDialog(
             backgroundColor: Colors.transparent,
             insetPadding:
                 const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -1585,7 +1586,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
             backgroundColor: Colors.transparent,
             builder: (_) => modal,
           )
-        : await showDialog<Object?>(context: context, builder: (_) => modal);
+        : await showAppDialog<Object?>(context: context, builder: (_) => modal);
     if (result == true || result is String) {
       await _load();
     }
@@ -1718,9 +1719,9 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
             backgroundColor: Colors.transparent,
             builder: (_) => content,
           )
-        : await showDialog<bool>(
+        : await showAppDialog<bool>(
             context: context,
-            builder: (_) => Dialog(
+            builder: (_) => AppDialog(
               backgroundColor: Colors.transparent,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
@@ -3390,7 +3391,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                 bottom: MediaQuery.viewInsetsOf(context).bottom),
             child: content,
           )
-        : Dialog(backgroundColor: Colors.transparent, child: content);
+        : AppDialog(backgroundColor: Colors.transparent, child: content);
   }
 }
 

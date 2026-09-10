@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -32,7 +33,7 @@ class UserProfilePopup extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     double popupWidth = screenWidth > 400 ? 320 : screenWidth * 0.85;
 
-    return Dialog(
+    return AppDialog(
       backgroundColor: isDark ? Colors.grey[900] : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),

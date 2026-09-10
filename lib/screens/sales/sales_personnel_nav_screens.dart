@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'dart:async';
 
@@ -133,9 +134,9 @@ class _SalesPersonnelRecordDeliveryScreenState
             backgroundColor: Colors.transparent,
             builder: (_) => modal,
           )
-        : await showDialog<bool>(
+        : await showAppDialog<bool>(
             context: context,
-            builder: (_) => Dialog(
+            builder: (_) => AppDialog(
               backgroundColor: Colors.transparent,
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -2396,13 +2397,13 @@ class _PipelineDealCard extends StatelessWidget {
     final isDesktop = MediaQuery.of(context).size.width >= 760;
 
     if (isDesktop) {
-      showDialog(
+      showAppDialog(
         context: context,
         useRootNavigator: true,
         builder: (context) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
 
-          return Dialog(
+          return AppDialog(
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.all(AppSpacing.xl),
             child: ConstrainedBox(

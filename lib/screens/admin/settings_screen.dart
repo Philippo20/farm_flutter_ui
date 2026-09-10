@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 // [FULLY UPDATED] FarmSettingsScreen.dart with advanced design, dynamic farm selection, and updated sensor UI
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -251,10 +252,10 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
   void _addNewFarm(BuildContext context, Color textColor, Color cardColor,
       Color activeColor) {
     TextEditingController newFarmController = TextEditingController();
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return AppAlertDialog(
           backgroundColor: cardColor,
           title: Text(
             'Add New Farm',

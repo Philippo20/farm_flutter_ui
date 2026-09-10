@@ -1,3 +1,4 @@
+import 'app_dialog.dart';
 import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 
@@ -34,7 +35,7 @@ Future<bool> showAdaptiveLogoutConfirmation(
         false;
   }
 
-  return await showDialog<bool>(
+  return await showAppDialog<bool>(
         context: context,
         builder: (dialogContext) {
           return _LogoutConfirmationDialog(
@@ -62,7 +63,7 @@ class _LogoutConfirmationDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return AlertDialog(
+    return AppAlertDialog(
       backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),

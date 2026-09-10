@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/responsive_metric_grid.dart';
 import 'package:flutter/material.dart';
@@ -1636,10 +1637,10 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
         ),
       );
     } else {
-      showDialog<void>(
+      showAppDialog<void>(
         context: context,
         barrierDismissible: true,
-        builder: (dialogContext) => Dialog(
+        builder: (dialogContext) => AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
@@ -2001,10 +2002,10 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
         ),
       );
     } else {
-      showDialog<void>(
+      showAppDialog<void>(
         context: context,
         barrierDismissible: true,
-        builder: (dialogContext) => Dialog(
+        builder: (dialogContext) => AppDialog(
           backgroundColor: Colors.transparent,
           insetPadding:
               const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
@@ -2353,10 +2354,10 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
     final statusColor =
         _transactionStatusColor(transaction['status'] as String);
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return AppAlertDialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),

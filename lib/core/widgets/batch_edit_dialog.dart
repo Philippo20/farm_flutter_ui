@@ -1,3 +1,4 @@
+import 'app_dialog.dart';
 import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -37,9 +38,9 @@ Future<bool?> showBatchEditDialog({
       ),
     );
   }
-  return showDialog<bool>(
+  return showAppDialog<bool>(
     context: context,
-    builder: (_) => Dialog(
+    builder: (_) => AppDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
       backgroundColor: Colors.transparent,
       child: ConstrainedBox(

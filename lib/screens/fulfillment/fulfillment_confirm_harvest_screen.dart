@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -233,7 +234,7 @@ class _FulfillmentConfirmHarvestScreenState
             backgroundColor: Colors.transparent,
             builder: (_) => form,
           )
-        : await showDialog<bool>(
+        : await showAppDialog<bool>(
             context: context,
             barrierDismissible: false,
             builder: (_) => form,
@@ -301,7 +302,7 @@ class _FulfillmentConfirmHarvestScreenState
         builder: (_) => content,
       );
     }
-    return showDialog<bool>(
+    return showAppDialog<bool>(
       context: context,
       builder: (_) => content,
     );
@@ -1424,7 +1425,7 @@ class _HarvestInspectionFormState extends State<_HarvestInspectionForm> {
         child: surface,
       );
     }
-    return Dialog(
+    return AppDialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(24),
       child: ConstrainedBox(
@@ -1587,7 +1588,7 @@ class _ReleaseConfirmation extends StatelessWidget {
         child: SafeArea(top: false, child: content),
       );
     }
-    return Dialog(
+    return AppDialog(
       backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(

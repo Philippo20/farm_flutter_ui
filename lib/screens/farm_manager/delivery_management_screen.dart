@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -1386,9 +1387,9 @@ class _DeliveryManagementScreenState
     final status = d['status'] as String;
     final sColor = _statusColor(status);
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (_) => Dialog(
+      builder: (_) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: ConstrainedBox(
@@ -1740,10 +1741,11 @@ class _DeliveryManagementScreenState
       }
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
+      barrierDismissible: false,
       builder: (_) => StatefulBuilder(
-        builder: (context, setLocal) => Dialog(
+        builder: (context, setLocal) => AppDialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -1751,244 +1753,282 @@ class _DeliveryManagementScreenState
             constraints: const BoxConstraints(maxWidth: 560),
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: SingleChildScrollView(
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(colors: [
-                                AppColors.primary,
-                                AppColors.primary.withOpacity(0.75),
-                              ]),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              isEditing
-                                  ? Icons.edit_rounded
-                                  : Icons.add_circle_outline_rounded,
-                              size: 20,
-                              color: Colors.white,
-                            ),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(colors: [
+                              AppColors.primary,
+                              AppColors.primary.withOpacity(0.75),
+                            ]),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
+                          child: Icon(
+                            isEditing
+                                ? Icons.edit_rounded
+                                : Icons.add_circle_outline_rounded,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  isEditing
+                                      ? 'Edit Delivery'
+                                      : 'Schedule Delivery',
+                                  style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark
+                                          ? Colors.white
+                                          : AppColors.textPrimary)),
+                              Text(
+                                  'Keep farm-to-hub delivery data synced with the backend',
+                                  style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: isDark
+                                          ? Colors.white38
+                                          : AppColors.textSecondary)),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: isSubmitting
+                              ? null
+                              : () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.close_rounded, size: 18),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Flexible(
+                        child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                    isEditing
-                                        ? 'Edit Delivery'
-                                        : 'Schedule Delivery',
-                                    style: GoogleFonts.inter(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w700,
-                                        color: isDark
-                                            ? Colors.white
-                                            : AppColors.textPrimary)),
-                                Text(
-                                    'Keep farm-to-hub delivery data synced with the backend',
-                                    style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        color: isDark
-                                            ? Colors.white38
-                                            : AppColors.textSecondary)),
-                              ],
-                            ),
-                          ),
-                          IconButton(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (formError.isNotEmpty) ...[
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            AppColors.error.withOpacity(0.08),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                            color: AppColors.error
+                                                .withOpacity(0.2)),
+                                      ),
+                                      child: Text(formError,
+                                          style: GoogleFonts.inter(
+                                              fontSize: 12,
+                                              color: AppColors.error)),
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _formField(
+                                            'Batch Number',
+                                            'e.g. BATCH-2026-001',
+                                            Icons.qr_code_rounded,
+                                            isDark,
+                                            initialValue: batch,
+                                            onChanged: (v) => batch = v),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: _formField(
+                                            'Crop',
+                                            'e.g. Lettuce',
+                                            Icons.eco_outlined,
+                                            isDark,
+                                            initialValue: crop,
+                                            onChanged: (v) => crop = v),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _formField(
+                                      'Destination',
+                                      'e.g. Sales Hub / Offtaker',
+                                      Icons.storefront_outlined,
+                                      isDark,
+                                      initialValue: destination,
+                                      onChanged: (v) => destination = v),
+                                  const SizedBox(height: 12),
+                                  _formField('Address', 'Delivery address',
+                                      Icons.location_on_outlined, isDark,
+                                      initialValue: address,
+                                      requiredField: false,
+                                      onChanged: (v) => address = v),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _formField(
+                                            'Quantity',
+                                            'e.g. 500',
+                                            Icons.scale_outlined,
+                                            isDark,
+                                            initialValue: quantity,
+                                            onChanged: (v) => quantity = v,
+                                            inputType: TextInputType.number),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: _formField(
+                                            'Temperature',
+                                            'e.g. 4 C',
+                                            Icons.thermostat_outlined,
+                                            isDark,
+                                            initialValue: temperature,
+                                            requiredField: false,
+                                            onChanged: (v) => temperature = v),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _formField(
+                                            'Driver',
+                                            'Driver name',
+                                            Icons.person_outline_rounded,
+                                            isDark,
+                                            initialValue: driver,
+                                            requiredField: false,
+                                            onChanged: (v) => driver = v),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: _formField(
+                                            'Vehicle',
+                                            'Vehicle / plate number',
+                                            Icons.fire_truck_outlined,
+                                            isDark,
+                                            initialValue: vehicle,
+                                            requiredField: false,
+                                            onChanged: (v) => vehicle = v),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _formField(
+                                            'Scheduled Date',
+                                            'YYYY-MM-DD',
+                                            Icons.event_outlined,
+                                            isDark,
+                                            initialValue: scheduledDate,
+                                            requiredField: false,
+                                            onChanged: (v) =>
+                                                scheduledDate = v),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: _formField(
+                                            'ETA',
+                                            'YYYY-MM-DD HH:mm',
+                                            Icons.schedule_outlined,
+                                            isDark,
+                                            initialValue: eta,
+                                            requiredField: false,
+                                            onChanged: (v) => eta = v),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _dropdownField(
+                                          label: 'Status',
+                                          value: status,
+                                          values: const [
+                                            'Scheduled',
+                                            'Pending Pickup',
+                                            'In Transit',
+                                            'Delivered',
+                                            'Cancelled'
+                                          ],
+                                          isDark: isDark,
+                                          onChanged: (value) =>
+                                              setLocal(() => status = value),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: _dropdownField(
+                                          label: 'Priority',
+                                          value: priority,
+                                          values: const [
+                                            'High',
+                                            'Medium',
+                                            'Low'
+                                          ],
+                                          isDark: isDark,
+                                          onChanged: (value) =>
+                                              setLocal(() => priority = value),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ]))),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
                             onPressed: isSubmitting
                                 ? null
                                 : () => Navigator.of(context).pop(),
-                            icon: const Icon(Icons.close_rounded, size: 18),
+                            child: const Text('Cancel'),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      if (formError.isNotEmpty) ...[
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                                color: AppColors.error.withOpacity(0.2)),
-                          ),
-                          child: Text(formError,
-                              style: GoogleFonts.inter(
-                                  fontSize: 12, color: AppColors.error)),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed:
+                                isSubmitting ? null : () => submit(setLocal),
+                            icon: isSubmitting
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.check_rounded, size: 16),
+                            label: Text(isSubmitting
+                                ? 'Saving...'
+                                : (isEditing ? 'Update' : 'Schedule')),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
                       ],
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _formField(
-                                'Batch Number',
-                                'e.g. BATCH-2026-001',
-                                Icons.qr_code_rounded,
-                                isDark,
-                                initialValue: batch,
-                                onChanged: (v) => batch = v),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _formField('Crop', 'e.g. Lettuce',
-                                Icons.eco_outlined, isDark,
-                                initialValue: crop, onChanged: (v) => crop = v),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      _formField('Destination', 'e.g. Sales Hub / Offtaker',
-                          Icons.storefront_outlined, isDark,
-                          initialValue: destination,
-                          onChanged: (v) => destination = v),
-                      const SizedBox(height: 12),
-                      _formField('Address', 'Delivery address',
-                          Icons.location_on_outlined, isDark,
-                          initialValue: address,
-                          requiredField: false,
-                          onChanged: (v) => address = v),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _formField('Quantity', 'e.g. 500',
-                                Icons.scale_outlined, isDark,
-                                initialValue: quantity,
-                                onChanged: (v) => quantity = v,
-                                inputType: TextInputType.number),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _formField('Temperature', 'e.g. 4 C',
-                                Icons.thermostat_outlined, isDark,
-                                initialValue: temperature,
-                                requiredField: false,
-                                onChanged: (v) => temperature = v),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _formField('Driver', 'Driver name',
-                                Icons.person_outline_rounded, isDark,
-                                initialValue: driver,
-                                requiredField: false,
-                                onChanged: (v) => driver = v),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _formField(
-                                'Vehicle',
-                                'Vehicle / plate number',
-                                Icons.fire_truck_outlined,
-                                isDark,
-                                initialValue: vehicle,
-                                requiredField: false,
-                                onChanged: (v) => vehicle = v),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _formField('Scheduled Date', 'YYYY-MM-DD',
-                                Icons.event_outlined, isDark,
-                                initialValue: scheduledDate,
-                                requiredField: false,
-                                onChanged: (v) => scheduledDate = v),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _formField('ETA', 'YYYY-MM-DD HH:mm',
-                                Icons.schedule_outlined, isDark,
-                                initialValue: eta,
-                                requiredField: false,
-                                onChanged: (v) => eta = v),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _dropdownField(
-                              label: 'Status',
-                              value: status,
-                              values: const [
-                                'Scheduled',
-                                'Pending Pickup',
-                                'In Transit',
-                                'Delivered',
-                                'Cancelled'
-                              ],
-                              isDark: isDark,
-                              onChanged: (value) =>
-                                  setLocal(() => status = value),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _dropdownField(
-                              label: 'Priority',
-                              value: priority,
-                              values: const ['High', 'Medium', 'Low'],
-                              isDark: isDark,
-                              onChanged: (value) =>
-                                  setLocal(() => priority = value),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: isSubmitting
-                                  ? null
-                                  : () => Navigator.of(context).pop(),
-                              child: const Text('Cancel'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed:
-                                  isSubmitting ? null : () => submit(setLocal),
-                              icon: isSubmitting
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2),
-                                    )
-                                  : const Icon(Icons.check_rounded, size: 16),
-                              label: Text(isSubmitting
-                                  ? 'Saving...'
-                                  : (isEditing ? 'Update' : 'Schedule')),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),

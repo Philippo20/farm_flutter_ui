@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1423,9 +1424,9 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
   void _showLogDetails(BuildContext context, _AuditLog log, bool isDark) {
     final category = _categoryStyle(log.category);
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -1566,10 +1567,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
     String selectedFormat = 'CSV';
     final isMobile = MediaQuery.of(context).size.width < 600;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
+        builder: (context, setDialogState) => AppDialog(
           backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),

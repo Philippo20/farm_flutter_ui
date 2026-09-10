@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -3257,7 +3258,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
     String? modalError;
     bool isSaving = false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) {
@@ -3275,7 +3276,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
           final assignedBy =
               _value(task, ['assigned_by_name'], fallback: 'Farm Manager');
 
-          return Dialog(
+          return AppDialog(
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.lg,
@@ -3750,9 +3751,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
       Map<String, dynamic> task, bool isDark) async {
     final taskId = _taskDocId(task);
     if (taskId.isEmpty) return;
-    final shouldDelete = await showDialog<bool>(
+    final shouldDelete = await showAppDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => AppAlertDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         title: Text(
           'Delete Task',
@@ -3830,7 +3831,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
     String? modalError;
     bool isSaving = false;
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) {
@@ -3871,7 +3872,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             ),
           );
 
-          return Dialog(
+          return AppDialog(
             backgroundColor: Colors.transparent,
             insetPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.lg,
@@ -4360,9 +4361,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
     final tasks = member['tasks'] as int? ?? 0;
     final completed = member['completed'] as int? ?? 0;
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (ctx) => Dialog(
+      builder: (ctx) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),

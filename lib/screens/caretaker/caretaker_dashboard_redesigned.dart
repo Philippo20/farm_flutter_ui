@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -1372,7 +1373,7 @@ class _CaretakerDashboardRedesignedState
     var isSaving = false;
     String? errorMessage;
 
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) {
@@ -1388,7 +1389,7 @@ class _CaretakerDashboardRedesignedState
               fallback: 'No task instructions were added.');
           final managerComment = _value(task, const ['manager_comment']);
 
-          return Dialog(
+          return AppDialog(
             backgroundColor: Colors.transparent,
             insetPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 24),

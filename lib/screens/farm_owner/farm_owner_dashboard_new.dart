@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -536,9 +537,9 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
   }
 
   void _showWithdrawDialog() {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => AppAlertDialog(
         title: const Text('Withdraw to Bank'),
         content: Column(
           mainAxisSize: MainAxisSize.min,

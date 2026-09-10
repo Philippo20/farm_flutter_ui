@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -1108,9 +1109,9 @@ class _FarmManagerSettingsScreenState
     }
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (ctx) => Dialog(
+      builder: (ctx) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(

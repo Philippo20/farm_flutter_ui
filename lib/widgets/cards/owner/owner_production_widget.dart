@@ -1,3 +1,4 @@
+import '../../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -527,10 +528,10 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
 
   void _showMobileDetails(
       BuildContext context, Map<String, dynamic> product, bool isDark) {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return AppAlertDialog(
           backgroundColor: isDark ? Colors.grey[800] : Colors.white,
           title: Text(
             product["name"] as String,
@@ -590,10 +591,10 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
       "Delivered"
     ];
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return AppAlertDialog(
           backgroundColor: isDark ? Colors.grey[900] : Colors.white,
           title: Text(
             "Filter by Status",
@@ -778,13 +779,13 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
     'Delivered': Icons.local_shipping,
   };
 
-  showDialog(
+  showAppDialog(
     context: context,
     builder: (context) {
       final screenWidth = MediaQuery.of(context).size.width;
       final isSmallScreen = screenWidth < 600; // Adjust breakpoint as needed
 
-      return Dialog(
+      return AppDialog(
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),

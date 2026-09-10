@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -110,7 +111,7 @@ class _SalesPricingScreenState extends ConsumerState<SalesPricingScreen> {
             backgroundColor: Colors.transparent,
             builder: (_) => editor,
           )
-        : await showDialog<bool>(context: context, builder: (_) => editor);
+        : await showAppDialog<bool>(context: context, builder: (_) => editor);
     if (changed == true) await _load();
   }
 
@@ -225,9 +226,9 @@ class _SalesPricingScreenState extends ConsumerState<SalesPricingScreen> {
             backgroundColor: Colors.transparent,
             builder: (_) => modal,
           )
-        : await showDialog<bool>(
+        : await showAppDialog<bool>(
             context: context,
-            builder: (_) => Dialog(
+            builder: (_) => AppDialog(
               backgroundColor: Colors.transparent,
               child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 480),
@@ -972,7 +973,7 @@ class _SalesPricingEditorState extends State<_SalesPricingEditor> {
                 bottom: MediaQuery.viewInsetsOf(context).bottom),
             child: content,
           )
-        : Dialog(backgroundColor: Colors.transparent, child: content);
+        : AppDialog(backgroundColor: Colors.transparent, child: content);
   }
 }
 

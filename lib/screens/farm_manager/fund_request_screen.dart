@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -1389,9 +1390,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
     final sColor = _statusColor(status);
     final amount = r['amount'] as num;
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (_) => Dialog(
+      builder: (_) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: ConstrainedBox(
@@ -1647,9 +1648,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
     final formError = ValueNotifier<String?>(null);
     final isSubmitting = ValueNotifier<bool>(false);
 
-    showDialog(
+    showAppDialog(
       context: ctx,
-      builder: (_) => Dialog(
+      builder: (_) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: ConstrainedBox(
@@ -2074,9 +2075,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
     final formError = ValueNotifier<String?>(null);
     final isSaving = ValueNotifier<bool>(false);
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (dialogCtx) => Dialog(
+      builder: (dialogCtx) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: ConstrainedBox(
@@ -2464,9 +2465,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
   void _deleteRequest(Map<String, dynamic> r) {
     final isDeleting = ValueNotifier<bool>(false);
     final deleteError = ValueNotifier<String?>(null);
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (dialogCtx) => AlertDialog(
+      builder: (dialogCtx) => AppAlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         title: Text('Delete Request',
             style:

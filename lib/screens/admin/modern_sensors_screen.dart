@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'dart:async';
 
@@ -1632,11 +1633,11 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         ),
       );
     } else {
-      showDialog<void>(
+      showAppDialog<void>(
         context: context,
         barrierDismissible: !isDeleting,
         builder: (dialogContext) => StatefulBuilder(
-          builder: (context, setModalState) => Dialog(
+          builder: (context, setModalState) => AppDialog(
             backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
@@ -1696,7 +1697,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
           .first,
     );
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       barrierDismissible: !isSaving,
       builder: (dialogContext) {
@@ -1768,7 +1769,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
 
             final isMobile = MediaQuery.sizeOf(context).width < 600;
 
-            return Dialog(
+            return AppDialog(
               insetPadding: EdgeInsets.symmetric(
                 horizontal: isMobile ? 12 : 40,
                 vertical: isMobile ? 16 : 24,
@@ -2369,7 +2370,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
       }
     }
 
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
@@ -2392,7 +2393,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
             final readingState = _readingDiagnosticLabel(sensor);
             final isMobile = MediaQuery.sizeOf(context).width < 600;
 
-            return Dialog(
+            return AppDialog(
               insetPadding: EdgeInsets.symmetric(
                 horizontal: isMobile ? 12 : 40,
                 vertical: isMobile ? 16 : 24,

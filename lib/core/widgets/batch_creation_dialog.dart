@@ -1,3 +1,4 @@
+import 'app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -256,13 +257,13 @@ Future<bool?> showBatchCreationDialog({
   }
 
   try {
-    return await showDialog<bool>(
+    return await showAppDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setModalState) {
           final isDark = Theme.of(context).brightness == Brightness.dark;
-          return Dialog(
+          return AppDialog(
             backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
             insetPadding: const EdgeInsets.symmetric(
               horizontal: 16,

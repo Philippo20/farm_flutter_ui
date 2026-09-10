@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/create_user_modal.dart';
 import '../../core/widgets/user_search_field.dart';
 import 'package:flutter/material.dart';
@@ -1490,7 +1491,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     bool isDeleting = false;
     String? errorText;
 
-    showDialog(
+    showAppDialog(
       context: context,
       barrierDismissible: !isDeleting,
       builder: (dialogContext) => StatefulBuilder(
@@ -1523,7 +1524,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
             }
           }
 
-          return Dialog(
+          return AppDialog(
             backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl),

@@ -165,7 +165,7 @@ class _ModernHeaderState extends ConsumerState<ModernHeader> {
                         ref.read(themeProvider.notifier).toggleTheme(),
                   ),
                   AdaptiveProfilePopupMenuButton(
-                    icon: const CircleAvatar(
+                    child: const CircleAvatar(
                       backgroundColor: AppColors.primary,
                       child: Icon(Icons.person, color: Colors.white),
                     ),

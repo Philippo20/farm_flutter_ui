@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -118,10 +119,10 @@ class _PackagingConfigurationScreenState
             backgroundColor: Colors.transparent,
             builder: (_) => panel,
           )
-        : await showDialog<bool>(
+        : await showAppDialog<bool>(
             context: context,
             barrierDismissible: false,
-            builder: (_) => Dialog(
+            builder: (_) => AppDialog(
               backgroundColor: Colors.transparent,
               insetPadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 24),

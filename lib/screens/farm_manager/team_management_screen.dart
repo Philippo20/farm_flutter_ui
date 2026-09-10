@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -1532,9 +1533,9 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
     final completed = member['completed'] as int? ?? 0;
     final isOwner = (member['role'] as String?) == 'Farm Owner';
 
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (ctx) => Dialog(
+      builder: (ctx) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),

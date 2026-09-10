@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/create_user_modal.dart';
 import '../../core/widgets/user_search_field.dart';
 import 'package:flutter/material.dart';
@@ -1587,9 +1588,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
 
   void _showDeleteConfirmDialog(
       BuildContext context, Map<String, dynamic> user, bool isDark) {
-    showDialog(
+    showAppDialog(
       context: context,
-      builder: (context) => Dialog(
+      builder: (context) => AppDialog(
         backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
