@@ -248,9 +248,14 @@ class _CreateUserModalState extends State<_CreateUserModal> {
                                           Icons.business_outlined,
                                           (value) => setState(
                                               () => _department = value))),
-                              if (widget.includeAccountFields) ...[
+                              if (widget.includeAccountFields || _editing)
                                 _input(
-                                    'password', 'Password', Icons.lock_outline),
+                                    'password',
+                                    _editing
+                                        ? 'New password (leave blank to keep current)'
+                                        : 'Password',
+                                    Icons.lock_outline),
+                              if (widget.includeAccountFields) ...[
                                 _input('phone', 'Phone number',
                                     Icons.phone_outlined,
                                     keyboard: TextInputType.phone),
@@ -405,6 +410,12 @@ class _CreateUserModalState extends State<_CreateUserModal> {
               style: GoogleFonts.inter(fontSize: 12),
               decoration: _decoration(icon),
               validator: (raw) {
+                if (key == 'password') {
+                  if (_editing && (raw ?? '').isEmpty) return null;
+                  if ((raw ?? '').length < 8)
+                    return 'Use at least 8 characters';
+                  return null;
+                }
                 final value = (raw ?? '').trim();
                 if (!['capacity', 'phone', 'address'].contains(key) &&
                     value.isEmpty) return 'Enter ${label.toLowerCase()}';

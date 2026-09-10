@@ -1379,7 +1379,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         id: user['id'].toString(),
         name: user['name']?.toString() ?? '',
         email: user['email']?.toString() ?? '',
-        password: user['password']?.toString() ?? '',
+        password: '',
         address: user['address']?.toString() ?? '',
         role: _roleValueFromUser(user),
         phone: user['phone']?.toString() ?? '',
@@ -1563,8 +1563,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         id: user['id'].toString(),
         name: values['name'] as String,
         email: values['email'] as String,
-        password:
-            _safeRequired(user['password']?.toString(), 'FarmDemo#2026New'),
+        password: values['password'] as String? ?? '',
         address: _safeRequired(user['address']?.toString(), 'Farm Estates'),
         phone: _safeRequired(user['phone']?.toString(), '+233000000000'),
         role: _roleValue(values['role'] as String),

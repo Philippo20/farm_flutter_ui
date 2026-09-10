@@ -1425,8 +1425,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
             : {
                 'name': user['name'],
                 'email': user['email'],
-                'password':
-                    _text(user['password'], fallback: 'FarmDemo#2026New'),
+                'password': '',
                 'phone': user['phone'],
                 'address': user['address'],
                 'role': user['role'],
