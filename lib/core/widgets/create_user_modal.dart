@@ -428,13 +428,18 @@ class _CreateUserModalState extends State<_CreateUserModal> {
               style: GoogleFonts.inter(
                   fontSize: 12, color: Theme.of(context).colorScheme.onSurface),
               decoration: _decoration(icon),
-              items: items
+              // Retain an existing value that this admin cannot assign, without
+              // adding it to their editable choices. Each value occurs once.
+              items: {...items, value}
                   .map((item) => DropdownMenuItem(
                       value: item,
+                      enabled: items.contains(item),
                       child: Text(item,
                           maxLines: 1, overflow: TextOverflow.ellipsis)))
                   .toList(),
-              onChanged: (value) {
-                if (value != null) onChanged(value);
-              }));
+              onChanged: items.contains(value)
+                  ? (value) {
+                      if (value != null) onChanged(value);
+                    }
+                  : null));
 }

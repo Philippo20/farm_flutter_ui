@@ -471,18 +471,17 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                 ],
               )
             else
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columns,
-                  crossAxisSpacing: AppSpacing.md,
-                  mainAxisSpacing: AppSpacing.md,
-                  mainAxisExtent: 360,
-                ),
-                itemCount: _crops.length,
-                itemBuilder: (context, index) =>
-                    _buildCard(_crops[index], isDark),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  for (final crop in _crops)
+                    SizedBox(
+                      width:
+                          (constraints.maxWidth - (columns - 1) * 16) / columns,
+                      child: _buildCard(crop, isDark),
+                    ),
+                ],
               ),
           ],
         );
@@ -855,133 +854,161 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   }
 
   Widget _buildCard(Map<String, dynamic> crop, bool isDark) {
-    return InkWell(
-      onTap: () => _showEditDialog(isDark, crop),
-      mouseCursor: SystemMouseCursors.click,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      child: Container(
-        width: double.infinity,
-        clipBehavior: Clip.antiAlias,
-        decoration: _panelDecoration(isDark),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: double.infinity,
-              height: 150,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  _buildCropImage(crop, isDark),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.68),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    left: AppSpacing.md,
-                    right: AppSpacing.md,
-                    bottom: AppSpacing.md,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          crop['crop'],
-                          style: AppTypography.bodyLarge.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          crop['variety'],
-                          style: AppTypography.bodySmall.copyWith(
-                            color: Colors.white.withValues(alpha: 0.78),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Positioned(
-                    top: AppSpacing.sm,
-                    right: AppSpacing.sm,
-                    child: _buildImageBadge(crop['duration'].toString()),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.business_outlined,
-                          size: 18, color: AppColors.success),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          crop['company'],
-                          style: AppTypography.bodySmall.copyWith(
-                            color: isDark
-                                ? Colors.white70
-                                : AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    children: [
-                      _buildMetricBadge('pH ${crop['ph']}', AppColors.primary),
-                      _buildMetricBadge('EC ${crop['ec']}', AppColors.warning),
-                      _buildMetricBadge(
-                          '${crop['sproutingRatio']}%', AppColors.success),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    final foreground = isDark ? Colors.white : AppColors.textPrimary;
+    final secondary = isDark ? Colors.white54 : AppColors.textSecondary;
+    String value(String key) {
+      final text = (crop[key] ?? '').toString().trim();
+      return text.isEmpty || text == '-' || text == '- - -'
+          ? 'Not provided'
+          : text;
+    }
 
-  Widget _buildImageBadge(String text) {
+    Widget metric(String label, String text, IconData icon) => Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.035)
+                : AppColors.neutral50,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Icon(icon, size: 14, color: secondary),
+              const SizedBox(width: 6),
+              Expanded(
+                  child: Text(label,
+                      style:
+                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+            ]),
+            const SizedBox(height: 7),
+            Text(text,
+                style: GoogleFonts.inter(
+                    fontSize: 13,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
+                    color: foreground)),
+          ]),
+        );
+
+    Widget pair(Widget first, Widget second) =>
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: first),
+          const SizedBox(width: 10),
+          Expanded(child: second)
+        ]);
+
+    final sprouting = value('sproutingRatio');
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.025),
+                blurRadius: 16,
+                offset: const Offset(0, 4))
+        ],
       ),
-      child: Text(
-        text,
-        style: AppTypography.bodySmall.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w500,
+      padding: const EdgeInsets.all(18),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                  width: 64, height: 64, child: _buildCropImage(crop, isDark))),
+          const SizedBox(width: 12),
+          Expanded(
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(value('crop'),
+                    style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: foreground)),
+                const SizedBox(height: 4),
+                Text(value('variety'),
+                    style: GoogleFonts.inter(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: isDark ? Colors.white70 : AppColors.primary)),
+                const SizedBox(height: 5),
+                Text(value('company'),
+                    style: GoogleFonts.inter(
+                        fontSize: 11, height: 1.4, color: secondary)),
+              ])),
+        ]),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: isDark ? 0.14 : 0.06),
+              borderRadius: BorderRadius.circular(10)),
+          child: Row(children: [
+            Icon(Icons.schedule_outlined,
+                size: 16, color: isDark ? Colors.white70 : AppColors.primary),
+            const SizedBox(width: 8),
+            Expanded(
+                child: Text('Growing duration',
+                    style: GoogleFonts.inter(fontSize: 11, color: secondary))),
+            const SizedBox(width: 8),
+            Flexible(
+                child: Text(value('duration'),
+                    style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: foreground),
+                    textAlign: TextAlign.end)),
+          ]),
         ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+        const SizedBox(height: 16),
+        Text('Growing conditions',
+            style: GoogleFonts.inter(
+                fontSize: 12, fontWeight: FontWeight.w600, color: foreground)),
+        const SizedBox(height: 10),
+        pair(metric('pH range', value('ph'), Icons.science_outlined),
+            metric('EC range', value('ec'), Icons.bolt_outlined)),
+        const SizedBox(height: 10),
+        pair(
+            metric(
+                'Temperature', value('temperature'), Icons.thermostat_outlined),
+            metric('Humidity', value('humidity'), Icons.water_drop_outlined)),
+        const SizedBox(height: 10),
+        pair(
+            metric(
+                'Sprouting ratio',
+                sprouting == 'Not provided' || sprouting.endsWith('%')
+                    ? sprouting
+                    : '$sprouting%',
+                Icons.spa_outlined),
+            metric('Harvest weight', value('harvestWeight'),
+                Icons.scale_outlined)),
+        const SizedBox(height: 16),
+        SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _isSaving ? null : () => _showEditDialog(isDark, crop),
+              icon: const Icon(Icons.edit_outlined, size: 16),
+              label: const Text('Edit variety'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: isDark ? Colors.white : AppColors.primary,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+                side: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.25)),
+                textStyle: GoogleFonts.inter(
+                    fontSize: 12, fontWeight: FontWeight.w600),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            )),
+      ]),
     );
   }
 
