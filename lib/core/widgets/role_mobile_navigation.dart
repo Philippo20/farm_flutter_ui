@@ -94,9 +94,9 @@ class RoleMobileDrawer extends StatelessWidget {
                       title: Text(
                         item.label,
                         style: AppTypography.bodyMedium.copyWith(
-                          fontSize: 15,
+                          fontSize: AppTypography.cardTitleSize,
                           fontWeight:
-                              selected ? FontWeight.w700 : FontWeight.w500,
+                              selected ? AppTypography.headingWeight : AppTypography.labelWeight,
                           color: selected
                               ? AppColors.primary
                               : (isDark ? Colors.white : AppColors.textPrimary),
@@ -153,9 +153,9 @@ class RoleMobileDrawer extends StatelessWidget {
                         const SizedBox(width: AppSpacing.sm),
                         Text('Logout',
                             style: AppTypography.bodyMedium.copyWith(
-                                fontSize: 15,
+                                fontSize: AppTypography.cardTitleSize,
                                 color: AppColors.error,
-                                fontWeight: FontWeight.w500)),
+                                fontWeight: AppTypography.labelWeight)),
                       ],
                     ),
                   ),
@@ -187,7 +187,7 @@ class RoleMobileDrawer extends StatelessWidget {
             child: Text(
               userName.isEmpty ? 'U' : userName[0].toUpperCase(),
               style: AppTypography.h4
-                  .copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+                  .copyWith(color: Colors.white, fontWeight: AppTypography.headingWeight),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -199,7 +199,7 @@ class RoleMobileDrawer extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.h6.copyWith(
-                        color: Colors.white, fontWeight: FontWeight.w600)),
+                        color: Colors.white, fontWeight: AppTypography.headingWeight)),
                 const SizedBox(height: 4),
                 Text(userRole,
                     maxLines: 1,
@@ -246,9 +246,9 @@ class RoleMobileDrawer extends StatelessWidget {
             child: Center(
               child: Text(userName.isEmpty ? 'U' : userName[0].toUpperCase(),
                   style: AppTypography.bodyMedium.copyWith(
-                      fontSize: 18,
+                      fontSize: AppTypography.sectionTitleSize,
                       color: Colors.white,
-                      fontWeight: FontWeight.w500)),
+                      fontWeight: AppTypography.labelWeight)),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -266,7 +266,7 @@ class RoleMobileDrawer extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.caption.copyWith(
-                        fontSize: 12,
+                        fontSize: AppTypography.captionSize,
                         color:
                             isDark ? Colors.white70 : AppColors.textSecondary)),
               ],

@@ -439,7 +439,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         chat['avatar'] as String,
                         style: const TextStyle(
                           color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ),
@@ -453,7 +453,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                       Text(
                         chat['name'] as String,
                         style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -480,7 +480,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                         color: isDark
                             ? Colors.white.withOpacity(0.5)
                             : AppColors.textSecondary,
-                        fontSize: 11,
+                        fontSize: AppTypography.fieldLabelSize,
                       ),
                     ),
                     if ((chat['unread'] as int) > 0) ...[
@@ -499,8 +499,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                           (chat['unread'] as int).toString(),
                           style: AppTypography.caption.copyWith(
                             color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            fontSize: AppTypography.microSize,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -531,7 +531,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     Text(
                       'Message Center',
                       style: AppTypography.h5.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -643,7 +643,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                   selectedChatData['avatar'] as String,
                   style: const TextStyle(
                     color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -655,14 +655,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                     Text(
                       selectedChatData['name'] as String,
                       style: AppTypography.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(selectedChatData['role']?.toString() ?? 'Farm team',
                         style: AppTypography.caption.copyWith(
-                            fontSize: 11,
+                            fontSize: AppTypography.fieldLabelSize,
                             color: isDark
                                 ? Colors.white60
                                 : AppColors.textSecondary)),
@@ -708,7 +708,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                               color: isDark
                                   ? Colors.white38
                                   : AppColors.textSecondary,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: AppTypography.headingWeight,
                             ),
                           ),
                         ),
@@ -776,7 +776,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
                                   : (isDark
                                       ? Colors.white38
                                       : AppColors.textSecondary),
-                              fontSize: 10,
+                              fontSize: AppTypography.microSize,
                             ),
                           ),
                         ),
@@ -860,7 +860,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         child: Row(children: [
           const Icon(Icons.info_outline, size: 18, color: AppColors.error),
           const SizedBox(width: 8),
-          Expanded(child: Text(message, style: const TextStyle(fontSize: 12))),
+          Expanded(child: Text(message, style: const TextStyle(fontSize: AppTypography.captionSize))),
           TextButton(
               onPressed: _sending
                   ? null

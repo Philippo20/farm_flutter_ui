@@ -123,7 +123,7 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
           child: Text(
             'Delivery Invoice',
             style:
-                AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w600),
+                AppTypography.titleMedium.copyWith(fontWeight: AppTypography.headingWeight),
           ),
         ),
         FilledButton.icon(
@@ -179,7 +179,7 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
                   Text('FARM ESTATES LTD',
                       style: AppTypography.titleMedium.copyWith(
                         color: AppColors.primaryDark,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                       )),
                   Text('Packaged produce delivery invoice',
                       style:
@@ -191,12 +191,12 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
                 children: [
                   Text('INVOICE',
                       style: AppTypography.titleLarge.copyWith(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
+                        fontSize: AppTypography.metricSize,
+                        fontWeight: AppTypography.headingWeight,
                       )),
                   Text(_text(['invoice_number', 'receipt_number']),
                       style: AppTypography.bodyMedium
-                          .copyWith(fontWeight: FontWeight.w600)),
+                          .copyWith(fontWeight: AppTypography.headingWeight)),
                   Text('Generated ${_date('invoice_generated_at')}',
                       style:
                           AppTypography.bodySmall.copyWith(color: secondary)),
@@ -384,7 +384,7 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
                 child: Text(
                   value,
                   style: AppTypography.bodySmall.copyWith(
-                    fontWeight: header ? FontWeight.w600 : FontWeight.w400,
+                    fontWeight: header ? AppTypography.headingWeight : AppTypography.bodyWeight,
                     color: header ? AppColors.primaryDark : null,
                   ),
                 ),
@@ -401,11 +401,11 @@ class _SalesInvoiceScreenState extends State<SalesInvoiceScreen> {
         children: [
           Text(label,
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: strong ? FontWeight.w700 : FontWeight.w400,
+                fontWeight: strong ? AppTypography.headingWeight : AppTypography.bodyWeight,
               )),
           Text('GHS ${amount.toStringAsFixed(2)}',
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: strong ? AppTypography.headingWeight : AppTypography.labelWeight,
               )),
         ],
       ),
@@ -432,13 +432,13 @@ class _InfoGroup extends StatelessWidget {
         Text(label,
             style: AppTypography.bodySmall.copyWith(
               color: secondary,
-              fontWeight: FontWeight.w600,
-              fontSize: 11,
+              fontWeight: AppTypography.headingWeight,
+              fontSize: AppTypography.fieldLabelSize,
             )),
         const SizedBox(height: 6),
         Text(title,
             style:
-                AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                AppTypography.bodyMedium.copyWith(fontWeight: AppTypography.headingWeight)),
         ...lines.map((line) => Text(
               line,
               style: AppTypography.bodySmall.copyWith(color: secondary),

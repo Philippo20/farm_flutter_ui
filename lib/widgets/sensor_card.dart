@@ -95,7 +95,7 @@ class SensorCard extends StatelessWidget {
                                 'Stale data',
                                 style: AppTypography.caption.copyWith(
                                   color: AppColors.warning,
-                                  fontSize: 10,
+                                  fontSize: AppTypography.microSize,
                                 ),
                               ),
                             ],
@@ -125,7 +125,7 @@ class SensorCard extends StatelessWidget {
                       sensor.value.toStringAsFixed(1),
                       style: AppTypography.sensorValueLarge.copyWith(
                         color: color,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

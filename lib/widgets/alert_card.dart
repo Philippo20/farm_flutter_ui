@@ -102,8 +102,8 @@ class AlertCard extends StatelessWidget {
                         alert.sensorType.displayName,
                         style: AppTypography.bodySmall.copyWith(
                           color: _getSensorColor(alert.sensorType),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 10,
+                          fontWeight: AppTypography.headingWeight,
+                          fontSize: AppTypography.microSize,
                         ),
                       ),
                     ],
@@ -124,7 +124,7 @@ class AlertCard extends StatelessWidget {
               alert.message,
               style: AppTypography.bodyMedium.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
 
@@ -170,8 +170,8 @@ class AlertCard extends StatelessWidget {
                           'Resolved',
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.success,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                            fontSize: AppTypography.microSize,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                       ],
@@ -239,7 +239,7 @@ class AlertCard extends StatelessWidget {
                         'Resolved by ${alert.resolvedBy}',
                         style: AppTypography.bodySmall.copyWith(
                           color: AppColors.success,
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                         ),
                       ),
                     ),
@@ -296,7 +296,7 @@ class AlertCard extends StatelessWidget {
                     alert.message,
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -306,7 +306,7 @@ class AlertCard extends StatelessWidget {
                     alert.timeAgo,
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white60 : AppColors.textSecondary,
-                      fontSize: 10,
+                      fontSize: AppTypography.microSize,
                     ),
                   ),
                 ],
@@ -336,8 +336,8 @@ class AlertCard extends StatelessWidget {
         severity.displayName.toUpperCase(),
         style: AppTypography.bodySmall.copyWith(
           color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 9,
+          fontWeight: AppTypography.headingWeight,
+          fontSize: AppTypography.microSize,
         ),
       ),
     );
@@ -456,7 +456,7 @@ class AlertBanner extends StatelessWidget {
                       alert.sensorType.displayName,
                       style: AppTypography.bodySmall.copyWith(
                         color: severityColor,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: 2),

@@ -1,10 +1,10 @@
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 // ignore_for_file: deprecated_member_use
 
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 import '../../core/widgets/modern_scaffold.dart';
 import '../../core/widgets/adaptive_navigation.dart';
@@ -200,9 +200,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
         Expanded(
           child: Text(
             'Farm Management',
-            style: GoogleFonts.poppins(
-              fontSize: isMobile ? 24 : 28,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
               letterSpacing: 0.3,
             ),
@@ -222,9 +222,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
-            textStyle: GoogleFonts.poppins(
-              fontWeight: FontWeight.w500,
-              fontSize: isMobile ? 14 : 15,
+            textStyle: AppTypography.font(
+              fontWeight: AppTypography.labelWeight,
+              fontSize: isMobile ? AppTypography.bodySize : AppTypography.cardTitleSize,
               letterSpacing: 0.2,
             ),
             elevation: 0,
@@ -312,9 +312,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
                     const SizedBox(width: 4),
                     Text(
                       change,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
+                        fontWeight: AppTypography.labelWeight,
                         color: isPositive ? Colors.green : Colors.red,
                       ),
                     ),
@@ -326,20 +326,20 @@ class _FarmsScreenState extends State<FarmsScreen> {
           const SizedBox(height: 16),
           Text(
             title,
-            style: GoogleFonts.inter(
-              fontSize: 14,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
               color: isDark
                   ? Colors.white.withOpacity(0.7)
                   : Colors.black.withOpacity(0.6),
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.pageTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: isDark ? Colors.white : Colors.black,
             ),
           ),
@@ -373,11 +373,11 @@ class _FarmsScreenState extends State<FarmsScreen> {
                 decoration: InputDecoration(
                   hintText: 'Search farms...',
                   border: InputBorder.none,
-                  hintStyle: GoogleFonts.inter(
+                  hintStyle: AppTypography.font(
                     color: secondaryTextColor,
                   ),
                 ),
-                style: GoogleFonts.inter(
+                style: AppTypography.font(
                     color: isDark ? Colors.white : Colors.black),
               ),
             ),
@@ -478,9 +478,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
               const SizedBox(height: 16),
               Text(
                 farm.name,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
+                style: AppTypography.font(
+                  fontSize: AppTypography.sectionTitleSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: textColor,
                 ),
                 maxLines: 1,
@@ -497,8 +497,8 @@ class _FarmsScreenState extends State<FarmsScreen> {
                   const SizedBox(width: 4),
                   Text(
                     farm.location,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.bodySize,
                       color: secondaryTextColor,
                     ),
                   ),
@@ -516,9 +516,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
                     ),
                     child: Text(
                       farm.status,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
+                        fontWeight: AppTypography.labelWeight,
                         color: statusColor,
                       ),
                     ),
@@ -526,9 +526,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
                   const Spacer(),
                   Text(
                     farm.size,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.bodySize,
+                      fontWeight: AppTypography.labelWeight,
                       color: textColor,
                     ),
                   ),
@@ -594,9 +594,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
                       children: [
                         Text(
                           'Add New Farm',
-                          style: GoogleFonts.poppins(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w500,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.headingSize,
+                            fontWeight: AppTypography.labelWeight,
                             color: Colors.white,
                           ),
                         ),
@@ -617,11 +617,11 @@ class _FarmsScreenState extends State<FarmsScreen> {
                         // Farm Name
                         TextFormField(
                           controller: nameController,
-                          style: GoogleFonts.inter(color: textColor),
+                          style: AppTypography.font(color: textColor),
                           decoration: InputDecoration(
                             labelText: 'Farm Name',
                             labelStyle:
-                                GoogleFonts.inter(color: secondaryTextColor),
+                                AppTypography.font(color: secondaryTextColor),
                             prefixIcon:
                                 Icon(Icons.agriculture, color: primaryColor),
                             filled: true,
@@ -647,11 +647,11 @@ class _FarmsScreenState extends State<FarmsScreen> {
                         // Location
                         TextFormField(
                           controller: locationController,
-                          style: GoogleFonts.inter(color: textColor),
+                          style: AppTypography.font(color: textColor),
                           decoration: InputDecoration(
                             labelText: 'Location',
                             labelStyle:
-                                GoogleFonts.inter(color: secondaryTextColor),
+                                AppTypography.font(color: secondaryTextColor),
                             prefixIcon: Icon(Icons.location_on_outlined,
                                 color: primaryColor),
                             filled: true,
@@ -677,17 +677,17 @@ class _FarmsScreenState extends State<FarmsScreen> {
                         // Size
                         TextFormField(
                           controller: sizeController,
-                          style: GoogleFonts.inter(color: textColor),
+                          style: AppTypography.font(color: textColor),
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             labelText: 'Size (acres)',
                             labelStyle:
-                                GoogleFonts.inter(color: secondaryTextColor),
+                                AppTypography.font(color: secondaryTextColor),
                             prefixIcon:
                                 Icon(Icons.square_foot, color: primaryColor),
                             suffixText: 'acres',
                             suffixStyle:
-                                GoogleFonts.inter(color: secondaryTextColor),
+                                AppTypography.font(color: secondaryTextColor),
                             filled: true,
                             fillColor: isDark
                                 ? Colors.grey[900]!.withOpacity(0.5)
@@ -719,7 +719,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
                               value: value,
                               child: Text(
                                 value,
-                                style: GoogleFonts.inter(color: textColor),
+                                style: AppTypography.font(color: textColor),
                               ),
                             );
                           }).toList(),
@@ -729,7 +729,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
                           decoration: InputDecoration(
                             labelText: 'Status',
                             labelStyle:
-                                GoogleFonts.inter(color: secondaryTextColor),
+                                AppTypography.font(color: secondaryTextColor),
                             prefixIcon: Icon(Icons.circle_outlined,
                                 color: primaryColor),
                             filled: true,
@@ -746,7 +746,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
                           dropdownColor: cardColor,
                           icon: Icon(Icons.arrow_drop_down,
                               color: secondaryTextColor),
-                          style: GoogleFonts.inter(color: textColor),
+                          style: AppTypography.font(color: textColor),
                         ),
                         const SizedBox(height: 24),
 
@@ -779,9 +779,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
                                 const SizedBox(height: 8),
                                 Text(
                                   'Upload Farm Image (Optional)',
-                                  style: GoogleFonts.inter(
+                                  style: AppTypography.font(
                                     color: secondaryTextColor,
-                                    fontSize: 14,
+                                    fontSize: AppTypography.bodySize,
                                   ),
                                 ),
                               ],
@@ -926,9 +926,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
                     children: [
                       Text(
                         'Farm Details',
-                        style: GoogleFonts.roboto(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.sectionTitleSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: textColor,
                         ),
                       ),
@@ -980,8 +980,8 @@ class _FarmsScreenState extends State<FarmsScreen> {
                                 indicatorColor: primaryColor,
                                 labelColor: primaryColor,
                                 unselectedLabelColor: secondaryTextColor,
-                                labelStyle: GoogleFonts.roboto(
-                                    fontSize: 14, fontWeight: FontWeight.w500),
+                                labelStyle: AppTypography.font(
+                                    fontSize: AppTypography.bodySize, fontWeight: AppTypography.labelWeight),
                                 tabs: const [
                                   Tab(text: 'Overview'),
                                   Tab(text: 'Production'),
@@ -1021,8 +1021,8 @@ class _FarmsScreenState extends State<FarmsScreen> {
                                 indicatorColor: primaryColor,
                                 labelColor: primaryColor,
                                 unselectedLabelColor: secondaryTextColor,
-                                labelStyle: GoogleFonts.roboto(
-                                    fontSize: 14, fontWeight: FontWeight.w500),
+                                labelStyle: AppTypography.font(
+                                    fontSize: AppTypography.bodySize, fontWeight: AppTypography.labelWeight),
                                 tabs: const [
                                   Tab(text: 'Performance'),
                                   Tab(text: 'Energy'),
@@ -1064,9 +1064,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
                         onPressed: () => Navigator.pop(dialogContext),
                         child: Text(
                           'Cancel',
-                          style: GoogleFonts.roboto(
+                          style: AppTypography.font(
                             color: secondaryTextColor,
-                            fontSize: 14,
+                            fontSize: AppTypography.bodySize,
                           ),
                         ),
                       ),
@@ -1085,9 +1085,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
                         ),
                         child: Text(
                           'Save Changes',
-                          style: GoogleFonts.roboto(
+                          style: AppTypography.font(
                             color: Colors.white,
-                            fontSize: 14,
+                            fontSize: AppTypography.bodySize,
                           ),
                         ),
                       ),
@@ -1111,9 +1111,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
         children: [
           Text(
             'Farm Information',
-            style: GoogleFonts.roboto(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
             ),
           ),
@@ -1186,9 +1186,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
         children: [
           Text(
             'Production Metrics',
-            style: GoogleFonts.roboto(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
             ),
           ),
@@ -1235,9 +1235,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
                   Expanded(
                     child: Text(
                       'Performance Dashboard',
-                      style: GoogleFonts.roboto(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.labelWeight,
                         color: textColor,
                       ),
                     ),
@@ -1273,8 +1273,8 @@ class _FarmsScreenState extends State<FarmsScreen> {
                         size: 16, color: secondaryTextColor),
                     label: Text(
                       '${DateFormat('MMM d').format(_dateRange.start)} - ${DateFormat('MMM d, y').format(_dateRange.end)}',
-                      style: GoogleFonts.roboto(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color: secondaryTextColor,
                       ),
                     ),
@@ -1345,9 +1345,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
                   children: [
                     Text(
                       'Crop Yield Trend',
-                      style: GoogleFonts.roboto(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.cardTitleSize,
+                        fontWeight: AppTypography.labelWeight,
                         color: textColor,
                       ),
                     ),
@@ -1368,8 +1368,8 @@ class _FarmsScreenState extends State<FarmsScreen> {
                                     padding: const EdgeInsets.only(top: 8.0),
                                     child: Text(
                                       DateFormat('MMM d').format(date),
-                                      style: GoogleFonts.roboto(
-                                        fontSize: 10,
+                                      style: AppTypography.font(
+                                        fontSize: AppTypography.microSize,
                                         color: secondaryTextColor,
                                       ),
                                     ),
@@ -1384,8 +1384,8 @@ class _FarmsScreenState extends State<FarmsScreen> {
                                 getTitlesWidget: (value, meta) {
                                   return Text(
                                     '${value.toInt()} t/ha',
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 10,
+                                    style: AppTypography.font(
+                                      fontSize: AppTypography.microSize,
                                       color: secondaryTextColor,
                                     ),
                                   );
@@ -1437,9 +1437,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
               const SizedBox(height: 24),
               Text(
                 'Recent Activities',
-                style: GoogleFonts.roboto(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                style: AppTypography.font(
+                  fontSize: AppTypography.cardTitleSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: textColor,
                 ),
               ),
@@ -1500,9 +1500,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
         children: [
           Text(
             'Energy Overview',
-            style: GoogleFonts.roboto(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.sectionTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
             ),
           ),
@@ -1522,16 +1522,16 @@ class _FarmsScreenState extends State<FarmsScreen> {
                   children: [
                     Text(
                       "Current Power Generation",
-                      style: GoogleFonts.roboto(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color: secondaryTextColor,
                       ),
                     ),
                     Text(
                       "24.5 kW",
-                      style: GoogleFonts.roboto(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.labelWeight,
                         color: textColor,
                       ),
                     ),
@@ -1550,15 +1550,15 @@ class _FarmsScreenState extends State<FarmsScreen> {
                   children: [
                     Text(
                       "82% of capacity",
-                      style: GoogleFonts.roboto(
-                        fontSize: 12,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color: secondaryTextColor,
                       ),
                     ),
                     Text(
                       "Max: 30 kW",
-                      style: GoogleFonts.roboto(
-                        fontSize: 12,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color: secondaryTextColor,
                       ),
                     ),
@@ -1571,9 +1571,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
           const SizedBox(height: 24),
           Text(
             'Energy Sources',
-            style: GoogleFonts.roboto(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
             ),
           ),
@@ -1615,9 +1615,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
           const SizedBox(height: 24),
           Text(
             'Daily Energy Production',
-            style: GoogleFonts.roboto(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
             ),
           ),
@@ -1633,7 +1633,7 @@ class _FarmsScreenState extends State<FarmsScreen> {
             alignment: Alignment.center,
             child: Text(
               "Energy Production Chart",
-              style: GoogleFonts.roboto(
+              style: AppTypography.font(
                 color: secondaryTextColor,
               ),
             ),
@@ -1675,8 +1675,8 @@ class _FarmsScreenState extends State<FarmsScreen> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.roboto(
-                    fontSize: 13,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.actionSize,
                     color: secondaryColor,
                   ),
                 ),
@@ -1685,9 +1685,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
                   children: [
                     Text(
                       value,
-                      style: GoogleFonts.roboto(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.cardTitleSize,
+                        fontWeight: AppTypography.labelWeight,
                         color: textColor,
                       ),
                     ),
@@ -1722,16 +1722,16 @@ class _FarmsScreenState extends State<FarmsScreen> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.roboto(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: AppTypography.labelWeight,
                     color: secondaryColor,
                   ),
                 ),
                 Text(
                   time,
-                  style: GoogleFonts.roboto(
-                    fontSize: 12,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: secondaryColor,
                   ),
                 ),
@@ -1771,9 +1771,9 @@ class _FarmsScreenState extends State<FarmsScreen> {
               children: [
                 Text(
                   source,
-                  style: GoogleFonts.roboto(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: AppTypography.labelWeight,
                     color: textColor,
                   ),
                 ),
@@ -1790,17 +1790,17 @@ class _FarmsScreenState extends State<FarmsScreen> {
           const SizedBox(width: 12),
           Text(
             value,
-            style: GoogleFonts.roboto(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
             ),
           ),
           const SizedBox(width: 8),
           Text(
             percentage,
-            style: GoogleFonts.roboto(
-              fontSize: 14,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
               color: secondaryColor,
             ),
           ),
@@ -1827,17 +1827,17 @@ class _FarmsScreenState extends State<FarmsScreen> {
             children: [
               Text(
                 label,
-                style: GoogleFonts.roboto(
-                  fontSize: 13,
+                style: AppTypography.font(
+                  fontSize: AppTypography.actionSize,
                   color: secondaryColor,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
-                style: GoogleFonts.roboto(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                style: AppTypography.font(
+                  fontSize: AppTypography.cardTitleSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: textColor,
                 ),
               ),

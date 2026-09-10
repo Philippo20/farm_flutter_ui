@@ -255,11 +255,11 @@ class _CaretakerSidebarState extends State<CaretakerSidebar>
                                 .textTheme
                                 .labelSmall
                                 ?.copyWith(
-                                  fontSize: 11,
+                                  fontSize: AppTypography.fieldLabelSize,
                                   color: isDark
                                       ? Colors.white.withOpacity(0.7)
                                       : AppColors.textSecondary,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: AppTypography.headingWeight,
                                   letterSpacing: 0.2,
                                 ),
                             overflow: TextOverflow.ellipsis,
@@ -443,15 +443,15 @@ class _CaretakerSidebarState extends State<CaretakerSidebar>
                             item.label,
                             textAlign: TextAlign.left,
                             style: AppTypography.bodyMedium.copyWith(
-                              fontSize: 13,
+                              fontSize: AppTypography.actionSize,
                               color: isSelected
                                   ? AppColors.primary
                                   : (isDark
                                       ? Colors.white
                                       : AppColors.textPrimary),
                               fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
+                                  ? AppTypography.headingWeight
+                                  : AppTypography.labelWeight,
                               letterSpacing: 0.1,
                             ),
                           ),
@@ -534,9 +534,9 @@ class _CaretakerSidebarState extends State<CaretakerSidebar>
                       ? widget.userName[0].toUpperCase()
                       : 'C',
                   style: AppTypography.bodyMedium.copyWith(
-                    fontSize: 18,
+                    fontSize: AppTypography.sectionTitleSize,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -550,8 +550,8 @@ class _CaretakerSidebarState extends State<CaretakerSidebar>
                   Text(
                     widget.userName,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
+                      fontSize: AppTypography.cardTitleSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                     maxLines: 1,
@@ -561,11 +561,11 @@ class _CaretakerSidebarState extends State<CaretakerSidebar>
                   Text(
                     widget.userRole,
                     style: AppTypography.caption.copyWith(
-                      fontSize: 13,
+                      fontSize: AppTypography.actionSize,
                       color: isDark
                           ? Colors.white.withOpacity(0.7)
                           : AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -631,9 +631,9 @@ class _CaretakerSidebarState extends State<CaretakerSidebar>
                         child: Text(
                           'Logout',
                           style: AppTypography.bodyMedium.copyWith(
-                            fontSize: 13,
+                            fontSize: AppTypography.actionSize,
                             color: AppColors.error,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                       ),

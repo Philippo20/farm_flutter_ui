@@ -1,7 +1,7 @@
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/farm_manager_sidebar.dart';
@@ -487,9 +487,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
             const SizedBox(height: 8),
             Text(
               'Could not load fund requests',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -497,8 +497,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
             Text(
               _loadError!,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white54 : AppColors.textSecondary,
               ),
             ),
@@ -524,14 +524,14 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
     if (isMobile) {
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('Fund Requests',
-            style: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
+            style: AppTypography.font(
+                fontSize: AppTypography.headingSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary)),
         const SizedBox(height: 4),
         Text('Request and track budget allocations for farm operations',
-            style: GoogleFonts.inter(
-                fontSize: 12,
+            style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white60 : AppColors.textSecondary)),
         const SizedBox(height: 12),
         SizedBox(
@@ -557,9 +557,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
         children: [
           Text(
             'Fund Requests',
-            style: GoogleFonts.inter(
-              fontSize: isMobile ? 20 : 24,
-              fontWeight: FontWeight.w700,
+            style: AppTypography.font(
+              fontSize: isMobile ? AppTypography.headingSize : AppTypography.pageTitleSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
               letterSpacing: -0.5,
             ),
@@ -567,8 +567,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
           const SizedBox(height: 2),
           Text(
             'Request and track budget allocations for farm operations',
-            style: GoogleFonts.inter(
-              fontSize: isMobile ? 12 : 14,
+            style: AppTypography.font(
+              fontSize: isMobile ? AppTypography.captionSize : AppTypography.bodySize,
               color: isDark
                   ? Colors.white.withOpacity(0.5)
                   : AppColors.textSecondary,
@@ -584,7 +584,7 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
           icon: const Icon(Icons.add_rounded, size: 18),
           label: Text('New Request',
               style:
-                  GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                  AppTypography.font(fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
@@ -675,16 +675,16 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(stat['value'] as String,
-                style: GoogleFonts.inter(
-                    fontSize: isMobile ? 20 : 24,
-                    fontWeight: FontWeight.w700,
+                style: AppTypography.font(
+                    fontSize: isMobile ? AppTypography.headingSize : AppTypography.pageTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                     height: 1)),
             const SizedBox(height: 2),
             Text(stat['label'] as String,
-                style: GoogleFonts.inter(
-                    fontSize: isMobile ? 10 : 11,
-                    fontWeight: FontWeight.w500,
+                style: AppTypography.font(
+                    fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark
                         ? Colors.white.withOpacity(0.4)
                         : AppColors.textSecondary)),
@@ -736,9 +736,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
               const SizedBox(width: 10),
               Expanded(
                   child: Text('Fund Requests',
-                      style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.cardTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary))),
               Container(
@@ -747,9 +747,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                     color: AppColors.warning.withOpacity(0.08),
                     borderRadius: BorderRadius.circular(10)),
                 child: Text('${requests.length} requests',
-                    style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.microSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: AppColors.warning)),
               ),
               if (isMobile) ...[
@@ -792,10 +792,10 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                 unselectedLabelColor: isDark
                     ? Colors.white.withOpacity(0.4)
                     : AppColors.textSecondary,
-                labelStyle: GoogleFonts.inter(
-                    fontSize: 11, fontWeight: FontWeight.w600),
-                unselectedLabelStyle: GoogleFonts.inter(
-                    fontSize: 11, fontWeight: FontWeight.w500),
+                labelStyle: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight),
+                unselectedLabelStyle: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.labelWeight),
                 labelPadding: const EdgeInsets.symmetric(horizontal: 10),
                 tabs: _statusTabs.map((t) {
                   final count =
@@ -816,8 +816,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text('$count',
-                          style: GoogleFonts.inter(
-                              fontSize: 9, fontWeight: FontWeight.w700)),
+                          style: AppTypography.font(
+                              fontSize: AppTypography.microSize, fontWeight: AppTypography.headingWeight)),
                     ),
                   ]));
                 }).toList(),
@@ -832,13 +832,13 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
               Expanded(
                   child: TextField(
                 onChanged: (v) => setState(() => _searchQuery = v),
-                style: GoogleFonts.inter(
-                    fontSize: 13,
+                style: AppTypography.font(
+                    fontSize: AppTypography.actionSize,
                     color: isDark ? Colors.white : AppColors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Search by ID, farm, or purpose...',
-                  hintStyle: GoogleFonts.inter(
-                      fontSize: 13,
+                  hintStyle: AppTypography.font(
+                      fontSize: AppTypography.actionSize,
                       color: isDark ? Colors.white24 : AppColors.textSecondary),
                   prefixIcon: Icon(Icons.search_rounded,
                       size: 18,
@@ -875,8 +875,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                       : () => _showCreateRequestDialog(context),
                   icon: const Icon(Icons.add_rounded, size: 16),
                   label: Text('New Request',
-                      style: GoogleFonts.inter(
-                          fontSize: 12, fontWeight: FontWeight.w600)),
+                      style: AppTypography.font(
+                          fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -928,14 +928,14 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
         ),
         const SizedBox(height: 16),
         Text('No requests found',
-            style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+                fontSize: AppTypography.cardTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white54 : AppColors.textSecondary)),
         const SizedBox(height: 4),
         Text('Create a new fund request to get started',
-            style: GoogleFonts.inter(
-                fontSize: 12,
+            style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white24 : AppColors.textSecondary)),
         const SizedBox(height: 16),
         ElevatedButton.icon(
@@ -944,7 +944,7 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
           icon: const Icon(Icons.add_rounded, size: 16),
           label: Text('New Request',
               style:
-                  GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
+                  AppTypography.font(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight)),
           style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -1000,9 +1000,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
     return Expanded(
       flex: flex,
       child: Text(label,
-          style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+          style: AppTypography.font(
+              fontSize: AppTypography.fieldLabelSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white38 : AppColors.textSecondary,
               letterSpacing: 0.3),
           maxLines: 1,
@@ -1048,9 +1048,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                   const SizedBox(width: 8),
                   Expanded(
                       child: Text(r['id'] as String,
-                          style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: isDark
                                   ? Colors.white
                                   : AppColors.textPrimary),
@@ -1067,8 +1067,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                   const SizedBox(width: 4),
                   Expanded(
                       child: Text(r['farm'] as String,
-                          style: GoogleFonts.inter(
-                              fontSize: 12,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
                               color: isDark
                                   ? Colors.white70
                                   : AppColors.textPrimary),
@@ -1079,8 +1079,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
             Expanded(
                 flex: 2,
                 child: Text(r['purpose'] as String,
-                    style: GoogleFonts.inter(
-                        fontSize: 12,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color: isDark ? Colors.white70 : AppColors.textPrimary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis)),
@@ -1097,9 +1097,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                       borderRadius: BorderRadius.circular(6)),
                   child: Text(r['category'] as String,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: isDark
                               ? Colors.white54
                               : AppColors.textSecondary),
@@ -1110,9 +1110,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
             Expanded(
                 flex: 2,
                 child: Text('GHS ${_formatAmount(amount.toDouble())}',
-                    style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.actionSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary))),
             // Status
             Expanded(
@@ -1129,9 +1129,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                       Icon(_statusIcon(status), size: 11, color: sColor),
                       const SizedBox(width: 4),
                       Text(status,
-                          style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.microSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: sColor)),
                     ]),
                   ),
@@ -1147,17 +1147,17 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                       borderRadius: BorderRadius.circular(6)),
                   child: Text(priority,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: pColor)),
                 )),
             // Date
             Expanded(
                 flex: 2,
                 child: Text(r['date'] as String,
-                    style: GoogleFonts.inter(
-                        fontSize: 12,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color: isDark
                             ? Colors.white54
                             : AppColors.textSecondary))),
@@ -1255,9 +1255,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Text(r['id'] as String,
-                      style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.bodySize,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
                   const SizedBox(height: 1),
@@ -1269,8 +1269,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                     const SizedBox(width: 3),
                     Expanded(
                         child: Text(r['farm'] as String,
-                            style: GoogleFonts.inter(
-                                fontSize: 11,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.fieldLabelSize,
                                 color: isDark
                                     ? Colors.white60
                                     : AppColors.textSecondary),
@@ -1285,9 +1285,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: sColor.withOpacity(0.2))),
               child: Text(status,
-                  style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.microSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: sColor)),
             ),
           ]),
@@ -1295,11 +1295,11 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
 
           Wrap(spacing: 8, runSpacing: 8, children: [
             Text(priority,
-                style: GoogleFonts.inter(
-                    fontSize: 11, color: pColor, fontWeight: FontWeight.w600)),
+                style: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize, color: pColor, fontWeight: AppTypography.headingWeight)),
             Text(r['category'] as String,
-                style: GoogleFonts.inter(
-                    fontSize: 11,
+                style: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary)),
           ]),
           const SizedBox(height: 12),
@@ -1314,15 +1314,15 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('Amount requested',
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.fieldLabelSize,
                       color:
                           isDark ? Colors.white60 : AppColors.textSecondary)),
               const SizedBox(height: 5),
               Text('GHS ${_formatAmount(amount.toDouble())}',
-                  style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.headingSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary)),
             ]),
           ),
@@ -1339,8 +1339,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
           // Description preview
           Text(
             r['description'] as String,
-            style: GoogleFonts.inter(
-                fontSize: 11,
+            style: AppTypography.font(
+                fontSize: AppTypography.fieldLabelSize,
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
                 height: 1.4),
             maxLines: 2,
@@ -1372,8 +1372,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
       const SizedBox(width: 4),
       Expanded(
           child: Text(text,
-              style: GoogleFonts.inter(
-                  fontSize: 11,
+              style: AppTypography.font(
+                  fontSize: AppTypography.fieldLabelSize,
                   color: isDark ? Colors.white54 : AppColors.textSecondary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis)),
@@ -1421,15 +1421,15 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                         Text(r['id'] as String,
-                            style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.cardTitleSize,
+                                fontWeight: AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary)),
                         Text(r['farm'] as String,
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white38
                                     : AppColors.textSecondary)),
@@ -1468,16 +1468,16 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                           Text('Amount Requested',
-                              style: GoogleFonts.inter(
-                                  fontSize: 10,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.microSize,
                                   color: isDark
                                       ? Colors.white24
                                       : AppColors.textSecondary)),
                           const SizedBox(height: 4),
                           Text('GHS ${_formatAmount(amount.toDouble())}',
-                              style: GoogleFonts.inter(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.pageTitleSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: isDark
                                       ? Colors.white
                                       : AppColors.textPrimary)),
@@ -1493,9 +1493,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                         Icon(_statusIcon(status), size: 14, color: sColor),
                         const SizedBox(width: 4),
                         Text(status,
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
+                                fontWeight: AppTypography.headingWeight,
                                 color: sColor)),
                       ]),
                     ),
@@ -1533,16 +1533,16 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Description',
-                            style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.fieldLabelSize,
+                                fontWeight: AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white38
                                     : AppColors.textSecondary)),
                         const SizedBox(height: 4),
                         Text(r['description'] as String,
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white70
                                     : AppColors.textPrimary,
@@ -1565,8 +1565,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                                 ? Colors.white.withOpacity(0.1)
                                 : Colors.black.withOpacity(0.08))),
                     child: Text('Close',
-                        style: GoogleFonts.inter(
-                            fontSize: 13, fontWeight: FontWeight.w500)),
+                        style: AppTypography.font(
+                            fontSize: AppTypography.actionSize, fontWeight: AppTypography.labelWeight)),
                   )),
                   const SizedBox(width: 8),
                   if (status == 'Pending')
@@ -1578,8 +1578,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                       },
                       icon: const Icon(Icons.edit_outlined, size: 15),
                       label: Text('Edit Request',
-                          style: GoogleFonts.inter(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
+                          style: AppTypography.font(
+                              fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
                       style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
@@ -1607,15 +1607,15 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
         SizedBox(
             width: 100,
             child: Text(label,
-                style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white38 : AppColors.textSecondary))),
         Expanded(
             child: Text(value,
-                style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary))),
       ]),
     );
@@ -1681,15 +1681,15 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                         Text('New Fund Request',
-                            style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.cardTitleSize,
+                                fontWeight: AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary)),
                         Text('Request budget allocation for operations',
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white38
                                     : AppColors.textSecondary)),
@@ -1721,14 +1721,14 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                   return DropdownButtonFormField<String>(
                     value: farmId.isEmpty ? null : farmId,
                     hint: Text('Select farm',
-                        style: GoogleFonts.inter(
-                            fontSize: 12,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.captionSize,
                             color: isDark
                                 ? Colors.white24
                                 : AppColors.textSecondary)),
                     decoration: _dialogInputDecoration(isDark),
-                    style: GoogleFonts.inter(
-                        fontSize: 12,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color: isDark ? Colors.white : AppColors.textPrimary),
                     dropdownColor:
                         isDark ? AppColors.surfaceDark : Colors.white,
@@ -1768,8 +1768,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                           return DropdownButtonFormField<String>(
                             value: category,
                             decoration: _dialogInputDecoration(isDark),
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary),
@@ -1810,8 +1810,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                           return DropdownButtonFormField<String>(
                             value: priority,
                             decoration: _dialogInputDecoration(isDark),
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary),
@@ -1844,10 +1844,10 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                       padding: const EdgeInsets.only(top: 10),
                       child: Text(
                         error,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
                           color: AppColors.error,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     );
@@ -1869,8 +1869,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                                 ? Colors.white.withOpacity(0.1)
                                 : Colors.black.withOpacity(0.08))),
                     child: Text('Cancel',
-                        style: GoogleFonts.inter(
-                            fontSize: 13, fontWeight: FontWeight.w500)),
+                        style: AppTypography.font(
+                            fontSize: AppTypography.actionSize, fontWeight: AppTypography.labelWeight)),
                   )),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1940,9 +1940,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                               : const Icon(Icons.send_rounded, size: 16),
                           label: Text(
                             submitting ? 'Submitting...' : 'Submit Request',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
+                            style: AppTypography.font(
+                              fontSize: AppTypography.actionSize,
+                              fontWeight: AppTypography.headingWeight,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
@@ -1973,9 +1973,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
 
   Widget _dialogLabel(String label, bool isDark) {
     return Text(label,
-        style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
+        style: AppTypography.font(
+            fontSize: AppTypography.fieldLabelSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white54 : AppColors.textSecondary));
   }
 
@@ -2013,12 +2013,12 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
         onChanged: onChanged,
         keyboardType: inputType,
         maxLines: maxLines,
-        style: GoogleFonts.inter(
-            fontSize: 12, color: isDark ? Colors.white : AppColors.textPrimary),
+        style: AppTypography.font(
+            fontSize: AppTypography.captionSize, color: isDark ? Colors.white : AppColors.textPrimary),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.inter(
-              fontSize: 12,
+          hintStyle: AppTypography.font(
+              fontSize: AppTypography.captionSize,
               color: isDark ? Colors.white24 : AppColors.textSecondary),
           prefixIcon: maxLines == 1
               ? Icon(icon,
@@ -2108,15 +2108,15 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                         Text('Edit Request ${r['id']}',
-                            style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.cardTitleSize,
+                                fontWeight: AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary)),
                         Text('Update the fund request details',
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white38
                                     : AppColors.textSecondary)),
@@ -2149,14 +2149,14 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                   return DropdownButtonFormField<String>(
                     value: farmIds.contains(farmId) ? farmId : null,
                     hint: Text('Select farm',
-                        style: GoogleFonts.inter(
-                            fontSize: 12,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.captionSize,
                             color: isDark
                                 ? Colors.white24
                                 : AppColors.textSecondary)),
                     decoration: _dialogInputDecoration(isDark),
-                    style: GoogleFonts.inter(
-                        fontSize: 12,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color: isDark ? Colors.white : AppColors.textPrimary),
                     dropdownColor:
                         isDark ? AppColors.surfaceDark : Colors.white,
@@ -2197,8 +2197,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                           return DropdownButtonFormField<String>(
                             value: category,
                             decoration: _dialogInputDecoration(isDark),
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary),
@@ -2242,8 +2242,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                           return DropdownButtonFormField<String>(
                             value: priority,
                             decoration: _dialogInputDecoration(isDark),
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary),
@@ -2272,10 +2272,10 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                       padding: const EdgeInsets.only(top: 10),
                       child: Text(
                         error,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
                           color: AppColors.error,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     );
@@ -2297,8 +2297,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                                 ? Colors.white.withOpacity(0.1)
                                 : Colors.black.withOpacity(0.08))),
                     child: Text('Cancel',
-                        style: GoogleFonts.inter(
-                            fontSize: 13, fontWeight: FontWeight.w500)),
+                        style: AppTypography.font(
+                            fontSize: AppTypography.actionSize, fontWeight: AppTypography.labelWeight)),
                   )),
                   const SizedBox(width: 8),
                   Expanded(
@@ -2382,8 +2382,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                               : const Icon(Icons.save_rounded, size: 16),
                           label: Text(
                             saving ? 'Saving...' : 'Save Changes',
-                            style: GoogleFonts.inter(
-                                fontSize: 13, fontWeight: FontWeight.w600),
+                            style: AppTypography.font(
+                                fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight),
                           ),
                           style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
@@ -2425,12 +2425,12 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
         controller: controller,
         keyboardType: inputType,
         maxLines: maxLines,
-        style: GoogleFonts.inter(
-            fontSize: 12, color: isDark ? Colors.white : AppColors.textPrimary),
+        style: AppTypography.font(
+            fontSize: AppTypography.captionSize, color: isDark ? Colors.white : AppColors.textPrimary),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.inter(
-              fontSize: 12,
+          hintStyle: AppTypography.font(
+              fontSize: AppTypography.captionSize,
               color: isDark ? Colors.white24 : AppColors.textSecondary),
           prefixIcon: maxLines == 1
               ? Icon(icon,
@@ -2471,7 +2471,7 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         title: Text('Delete Request',
             style:
-                GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+                AppTypography.font(fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight)),
         content: ValueListenableBuilder<String?>(
           valueListenable: deleteError,
           builder: (context, error, _) {
@@ -2480,15 +2480,15 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Are you sure you want to delete ${r['id']}?',
-                    style: GoogleFonts.inter(fontSize: 13)),
+                    style: AppTypography.font(fontSize: AppTypography.actionSize)),
                 if (error != null) ...[
                   const SizedBox(height: 10),
                   Text(
                     error,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.captionSize,
                       color: AppColors.error,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ],
@@ -2499,7 +2499,7 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: GoogleFonts.inter(fontSize: 13)),
+            child: Text('Cancel', style: AppTypography.font(fontSize: AppTypography.actionSize)),
           ),
           ValueListenableBuilder<bool>(
             valueListenable: isDeleting,
@@ -2535,8 +2535,8 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                       )
                     : const Icon(Icons.delete_outline_rounded, size: 16),
                 label: Text(deleting ? 'Deleting...' : 'Delete',
-                    style: GoogleFonts.inter(
-                        fontSize: 13, fontWeight: FontWeight.w600)),
+                    style: AppTypography.font(
+                        fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.error,
                   foregroundColor: Colors.white,
@@ -2639,9 +2639,9 @@ class _FundRequestScreenState extends ConsumerState<FundRequestScreen>
                             : AppColors.textSecondary),
                     const SizedBox(height: 3),
                     Text(item['label'] as String,
-                        style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.microSize,
+                            fontWeight: AppTypography.labelWeight,
                             color: isDark
                                 ? Colors.white.withOpacity(0.4)
                                 : AppColors.textSecondary)),

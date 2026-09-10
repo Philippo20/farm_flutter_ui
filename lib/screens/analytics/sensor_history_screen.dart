@@ -88,7 +88,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
           Text(
             'Select Sensor',
             style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -111,7 +111,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
                 checkmarkColor: _getSensorColor(sensor),
                 labelStyle: AppTypography.bodySmall.copyWith(
                   color: isSelected ? _getSensorColor(sensor) : (isDark ? Colors.white70 : AppColors.textPrimary),
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
                 ),
                 side: BorderSide(
                   color: isSelected ? _getSensorColor(sensor) : (isDark ? Colors.white24 : Colors.black12),
@@ -136,7 +136,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
           Text(
             'Time Period:',
             style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -185,7 +185,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
               Text(
                 '${_selectedSensor.displayName} History',
                 style: AppTypography.h6.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -238,7 +238,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
                         return Text(
                           _getTimeLabel(value.toInt()),
                           style: AppTypography.bodySmall.copyWith(
-                            fontSize: 10,
+                            fontSize: AppTypography.microSize,
                             color: isDark ? Colors.white60 : AppColors.textSecondary,
                           ),
                         );
@@ -254,7 +254,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
                         return Text(
                           value.toStringAsFixed(1),
                           style: AppTypography.bodySmall.copyWith(
-                            fontSize: 10,
+                            fontSize: AppTypography.microSize,
                             color: isDark ? Colors.white60 : AppColors.textSecondary,
                           ),
                         );
@@ -294,7 +294,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
                           '${barSpot.y.toStringAsFixed(1)} ${_selectedSensor.unit}',
                           AppTypography.bodySmall.copyWith(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         );
                       }).toList();
@@ -364,7 +364,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
           Text(
             value,
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -372,7 +372,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
             ),
           ),
         ],
@@ -395,7 +395,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
           Text(
             'Recent Readings',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -408,7 +408,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
                   label: Text(
                     'Time',
                     style: AppTypography.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),
@@ -416,7 +416,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
                   label: Text(
                     'Value',
                     style: AppTypography.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),
@@ -424,7 +424,7 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
                   label: Text(
                     'Status',
                     style: AppTypography.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),
@@ -448,8 +448,8 @@ class _SensorHistoryScreenState extends ConsumerState<SensorHistoryScreen> {
                           row['status'] as String,
                           style: AppTypography.bodySmall.copyWith(
                             color: _getStatusColor(row['status'] as String),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                            fontSize: AppTypography.microSize,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                       ),

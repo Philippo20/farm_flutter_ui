@@ -2,7 +2,6 @@ import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -279,9 +278,9 @@ class _PackagingConfigurationScreenState
               child: Text(
                 'Variety Packaging Catalog',
                 style: AppTypography.h5.copyWith(
-                  fontSize: compact ? 16 : null,
+                  fontSize: compact ? AppTypography.cardTitleSize : null,
                   color: dark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
             ),
@@ -607,9 +606,9 @@ class _PackageConfigurationPanelState
                             _editing
                                 ? 'Edit Variety Packaging'
                                 : 'Configure Variety Packaging',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                            style: AppTypography.font(
+                              fontSize: AppTypography.cardTitleSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: textColor,
                             ),
                           ),
@@ -618,9 +617,9 @@ class _PackageConfigurationPanelState
                             'Define packaging for a specific crop variety',
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
+                            style: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.bodyWeight,
                               color: secondaryColor,
                             ),
                           ),
@@ -810,9 +809,9 @@ class _PackageConfigurationPanelState
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          textStyle: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                          textStyle: AppTypography.font(
+                            fontSize: AppTypography.actionSize,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                         child: const Text('Cancel'),
@@ -829,9 +828,9 @@ class _PackageConfigurationPanelState
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          textStyle: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                          textStyle: AppTypography.font(
+                            fontSize: AppTypography.actionSize,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                         icon: _saving
@@ -967,8 +966,8 @@ class _CatalogHero extends StatelessWidget {
                       Text('Crop Variety Packaging',
                           style: AppTypography.h4.copyWith(
                             color: dark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: mobile ? 22 : 26,
+                            fontWeight: AppTypography.headingWeight,
+                            fontSize: mobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
                           )),
                       const SizedBox(height: 4),
                       Text(
@@ -1091,7 +1090,7 @@ class _MetricTile extends StatelessWidget {
               Text(value,
                   style: AppTypography.h5.copyWith(
                       color: dark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w600)),
+                      fontWeight: AppTypography.headingWeight)),
               Text(label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1130,14 +1129,14 @@ class _PackageConfigurationCard extends StatelessWidget {
             Expanded(
                 child: Text(label,
                     style: AppTypography.caption
-                        .copyWith(fontSize: 11, color: secondary))),
+                        .copyWith(fontSize: AppTypography.fieldLabelSize, color: secondary))),
           ]),
           const SizedBox(height: 6),
           Text(value.isEmpty ? 'Not provided' : value,
               style: AppTypography.bodySmall.copyWith(
-                  fontSize: 13,
+                  fontSize: AppTypography.actionSize,
                   color: foreground,
-                  fontWeight: FontWeight.w600)),
+                  fontWeight: AppTypography.headingWeight)),
         ]),
       );
     }
@@ -1157,7 +1156,7 @@ class _PackageConfigurationCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8)),
           child: Text(label,
               style: AppTypography.caption.copyWith(
-                  fontSize: 11, color: color, fontWeight: FontWeight.w600)),
+                  fontSize: AppTypography.fieldLabelSize, color: color, fontWeight: AppTypography.headingWeight)),
         );
 
     return Container(
@@ -1190,13 +1189,13 @@ class _PackageConfigurationCard extends StatelessWidget {
                   children: [
                 Text(_text(package, ['package_name'], 'Package'),
                     style: AppTypography.bodyMedium.copyWith(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                        fontSize: AppTypography.cardTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: foreground)),
                 const SizedBox(height: 4),
                 Text(_packageVarietyLabel(package),
                     style: AppTypography.bodySmall
-                        .copyWith(fontSize: 12, color: secondary)),
+                        .copyWith(fontSize: AppTypography.captionSize, color: secondary)),
               ])),
         ]),
         const SizedBox(height: 12),
@@ -1235,7 +1234,7 @@ class _PackageConfigurationCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   textStyle: AppTypography.bodySmall
-                      .copyWith(fontSize: 13, fontWeight: FontWeight.w600),
+                      .copyWith(fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight),
                   side: BorderSide(
                       color: AppColors.primary.withValues(alpha: .25)),
                   shape: RoundedRectangleBorder(
@@ -1292,7 +1291,7 @@ class _PackageConfigurationCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.h6.copyWith(
                             color: dark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600)),
+                            fontWeight: AppTypography.headingWeight)),
                     Text(_packageVarietyLabel(package),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1336,7 +1335,7 @@ class _PackageConfigurationCard extends StatelessWidget {
                         'GHS ${_number(package['cost_per_unit']).toStringAsFixed(2)}',
                         style: AppTypography.bodyMedium.copyWith(
                             color: dark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600)),
+                            fontWeight: AppTypography.headingWeight)),
                   ],
                 ),
               ),
@@ -1349,7 +1348,7 @@ class _PackageConfigurationCard extends StatelessWidget {
                 ),
                 child: Text(status.replaceAll('_', ' '),
                     style: AppTypography.caption.copyWith(
-                        color: statusColor, fontWeight: FontWeight.w600)),
+                        color: statusColor, fontWeight: AppTypography.headingWeight)),
               ),
             ]),
           ],
@@ -1394,9 +1393,9 @@ class _LabeledField extends StatelessWidget {
           children: [
             Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.font(
+                fontSize: AppTypography.fieldLabelSize,
+                fontWeight: AppTypography.headingWeight,
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white70
                     : AppColors.textSecondary,
@@ -1428,9 +1427,9 @@ class _PackageFormError extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
               child: Text(message,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: AppColors.error,
                   ))),
         ]),
@@ -1488,9 +1487,9 @@ InputDecoration _fieldDecoration(
   );
   return InputDecoration(
     hintText: hint,
-    hintStyle: GoogleFonts.inter(
-      fontSize: 12,
-      fontWeight: FontWeight.w400,
+    hintStyle: AppTypography.font(
+      fontSize: AppTypography.captionSize,
+      fontWeight: AppTypography.bodyWeight,
       color: dark ? Colors.white38 : AppColors.textSecondary,
     ),
     prefixIcon: Icon(
@@ -1509,9 +1508,9 @@ InputDecoration _fieldDecoration(
   );
 }
 
-TextStyle _modalInputStyle(BuildContext context) => GoogleFonts.inter(
-      fontSize: 12,
-      fontWeight: FontWeight.w400,
+TextStyle _modalInputStyle(BuildContext context) => AppTypography.font(
+      fontSize: AppTypography.captionSize,
+      fontWeight: AppTypography.bodyWeight,
       color: Theme.of(context).brightness == Brightness.dark
           ? Colors.white
           : AppColors.textPrimary,

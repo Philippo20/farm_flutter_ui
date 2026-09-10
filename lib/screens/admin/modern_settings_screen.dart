@@ -319,7 +319,7 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
                 'Admin Settings',
                 style: AppTypography.h4.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -363,7 +363,7 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
               _saveError ?? _saveMessage ?? '',
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -385,7 +385,7 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
             'Settings could not be loaded',
             style: AppTypography.titleMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -732,7 +732,7 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
               color: isDark
                   ? Colors.white.withValues(alpha: 0.64)
                   : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           Wrap(
@@ -895,7 +895,7 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
           title,
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
         const SizedBox(height: 2),
@@ -930,7 +930,7 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
             value,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -957,7 +957,7 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
               text,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -1030,13 +1030,13 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.caption.copyWith(
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                         color: selected
                             ? AppColors.primary
                             : (isDark
                                 ? Colors.white.withValues(alpha: 0.62)
                                 : AppColors.textSecondary),
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                   ],
@@ -1097,7 +1097,7 @@ class _SettingsCard extends StatelessWidget {
                       title,
                       style: AppTypography.titleSmall.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     Text(
@@ -1148,7 +1148,7 @@ class _AccessPill extends StatelessWidget {
             'Admin 90% Control',
             style: AppTypography.label.copyWith(
               color: isDark ? Colors.white : AppColors.primary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],

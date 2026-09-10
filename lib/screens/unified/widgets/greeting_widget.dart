@@ -78,21 +78,21 @@ class GreetingWidget extends StatelessWidget {
                     Text(
                       '${_getGreeting()}, ',
                       style: AppTypography.h4.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
                     Text(
                       userName,
                       style: AppTypography.h4.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                         color: AppColors.primary,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
                       _getEmoji(),
-                      style: const TextStyle(fontSize: 28),
+                      style: const TextStyle(fontSize: AppTypography.metricSize),
                     ),
                   ],
                 ),
@@ -123,7 +123,7 @@ class GreetingWidget extends StatelessWidget {
                     role,
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),

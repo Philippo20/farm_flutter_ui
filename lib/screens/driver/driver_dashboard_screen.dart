@@ -341,8 +341,8 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
                 Text(
                   'Driver Workspace',
                   style: AppTypography.h5.copyWith(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppTypography.pageTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -396,8 +396,8 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
                     Text(
                       title,
                       style: AppTypography.h6.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -484,7 +484,7 @@ class _DemoPreviewNotice extends StatelessWidget {
                   'Demo delivery preview',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -544,8 +544,8 @@ class _MetricCard extends StatelessWidget {
           Text(
             value,
             style: AppTypography.h5.copyWith(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
+              fontSize: AppTypography.pageTitleSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -630,7 +630,7 @@ class _DeliveryCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodyLarge.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
                           ),
@@ -663,7 +663,7 @@ class _DeliveryCard extends StatelessWidget {
                       status,
                       style: AppTypography.caption.copyWith(
                         color: statusColor,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -766,7 +766,7 @@ class _CountBadge extends StatelessWidget {
         '$count',
         style: AppTypography.caption.copyWith(
           color: AppColors.primary,
-          fontWeight: FontWeight.w600,
+          fontWeight: AppTypography.headingWeight,
         ),
       ),
     );
@@ -806,7 +806,7 @@ class _EmptyState extends StatelessWidget {
               Text(
                 title,
                 style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -845,7 +845,7 @@ class _ErrorState extends StatelessWidget {
             Text(
               'Could not load assigned deliveries',
               style:
-                  AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+                  AppTypography.bodyLarge.copyWith(fontWeight: AppTypography.headingWeight),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
@@ -916,7 +916,7 @@ class _DriverDesktopSidebar extends ConsumerWidget {
               'DRIVER WORKSPACE',
               style: AppTypography.caption.copyWith(
                 color: isDark ? Colors.white54 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -948,8 +948,8 @@ class _DriverDesktopSidebar extends ConsumerWidget {
                             ? AppColors.primary
                             : foreground,
                         fontWeight: index == selectedIndex
-                            ? FontWeight.w600
-                            : FontWeight.w500,
+                            ? AppTypography.headingWeight
+                            : AppTypography.labelWeight,
                       ),
                     ),
                     onTap: () {
@@ -979,7 +979,7 @@ class _DriverDesktopSidebar extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodyMedium.copyWith(
                   color: foreground,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
               subtitle: Text(

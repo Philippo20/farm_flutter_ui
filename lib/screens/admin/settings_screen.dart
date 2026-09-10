@@ -1,7 +1,7 @@
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 // [FULLY UPDATED] FarmSettingsScreen.dart with advanced design, dynamic farm selection, and updated sensor UI
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/headers/admin_header.dart';
 import '../../widgets/sidebars/admin_sidebar.dart';
 
@@ -175,7 +175,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
             child: DropdownButtonFormField<String>(
               value: selectedFarm,
               dropdownColor: cardColor, // Background color of the dropdown menu
-              style: GoogleFonts.inter(
+              style: AppTypography.font(
                   color: textColor), // Text color of dropdown items
               // Use the dynamic availableFarms list
               items: availableFarms
@@ -192,7 +192,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
               decoration: InputDecoration(
                 labelText: 'Select Farm',
                 labelStyle:
-                    GoogleFonts.inter(color: textColor.withOpacity(0.8)),
+                    AppTypography.font(color: textColor.withOpacity(0.8)),
                 prefixIcon: Icon(Icons.agriculture, color: activeColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -222,8 +222,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
               icon: const Icon(Icons.add, size: 20),
               label: Text(
                 'New Farm',
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500, fontSize: 16),
+                style: AppTypography.font(
+                    fontWeight: AppTypography.labelWeight, fontSize: AppTypography.cardTitleSize),
               ),
               onPressed: () => _addNewFarm(context, textColor, cardColor,
                   activeColor), // Call the new method
@@ -259,19 +259,19 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
           backgroundColor: cardColor,
           title: Text(
             'Add New Farm',
-            style: GoogleFonts.inter(
+            style: AppTypography.font(
               color: textColor,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           content: TextField(
             controller: newFarmController,
-            style: GoogleFonts.inter(color: textColor),
+            style: AppTypography.font(color: textColor),
             decoration: InputDecoration(
               labelText: 'Farm Name',
-              labelStyle: GoogleFonts.inter(color: textColor.withOpacity(0.7)),
+              labelStyle: AppTypography.font(color: textColor.withOpacity(0.7)),
               hintText: 'e.g., North Field',
-              hintStyle: GoogleFonts.inter(color: textColor.withOpacity(0.5)),
+              hintStyle: AppTypography.font(color: textColor.withOpacity(0.5)),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(color: textColor.withOpacity(0.3)),
@@ -286,7 +286,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
             TextButton(
               child: Text(
                 'Cancel',
-                style: GoogleFonts.inter(color: activeColor.withOpacity(0.7)),
+                style: AppTypography.font(color: activeColor.withOpacity(0.7)),
               ),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -301,7 +301,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
               ),
               child: Text(
                 'Add',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+                style: AppTypography.font(fontWeight: AppTypography.labelWeight),
               ),
               onPressed: () {
                 if (newFarmController.text.isNotEmpty) {
@@ -359,9 +359,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
           indicatorPadding: const EdgeInsets.symmetric(
               vertical: 8), // Padding around the indicator
           labelStyle:
-              GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 15),
+              AppTypography.font(fontWeight: AppTypography.labelWeight, fontSize: AppTypography.cardTitleSize),
           unselectedLabelStyle:
-              GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14),
+              AppTypography.font(fontWeight: AppTypography.labelWeight, fontSize: AppTypography.bodySize),
           tabs: const [
             Tab(
                 icon: Icon(Icons.settings_remote, size: 20),
@@ -411,9 +411,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
         children: [
           Text(
             'Automated Farm Operations',
-            style: GoogleFonts.inter(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.pageTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
             ),
           ),
@@ -463,9 +463,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                           Expanded(
                             child: Text(
                               entry.key,
-                              style: GoogleFonts.inter(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w500,
+                              style: AppTypography.font(
+                                fontSize: AppTypography.sectionTitleSize,
+                                fontWeight: AppTypography.labelWeight,
                                 color: textColor,
                               ),
                             ),
@@ -504,9 +504,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
         children: [
           Text(
             'Sensor Thresholds & Monitoring',
-            style: GoogleFonts.inter(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.pageTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
             ),
           ),
@@ -547,9 +547,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                                 // Use Expanded to prevent overflow
                                 child: Text(
                                   entry.key,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.w500,
+                                  style: AppTypography.font(
+                                    fontSize: AppTypography.headingSize,
+                                    fontWeight: AppTypography.labelWeight,
                                     color: textColor,
                                   ),
                                   overflow:
@@ -559,9 +559,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                               const Spacer(),
                               Text(
                                 '${entry.value.toStringAsFixed(entry.key == 'Nutrient EC' || entry.key == 'Water pH' ? 1 : 0)}${_getSensorUnit(entry.key)}', // Adjust precision for EC/pH
-                                style: GoogleFonts.inter(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
+                                style: AppTypography.font(
+                                  fontSize: AppTypography.sectionTitleSize,
+                                  fontWeight: AppTypography.labelWeight,
                                   color: activeColor,
                                 ),
                               ),
@@ -579,10 +579,10 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                                     overlayRadius: 20.0),
                                 valueIndicatorShape:
                                     PaddleSliderValueIndicatorShape(),
-                                valueIndicatorTextStyle: GoogleFonts.inter(
+                                valueIndicatorTextStyle: AppTypography.font(
                                   color: isDark ? Colors.black : Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: AppTypography.bodySize,
+                                  fontWeight: AppTypography.labelWeight,
                                 ),
                               ),
                               child: Slider(
@@ -603,8 +603,8 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                             alignment: Alignment.centerRight,
                             child: Text(
                               'Adjust Threshold',
-                              style: GoogleFonts.inter(
-                                  color: subtitleColor, fontSize: 13),
+                              style: AppTypography.font(
+                                  color: subtitleColor, fontSize: AppTypography.actionSize),
                             ),
                           ),
                         ],
@@ -629,9 +629,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
         children: [
           Text(
             'Alert Settings & Notification Channels',
-            style: GoogleFonts.inter(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.pageTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
             ),
           ),
@@ -648,9 +648,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                 children: [
                   Text(
                     'Alert Triggers',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.headingSize,
+                      fontWeight: AppTypography.labelWeight,
                       color: textColor,
                     ),
                   ),
@@ -662,7 +662,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         title: Text(
                           entry.key,
                           style:
-                              GoogleFonts.inter(color: textColor, fontSize: 16),
+                              AppTypography.font(color: textColor, fontSize: AppTypography.cardTitleSize),
                         ),
                         secondary: Icon(_getAlertIcon(entry.key),
                             color: activeColor, size: 28),
@@ -697,9 +697,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                 children: [
                   Text(
                     'Notification Channels',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.headingSize,
+                      fontWeight: AppTypography.labelWeight,
                       color: textColor,
                     ),
                   ),
@@ -711,7 +711,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         title: Text(
                           entry.key,
                           style:
-                              GoogleFonts.inter(color: textColor, fontSize: 16),
+                              AppTypography.font(color: textColor, fontSize: AppTypography.cardTitleSize),
                         ),
                         secondary: Icon(_getChannelIcon(entry.key),
                             color: activeColor, size: 28),
@@ -746,9 +746,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
         children: [
           Text(
             'Data Analytics & Reporting',
-            style: GoogleFonts.inter(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.pageTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
             ),
           ),
@@ -765,9 +765,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                 children: [
                   Text(
                     'Recent Data Trends',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.headingSize,
+                      fontWeight: AppTypography.labelWeight,
                       color: textColor,
                     ),
                   ),
@@ -790,15 +790,15 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         const SizedBox(height: 10),
                         Text(
                           'Interactive Chart / Data Visualization Placeholder',
-                          style: GoogleFonts.inter(
-                              color: subtitleColor, fontSize: 16),
+                          style: AppTypography.font(
+                              color: subtitleColor, fontSize: AppTypography.cardTitleSize),
                           textAlign: TextAlign.center,
                         ),
                         Text(
                           'Connect to data sources for live insights.',
-                          style: GoogleFonts.inter(
+                          style: AppTypography.font(
                               color: subtitleColor.withOpacity(0.7),
-                              fontSize: 13),
+                              fontSize: AppTypography.actionSize),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -807,9 +807,9 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                   const SizedBox(height: 30),
                   Text(
                     'Download Reports',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.headingSize,
+                      fontWeight: AppTypography.labelWeight,
                       color: textColor,
                     ),
                   ),
@@ -819,7 +819,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         color: Theme.of(context).primaryColor, size: 30),
                     title: Text(
                       'Export Sensor Data (CSV)',
-                      style: GoogleFonts.inter(color: textColor, fontSize: 16),
+                      style: AppTypography.font(color: textColor, fontSize: AppTypography.cardTitleSize),
                     ),
                     trailing: Icon(Icons.arrow_forward_ios,
                         color: textColor.withOpacity(0.7), size: 18),
@@ -835,7 +835,7 @@ class _FarmSettingsScreenState extends State<FarmSettingsScreen>
                         color: Theme.of(context).primaryColor, size: 30),
                     title: Text(
                       'Generate Performance Report (PDF)',
-                      style: GoogleFonts.inter(color: textColor, fontSize: 16),
+                      style: AppTypography.font(color: textColor, fontSize: AppTypography.cardTitleSize),
                     ),
                     trailing: Icon(Icons.arrow_forward_ios,
                         color: textColor.withOpacity(0.7), size: 18),

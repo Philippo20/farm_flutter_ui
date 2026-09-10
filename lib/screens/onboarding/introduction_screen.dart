@@ -1,6 +1,6 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:animated_background/animated_background.dart';
 import 'package:lottie/lottie.dart';
 import '../../constants/colors.dart';
@@ -125,10 +125,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
                         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
                         child: Text(
                           "Skip",
-                          style: GoogleFonts.poppins(
+                          style: AppTypography.font(
                             color: primary,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
+                            fontWeight: AppTypography.labelWeight,
+                            fontSize: AppTypography.cardTitleSize,
                           ),
                         ),
                       ),
@@ -155,10 +155,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
                         ),
                         child: Text(
                           "Get Started",
-                          style: GoogleFonts.poppins(
+                          style: AppTypography.font(
                             color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
+                            fontWeight: AppTypography.headingWeight,
+                            fontSize: AppTypography.cardTitleSize,
                           ),
                         ),
                       ),
@@ -206,9 +206,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         padding: const EdgeInsets.only(top: 8, bottom: 2),
         child: Text(
           title,
-          style: GoogleFonts.poppins(
-            fontSize: 25,
-            fontWeight: FontWeight.w700,
+          style: AppTypography.font(
+            fontSize: AppTypography.pageTitleSize,
+            fontWeight: AppTypography.headingWeight,
             color: primary,
             height: 1.2,
           ),
@@ -219,8 +219,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
         padding: const EdgeInsets.only(top: 14, bottom: 6),
         child: Text(
           body,
-          style: GoogleFonts.inter(
-            fontSize: 16,
+          style: AppTypography.font(
+            fontSize: AppTypography.cardTitleSize,
             color: textColor.withOpacity(0.92),
             height: 1.6,
           ),

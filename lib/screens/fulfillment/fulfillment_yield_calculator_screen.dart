@@ -210,7 +210,7 @@ class _FulfillmentYieldCalculatorScreenState
             'Batch Yield Breakdown',
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -246,8 +246,8 @@ class _FulfillmentYieldCalculatorScreenState
             'Yield Loss Calculator',
             style: AppTypography.h4.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: isMobile ? 24 : 28,
+              fontWeight: AppTypography.headingWeight,
+              fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -282,7 +282,7 @@ class _FulfillmentYieldCalculatorScreenState
                   'Current Batch Calculation',
                   style: AppTypography.bodyLarge.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ),
@@ -343,7 +343,7 @@ class _FulfillmentYieldCalculatorScreenState
               'Calculated recovery: ${_receivedTotal <= 0 ? 0 : (_packedTotal / _receivedTotal * 100).toStringAsFixed(1)}% sellable output from backend records.',
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -372,7 +372,7 @@ class _FulfillmentYieldCalculatorScreenState
                   'Yield Control Insights',
                   style: AppTypography.bodyLarge.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ),
@@ -497,7 +497,7 @@ class _FulfillmentYieldCalculatorScreenState
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -639,7 +639,7 @@ class _YieldKpi extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -647,7 +647,7 @@ class _YieldKpi extends StatelessWidget {
                   value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -697,7 +697,7 @@ class _CalculatorField extends StatelessWidget {
             label,
             style: AppTypography.caption.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -707,7 +707,7 @@ class _CalculatorField extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.h6.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
         ],
@@ -747,7 +747,7 @@ class _YieldMetric extends StatelessWidget {
             label,
             style: AppTypography.caption.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -757,7 +757,7 @@ class _YieldMetric extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -831,7 +831,7 @@ class _InsightRow extends StatelessWidget {
                   title,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -841,7 +841,7 @@ class _InsightRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ],
@@ -878,7 +878,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );

@@ -204,12 +204,12 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('Repair history',
               style: AppTypography.h5.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
+                  fontSize: AppTypography.headingSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: foreground)),
           const SizedBox(height: 4),
           Text('Maintenance tasks assigned to you',
-              style: TextStyle(fontSize: 12, color: secondary)),
+              style: TextStyle(fontSize: AppTypography.captionSize, color: secondary)),
         ])),
         IconButton(
             tooltip: 'Refresh repair history',
@@ -230,7 +230,7 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
               const SizedBox(height: 12),
               Text(_error!,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: secondary)),
+                  style: TextStyle(fontSize: AppTypography.captionSize, color: secondary)),
               TextButton(onPressed: _load, child: const Text('Retry')),
             ]))
       else ...[
@@ -250,12 +250,12 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                         children: [
                           Text(stat.$2.toString(),
                               style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: AppTypography.pageTitleSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: foreground)),
                           const SizedBox(height: 4),
                           Text(stat.$1,
-                              style: TextStyle(fontSize: 11, color: secondary)),
+                              style: TextStyle(fontSize: AppTypography.fieldLabelSize, color: secondary)),
                         ]))),
           ],
         ]),
@@ -266,7 +266,7 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
             child: Column(children: [
               TextField(
                   onChanged: (value) => setState(() => _search = value),
-                  style: const TextStyle(fontSize: 13),
+                  style: const TextStyle(fontSize: AppTypography.actionSize),
                   decoration: InputDecoration(
                       hintText: 'Search repairs or farms',
                       prefixIcon: const Icon(Icons.search, size: 20),
@@ -288,7 +288,7 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                           .map((status) => ChoiceChip(
                               showCheckmark: false,
                               label: Text(status,
-                                  style: const TextStyle(fontSize: 11)),
+                                  style: const TextStyle(fontSize: AppTypography.fieldLabelSize)),
                               selected: _selectedFilter == status,
                               onSelected: (_) =>
                                   setState(() => _selectedFilter = status)))
@@ -301,7 +301,7 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                 Expanded(
                     child: Text(_error!,
                         style:
-                            TextStyle(fontSize: 12, color: AppColors.error))),
+                            TextStyle(fontSize: AppTypography.captionSize, color: AppColors.error))),
                 TextButton(onPressed: _load, child: const Text('Retry'))
               ])),
         const SizedBox(height: 12),
@@ -317,8 +317,8 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                         ? 'No repair records yet'
                         : 'No matching records',
                     style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        fontSize: AppTypography.bodySize,
+                        fontWeight: AppTypography.headingWeight,
                         color: foreground)),
                 const SizedBox(height: 6),
                 Text(
@@ -326,7 +326,7 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                         ? 'Assigned maintenance tasks will appear here when recorded.'
                         : 'Try another search or status.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, color: secondary))
+                    style: TextStyle(fontSize: AppTypography.captionSize, color: secondary))
               ]))
         else
           LayoutBuilder(builder: (context, constraints) {
@@ -372,9 +372,9 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
     Widget detail(String label, String value) => Expanded(
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: TextStyle(fontSize: 10, color: secondary)),
+          Text(label, style: TextStyle(fontSize: AppTypography.microSize, color: secondary)),
           const SizedBox(height: 5),
-          Text(value, style: TextStyle(fontSize: 12, color: foreground))
+          Text(value, style: TextStyle(fontSize: AppTypography.captionSize, color: foreground))
         ]));
     return Container(
         padding: const EdgeInsets.all(16),
@@ -394,12 +394,12 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                     children: [
                   Text(_value(repair, 'title', 'Maintenance task'),
                       style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          fontSize: AppTypography.bodySize,
+                          fontWeight: AppTypography.headingWeight,
                           color: foreground)),
                   const SizedBox(height: 5),
                   Text(_value(repair, 'farm_name'),
-                      style: TextStyle(fontSize: 12, color: secondary))
+                      style: TextStyle(fontSize: AppTypography.captionSize, color: secondary))
                 ]))
           ]),
           const SizedBox(height: 12),
@@ -411,16 +411,16 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                     borderRadius: BorderRadius.circular(6)),
                 child: Text(status,
                     style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        fontSize: AppTypography.fieldLabelSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: color))),
             Text(_value(repair, 'task_id', 'Reference unavailable'),
-                style: TextStyle(fontSize: 11, color: secondary))
+                style: TextStyle(fontSize: AppTypography.fieldLabelSize, color: secondary))
           ]),
           if (_value(repair, 'description', '').isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(_value(repair, 'description'),
-                style: TextStyle(fontSize: 12, height: 1.4, color: foreground))
+                style: TextStyle(fontSize: AppTypography.captionSize, height: 1.4, color: foreground))
           ],
           const SizedBox(height: 14),
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -442,13 +442,13 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
               const SizedBox(height: 12),
               Text(note.$1,
                   style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontSize: AppTypography.fieldLabelSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: secondary)),
               const SizedBox(height: 5),
               Text(_value(repair, note.$2),
                   style:
-                      TextStyle(fontSize: 12, height: 1.4, color: foreground)),
+                      TextStyle(fontSize: AppTypography.captionSize, height: 1.4, color: foreground)),
             ],
         ]));
   }

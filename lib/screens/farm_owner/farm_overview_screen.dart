@@ -480,7 +480,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
             'Unable to load farm data',
             style: AppTypography.h6.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -516,7 +516,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
               Text(
                 'Farm Overview',
                 style: AppTypography.h4.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -642,8 +642,8 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                     metric['change'] as String,
                     style: AppTypography.caption.copyWith(
                       color: isDark ? Colors.white60 : AppColors.textSecondary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
+                      fontSize: AppTypography.microSize,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ],
@@ -652,7 +652,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
               Text(
                 metric['value'] as String,
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -724,8 +724,8 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                           ? AppColors.primary
                           : (isDark ? Colors.white70 : AppColors.textSecondary),
                       fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w600,
-                      fontSize: 13,
+                          isSelected ? AppTypography.headingWeight : AppTypography.headingWeight,
+                      fontSize: AppTypography.actionSize,
                     ),
                   ),
                 ),
@@ -853,7 +853,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
             'No sensors linked',
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: 4),
@@ -917,7 +917,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
               Text(
                 'IoT Dashboard',
                 style: AppTypography.h6.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -1031,7 +1031,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
               key: ValueKey('$label-$value'),
               style: AppTypography.bodySmall.copyWith(
                 color: color,
-                fontWeight: FontWeight.w800,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
           ),
@@ -1040,7 +1040,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
             label,
             style: AppTypography.caption.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
         ],
@@ -1074,7 +1074,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
           Text(
             'Detailed Sensor Readings',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -1172,7 +1172,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                             style: AppTypography.bodyMedium.copyWith(
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: AppTypography.headingWeight,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1199,7 +1199,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                             style: AppTypography.bodyMedium.copyWith(
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: AppTypography.headingWeight,
                             ),
                           ),
                         ),
@@ -1210,7 +1210,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                       statusInfo.label,
                       style: AppTypography.caption.copyWith(
                         color: statusInfo.color,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -1271,7 +1271,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
             color: isSelected
                 ? AppColors.primary
                 : (isDark ? Colors.white70 : AppColors.textSecondary),
-            fontWeight: FontWeight.w700,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
       ),
@@ -1365,7 +1365,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
             Text(
               title,
               style: AppTypography.bodyLarge.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -1380,7 +1380,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                 '${sensors.length}',
                 style: AppTypography.caption.copyWith(
                   color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
             ),
@@ -1494,7 +1494,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                     sensor['value'] as String,
                     key: ValueKey('${sensor['label']}-${sensor['value']}'),
                     style: AppTypography.h5.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                     maxLines: 1,
@@ -1528,8 +1528,8 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                         style: AppTypography.caption.copyWith(
                           color:
                               isDark ? Colors.white60 : AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 10,
+                          fontWeight: AppTypography.headingWeight,
+                          fontSize: AppTypography.microSize,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1548,8 +1548,8 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                           'Alert',
                           style: AppTypography.caption.copyWith(
                             color: statusInfo.color,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 10,
+                            fontWeight: AppTypography.headingWeight,
+                            fontSize: AppTypography.microSize,
                           ),
                         ),
                       ),
@@ -1639,7 +1639,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                   'Electrical Double Reading',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ],
@@ -1715,8 +1715,8 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
               label,
               style: AppTypography.caption.copyWith(
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontWeight: FontWeight.w700,
-                fontSize: 10,
+                fontWeight: AppTypography.headingWeight,
+                fontSize: AppTypography.microSize,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1726,7 +1726,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
             value,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(width: 6),
@@ -1824,7 +1824,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                     '$label: ${value.toStringAsFixed(1)} $unit',
                     AppTypography.caption.copyWith(
                       color: c,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   );
                 }).toList();
@@ -1937,9 +1937,9 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
             Text(
               '${(animatedPercent * 100).toStringAsFixed(0)}%',
               style: AppTypography.caption.copyWith(
-                fontSize: 9,
+                fontSize: AppTypography.microSize,
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
           ],
@@ -2003,7 +2003,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                       '$value$suffix',
                       AppTypography.caption.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     );
                   }).toList();
@@ -2161,7 +2161,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                       'Farm Portfolio',
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -2264,7 +2264,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                   value,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -2273,7 +2273,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                   label,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -2301,7 +2301,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
         label,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: AppTypography.headingWeight,
         ),
       ),
     );
@@ -2336,7 +2336,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                 child: Text(
                   'Assigned Team',
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -2447,7 +2447,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                   title,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -2455,7 +2455,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                   name,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -2494,8 +2494,8 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
               isAssigned ? 'Assigned' : 'Open',
               style: AppTypography.caption.copyWith(
                 color: isAssigned ? AppColors.success : AppColors.warning,
-                fontWeight: FontWeight.w700,
-                fontSize: 10,
+                fontWeight: AppTypography.headingWeight,
+                fontSize: AppTypography.microSize,
               ),
             ),
           ),
@@ -2531,7 +2531,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
               Text(
                 title,
                 style: AppTypography.h6.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -2598,7 +2598,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                         'Message Center',
                         style: AppTypography.h6.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -2647,7 +2647,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                           : recipientName.characters.first.toUpperCase(),
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.primary,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -2661,7 +2661,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                           style: AppTypography.bodyMedium.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -2899,7 +2899,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                       fallback: 'Technical issue reported'),
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -2924,7 +2924,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
               status,
               style: AppTypography.caption.copyWith(
                 color: statusColor,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
           ),
@@ -3059,7 +3059,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                       ], fallback: 'Crop')}',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -3067,7 +3067,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                 '$progressPercent%',
                 style: AppTypography.caption.copyWith(
                   color: statusColor,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
             ],
@@ -3105,7 +3105,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                   status,
                   style: AppTypography.caption.copyWith(
                     color: statusColor,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -3252,9 +3252,9 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

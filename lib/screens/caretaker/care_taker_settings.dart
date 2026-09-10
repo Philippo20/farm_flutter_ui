@@ -320,8 +320,8 @@ class _CareTakerSettingsScreenState
                         Expanded(
                           child: DefaultTextStyle(
                             style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
+                              fontSize: AppTypography.headingSize,
+                              fontWeight: AppTypography.labelWeight,
                               color: Colors.white,
                             ),
                             child: title,
@@ -369,19 +369,19 @@ class _CareTakerSettingsScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Input confirmations',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
+                  style: TextStyle(fontWeight: AppTypography.headingWeight)),
               SizedBox(height: 4),
               Text(
                   'Review assigned inputs and update them as Received or Confirmed.'),
               SizedBox(height: 14),
               Text('Records and tasks',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
+                  style: TextStyle(fontWeight: AppTypography.headingWeight)),
               SizedBox(height: 4),
               Text(
                   'Use the task and record screens to keep farm activity current. Changes are synced to the backend.'),
               SizedBox(height: 14),
               Text('Connectivity',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
+                  style: TextStyle(fontWeight: AppTypography.headingWeight)),
               SizedBox(height: 4),
               Text(
                   'Keep Auto-sync enabled so saved work is sent when connectivity returns.'),
@@ -598,7 +598,7 @@ class _CareTakerSettingsScreenState
               'Caretaker Workspace',
               style: AppTypography.labelSmall.copyWith(
                 color: AppColors.primaryDark,
-                fontWeight: FontWeight.w700,
+                fontWeight: AppTypography.headingWeight,
                 letterSpacing: 0.4,
               ),
             ),
@@ -608,8 +608,8 @@ class _CareTakerSettingsScreenState
             'Settings',
             style: AppTypography.h4.copyWith(
               color: _primaryTextColor(isDark),
-              fontSize: isMobile ? 24 : 28,
-              fontWeight: FontWeight.w800,
+              fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -1008,7 +1008,7 @@ class _CareTakerSettingsScreenState
                 title,
                 style: AppTypography.h6.copyWith(
                   color: _primaryTextColor(isDark),
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
               const SizedBox(height: 2),
@@ -1079,7 +1079,7 @@ class _CareTakerSettingsScreenState
                     title,
                     style: AppTypography.bodyMedium.copyWith(
                       color: _primaryTextColor(isDark),
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1137,7 +1137,7 @@ class _CareTakerSettingsScreenState
                   title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: _primaryTextColor(isDark),
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1180,7 +1180,7 @@ class _CareTakerSettingsScreenState
               label,
               style: AppTypography.bodySmall.copyWith(
                 color: _secondaryTextColor(isDark),
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
           ],
@@ -1282,7 +1282,7 @@ class _CareTakerSettingsScreenState
                     title,
                     style: AppTypography.bodyMedium.copyWith(
                       color: _primaryTextColor(isDark),
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1391,8 +1391,8 @@ class _CareTakerSettingsScreenState
                               ? AppColors.primary
                               : _inactiveNavColor(isDark),
                           fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
-                          fontSize: 11,
+                              isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
+                          fontSize: AppTypography.fieldLabelSize,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

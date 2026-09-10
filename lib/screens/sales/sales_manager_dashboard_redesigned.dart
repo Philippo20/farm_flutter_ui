@@ -440,7 +440,7 @@ class _SalesManagerDashboardRedesignedState
           Text(
             'Sales data could not be loaded',
             style:
-                AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+                AppTypography.bodyLarge.copyWith(fontWeight: AppTypography.headingWeight),
           ),
           const SizedBox(height: AppSpacing.xs),
           _MutedText('Check the API connection and try again.'),
@@ -501,8 +501,8 @@ class _SalesManagerDashboardRedesignedState
                       'Sales Command Center',
                       style: AppTypography.h4.copyWith(
                         color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: isMobile ? 24 : 28,
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -746,7 +746,7 @@ class _SalesIntakeCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                         Text(
@@ -808,15 +808,15 @@ class _SalesBatchMetric extends StatelessWidget {
       children: [
         Text(label,
             style: AppTypography.bodySmall
-                .copyWith(fontSize: 11, color: AppColors.textSecondary)),
+                .copyWith(fontSize: AppTypography.fieldLabelSize, color: AppColors.textSecondary)),
         const SizedBox(height: 3),
         Text(
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AppTypography.bodySmall.copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
       ],
@@ -845,7 +845,7 @@ class _SalesIntakeEmpty extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text('No batches released to sales',
               style: AppTypography.bodyMedium
-                  .copyWith(fontWeight: FontWeight.w600)),
+                  .copyWith(fontWeight: AppTypography.headingWeight)),
           const SizedBox(height: 3),
           Text(
             'Approved batches appear here immediately after the QA decision.',
@@ -977,14 +977,14 @@ class _SalesBatchDetailModal extends StatelessWidget {
                       Text(
                         'Sales Batch Intake',
                         style: AppTypography.bodyLarge.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontSize: AppTypography.cardTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                       Text(
                         'Review QA-approved batch details from fulfillment',
                         style: AppTypography.bodySmall.copyWith(
-                          fontSize: 12,
+                          fontSize: AppTypography.captionSize,
                           color:
                               isDark ? Colors.white38 : AppColors.textSecondary,
                         ),
@@ -1091,8 +1091,8 @@ class _SalesModalReadOnlyField extends StatelessWidget {
         Text(
           label,
           style: AppTypography.bodySmall.copyWith(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
+            fontSize: AppTypography.fieldLabelSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white54 : AppColors.textSecondary,
           ),
         ),
@@ -1123,7 +1123,7 @@ class _SalesModalReadOnlyField extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -1186,7 +1186,7 @@ class _SalesKpi extends StatelessWidget {
                   value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1249,7 +1249,7 @@ class _DashboardPanel extends StatelessWidget {
                       title,
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1337,7 +1337,7 @@ class _PipelineCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.h6.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -1411,7 +1411,7 @@ class _ActionTile extends StatelessWidget {
                     title,
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -1468,7 +1468,7 @@ class _ActivityRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -1518,7 +1518,7 @@ class _MetricBlock extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -1554,7 +1554,7 @@ class _HeroChip extends StatelessWidget {
             label,
             style: AppTypography.caption.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -1613,7 +1613,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -1635,7 +1635,7 @@ class _MutedText extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: AppTypography.caption.copyWith(
         color: isDark ? Colors.white60 : AppColors.textSecondary,
-        fontWeight: FontWeight.w500,
+        fontWeight: AppTypography.labelWeight,
       ),
     );
   }

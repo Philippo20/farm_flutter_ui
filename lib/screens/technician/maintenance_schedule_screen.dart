@@ -185,7 +185,7 @@ class _MaintenanceScheduleScreenState
                       child: Text(
                         userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
                         style: AppTypography.h5.copyWith(
-                            color: Colors.white, fontWeight: FontWeight.bold),
+                            color: Colors.white, fontWeight: AppTypography.headingWeight),
                       ),
                     ),
                   ),
@@ -197,7 +197,7 @@ class _MaintenanceScheduleScreenState
                         Text(
                           userName,
                           style: AppTypography.bodyLarge.copyWith(
-                              color: Colors.white, fontWeight: FontWeight.bold),
+                              color: Colors.white, fontWeight: AppTypography.headingWeight),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -249,7 +249,7 @@ class _MaintenanceScheduleScreenState
       title: Text(
         label,
         style: AppTypography.bodyMedium.copyWith(
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
           color: isSelected
               ? AppColors.primary
               : (isDark ? Colors.white : AppColors.textPrimary),
@@ -374,12 +374,12 @@ class _MaintenanceScheduleScreenState
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelStyle: AppTypography.bodySmall.copyWith(
-          fontWeight: FontWeight.w700,
-          fontSize: isMobile ? 12 : 13,
+          fontWeight: AppTypography.headingWeight,
+          fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
         ),
         unselectedLabelStyle: AppTypography.bodySmall.copyWith(
-          fontWeight: FontWeight.w600,
-          fontSize: isMobile ? 12 : 13,
+          fontWeight: AppTypography.headingWeight,
+          fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
         ),
         tabs: [
           Tab(text: isMobile ? 'Maintenance' : 'Maintenance Schedule'),
@@ -495,9 +495,9 @@ class _MaintenanceScheduleScreenState
                                       ? Colors.white.withOpacity(0.5)
                                       : AppColors.textSecondary),
                               fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                              fontSize: 10,
+                                  ? AppTypography.headingWeight
+                                  : AppTypography.bodyWeight,
+                              fontSize: AppTypography.microSize,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -687,8 +687,8 @@ class _MaintenanceScheduleScreenState
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(isMaintenanceTab ? 'Maintenance overview' : 'Technical issues',
             style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+                fontSize: AppTypography.headingSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary)),
         const SizedBox(height: 5),
         Text(
@@ -696,7 +696,7 @@ class _MaintenanceScheduleScreenState
                 ? 'Scheduled work and active repairs'
                 : 'Review reported faults and follow-up work',
             style: TextStyle(
-                fontSize: 12,
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white70 : AppColors.textSecondary)),
       ]);
 
@@ -737,8 +737,8 @@ class _MaintenanceScheduleScreenState
             value,
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-              fontSize: isMobile ? 18 : 22,
+              fontWeight: AppTypography.headingWeight,
+              fontSize: isMobile ? AppTypography.sectionTitleSize : AppTypography.pageTitleSize,
             ),
           ),
           const SizedBox(height: 2),
@@ -746,7 +746,7 @@ class _MaintenanceScheduleScreenState
             title,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -785,7 +785,7 @@ class _MaintenanceScheduleScreenState
                 color: isSelected
                     ? AppColors.primary
                     : (isDark ? Colors.white : AppColors.textPrimary),
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
               ),
               side: BorderSide(
                 color: isSelected
@@ -884,7 +884,7 @@ class _MaintenanceScheduleScreenState
                     issues
                         ? 'No issues match this filter.'
                         : 'No maintenance tasks match this filter.',
-                    style: TextStyle(fontSize: 12, color: secondary)))
+                    style: TextStyle(fontSize: AppTypography.captionSize, color: secondary)))
             : _responsiveCards(
                 records.map((item) {
                   final title =
@@ -937,8 +937,8 @@ class _MaintenanceScheduleScreenState
                                         Expanded(
                                             child: Text(title,
                                                 style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: AppTypography.bodySize,
+                                                    fontWeight: AppTypography.headingWeight,
                                                     color: foreground))),
                                         const Icon(Icons.chevron_right,
                                             size: 18)
@@ -954,17 +954,17 @@ class _MaintenanceScheduleScreenState
                                                 BorderRadius.circular(6)),
                                         child: Text(status,
                                             style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
+                                                fontSize: AppTypography.fieldLabelSize,
+                                                fontWeight: AppTypography.headingWeight,
                                                 color: color))),
                                     Text(priority + ' priority',
                                         style: TextStyle(
-                                            fontSize: 11, color: secondary))
+                                            fontSize: AppTypography.fieldLabelSize, color: secondary))
                                   ]),
                                   const SizedBox(height: 12),
                                   Text(item['farm'].toString(),
                                       style: TextStyle(
-                                          fontSize: 12, color: foreground)),
+                                          fontSize: AppTypography.captionSize, color: foreground)),
                                   const SizedBox(height: 8),
                                   Text(
                                       date is DateTime
@@ -972,7 +972,7 @@ class _MaintenanceScheduleScreenState
                                               .format(date.toLocal())
                                           : 'Date not recorded',
                                       style: TextStyle(
-                                          fontSize: 11, color: secondary)),
+                                          fontSize: AppTypography.fieldLabelSize, color: secondary)),
                                   const SizedBox(height: 8),
                                   Text(
                                       (issues
@@ -981,7 +981,7 @@ class _MaintenanceScheduleScreenState
                                                   .join(' '))
                                           .toString(),
                                       style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: AppTypography.captionSize,
                                           height: 1.4,
                                           color: secondary)),
                                   if (!issues) ...[
@@ -990,7 +990,7 @@ class _MaintenanceScheduleScreenState
                                         'Assigned to: ' +
                                             item['assignedTo'].toString(),
                                         style: TextStyle(
-                                            fontSize: 11, color: secondary))
+                                            fontSize: AppTypography.fieldLabelSize, color: secondary))
                                   ],
                                 ])),
                       ));
@@ -1178,7 +1178,7 @@ class _MaintenanceScheduleScreenState
                     'Planned Work',
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -1288,7 +1288,7 @@ class _MaintenanceScheduleScreenState
                           style: AppTypography.bodyMedium.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xs),
@@ -1362,7 +1362,7 @@ class _MaintenanceScheduleScreenState
             title,
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -1395,7 +1395,7 @@ class _MaintenanceScheduleScreenState
         label,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w800,
+          fontWeight: AppTypography.headingWeight,
         ),
       ),
     );
@@ -1428,7 +1428,7 @@ class _MaintenanceScheduleScreenState
                       style: AppTypography.caption.copyWith(
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -1436,7 +1436,7 @@ class _MaintenanceScheduleScreenState
                       field.value,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ],
@@ -1501,7 +1501,7 @@ class _MaintenanceScheduleScreenState
               Text('Duration: ${item['estimatedDuration']} min'),
               const SizedBox(height: AppSpacing.sm),
               const Text('Tasks:',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontWeight: AppTypography.headingWeight)),
               ...(item['tasks'] as List).map((task) => Text('• $task')),
             ],
           ),

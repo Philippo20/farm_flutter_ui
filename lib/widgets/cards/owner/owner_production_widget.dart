@@ -1,6 +1,6 @@
+import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class OwnerProductionWidget extends StatefulWidget {
   final bool isDark;
@@ -147,9 +147,9 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
               children: [
                 Text(
                   "Production Overview",
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.sectionTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
@@ -179,7 +179,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                       },
                       decoration: InputDecoration(
                         labelText: "Filter by Status",
-                        labelStyle: GoogleFonts.inter(
+                        labelStyle: AppTypography.font(
                           color: isDark ? Colors.white70 : Colors.black54,
                         ),
                         border: OutlineInputBorder(
@@ -199,7 +199,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: "Search products...",
-                  hintStyle: GoogleFonts.inter(
+                  hintStyle: AppTypography.font(
                     color: isDark ? Colors.white70 : Colors.black54,
                   ),
                   prefixIcon: Icon(Icons.search,
@@ -293,8 +293,8 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
           width: width,
           child: Text(
             title,
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
@@ -309,7 +309,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
             padding: const EdgeInsets.all(16),
             child: Text(
               "No products found",
-              style: GoogleFonts.inter(
+              style: AppTypography.font(
                   color: isDark ? Colors.white70 : Colors.black54),
             ),
           )
@@ -345,15 +345,15 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                     children: [
                       Text(
                         product["name"] as String,
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         "Batch: ${product["batch"]}",
-                        style: GoogleFonts.inter(
+                        style: AppTypography.font(
                           color: isDark ? Colors.white70 : Colors.black54,
                         ),
                       ),
@@ -377,7 +377,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                       },
                       child: Text(
                         "Filter by Status",
-                        style: GoogleFonts.inter(
+                        style: AppTypography.font(
                           color: widget.isDark ? Colors.white : Colors.black,
                         ),
                       ),
@@ -398,17 +398,17 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                   ),
                   child: Text(
                     product["status"] as String,
-                    style: GoogleFonts.inter(
+                    style: AppTypography.font(
                       color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                      fontSize: AppTypography.captionSize,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ),
                 const Spacer(),
                 Text(
                   "${(((product["progress"] ?? 0.0) as double) * 100).toStringAsFixed(0)}% complete",
-                  style: GoogleFonts.inter(
+                  style: AppTypography.font(
                     color: isDark ? Colors.white70 : Colors.black54,
                   ),
                 ),
@@ -445,9 +445,9 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                       value: e,
                       child: Text(
                         "$e items per page",
-                        style: GoogleFonts.inter(
+                        style: AppTypography.font(
                             color: isDark ? Colors.white70 : Colors.black54,
-                            fontSize: 12),
+                            fontSize: AppTypography.captionSize),
                       ),
                     ))
                 .toList(),
@@ -476,8 +476,8 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
               ),
               Text(
                 "Page ${_currentPage + 1} of ${totalPages == 0 ? 1 : totalPages}",
-                style: GoogleFonts.inter(
-                    fontSize: 12,
+                style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white70 : Colors.black54),
               ),
               IconButton(
@@ -513,7 +513,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
           ),
           Text(
             "${_currentPage + 1}/$totalPages",
-            style: GoogleFonts.inter(),
+            style: AppTypography.font(),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
@@ -536,7 +536,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
           title: Text(
             product["name"] as String,
             style:
-                GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
+                AppTypography.font(color: isDark ? Colors.white : Colors.black),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -560,7 +560,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   "${(((product["progress"] ?? 0.0) as double) * 100).toStringAsFixed(0)}% complete",
-                  style: GoogleFonts.inter(
+                  style: AppTypography.font(
                       color: isDark ? Colors.white70 : Colors.black54),
                 ),
               ),
@@ -570,7 +570,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
             TextButton(
               child: Text(
                 "Close",
-                style: GoogleFonts.inter(
+                style: AppTypography.font(
                     color: isDark ? Colors.white : Colors.blue),
               ),
               onPressed: () => Navigator.pop(context),
@@ -598,7 +598,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
           backgroundColor: isDark ? Colors.grey[900] : Colors.white,
           title: Text(
             "Filter by Status",
-            style: GoogleFonts.inter(
+            style: AppTypography.font(
               color: isDark ? Colors.white : Colors.black,
             ),
           ),
@@ -609,7 +609,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                 return ListTile(
                   title: Text(
                     status,
-                    style: GoogleFonts.inter(
+                    style: AppTypography.font(
                       color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
@@ -637,7 +637,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
     return ListTile(
       title: Text(
         status,
-        style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black),
+        style: AppTypography.font(color: isDark ? Colors.white : Colors.black),
       ),
       trailing: _statusFilter == status
           ? Icon(Icons.check, color: isDark ? Colors.white : Colors.blue)
@@ -660,15 +660,15 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
         children: [
           Text(
             "$label: ",
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white70 : Colors.black87,
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: GoogleFonts.inter(
+              style: AppTypography.font(
                 color: isDark ? Colors.white70 : Colors.black87,
               ),
             ),
@@ -688,7 +688,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
         DataCell(
           Text(
             product["name"] as String,
-            style: GoogleFonts.inter(
+            style: AppTypography.font(
               color: isDark ? Colors.white70 : Colors.black87,
             ),
           ),
@@ -696,7 +696,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
         DataCell(
           Text(
             product["batch"] as String,
-            style: GoogleFonts.inter(
+            style: AppTypography.font(
               color: isDark ? Colors.white70 : Colors.black87,
             ),
           ),
@@ -704,7 +704,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
         DataCell(
           Text(
             product["quantity"] as String,
-            style: GoogleFonts.inter(
+            style: AppTypography.font(
               color: isDark ? Colors.white70 : Colors.black87,
             ),
           ),
@@ -718,10 +718,10 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
             ),
             child: Text(
               product["status"] as String,
-              style: GoogleFonts.inter(
+              style: AppTypography.font(
                 color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -729,7 +729,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
         DataCell(
           Text(
             product["assignee"] as String,
-            style: GoogleFonts.inter(
+            style: AppTypography.font(
               color: isDark ? Colors.white70 : Colors.black87,
             ),
           ),
@@ -749,8 +749,8 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
               const SizedBox(width: 8),
               Text(
                 "${(progress * 100).toStringAsFixed(0)}%",
-                style: GoogleFonts.inter(
-                  fontSize: 12,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
                   color: isDark ? Colors.white70 : Colors.black54,
                 ),
               ),
@@ -816,9 +816,9 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                         Flexible(
                           child: Text(
                             "Production Details",
-                            style: GoogleFonts.poppins(
-                              fontSize: isSmallScreen ? 18 : 22,
-                              fontWeight: FontWeight.w600,
+                            style: AppTypography.font(
+                              fontSize: isSmallScreen ? AppTypography.sectionTitleSize : AppTypography.pageTitleSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: isDark ? Colors.white : Colors.black,
                             ),
                           ),
@@ -867,9 +867,9 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                     // Progress section
                     Text(
                       "Production Progress",
-                      style: GoogleFonts.inter(
-                        fontSize: isSmallScreen ? 16 : 18,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: isSmallScreen ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
@@ -888,14 +888,14 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                             children: [
                               Text(
                                 "${((product["progress"] ?? 0.0) * 100)}% Complete",
-                                style: GoogleFonts.inter(
+                                style: AppTypography.font(
                                   color: isDark ? Colors.white70 : Colors.grey[600],
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 "Estimated completion: ${_formatDate(DateTime.now().add(const Duration(days: 3)))}",
-                                style: GoogleFonts.inter(
+                                style: AppTypography.font(
                                   color: isDark ? Colors.white70 : Colors.grey[600],
                                 ),
                               ),
@@ -906,13 +906,13 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                             children: [
                               Text(
                                 "${((product["progress"] ?? 0.0) * 100)}% Complete",
-                                style: GoogleFonts.inter(
+                                style: AppTypography.font(
                                   color: isDark ? Colors.white70 : Colors.grey[600],
                                 ),
                               ),
                               Text(
                                 "Estimated completion: ${_formatDate(DateTime.now().add(const Duration(days: 3)))}",
-                                style: GoogleFonts.inter(
+                                style: AppTypography.font(
                                   color: isDark ? Colors.white70 : Colors.grey[600],
                                 ),
                               ),
@@ -935,9 +935,9 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                       const SizedBox(height: 8),
                       Text(
                         "Production Timeline",
-                        style: GoogleFonts.inter(
-                          fontSize: isSmallScreen ? 16 : 18,
-                          fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                          fontSize: isSmallScreen ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
@@ -948,9 +948,9 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                       // Notes section
                       Text(
                         "Notes",
-                        style: GoogleFonts.inter(
-                          fontSize: isSmallScreen ? 16 : 18,
-                          fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                          fontSize: isSmallScreen ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
@@ -964,7 +964,7 @@ class _OwnerProductionWidgetState extends State<OwnerProductionWidget> {
                         ),
                         child: Text(
                           "No additional notes for this production batch.",
-                          style: GoogleFonts.inter(
+                          style: AppTypography.font(
                             color: isDark ? Colors.white70 : Colors.grey[600],
                           ),
                         ),
@@ -1008,9 +1008,9 @@ Widget _buildProductInfoSection(BuildContext context, Map<String, dynamic> produ
     children: [
       Text(
         product["name"] as String,
-        style: GoogleFonts.poppins(
-          fontSize: isSmallScreen ? 18 : 20,
-          fontWeight: FontWeight.w600,
+        style: AppTypography.font(
+          fontSize: isSmallScreen ? AppTypography.sectionTitleSize : AppTypography.headingSize,
+          fontWeight: AppTypography.headingWeight,
           color: isDark ? Colors.white : Colors.black,
         ),
       ),
@@ -1036,9 +1036,9 @@ Widget _buildProductInfoSection(BuildContext context, Map<String, dynamic> produ
                 const SizedBox(width: 6),
                 Text(
                   product["status"] as String,
-                  style: GoogleFonts.inter(
+                  style: AppTypography.font(
                     color: Colors.white,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ],
@@ -1056,7 +1056,7 @@ Widget _buildProductInfoSection(BuildContext context, Map<String, dynamic> produ
               const SizedBox(width: 4),
               Text(
                 "Started: ${_formatDate(DateTime.now().subtract(const Duration(days: 7)))}",
-                style: GoogleFonts.inter(
+                style: AppTypography.font(
                   color: isDark ? Colors.white70 : Colors.grey[600],
                 ),
               ),
@@ -1102,8 +1102,8 @@ Widget _buildInfoChip(String text, IconData icon, bool isDark, {bool isSmallScre
     ),
     label: Text(
       text,
-      style: GoogleFonts.inter(
-        fontSize: isSmallScreen ? 12 : 13,
+      style: AppTypography.font(
+        fontSize: isSmallScreen ? AppTypography.captionSize : AppTypography.actionSize,
         color: isDark ? Colors.white : Colors.black87,
       ),
     ),
@@ -1189,10 +1189,10 @@ Widget _buildTimeline(String currentStatus, bool isDark, bool isSmallScreen) {
                     children: [
                       Text(
                         stage["name"] as String,
-                        style: GoogleFonts.inter(
-                          fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
+                        style: AppTypography.font(
+                          fontWeight: isCurrent ? AppTypography.headingWeight : AppTypography.labelWeight,
                           color: isDark ? Colors.white : Colors.black,
-                          fontSize: 15,
+                          fontSize: AppTypography.cardTitleSize,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -1206,9 +1206,9 @@ Widget _buildTimeline(String currentStatus, bool isDark, bool isSmallScreen) {
                           const SizedBox(width: 4),
                           Text(
                             stage["date"] as String,
-                            style: GoogleFonts.inter(
+                            style: AppTypography.font(
                               color: isDark ? Colors.white70 : Colors.grey[600],
-                              fontSize: 13,
+                              fontSize: AppTypography.actionSize,
                             ),
                           ),
                           if (isCurrent) ...[
@@ -1223,10 +1223,10 @@ Widget _buildTimeline(String currentStatus, bool isDark, bool isSmallScreen) {
                               ),
                               child: Text(
                                 "Current Stage",
-                                style: GoogleFonts.inter(
+                                style: AppTypography.font(
                                   color: _getStatusColor(currentStatus),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: AppTypography.captionSize,
+                                  fontWeight: AppTypography.labelWeight,
                                 ),
                               ),
                             ),
@@ -1237,9 +1237,9 @@ Widget _buildTimeline(String currentStatus, bool isDark, bool isSmallScreen) {
                         const SizedBox(height: 8),
                         Text(
                           _getStageDescription(stage["name"] as String),
-                          style: GoogleFonts.inter(
+                          style: AppTypography.font(
                             color: isDark ? Colors.white70 : Colors.grey[600],
-                            fontSize: 13,
+                            fontSize: AppTypography.actionSize,
                           ),
                         ),
                       ],

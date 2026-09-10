@@ -49,21 +49,21 @@ class GaugeWidget extends StatelessWidget {
                 value.toStringAsFixed(1),
                 style: AppTypography.sensorValueLarge.copyWith(
                   color: gaugeColor,
-                  fontSize: size * 0.15,
-                  fontWeight: FontWeight.bold,
+                  fontSize: AppTypography.resolveSize(size * 0.15),
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
               Text(
                 unit,
                 style: AppTypography.sensorUnit.copyWith(
-                  fontSize: size * 0.08,
+                  fontSize: AppTypography.resolveSize(size * 0.08),
                 ),
               ),
               SizedBox(height: AppSpacing.xs),
               Text(
                 label,
                 style: AppTypography.caption.copyWith(
-                  fontSize: size * 0.06,
+                  fontSize: AppTypography.resolveSize(size * 0.06),
                   color: AppColors.textSecondary,
                 ),
                 textAlign: TextAlign.center,
@@ -136,7 +136,7 @@ class _GaugePainter extends CustomPainter {
       text: '${percentage * 100 ~/ 1}%',
       style: AppTypography.caption.copyWith(
         color: AppColors.textSecondary,
-        fontSize: size.width * 0.06,
+        fontSize: AppTypography.resolveSize(size.width * 0.06),
       ),
     );
     textPainter.layout();
@@ -204,7 +204,7 @@ class LinearGaugeWidget extends StatelessWidget {
                 '${value.toStringAsFixed(1)} $unit',
                 style: AppTypography.labelSmall.copyWith(
                   color: gaugeColor,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
             ],

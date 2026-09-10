@@ -1,5 +1,5 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../constants/colors.dart';
 
@@ -86,9 +86,9 @@ class _BarChartCard extends StatelessWidget {
             children: [
               Text(
                 "Energy Consumption",
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
+                style: AppTypography.font(
+                  fontSize: AppTypography.sectionTitleSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: textColor,
                 ),
               ),
@@ -101,9 +101,9 @@ class _BarChartCard extends StatelessWidget {
                 ),
                 child: Text(
                   "Last 7 Days",
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.actionSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: AppColors.primary,
                   ),
                 ),
@@ -113,9 +113,9 @@ class _BarChartCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             "Average: 12.1 kWh/day",
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
+              fontWeight: AppTypography.labelWeight,
               color: secondaryTextColor,
             ),
           ),
@@ -134,9 +134,9 @@ class _BarChartCard extends StatelessWidget {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       return BarTooltipItem(
                         '${rod.toY} kWh',
-                        GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
+                        AppTypography.font(
+                          fontSize: AppTypography.actionSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: Colors.white,
                         ),
                       );
@@ -155,10 +155,10 @@ class _BarChartCard extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               barData[index].day,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
+                              style: AppTypography.font(
+                                fontSize: AppTypography.fieldLabelSize,
                                 color: secondaryTextColor,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: AppTypography.labelWeight,
                               ),
                             ),
                           );
@@ -174,10 +174,10 @@ class _BarChartCard extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         return Text(
                           value.toInt().toString(),
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.fieldLabelSize,
                             color: secondaryTextColor,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: AppTypography.labelWeight,
                           ),
                         );
                       },
@@ -337,9 +337,9 @@ class _PieChartCardState extends State<_PieChartCard> {
               children: [
                 Text(
                   "Energy Distribution",
-                  style: GoogleFonts.poppins(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.sectionTitleSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: textColor,
                     letterSpacing: 0.2,
                   ),
@@ -354,10 +354,10 @@ class _PieChartCardState extends State<_PieChartCard> {
             ),
             Text(
               "by equipment category",
-              style: GoogleFonts.inter(
-                fontSize: 13.5,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
                 color: secondaryTextColor,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
                 letterSpacing: 0.1,
               ),
             ),
@@ -384,9 +384,9 @@ class _PieChartCardState extends State<_PieChartCard> {
                                   radius: isHovered ? 70 : 65,
                                   showTitle: isHovered,
                                   title: isHovered ? pieData[i].category : '',
-                                  titleStyle: GoogleFonts.poppins(
-                                    fontSize: isHovered ? 14 : 12,
-                                    fontWeight: FontWeight.w500,
+                                  titleStyle: AppTypography.font(
+                                    fontSize: isHovered ? AppTypography.bodySize : AppTypography.captionSize,
+                                    fontWeight: AppTypography.labelWeight,
                                     color: Colors.white,
                                   ),
                                   titlePositionPercentageOffset: 0.6,
@@ -445,19 +445,19 @@ class _PieChartCardState extends State<_PieChartCard> {
                                       Expanded(
                                         child: Text(
                                           item.category,
-                                          style: GoogleFonts.inter(
-                                            fontWeight: FontWeight.w500,
+                                          style: AppTypography.font(
+                                            fontWeight: AppTypography.labelWeight,
                                             color: textColor,
-                                            fontSize: 14,
+                                            fontSize: AppTypography.bodySize,
                                           ),
                                         ),
                                       ),
                                       Text(
                                         "${item.percent}%",
-                                        style: GoogleFonts.poppins(
+                                        style: AppTypography.font(
                                           color: item.color,
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 15,
+                                          fontWeight: AppTypography.labelWeight,
+                                          fontSize: AppTypography.cardTitleSize,
                                         ),
                                       ),
                                     ],
@@ -499,19 +499,19 @@ class _PieChartCardState extends State<_PieChartCard> {
                                         Expanded(
                                           child: Text(
                                             item.category,
-                                            style: GoogleFonts.inter(
-                                              fontWeight: FontWeight.w500,
+                                            style: AppTypography.font(
+                                              fontWeight: AppTypography.labelWeight,
                                               color: textColor,
-                                              fontSize: 14,
+                                              fontSize: AppTypography.bodySize,
                                             ),
                                           ),
                                         ),
                                         Text(
                                           "${item.percent}%",
-                                          style: GoogleFonts.poppins(
+                                          style: AppTypography.font(
                                             color: item.color,
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 15,
+                                            fontWeight: AppTypography.labelWeight,
+                                            fontSize: AppTypography.cardTitleSize,
                                           ),
                                         ),
                                       ],
@@ -539,9 +539,9 @@ class _PieChartCardState extends State<_PieChartCard> {
                                     radius: isHovered ? 80 : 75,
                                     showTitle: isHovered,
                                     title: isHovered ? pieData[i].category : '',
-                                    titleStyle: GoogleFonts.poppins(
-                                      fontSize: isHovered ? 17 : 14,
-                                      fontWeight: FontWeight.w500,
+                                    titleStyle: AppTypography.font(
+                                      fontSize: isHovered ? AppTypography.sectionTitleSize : AppTypography.bodySize,
+                                      fontWeight: AppTypography.labelWeight,
                                       color: Colors.white,
                                     ),
                                     titlePositionPercentageOffset: 0.58,
@@ -597,9 +597,9 @@ class _PieChartCardState extends State<_PieChartCard> {
                       width: 2,
                     ),
                   ),
-                  textStyle: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 15,
+                  textStyle: AppTypography.font(
+                    fontWeight: AppTypography.labelWeight,
+                    fontSize: AppTypography.cardTitleSize,
                     letterSpacing: 0.2,
                   ),
                   elevation: 0,
@@ -652,17 +652,17 @@ class _StatIndicator extends StatelessWidget {
           children: [
             Text(
               value,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
+                fontWeight: AppTypography.labelWeight,
                 color: textColor,
               ),
             ),
             Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.labelWeight,
                 color: textColor.withOpacity(0.6),
               ),
             ),
@@ -702,18 +702,18 @@ class _EnergyRow extends StatelessWidget {
           Expanded(
             child: Text(
               category,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
+                fontWeight: AppTypography.labelWeight,
                 color: textColor,
               ),
             ),
           ),
           Text(
             "$percent%",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
             ),
           ),

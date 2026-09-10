@@ -4,7 +4,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -160,7 +159,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                       Expanded(
                         child: Text('Review Off-Taker Update',
                             style: AppTypography.h5
-                                .copyWith(fontWeight: FontWeight.w600)),
+                                .copyWith(fontWeight: AppTypography.headingWeight)),
                       ),
                       IconButton(
                         onPressed: () => Navigator.pop(dialogContext),
@@ -171,7 +170,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                   const Divider(height: AppSpacing.lg),
                   Text('${offTaker?['name'] ?? 'Off-taker'}',
                       style: AppTypography.h6
-                          .copyWith(fontWeight: FontWeight.w600)),
+                          .copyWith(fontWeight: AppTypography.headingWeight)),
                   const SizedBox(height: 4),
                   Text(
                       'Requested by ${request['requested_by_name'] ?? 'Sales Personnel'}',
@@ -184,7 +183,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                   const SizedBox(height: AppSpacing.md),
                   Text('Changed fields',
                       style: AppTypography.bodyMedium
-                          .copyWith(fontWeight: FontWeight.w600)),
+                          .copyWith(fontWeight: AppTypography.headingWeight)),
                   const SizedBox(height: AppSpacing.sm),
                   if (changes.isEmpty)
                     const _ReviewInfoBlock(
@@ -308,7 +307,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                         children: [
                           Text('Review change request',
                               style: AppTypography.h6
-                                  .copyWith(fontWeight: FontWeight.w600)),
+                                  .copyWith(fontWeight: AppTypography.headingWeight)),
                           Text('Compare details before deciding',
                               style: AppTypography.bodySmall),
                         ],
@@ -332,7 +331,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                     children: [
                       Text('${offTaker?['name'] ?? 'Off-taker'}',
                           style: AppTypography.h5
-                              .copyWith(fontWeight: FontWeight.w600)),
+                              .copyWith(fontWeight: AppTypography.headingWeight)),
                       const SizedBox(height: 4),
                       Text(
                           'Requested by ${request['requested_by_name'] ?? 'Sales Personnel'}',
@@ -345,7 +344,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                       const SizedBox(height: AppSpacing.md),
                       Text('Changed fields',
                           style: AppTypography.bodyMedium
-                              .copyWith(fontWeight: FontWeight.w600)),
+                              .copyWith(fontWeight: AppTypography.headingWeight)),
                       const SizedBox(height: AppSpacing.sm),
                       if (changes.isEmpty)
                         const _ReviewInfoBlock(
@@ -534,9 +533,9 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(isEdit ? 'Edit Off-Taker' : 'New Off-Taker',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
+                                  style: AppTypography.font(
+                                      fontSize: AppTypography.cardTitleSize,
+                                      fontWeight: AppTypography.headingWeight,
                                       color: Theme.of(context).brightness ==
                                               Brightness.dark
                                           ? Colors.white
@@ -547,8 +546,8 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                           ? 'Submit changes for manager approval'
                                           : 'Update the buyer business record'
                                       : 'Create a separate buyer business record',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12,
+                                  style: AppTypography.font(
+                                      fontSize: AppTypography.captionSize,
                                       color: Theme.of(context).brightness ==
                                               Brightness.dark
                                           ? Colors.white38
@@ -658,8 +657,8 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                             DropdownButtonFormField<String>(
                               value: status,
                               isExpanded: true,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
+                              style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: Theme.of(context).brightness ==
                                         Brightness.dark
                                     ? Colors.white
@@ -685,9 +684,9 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                 padding: const EdgeInsets.only(top: 12),
                                 child: Text(
                                   formError!,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
+                                  style: AppTypography.font(
+                                    fontSize: AppTypography.captionSize,
+                                    fontWeight: AppTypography.labelWeight,
                                     color: AppColors.error,
                                   ),
                                 ),
@@ -717,8 +716,8 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                       : Colors.black.withOpacity(0.08)),
                             ),
                             child: Text('Cancel',
-                                style: GoogleFonts.inter(
-                                    fontSize: 13, fontWeight: FontWeight.w500)),
+                                style: AppTypography.font(
+                                    fontSize: AppTypography.actionSize, fontWeight: AppTypography.labelWeight)),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -789,8 +788,8 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                                       : isEdit
                                           ? 'Update Off-Taker'
                                           : 'Save Off-Taker',
-                              style: GoogleFonts.inter(
-                                  fontSize: 13, fontWeight: FontWeight.w600),
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
@@ -842,8 +841,8 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
             controller: controller,
             keyboardType: keyboard,
             maxLines: maxLines,
-            style: GoogleFonts.inter(
-                fontSize: 12,
+            style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white : AppColors.textPrimary),
             decoration: _dialogInputDecoration(context, icon: icon),
             validator: required
@@ -878,9 +877,9 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Text(
       label,
-      style: GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
+      style: AppTypography.font(
+        fontSize: AppTypography.fieldLabelSize,
+        fontWeight: AppTypography.headingWeight,
         color: isDark ? Colors.white54 : AppColors.textSecondary,
       ),
     );
@@ -891,8 +890,8 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return InputDecoration(
       hintText: 'Enter ${icon == Icons.notes_outlined ? 'notes' : 'value'}',
-      hintStyle: GoogleFonts.inter(
-          fontSize: 12,
+      hintStyle: AppTypography.font(
+          fontSize: AppTypography.captionSize,
           color: isDark ? Colors.white24 : AppColors.textSecondary),
       prefixIcon: icon == null
           ? null
@@ -997,7 +996,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
         if (!widget.forSalesPersonnel &&
             _updateRequests.any((item) => item['status'] == 'Pending')) ...[
           Text('Pending Change Requests',
-              style: AppTypography.h5.copyWith(fontWeight: FontWeight.w600)),
+              style: AppTypography.h5.copyWith(fontWeight: AppTypography.headingWeight)),
           const SizedBox(height: AppSpacing.md),
           ..._updateRequests
               .where((item) => item['status'] == 'Pending')
@@ -1029,7 +1028,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                       children: [
                         Text('${offTaker?['name'] ?? 'Off-taker update'}',
                             style: AppTypography.h6
-                                .copyWith(fontWeight: FontWeight.w600)),
+                                .copyWith(fontWeight: AppTypography.headingWeight)),
                         const SizedBox(height: 4),
                         Text(
                             'Requested by ${request['requested_by_name'] ?? 'Sales personnel'}',
@@ -1070,7 +1069,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
           const SizedBox(height: AppSpacing.md),
         ],
         Text('Buyer Accounts',
-            style: AppTypography.h5.copyWith(fontWeight: FontWeight.w600)),
+            style: AppTypography.h5.copyWith(fontWeight: AppTypography.headingWeight)),
         const SizedBox(height: AppSpacing.md),
         if (_loading)
           const Center(child: CircularProgressIndicator())
@@ -1141,7 +1140,7 @@ class _ReviewChangeRow extends StatelessWidget {
         children: [
           Text(change['label'] ?? 'Changed field',
               style: AppTypography.bodySmall
-                  .copyWith(color: warning, fontWeight: FontWeight.w600)),
+                  .copyWith(color: warning, fontWeight: AppTypography.headingWeight)),
           const SizedBox(height: 6),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -1161,7 +1160,7 @@ class _ReviewChangeRow extends StatelessWidget {
               Expanded(
                 child: Text(change['newValue'] ?? 'Not set',
                     style: AppTypography.bodyMedium.copyWith(
-                        color: textColor, fontWeight: FontWeight.w600)),
+                        color: textColor, fontWeight: AppTypography.headingWeight)),
               ),
             ],
           ),
@@ -1194,7 +1193,7 @@ class _ReviewInfoBlock extends StatelessWidget {
           Text(title,
               style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white54 : AppColors.textSecondary,
-                  fontWeight: FontWeight.w600)),
+                  fontWeight: AppTypography.headingWeight)),
           const SizedBox(height: 3),
           Text(value,
               style: AppTypography.bodyMedium.copyWith(
@@ -1286,7 +1285,7 @@ class _OffTakerCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h6.copyWith(
                         color: textColor,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -1320,9 +1319,9 @@ class _OffTakerCard extends StatelessWidget {
                       SizedBox(width: 4),
                       Text('Pending',
                           style: TextStyle(
-                              fontSize: 11,
+                              fontSize: AppTypography.fieldLabelSize,
                               color: AppColors.warning,
-                              fontWeight: FontWeight.w600)),
+                              fontWeight: AppTypography.headingWeight)),
                     ],
                   ),
                 ),
@@ -1820,7 +1819,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
               subtitle: 'Allocate available packs to an active off-taker.',
               trailing: Text('$availablePacks packs available',
                   style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.primary, fontWeight: FontWeight.w600)),
+                      color: AppColors.primary, fontWeight: AppTypography.headingWeight)),
             ),
             const SizedBox(height: AppSpacing.md),
             if (_releasedBatches.isEmpty)
@@ -1989,7 +1988,7 @@ class _SalesDeliveryHero extends StatelessWidget {
           Text('Sales Delivery Control',
               style: AppTypography.h4.copyWith(
                 color: Colors.white,
-                fontWeight: FontWeight.w700,
+                fontWeight: AppTypography.headingWeight,
               )),
           const SizedBox(height: 5),
           Text(
@@ -2045,7 +2044,7 @@ class _SalesSectionHeader extends StatelessWidget {
         Text(title,
             style: AppTypography.titleMedium.copyWith(
               color: dark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             )),
         Text(subtitle,
             style: AppTypography.bodySmall.copyWith(
@@ -2095,7 +2094,7 @@ class _SalesDeliveryMetric extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodySmall.copyWith(
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
               color: dark ? Colors.white54 : AppColors.textSecondary,
             )),
         const SizedBox(height: 3),
@@ -2103,8 +2102,8 @@ class _SalesDeliveryMetric extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodySmall.copyWith(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.headingWeight,
             )),
       ],
     );
@@ -2166,7 +2165,7 @@ class _SalesBatchAllocationCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodyMedium
-                          .copyWith(fontWeight: FontWeight.w600)),
+                          .copyWith(fontWeight: AppTypography.headingWeight)),
                   Text(
                     '${_value(['plant_variety', 'plant_type'])} | ${_value([
                           'farm_name'
@@ -2293,7 +2292,7 @@ class _SalesDeliveryRecordCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodyMedium
-                              .copyWith(fontWeight: FontWeight.w600)),
+                              .copyWith(fontWeight: AppTypography.headingWeight)),
                       Text(
                           '${_value([
                                 'batch_number',
@@ -2348,7 +2347,7 @@ class _SalesDeliveryRecordCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.bodySmall.copyWith(
                       color: dark ? Colors.white70 : AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ),
@@ -2873,7 +2872,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                     children: [
                       Text(_editing ? 'Update Delivery' : 'Allocate Delivery',
                           style: AppTypography.titleLarge
-                              .copyWith(fontWeight: FontWeight.w700)),
+                              .copyWith(fontWeight: AppTypography.headingWeight)),
                       Text('Assign verified packs to an off-taker',
                           style: AppTypography.bodySmall.copyWith(
                               color: dark
@@ -3201,7 +3200,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                       '$_requestedPacks packs x GHS ${_unitPrice.toStringAsFixed(2)} = GHS ${_totalAmount.toStringAsFixed(2)}',
                                       style: AppTypography.titleMedium.copyWith(
                                         color: AppColors.success,
-                                        fontWeight: FontWeight.w700,
+                                        fontWeight: AppTypography.headingWeight,
                                       ),
                                     ),
                                   ],
@@ -3466,7 +3465,7 @@ class _SalesDeliveryEmpty extends StatelessWidget {
         Text(title,
             textAlign: TextAlign.center,
             style:
-                AppTypography.titleSmall.copyWith(fontWeight: FontWeight.w600)),
+                AppTypography.titleSmall.copyWith(fontWeight: AppTypography.headingWeight)),
         const SizedBox(height: 4),
         Text(message,
             textAlign: TextAlign.center,
@@ -3926,7 +3925,7 @@ class _SalesPage extends StatelessWidget {
             sectionTitle,
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -3988,8 +3987,8 @@ class _Hero extends StatelessWidget {
                   title,
                   style: AppTypography.h4.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: isMobile ? 24 : 28,
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -4090,7 +4089,7 @@ class _SalesCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -4163,7 +4162,7 @@ class _KpiCard extends StatelessWidget {
                   data.value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -4246,7 +4245,7 @@ class _SettingRow extends StatelessWidget {
                   title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -4295,7 +4294,7 @@ class _MetricPill extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -4351,7 +4350,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -4373,7 +4372,7 @@ class _MutedText extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: AppTypography.caption.copyWith(
         color: isDark ? Colors.white60 : AppColors.textSecondary,
-        fontWeight: FontWeight.w500,
+        fontWeight: AppTypography.labelWeight,
       ),
     );
   }

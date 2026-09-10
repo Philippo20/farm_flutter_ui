@@ -557,7 +557,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                 'Global audit intelligence',
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white : AppColors.info,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ],
@@ -568,7 +568,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           'Audit Logs',
           style: AppTypography.h4.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: 6),
@@ -608,7 +608,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
             selectedScope.name,
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -742,7 +742,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               scope.name,
               style: AppTypography.bodyLarge.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -859,7 +859,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                   color: isSelected
                       ? AppColors.primary
                       : (isDark ? Colors.white70 : AppColors.textSecondary),
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
                 ),
               );
             }).toList(),
@@ -990,7 +990,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                         log.action,
                         style: AppTypography.bodyMedium.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1016,7 +1016,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               log.farm,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1028,7 +1028,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               log.user,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1094,7 +1094,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                       log.action,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -1225,7 +1225,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
           style: TextStyle(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: 14,
+            fontSize: AppTypography.bodySize,
           ),
           items: items
               .map(
@@ -1260,7 +1260,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           title,
           style: AppTypography.h6.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: 4),
@@ -1289,7 +1289,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           value,
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -1313,7 +1313,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white54 : AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
             ),
           ),
           const SizedBox(height: 3),
@@ -1321,7 +1321,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
             value,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1344,7 +1344,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
         '$count event${count == 1 ? '' : 's'}',
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white : AppColors.primary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -1364,8 +1364,8 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           text,
           style: AppTypography.bodySmall.copyWith(
             color: color,
-            fontWeight: FontWeight.w500,
-            fontSize: 11,
+            fontWeight: AppTypography.labelWeight,
+            fontSize: AppTypography.fieldLabelSize,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -1385,7 +1385,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           letterSpacing: 0.2,
         ),
       ),
@@ -1413,7 +1413,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
             'No audit events match the current filters.',
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -1458,7 +1458,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                           style: AppTypography.h6.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                         Text(
@@ -1486,7 +1486,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                 log.action,
                 style: AppTypography.bodyLarge.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -1550,7 +1550,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               textAlign: TextAlign.right,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -1623,7 +1623,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                               'Export Audit Logs',
                               style: AppTypography.h6.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: AppTypography.headingWeight,
                               ),
                             ),
                             Text(
@@ -1650,7 +1650,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                       Text(
                         'Export Format',
                         style: AppTypography.bodySmall.copyWith(
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                           color:
                               isDark ? Colors.white70 : AppColors.textSecondary,
                         ),
@@ -1840,8 +1840,8 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
             Text(
               format,
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: AppTypography.captionSize,
+                fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
                 color: isSelected
                     ? AppColors.primary
                     : (isDark ? Colors.white : AppColors.textPrimary),
@@ -1862,15 +1862,15 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: AppTypography.captionSize,
               color: isDark ? Colors.white54 : AppColors.textSecondary,
             ),
           ),
           Text(
             value,
             style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.labelWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),

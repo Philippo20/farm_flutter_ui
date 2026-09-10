@@ -1,7 +1,7 @@
+import '../theme/app_typography.dart';
 import 'app_dialog.dart';
 import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 
 Future<bool?> showCreateUserModal(
@@ -189,16 +189,16 @@ class _CreateUserModalState extends State<_CreateUserModal> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                     Text(_editing ? 'Edit user' : 'Add user',
-                        style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.cardTitleSize,
+                            fontWeight: AppTypography.headingWeight,
                             color: text)),
                     const SizedBox(height: 3),
                     Text(
                         _editing
                             ? 'Update account details and access'
                             : 'Create an account for your team',
-                        style: GoogleFonts.inter(fontSize: 12, color: muted)),
+                        style: AppTypography.font(fontSize: AppTypography.captionSize, color: muted)),
                   ])),
               IconButton(
                   onPressed:
@@ -240,8 +240,8 @@ class _CreateUserModalState extends State<_CreateUserModal> {
                                               child: Text(
                                                   widget.departmentForRole!(
                                                       _role),
-                                                  style: GoogleFonts.inter(
-                                                      fontSize: 12))))
+                                                  style: AppTypography.font(
+                                                      fontSize: AppTypography.captionSize))))
                                       : _select(
                                           'Department',
                                           _department,
@@ -304,8 +304,8 @@ class _CreateUserModalState extends State<_CreateUserModal> {
                                     child: Semantics(
                                         liveRegion: true,
                                         child: Text(_error!,
-                                            style: GoogleFonts.inter(
-                                                fontSize: 12,
+                                            style: AppTypography.font(
+                                                fontSize: AppTypography.captionSize,
                                                 color: AppColors.error)))),
                             ]))))),
         Padding(
@@ -356,7 +356,7 @@ class _CreateUserModalState extends State<_CreateUserModal> {
   ButtonStyle _buttonStyle() => ButtonStyle(
       padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 12)),
       textStyle: WidgetStatePropertyAll(
-          GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+          AppTypography.font(fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
       shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
 
@@ -373,7 +373,7 @@ class _CreateUserModalState extends State<_CreateUserModal> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label,
             style:
-                GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600)),
+                AppTypography.font(fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight)),
         const SizedBox(height: 6),
         field,
       ]));
@@ -408,7 +408,7 @@ class _CreateUserModalState extends State<_CreateUserModal> {
               obscureText: key == 'password',
               enableSuggestions: key != 'password',
               autocorrect: key != 'password',
-              style: GoogleFonts.inter(fontSize: 12),
+              style: AppTypography.font(fontSize: AppTypography.captionSize),
               decoration: _decoration(icon),
               validator: (raw) {
                 if (key == 'password') {
@@ -440,8 +440,8 @@ class _CreateUserModalState extends State<_CreateUserModal> {
           DropdownButtonFormField<String>(
               value: value,
               isExpanded: true,
-              style: GoogleFonts.inter(
-                  fontSize: 12, color: Theme.of(context).colorScheme.onSurface),
+              style: AppTypography.font(
+                  fontSize: AppTypography.captionSize, color: Theme.of(context).colorScheme.onSurface),
               decoration: _decoration(icon),
               // Retain an existing value that this admin cannot assign, without
               // adding it to their editable choices. Each value occurs once.

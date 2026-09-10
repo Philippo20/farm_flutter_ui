@@ -106,8 +106,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     Text(
                       'Join Farm Estates',
                       style: AppTypography.h4.copyWith(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                       textAlign: TextAlign.center,
@@ -317,7 +316,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                           text: 'Terms and Conditions',
                                           style: AppTypography.bodySmall.copyWith(
                                             color: AppColors.primary,
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight: AppTypography.headingWeight,
                                           ),
                                         ),
                                       ],
@@ -380,7 +379,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             'Login',
                             style: AppTypography.bodyMedium.copyWith(
                               color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: AppTypography.headingWeight,
                             ),
                           ),
                         ),

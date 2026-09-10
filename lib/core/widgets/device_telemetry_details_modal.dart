@@ -1,7 +1,7 @@
+import '../theme/app_typography.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import 'app_dialog.dart';
 import 'sensor_reading_history.dart';
@@ -58,9 +58,9 @@ class _DeviceTelemetryDetailsModalState
     final foreground = dark ? Colors.white : AppColors.textPrimary;
     final secondary = dark ? Colors.white70 : AppColors.textSecondary;
     TextStyle text(double size, {bool bold = false, Color? color}) =>
-        GoogleFonts.inter(
-            fontSize: size,
-            fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
+        AppTypography.font(
+            fontSize: AppTypography.resolveSize(size),
+            fontWeight: bold ? AppTypography.headingWeight : AppTypography.bodyWeight,
             color: color ?? foreground);
     Widget fields(Map<String, String> values) =>
         LayoutBuilder(builder: (context, constraints) {
@@ -151,9 +151,9 @@ class _DeviceTelemetryDetailsModalState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                           Text('Device details',
-                              style: GoogleFonts.inter(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.cardTitleSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: foreground)),
                           const SizedBox(height: 3),
                           Text(data.name,

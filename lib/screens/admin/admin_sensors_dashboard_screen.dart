@@ -1,5 +1,5 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 import '../../widgets/sidebars/admin_sidebar.dart';
 import '../../widgets/headers/admin_header.dart';
@@ -171,9 +171,9 @@ class _SensorsScreenState extends State<SensorsScreen> {
         Expanded(
           child: Text(
             'Sensor Management',
-            style: GoogleFonts.poppins(
-              fontSize: isMobile ? 24 : 28,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
               letterSpacing: 0.3,
             ),
@@ -193,9 +193,9 @@ class _SensorsScreenState extends State<SensorsScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
-            textStyle: GoogleFonts.poppins(
-              fontWeight: FontWeight.w500,
-              fontSize: isMobile ? 14 : 15,
+            textStyle: AppTypography.font(
+              fontWeight: AppTypography.labelWeight,
+              fontSize: isMobile ? AppTypography.bodySize : AppTypography.cardTitleSize,
               letterSpacing: 0.2,
             ),
             elevation: 0,
@@ -283,9 +283,9 @@ class _SensorsScreenState extends State<SensorsScreen> {
                     const SizedBox(width: 4),
                     Text(
                       change,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
+                        fontWeight: AppTypography.labelWeight,
                         color: isPositive ? Colors.green : Colors.red,
                       ),
                     ),
@@ -297,20 +297,20 @@ class _SensorsScreenState extends State<SensorsScreen> {
           const SizedBox(height: 16),
           Text(
             title,
-            style: GoogleFonts.inter(
-              fontSize: 14,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
               color: isDark
                   ? Colors.white.withOpacity(0.7)
                   : Colors.black.withOpacity(0.6),
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.pageTitleSize,
+              fontWeight: AppTypography.labelWeight,
               color: isDark ? Colors.white : Colors.black,
             ),
           ),
@@ -344,11 +344,11 @@ class _SensorsScreenState extends State<SensorsScreen> {
                 decoration: InputDecoration(
                   hintText: 'Search Farms...',
                   border: InputBorder.none,
-                  hintStyle: GoogleFonts.inter(
+                  hintStyle: AppTypography.font(
                     color: secondaryTextColor,
                   ),
                 ),
-                style: GoogleFonts.inter(
+                style: AppTypography.font(
                     color: isDark ? Colors.white : Colors.black),
               ),
             ),

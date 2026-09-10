@@ -123,9 +123,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
         Text(
           'Farm Estates',
           style: AppTypography.h3.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: isMobile ? 24 : 28,
+            fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -133,7 +133,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
           'Management Platform',
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
-            fontSize: isMobile ? 13 : 14,
+            fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
           ),
           textAlign: TextAlign.center,
         ),
@@ -163,7 +163,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
             Text(
               'Welcome Back',
               style: AppTypography.h5.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -286,7 +286,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                               child: Text(
                                 authState.error!,
                                 style: TextStyle(
-                                    color: AppColors.error, fontSize: 13),
+                                    color: AppColors.error, fontSize: AppTypography.actionSize),
                               ),
                             ),
                           ],
@@ -332,8 +332,8 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                         : const Text(
                             'Sign In',
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              fontSize: AppTypography.cardTitleSize,
+                              fontWeight: AppTypography.headingWeight,
                             ),
                           ),
                   ),
@@ -351,7 +351,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                   'Forgot Password?',
                   style: TextStyle(
                     color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ),
@@ -381,9 +381,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                 child: Text(
                   'Demo Logins - Tap Any Role',
                   style: AppTypography.bodyLarge.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: isMobile ? 14 : 16,
+                    fontSize: isMobile ? AppTypography.bodySize : AppTypography.cardTitleSize,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -455,9 +455,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                   Text(
                     account.displayName,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: AppTypography.headingWeight,
                       color: AppColors.primary,
-                      fontSize: isMobile ? 13 : 14,
+                      fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -467,7 +467,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                     account.description,
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white60 : AppColors.textSecondary,
-                      fontSize: isMobile ? 10 : 11,
+                      fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -477,7 +477,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                     account.email,
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white70 : AppColors.textSecondary,
-                      fontSize: isMobile ? 10 : 11,
+                      fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -486,7 +486,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                     'Password: ${account.password}',
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white70 : AppColors.textSecondary,
-                      fontSize: isMobile ? 10 : 11,
+                      fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

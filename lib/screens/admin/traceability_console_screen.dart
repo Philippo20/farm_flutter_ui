@@ -1,9 +1,9 @@
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -168,7 +168,7 @@ class _TraceabilityConsoleScreenState
   void _notice(String message, {bool error = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: GoogleFonts.poppins()),
+        content: Text(message, style: AppTypography.font()),
         backgroundColor: error ? Colors.red.shade700 : AppColors.primary,
       ),
     );
@@ -437,16 +437,16 @@ class _TraceabilityConsoleScreenState
                 children: [
                   Text(
                     'Product Traceability',
-                    style: GoogleFonts.poppins(
-                      fontSize: mobile ? 24 : 30,
-                      fontWeight: FontWeight.w600,
+                    style: AppTypography.font(
+                      fontSize: mobile ? AppTypography.pageTitleSize : AppTypography.displaySize,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     'Publish verified batch journeys, control the consumer experience, and measure product engagement.',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.bodySize,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       height: 1.5,
                     ),
@@ -457,7 +457,7 @@ class _TraceabilityConsoleScreenState
             OutlinedButton.icon(
               onPressed: _load,
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: Text('Refresh', style: GoogleFonts.poppins()),
+              label: Text('Refresh', style: AppTypography.font()),
             ),
           ],
         ),
@@ -518,12 +518,12 @@ class _TraceabilityConsoleScreenState
                         Icon(item.$3, color: item.$4, size: 20),
                         const SizedBox(height: 8),
                         Text('${item.$2}',
-                            style: GoogleFonts.inter(
-                                fontSize: 22, fontWeight: FontWeight.w700)),
+                            style: AppTypography.font(
+                                fontSize: AppTypography.pageTitleSize, fontWeight: AppTypography.headingWeight)),
                         const SizedBox(height: 2),
                         Text(item.$1,
-                            style: GoogleFonts.inter(
-                                fontSize: 11,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.fieldLabelSize,
                                 color: Theme.of(context)
                                     .colorScheme
                                     .onSurfaceVariant)),
@@ -577,7 +577,7 @@ class _TraceabilityConsoleScreenState
               onSelected: (_) => setState(() => _tab = index),
               avatar: Icon(tabs[index].$2,
                   size: 17, color: selected ? Colors.white : AppColors.primary),
-              label: Text(tabs[index].$1, style: GoogleFonts.poppins()),
+              label: Text(tabs[index].$1, style: AppTypography.font()),
               selectedColor: AppColors.primary,
               labelStyle: TextStyle(color: selected ? Colors.white : null),
               shape: RoundedRectangleBorder(
@@ -606,7 +606,7 @@ class _TraceabilityConsoleScreenState
             width: mobile ? double.infinity : (mobile ? 190 : 280),
             child: TextField(
               controller: _searchController,
-              style: GoogleFonts.poppins(fontSize: 13),
+              style: AppTypography.font(fontSize: AppTypography.actionSize),
               decoration: _input('Search batches', Icons.search_rounded),
             ),
           ),
@@ -648,11 +648,11 @@ class _TraceabilityConsoleScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Text(label,
-                      style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+                      style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
                   const SizedBox(height: 4),
                   Text(value.trim().isEmpty ? 'Not provided' : value,
-                      style: GoogleFonts.inter(
-                          fontSize: 12, fontWeight: FontWeight.w600)),
+                      style: AppTypography.font(
+                          fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight)),
                 ])),
           ],
         );
@@ -676,12 +676,12 @@ class _TraceabilityConsoleScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                     Text('${batch['product_name'] ?? 'Product'}',
-                        style: GoogleFonts.inter(
-                            fontSize: 15, fontWeight: FontWeight.w700)),
+                        style: AppTypography.font(
+                            fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight)),
                     const SizedBox(height: 4),
                     Text('${batch['batch_number'] ?? 'No batch number'}',
                         style:
-                            GoogleFonts.inter(fontSize: 11, color: secondary)),
+                            AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary)),
                   ])),
             ]),
             const SizedBox(height: 12),
@@ -723,8 +723,8 @@ class _TraceabilityConsoleScreenState
                       minimumSize: const Size(0, 44),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 12),
-                      textStyle: GoogleFonts.inter(
-                          fontSize: 12, fontWeight: FontWeight.w600),
+                      textStyle: AppTypography.font(
+                          fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10))),
                 )),
@@ -741,8 +741,8 @@ class _TraceabilityConsoleScreenState
                     foregroundColor: Colors.white,
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                    textStyle: GoogleFonts.inter(
-                        fontSize: 12, fontWeight: FontWeight.w600),
+                    textStyle: AppTypography.font(
+                        fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10))),
               )),
@@ -791,15 +791,15 @@ class _TraceabilityConsoleScreenState
                     children: [
                       Text(
                         'Traceability maintenance mode',
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.actionSize,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                       Text(
                         'Temporarily pause public product verification while keeping this console available.',
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.fieldLabelSize,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
@@ -820,7 +820,7 @@ class _TraceabilityConsoleScreenState
             ),
             const SizedBox(height: 14),
             Text('Public data visibility',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                style: AppTypography.font(fontWeight: AppTypography.headingWeight)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 10,
@@ -852,7 +852,7 @@ class _TraceabilityConsoleScreenState
                       )
                     : const Icon(Icons.save_outlined, size: 18),
                 label: Text(_savingSettings ? 'Saving...' : 'Save experience',
-                    style: GoogleFonts.poppins()),
+                    style: AppTypography.font()),
               ),
             ),
           ],
@@ -867,7 +867,7 @@ class _TraceabilityConsoleScreenState
             action: FilledButton.icon(
               onPressed: () => _openPromotion(),
               icon: const Icon(Icons.add_rounded, size: 18),
-              label: Text('New promotion', style: GoogleFonts.poppins()),
+              label: Text('New promotion', style: AppTypography.font()),
             ),
           ),
           const SizedBox(height: 12),
@@ -896,10 +896,10 @@ class _TraceabilityConsoleScreenState
     final confirmed = await showAppDialog<bool>(
           context: context,
           builder: (dialogContext) => AppAlertDialog(
-            title: Text('Delete promotion?', style: GoogleFonts.poppins()),
+            title: Text('Delete promotion?', style: AppTypography.font()),
             content: Text(
               'This removes ${promotion['title']} from the consumer experience.',
-              style: GoogleFonts.poppins(),
+              style: AppTypography.font(),
             ),
             actions: [
               TextButton(
@@ -959,7 +959,7 @@ class _TraceabilityConsoleScreenState
             if (byRegion.isNotEmpty) ...[
               const SizedBox(height: 20),
               Text('Top regions',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                  style: AppTypography.font(fontWeight: AppTypography.headingWeight)),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
@@ -967,7 +967,7 @@ class _TraceabilityConsoleScreenState
                 children: byRegion.entries
                     .map((entry) => Chip(
                           label: Text('${entry.key}  ${entry.value}',
-                              style: GoogleFonts.poppins(fontSize: 12)),
+                              style: AppTypography.font(fontSize: AppTypography.captionSize)),
                         ))
                     .toList(),
               ),
@@ -975,7 +975,7 @@ class _TraceabilityConsoleScreenState
             if (byDevice.isNotEmpty) ...[
               const SizedBox(height: 20),
               Text('Devices',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                  style: AppTypography.font(fontWeight: AppTypography.headingWeight)),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
@@ -984,19 +984,19 @@ class _TraceabilityConsoleScreenState
                     .map((entry) => Chip(
                           avatar: Icon(_deviceIcon(entry.key), size: 16),
                           label: Text('${_friendly(entry.key)}  ${entry.value}',
-                              style: GoogleFonts.poppins(fontSize: 12)),
+                              style: AppTypography.font(fontSize: AppTypography.captionSize)),
                         ))
                     .toList(),
               ),
             ],
             const SizedBox(height: 24),
             Text('Recent visitors',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                style: AppTypography.font(fontWeight: AppTypography.headingWeight)),
             const SizedBox(height: 4),
             Text(
               'Approximate IP location and server-detected device details',
-              style: GoogleFonts.poppins(
-                fontSize: 11,
+              style: AppTypography.font(
+                fontSize: AppTypography.fieldLabelSize,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -1050,7 +1050,7 @@ class _TraceabilityConsoleScreenState
                       child: ChoiceChip(
                         showCheckmark: false,
                         label: Text(entry.value,
-                            style: GoogleFonts.poppins(fontSize: 12)),
+                            style: AppTypography.font(fontSize: AppTypography.captionSize)),
                         selected: _feedbackFilter == entry.key,
                         onSelected: (_) =>
                             setState(() => _feedbackFilter = entry.key),
@@ -1087,7 +1087,7 @@ class _TraceabilityConsoleScreenState
             const Icon(Icons.cloud_off_rounded, size: 38, color: Colors.red),
             const SizedBox(height: 10),
             Text(_error!,
-                textAlign: TextAlign.center, style: GoogleFonts.poppins()),
+                textAlign: TextAlign.center, style: AppTypography.font()),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: _load,
@@ -1109,11 +1109,11 @@ class _TraceabilityConsoleScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
-                  style: GoogleFonts.poppins(
-                      fontSize: 18, fontWeight: FontWeight.w600)),
+                  style: AppTypography.font(
+                      fontSize: AppTypography.sectionTitleSize, fontWeight: AppTypography.headingWeight)),
               Text(subtitle,
-                  style: GoogleFonts.poppins(
-                      fontSize: 12,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.captionSize,
                       color: Theme.of(context).colorScheme.onSurfaceVariant)),
             ],
           );
@@ -1149,13 +1149,13 @@ class _TraceabilityConsoleScreenState
           TextEditingController controller, String label, IconData icon) =>
       TextField(
         controller: controller,
-        style: GoogleFonts.poppins(fontSize: 13),
+        style: AppTypography.font(fontSize: AppTypography.actionSize),
         decoration: _input(label, icon),
       );
 
   InputDecoration _input(String label, IconData icon) => InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.poppins(fontSize: 12),
+        labelStyle: AppTypography.font(fontSize: AppTypography.captionSize),
         prefixIcon: Icon(icon, size: 17),
         filled: true,
         fillColor: Theme.of(context).brightness == Brightness.dark
@@ -1194,7 +1194,7 @@ class _TraceabilityConsoleScreenState
         ),
         child: SwitchListTile.adaptive(
           dense: true,
-          title: Text(label, style: GoogleFonts.poppins(fontSize: 12)),
+          title: Text(label, style: AppTypography.font(fontSize: AppTypography.captionSize)),
           value: _settings[key] is bool ? _settings[key] as bool : defaultValue,
           onChanged: (value) => _toggle(key, value),
         ),
@@ -1220,7 +1220,7 @@ class _TraceabilityConsoleScreenState
           children: [
             Icon(icon, size: 34, color: Theme.of(context).hintColor),
             const SizedBox(height: 10),
-            Text(text, style: GoogleFonts.poppins()),
+            Text(text, style: AppTypography.font()),
           ],
         ),
       );
@@ -1279,13 +1279,13 @@ class _MetricCard extends StatelessWidget {
             Icon(icon, color: color, size: 22),
             const Spacer(),
             Text(value,
-                style: GoogleFonts.poppins(
-                    fontSize: 22, fontWeight: FontWeight.w600)),
+                style: AppTypography.font(
+                    fontSize: AppTypography.pageTitleSize, fontWeight: AppTypography.headingWeight)),
             Text(label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.poppins(
-                    fontSize: 11,
+                style: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize,
                     color: Theme.of(context).colorScheme.onSurfaceVariant)),
           ],
         ),
@@ -1329,7 +1329,7 @@ class _BatchCard extends StatelessWidget {
                   children: [
                     Text('${batch['batch_number'] ?? 'No batch number'}',
                         style:
-                            GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                            AppTypography.font(fontWeight: AppTypography.headingWeight)),
                     _StatusPill(
                       text: published ? 'Published' : 'Private',
                       color: published ? AppColors.primary : Colors.grey,
@@ -1342,14 +1342,14 @@ class _BatchCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${batch['product_name'] ?? ''} - ${batch['variety'] ?? ''}  |  ${batch['farm_name'] ?? ''}',
-                  style: GoogleFonts.poppins(
-                      fontSize: 12,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.captionSize,
                       color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
                 if (published) ...[
                   const SizedBox(height: 6),
                   Text('${batch['scan_count'] ?? 0} product checks',
-                      style: GoogleFonts.poppins(fontSize: 11)),
+                      style: AppTypography.font(fontSize: AppTypography.fieldLabelSize)),
                 ],
               ],
             ),
@@ -1394,8 +1394,8 @@ class _PromotionCard extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                   child: Text('${promotion['title'] ?? ''}',
-                      style: GoogleFonts.inter(
-                          fontSize: 15, fontWeight: FontWeight.w700))),
+                      style: AppTypography.font(
+                          fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight))),
             ]),
             const SizedBox(height: 10),
             _StatusPill(
@@ -1405,8 +1405,8 @@ class _PromotionCard extends StatelessWidget {
                     : Colors.grey),
             const SizedBox(height: 12),
             Text('${promotion['message'] ?? ''}',
-                style: GoogleFonts.inter(
-                    fontSize: 12,
+                style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     height: 1.5,
                     color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: 14),
@@ -1437,8 +1437,8 @@ class _PromotionCard extends StatelessWidget {
                       spacing: 8,
                       children: [
                         Text('${promotion['title'] ?? ''}',
-                            style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600)),
+                            style: AppTypography.font(
+                                fontWeight: AppTypography.headingWeight)),
                         _StatusPill(
                           text: '${promotion['status'] ?? 'draft'}',
                           color: promotion['status'] == 'active'
@@ -1451,8 +1451,8 @@ class _PromotionCard extends StatelessWidget {
                     Text('${promotion['message'] ?? ''}',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                            fontSize: 12,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.captionSize,
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurfaceVariant)),
@@ -1520,8 +1520,8 @@ class _FeedbackCard extends StatelessWidget {
                       children: [
                         Text(
                           isIssue ? 'Issue report' : 'Product feedback',
-                          style: GoogleFonts.poppins(
-                              fontSize: 13, fontWeight: FontWeight.w600),
+                          style: AppTypography.font(
+                              fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight),
                         ),
                         _StatusPill(
                           text: '${feedback['status'] ?? 'new'}',
@@ -1530,10 +1530,10 @@ class _FeedbackCard extends StatelessWidget {
                         ),
                         if (rating > 0)
                           Text('$rating/5',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 11,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.fieldLabelSize,
                                   color: Colors.amber.shade800,
-                                  fontWeight: FontWeight.w600)),
+                                  fontWeight: AppTypography.headingWeight)),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -1541,8 +1541,8 @@ class _FeedbackCard extends StatelessWidget {
                       '${feedback['message'] ?? ''}',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -1623,15 +1623,15 @@ class _VisitorRow extends StatelessWidget {
                   location.isEmpty ? 'Location unavailable' : location,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
-                      fontSize: 12, fontWeight: FontWeight.w500),
+                  style: AppTypography.font(
+                      fontSize: AppTypography.captionSize, fontWeight: AppTypography.labelWeight),
                 ),
                 Text(
                   '${event['ip_masked'] ?? 'unknown'}  |  ${device.isEmpty ? 'Unknown device' : device}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.microSize,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -1640,8 +1640,8 @@ class _VisitorRow extends StatelessWidget {
                     network,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.poppins(
-                      fontSize: 10,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.microSize,
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
@@ -1651,8 +1651,8 @@ class _VisitorRow extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             _formatTraceDate(event['occurred_at']),
-            style: GoogleFonts.poppins(
-              fontSize: 10,
+            style: AppTypography.font(
+              fontSize: AppTypography.microSize,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
@@ -1681,8 +1681,8 @@ class _MetaText extends StatelessWidget {
               child: Text(text,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(
-                      fontSize: 10,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.microSize,
                       color: Theme.of(context).colorScheme.onSurfaceVariant)),
             ),
           ],
@@ -1723,8 +1723,8 @@ class _StatusPill extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(text,
-            style: GoogleFonts.poppins(
-                fontSize: 10, color: color, fontWeight: FontWeight.w500)),
+            style: AppTypography.font(
+                fontSize: AppTypography.microSize, color: color, fontWeight: AppTypography.labelWeight)),
       );
 }
 
@@ -1744,9 +1744,9 @@ class _AnalyticsBar extends StatelessWidget {
               children: [
                 Expanded(
                     child:
-                        Text(label, style: GoogleFonts.poppins(fontSize: 12))),
+                        Text(label, style: AppTypography.font(fontSize: AppTypography.captionSize))),
                 Text('$value',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
+                    style: AppTypography.font(fontWeight: AppTypography.headingWeight)),
               ],
             ),
             const SizedBox(height: 6),
@@ -1859,7 +1859,7 @@ class _FeedbackReviewPanelState extends State<_FeedbackReviewPanel> {
                 ),
                 const SizedBox(height: 10),
                 Text('${item['message'] ?? ''}',
-                    style: GoogleFonts.poppins(fontSize: 13, height: 1.5)),
+                    style: AppTypography.font(fontSize: AppTypography.actionSize, height: 1.5)),
               ],
             ),
           ),
@@ -1946,7 +1946,7 @@ class _ReviewInfo extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: Text(label,
-                  style: GoogleFonts.poppins(fontSize: 10),
+                  style: AppTypography.font(fontSize: AppTypography.microSize),
                   overflow: TextOverflow.ellipsis),
             ),
           ],
@@ -2033,9 +2033,9 @@ class _PublicationPanelState extends State<_PublicationPanel> {
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
               title: Text('Available to consumers',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+                  style: AppTypography.font(fontWeight: AppTypography.labelWeight)),
               subtitle: Text('Creates a stable public token and product URL',
-                  style: GoogleFonts.poppins(fontSize: 11)),
+                  style: AppTypography.font(fontSize: AppTypography.fieldLabelSize)),
               value: _published,
               onChanged: (value) => setState(() => _published = value),
             ),
@@ -2285,13 +2285,13 @@ class _ModalFrame extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(title,
-                              style: GoogleFonts.inter(
-                                  fontSize: 16, fontWeight: FontWeight.w700)),
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight)),
                           Text(subtitle,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                  fontSize: 12,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.captionSize,
                                   color: Theme.of(context)
                                       .colorScheme
                                       .onSurfaceVariant)),
@@ -2332,8 +2332,8 @@ class _ModalFrame extends StatelessWidget {
                                   color: Colors.red.withValues(alpha: .2)),
                               borderRadius: BorderRadius.circular(10)),
                           child: Text(error!,
-                              style: GoogleFonts.inter(
-                                  fontSize: 12, color: Colors.red.shade700)),
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.captionSize, color: Colors.red.shade700)),
                         ),
                         const SizedBox(height: 14),
                       ],
@@ -2356,13 +2356,13 @@ class _ModalFrame extends StatelessWidget {
                             style: OutlinedButton.styleFrom(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 12),
-                                textStyle: GoogleFonts.inter(fontSize: 13),
+                                textStyle: AppTypography.font(fontSize: AppTypography.actionSize),
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10))),
                             onPressed:
                                 saving ? null : () => Navigator.pop(context),
                             child: Text('Cancel',
-                                style: GoogleFonts.inter(fontSize: 13)))),
+                                style: AppTypography.font(fontSize: AppTypography.actionSize)))),
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
@@ -2375,10 +2375,10 @@ class _ModalFrame extends StatelessWidget {
                                     strokeWidth: 2, color: Colors.white))
                             : const Icon(Icons.check_rounded, size: 18),
                         label: Text(saving ? 'Saving...' : 'Save',
-                            style: GoogleFonts.inter(fontSize: 13)),
+                            style: AppTypography.font(fontSize: AppTypography.actionSize)),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          textStyle: GoogleFonts.inter(fontSize: 13),
+                          textStyle: AppTypography.font(fontSize: AppTypography.actionSize),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
                           backgroundColor: AppColors.primary,
@@ -2429,7 +2429,7 @@ Widget _modalField(
           TextFormField(
             controller: controller,
             maxLines: lines,
-            style: GoogleFonts.inter(fontSize: 12),
+            style: AppTypography.font(fontSize: AppTypography.captionSize),
             decoration: _modalDecoration(context, hint, icon),
           ),
         ],
@@ -2452,8 +2452,8 @@ Widget _modalDropdown({
           DropdownButtonFormField<String>(
             initialValue: values.containsKey(value) ? value : values.keys.first,
             isExpanded: true,
-            style: GoogleFonts.inter(
-              fontSize: 12,
+            style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.white
                   : AppColors.textPrimary,
@@ -2478,9 +2478,9 @@ Widget _modalDropdown({
 
 Widget _modalLabel(BuildContext context, String label) => Text(
       label,
-      style: GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
+      style: AppTypography.font(
+        fontSize: AppTypography.fieldLabelSize,
+        fontWeight: AppTypography.headingWeight,
         color: Theme.of(context).brightness == Brightness.dark
             ? Colors.white54
             : AppColors.textSecondary,
@@ -2491,8 +2491,8 @@ InputDecoration _modalDecoration(
         BuildContext context, String hint, IconData icon) =>
     InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.inter(
-        fontSize: 12,
+      hintStyle: AppTypography.font(
+        fontSize: AppTypography.captionSize,
         color: Theme.of(context).brightness == Brightness.dark
             ? Colors.white24
             : AppColors.textSecondary,

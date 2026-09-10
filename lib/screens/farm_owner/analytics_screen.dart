@@ -668,7 +668,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             'Unable to load analytics data',
             style: AppTypography.h6.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: 4),
@@ -705,9 +705,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               Text(
                 'Your Farm Analytics',
                 style: AppTypography.h4.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: 20,
+                  fontSize: AppTypography.headingSize,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -768,9 +768,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               child: Text(
                 'Your Farm Analytics',
                 style: AppTypography.h4.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: isTablet ? 22 : 24,
+                  fontSize: isTablet ? AppTypography.pageTitleSize : AppTypography.pageTitleSize,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -787,7 +787,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 'Last Year'
               ],
               onChanged: (value) => setState(() => _selectedPeriod = value),
-              fontSize: isTablet ? 12 : 13,
+              fontSize: isTablet ? AppTypography.captionSize : AppTypography.actionSize,
             ),
             const SizedBox(width: AppSpacing.sm),
             _buildHeaderDropdown(
@@ -795,7 +795,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               value: _selectedCrop,
               items: _cropFilterItems,
               onChanged: (value) => setState(() => _selectedCrop = value),
-              fontSize: isTablet ? 12 : 13,
+              fontSize: isTablet ? AppTypography.captionSize : AppTypography.actionSize,
             ),
             const SizedBox(width: AppSpacing.sm),
             _buildHeaderDropdown(
@@ -809,7 +809,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 'Packaging'
               ],
               onChanged: (value) => setState(() => _selectedInputType = value),
-              fontSize: isTablet ? 12 : 13,
+              fontSize: isTablet ? AppTypography.captionSize : AppTypography.actionSize,
             ),
           ],
         );
@@ -844,7 +844,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               item,
               style: TextStyle(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontSize: fontSize,
+                fontSize: AppTypography.resolveSize(fontSize),
               ),
             ),
           );
@@ -858,7 +858,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
         style: TextStyle(
           color: isDark ? Colors.white : AppColors.textPrimary,
-          fontSize: fontSize,
+          fontSize: AppTypography.resolveSize(fontSize),
         ),
       ),
     );
@@ -940,22 +940,22 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   const SizedBox(height: 12),
                   Text(metric['title'] as String,
                       style: AppTypography.bodySmall.copyWith(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                          fontSize: AppTypography.fieldLabelSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark
                               ? Colors.white70
                               : AppColors.textSecondary)),
                   const SizedBox(height: 6),
                   Text(metric['value'] as String,
                       style: AppTypography.h5.copyWith(
-                          fontSize: isMobile ? 22 : 26,
-                          fontWeight: FontWeight.w700,
+                          fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
                   const SizedBox(height: 10),
                   Text(metric['change'] as String,
                       style: AppTypography.caption.copyWith(
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                           color: isDark
                               ? Colors.white60
                               : AppColors.textSecondary)),
@@ -1042,8 +1042,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 children: [
                   Text('Farm Details',
                       style: AppTypography.h6.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontSize: AppTypography.cardTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
                   const SizedBox(height: 4),
@@ -1052,7 +1052,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           ? 'No farms linked to your account'
                           : farmNames.join(' • '),
                       style: AppTypography.bodySmall.copyWith(
-                          fontSize: 12,
+                          fontSize: AppTypography.captionSize,
                           color: isDark
                               ? Colors.white70
                               : AppColors.textSecondary)),
@@ -1099,8 +1099,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                       children: [
                                     Text(detail['label'] as String,
                                         style: AppTypography.caption.copyWith(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w500,
+                                            fontSize: AppTypography.fieldLabelSize,
+                                            fontWeight: AppTypography.labelWeight,
                                             color: isDark
                                                 ? Colors.white60
                                                 : AppColors.textSecondary)),
@@ -1108,8 +1108,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     Text(detail['value'] as String,
                                         style: AppTypography.bodyMedium
                                             .copyWith(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
+                                                fontSize: AppTypography.actionSize,
+                                                fontWeight: AppTypography.headingWeight,
                                                 color: isDark
                                                     ? Colors.white
                                                     : AppColors.textPrimary)),
@@ -1146,9 +1146,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         Text(
           'Farm Revenue Trend',
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: isMobile ? 18 : (isTablet ? 20 : 22),
+            fontSize: isMobile ? AppTypography.sectionTitleSize : (isTablet ? AppTypography.headingSize : AppTypography.pageTitleSize),
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -1197,7 +1197,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         style: AppTypography.caption.copyWith(
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                         ),
                       );
                     },
@@ -1225,7 +1225,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         style: AppTypography.caption.copyWith(
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                         ),
                       );
                     },
@@ -1247,7 +1247,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         'GHS ${spot.y.toStringAsFixed(1)}k',
                         AppTypography.caption.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       );
                     }).toList();
@@ -1285,9 +1285,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         Text(
           'Insights',
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: isMobile ? 18 : (isTablet ? 20 : 22),
+            fontSize: isMobile ? AppTypography.sectionTitleSize : (isTablet ? AppTypography.headingSize : AppTypography.pageTitleSize),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -1447,7 +1447,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             color: isDark
                                 ? Colors.white60
                                 : AppColors.textSecondary,
-                            fontSize: 11,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                         ),
                         Text(
@@ -1455,7 +1455,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           style: AppTypography.bodyLarge.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                       ],
@@ -1488,7 +1488,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                 color: isDark
                                     ? Colors.white70
                                     : AppColors.textSecondary,
-                                fontSize: 12,
+                                fontSize: AppTypography.captionSize,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -1499,8 +1499,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             style: AppTypography.bodySmall.copyWith(
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                              fontWeight: AppTypography.headingWeight,
+                              fontSize: AppTypography.captionSize,
                             ),
                           ),
                         ],
@@ -1538,7 +1538,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         '${slice.label}: ${slice.value.toStringAsFixed(0)}%',
         style: AppTypography.caption.copyWith(
           color: isDark ? Colors.white : AppColors.textPrimary,
-          fontWeight: FontWeight.w600,
+          fontWeight: AppTypography.headingWeight,
         ),
       ),
     );
@@ -1548,8 +1548,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       bool isDark, String title, String selectedFilter, List<String> options) {
     final heading = Text(title,
         style: AppTypography.h6.copyWith(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontSize: AppTypography.cardTitleSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary));
     final filter = _buildCardFilter(isDark,
         title: title, value: selectedFilter, options: options);
@@ -1623,7 +1623,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               value,
               style: AppTypography.caption.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontSize: 10,
+                fontSize: AppTypography.microSize,
               ),
             ),
             const SizedBox(width: 4),
@@ -1673,8 +1673,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 totalLabel,
                 style: AppTypography.caption.copyWith(
                   color: isDark ? Colors.white60 : AppColors.textSecondary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontSize: AppTypography.fieldLabelSize,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
               const SizedBox(width: 8),
@@ -1682,7 +1682,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 totalValue,
                 style: AppTypography.bodyMedium.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
             ],
@@ -1718,7 +1718,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         style: AppTypography.caption.copyWith(
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                         ),
                       ),
                     ),
@@ -1737,7 +1737,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             color: isDark
                                 ? Colors.white70
                                 : AppColors.textSecondary,
-                            fontSize: 10,
+                            fontSize: AppTypography.microSize,
                           ),
                         );
                       },
@@ -1758,7 +1758,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         'GHS ${rod.toY.toStringAsFixed(0)}',
                         AppTypography.caption.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       );
                     },
@@ -1823,7 +1823,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             subtitle,
             style: AppTypography.caption.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -1860,7 +1860,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         style: AppTypography.caption.copyWith(
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                         ),
                       ),
                     ),
@@ -1887,7 +1887,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                           AppTypography.caption.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         );
                       }).toList();
@@ -1988,7 +1988,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         style: AppTypography.caption.copyWith(
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                         ),
                       ),
                     ),
@@ -2007,7 +2007,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             color: isDark
                                 ? Colors.white70
                                 : AppColors.textSecondary,
-                            fontSize: 10,
+                            fontSize: AppTypography.microSize,
                           ),
                         );
                       },
@@ -2028,7 +2028,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         'GHS ${rod.toY.toStringAsFixed(0)}',
                         AppTypography.caption.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       );
                     },
@@ -2161,9 +2161,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

@@ -766,7 +766,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             'Unable to load reports',
             style: AppTypography.h6.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: 4),
@@ -799,8 +799,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           Text(
             'Reports',
             style: AppTypography.h4.copyWith(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
+              fontWeight: AppTypography.headingWeight,
+              fontSize: AppTypography.headingSize,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -835,7 +835,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         child: Text(
                           period,
                           style: AppTypography.bodySmall.copyWith(
-                            fontSize: 12,
+                            fontSize: AppTypography.captionSize,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
                           ),
@@ -877,7 +877,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         Text(
           'Reports',
           style: AppTypography.h4.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -907,7 +907,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       period,
                       style: TextStyle(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontSize: 13,
+                        fontSize: AppTypography.actionSize,
                       ),
                     ),
                   );
@@ -923,7 +923,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
                 style: TextStyle(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: 13,
+                  fontSize: AppTypography.actionSize,
                 ),
               ),
             ),
@@ -1146,7 +1146,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               label: Text(
                 type,
                 style: TextStyle(
-                  fontSize: isMobile ? 11 : 12,
+                  fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
                 ),
               ),
               selected: isSelected,
@@ -1159,8 +1159,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 color: isSelected
                     ? AppColors.primary
                     : (isDark ? Colors.white : AppColors.textPrimary),
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                fontSize: isMobile ? 11 : 12,
+                fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
+                fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
               ),
               padding: EdgeInsets.symmetric(
                 horizontal: isMobile ? AppSpacing.xs : AppSpacing.sm,
@@ -1189,8 +1189,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         Text(
           'Available Reports',
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
-            fontSize: isMobile ? 16 : 18,
+            fontWeight: AppTypography.headingWeight,
+            fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -1231,7 +1231,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             'No reports found',
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
         ],
@@ -1275,9 +1275,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 Text(
                   report['title'] as String,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: isMobile ? 13 : 14,
+                    fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -1301,7 +1301,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         report['type'] as String,
                         style: AppTypography.caption.copyWith(
                           color: report['color'] as Color,
-                          fontSize: isMobile ? 9 : 10,
+                          fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1313,7 +1313,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         color: isDark
                             ? Colors.white.withOpacity(0.6)
                             : AppColors.textSecondary,
-                        fontSize: isMobile ? 9 : 10,
+                        fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1348,7 +1348,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     color: isDark
                         ? Colors.white.withOpacity(0.5)
                         : AppColors.textSecondary,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                 ),
             ],
@@ -1461,9 +1461,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

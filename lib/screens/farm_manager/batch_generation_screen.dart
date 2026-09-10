@@ -1,7 +1,6 @@
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -675,8 +674,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 child: Text(
                   option,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -728,14 +727,14 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Create New Batch',
-                    style: GoogleFonts.inter(
-                        fontSize: isMobile ? 16 : 18,
-                        fontWeight: FontWeight.w700,
+                    style: AppTypography.font(
+                        fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary)),
                 const SizedBox(height: 2),
                 Text('Fill in the details to generate a new production batch',
-                    style: GoogleFonts.inter(
-                        fontSize: isMobile ? 11 : 12,
+                    style: AppTypography.font(
+                        fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
                         color:
                             isDark ? Colors.white38 : AppColors.textSecondary)),
               ],
@@ -760,7 +759,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             Text(
                               'Farm',
                               style: AppTypography.labelLarge.copyWith(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -805,7 +804,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             Text(
                               'Plant Type',
                               style: AppTypography.labelLarge.copyWith(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -854,7 +853,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       Text(
                         'Farm',
                         style: AppTypography.labelLarge.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -895,7 +894,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       Text(
                         'Plant Type',
                         style: AppTypography.labelLarge.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -939,7 +938,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     Text(
                       'Crop Variety',
                       style: AppTypography.labelLarge.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -998,7 +997,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           Text(
                             'Start Date',
                             style: AppTypography.labelLarge.copyWith(
-                              fontWeight: FontWeight.w600,
+                              fontWeight: AppTypography.headingWeight,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
                             ),
@@ -1065,7 +1064,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             Text(
                               'End Date (Auto)',
                               style: AppTypography.labelLarge.copyWith(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -1145,8 +1144,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             available
                                 ? 'Calculated from $durationLabel'
                                 : 'Select a crop variety with a valid duration.',
-                            style: GoogleFonts.poppins(
-                              fontSize: 10.5,
+                            style: AppTypography.font(
+                              fontSize: AppTypography.fieldLabelSize,
                               color: available
                                   ? (isDark
                                       ? Colors.white60
@@ -1172,7 +1171,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             Text(
                               'Number of Seeds',
                               style: AppTypography.labelLarge.copyWith(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -1224,7 +1223,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             Text(
                               'Assigned Caretaker',
                               style: AppTypography.labelLarge.copyWith(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -1266,7 +1265,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       Text(
                         'Number of Seeds',
                         style: AppTypography.labelLarge.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -1315,7 +1314,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       Text(
                         'Assigned Caretaker',
                         style: AppTypography.labelLarge.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -1350,7 +1349,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 Text(
                   'Notes (Optional)',
                   style: AppTypography.labelLarge.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -1436,7 +1435,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                   Text(
                                     'Generate Batch',
                                     style: AppTypography.button.copyWith(
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: AppTypography.headingWeight,
                                     ),
                                   ),
                                 ],
@@ -1561,10 +1560,10 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                   SizedBox(width: isMobile ? AppSpacing.xs : AppSpacing.sm),
                   Text(
                     'Batch Overview',
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w700,
+                    style: AppTypography.font(
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontSize: isMobile ? 15 : 17,
+                      fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
                     ),
                   ),
                 ],
@@ -1628,18 +1627,18 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             ),
             const Spacer(),
             Text(stat['value'] as String,
-                style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700,
+                style: AppTypography.font(
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: compact ? 18 : 22,
+                    fontSize: compact ? AppTypography.sectionTitleSize : AppTypography.pageTitleSize,
                     height: 1.1),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
             SizedBox(height: compact ? 2 : 4),
             Text(stat['title'] as String,
-                style: GoogleFonts.inter(
+                style: AppTypography.font(
                     color: isDark ? Colors.white38 : AppColors.textSecondary,
-                    fontSize: compact ? 10 : 11,
+                    fontSize: compact ? AppTypography.microSize : AppTypography.fieldLabelSize,
                     height: 1.2),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis),
@@ -1712,9 +1711,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       flex: flex,
       child: Text(
         label,
-        style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
+        style: AppTypography.font(
+          fontSize: AppTypography.fieldLabelSize,
+          fontWeight: AppTypography.headingWeight,
           color: isDark ? Colors.white38 : AppColors.textSecondary,
           letterSpacing: 0.3,
         ),
@@ -1763,9 +1762,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 Expanded(
                     child: Text(
                   batch.batchNumber,
-                  style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.actionSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1776,8 +1775,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             Expanded(
               flex: 2,
               child: Text(batch.farmName,
-                  style: GoogleFonts.inter(
-                      fontSize: 12,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.captionSize,
                       color: isDark ? Colors.white70 : AppColors.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
@@ -1791,8 +1790,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 const SizedBox(width: 4),
                 Expanded(
                     child: Text(batch.plantType,
-                        style: GoogleFonts.inter(
-                            fontSize: 12,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.captionSize,
                             color: isDark
                                 ? Colors.white70
                                 : AppColors.textPrimary),
@@ -1819,9 +1818,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 child: Text(
                   '${pct.toStringAsFixed(0)}%',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.fieldLabelSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: pctColor),
                 ),
               ),
@@ -1831,8 +1830,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
               flex: 2,
               child: Text(
                 DateFormat('MMM dd, yyyy').format(batch.startDate),
-                style: GoogleFonts.inter(
-                    fontSize: 12,
+                style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary),
               ),
             ),
@@ -1928,9 +1927,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
               const SizedBox(width: 3),
               Text(
                 '$value',
-                style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                style: AppTypography.font(
+                    fontSize: AppTypography.microSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isActive
                         ? color
                         : (isDark ? Colors.white24 : AppColors.neutral400)),
@@ -1967,12 +1966,12 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Text(label,
-                      style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+                      style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
                   const SizedBox(height: 4),
                   Text(value.trim().isEmpty ? 'Not provided' : value,
-                      style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: foreground)),
                 ])),
           ],
@@ -1989,11 +1988,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(NumberFormat.decimalPattern().format(count),
-                style: GoogleFonts.inter(
-                    fontSize: 16, fontWeight: FontWeight.w700, color: color)),
+                style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight, color: color)),
             const SizedBox(height: 4),
             Text(label,
-                style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+                style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
           ]),
         );
     return Container(
@@ -2026,13 +2025,13 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                 Text(batch.batchNumber,
-                    style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
+                        fontWeight: AppTypography.headingWeight,
                         color: foreground)),
                 const SizedBox(height: 4),
                 Text(batch.farmName,
-                    style: GoogleFonts.inter(fontSize: 12, color: secondary)),
+                    style: AppTypography.font(fontSize: AppTypography.captionSize, color: secondary)),
               ])),
         ]),
         const SizedBox(height: 12),
@@ -2060,7 +2059,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             ]),
             const SizedBox(height: 12),
             Text('Batch progress · ${progress.toStringAsFixed(0)}%',
-                style: GoogleFonts.inter(fontSize: 11, color: secondary)),
+                style: AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary)),
             const SizedBox(height: 6),
             ClipRRect(
                 borderRadius: BorderRadius.circular(4),
@@ -2097,8 +2096,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 foregroundColor: AppColors.primary,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                textStyle: GoogleFonts.inter(
-                    fontSize: 12, fontWeight: FontWeight.w600),
+                textStyle: AppTypography.font(
+                    fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                 side:
                     BorderSide(color: AppColors.primary.withValues(alpha: .25)),
                 shape: RoundedRectangleBorder(
@@ -2116,8 +2115,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                textStyle: GoogleFonts.inter(
-                    fontSize: 12, fontWeight: FontWeight.w600),
+                textStyle: AppTypography.font(
+                    fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10))),
           )),
@@ -2127,17 +2126,17 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   }
 
   TextStyle _tableHeaderStyle(bool isDark) {
-    return GoogleFonts.inter(
-      fontWeight: FontWeight.w600,
-      fontSize: 12,
+    return AppTypography.font(
+      fontWeight: AppTypography.headingWeight,
+      fontSize: AppTypography.captionSize,
       color: isDark ? Colors.white54 : AppColors.textSecondary,
     );
   }
 
   TextStyle _tableCellStyle(bool isDark, {bool isBold = false, Color? color}) {
-    return GoogleFonts.inter(
-      fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
-      fontSize: 13,
+    return AppTypography.font(
+      fontWeight: isBold ? AppTypography.headingWeight : AppTypography.bodyWeight,
+      fontSize: AppTypography.actionSize,
       color: color ??
           (isDark ? Colors.white.withOpacity(0.9) : AppColors.textPrimary),
     );
@@ -2184,15 +2183,15 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(batch.batchNumber,
-                            style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.cardTitleSize,
+                                fontWeight: AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary)),
                         Text(batch.farmName,
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white38
                                     : AppColors.textSecondary)),
@@ -2233,9 +2232,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('Overall Progress',
-                                style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                                style: AppTypography.font(
+                                    fontSize: AppTypography.captionSize,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: isDark
                                         ? Colors.white54
                                         : AppColors.textSecondary)),
@@ -2246,9 +2245,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                   color: pctColor.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(10)),
                               child: Text('${pct.toStringAsFixed(0)}%',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
+                                  style: AppTypography.font(
+                                      fontSize: AppTypography.fieldLabelSize,
+                                      fontWeight: AppTypography.headingWeight,
                                       color: pctColor)),
                             ),
                           ]),
@@ -2336,16 +2335,16 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Notes',
-                                style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
+                                style: AppTypography.font(
+                                    fontSize: AppTypography.fieldLabelSize,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: isDark
                                         ? Colors.white38
                                         : AppColors.textSecondary)),
                             const SizedBox(height: 4),
                             Text(batch.notes!,
-                                style: GoogleFonts.inter(
-                                    fontSize: 12,
+                                style: AppTypography.font(
+                                    fontSize: AppTypography.captionSize,
                                     color: isDark
                                         ? Colors.white70
                                         : AppColors.textPrimary,
@@ -2369,8 +2368,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                 : Colors.black.withOpacity(0.08)),
                       ),
                       child: Text('Close',
-                          style: GoogleFonts.inter(
-                              fontSize: 13, fontWeight: FontWeight.w500)),
+                          style: AppTypography.font(
+                              fontSize: AppTypography.actionSize, fontWeight: AppTypography.labelWeight)),
                     )),
                     const SizedBox(width: 8),
                     Expanded(
@@ -2381,8 +2380,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       },
                       icon: const Icon(Icons.edit_outlined, size: 15),
                       label: Text('Edit Batch',
-                          style: GoogleFonts.inter(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
+                          style: AppTypography.font(
+                              fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -2413,13 +2412,13 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       ),
       child: Column(children: [
         Text(value,
-            style: GoogleFonts.inter(
-                fontSize: 16, fontWeight: FontWeight.w700, color: color)),
+            style: AppTypography.font(
+                fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight, color: color)),
         const SizedBox(height: 2),
         Text(label,
-            style: GoogleFonts.inter(
-                fontSize: 9,
-                fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+                fontSize: AppTypography.microSize,
+                fontWeight: AppTypography.labelWeight,
                 color: isDark ? Colors.white38 : AppColors.textSecondary)),
       ]),
     ));
@@ -2436,16 +2435,16 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         SizedBox(
           width: 100,
           child: Text(label,
-              style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white38 : AppColors.textSecondary)),
         ),
         Expanded(
             child: Text(value,
-                style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary))),
       ]),
     );
@@ -2494,7 +2493,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             'Could not load batches',
             style: AppTypography.titleMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -2681,7 +2680,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                       Text(
                                         'Batch Management & Tracking',
                                         style: AppTypography.h4.copyWith(
-                                          fontWeight: FontWeight.w700,
+                                          fontWeight: AppTypography.headingWeight,
                                           color: isDark
                                               ? Colors.white
                                               : AppColors.textPrimary,
@@ -2736,7 +2735,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                   Text(
                                     'Create New Batch',
                                     style: AppTypography.h5.copyWith(
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: AppTypography.headingWeight,
                                       color: isDark
                                           ? Colors.white
                                           : AppColors.textPrimary,
@@ -2797,9 +2796,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                         const SizedBox(width: 10),
                                         Expanded(
                                             child: Text('Batch Tracking',
-                                                style: GoogleFonts.inter(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w700,
+                                                style: AppTypography.font(
+                                                    fontSize: AppTypography.cardTitleSize,
+                                                    fontWeight: AppTypography.headingWeight,
                                                     color: isDark
                                                         ? Colors.white
                                                         : AppColors
@@ -2815,9 +2814,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                           ),
                                           child: Text(
                                               '${filteredBatches.length}/${batches.length} batches',
-                                              style: GoogleFonts.inter(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
+                                              style: AppTypography.font(
+                                                  fontSize: AppTypography.microSize,
+                                                  fontWeight: AppTypography.headingWeight,
                                                   color: AppColors.primary)),
                                         ),
                                       ]),
@@ -2830,15 +2829,15 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                             controller: _batchSearchController,
                                             onChanged: (value) => setState(
                                                 () => _searchQuery = value),
-                                            style: GoogleFonts.inter(
-                                                fontSize: 13,
+                                            style: AppTypography.font(
+                                                fontSize: AppTypography.actionSize,
                                                 color: isDark
                                                     ? Colors.white
                                                     : AppColors.textPrimary),
                                             decoration: InputDecoration(
                                               hintText: 'Search batches...',
-                                              hintStyle: GoogleFonts.inter(
-                                                  fontSize: 13,
+                                              hintStyle: AppTypography.font(
+                                                  fontSize: AppTypography.actionSize,
                                                   color: isDark
                                                       ? Colors.white24
                                                       : AppColors
@@ -2896,9 +2895,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                           icon: const Icon(Icons.add_rounded,
                                               size: 16),
                                           label: Text('New Batch',
-                                              style: GoogleFonts.inter(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600)),
+                                              style: AppTypography.font(
+                                                  fontSize: AppTypography.captionSize,
+                                                  fontWeight: AppTypography.headingWeight)),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: AppColors.primary,
                                             foregroundColor: Colors.white,
@@ -3000,10 +2999,10 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                                   _hasActiveBatchFilters
                                                       ? 'No batches match your filters'
                                                       : 'No batches created yet',
-                                                  style: GoogleFonts.inter(
-                                                      fontSize: 15,
+                                                  style: AppTypography.font(
+                                                      fontSize: AppTypography.cardTitleSize,
                                                       fontWeight:
-                                                          FontWeight.w600,
+                                                          AppTypography.headingWeight,
                                                       color: isDark
                                                           ? Colors.white54
                                                           : AppColors
@@ -3013,8 +3012,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                                   _hasActiveBatchFilters
                                                       ? 'Adjust or clear the filters to see more batches'
                                                       : 'Create your first batch to get started',
-                                                  style: GoogleFonts.inter(
-                                                      fontSize: 12,
+                                                  style: AppTypography.font(
+                                                      fontSize: AppTypography.captionSize,
                                                       color: isDark
                                                           ? Colors.white24
                                                           : AppColors
@@ -3028,10 +3027,10 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                                     size: 16),
                                                 label: Text(
                                                     'Create First Batch',
-                                                    style: GoogleFonts.inter(
-                                                        fontSize: 12,
+                                                    style: AppTypography.font(
+                                                        fontSize: AppTypography.captionSize,
                                                         fontWeight:
-                                                            FontWeight.w600)),
+                                                            AppTypography.headingWeight)),
                                                 style: ElevatedButton.styleFrom(
                                                   backgroundColor:
                                                       AppColors.primary,
@@ -3093,7 +3092,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                   child: Text(
                     'Create New Batch',
                     style: AppTypography.h6.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -3152,9 +3151,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                             child: Text('All Batches',
-                                style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
+                                style: AppTypography.font(
+                                    fontSize: AppTypography.bodySize,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary))),
@@ -3166,17 +3165,17 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                               borderRadius: BorderRadius.circular(10)),
                           child: Text(
                               '${filteredBatches.length}/${batches.length}',
-                              style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.microSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: AppColors.primary)),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton.icon(
                           icon: const Icon(Icons.add_rounded, size: 15),
                           label: Text('New',
-                              style: GoogleFonts.inter(
-                                  fontSize: 11, fontWeight: FontWeight.w600)),
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight)),
                           onPressed: () => setState(() => _showForm = true),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
@@ -3195,14 +3194,14 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                         controller: _batchSearchController,
                         onChanged: (value) =>
                             setState(() => _searchQuery = value),
-                        style: GoogleFonts.inter(
-                            fontSize: 12,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.captionSize,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary),
                         decoration: InputDecoration(
                           hintText: 'Search batches...',
-                          hintStyle: GoogleFonts.inter(
-                              fontSize: 12,
+                          hintStyle: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
                               color: isDark
                                   ? Colors.white24
                                   : AppColors.textSecondary),
@@ -3293,8 +3292,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           _hasActiveBatchFilters
                               ? 'No batches match your filters'
                               : 'No batches created yet',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.actionSize,
                             color: isDark
                                 ? Colors.white54
                                 : AppColors.textSecondary,
@@ -3421,9 +3420,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                       ? Colors.white.withOpacity(0.5)
                                       : AppColors.textSecondary),
                               fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                              fontSize: 11,
+                                  ? AppTypography.headingWeight
+                                  : AppTypography.bodyWeight,
+                              fontSize: AppTypography.fieldLabelSize,
                             ),
                           ),
                         ],

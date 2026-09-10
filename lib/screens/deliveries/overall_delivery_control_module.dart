@@ -1,3 +1,4 @@
+import '../../core/widgets/delivery_kpi_grid.dart';
 import '../../core/widgets/delivery_details_modal.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
@@ -538,7 +539,7 @@ class _OverallDeliveryControlModuleState
               Text(
                 widget.title,
                 style: AppTypography.h4.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   letterSpacing: -0.5,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
@@ -642,7 +643,7 @@ class _OverallDeliveryControlModuleState
                 Text(
                   value,
                   style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -651,7 +652,7 @@ class _OverallDeliveryControlModuleState
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ],
@@ -674,97 +675,12 @@ class _OverallDeliveryControlModuleState
         .where((record) => record.status == _DeliveryStatus.delivered)
         .length;
 
-    final cards = [
-      _StatData(
-          'Deliveries', '$total', Icons.local_shipping, AppColors.primary),
-      _StatData('Pending Approval', '$pendingApproval', Icons.approval,
-          AppColors.warning),
-      _StatData('In Transit', '$inTransit', Icons.route, AppColors.info),
-      _StatData(
-          'Delivered', '$delivered', Icons.check_circle, AppColors.success),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final crossAxisCount = widget.isMobile ? 2 : (width > 1100 ? 4 : 2);
-        final ratio = widget.isMobile ? 2.1 : (crossAxisCount == 4 ? 2.3 : 2.6);
-
-        return GridView.builder(
-          padding: _mobileCards ? EdgeInsets.zero : null,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: cards.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: AppSpacing.sm,
-            mainAxisSpacing: AppSpacing.sm,
-            childAspectRatio: ratio,
-          ),
-          itemBuilder: (context, index) {
-            final card = cards[index];
-            return Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.surfaceDark : Colors.white,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                border: Border.all(
-                  color:
-                      isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.16 : 0.04),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: card.color.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                    child: Icon(card.icon, color: card.color, size: 22),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          card.value,
-                          style: AppTypography.h6.copyWith(
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          card.label,
-                          style: AppTypography.caption.copyWith(
-                            color: isDark
-                                ? Colors.white60
-                                : AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+    return DeliveryKpiGrid(
+        mobile: widget.isMobile,
+        total: total,
+        pending: pendingApproval,
+        inTransit: inTransit,
+        delivered: delivered);
   }
 
   Widget _buildFarmDeliveryOverview(bool isDark) {
@@ -825,7 +741,7 @@ class _OverallDeliveryControlModuleState
                     Text(
                       'Farm Delivery Operations',
                       style: AppTypography.h6.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -913,7 +829,7 @@ class _OverallDeliveryControlModuleState
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -963,7 +879,7 @@ class _OverallDeliveryControlModuleState
                             : 'Operations normal',
                     style: AppTypography.caption.copyWith(
                       color: riskColor,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ],
@@ -984,14 +900,14 @@ class _OverallDeliveryControlModuleState
           overflow: TextOverflow.ellipsis,
           style: AppTypography.bodyMedium.copyWith(
             color: color,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
         Text(
           label,
           style: AppTypography.caption.copyWith(
             color: isDark ? Colors.white54 : AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -1019,7 +935,7 @@ class _OverallDeliveryControlModuleState
             const SizedBox(height: 6),
             Text('Find deliveries by farm, status, or keyword.',
                 style: AppTypography.bodySmall.copyWith(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary)),
             if (_selectedFarm != 'All Farms')
               TextButton.icon(
@@ -1036,7 +952,7 @@ class _OverallDeliveryControlModuleState
                         ? 'Global Delivery Records'
                         : '$_selectedFarm Delivery Records',
                     style: AppTypography.h6.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -1099,7 +1015,7 @@ class _OverallDeliveryControlModuleState
                     color: selected
                         ? AppColors.primary
                         : (isDark ? Colors.white70 : AppColors.textSecondary),
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: selected ? AppTypography.headingWeight : AppTypography.labelWeight,
                   ),
                 );
               }).toList(),
@@ -1247,7 +1163,7 @@ class _OverallDeliveryControlModuleState
                 label,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodySmall.copyWith(
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  fontWeight: selected ? AppTypography.headingWeight : AppTypography.labelWeight,
                   color: selected
                       ? AppColors.primary
                       : (isDark ? Colors.white70 : AppColors.textSecondary),
@@ -1304,7 +1220,7 @@ class _OverallDeliveryControlModuleState
           Text(
             'Delivery Control Center',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -1348,13 +1264,13 @@ class _OverallDeliveryControlModuleState
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(title,
             style: AppTypography.bodyMedium.copyWith(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
+                fontSize: AppTypography.cardTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary)),
         const SizedBox(height: 3),
         Text(subtitle,
             style: AppTypography.bodySmall.copyWith(
-                fontSize: 11,
+                fontSize: AppTypography.fieldLabelSize,
                 color: isDark ? Colors.white60 : AppColors.textSecondary)),
       ])),
     ]);
@@ -1370,12 +1286,12 @@ class _OverallDeliveryControlModuleState
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label,
             style:
-                AppTypography.caption.copyWith(fontSize: 10, color: secondary)),
+                AppTypography.caption.copyWith(fontSize: AppTypography.microSize, color: secondary)),
         const SizedBox(height: 3),
         Text(value.trim().isEmpty ? 'Not provided' : value,
             style: AppTypography.bodySmall.copyWith(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary)),
       ])),
     ]);
@@ -1446,7 +1362,7 @@ class _OverallDeliveryControlModuleState
                     const SizedBox(height: 14),
                     Text('${(completion * 100).round()}% delivered',
                         style: AppTypography.caption.copyWith(
-                            fontSize: 11,
+                            fontSize: AppTypography.fieldLabelSize,
                             color: isDark
                                 ? Colors.white70
                                 : AppColors.textSecondary)),
@@ -1586,7 +1502,7 @@ class _OverallDeliveryControlModuleState
                     Text(
                       '${record.id}  |  ${record.farm}',
                       style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -1749,7 +1665,7 @@ class _OverallDeliveryControlModuleState
           label,
           style: AppTypography.caption.copyWith(
             color: color,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
         style: TextButton.styleFrom(
@@ -2559,7 +2475,7 @@ class _OverallDeliveryControlModuleState
                                 color: isDark
                                     ? Colors.white70
                                     : AppColors.textSecondary,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: AppTypography.labelWeight,
                               ),
                             ),
                             value: notifyFarmManager,
@@ -2980,14 +2896,14 @@ class _OverallDeliveryControlModuleState
                   title,
                   style: AppTypography.h6.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 Text(
                   subtitle,
                   style: AppTypography.bodySmall.copyWith(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
                   ),
                 ),
@@ -3074,7 +2990,7 @@ class _OverallDeliveryControlModuleState
           children: [
             TextSpan(
               text: '$label: ',
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: const TextStyle(fontWeight: AppTypography.labelWeight),
             ),
             TextSpan(text: value),
           ],
@@ -3094,7 +3010,7 @@ class _OverallDeliveryControlModuleState
         label,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -3157,7 +3073,7 @@ class _OverallDeliveryControlModuleState
                   '${activity.deliveryId}  |  ${activity.farm}',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -3207,7 +3123,7 @@ class _OverallDeliveryControlModuleState
             title,
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: 4),
@@ -3357,15 +3273,6 @@ class _FarmDeliverySummary {
     required this.onHold,
     required this.delivered,
   });
-}
-
-class _StatData {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _StatData(this.label, this.value, this.icon, this.color);
 }
 
 enum _DeliveryStatus {

@@ -93,7 +93,7 @@ class AlertSummaryCard extends StatelessWidget {
                     Text(
                       'System Alerts',
                       style: AppTypography.h6.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -103,7 +103,7 @@ class AlertSummaryCard extends StatelessWidget {
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
-                        fontSize: 12,
+                        fontSize: AppTypography.captionSize,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -129,8 +129,8 @@ class AlertSummaryCard extends StatelessWidget {
                         style: AppTypography.labelSmall.copyWith(
                           color:
                               hasCritical ? AppColors.error : AppColors.success,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 10,
+                          fontWeight: AppTypography.headingWeight,
+                          fontSize: AppTypography.microSize,
                         ),
                       ),
                     ),
@@ -186,7 +186,7 @@ class AlertSummaryCard extends StatelessWidget {
                 Text(
                   'Critical Alerts',
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -219,7 +219,7 @@ class AlertSummaryCard extends StatelessWidget {
                       'All systems operating normally',
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.success,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -316,9 +316,9 @@ class AlertSummaryCard extends StatelessWidget {
                 Text(
                   value,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: AppTypography.headingWeight,
                     color: color,
-                    fontSize: 16,
+                    fontSize: AppTypography.cardTitleSize,
                     height: 1.1,
                   ),
                 ),
@@ -326,7 +326,7 @@ class AlertSummaryCard extends StatelessWidget {
                   label,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white70 : AppColors.textSecondary,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                     height: 1.1,
                   ),
                 ),
@@ -382,8 +382,8 @@ class AlertSummaryCard extends StatelessWidget {
                   alert.sensorType.displayName,
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.error,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11.5,
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: AppTypography.captionSize,
                   ),
                 ),
                 const SizedBox(height: 1),
@@ -391,7 +391,7 @@ class AlertSummaryCard extends StatelessWidget {
                   alert.message,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: 10.5,
+                    fontSize: AppTypography.fieldLabelSize,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -409,8 +409,8 @@ class AlertSummaryCard extends StatelessWidget {
               alert.timeAgo,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
+                fontSize: AppTypography.microSize,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
           ),
@@ -454,8 +454,8 @@ class AlertBadge extends StatelessWidget {
         count > 99 ? '99+' : count.toString(),
         style: AppTypography.bodySmall.copyWith(
           color: Colors.white,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
+          fontSize: AppTypography.microSize,
+          fontWeight: AppTypography.headingWeight,
         ),
         textAlign: TextAlign.center,
       ),

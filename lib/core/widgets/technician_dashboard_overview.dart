@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
@@ -45,12 +46,12 @@ class TechnicianDashboardOverview extends StatelessWidget {
               child: Text(title,
                   style: TextStyle(
                       color: foreground,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600))),
+                      fontSize: AppTypography.bodySize,
+                      fontWeight: AppTypography.headingWeight))),
           TextButton(
               onPressed: () => Navigator.pushNamed(context, route),
               child: Text(action,
-                  style: TextStyle(color: foreground, fontSize: 12)))
+                  style: TextStyle(color: foreground, fontSize: AppTypography.captionSize)))
         ]);
     Widget metric(String label, int count, IconData icon, Color color) =>
         Container(
@@ -63,10 +64,10 @@ class TechnicianDashboardOverview extends StatelessWidget {
               Text('$count',
                   style: TextStyle(
                       color: foreground,
-                      fontSize: 26,
-                      fontWeight: FontWeight.w600)),
+                      fontSize: AppTypography.metricSize,
+                      fontWeight: AppTypography.headingWeight)),
               const SizedBox(height: 4),
-              Text(label, style: TextStyle(fontSize: 12, color: secondary)),
+              Text(label, style: TextStyle(fontSize: AppTypography.captionSize, color: secondary)),
             ]));
     Widget sensorPanel() => Container(
         padding: const EdgeInsets.all(16),
@@ -81,8 +82,8 @@ class TechnicianDashboardOverview extends StatelessWidget {
                   : '$online of ${sensors.length} sensors online',
               style: TextStyle(
                   color: foreground,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600)),
+                  fontSize: AppTypography.headingSize,
+                  fontWeight: AppTypography.headingWeight)),
           const SizedBox(height: 12),
           ClipRRect(
               borderRadius: BorderRadius.circular(6),
@@ -102,12 +103,12 @@ class TechnicianDashboardOverview extends StatelessWidget {
                 Icon(Icons.circle, size: 8, color: item.$3),
                 const SizedBox(width: 5),
                 Text('${item.$2} ${item.$1}',
-                    style: TextStyle(fontSize: 11, color: secondary))
+                    style: TextStyle(fontSize: AppTypography.fieldLabelSize, color: secondary))
               ])
           ]),
           const SizedBox(height: 14),
           Text('Offline after 10 seconds without a reading.',
-              style: TextStyle(fontSize: 11, color: secondary)),
+              style: TextStyle(fontSize: AppTypography.fieldLabelSize, color: secondary)),
           const SizedBox(height: 16),
           Container(
               padding: const EdgeInsets.all(12),
@@ -131,7 +132,7 @@ class TechnicianDashboardOverview extends StatelessWidget {
                         openAlerts > 0
                             ? '$openAlerts open alerts need review'
                             : 'No unresolved alerts in the loaded records',
-                        style: TextStyle(color: foreground, fontSize: 12)))
+                        style: TextStyle(color: foreground, fontSize: AppTypography.captionSize)))
               ])),
         ]));
     Widget taskPanel() => Container(
@@ -144,7 +145,7 @@ class TechnicianDashboardOverview extends StatelessWidget {
             Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Text('No open maintenance tasks.',
-                    style: TextStyle(fontSize: 12, color: secondary)))
+                    style: TextStyle(fontSize: AppTypography.captionSize, color: secondary)))
           else
             for (final task in pending.take(4))
               Padding(
@@ -173,25 +174,25 @@ class TechnicianDashboardOverview extends StatelessWidget {
                                   Text(value(task, 'title', 'Maintenance task'),
                                       style: TextStyle(
                                           color: foreground,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600)),
+                                          fontSize: AppTypography.actionSize,
+                                          fontWeight: AppTypography.headingWeight)),
                                   const SizedBox(height: 5),
                                   Text(
                                       value(task, 'farm_name',
                                           'Farm not recorded'),
                                       style: TextStyle(
-                                          fontSize: 11, color: secondary)),
+                                          fontSize: AppTypography.fieldLabelSize, color: secondary)),
                                   const SizedBox(height: 6),
                                   Wrap(spacing: 10, runSpacing: 4, children: [
                                     Text(
                                         value(task, 'status',
                                             'Status not recorded'),
                                         style: const TextStyle(
-                                            fontSize: 11,
+                                            fontSize: AppTypography.fieldLabelSize,
                                             color: AppColors.info)),
                                     Text(_due(value(task, 'due_date')),
                                         style: TextStyle(
-                                            fontSize: 11, color: secondary))
+                                            fontSize: AppTypography.fieldLabelSize, color: secondary))
                                   ])
                                 ])),
                             const Icon(Icons.chevron_right, size: 18),
@@ -200,10 +201,10 @@ class TechnicianDashboardOverview extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Text('Technical overview',
           style: TextStyle(
-              color: foreground, fontSize: 20, fontWeight: FontWeight.w600)),
+              color: foreground, fontSize: AppTypography.headingSize, fontWeight: AppTypography.headingWeight)),
       const SizedBox(height: 5),
       Text('Monitor equipment and keep maintenance on track.',
-          style: TextStyle(fontSize: 12, color: secondary)),
+          style: TextStyle(fontSize: AppTypography.captionSize, color: secondary)),
       const SizedBox(height: 16),
       LayoutBuilder(builder: (context, constraints) {
         final items = [
@@ -249,7 +250,7 @@ class TechnicianDashboardOverview extends StatelessWidget {
       const SizedBox(height: 20),
       Text('Workspace',
           style: TextStyle(
-              color: foreground, fontSize: 14, fontWeight: FontWeight.w600)),
+              color: foreground, fontSize: AppTypography.bodySize, fontWeight: AppTypography.headingWeight)),
       const SizedBox(height: 10),
       LayoutBuilder(builder: (context, constraints) {
         final cols = constraints.maxWidth >= 800
@@ -311,12 +312,12 @@ class TechnicianDashboardOverview extends StatelessWidget {
                                       Text(item.$1,
                                           style: TextStyle(
                                               color: foreground,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600)),
+                                              fontSize: AppTypography.actionSize,
+                                              fontWeight: AppTypography.headingWeight)),
                                       const SizedBox(height: 4),
                                       Text(item.$2,
                                           style: TextStyle(
-                                              fontSize: 11, color: secondary))
+                                              fontSize: AppTypography.fieldLabelSize, color: secondary))
                                     ])),
                                 const Icon(Icons.chevron_right, size: 16)
                               ]))));

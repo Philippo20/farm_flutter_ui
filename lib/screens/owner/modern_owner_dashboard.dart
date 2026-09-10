@@ -117,7 +117,7 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
             Text(
               'Farm Owner Dashboard',
               style: AppTypography.h4.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -198,8 +198,8 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
                       stat['change'] as String,
                       style: TextStyle(
                         color: (stat['change'] as String).startsWith('+') ? AppColors.success : AppColors.error,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
+                        fontSize: AppTypography.fieldLabelSize,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -209,7 +209,7 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
               Text(
                 stat['value'] as String,
                 style: AppTypography.h4.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: stat['color'] as Color,
                 ),
               ),
@@ -217,8 +217,8 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
                 stat['title'] as String,
                 style: TextStyle(
                   color: (stat['color'] as Color).withOpacity(0.8),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontSize: AppTypography.captionSize,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
             ],
@@ -245,7 +245,7 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
           Text(
             'Revenue & Expenses Trend',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -272,7 +272,7 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
                         if (value.toInt() < monthlyData.length) {
                           return Text(
                             monthlyData[value.toInt()]['month'],
-                            style: const TextStyle(fontSize: 10),
+                            style: const TextStyle(fontSize: AppTypography.microSize),
                           );
                         }
                         return const SizedBox();
@@ -326,7 +326,7 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
           Text(
             'Production Distribution',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -342,28 +342,28 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
                     title: 'Vegetables',
                     color: AppColors.primary,
                     radius: 60,
-                    titleStyle: const TextStyle(fontSize: 10, color: Colors.white),
+                    titleStyle: const TextStyle(fontSize: AppTypography.microSize, color: Colors.white),
                   ),
                   PieChartSectionData(
                     value: data['daily']['fruits'].toDouble(),
                     title: 'Fruits',
                     color: AppColors.warning,
                     radius: 60,
-                    titleStyle: const TextStyle(fontSize: 10, color: Colors.white),
+                    titleStyle: const TextStyle(fontSize: AppTypography.microSize, color: Colors.white),
                   ),
                   PieChartSectionData(
                     value: data['daily']['eggs'].toDouble(),
                     title: 'Eggs',
                     color: AppColors.info,
                     radius: 60,
-                    titleStyle: const TextStyle(fontSize: 10, color: Colors.white),
+                    titleStyle: const TextStyle(fontSize: AppTypography.microSize, color: Colors.white),
                   ),
                   PieChartSectionData(
                     value: data['daily']['milk'].toDouble(),
                     title: 'Dairy',
                     color: AppColors.success,
                     radius: 60,
-                    titleStyle: const TextStyle(fontSize: 10, color: Colors.white),
+                    titleStyle: const TextStyle(fontSize: AppTypography.microSize, color: Colors.white),
                   ),
                 ],
               ),
@@ -388,7 +388,7 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
           Text(
             'Caretaker Performance',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -406,7 +406,7 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
                   backgroundColor: AppColors.primary.withOpacity(0.1),
                   child: Text(
                     caretaker['name'].toString().split(' ').map((e) => e[0]).take(2).join(),
-                    style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: AppColors.primary, fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -414,16 +414,16 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(caretaker['name'], style: TextStyle(fontWeight: FontWeight.w600, color: isDark ? Colors.white : AppColors.textPrimary)),
-                      Text('${caretaker['farms'].first} • ${caretaker['specialization']}', style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textSecondary)),
+                      Text(caretaker['name'], style: TextStyle(fontWeight: AppTypography.headingWeight, color: isDark ? Colors.white : AppColors.textPrimary)),
+                      Text('${caretaker['farms'].first} • ${caretaker['specialization']}', style: TextStyle(fontSize: AppTypography.fieldLabelSize, color: isDark ? Colors.white60 : AppColors.textSecondary)),
                     ],
                   ),
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('${caretaker['efficiency']}%', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.success)),
-                    Text('${caretaker['tasksCompleted']} tasks', style: TextStyle(fontSize: 11, color: isDark ? Colors.white60 : AppColors.textSecondary)),
+                    Text('${caretaker['efficiency']}%', style: TextStyle(fontWeight: AppTypography.headingWeight, color: AppColors.success)),
+                    Text('${caretaker['tasksCompleted']} tasks', style: TextStyle(fontSize: AppTypography.fieldLabelSize, color: isDark ? Colors.white60 : AppColors.textSecondary)),
                   ],
                 ),
               ],
@@ -461,7 +461,7 @@ class _ModernOwnerDashboardState extends ConsumerState<ModernOwnerDashboard> {
               children: [
                 Icon(action['icon'] as IconData, size: 24),
                 const SizedBox(height: AppSpacing.sm),
-                Text(action['label'] as String, style: const TextStyle(fontSize: 12)),
+                Text(action['label'] as String, style: const TextStyle(fontSize: AppTypography.captionSize)),
               ],
             ),
           ),

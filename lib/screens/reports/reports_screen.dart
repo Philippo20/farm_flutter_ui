@@ -29,8 +29,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         title: Text(
           'Reports',
           style: AppTypography.h5.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
       ),
@@ -73,8 +72,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         Text(
           'Report Type',
           style: AppTypography.h6.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -119,7 +117,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         type['name'] as String,
                         style: AppTypography.bodyMedium.copyWith(
                           color: isSelected ? AppColors.primary : (isDark ? Colors.white : AppColors.textPrimary),
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
                         ),
                       ),
                     ),
@@ -140,8 +138,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         Text(
           'Date Range',
           style: AppTypography.h6.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -201,7 +198,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   DateFormat('MMM dd, yyyy').format(date),
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ],
@@ -259,8 +256,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         Text(
           'Recent Reports',
           style: AppTypography.h6.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -297,7 +293,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         Text(
                           report['name'] as String,
                           style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                             color: isDark ? Colors.white : AppColors.textPrimary,
                           ),
                         ),

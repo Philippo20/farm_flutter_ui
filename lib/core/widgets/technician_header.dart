@@ -97,8 +97,8 @@ class TechnicianHeader extends ConsumerWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.h4.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 28,
+                      fontWeight: AppTypography.headingWeight,
+                      fontSize: AppTypography.metricSize,
                       color: isDark ? Colors.white : AppColors.textPrimary)),
               const SizedBox(height: AppSpacing.xs),
               Row(
@@ -116,11 +116,11 @@ class TechnicianHeader extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.bodyLarge.copyWith(
-                          fontSize: 14,
+                          fontSize: AppTypography.bodySize,
                           color: isDark
                               ? Colors.white.withOpacity(0.7)
                               : AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                           letterSpacing: 0.2,
                         )),
                   ),
@@ -204,8 +204,8 @@ class TechnicianHeader extends ConsumerWidget {
                         child: Text(
                           _getGreeting(),
                           style: AppTypography.h5.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
+                            fontWeight: AppTypography.headingWeight,
+                            fontSize: AppTypography.sectionTitleSize,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
                             letterSpacing: -0.3,
@@ -221,8 +221,8 @@ class TechnicianHeader extends ConsumerWidget {
                   Text(
                     userName,
                     style: AppTypography.bodyLarge.copyWith(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                      fontSize: AppTypography.actionSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark
                           ? Colors.white.withOpacity(0.85)
                           : AppColors.textPrimary.withOpacity(0.75),
@@ -248,11 +248,11 @@ class TechnicianHeader extends ConsumerWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.bodySmall.copyWith(
-                              fontSize: 11,
+                              fontSize: AppTypography.fieldLabelSize,
                               color: isDark
                                   ? Colors.white.withOpacity(0.6)
                                   : AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: AppTypography.labelWeight,
                             )),
                       ),
                     ],
@@ -317,11 +317,11 @@ class TechnicianHeader extends ConsumerWidget {
                 child: Text(
                   _getFormattedDate(),
                   style: AppTypography.bodyMedium.copyWith(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark
                         ? Colors.white.withOpacity(0.7)
                         : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     letterSpacing: 0.1,
                   ),
                   maxLines: 1,
@@ -402,8 +402,8 @@ class TechnicianHeader extends ConsumerWidget {
                   badge > 9 ? '9+' : badge.toString(),
                   style: AppTypography.caption.copyWith(
                     color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppTypography.microSize,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -468,8 +468,8 @@ class TechnicianHeader extends ConsumerWidget {
                   initials,
                   style: AppTypography.bodyMedium.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: AppTypography.bodySize,
                   ),
                 ),
               ),
@@ -594,8 +594,8 @@ class TechnicianHeader extends ConsumerWidget {
                   badge > 9 ? '9+' : badge.toString(),
                   style: AppTypography.caption.copyWith(
                     color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppTypography.microSize,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -722,8 +722,8 @@ class TechnicianHeader extends ConsumerWidget {
                           userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
                           style: AppTypography.bodyMedium.copyWith(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontWeight: AppTypography.headingWeight,
+                            fontSize: AppTypography.cardTitleSize,
                           ),
                         ),
                       ),
@@ -733,8 +733,8 @@ class TechnicianHeader extends ConsumerWidget {
                       userName.split(' ').first,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: AppTypography.bodySize,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
@@ -805,8 +805,8 @@ class TechnicianHeader extends ConsumerWidget {
                   farm,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: AppTypography.bodySize,
                   ),
                 ),
               );

@@ -1,7 +1,6 @@
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -459,9 +458,9 @@ class _InventoryManagementScreenState
             const SizedBox(height: 12),
             Text(
               'Could not load inventory',
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
+              style: AppTypography.font(
+                fontSize: AppTypography.sectionTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -469,8 +468,8 @@ class _InventoryManagementScreenState
             Text(
               _errorMessage ?? 'The inventory service did not return data.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white54 : AppColors.textSecondary,
               ),
             ),
@@ -616,17 +615,17 @@ class _InventoryManagementScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(stat['value'] as String,
-                  style: GoogleFonts.inter(
-                      fontSize: compact ? 16 : 20,
-                      fontWeight: FontWeight.w700,
+                  style: AppTypography.font(
+                      fontSize: compact ? AppTypography.cardTitleSize : AppTypography.headingSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                       height: 1.1),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
               const SizedBox(height: 2),
               Text(stat['title'] as String,
-                  style: GoogleFonts.inter(
-                      fontSize: compact ? 10 : 11,
+                  style: AppTypography.font(
+                      fontSize: compact ? AppTypography.microSize : AppTypography.fieldLabelSize,
                       color: isDark ? Colors.white38 : AppColors.textSecondary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
@@ -643,9 +642,9 @@ class _InventoryManagementScreenState
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(stat['change'] as String,
-                  style: GoogleFonts.inter(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.microSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: (stat['isPositive'] as bool)
                           ? AppColors.success
                           : AppColors.error)),
@@ -727,17 +726,17 @@ class _InventoryManagementScreenState
           ),
           const SizedBox(height: 6),
           Text(value,
-              style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+              style: AppTypography.font(
+                  fontSize: AppTypography.sectionTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center),
           const SizedBox(height: 2),
           Text(title,
-              style: GoogleFonts.inter(
-                  fontSize: 10,
+              style: AppTypography.font(
+                  fontSize: AppTypography.microSize,
                   color: isDark ? Colors.white38 : AppColors.textSecondary),
               textAlign: TextAlign.center,
               maxLines: 1,
@@ -886,8 +885,8 @@ class _InventoryManagementScreenState
                   Text(
                     category['label'] as String,
                     style: AppTypography.bodySmall.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: isMobile ? 11 : 13,
+                      fontWeight: AppTypography.headingWeight,
+                      fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.actionSize,
                       color: isSelected
                           ? Colors.white
                           : (isDark
@@ -914,8 +913,8 @@ class _InventoryManagementScreenState
                     child: Text(
                       '${category['count']}',
                       style: AppTypography.caption.copyWith(
-                        fontSize: isMobile ? 9 : 10,
-                        fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isSelected
                             ? Colors.white
                             : (isDark
@@ -1079,11 +1078,11 @@ class _InventoryManagementScreenState
                               Text(
                                 item['name'] as String,
                                 style: AppTypography.bodyLarge.copyWith(
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: isDark
                                       ? Colors.white
                                       : AppColors.textPrimary,
-                                  fontSize: isMobile ? 13 : 15,
+                                  fontSize: isMobile ? AppTypography.actionSize : AppTypography.cardTitleSize,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -1107,7 +1106,7 @@ class _InventoryManagementScreenState
                                         color: isDark
                                             ? Colors.white.withOpacity(0.6)
                                             : AppColors.textSecondary,
-                                        fontSize: isMobile ? 10 : 11,
+                                        fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -1137,8 +1136,8 @@ class _InventoryManagementScreenState
                             item['status'] as String,
                             style: AppTypography.caption.copyWith(
                               color: item['color'] as Color,
-                              fontWeight: FontWeight.w700,
-                              fontSize: isMobile ? 9 : 10,
+                              fontWeight: AppTypography.headingWeight,
+                              fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1185,8 +1184,8 @@ class _InventoryManagementScreenState
                                         color: isDark
                                             ? Colors.white.withOpacity(0.6)
                                             : AppColors.textSecondary,
-                                        fontSize: isMobile ? 10 : 12,
-                                        fontWeight: FontWeight.w600,
+                                        fontSize: isMobile ? AppTypography.microSize : AppTypography.captionSize,
+                                        fontWeight: AppTypography.headingWeight,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -1208,9 +1207,9 @@ class _InventoryManagementScreenState
                                 child: Text(
                                   '${(stockPercentage * 100).toStringAsFixed(0)}%',
                                   style: AppTypography.caption.copyWith(
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: item['color'] as Color,
-                                    fontSize: isMobile ? 10 : 11,
+                                    fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
                                   ),
                                 ),
                               ),
@@ -1251,8 +1250,8 @@ class _InventoryManagementScreenState
                                           color: isDark
                                               ? Colors.white.withOpacity(0.7)
                                               : AppColors.textPrimary,
-                                          fontSize: isMobile ? 10 : 11,
-                                          fontWeight: FontWeight.w600,
+                                          fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                                          fontWeight: AppTypography.headingWeight,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -1274,7 +1273,7 @@ class _InventoryManagementScreenState
                                           color: isDark
                                               ? Colors.white.withOpacity(0.5)
                                               : AppColors.textSecondary,
-                                          fontSize: isMobile ? 9 : 10,
+                                          fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -1327,7 +1326,7 @@ class _InventoryManagementScreenState
                                         color: isDark
                                             ? Colors.white.withOpacity(0.6)
                                             : AppColors.textSecondary,
-                                        fontSize: isMobile ? 9 : 10,
+                                        fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -1338,11 +1337,11 @@ class _InventoryManagementScreenState
                                 Text(
                                   'GH₵${item['unitCost']}',
                                   style: AppTypography.bodySmall.copyWith(
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary,
-                                    fontSize: isMobile ? 12 : 14,
+                                    fontSize: isMobile ? AppTypography.captionSize : AppTypography.bodySize,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -1385,7 +1384,7 @@ class _InventoryManagementScreenState
                                         color: isDark
                                             ? Colors.white.withOpacity(0.6)
                                             : AppColors.textSecondary,
-                                        fontSize: isMobile ? 9 : 10,
+                                        fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -1396,9 +1395,9 @@ class _InventoryManagementScreenState
                                 Text(
                                   'GH₵${totalValue.toStringAsFixed(2)}',
                                   style: AppTypography.bodySmall.copyWith(
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: AppColors.success,
-                                    fontSize: isMobile ? 12 : 14,
+                                    fontSize: isMobile ? AppTypography.captionSize : AppTypography.bodySize,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -1438,8 +1437,8 @@ class _InventoryManagementScreenState
                                 'Exp: ${item['expiryDate']}',
                                 style: AppTypography.caption.copyWith(
                                   color: AppColors.warning,
-                                  fontSize: isMobile ? 10 : 11,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                                  fontWeight: AppTypography.headingWeight,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -1465,8 +1464,8 @@ class _InventoryManagementScreenState
                             label: Text(
                               'Stock In',
                               style: TextStyle(
-                                fontSize: isMobile ? 11 : 12,
-                                fontWeight: FontWeight.w600,
+                                fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
+                                fontWeight: AppTypography.headingWeight,
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
@@ -1504,8 +1503,8 @@ class _InventoryManagementScreenState
                             label: Text(
                               'Stock Out',
                               style: TextStyle(
-                                fontSize: isMobile ? 11 : 12,
-                                fontWeight: FontWeight.w600,
+                                fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
+                                fontWeight: AppTypography.headingWeight,
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
@@ -1650,9 +1649,9 @@ class _InventoryManagementScreenState
                                       ? Colors.white.withOpacity(0.5)
                                       : AppColors.textSecondary),
                               fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                              fontSize: 11,
+                                  ? AppTypography.headingWeight
+                                  : AppTypography.bodyWeight,
+                              fontSize: AppTypography.fieldLabelSize,
                             ),
                           ),
                         ],
@@ -1729,8 +1728,8 @@ class _InventoryManagementScreenState
                   badge > 9 ? '9+' : badge.toString(),
                   style: AppTypography.caption.copyWith(
                     color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppTypography.microSize,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   textAlign: TextAlign.center,
                 ),

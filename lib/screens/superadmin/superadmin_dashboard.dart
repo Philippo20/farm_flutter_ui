@@ -547,7 +547,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
             'Unable to load dashboard data',
             style: AppTypography.titleMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -643,7 +643,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                 'Super Admin Command Center',
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white : AppColors.primary,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ],
@@ -654,7 +654,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
           'Platform Control Dashboard',
           style: AppTypography.h4.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: 6),
@@ -720,7 +720,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ),
@@ -728,7 +728,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
           value,
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -788,8 +788,8 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h5.copyWith(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
+                          fontSize: AppTypography.pageTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
                   const SizedBox(height: 4),
@@ -797,7 +797,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodySmall.copyWith(
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                           color: isDark
                               ? Colors.white70
                               : AppColors.textSecondary)),
@@ -806,7 +806,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodySmall.copyWith(
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                           color: isDark
                               ? Colors.white54
                               : AppColors.textSecondary)),
@@ -833,7 +833,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                           style: AppTypography.h5.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -844,7 +844,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                             color: isDark
                                 ? Colors.white70
                                 : AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: AppTypography.labelWeight,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -856,7 +856,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                             color: isDark
                                 ? Colors.white54
                                 : AppColors.textSecondary,
-                            fontSize: 11,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -930,7 +930,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                     action.title,
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1035,7 +1035,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                     panel.title,
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                   Text(
@@ -1053,7 +1053,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
               panel.value,
               style: AppTypography.h6.copyWith(
                 color: panel.color,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
           ],
@@ -1171,7 +1171,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                   activity.title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 Text(
@@ -1189,7 +1189,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
             activity.time,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white54 : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -1205,7 +1205,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
           title,
           style: AppTypography.h6.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: 4),

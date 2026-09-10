@@ -395,7 +395,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
               'Unable to load users',
               style: AppTypography.h6.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -430,7 +430,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 'User Management',
                 style:
                     (isMobile ? AppTypography.h5 : AppTypography.h4).copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -566,8 +566,8 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                     title,
                     style: AppTypography.bodySmall.copyWith(
                       color: color.withOpacity(0.8),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 10,
+                      fontWeight: AppTypography.labelWeight,
+                      fontSize: AppTypography.microSize,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -576,9 +576,9 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                   Text(
                     value,
                     style: AppTypography.h6.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: color,
-                      fontSize: 18,
+                      fontSize: AppTypography.sectionTitleSize,
                     ),
                   ),
                 ],
@@ -707,15 +707,15 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
               children: [
                 Text(label,
                     style: AppTypography.bodySmall.copyWith(
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                         color: secondary,
-                        fontWeight: FontWeight.w500)),
+                        fontWeight: AppTypography.labelWeight)),
                 const SizedBox(height: 3),
                 Text(text.isEmpty ? 'Not provided' : text,
                     style: AppTypography.bodySmall.copyWith(
-                        fontSize: 12,
+                        fontSize: AppTypography.captionSize,
                         color: foreground,
-                        fontWeight: FontWeight.w600)),
+                        fontWeight: AppTypography.headingWeight)),
               ],
             ),
           ),
@@ -753,7 +753,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 ),
                 child: Text(initials,
                     style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.primary, fontWeight: FontWeight.w700)),
+                        color: AppColors.primary, fontWeight: AppTypography.headingWeight)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -762,13 +762,13 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 children: [
                   Text(name.isEmpty ? 'Unnamed User' : name,
                       style: AppTypography.bodyMedium.copyWith(
-                          fontSize: 14,
+                          fontSize: AppTypography.bodySize,
                           color: foreground,
-                          fontWeight: FontWeight.w700)),
+                          fontWeight: AppTypography.headingWeight)),
                   const SizedBox(height: 4),
                   Text((user['email'] ?? '').toString(),
                       style: AppTypography.bodySmall
-                          .copyWith(fontSize: 12, color: secondary)),
+                          .copyWith(fontSize: AppTypography.captionSize, color: secondary)),
                 ],
               )),
             ],
@@ -832,7 +832,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                 side: BorderSide(
                     color: isDark ? Colors.white12 : AppColors.neutral200),
                 shape: RoundedRectangleBorder(
@@ -852,7 +852,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
@@ -872,7 +872,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       ),
       child: Text(label,
           style: AppTypography.bodySmall.copyWith(
-              fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+              fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight, color: color)),
     );
   }
 
@@ -900,7 +900,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 child: Text(
                   'All Users',
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -916,7 +916,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                   '${filteredUsers.length} records',
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.primary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ),
@@ -965,7 +965,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -1002,7 +1002,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                         user['name'],
                         style: AppTypography.bodyMedium.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1071,8 +1071,8 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
           user['avatar'],
           style: const TextStyle(
             color: Colors.white,
-            fontWeight: FontWeight.w500,
-            fontSize: 12,
+            fontWeight: AppTypography.labelWeight,
+            fontSize: AppTypography.captionSize,
           ),
         ),
       ),
@@ -1091,7 +1091,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
         ),
         child: Text(
           text,
-          style: TextStyle(color: color, fontSize: 11),
+          style: TextStyle(color: color, fontSize: AppTypography.fieldLabelSize),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -1115,7 +1115,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
             'No users found',
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -1312,8 +1312,8 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                                   ? Colors.white.withOpacity(0.5)
                                   : AppColors.textSecondary),
                           fontWeight:
-                              isSelected ? FontWeight.w500 : FontWeight.normal,
-                          fontSize: 11,
+                              isSelected ? AppTypography.labelWeight : AppTypography.bodyWeight,
+                          fontSize: AppTypography.fieldLabelSize,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1560,7 +1560,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                   Text(
                     'Delete User?',
                     style: AppTypography.h5.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),

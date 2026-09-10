@@ -314,8 +314,8 @@ class _WorkflowHero extends StatelessWidget {
                 Text(
                   config.title,
                   style: AppTypography.h4.copyWith(
-                    fontSize: mobile ? 23 : 28,
-                    fontWeight: FontWeight.w600,
+                    fontSize: mobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: dark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -417,7 +417,7 @@ class _MiniKpi extends StatelessWidget {
           children: [
             Text('$value',
                 style: AppTypography.h5.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: dark ? Colors.white : AppColors.textPrimary)),
             Text(label,
                 maxLines: 1,
@@ -445,7 +445,7 @@ class _QueueToolbar extends StatelessWidget {
     final titleWidget = Row(children: [
       Expanded(
           child: Text(title,
-              style: AppTypography.h5.copyWith(fontWeight: FontWeight.w600))),
+              style: AppTypography.h5.copyWith(fontWeight: AppTypography.headingWeight))),
       _CountBadge(count: count),
     ]);
     final search = SizedBox(
@@ -516,7 +516,7 @@ class _WorkflowCard extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.h6
-                            .copyWith(fontWeight: FontWeight.w600)),
+                            .copyWith(fontWeight: AppTypography.headingWeight)),
                     const SizedBox(height: 3),
                     Text(
                         '${value('plant_variety', value('plant_type', 'Crop variety'))} | ${value('farm_name', 'Unassigned farm')}',
@@ -913,12 +913,12 @@ class _WorkflowModalFrame extends StatelessWidget {
                     children: [
                   Text(title,
                       style: AppTypography.bodyLarge
-                          .copyWith(fontSize: 16, fontWeight: FontWeight.w700)),
+                          .copyWith(fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight)),
                   Text(subtitle,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodySmall.copyWith(
-                          fontSize: 12,
+                          fontSize: AppTypography.captionSize,
                           color:
                               dark ? Colors.white38 : AppColors.textSecondary)),
                 ])),
@@ -984,8 +984,8 @@ class _QaModalLabel extends StatelessWidget {
     return Text(
       label,
       style: AppTypography.bodySmall.copyWith(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
+        fontSize: AppTypography.fieldLabelSize,
+        fontWeight: AppTypography.headingWeight,
         color: dark ? Colors.white54 : AppColors.textSecondary,
       ),
     );
@@ -1022,13 +1022,13 @@ class _QaModalTextField extends StatelessWidget {
           maxLines: 5,
           maxLength: 1000,
           style: AppTypography.bodySmall.copyWith(
-            fontSize: 12,
+            fontSize: AppTypography.captionSize,
             color: dark ? Colors.white : AppColors.textPrimary,
           ),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: AppTypography.bodySmall.copyWith(
-              fontSize: 12,
+              fontSize: AppTypography.captionSize,
               color: dark ? Colors.white24 : AppColors.textSecondary,
             ),
             prefixIcon: Padding(
@@ -1112,7 +1112,7 @@ class _ReadOnlyFindings extends StatelessWidget {
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text('Inspection findings',
-          style: AppTypography.h6.copyWith(fontWeight: FontWeight.w600)),
+          style: AppTypography.h6.copyWith(fontWeight: AppTypography.headingWeight)),
       const SizedBox(height: AppSpacing.sm),
       ...findings.map((finding) => Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -1129,7 +1129,7 @@ class _ReadOnlyFindings extends StatelessWidget {
               Text(finding.$2 ? 'Passed' : 'Failed',
                   style: AppTypography.bodySmall.copyWith(
                       color: finding.$2 ? AppColors.success : AppColors.error,
-                      fontWeight: FontWeight.w600)),
+                      fontWeight: AppTypography.headingWeight)),
             ]),
           )),
       if ('${record['quality_notes'] ?? ''}'.trim().isNotEmpty) ...[
@@ -1171,10 +1171,10 @@ class _GateTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
           title: Text(title,
               style: AppTypography.bodySmall
-                  .copyWith(fontSize: 12, fontWeight: FontWeight.w600)),
+                  .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight)),
           subtitle: Text(subtitle,
               style: AppTypography.bodySmall.copyWith(
-                  fontSize: 11,
+                  fontSize: AppTypography.fieldLabelSize,
                   color: dark ? Colors.white70 : AppColors.textSecondary)),
           secondary: Icon(
               value ? Icons.check_circle_outline : Icons.radio_button_unchecked,
@@ -1216,7 +1216,7 @@ class _SummaryCell extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodyMedium
-                    .copyWith(fontWeight: FontWeight.w600)),
+                    .copyWith(fontWeight: AppTypography.headingWeight)),
           ]),
     );
   }
@@ -1239,7 +1239,7 @@ class _CardMetric extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style:
-                AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                AppTypography.bodyMedium.copyWith(fontWeight: AppTypography.headingWeight)),
       ]);
 }
 
@@ -1255,7 +1255,7 @@ class _StatusChip extends StatelessWidget {
             borderRadius: BorderRadius.circular(20)),
         child: Text(label,
             style: AppTypography.bodySmall
-                .copyWith(color: color, fontWeight: FontWeight.w600)),
+                .copyWith(color: color, fontWeight: AppTypography.headingWeight)),
       );
 }
 
@@ -1270,7 +1270,7 @@ class _CountBadge extends StatelessWidget {
             borderRadius: BorderRadius.circular(20)),
         child: Text('$count',
             style: AppTypography.bodySmall.copyWith(
-                color: AppColors.primary, fontWeight: FontWeight.w600)),
+                color: AppColors.primary, fontWeight: AppTypography.headingWeight)),
       );
 }
 
@@ -1339,7 +1339,7 @@ class _EmptyQueue extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(config.emptyTitle,
               textAlign: TextAlign.center,
-              style: AppTypography.h6.copyWith(fontWeight: FontWeight.w600)),
+              style: AppTypography.h6.copyWith(fontWeight: AppTypography.headingWeight)),
           const SizedBox(height: 6),
           Text(config.emptyMessage,
               textAlign: TextAlign.center,

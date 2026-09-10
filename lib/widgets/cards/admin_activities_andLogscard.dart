@@ -1,5 +1,5 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 
 class ActivitiesAndLogsCard extends StatelessWidget {
@@ -90,18 +90,18 @@ class _TodayActivitiesCard extends StatelessWidget {
           children: [
             Text(
               "Today's Activities",
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.sectionTitleSize,
+                fontWeight: AppTypography.labelWeight,
                 color: textColor,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               "Recent system activities and events",
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
+                fontWeight: AppTypography.labelWeight,
                 color: secondaryTextColor,
               ),
             ),
@@ -132,17 +132,17 @@ class _TodayActivitiesCard extends StatelessWidget {
                                 children: [
                                   Text(
                                     activity.title,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
+                                    style: AppTypography.font(
+                                      fontSize: AppTypography.cardTitleSize,
+                                      fontWeight: AppTypography.labelWeight,
                                       color: textColor,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     activity.time,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13,
+                                    style: AppTypography.font(
+                                      fontSize: AppTypography.actionSize,
                                       color: secondaryTextColor,
                                     ),
                                   ),
@@ -169,9 +169,9 @@ class _TodayActivitiesCard extends StatelessWidget {
                 ),
                 child: Text(
                   "View All Activities",
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
+                  style: AppTypography.font(
+                    fontWeight: AppTypography.labelWeight,
+                    fontSize: AppTypography.bodySize,
                   ),
                 ),
               ),
@@ -229,9 +229,9 @@ class _SystemLogsCard extends StatelessWidget {
               children: [
                 Text(
                   "System Logs",
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.sectionTitleSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: textColor,
                   ),
                 ),
@@ -246,9 +246,9 @@ class _SystemLogsCard extends StatelessWidget {
                   ),
                   child: Text(
                     "Live",
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.actionSize,
+                      fontWeight: AppTypography.labelWeight,
                       color: secondaryTextColor,
                     ),
                   ),
@@ -258,9 +258,9 @@ class _SystemLogsCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               "Recent system events and notifications",
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
+                fontWeight: AppTypography.labelWeight,
                 color: secondaryTextColor,
               ),
             ),
@@ -287,9 +287,9 @@ class _SystemLogsCard extends StatelessWidget {
                                 ),
                                 child: Text(
                                   log.level,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
+                                  style: AppTypography.font(
+                                    fontSize: AppTypography.fieldLabelSize,
+                                    fontWeight: AppTypography.labelWeight,
                                     color: Colors.white,
                                     letterSpacing: 0.5,
                                   ),
@@ -302,17 +302,17 @@ class _SystemLogsCard extends StatelessWidget {
                                   children: [
                                     Text(
                                       log.message,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
+                                      style: AppTypography.font(
+                                        fontSize: AppTypography.bodySize,
+                                        fontWeight: AppTypography.labelWeight,
                                         color: textColor,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       log.time,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12,
+                                      style: AppTypography.font(
+                                        fontSize: AppTypography.captionSize,
                                         color: secondaryTextColor,
                                       ),
                                     ),
@@ -336,9 +336,9 @@ class _SystemLogsCard extends StatelessWidget {
                 ),
                 child: Text(
                   "View All Logs",
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
+                  style: AppTypography.font(
+                    fontWeight: AppTypography.labelWeight,
+                    fontSize: AppTypography.bodySize,
                   ),
                 ),
               ),

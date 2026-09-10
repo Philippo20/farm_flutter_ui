@@ -319,11 +319,11 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                                 .textTheme
                                 .labelSmall
                                 ?.copyWith(
-                                  fontSize: 11,
+                                  fontSize: AppTypography.fieldLabelSize,
                                   color: isDark
                                       ? Colors.white.withOpacity(0.7)
                                       : AppColors.textSecondary,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: AppTypography.labelWeight,
                                   letterSpacing: 0.2,
                                 ),
                             overflow: TextOverflow.ellipsis,
@@ -512,15 +512,15 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                             item.label,
                             textAlign: TextAlign.left,
                             style: AppTypography.bodyMedium.copyWith(
-                              fontSize: 13,
+                              fontSize: AppTypography.actionSize,
                               color: isSelected
                                   ? AppColors.primary
                                   : (isDark
                                       ? Colors.white
                                       : AppColors.textPrimary),
                               fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
+                                  ? AppTypography.headingWeight
+                                  : AppTypography.labelWeight,
                               letterSpacing: 0.1,
                             ),
                           ),
@@ -603,9 +603,9 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                       ? widget.userName[0].toUpperCase()
                       : 'A',
                   style: AppTypography.bodyMedium.copyWith(
-                    fontSize: 18,
+                    fontSize: AppTypography.sectionTitleSize,
                     color: Colors.white,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ),
@@ -619,8 +619,8 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                   Text(
                     widget.userName,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      fontSize: AppTypography.cardTitleSize,
+                      fontWeight: AppTypography.labelWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                     maxLines: 1,
@@ -630,11 +630,11 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                   Text(
                     widget.userRole,
                     style: AppTypography.caption.copyWith(
-                      fontSize: 13,
+                      fontSize: AppTypography.actionSize,
                       color: isDark
                           ? Colors.white.withOpacity(0.7)
                           : AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -700,9 +700,9 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
                         child: Text(
                           'Logout',
                           style: AppTypography.bodyMedium.copyWith(
-                            fontSize: 13,
+                            fontSize: AppTypography.actionSize,
                             color: AppColors.error,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: AppTypography.labelWeight,
                           ),
                         ),
                       ),
@@ -911,7 +911,7 @@ class SuperAdminDrawer extends StatelessWidget {
                     userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
                     style: AppTypography.h4.copyWith(
                       color: Colors.white,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),
@@ -925,7 +925,7 @@ class SuperAdminDrawer extends StatelessWidget {
                       userName,
                       style: AppTypography.h6.copyWith(
                         color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -935,7 +935,7 @@ class SuperAdminDrawer extends StatelessWidget {
                       userRole,
                       style: AppTypography.bodySmall.copyWith(
                         color: Colors.white.withOpacity(0.9),
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -976,8 +976,8 @@ class SuperAdminDrawer extends StatelessWidget {
       title: Text(
         item.label,
         style: AppTypography.bodyMedium.copyWith(
-          fontSize: 15,
-          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          fontSize: AppTypography.cardTitleSize,
+          fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
           color: isSelected
               ? AppColors.primary
               : (isDark ? Colors.white : AppColors.textPrimary),
@@ -1048,9 +1048,9 @@ class SuperAdminDrawer extends StatelessWidget {
               child: Text(
                 userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
                 style: AppTypography.bodyMedium.copyWith(
-                  fontSize: 18,
+                  fontSize: AppTypography.sectionTitleSize,
                   color: Colors.white,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ),
@@ -1064,8 +1064,8 @@ class SuperAdminDrawer extends StatelessWidget {
                 Text(
                   userName,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                   maxLines: 1,
@@ -1075,7 +1075,7 @@ class SuperAdminDrawer extends StatelessWidget {
                 Text(
                   userEmail,
                   style: AppTypography.caption.copyWith(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark
                         ? Colors.white.withOpacity(0.7)
                         : AppColors.textSecondary,
@@ -1124,9 +1124,9 @@ class SuperAdminDrawer extends StatelessWidget {
                 Text(
                   'Logout',
                   style: AppTypography.bodyMedium.copyWith(
-                    fontSize: 15,
+                    fontSize: AppTypography.cardTitleSize,
                     color: AppColors.error,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ],

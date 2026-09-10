@@ -1,5 +1,5 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 
 class AdminUserStatCard extends StatelessWidget {
@@ -83,9 +83,9 @@ class AdminUserStatCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   change,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: isPositive ? Colors.green : Colors.red,
                   ),
                 ),
@@ -99,9 +99,9 @@ class AdminUserStatCard extends StatelessWidget {
               children: [
                 Text(
                   value,
-                  style: GoogleFonts.poppins(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.metricSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : Colors.black,
                     height: 1.2,
                   ),
@@ -109,9 +109,9 @@ class AdminUserStatCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   title,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: AppTypography.labelWeight,
                     color: secondaryTextColor,
                     letterSpacing: 0.2,
                   ),

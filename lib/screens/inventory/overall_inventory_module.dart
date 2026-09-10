@@ -343,7 +343,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
               Text(
                 widget.title,
                 style: AppTypography.h4.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   letterSpacing: -0.5,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
@@ -442,7 +442,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                 Text(
                   value,
                   style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -451,7 +451,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ],
@@ -553,7 +553,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                           style: AppTypography.h6.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -563,7 +563,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                             color: isDark
                                 ? Colors.white60
                                 : AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: AppTypography.labelWeight,
                           ),
                         ),
                       ],
@@ -615,7 +615,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                     Text(
                       'Farm-Level Inventory',
                       style: AppTypography.h6.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -703,7 +703,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -753,7 +753,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                             : 'Healthy stock',
                     style: AppTypography.caption.copyWith(
                       color: riskColor,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ],
@@ -774,14 +774,14 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           overflow: TextOverflow.ellipsis,
           style: AppTypography.bodyMedium.copyWith(
             color: color,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
         Text(
           label,
           style: AppTypography.caption.copyWith(
             color: isDark ? Colors.white54 : AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -808,7 +808,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                       ? 'Global Inventory Records'
                       : '$_selectedFarm Inventory Records',
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -864,7 +864,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                     color: selected
                         ? AppColors.primary
                         : (isDark ? Colors.white70 : AppColors.textSecondary),
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: selected ? AppTypography.headingWeight : AppTypography.labelWeight,
                   ),
                 );
               }).toList(),
@@ -1014,7 +1014,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                 label,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodySmall.copyWith(
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  fontWeight: selected ? AppTypography.headingWeight : AppTypography.labelWeight,
                   color: selected
                       ? AppColors.primary
                       : (isDark ? Colors.white70 : AppColors.textSecondary),
@@ -1051,7 +1051,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           Text(
             'Stock Ledger',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -1104,7 +1104,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                     Text(
                       entry.name,
                       style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -1130,7 +1130,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                   statusText,
                   style: AppTypography.caption.copyWith(
                     color: statusColor,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ),
@@ -1233,7 +1233,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           label,
           style: AppTypography.caption.copyWith(
             color: color,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
         style: TextButton.styleFrom(
@@ -1978,7 +1978,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
           children: [
             TextSpan(
               text: '$label: ',
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: const TextStyle(fontWeight: AppTypography.labelWeight),
             ),
             TextSpan(text: value),
           ],
@@ -2026,7 +2026,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                   title,
                   style: AppTypography.h6.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 Text(
@@ -2198,7 +2198,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                         movement.itemName,
                         style: AppTypography.bodyMedium.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -2214,7 +2214,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
                         '$typeText  $sign${movement.quantity.toStringAsFixed(1)} ${movement.unit}',
                         style: AppTypography.caption.copyWith(
                           color: typeColor,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -2276,7 +2276,7 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
             title,
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: 4),

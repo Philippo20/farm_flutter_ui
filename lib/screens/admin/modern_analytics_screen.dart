@@ -537,7 +537,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
             'Analytics data could not be loaded',
             style: AppTypography.titleMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -609,7 +609,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
                           : 'Farm Analytics Command Center',
                       style: AppTypography.h3.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -661,7 +661,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
             widget.isSuperAdmin ? '100% platform control' : '90% admin control',
             style: AppTypography.label.copyWith(
               color: isDark ? Colors.white : AppColors.info,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -728,7 +728,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
               color: isDark
                   ? Colors.white.withValues(alpha: 0.72)
                   : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ),
@@ -736,7 +736,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
           value,
           style: AppTypography.titleSmall.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -1177,13 +1177,13 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.caption.copyWith(
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                         color: selected
                             ? AppColors.primary
                             : (isDark
                                 ? Colors.white.withValues(alpha: 0.62)
                                 : AppColors.textSecondary),
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                   ],
@@ -1321,7 +1321,7 @@ class _KpiCard extends StatelessWidget {
                   kpi.value,
                   style: AppTypography.titleMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 Text(
@@ -1332,7 +1332,7 @@ class _KpiCard extends StatelessWidget {
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.64)
                         : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 Text(
@@ -1608,7 +1608,7 @@ class _FarmComparisonCard extends StatelessWidget {
                       farm.name,
                       style: AppTypography.titleSmall.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                   ),
@@ -1719,7 +1719,7 @@ class _ProgressLine extends StatelessWidget {
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.64)
                       : AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ),
@@ -1727,7 +1727,7 @@ class _ProgressLine extends StatelessWidget {
               '$value%',
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ],
@@ -1769,7 +1769,7 @@ class _MetricColumn extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: AppTypography.bodyLarge.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
         Text(
@@ -1778,7 +1778,7 @@ class _MetricColumn extends StatelessWidget {
             color: isDark
                 ? Colors.white.withValues(alpha: 0.58)
                 : AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -1827,7 +1827,7 @@ class _InsightRow extends StatelessWidget {
                   insight.title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 Text(
@@ -1867,7 +1867,7 @@ class _SectionHeader extends StatelessWidget {
           title,
           style: AppTypography.titleMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: 2),
@@ -1877,7 +1877,7 @@ class _SectionHeader extends StatelessWidget {
             color: isDark
                 ? Colors.white.withValues(alpha: 0.62)
                 : AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -1914,8 +1914,8 @@ class _ScopeChip extends StatelessWidget {
             label,
             style: TextStyle(
               color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
+              fontSize: AppTypography.fieldLabelSize,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],

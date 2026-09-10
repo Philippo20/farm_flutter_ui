@@ -661,7 +661,7 @@ class _RedesignedAdminDashboardState
             'Unable to load admin dashboard',
             style: AppTypography.titleMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -735,7 +735,7 @@ class _RedesignedAdminDashboardState
                       'Admin Operations Dashboard',
                       style: AppTypography.h3.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                         letterSpacing: -1,
                       ),
                     ),
@@ -795,7 +795,7 @@ class _RedesignedAdminDashboardState
             'Administrator Control Layer',
             style: AppTypography.label.copyWith(
               color: isDark ? Colors.white : AppColors.primaryDark,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -882,7 +882,7 @@ class _RedesignedAdminDashboardState
               color: isDark
                   ? Colors.white.withValues(alpha: .74)
                   : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ),
@@ -890,7 +890,7 @@ class _RedesignedAdminDashboardState
           value,
           style: AppTypography.titleMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
       ],
@@ -922,7 +922,7 @@ class _RedesignedAdminDashboardState
               color: selected
                   ? AppColors.primary
                   : (isDark ? Colors.white : AppColors.textSecondary),
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           );
         }).toList();
@@ -1119,7 +1119,7 @@ class _RedesignedAdminDashboardState
                     priority.$1,
                     style: AppTypography.bodyMedium.copyWith(
                       color: _textColor(context),
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ),
@@ -1277,7 +1277,7 @@ class _RedesignedAdminDashboardState
                                 ? Colors.white.withValues(alpha: .68)
                                 : AppColors.textSecondary),
                         fontWeight:
-                            selected ? FontWeight.w500 : FontWeight.w500,
+                            selected ? AppTypography.labelWeight : AppTypography.labelWeight,
                       ),
                     ),
                   ],
@@ -1336,7 +1336,7 @@ class _MetricCard extends StatelessWidget {
                 metric.trend,
                 style: AppTypography.caption.copyWith(
                   color: metric.color,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ],
@@ -1347,7 +1347,7 @@ class _MetricCard extends StatelessWidget {
             style: (compact ? AppTypography.titleLarge : AppTypography.h3)
                 .copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
               letterSpacing: -1,
             ),
           ),
@@ -1358,7 +1358,7 @@ class _MetricCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: 2),
@@ -1368,7 +1368,7 @@ class _MetricCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodySmall.copyWith(
               color: _mutedTextColor(context),
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -1428,7 +1428,7 @@ class _OperationCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.titleSmall.copyWith(
                         color: _textColor(context),
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -1484,14 +1484,14 @@ class _FarmPerformanceCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.titleSmall.copyWith(
                         color: _textColor(context),
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     Text(
                       farm.manager,
                       style: AppTypography.bodySmall.copyWith(
                         color: _mutedTextColor(context),
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                   ],
@@ -1522,7 +1522,7 @@ class _FarmPerformanceCard extends StatelessWidget {
                 '${farm.alerts} active alerts',
                 style: AppTypography.bodySmall.copyWith(
                   color: _mutedTextColor(context),
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ],
@@ -1565,7 +1565,7 @@ class _AlertRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodyMedium.copyWith(
                     color: _textColor(context),
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1573,7 +1573,7 @@ class _AlertRow extends StatelessWidget {
                   '${alert.farm} - ${alert.time}',
                   style: AppTypography.bodySmall.copyWith(
                     color: _mutedTextColor(context),
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ],
@@ -1630,7 +1630,7 @@ class _ActivityRow extends StatelessWidget {
                         activity.title,
                         style: AppTypography.bodyMedium.copyWith(
                           color: _textColor(context),
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -1648,7 +1648,7 @@ class _ActivityRow extends StatelessWidget {
                   activity.time,
                   style: AppTypography.caption.copyWith(
                     color: _mutedTextColor(context),
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ],
@@ -1683,7 +1683,7 @@ class _ScoreRow extends StatelessWidget {
                 label,
                 style: AppTypography.bodySmall.copyWith(
                   color: _mutedTextColor(context),
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ),
@@ -1691,7 +1691,7 @@ class _ScoreRow extends StatelessWidget {
               '$value%',
               style: AppTypography.bodySmall.copyWith(
                 color: _textColor(context),
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ],
@@ -1733,7 +1733,7 @@ class _StatusBadge extends StatelessWidget {
         label,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -1820,7 +1820,7 @@ class _EmptyPanelMessage extends StatelessWidget {
               message,
               style: AppTypography.bodyMedium.copyWith(
                 color: _mutedTextColor(context),
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -1854,7 +1854,7 @@ class _SectionHeader extends StatelessWidget {
                 title,
                 style: AppTypography.titleMedium.copyWith(
                   color: _textColor(context),
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
               const SizedBox(height: 2),
@@ -1862,7 +1862,7 @@ class _SectionHeader extends StatelessWidget {
                 subtitle,
                 style: AppTypography.bodySmall.copyWith(
                   color: _mutedTextColor(context),
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ],

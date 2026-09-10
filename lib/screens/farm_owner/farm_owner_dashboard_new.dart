@@ -57,7 +57,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
               Text(
                 'Farm Management',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -114,7 +114,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
                     'Digital Wallet',
                     style: AppTypography.h6.copyWith(
                       color: Colors.white.withOpacity(0.9),
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ],
@@ -132,7 +132,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
                   'Active',
                   style: AppTypography.bodySmall.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -150,7 +150,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
             '\$48,500.00',
             style: AppTypography.h3.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -226,7 +226,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
           value,
           style: AppTypography.h6.copyWith(
             color: color,
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
       ],
@@ -288,7 +288,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
               Text(
                 value,
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: color,
                 ),
               ),
@@ -305,7 +305,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
             subtitle,
             style: AppTypography.bodySmall.copyWith(
               color: color,
-              fontSize: 10,
+              fontSize: AppTypography.microSize,
             ),
           ),
         ],
@@ -399,7 +399,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
             Text(
               feature.title,
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
@@ -411,7 +411,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
               feature.subtitle,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontSize: 10,
+                fontSize: AppTypography.microSize,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -433,7 +433,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
             Text(
               'Recent Alerts',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -509,7 +509,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
                 Text(
                   title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -525,7 +525,7 @@ class _FarmOwnerDashboardNewState extends ConsumerState<FarmOwnerDashboardNew> {
                   time,
                   style: AppTypography.bodySmall.copyWith(
                     color: color,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                 ),
               ],

@@ -1,5 +1,5 @@
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 import 'sensor_gauge_card.dart';
 import 'live_sensor_card.dart';
@@ -108,9 +108,9 @@ class SensorOverviewPanel extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text('Sensor Readings',
-                style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary)),
           ),
           _statusChip(isDark, true),
@@ -118,17 +118,17 @@ class SensorOverviewPanel extends StatelessWidget {
         const SizedBox(height: 6),
         Row(children: [
           Text('Real-time monitoring data',
-              style: GoogleFonts.inter(
-                  fontSize: 11,
+              style: AppTypography.font(
+                  fontSize: AppTypography.fieldLabelSize,
                   color: isDark ? Colors.white38 : AppColors.textSecondary)),
           const Spacer(),
           if (onViewAllTap != null)
             GestureDetector(
               onTap: onViewAllTap,
               child: Text('View all',
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.fieldLabelSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: AppColors.primary)),
             ),
         ]),
@@ -145,14 +145,14 @@ class SensorOverviewPanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Sensor Readings',
-                style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
+                style: AppTypography.font(
+                    fontSize: AppTypography.sectionTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary)),
             const SizedBox(height: 2),
             Text('Real-time monitoring data',
-                style: GoogleFonts.inter(
-                    fontSize: 12,
+                style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white38 : AppColors.textSecondary)),
           ],
         ),
@@ -168,8 +168,8 @@ class SensorOverviewPanel extends StatelessWidget {
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Text('View all',
-                style: GoogleFonts.inter(
-                    fontSize: 12, fontWeight: FontWeight.w600)),
+                style: AppTypography.font(
+                    fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight)),
             const SizedBox(width: 4),
             const Icon(Icons.arrow_forward_ios_rounded, size: 11),
           ]),
@@ -207,9 +207,9 @@ class SensorOverviewPanel extends StatelessWidget {
                 color: AppColors.success, shape: BoxShape.circle)),
         SizedBox(width: compact ? 4 : 6),
         Text(compact ? 'Normal' : 'All Systems Normal',
-            style: GoogleFonts.inter(
-              fontSize: compact ? 9 : 11,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: compact ? AppTypography.microSize : AppTypography.fieldLabelSize,
+              fontWeight: AppTypography.headingWeight,
               color: AppColors.success,
             )),
       ]),
@@ -298,9 +298,9 @@ class SensorOverviewPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Additional Readings',
-            style: GoogleFonts.inter(
-              fontSize: mobile ? 12 : 13,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: mobile ? AppTypography.captionSize : AppTypography.actionSize,
+              fontWeight: AppTypography.headingWeight,
               letterSpacing: 0.3,
               color: isDark
                   ? Colors.white.withOpacity(0.45)

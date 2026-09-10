@@ -1,5 +1,5 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 import '../../core/widgets/notification_center.dart';
 
@@ -78,9 +78,9 @@ class OwnerHeader extends StatelessWidget implements PreferredSizeWidget {
                 // Greeting text below logo on small screens
                 Text(
                   "${_greeting()}, $adminName",
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: isVerySmall ? 16 : 18,
+                  style: AppTypography.font(
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: isVerySmall ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
                     color: isDark ? Colors.white : AppColors.darkBackground,
                     letterSpacing: 0.2,
                   ),
@@ -92,9 +92,9 @@ class OwnerHeader extends StatelessWidget implements PreferredSizeWidget {
                   children: [
                     Text(
                       subtitle,
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w400,
-                        fontSize: isVerySmall ? 12 : 13,
+                      style: AppTypography.font(
+                        fontWeight: AppTypography.bodyWeight,
+                        fontSize: isVerySmall ? AppTypography.captionSize : AppTypography.actionSize,
                         color: isDark
                             ? Colors.grey.shade400
                             : Colors.grey.shade600,
@@ -108,10 +108,10 @@ class OwnerHeader extends StatelessWidget implements PreferredSizeWidget {
                     const SizedBox(width: 4),
                     Text(
                       "Owner Panel",
-                      style: GoogleFonts.poppins(
+                      style: AppTypography.font(
                         color: isDark ? Colors.white : AppColors.darkBackground,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
+                        fontSize: AppTypography.bodySize,
+                        fontWeight: AppTypography.bodyWeight,
                       ),
                     ),
                   ],
@@ -141,9 +141,9 @@ class OwnerHeader extends StatelessWidget implements PreferredSizeWidget {
                     children: [
                       Text(
                         "${_greeting()}, $adminName",
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          fontSize: isVerySmall ? 16 : 20,
+                        style: AppTypography.font(
+                          fontWeight: AppTypography.headingWeight,
+                          fontSize: isVerySmall ? AppTypography.cardTitleSize : AppTypography.headingSize,
                           color:
                               isDark ? Colors.white : AppColors.darkBackground,
                           letterSpacing: 0.2,
@@ -156,9 +156,9 @@ class OwnerHeader extends StatelessWidget implements PreferredSizeWidget {
                         children: [
                           Text(
                             subtitle,
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w400,
-                              fontSize: isVerySmall ? 12 : 14,
+                            style: AppTypography.font(
+                              fontWeight: AppTypography.bodyWeight,
+                              fontSize: isVerySmall ? AppTypography.captionSize : AppTypography.bodySize,
                               color: isDark
                                   ? Colors.grey.shade400
                                   : Colors.grey.shade600,
@@ -174,12 +174,12 @@ class OwnerHeader extends StatelessWidget implements PreferredSizeWidget {
                             const SizedBox(width: 4),
                             Text(
                               "Owner Panel",
-                              style: GoogleFonts.poppins(
+                              style: AppTypography.font(
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.darkBackground,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
+                                fontSize: AppTypography.bodySize,
+                                fontWeight: AppTypography.bodyWeight,
                               ),
                             ),
                           ],

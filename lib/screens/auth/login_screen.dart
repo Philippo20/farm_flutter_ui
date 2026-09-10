@@ -1,3 +1,4 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../constants/colors.dart';
@@ -143,7 +144,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
           'Farm Estates Ltd',
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: AppColors.primary,
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
               ),
         ),
 
@@ -175,7 +176,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
               Text(
                 'Welcome Back',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: AppTypography.headingWeight,
                     ),
               ),
 
@@ -295,7 +296,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                     'Forgot Password?',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                   ),
                 ),
@@ -406,7 +407,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
             'Create Account',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                 ),
           ),
         ),

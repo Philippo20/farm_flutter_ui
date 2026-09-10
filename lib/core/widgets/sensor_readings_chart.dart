@@ -1,8 +1,8 @@
+import '../theme/app_typography.dart';
 import '../utils/sensor_thresholds.dart';
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 
@@ -47,8 +47,8 @@ class SensorReadingsChart extends StatelessWidget {
       if (valid.length != readings.length)
         Text(
             '${readings.length - valid.length} readings with missing or invalid values/timestamps are available in the records only.',
-            style: GoogleFonts.inter(
-                fontSize: 11,
+            style: AppTypography.font(
+                fontSize: AppTypography.fieldLabelSize,
                 color: Theme.of(context).colorScheme.onSurfaceVariant)),
     ]);
   }
@@ -92,31 +92,31 @@ class SensorReadingsChart extends StatelessWidget {
                   ? 'Reading value · unit unspecified'
                   : 'Reading value ($unit)',
               style:
-                  GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
+                  AppTypography.font(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight)),
           if (MediaQuery.sizeOf(context).width < 600) ...[
             const SizedBox(height: 8),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(
                   child: Text(rows.length.toString() + ' samples',
                       style:
-                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+                          AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary))),
               const SizedBox(width: 10),
               Expanded(
                   child: Text('Oldest to newest',
                       style:
-                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+                          AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary))),
             ]),
             const SizedBox(height: 8),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Expanded(
                   child: Text('Low ' + number.format(values.reduce(math.min)),
                       style:
-                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+                          AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary))),
               const SizedBox(width: 10),
               Expanded(
                   child: Text('High ' + number.format(values.reduce(math.max)),
                       style:
-                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+                          AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary))),
             ]),
             const SizedBox(height: 8),
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -126,7 +126,7 @@ class SensorReadingsChart extends StatelessWidget {
                           ? thresholds.normalLabel + ' ' + unit
                           : 'Thresholds unavailable for this unit or configuration',
                       style:
-                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+                          AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary))),
               const SizedBox(width: 10),
               Expanded(
                   child: Wrap(spacing: 8, runSpacing: 6, children: [
@@ -136,30 +136,30 @@ class SensorReadingsChart extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(label,
                         style:
-                            GoogleFonts.inter(fontSize: 10, color: secondary)),
+                            AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
                   ]),
               ])),
             ]),
             const SizedBox(height: 6),
             Text('Colors use current sensor thresholds',
-                style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+                style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
           ] else ...[
             const SizedBox(height: 5),
             Text('${rows.length} samples · oldest to newest',
-                style: GoogleFonts.inter(fontSize: 11, color: secondary)),
+                style: AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary)),
             const SizedBox(height: 12),
             Wrap(spacing: 16, runSpacing: 6, children: [
               Text('Low ${number.format(values.reduce(math.min))}',
-                  style: GoogleFonts.inter(fontSize: 11, color: secondary)),
+                  style: AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary)),
               Text('High ${number.format(values.reduce(math.max))}',
-                  style: GoogleFonts.inter(fontSize: 11, color: secondary)),
+                  style: AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary)),
             ]),
             const SizedBox(height: 12),
             Text(
                 thresholds.valid
                     ? '${thresholds.normalLabel} $unit'
                     : 'Thresholds unavailable for this unit or configuration',
-                style: GoogleFonts.inter(fontSize: 11, color: secondary)),
+                style: AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary)),
             const SizedBox(height: 8),
             Wrap(spacing: 12, runSpacing: 8, children: [
               for (final label in ['Good', 'Bad', 'Unrated'])
@@ -167,12 +167,12 @@ class SensorReadingsChart extends StatelessWidget {
                   Icon(Icons.circle, size: 8, color: _statusColor(label)),
                   const SizedBox(width: 5),
                   Text(label,
-                      style: GoogleFonts.inter(fontSize: 10, color: secondary))
+                      style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary))
                 ])
             ]),
             const SizedBox(height: 6),
             Text('Colors use current sensor thresholds',
-                style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+                style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
           ],
           const SizedBox(height: 18),
           LayoutBuilder(
@@ -238,8 +238,8 @@ class SensorReadingsChart extends StatelessWidget {
                                         interval: (maxY - minY) / 4,
                                         getTitlesWidget: (value, meta) => Text(
                                             number.format(value),
-                                            style: GoogleFonts.inter(
-                                                fontSize: 9,
+                                            style: AppTypography.font(
+                                                fontSize: AppTypography.microSize,
                                                 color: secondary)))),
                                 bottomTitles: AxisTitles(
                                     sideTitles: SideTitles(
@@ -253,8 +253,8 @@ class SensorReadingsChart extends StatelessWidget {
                                               padding:
                                                   const EdgeInsets.only(top: 8),
                                               child: Text(stamp(index, 'HH:mm'),
-                                                  style: GoogleFonts.inter(
-                                                      fontSize: 9,
+                                                  style: AppTypography.font(
+                                                      fontSize: AppTypography.microSize,
                                                       color: secondary)));
                                         }))),
                             barTouchData: BarTouchData(
@@ -269,8 +269,8 @@ class SensorReadingsChart extends StatelessWidget {
                                             compact
                                                 ? '${rows[index]['value']} $unit\n${stamp(index, 'HH:mm:ss')} · ${thresholds.classify(values[index])}'
                                                 : '${rows[index]['value']} $unit\n${stamp(index, 'd MMM yyyy, HH:mm:ss')}\n${thresholds.classify(values[index])} · current thresholds\nRecorded: ${rows[index]['status'] ?? 'Unknown status'}',
-                                            GoogleFonts.inter(
-                                                fontSize: 11,
+                                            AppTypography.font(
+                                                fontSize: AppTypography.fieldLabelSize,
                                                 color: Colors.white)))),
                             barGroups: [
                               for (var i = 0; i < rows.length; i++)
@@ -294,10 +294,10 @@ class SensorReadingsChart extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
               '${stamp(0, 'd MMM, HH:mm')} — ${stamp(rows.length - 1, 'd MMM, HH:mm')}',
-              style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+              style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
           const SizedBox(height: 4),
           Text('Tap or hover for details · scroll sideways for more',
-              style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+              style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
         ]));
   }
 }

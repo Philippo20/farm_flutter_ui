@@ -57,7 +57,7 @@ class _SalesPersonnelDashboardState
               Text(
                 'Sales Operations',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -110,7 +110,7 @@ class _SalesPersonnelDashboardState
                   'Sales & Delivery',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -167,7 +167,7 @@ class _SalesPersonnelDashboardState
               Text(
                 'Today\'s Deliveries',
                 style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -202,7 +202,7 @@ class _SalesPersonnelDashboardState
         Text(
           count,
           style: AppTypography.h4.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: color,
           ),
         ),
@@ -211,7 +211,7 @@ class _SalesPersonnelDashboardState
           label,
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
-            fontSize: 11,
+            fontSize: AppTypography.fieldLabelSize,
           ),
         ),
       ],
@@ -305,7 +305,7 @@ class _SalesPersonnelDashboardState
                 Text(
                   feature.title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                   textAlign: TextAlign.center,
@@ -317,7 +317,7 @@ class _SalesPersonnelDashboardState
                   feature.subtitle,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
@@ -342,8 +342,8 @@ class _SalesPersonnelDashboardState
                     feature.badge!,
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.w500,
+                      fontSize: AppTypography.microSize,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ),
@@ -361,7 +361,7 @@ class _SalesPersonnelDashboardState
         Text(
           'Active Deliveries',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -422,7 +422,7 @@ class _SalesPersonnelDashboardState
                 Text(
                   batchNumber,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -431,7 +431,7 @@ class _SalesPersonnelDashboardState
                   company,
                   style: AppTypography.bodySmall.copyWith(
                     color: color,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -439,7 +439,7 @@ class _SalesPersonnelDashboardState
                   details,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontSize: 11,
+                    fontSize: AppTypography.fieldLabelSize,
                   ),
                 ),
               ],
@@ -458,8 +458,8 @@ class _SalesPersonnelDashboardState
               status,
               style: AppTypography.bodySmall.copyWith(
                 color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
+                fontSize: AppTypography.microSize,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -475,7 +475,7 @@ class _SalesPersonnelDashboardState
         Text(
           'Off-Taker Pipeline',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -541,7 +541,7 @@ class _SalesPersonnelDashboardState
                 Text(
                   company,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -562,8 +562,8 @@ class _SalesPersonnelDashboardState
                         stage,
                         style: AppTypography.bodySmall.copyWith(
                           color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w500,
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -574,7 +574,7 @@ class _SalesPersonnelDashboardState
                         style: AppTypography.bodySmall.copyWith(
                           color:
                               isDark ? Colors.white60 : AppColors.textSecondary,
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                         ),
                       ),
                     ),

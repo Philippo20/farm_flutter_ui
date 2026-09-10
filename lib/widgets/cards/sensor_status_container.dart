@@ -1,5 +1,5 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class EnergyConsumptionContainer extends StatefulWidget {
   final bool isDark;
@@ -63,9 +63,9 @@ class _EnergyConsumptionContainerState extends State<EnergyConsumptionContainer>
               children: [
                 Text(
                   'Energy Overview',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.sectionTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
@@ -168,7 +168,7 @@ class _EnergyConsumptionContainerState extends State<EnergyConsumptionContainer>
                     children: [
                       const Icon(Icons.electrical_services, size: 20),
                       const SizedBox(width: 8),
-                      Text('Grid', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+                      Text('Grid', style: AppTypography.font(fontWeight: AppTypography.labelWeight)),
                     ],
                   ),
                 ),
@@ -178,7 +178,7 @@ class _EnergyConsumptionContainerState extends State<EnergyConsumptionContainer>
                     children: [
                       const Icon(Icons.solar_power, size: 20),
                       const SizedBox(width: 8),
-                      Text('Solar', style: GoogleFonts.poppins(fontWeight: FontWeight.w500)),
+                      Text('Solar', style: AppTypography.font(fontWeight: AppTypography.labelWeight)),
                     ],
                   ),
                 ),
@@ -225,7 +225,7 @@ class _EnergyConsumptionContainerState extends State<EnergyConsumptionContainer>
                 Icon(Icons.bar_chart, size: 40, color: Colors.blue),
                 const SizedBox(height: 10),
                 Text('Grid Consumption Chart',
-                    style: GoogleFonts.inter(color: isDark ? Colors.white70 : Colors.black54)),
+                    style: AppTypography.font(color: isDark ? Colors.white70 : Colors.black54)),
               ],
             ),
           ),
@@ -303,7 +303,7 @@ Widget _buildSolarProduction(bool isDark) {
                 Icon(Icons.show_chart, size: 40, color: Colors.orange),
                 const SizedBox(height: 10),
                 Text('Solar Production Chart',
-                    style: GoogleFonts.inter(color: isDark ? Colors.white70 : Colors.black54)),
+                    style: AppTypography.font(color: isDark ? Colors.white70 : Colors.black54)),
               ],
             ),
           ),
@@ -410,17 +410,17 @@ Widget _buildSolarProduction(bool isDark) {
           children: [
             Text(
               title,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.fieldLabelSize,
+                fontWeight: AppTypography.labelWeight,
                 color: isDark ? Colors.white70 : Colors.black54,
               ),
             ),
             Text(
               value,
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
+              style: AppTypography.font(
+                fontSize: AppTypography.cardTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : Colors.black,
               ),
             ),
@@ -466,16 +466,16 @@ Widget _buildSolarProduction(bool isDark) {
               children: [
                 Text(
                   'Net Energy Today',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 Text(
                   '18.4 kWh from solar (64% of total)',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.actionSize,
                     color: isDark ? Colors.white70 : Colors.black54,
                   ),
                 ),
@@ -498,9 +498,9 @@ Widget _buildSolarProduction(bool isDark) {
                 const SizedBox(width: 6),
                 Text(
                   'Eco Mode',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: Colors.green,
                   ),
                 ),

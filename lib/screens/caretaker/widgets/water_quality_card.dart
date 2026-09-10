@@ -72,7 +72,7 @@ class WaterQualityCard extends StatelessWidget {
                       Text(
                         'Water Quality',
                         style: AppTypography.h6.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -176,7 +176,7 @@ class WaterQualityCard extends StatelessWidget {
                       _getStatusMessage(overallStatus),
                       style: AppTypography.bodySmall.copyWith(
                         color: _getStatusColor(overallStatus),
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -222,7 +222,7 @@ class WaterQualityCard extends StatelessWidget {
                   label,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white70 : AppColors.textSecondary,
-                    fontSize: 11,
+                    fontSize: AppTypography.fieldLabelSize,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -238,7 +238,7 @@ class WaterQualityCard extends StatelessWidget {
                 child: Text(
                   value,
                   style: AppTypography.h5.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                     color: statusColor,
                   ),
                   maxLines: 1,
@@ -252,7 +252,7 @@ class WaterQualityCard extends StatelessWidget {
                   unit,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                 ),
               ),
@@ -284,8 +284,8 @@ class WaterQualityCard extends StatelessWidget {
             status.toUpperCase(),
             style: AppTypography.bodySmall.copyWith(
               color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 10,
+              fontWeight: AppTypography.headingWeight,
+              fontSize: AppTypography.microSize,
             ),
           ),
         ],

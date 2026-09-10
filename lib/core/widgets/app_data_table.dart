@@ -279,7 +279,7 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                 Text(
                   '${_selectedItems.length} selected',
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: AppColors.primary,
                   ),
                 ),
@@ -589,7 +589,7 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
               child: Text(
                 column.label,
                 style: AppTypography.labelLarge.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
                 overflow: TextOverflow.ellipsis,
@@ -688,7 +688,7 @@ class _AppDataTableState<T> extends State<AppDataTable<T>> {
                 child: Text(
                   '${pagination.currentPage}',
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: AppColors.primary,
                   ),
                 ),

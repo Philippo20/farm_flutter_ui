@@ -448,7 +448,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           Text(
             'User Management',
             style: AppTypography.h5.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -487,7 +487,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             Text(
               'User Management',
               style: AppTypography.h4.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -533,7 +533,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 child: Text(
                   'All Users',
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -542,7 +542,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 '${filteredUsers.length} records',
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white60 : AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ],
@@ -594,7 +594,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           letterSpacing: 0.2,
         ),
       ),
@@ -615,8 +615,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           text,
           style: TextStyle(
             color: color,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
+            fontSize: AppTypography.fieldLabelSize,
+            fontWeight: AppTypography.labelWeight,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -786,8 +786,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     Text(
                       stat['value'] as String,
                       style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
+                          fontSize: AppTypography.headingSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: stat['color'] as Color),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -795,7 +795,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     Text(
                       stat['title'] as String,
                       style: TextStyle(
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                           color: (stat['color'] as Color).withOpacity(0.8)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -831,7 +831,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             color: isSelected
                 ? AppColors.primary
                 : (isDark ? Colors.white70 : AppColors.textSecondary),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
           ),
         );
       }).toList(),
@@ -865,7 +865,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     user['name'].toString().substring(0, 1),
                     style: const TextStyle(
                       color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ),
@@ -876,14 +876,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     children: [
                       Text(user['name'],
                           style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
+                              fontWeight: AppTypography.labelWeight,
+                              fontSize: AppTypography.bodySize,
                               color: isDark
                                   ? Colors.white
                                   : AppColors.textPrimary)),
                       Text('${user['id']} | ${user['email']}',
                           style: TextStyle(
-                              fontSize: 11,
+                              fontSize: AppTypography.fieldLabelSize,
                               color: isDark
                                   ? Colors.white54
                                   : AppColors.textSecondary),
@@ -901,8 +901,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             child: Text(
               user['department'],
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontSize: AppTypography.actionSize,
+                fontWeight: AppTypography.labelWeight,
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
               ),
               maxLines: 1,
@@ -913,7 +913,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           Expanded(
             child: Text(user['joined'],
                 style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary)),
           ),
           _buildUserActionButtons(user, isDark),
@@ -951,15 +951,15 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               children: [
                 Text(label,
                     style: AppTypography.bodySmall.copyWith(
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                         color: secondary,
-                        fontWeight: FontWeight.w500)),
+                        fontWeight: AppTypography.labelWeight)),
                 const SizedBox(height: 3),
                 Text(text.isEmpty ? 'Not provided' : text,
                     style: AppTypography.bodySmall.copyWith(
-                        fontSize: 12,
+                        fontSize: AppTypography.captionSize,
                         color: foreground,
-                        fontWeight: FontWeight.w600)),
+                        fontWeight: AppTypography.headingWeight)),
               ],
             ),
           ),
@@ -997,7 +997,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 ),
                 child: Text(initials,
                     style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.primary, fontWeight: FontWeight.w700)),
+                        color: AppColors.primary, fontWeight: AppTypography.headingWeight)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1006,13 +1006,13 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 children: [
                   Text(name.isEmpty ? 'Unnamed User' : name,
                       style: AppTypography.bodyMedium.copyWith(
-                          fontSize: 14,
+                          fontSize: AppTypography.bodySize,
                           color: foreground,
-                          fontWeight: FontWeight.w700)),
+                          fontWeight: AppTypography.headingWeight)),
                   const SizedBox(height: 4),
                   Text((user['email'] ?? '').toString(),
                       style: AppTypography.bodySmall
-                          .copyWith(fontSize: 12, color: secondary)),
+                          .copyWith(fontSize: AppTypography.captionSize, color: secondary)),
                 ],
               )),
             ],
@@ -1083,7 +1083,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                 side: BorderSide(
                     color: isDark ? Colors.white12 : AppColors.neutral200),
                 shape: RoundedRectangleBorder(
@@ -1106,7 +1106,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
@@ -1126,7 +1126,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       ),
       child: Text(label,
           style: AppTypography.bodySmall.copyWith(
-              fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+              fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight, color: color)),
     );
   }
 
@@ -1153,7 +1153,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 child: Text(
                   user['name'].toString().substring(0, 1),
                   style: const TextStyle(
-                      color: AppColors.primary, fontWeight: FontWeight.w500),
+                      color: AppColors.primary, fontWeight: AppTypography.labelWeight),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -1164,8 +1164,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     Text(
                       user['name'],
                       style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
+                        fontWeight: AppTypography.labelWeight,
+                        fontSize: AppTypography.bodySize,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                       maxLines: 1,
@@ -1175,7 +1175,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     Text(
                       user['email'],
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: AppTypography.captionSize,
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
                       ),
@@ -1195,8 +1195,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   user['status'],
                   style: TextStyle(
                       color: statusColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500),
+                      fontSize: AppTypography.fieldLabelSize,
+                      fontWeight: AppTypography.labelWeight),
                 ),
               ),
             ],
@@ -1286,7 +1286,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       child: Text(
         '$label: $value',
         style: TextStyle(
-          fontSize: 11,
+          fontSize: AppTypography.fieldLabelSize,
           color: isDark ? Colors.white70 : AppColors.textSecondary,
         ),
       ),
@@ -1344,7 +1344,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 const SizedBox(width: 10),
                 Text(label,
                     style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600)),
+                        fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
               ])),
         )),
     ]);
@@ -1612,7 +1612,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               Text(
                 'Delete User?',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),

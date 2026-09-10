@@ -56,7 +56,7 @@ class _PackagingSupervisorDashboardState
               Text(
                 'Packaging Operations',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -109,7 +109,7 @@ class _PackagingSupervisorDashboardState
                   'Packaging Station',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -166,7 +166,7 @@ class _PackagingSupervisorDashboardState
               Text(
                 'Today\'s Progress',
                 style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -216,7 +216,7 @@ class _PackagingSupervisorDashboardState
         Text(
           value,
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: color,
           ),
         ),
@@ -224,7 +224,7 @@ class _PackagingSupervisorDashboardState
           unit,
           style: AppTypography.bodySmall.copyWith(
             color: color,
-            fontSize: 10,
+            fontSize: AppTypography.microSize,
           ),
         ),
         const SizedBox(height: 4),
@@ -232,7 +232,7 @@ class _PackagingSupervisorDashboardState
           label,
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
-            fontSize: 11,
+            fontSize: AppTypography.fieldLabelSize,
           ),
         ),
       ],
@@ -309,7 +309,7 @@ class _PackagingSupervisorDashboardState
             Text(
               feature.title,
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
@@ -321,7 +321,7 @@ class _PackagingSupervisorDashboardState
               feature.subtitle,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontSize: 10,
+                fontSize: AppTypography.microSize,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -340,7 +340,7 @@ class _PackagingSupervisorDashboardState
         Text(
           'Active Batches',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -404,7 +404,7 @@ class _PackagingSupervisorDashboardState
                     Text(
                       batchNumber,
                       style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -432,8 +432,8 @@ class _PackagingSupervisorDashboardState
                   status,
                   style: AppTypography.bodySmall.copyWith(
                     color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                    fontSize: AppTypography.microSize,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ),
@@ -456,8 +456,8 @@ class _PackagingSupervisorDashboardState
                 progress,
                 style: AppTypography.bodySmall.copyWith(
                   color: color,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 11,
+                  fontWeight: AppTypography.labelWeight,
+                  fontSize: AppTypography.fieldLabelSize,
                 ),
               ),
             ],
@@ -474,7 +474,7 @@ class _PackagingSupervisorDashboardState
         Text(
           'Waste Summary',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -502,14 +502,14 @@ class _PackagingSupervisorDashboardState
                   Text(
                     'Total Waste Today',
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
                   Text(
                     '15 kg',
                     style: AppTypography.h6.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: AppColors.error,
                     ),
                   ),
@@ -539,7 +539,7 @@ class _PackagingSupervisorDashboardState
           Text(
             amount,
             style: AppTypography.bodySmall.copyWith(
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -548,7 +548,7 @@ class _PackagingSupervisorDashboardState
             percentage,
             style: AppTypography.bodySmall.copyWith(
               color: AppColors.error,
-              fontSize: 10,
+              fontSize: AppTypography.microSize,
             ),
           ),
         ],

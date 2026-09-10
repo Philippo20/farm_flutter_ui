@@ -305,7 +305,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                 Text(
                   'Delete Backup?',
                   style: AppTypography.h5.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -353,7 +353,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                             Text(
                               backup.name,
                               style: TextStyle(
-                                fontWeight: FontWeight.w500,
+                                fontWeight: AppTypography.labelWeight,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -362,7 +362,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                             Text(
                               '${backup.farm} | ${backup.date} | ${backup.size}',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white60
                                     : AppColors.textSecondary,
@@ -396,8 +396,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                           'This action cannot be undone. The storage file and metadata record will both be deleted.',
                           style: TextStyle(
                             color: AppColors.error,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            fontSize: AppTypography.captionSize,
+                            fontWeight: AppTypography.labelWeight,
                           ),
                         ),
                       ),
@@ -891,7 +891,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                 'Disaster recovery command center',
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white : AppColors.primary,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ],
@@ -902,7 +902,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           'Backup & Restore',
           style: AppTypography.h4.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: 6),
@@ -934,7 +934,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             _selectedScope == 'global' ? 'Global Coverage' : 'Selected Farm',
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -957,7 +957,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                       summary.name,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     Text(
@@ -1131,7 +1131,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               summary.name,
               style: AppTypography.bodyLarge.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1284,7 +1284,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                     action.title,
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1401,7 +1401,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             'No backup records found',
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: 4),
@@ -1493,7 +1493,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                       Text(
                         backup.name,
                         style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                         maxLines: 1,
@@ -1520,7 +1520,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               backup.farm,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -1529,7 +1529,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               backup.size,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -1611,7 +1611,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                       backup.name,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1652,7 +1652,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           const SizedBox(height: AppSpacing.md),
           Text('Created ${backup.date}',
               style: AppTypography.bodySmall.copyWith(
-                  fontSize: 11,
+                  fontSize: AppTypography.fieldLabelSize,
                   color: isDark ? Colors.white60 : AppColors.textSecondary)),
           const SizedBox(height: 12),
           Wrap(spacing: 8, runSpacing: 8, children: [
@@ -1682,7 +1682,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
         minimumSize: const Size(0, 44),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         textStyle: AppTypography.bodySmall
-            .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+            .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
         side: BorderSide(color: color.withValues(alpha: .25)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -1697,7 +1697,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           title,
           style: AppTypography.h6.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: 4),
@@ -1726,7 +1726,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           value,
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -1750,7 +1750,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white54 : AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
             ),
           ),
           const SizedBox(height: 3),
@@ -1758,7 +1758,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             value,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1783,7 +1783,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
         '$count recovery point${count == 1 ? '' : 's'}',
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white : AppColors.primary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -1803,8 +1803,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           text,
           style: AppTypography.bodySmall.copyWith(
             color: color,
-            fontWeight: FontWeight.w500,
-            fontSize: 11,
+            fontWeight: AppTypography.labelWeight,
+            fontSize: AppTypography.fieldLabelSize,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -1824,7 +1824,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           letterSpacing: 0.2,
         ),
       ),
@@ -1855,8 +1855,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             text,
             style: AppTypography.bodySmall.copyWith(
               color: chipColor,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
+              fontSize: AppTypography.fieldLabelSize,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -1950,7 +1950,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                               'Create Backup',
                               style: AppTypography.h6.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: AppTypography.headingWeight,
                               ),
                             ),
                             Text(
@@ -2040,7 +2040,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                                 'The backup will be encrypted, verified, and added to the selected recovery scope.',
                                 style: AppTypography.bodySmall.copyWith(
                                   color: AppColors.info,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: AppTypography.labelWeight,
                                 ),
                               ),
                             ),
@@ -2074,7 +2074,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                                   dialogError!,
                                   style: AppTypography.bodySmall.copyWith(
                                     color: AppColors.error,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: AppTypography.labelWeight,
                                     height: 1.35,
                                   ),
                                 ),
@@ -2229,7 +2229,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               Text(
                 'Restore Backup?',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -2277,7 +2277,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                           Text(
                             backup.name,
                             style: TextStyle(
-                              fontWeight: FontWeight.w500,
+                              fontWeight: AppTypography.labelWeight,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
                             ),
@@ -2285,7 +2285,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                           Text(
                             '${backup.farm} | ${backup.date} | ${backup.size}',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: AppTypography.captionSize,
                               color: isDark
                                   ? Colors.white60
                                   : AppColors.textSecondary,
@@ -2321,8 +2321,8 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                             : 'Farm restore affects only ${backup.farm} records.',
                         style: const TextStyle(
                           color: AppColors.error,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -2406,7 +2406,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
   Widget _buildFormLabel(String label, bool isDark) => Text(
         label,
         style: AppTypography.bodyMedium.copyWith(
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           color: isDark ? Colors.white : AppColors.textPrimary,
         ),
       );
@@ -2488,7 +2488,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
           style: TextStyle(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: 14,
+            fontSize: AppTypography.bodySize,
           ),
           items: items
               .map(

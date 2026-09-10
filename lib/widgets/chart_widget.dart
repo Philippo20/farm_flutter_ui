@@ -47,7 +47,7 @@ class SimpleLineChart extends StatelessWidget {
           Text(
             title,
             style: AppTypography.titleSmall.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           SizedBox(height: AppSpacing.sm),
@@ -230,7 +230,7 @@ class SimpleBarChart extends StatelessWidget {
           Text(
             title,
             style: AppTypography.titleSmall.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           SizedBox(height: AppSpacing.md),
@@ -249,7 +249,7 @@ class SimpleBarChart extends StatelessWidget {
                         Text(
                           data[index].toStringAsFixed(1),
                           style: AppTypography.caption.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: AppTypography.headingWeight,
                             color: color,
                           ),
                         ),

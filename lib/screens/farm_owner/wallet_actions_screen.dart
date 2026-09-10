@@ -113,7 +113,7 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
           'Wallet Actions',
           style: AppTypography.h4.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: 4),
@@ -195,7 +195,7 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
                     title,
                     style: AppTypography.bodyLarge.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -310,7 +310,7 @@ class _WalletActionsScreenState extends ConsumerState<WalletActionsScreen> {
                                   ? Colors.white.withOpacity(0.5)
                                   : AppColors.textSecondary),
                           fontWeight:
-                              selected ? FontWeight.w600 : FontWeight.normal,
+                              selected ? AppTypography.headingWeight : AppTypography.bodyWeight,
                         ),
                       ),
                     ],

@@ -75,7 +75,7 @@ class _FulfillmentSettingsScreenState
             'Fulfillment Settings',
             style: AppTypography.h4.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -184,7 +184,7 @@ class _FulfillmentSettingsScreenState
           title,
           style: AppTypography.bodyLarge.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -220,7 +220,7 @@ class _FulfillmentSettingsScreenState
                 label,
                 style: AppTypography.bodyMedium.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ),
@@ -258,7 +258,7 @@ class _FulfillmentSettingsScreenState
                   title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 2),

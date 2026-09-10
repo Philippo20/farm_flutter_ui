@@ -1,5 +1,5 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 
 class FarmPerformanceCard extends StatefulWidget {
@@ -37,10 +37,10 @@ class _FarmPerformanceCardState extends State<FarmPerformanceCard> {
         constraints: const BoxConstraints(maxWidth: 200),
         child: Text(
           "Current metrics across all agricultural sites",
-          style: GoogleFonts.inter(
-            fontSize: 14,
+          style: AppTypography.font(
+            fontSize: AppTypography.bodySize,
             color: secondaryTextColor,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
           overflow: TextOverflow.ellipsis,
           maxLines: 2,
@@ -48,10 +48,10 @@ class _FarmPerformanceCardState extends State<FarmPerformanceCard> {
       )
     : Text(
         "Current metrics across all agricultural sites",
-        style: GoogleFonts.inter(
-          fontSize: 14,
+        style: AppTypography.font(
+          fontSize: AppTypography.bodySize,
           color: secondaryTextColor,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       );    
 
@@ -84,9 +84,9 @@ class _FarmPerformanceCardState extends State<FarmPerformanceCard> {
                 flex: 2,
                 child: Text(
                   "FARM DETAILS",
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: secondaryTextColor,
                     letterSpacing: 0.5,
                   ),
@@ -97,9 +97,9 @@ class _FarmPerformanceCardState extends State<FarmPerformanceCard> {
                         child: Center(
                           child: Text(
                             title,
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
+                            style: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: secondaryTextColor,
                               letterSpacing: 0.5,
                             ),
@@ -151,17 +151,17 @@ class _FarmPerformanceCardState extends State<FarmPerformanceCard> {
                       children: [
                         Text(
                           farm.name,
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.cardTitleSize,
+                            fontWeight: AppTypography.headingWeight,
                             color: textColor,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           farm.owner,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.actionSize,
                             color: secondaryTextColor,
                           ),
                         ),
@@ -176,8 +176,8 @@ class _FarmPerformanceCardState extends State<FarmPerformanceCard> {
                             const SizedBox(width: 4),
                             Text(
                               farm.location,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
+                              style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: secondaryTextColor,
                               ),
                             ),
@@ -222,9 +222,9 @@ class _FarmPerformanceCardState extends State<FarmPerformanceCard> {
                         ),
                         child: Text(
                           farm.sensors.toString(),
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.bodySize,
+                            fontWeight: AppTypography.headingWeight,
                             color: Colors.blue[400],
                           ),
                         ),
@@ -258,9 +258,9 @@ class _FarmPerformanceCardState extends State<FarmPerformanceCard> {
                             const SizedBox(width: 4),
                             Text(
                               farm.issues.toString(),
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                              style: AppTypography.font(
+                                fontSize: AppTypography.bodySize,
+                                fontWeight: AppTypography.headingWeight,
                                 color: farm.issues > 3
                                     ? Colors.red[400]
                                     : Colors.green[400],
@@ -325,10 +325,10 @@ class _FarmPerformanceCardState extends State<FarmPerformanceCard> {
                   children: [
                     Text(
                       "Farm Performance",
-                      style: GoogleFonts.poppins(
+                      style: AppTypography.font(
                         
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: textColor,
                       ),
                     ),
@@ -401,9 +401,9 @@ class _CircularProgress extends StatelessWidget {
               ),
               Text(
                 '${(value * 100).toInt()}${showPercentageSymbol ? '%' : ''}',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
+                style: AppTypography.font(
+                  fontSize: AppTypography.microSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: color,
                 ),
               ),
@@ -413,9 +413,9 @@ class _CircularProgress extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
+          style: AppTypography.font(
+            fontSize: AppTypography.fieldLabelSize,
+            fontWeight: AppTypography.labelWeight,
             color: isDark
                 ? Colors.white.withOpacity(0.8)
                 : Colors.black.withOpacity(0.7),

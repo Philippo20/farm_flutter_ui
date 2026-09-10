@@ -72,7 +72,7 @@ class PhControlCard extends StatelessWidget {
                     Text(
                       controlName,
                       style: AppTypography.h6.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -80,7 +80,7 @@ class PhControlCard extends StatelessWidget {
                       isOn ? 'Auto Mode' : 'Manual Only',
                       style: AppTypography.bodySmall.copyWith(
                         color: isOn ? Colors.purple : Colors.grey,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ],
@@ -170,7 +170,7 @@ class PhControlCard extends StatelessWidget {
           Text(
             value,
             style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -178,7 +178,7 @@ class PhControlCard extends StatelessWidget {
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
             ),
           ),
         ],

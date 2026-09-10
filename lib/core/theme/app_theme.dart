@@ -5,6 +5,7 @@ import 'app_typography.dart';
 class AppTheme {
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
+    fontFamily: AppTypography.font().fontFamily,
     brightness: Brightness.light,
     colorScheme: ColorScheme.light(
       primary: AppColors.primary,
@@ -13,18 +14,7 @@ class AppTheme {
       surface: AppColors.surfaceLight,
     ),
     scaffoldBackgroundColor: AppColors.backgroundLight,
-    textTheme: TextTheme(
-      displayLarge: AppTypography.h1,
-      displayMedium: AppTypography.h2,
-      displaySmall: AppTypography.h3,
-      headlineMedium: AppTypography.h4,
-      headlineSmall: AppTypography.h5,
-      titleLarge: AppTypography.h6,
-      bodyLarge: AppTypography.bodyLarge,
-      bodyMedium: AppTypography.bodyMedium,
-      bodySmall: AppTypography.bodySmall,
-      labelLarge: AppTypography.labelLarge,
-    ),
+    textTheme: AppTypography.textTheme,
     // SnackBar theme for light mode
     snackBarTheme: SnackBarThemeData(
       backgroundColor: AppColors.surfaceDark,
@@ -62,6 +52,7 @@ class AppTheme {
 
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
+    fontFamily: AppTypography.font().fontFamily,
     brightness: Brightness.dark,
     colorScheme: ColorScheme.dark(
       primary: AppColors.primary,
@@ -70,18 +61,7 @@ class AppTheme {
       surface: AppColors.surfaceDark,
     ),
     scaffoldBackgroundColor: AppColors.backgroundDark,
-    textTheme: TextTheme(
-      displayLarge: AppTypography.h1,
-      displayMedium: AppTypography.h2,
-      displaySmall: AppTypography.h3,
-      headlineMedium: AppTypography.h4,
-      headlineSmall: AppTypography.h5,
-      titleLarge: AppTypography.h6,
-      bodyLarge: AppTypography.bodyLarge,
-      bodyMedium: AppTypography.bodyMedium,
-      bodySmall: AppTypography.bodySmall,
-      labelLarge: AppTypography.labelLarge,
-    ).apply(
+    textTheme: AppTypography.textTheme.apply(
         bodyColor: AppColors.textOnDark, displayColor: AppColors.textOnDark),
     // SnackBar theme for dark mode
     snackBarTheme: SnackBarThemeData(

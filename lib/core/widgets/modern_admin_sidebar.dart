@@ -160,7 +160,7 @@ class AdminDrawer extends StatelessWidget {
                       userName.isEmpty ? 'A' : userName[0].toUpperCase(),
                       style: AppTypography.h4.copyWith(
                         color: Colors.white,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -175,7 +175,7 @@ class AdminDrawer extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.h6.copyWith(
                             color: Colors.white,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -224,12 +224,12 @@ class AdminDrawer extends StatelessWidget {
                     title: Text(
                       item.label,
                       style: AppTypography.bodyMedium.copyWith(
-                        fontSize: 15,
+                        fontSize: AppTypography.cardTitleSize,
                         color: selected
                             ? AppColors.primary
                             : (isDark ? Colors.white : AppColors.textPrimary),
                         fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w500,
+                            selected ? AppTypography.headingWeight : AppTypography.labelWeight,
                       ),
                     ),
                     selected: selected,
@@ -280,9 +280,9 @@ class AdminDrawer extends StatelessWidget {
                       child: Text(
                         userName.isEmpty ? 'A' : userName[0].toUpperCase(),
                         style: AppTypography.bodyMedium.copyWith(
-                          fontSize: 18,
+                          fontSize: AppTypography.sectionTitleSize,
                           color: Colors.white,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -297,7 +297,7 @@ class AdminDrawer extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodyMedium.copyWith(
-                            fontSize: 15,
+                            fontSize: AppTypography.cardTitleSize,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
                           ),
@@ -308,7 +308,7 @@ class AdminDrawer extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.caption.copyWith(
-                            fontSize: 12,
+                            fontSize: AppTypography.captionSize,
                             color: isDark
                                 ? Colors.white.withOpacity(0.7)
                                 : AppColors.textSecondary,
@@ -357,9 +357,9 @@ class AdminDrawer extends StatelessWidget {
                         Text(
                           'Logout',
                           style: AppTypography.bodyMedium.copyWith(
-                            fontSize: 15,
+                            fontSize: AppTypography.cardTitleSize,
                             color: AppColors.error,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: AppTypography.labelWeight,
                           ),
                         ),
                       ],
@@ -778,11 +778,11 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
                                 .textTheme
                                 .labelSmall
                                 ?.copyWith(
-                                  fontSize: 11,
+                                  fontSize: AppTypography.fieldLabelSize,
                                   color: isDark
                                       ? Colors.white.withOpacity(0.7)
                                       : AppColors.textSecondary,
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: AppTypography.labelWeight,
                                   letterSpacing: 0.2,
                                 ),
                             overflow: TextOverflow.ellipsis,
@@ -971,15 +971,15 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
                             item.label,
                             textAlign: TextAlign.left,
                             style: AppTypography.bodyMedium.copyWith(
-                              fontSize: 13,
+                              fontSize: AppTypography.actionSize,
                               color: isSelected
                                   ? AppColors.primary
                                   : (isDark
                                       ? Colors.white
                                       : AppColors.textPrimary),
                               fontWeight: isSelected
-                                  ? FontWeight.w500
-                                  : FontWeight.w500,
+                                  ? AppTypography.labelWeight
+                                  : AppTypography.labelWeight,
                               letterSpacing: 0.1,
                             ),
                           ),
@@ -1062,9 +1062,9 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
                       ? widget.userName[0].toUpperCase()
                       : 'A',
                   style: AppTypography.bodyMedium.copyWith(
-                    fontSize: 18,
+                    fontSize: AppTypography.sectionTitleSize,
                     color: Colors.white,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ),
@@ -1078,8 +1078,8 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
                   Text(
                     widget.userName,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
+                      fontSize: AppTypography.cardTitleSize,
+                      fontWeight: AppTypography.labelWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                     maxLines: 1,
@@ -1089,11 +1089,11 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
                   Text(
                     widget.userRole,
                     style: AppTypography.caption.copyWith(
-                      fontSize: 13,
+                      fontSize: AppTypography.actionSize,
                       color: isDark
                           ? Colors.white.withOpacity(0.7)
                           : AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -1159,9 +1159,9 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
                         child: Text(
                           'Logout',
                           style: AppTypography.bodyMedium.copyWith(
-                            fontSize: 13,
+                            fontSize: AppTypography.actionSize,
                             color: AppColors.error,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: AppTypography.labelWeight,
                           ),
                         ),
                       ),

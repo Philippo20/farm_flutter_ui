@@ -6,7 +6,6 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -289,7 +288,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
           'Crop Varieties',
           style: (isMobile ? AppTypography.h5 : AppTypography.h4).copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         Text(
@@ -373,7 +372,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                 color: selected
                     ? Colors.white
                     : (isDark ? Colors.white70 : AppColors.textSecondary),
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ],
@@ -403,7 +402,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                         child: Text(
                           'All Crop Varieties',
                           style: AppTypography.h6.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
                           ),
@@ -414,7 +413,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                         style: AppTypography.bodySmall.copyWith(
                           color:
                               isDark ? Colors.white60 : AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ],
@@ -450,7 +449,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                   child: Text(
                     'Crop Variety Cards',
                     style: AppTypography.h6.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -459,7 +458,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                   '${_crops.length} records',
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ],
@@ -522,7 +521,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
               textAlign: TextAlign.center,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white54 : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
                 letterSpacing: 0.2,
               ),
             ),
@@ -543,7 +542,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           letterSpacing: 0.2,
         ),
       ),
@@ -581,7 +580,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                       _initial(crop['crop']),
                       style: const TextStyle(
                         color: AppColors.success,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                   ),
@@ -593,8 +592,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                         Text(
                           crop['crop'],
                           style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
+                            fontWeight: AppTypography.labelWeight,
+                            fontSize: AppTypography.bodySize,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
                           ),
@@ -604,7 +603,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                         Text(
                           '${crop['id']} | ${crop['variety']}',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: AppTypography.fieldLabelSize,
                             color: isDark
                                 ? Colors.white54
                                 : AppColors.textSecondary,
@@ -665,8 +664,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     return Text(
       value.toString(),
       style: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
+        fontSize: AppTypography.actionSize,
+        fontWeight: AppTypography.labelWeight,
         color: isDark ? Colors.white70 : AppColors.textSecondary,
       ),
       maxLines: 1,
@@ -688,8 +687,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
           text,
           style: TextStyle(
             color: color,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
+            fontSize: AppTypography.fieldLabelSize,
+            fontWeight: AppTypography.labelWeight,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -729,13 +728,13 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
             Expanded(
                 child: Text(label,
                     style: AppTypography.caption
-                        .copyWith(fontSize: 11, color: secondary))),
+                        .copyWith(fontSize: AppTypography.fieldLabelSize, color: secondary))),
           ]),
           const SizedBox(height: 7),
           Text(text,
               style: AppTypography.bodySmall.copyWith(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontSize: AppTypography.actionSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: foreground)),
         ]),
       );
@@ -778,19 +777,19 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                   children: [
                 Text(value('crop'),
                     style: AppTypography.bodyLarge.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                        fontSize: AppTypography.cardTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: foreground)),
                 const SizedBox(height: 4),
                 Text(value('variety'),
                     style: AppTypography.bodySmall.copyWith(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                        fontSize: AppTypography.actionSize,
+                        fontWeight: AppTypography.labelWeight,
                         color: AppColors.primary)),
                 const SizedBox(height: 8),
                 Text('Company · ${value('company')}',
                     style: AppTypography.bodySmall
-                        .copyWith(fontSize: 11, color: secondary)),
+                        .copyWith(fontSize: AppTypography.fieldLabelSize, color: secondary)),
               ])),
         ]),
         const SizedBox(height: 14),
@@ -806,15 +805,15 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
             Flexible(
                 child: Text('Growing duration · ${value('duration')}',
                     style: AppTypography.bodySmall.copyWith(
-                        fontSize: 11,
+                        fontSize: AppTypography.fieldLabelSize,
                         color: AppColors.primary,
-                        fontWeight: FontWeight.w600))),
+                        fontWeight: AppTypography.headingWeight))),
           ]),
         ),
         const SizedBox(height: 16),
         Text('Growing conditions',
             style: AppTypography.bodySmall.copyWith(
-                fontSize: 12, fontWeight: FontWeight.w600, color: foreground)),
+                fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight, color: foreground)),
         const SizedBox(height: 10),
         pair(metric(Icons.science_outlined, 'pH range', value('ph')),
             metric(Icons.bolt_outlined, 'EC range', value('ec'))),
@@ -848,7 +847,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                 side: BorderSide(
                     color: AppColors.primary.withValues(alpha: 0.25)),
                 textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: 13, fontWeight: FontWeight.w600),
+                    .copyWith(fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
@@ -884,14 +883,14 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
               Expanded(
                   child: Text(label,
                       style:
-                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+                          AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary))),
             ]),
             const SizedBox(height: 7),
             Text(text,
-                style: GoogleFonts.inter(
-                    fontSize: 13,
+                style: AppTypography.font(
+                    fontSize: AppTypography.actionSize,
                     height: 1.4,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: foreground)),
           ]),
         );
@@ -931,20 +930,20 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                 Text(value('crop'),
-                    style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.cardTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: foreground)),
                 const SizedBox(height: 4),
                 Text(value('variety'),
-                    style: GoogleFonts.inter(
-                        fontSize: 13,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.actionSize,
                         height: 1.4,
                         color: isDark ? Colors.white70 : AppColors.primary)),
                 const SizedBox(height: 5),
                 Text(value('company'),
-                    style: GoogleFonts.inter(
-                        fontSize: 11, height: 1.4, color: secondary)),
+                    style: AppTypography.font(
+                        fontSize: AppTypography.fieldLabelSize, height: 1.4, color: secondary)),
               ])),
         ]),
         const SizedBox(height: 16),
@@ -960,21 +959,21 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
             const SizedBox(width: 8),
             Expanded(
                 child: Text('Growing duration',
-                    style: GoogleFonts.inter(fontSize: 11, color: secondary))),
+                    style: AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary))),
             const SizedBox(width: 8),
             Flexible(
                 child: Text(value('duration'),
-                    style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: foreground),
                     textAlign: TextAlign.end)),
           ]),
         ),
         const SizedBox(height: 16),
         Text('Growing conditions',
-            style: GoogleFonts.inter(
-                fontSize: 12, fontWeight: FontWeight.w600, color: foreground)),
+            style: AppTypography.font(
+                fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight, color: foreground)),
         const SizedBox(height: 10),
         pair(metric('pH range', value('ph'), Icons.science_outlined),
             metric('EC range', value('ec'), Icons.bolt_outlined)),
@@ -1006,8 +1005,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
                 side: BorderSide(
                     color: AppColors.primary.withValues(alpha: 0.25)),
-                textStyle: GoogleFonts.inter(
-                    fontSize: 12, fontWeight: FontWeight.w600),
+                textStyle: AppTypography.font(
+                    fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
@@ -1220,9 +1219,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                     isEditing
                                         ? 'Edit Crop Variety'
                                         : 'Add Crop Variety',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                                    style: AppTypography.font(
+                                      fontSize: AppTypography.cardTitleSize,
+                                      fontWeight: AppTypography.headingWeight,
                                       color: isDark
                                           ? Colors.white
                                           : AppColors.textPrimary,
@@ -1233,9 +1232,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                   isEditing
                                       ? 'Update seed and production specifications'
                                       : 'Define seed and production specifications',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
+                                  style: AppTypography.font(
+                                    fontSize: AppTypography.captionSize,
+                                    fontWeight: AppTypography.bodyWeight,
                                     color: isDark
                                         ? Colors.white70
                                         : AppColors.textSecondary,
@@ -1369,7 +1368,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                     child: Text(_varietySaveError!,
                                         style: TextStyle(
                                             color: AppColors.error,
-                                            fontSize: 12))),
+                                            fontSize: AppTypography.captionSize))),
                               if (isEditing)
                                 Align(
                                     alignment: Alignment.centerLeft,
@@ -1414,9 +1413,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                               style: OutlinedButton.styleFrom(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 12),
-                                textStyle: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
+                                textStyle: AppTypography.font(
+                                  fontSize: AppTypography.actionSize,
+                                  fontWeight: AppTypography.headingWeight,
                                 ),
                               ),
                               child: const Text('Cancel'),
@@ -1519,9 +1518,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                 foregroundColor: Colors.white,
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 12),
-                                textStyle: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
+                                textStyle: AppTypography.font(
+                                  fontSize: AppTypography.actionSize,
+                                  fontWeight: AppTypography.headingWeight,
                                 ),
                               ),
                             ),
@@ -1621,9 +1620,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                     Text(
                       'Delete Crop Variety?',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -1631,8 +1630,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                     Text(
                       'This permanently removes the variety from the crop catalogue and cannot be undone.',
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 11.5,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         height: 1.5,
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
@@ -1673,9 +1672,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                   crop['crop'].toString(),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+                                  style: AppTypography.font(
+                                    fontSize: AppTypography.actionSize,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary,
@@ -1686,8 +1685,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                   crop['variety'].toString(),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 11.5,
+                                  style: AppTypography.font(
+                                    fontSize: AppTypography.captionSize,
                                     color: isDark
                                         ? Colors.white60
                                         : AppColors.textSecondary,
@@ -1711,8 +1710,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                         ),
                         child: Text(
                           deleteError!,
-                          style: GoogleFonts.poppins(
-                            fontSize: 10.5,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.fieldLabelSize,
                             height: 1.4,
                             color: AppColors.error,
                           ),
@@ -1729,9 +1728,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                 : () => Navigator.pop(dialogContext),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 13),
-                              textStyle: GoogleFonts.poppins(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
+                              textStyle: AppTypography.font(
+                                fontSize: AppTypography.actionSize,
+                                fontWeight: AppTypography.headingWeight,
                               ),
                             ),
                             child: const Text('Cancel'),
@@ -1796,9 +1795,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                               backgroundColor: AppColors.error,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(vertical: 13),
-                              textStyle: GoogleFonts.poppins(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
+                              textStyle: AppTypography.font(
+                                fontSize: AppTypography.actionSize,
+                                fontWeight: AppTypography.headingWeight,
                               ),
                             ),
                           ),
@@ -1828,9 +1827,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
             height: 1.35,
           ),
@@ -1838,9 +1837,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.bodyWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
           keyboardType: numeric
@@ -1849,11 +1848,11 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
               : TextInputType.text,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.inter(
-              fontSize: 12,
+            hintStyle: AppTypography.font(
+              fontSize: AppTypography.captionSize,
               color: isDark ? Colors.white54 : AppColors.textSecondary,
             ),
-            errorStyle: GoogleFonts.inter(fontSize: 10.5, height: 1.25),
+            errorStyle: AppTypography.font(fontSize: AppTypography.fieldLabelSize, height: 1.25),
             prefixIcon: Icon(icon, size: 16),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
@@ -1907,9 +1906,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
             height: 1.35,
           ),
@@ -1945,20 +1944,20 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
             Expanded(
               child: TextFormField(
                 controller: controller,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
+                  fontWeight: AppTypography.bodyWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
                 readOnly: true,
                 onTap: saving ? null : onPick,
                 decoration: InputDecoration(
                   hintText: hint,
-                  hintStyle: GoogleFonts.inter(
-                    fontSize: 12,
+                  hintStyle: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
-                  errorStyle: GoogleFonts.inter(fontSize: 10.5, height: 1.25),
+                  errorStyle: AppTypography.font(fontSize: AppTypography.fieldLabelSize, height: 1.25),
                   prefixIcon: Icon(icon, size: 16),
                   suffixIcon: IconButton(
                     tooltip: 'Choose image',
@@ -2112,11 +2111,11 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     InputDecoration decoration({String? hint, IconData? icon}) {
       return InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.inter(
-          fontSize: 12,
+        hintStyle: AppTypography.font(
+          fontSize: AppTypography.captionSize,
           color: isDark ? Colors.white54 : AppColors.textSecondary,
         ),
-        errorStyle: GoogleFonts.inter(fontSize: 10.5, height: 1.25),
+        errorStyle: AppTypography.font(fontSize: AppTypography.fieldLabelSize, height: 1.25),
         prefixIcon: icon == null ? null : Icon(icon, size: 16),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
@@ -2141,9 +2140,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       );
     }
 
-    final textStyle = GoogleFonts.inter(
-      fontSize: 12,
-      fontWeight: FontWeight.w400,
+    final textStyle = AppTypography.font(
+      fontSize: AppTypography.captionSize,
+      fontWeight: AppTypography.bodyWeight,
       color: isDark ? Colors.white : AppColors.textPrimary,
     );
     return Column(
@@ -2151,9 +2150,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       children: [
         Text(
           'Plant Duration',
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
             height: 1.35,
           ),

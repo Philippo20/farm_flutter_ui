@@ -166,8 +166,8 @@ class CaretakerMobileDrawer extends StatelessWidget {
                       userName.isEmpty ? 'C' : userName[0].toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                        fontSize: AppTypography.headingSize,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -181,7 +181,7 @@ class CaretakerMobileDrawer extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.bodyMedium.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w700)),
+                                fontWeight: AppTypography.headingWeight)),
                         Text('Caretaker',
                             style: AppTypography.bodySmall.copyWith(
                                 color: Colors.white.withOpacity(0.9))),
@@ -230,9 +230,9 @@ class CaretakerMobileDrawer extends StatelessWidget {
                     ),
                     title: Text(item.$1,
                         style: AppTypography.bodyMedium.copyWith(
-                            fontSize: 15,
+                            fontSize: AppTypography.cardTitleSize,
                             fontWeight:
-                                selected ? FontWeight.w700 : FontWeight.w500,
+                                selected ? AppTypography.headingWeight : AppTypography.labelWeight,
                             color: selected
                                 ? AppColors.primary
                                 : (isDark
@@ -280,9 +280,9 @@ class CaretakerMobileDrawer extends StatelessWidget {
                       child: Text(
                         userName.isEmpty ? 'C' : userName[0].toUpperCase(),
                         style: AppTypography.bodyMedium.copyWith(
-                          fontSize: 18,
+                          fontSize: AppTypography.sectionTitleSize,
                           color: Colors.white,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -304,7 +304,7 @@ class CaretakerMobileDrawer extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.caption.copyWith(
-                                fontSize: 12,
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white70
                                     : AppColors.textSecondary)),
@@ -346,9 +346,9 @@ class CaretakerMobileDrawer extends StatelessWidget {
                         const SizedBox(width: AppSpacing.sm),
                         Text('Logout',
                             style: AppTypography.bodyMedium.copyWith(
-                                fontSize: 15,
+                                fontSize: AppTypography.cardTitleSize,
                                 color: AppColors.error,
-                                fontWeight: FontWeight.w500)),
+                                fontWeight: AppTypography.labelWeight)),
                       ],
                     ),
                   ),

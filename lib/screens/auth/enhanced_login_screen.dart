@@ -91,8 +91,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                       Text(
                         'Farm Estate Management',
                         style: AppTypography.h4.copyWith(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                         textAlign: TextAlign.center,
@@ -101,7 +100,6 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                       Text(
                         'Sign in to your account',
                         style: AppTypography.bodyMedium.copyWith(
-                          fontFamily: 'Roboto',
                           color: isDark ? Colors.white70 : AppColors.textSecondary,
                         ),
                         textAlign: TextAlign.center,
@@ -186,8 +184,7 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
                             : Text(
                                 'Sign In',
                                 style: AppTypography.button.copyWith(
-                                  fontFamily: 'Poppins',
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: AppTypography.headingWeight,
                                 ),
                               ),
                       ),
@@ -211,9 +208,8 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
       title: Text(
         'Demo Accounts',
         style: TextStyle(
-          fontFamily: 'Poppins',
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
+          fontSize: AppTypography.bodySize,
+          fontWeight: AppTypography.headingWeight,
           color: isDark ? Colors.white : AppColors.textPrimary,
         ),
       ),
@@ -244,16 +240,14 @@ class _EnhancedLoginScreenState extends ConsumerState<EnhancedLoginScreen> {
       title: Text(
         role,
         style: const TextStyle(
-          fontFamily: 'Poppins',
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
+          fontSize: AppTypography.captionSize,
+          fontWeight: AppTypography.headingWeight,
         ),
       ),
       subtitle: Text(
         email,
         style: const TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 10,
+          fontSize: AppTypography.microSize,
         ),
       ),
       trailing: IconButton(

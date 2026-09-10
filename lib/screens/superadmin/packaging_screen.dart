@@ -282,7 +282,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
         Text(
           'Packaging Management',
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -319,8 +319,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
         Text(
           'All Packaging Types',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
+            fontWeight: AppTypography.headingWeight,
+            fontSize: AppTypography.bodySize,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -344,7 +344,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                 children: [
                   Text('Packaging Management',
                       style: AppTypography.h4.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
                   Text(
@@ -404,7 +404,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                       child: Text(
                         'All Packaging Types',
                         style: AppTypography.h6.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -414,7 +414,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                   ],
@@ -498,7 +498,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                     child: Text(
                       stat['title'] as String,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                         color: statColor.withOpacity(0.9),
                       ),
                       maxLines: 1,
@@ -511,8 +511,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
               Text(
                 stat['value'] as String,
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  fontSize: AppTypography.cardTitleSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: statColor,
                 ),
                 maxLines: 1,
@@ -559,12 +559,12 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                         children: [
                           Text(stat['value'] as String,
                               style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: AppTypography.headingSize,
+                                  fontWeight: AppTypography.labelWeight,
                                   color: stat['color'] as Color)),
                           Text(stat['title'] as String,
                               style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: AppTypography.fieldLabelSize,
                                   color: (stat['color'] as Color)
                                       .withOpacity(0.8))),
                         ],
@@ -661,15 +661,15 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                     Text(
                       packaging['type'],
                       style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
+                        fontWeight: AppTypography.labelWeight,
+                        fontSize: AppTypography.actionSize,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
                     Text(
                       '${packaging['weight']}${packaging['unit']} | ${packaging['material']}',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: AppTypography.fieldLabelSize,
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
                       ),
@@ -680,8 +680,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
               Text(
                 '\$${packaging['cost'].toStringAsFixed(2)}',
                 style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontSize: AppTypography.bodySize,
+                  fontWeight: AppTypography.labelWeight,
                   color: AppColors.warning,
                 ),
               ),
@@ -744,7 +744,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
           Text(
             text,
             style: TextStyle(
-                fontSize: 10, color: chipColor, fontWeight: FontWeight.w500),
+                fontSize: AppTypography.microSize, color: chipColor, fontWeight: AppTypography.labelWeight),
           ),
         ],
       ),
@@ -788,7 +788,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           letterSpacing: 0.2,
         ),
       ),
@@ -817,8 +817,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
           material,
           style: TextStyle(
             color: color,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
+            fontSize: AppTypography.fieldLabelSize,
+            fontWeight: AppTypography.labelWeight,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -852,8 +852,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
               '$stock',
               style: TextStyle(
                 color: color,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
+                fontSize: AppTypography.fieldLabelSize,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ],
@@ -903,15 +903,15 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                       Text(
                         packaging['type'],
                         style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
+                          fontWeight: AppTypography.labelWeight,
+                          fontSize: AppTypography.bodySize,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       Text(
                         '${packaging['id']} | ${packaging['weight']}${packaging['unit']} capacity',
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
                         ),
@@ -932,8 +932,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
             child: Text(
               '\$${cost.toStringAsFixed(2)}',
               style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontSize: AppTypography.actionSize,
+                fontWeight: AppTypography.labelWeight,
                 color: AppColors.warning,
               ),
             ),
@@ -943,8 +943,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
             child: Text(
               '\$${inventoryValue.toStringAsFixed(2)}',
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.labelWeight,
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
               ),
             ),
@@ -1046,7 +1046,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                             Text('Edit Packaging',
                                 style: AppTypography.h6.copyWith(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.w600)),
+                                    fontWeight: AppTypography.headingWeight)),
                             Text('Modify packaging details',
                                 style: AppTypography.bodySmall
                                     .copyWith(color: Colors.white70))
@@ -1085,7 +1085,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                               children: [
                             Text(packaging['type'],
                                 style: AppTypography.bodyLarge.copyWith(
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: AppTypography.labelWeight,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary)),
@@ -1106,8 +1106,8 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                         child: Text('\$${packaging['cost'].toStringAsFixed(2)}',
                             style: const TextStyle(
                                 color: AppColors.warning,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500)),
+                                fontSize: AppTypography.captionSize,
+                                fontWeight: AppTypography.labelWeight)),
                       ),
                     ],
                   ),
@@ -1363,7 +1363,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
               const SizedBox(height: AppSpacing.lg),
               Text('Delete Packaging?',
                   style: AppTypography.h5.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary)),
               const SizedBox(height: AppSpacing.sm),
               Text('Are you sure you want to delete "${packaging['type']}"?',
@@ -1387,7 +1387,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                         child: Text(
                             'This will also affect associated pricing configurations.',
                             style: TextStyle(
-                                fontSize: 12,
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white70
                                     : AppColors.textSecondary))),
@@ -1508,7 +1508,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
                             Text('Add Packaging',
                                 style: AppTypography.h6.copyWith(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.w600)),
+                                    fontWeight: AppTypography.headingWeight)),
                             Text('Create new packaging option',
                                 style: AppTypography.bodySmall
                                     .copyWith(color: Colors.white70))
@@ -1745,7 +1745,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
   // Helper widgets
   Widget _buildFormLabel(String label, bool isDark) => Text(label,
       style: AppTypography.bodyMedium.copyWith(
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           color: isDark ? Colors.white : AppColors.textPrimary));
 
   Widget _buildTextField(
@@ -1808,7 +1808,7 @@ class _PackagingScreenState extends ConsumerState<PackagingScreen> {
               dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
               style: TextStyle(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: 14),
+                  fontSize: AppTypography.bodySize),
               items: items
                   .map((item) => DropdownMenuItem(
                       value: item,

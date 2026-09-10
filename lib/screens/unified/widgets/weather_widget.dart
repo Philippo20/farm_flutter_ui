@@ -95,7 +95,7 @@ class WeatherWidget extends StatelessWidget {
               Text(
                 '${weatherData['temperature']}°C',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -167,7 +167,7 @@ class WeatherWidget extends StatelessWidget {
                         Text(
                           '${weatherData['temperature']}',
                           style: AppTypography.h3.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: AppTypography.headingWeight,
                             color: isDark ? Colors.white : AppColors.textPrimary,
                           ),
                         ),
@@ -187,7 +187,7 @@ class WeatherWidget extends StatelessWidget {
                         color: isDark
                             ? Colors.white.withOpacity(0.8)
                             : AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                   ],
@@ -229,7 +229,7 @@ class WeatherWidget extends StatelessWidget {
           Text(
             '7-Day Forecast',
             style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -270,7 +270,7 @@ class WeatherWidget extends StatelessWidget {
                       Text(
                         '${day['high']}°',
                         style: AppTypography.caption.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -304,7 +304,7 @@ class WeatherWidget extends StatelessWidget {
         Text(
           value,
           style: AppTypography.bodySmall.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),

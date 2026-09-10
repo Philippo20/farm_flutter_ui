@@ -1,3 +1,4 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -192,9 +193,9 @@ class _AdminDeliveryControlScreenState
                       Text(
                         item['label'] as String,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                           fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.normal,
+                              isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
                           color: isSelected
                               ? AppColors.primary
                               : (isDark

@@ -115,10 +115,10 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
                         child: Text(
                           '${weather?.temperature.toStringAsFixed(1) ?? '28'}°C',
                           style: AppTypography.h5.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: AppTypography.headingWeight,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontSize: 20,
+                            fontSize: AppTypography.headingSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -132,7 +132,7 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
                             color: isDark
                                 ? Colors.white70
                                 : AppColors.textSecondary,
-                            fontSize: 13,
+                            fontSize: AppTypography.actionSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -160,9 +160,9 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
                     Text(
                       _currentTime,
                       style: AppTypography.h6.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontSize: 16,
+                        fontSize: AppTypography.cardTitleSize,
                       ),
                     ),
                   ],
@@ -177,7 +177,7 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
           _currentDate,
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white60 : AppColors.textSecondary,
-            fontSize: 10,
+            fontSize: AppTypography.microSize,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -217,7 +217,7 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
                   Text(
                     '${weather?.temperature.toStringAsFixed(1) ?? '28'}°C',
                     style: AppTypography.h5.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -258,7 +258,7 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
                 Text(
                   _currentTime,
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -269,7 +269,7 @@ class _WeatherTimeWidgetState extends State<WeatherTimeWidget> {
               _currentDate,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontSize: 11,
+                fontSize: AppTypography.fieldLabelSize,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -329,7 +329,7 @@ class _CompactWeatherTimeWidgetState extends State<CompactWeatherTimeWidget> {
           Text(
             '28°C',
             style: AppTypography.bodySmall.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -343,7 +343,7 @@ class _CompactWeatherTimeWidgetState extends State<CompactWeatherTimeWidget> {
           Text(
             _currentTime,
             style: AppTypography.bodySmall.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),

@@ -1,9 +1,9 @@
+import '../theme/app_typography.dart';
 import 'dart:async';
 import '../utils/sensor_connection.dart';
 import '../utils/sensor_calibration_policy.dart';
 import 'sensor_reading_history.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_colors.dart';
 import 'app_dialog.dart';
@@ -70,9 +70,9 @@ class _SensorInspectModalState extends State<SensorInspectModal> {
         'Continue routine monitoring and follow the sensor maintenance schedule.',
     };
     TextStyle text(double size, {bool strong = false, Color? color}) =>
-        GoogleFonts.inter(
-            fontSize: size,
-            fontWeight: strong ? FontWeight.w600 : FontWeight.w400,
+        AppTypography.font(
+            fontSize: AppTypography.resolveSize(size),
+            fontWeight: strong ? AppTypography.headingWeight : AppTypography.bodyWeight,
             color: color ?? foreground);
     Widget field(String label, String content) =>
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -141,9 +141,9 @@ class _SensorInspectModalState extends State<SensorInspectModal> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                           Text('Sensor details',
-                              style: GoogleFonts.inter(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.cardTitleSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: foreground)),
                           const SizedBox(height: 4),
                           Text('Readings and device information',

@@ -1,8 +1,8 @@
+import '../theme/app_typography.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_spacing.dart';
 import '../providers/theme_provider.dart';
 import '../providers/notification_provider.dart';
@@ -92,18 +92,18 @@ class _ModernHeaderState extends ConsumerState<ModernHeader> {
                       children: [
                         Text(
                           '$greeting, ${widget.userName}',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.cardTitleSize,
+                            fontWeight: AppTypography.headingWeight,
                             color: colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           widget.title,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.actionSize,
+                            fontWeight: AppTypography.labelWeight,
                             color: colorScheme.onSurface.withOpacity(0.7),
                           ),
                         ),
@@ -256,9 +256,9 @@ class _LogoAndTenantSwitcher extends StatelessWidget {
                     onTenantChanged?.call(value);
                   }
                 },
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.font(
+                  fontSize: AppTypography.actionSize,
+                  fontWeight: AppTypography.headingWeight,
                 ),
                 items: tenants
                     .map(
@@ -311,16 +311,16 @@ class _DateTimeBadge extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 '$formattedTime - $timezone',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
                 formattedDate,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
                   color: colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
@@ -398,9 +398,9 @@ class _StatusIndicatorsRow extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       status.label,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: _textForLevel(status.level, colorScheme),
                       ),
                     ),
@@ -456,8 +456,8 @@ class _NotificationSummary extends StatelessWidget {
       children: [
         Text(
           text,
-          style: GoogleFonts.inter(
-            fontSize: 12,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
           ),
         ),
@@ -587,7 +587,7 @@ class _GlobalSearchFieldState extends State<GlobalSearchField> {
                   subtitle: item.description != null
                       ? Text(
                           item.description!,
-                          style: const TextStyle(fontSize: 12),
+                          style: const TextStyle(fontSize: AppTypography.captionSize),
                         )
                       : null,
                   onTap: () {

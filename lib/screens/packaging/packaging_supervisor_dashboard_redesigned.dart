@@ -404,8 +404,8 @@ class _PackagingSupervisorDashboardRedesignedState
                       'Packaging Command Center',
                       style: AppTypography.h4.copyWith(
                         color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: isMobile ? 24 : 28,
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -642,9 +642,9 @@ class _PackagingSupervisorDashboardRedesignedState
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -712,7 +712,7 @@ class _DashboardKpi extends StatelessWidget {
                   value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -775,7 +775,7 @@ class _DashboardPanel extends StatelessWidget {
                       title,
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -827,7 +827,7 @@ class _LineStatusRow extends StatelessWidget {
                       line['line']! as String,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -918,7 +918,7 @@ class _ActionTile extends StatelessWidget {
                     title,
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                   const SizedBox(height: 3),
@@ -975,7 +975,7 @@ class _ActivityRow extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -1024,7 +1024,7 @@ class _MetricBlock extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -1060,7 +1060,7 @@ class _HeroChip extends StatelessWidget {
             label,
             style: AppTypography.caption.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -1119,7 +1119,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -1141,7 +1141,7 @@ class _MutedText extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: AppTypography.caption.copyWith(
         color: isDark ? Colors.white60 : AppColors.textSecondary,
-        fontWeight: FontWeight.w500,
+        fontWeight: AppTypography.labelWeight,
       ),
     );
   }

@@ -57,7 +57,7 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                         userName.isNotEmpty ? userName[0].toUpperCase() : 'F',
                         style: AppTypography.bodyMedium.copyWith(
                           color: Colors.white,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ),
@@ -70,7 +70,7 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                         Text(
                           userName,
                           style: AppTypography.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w700,
+                            fontWeight: AppTypography.headingWeight,
                             color: Colors.white,
                           ),
                           maxLines: 1,
@@ -134,9 +134,9 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                       child: Text(
                         userName.isNotEmpty ? userName[0].toUpperCase() : 'F',
                         style: AppTypography.bodyMedium.copyWith(
-                          fontSize: 18,
+                          fontSize: AppTypography.sectionTitleSize,
                           color: Colors.white,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -151,7 +151,7 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodyMedium.copyWith(
-                            fontSize: 15,
+                            fontSize: AppTypography.cardTitleSize,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
                           ),
@@ -162,7 +162,7 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.caption.copyWith(
-                            fontSize: 12,
+                            fontSize: AppTypography.captionSize,
                             color: isDark
                                 ? Colors.white.withOpacity(0.7)
                                 : AppColors.textSecondary,
@@ -209,8 +209,8 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
                           'Logout',
                           style: AppTypography.bodyMedium.copyWith(
                             color: AppColors.error,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                            fontSize: AppTypography.cardTitleSize,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                       ],
@@ -297,8 +297,8 @@ class FarmOwnerMobileDrawer extends StatelessWidget {
           title: Text(
             item['label'] as String,
             style: AppTypography.bodyMedium.copyWith(
-              fontSize: 15,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
               color: isSelected
                   ? AppColors.primary
                   : (isDark ? Colors.white : AppColors.textPrimary),

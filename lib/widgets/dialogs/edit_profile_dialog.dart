@@ -1,6 +1,6 @@
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class EditProfileDialog extends StatefulWidget {
   final bool isDark;
@@ -81,9 +81,9 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                     children: [
                       Text(
                         "Edit Profile",
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.headingSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: widget.isDark ? Colors.white : Colors.black,
                         ),
                       ),
@@ -178,8 +178,8 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                     children: [
                       Text(
                         "Username",
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.bodySize,
                           color: widget.isDark ? Colors.white70 : Colors.grey[700],
                         ),
                       ),
@@ -194,7 +194,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                             ),
                             child: Text(
                               "farmcare.com/",
-                              style: GoogleFonts.poppins(
+                              style: AppTypography.font(
                                 color: widget.isDark ? Colors.white70 : Colors.grey[800],
                               ),
                             ),
@@ -204,7 +204,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                             child: TextFormField(
                               controller: _usernameController,
                               validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
-                              style: GoogleFonts.poppins(
+                              style: AppTypography.font(
                                 color: widget.isDark ? Colors.white : Colors.black,
                               ),
                               decoration: InputDecoration(
@@ -303,8 +303,8 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
       children: [
         Text(
           label,
-          style: GoogleFonts.poppins(
-            fontSize: 14,
+          style: AppTypography.font(
+            fontSize: AppTypography.bodySize,
             color: widget.isDark ? Colors.white70 : Colors.grey[700],
           ),
         ),
@@ -312,7 +312,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
         TextFormField(
           controller: controller,
           validator: validator,
-          style: GoogleFonts.poppins(
+          style: AppTypography.font(
             color: widget.isDark ? Colors.white : Colors.black,
           ),
           decoration: InputDecoration(

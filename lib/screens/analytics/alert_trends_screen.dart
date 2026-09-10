@@ -92,7 +92,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
           Text(
             'Time Period:',
             style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -126,7 +126,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
           Text(
             'Alert Frequency Over Time',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -151,7 +151,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
                       showTitles: true,
                       getTitlesWidget: (value, meta) => Text(
                         'D${value.toInt()}',
-                        style: AppTypography.bodySmall.copyWith(fontSize: 10),
+                        style: AppTypography.bodySmall.copyWith(fontSize: AppTypography.microSize),
                       ),
                     ),
                   ),
@@ -194,7 +194,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
           Text(
             'By Severity',
             style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -209,21 +209,21 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
                     title: 'High',
                     color: AppColors.error,
                     radius: 60,
-                    titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    titleStyle: const TextStyle(color: Colors.white, fontWeight: AppTypography.headingWeight),
                   ),
                   PieChartSectionData(
                     value: 50,
                     title: 'Medium',
                     color: AppColors.warning,
                     radius: 60,
-                    titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    titleStyle: const TextStyle(color: Colors.white, fontWeight: AppTypography.headingWeight),
                   ),
                   PieChartSectionData(
                     value: 20,
                     title: 'Low',
                     color: AppColors.info,
                     radius: 60,
-                    titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    titleStyle: const TextStyle(color: Colors.white, fontWeight: AppTypography.headingWeight),
                   ),
                 ],
                 sectionsSpace: 2,
@@ -249,7 +249,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
           Text(
             'By Sensor Type',
             style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -272,7 +272,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
                         const sensors = ['Temp', 'Hum', 'pH', 'EC', 'CO₂'];
                         return Text(
                           sensors[value.toInt() % sensors.length],
-                          style: AppTypography.bodySmall.copyWith(fontSize: 9),
+                          style: AppTypography.bodySmall.copyWith(fontSize: AppTypography.microSize),
                         );
                       },
                     ),
@@ -351,7 +351,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
           Text(
             value,
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -359,7 +359,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
             ),
             textAlign: TextAlign.center,
           ),
@@ -381,7 +381,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
           Text(
             'Peak Alert Hours',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -401,7 +401,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
                 child: Center(
                   child: Text(
                     hour.toString().padLeft(2, '0'),
-                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                    style: const TextStyle(color: Colors.white, fontSize: AppTypography.microSize),
                   ),
                 ),
               );
@@ -425,7 +425,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
           Text(
             'Average Resolution Time by Severity',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -456,7 +456,7 @@ class _AlertTrendsScreenState extends ConsumerState<AlertTrendsScreen> {
             Text(
               '${hours}h',
               style: AppTypography.bodySmall.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: color,
               ),
             ),

@@ -1,5 +1,5 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import '../../constants/colors.dart';
 
@@ -66,20 +66,20 @@ class AdminDashboardCard extends StatelessWidget {
                       children: [
                         Text(
                           "Hello Mr, $adminName ðŸ‘‹",
-                          style: GoogleFonts.poppins(
+                          style: AppTypography.font(
                             color: textColor,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w500,
+                            fontSize: AppTypography.headingSize,
+                            fontWeight: AppTypography.labelWeight,
                             height: 1.4,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           "Today's date is, $today",
-                          style: GoogleFonts.inter(
+                          style: AppTypography.font(
                             color: textColor.withOpacity(0.7),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                            fontSize: AppTypography.bodySize,
+                            fontWeight: AppTypography.labelWeight,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -116,20 +116,20 @@ class AdminDashboardCard extends StatelessWidget {
                   children: [
                     Text(
                       "Welcome back, $adminName ðŸ‘‹",
-                      style: GoogleFonts.poppins(
+                      style: AppTypography.font(
                         color: textColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.labelWeight,
                         height: 1.4,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       today,
-                      style: GoogleFonts.inter(
+                      style: AppTypography.font(
                         color: textColor.withOpacity(0.7),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                        fontSize: AppTypography.bodySize,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -241,10 +241,10 @@ class _FilterPill extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               label,
-              style: GoogleFonts.inter(
+              style: AppTypography.font(
                 color: textColor.withOpacity(0.9),
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
+                fontWeight: AppTypography.labelWeight,
+                fontSize: AppTypography.bodySize,
               ),
             ),
             const SizedBox(width: 8),
@@ -295,10 +295,10 @@ class _SegmentPill extends StatelessWidget {
                     value: opt,
                     child: Text(
                       opt,
-                      style: GoogleFonts.inter(
+                      style: AppTypography.font(
                         color: textColor.withOpacity(0.9),
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
+                        fontWeight: AppTypography.labelWeight,
+                        fontSize: AppTypography.bodySize,
                       ),
                     ),
                   ))
@@ -350,19 +350,19 @@ class WeatherInfoWidget extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           "${temperature.toStringAsFixed(1)}Â°C",
-          style: GoogleFonts.poppins(
+          style: AppTypography.font(
             color: textColor,
-            fontWeight: FontWeight.w500,
-            fontSize: 15,
+            fontWeight: AppTypography.labelWeight,
+            fontSize: AppTypography.cardTitleSize,
           ),
         ),
         const SizedBox(width: 6),
         Text(
           weatherState,
-          style: GoogleFonts.inter(
+          style: AppTypography.font(
             color: textColor.withOpacity(0.9),
-            fontWeight: FontWeight.w500,
-            fontSize: 13,
+            fontWeight: AppTypography.labelWeight,
+            fontSize: AppTypography.actionSize,
           ),
         ),
       ],

@@ -587,7 +587,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         Text(
           'Farm Reports',
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -609,7 +609,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           child: ElevatedButton.icon(
             onPressed: () => _showExportDialog(context, isDark),
             icon: const Icon(Icons.download, size: 16),
-            label: const Text('Export', style: TextStyle(fontSize: 12)),
+            label: const Text('Export', style: TextStyle(fontSize: AppTypography.captionSize)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -624,7 +624,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           child: OutlinedButton.icon(
             onPressed: () => _showPrintDialog(context, isDark),
             icon: const Icon(Icons.print, size: 16),
-            label: const Text('Print', style: TextStyle(fontSize: 12)),
+            label: const Text('Print', style: TextStyle(fontSize: AppTypography.captionSize)),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 10),
               shape: RoundedRectangleBorder(
@@ -637,7 +637,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           child: OutlinedButton.icon(
             onPressed: () => _showScheduleReportDialog(context, isDark),
             icon: const Icon(Icons.schedule, size: 16),
-            label: const Text('Schedule', style: TextStyle(fontSize: 12)),
+            label: const Text('Schedule', style: TextStyle(fontSize: AppTypography.captionSize)),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 10),
               shape: RoundedRectangleBorder(
@@ -660,7 +660,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               Text(
                 'Farm Reports',
                 style: AppTypography.h4.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -808,8 +808,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         Text(
           label,
           style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white70 : AppColors.textSecondary),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -898,22 +898,22 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   const SizedBox(height: 8),
                   Text(title,
                       style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                          fontSize: AppTypography.fieldLabelSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark
                               ? Colors.white70
                               : AppColors.textSecondary)),
                   const SizedBox(height: 4),
                   Text(value,
                       style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: AppTypography.sectionTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
                   const SizedBox(height: 6),
                   Text(change,
                       style: TextStyle(
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                           color: isDark
                               ? Colors.white70
                               : AppColors.textSecondary)),
@@ -939,8 +939,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                           title,
                           style: AppTypography.bodySmall.copyWith(
                             color: color.withOpacity(0.8),
-                            fontWeight: FontWeight.w600,
-                            fontSize: isMobile ? 9 : 11,
+                            fontWeight: AppTypography.headingWeight,
+                            fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -948,9 +948,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         Text(
                           value,
                           style: AppTypography.h6.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: AppTypography.headingWeight,
                             color: color,
-                            fontSize: isMobile ? 14 : 18,
+                            fontSize: isMobile ? AppTypography.bodySize : AppTypography.sectionTitleSize,
                           ),
                         ),
                       ],
@@ -976,8 +976,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             child: Text(change,
                                 style: TextStyle(
                                     color: AppColors.success,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: isMobile ? 8 : 10))),
+                                    fontWeight: AppTypography.headingWeight,
+                                    fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize))),
                       ],
                     ),
                   )),
@@ -1041,9 +1041,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             Text(
               'Production Trend',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontSize: isMobile ? 14 : 18,
+                fontSize: isMobile ? AppTypography.bodySize : AppTypography.sectionTitleSize,
               ),
             ),
             SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
@@ -1069,7 +1069,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         getTitlesWidget: (value, meta) => Text(
                           '${value.toStringAsFixed(1)}K',
                           style: TextStyle(
-                              fontSize: isMobile ? 9 : 10,
+                              fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
                               color: isDark
                                   ? Colors.white60
                                   : AppColors.textSecondary),
@@ -1086,7 +1086,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             return Text(
                               labels[index],
                               style: TextStyle(
-                                  fontSize: isMobile ? 9 : 10,
+                                  fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
                                   color: isDark
                                       ? Colors.white60
                                       : AppColors.textSecondary),
@@ -1155,9 +1155,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             Text(
               'Farm Distribution',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontSize: isMobile ? 14 : 18,
+                fontSize: isMobile ? AppTypography.bodySize : AppTypography.sectionTitleSize,
               ),
             ),
             SizedBox(height: isMobile ? AppSpacing.sm : AppSpacing.md),
@@ -1176,9 +1176,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       color: colors[entry.key % colors.length],
                       radius: isMobile ? 40 : 60,
                       titleStyle: TextStyle(
-                        fontSize: isMobile ? 10 : 11,
+                        fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     );
                   }).toList(),
@@ -1216,7 +1216,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         Flexible(
             child: Text(label,
                 style: TextStyle(
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                     color: isDark ? Colors.white70 : AppColors.textSecondary))),
       ],
     );
@@ -1248,9 +1248,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     child: Text(
                   'Farm Performance Summary',
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: isMobile ? 14 : 18,
+                    fontSize: isMobile ? AppTypography.bodySize : AppTypography.sectionTitleSize,
                   ),
                 )),
                 if (!isMobile)
@@ -1333,7 +1333,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             'No report data for this filter',
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: 4),
@@ -1366,8 +1366,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               Expanded(
                 child: Text(report['farm']!,
                     style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: AppTypography.actionSize,
                         color: isDark ? Colors.white : AppColors.textPrimary)),
               ),
               _buildStatusBadge(report['status']!, isDark),
@@ -1397,7 +1397,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               TextButton.icon(
                 onPressed: () {},
                 icon: const Icon(Icons.visibility, size: 14),
-                label: const Text('Details', style: TextStyle(fontSize: 11)),
+                label: const Text('Details', style: TextStyle(fontSize: AppTypography.fieldLabelSize)),
                 style: TextButton.styleFrom(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1417,12 +1417,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       children: [
         Text(label,
             style: TextStyle(
-                fontSize: 10,
+                fontSize: AppTypography.microSize,
                 color: isDark ? Colors.white54 : AppColors.textSecondary)),
         Text(value,
             style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary)),
       ],
     );
@@ -1443,7 +1443,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       child: Text(
         status,
         style: TextStyle(
-            color: statusColor, fontSize: 10, fontWeight: FontWeight.w600),
+            color: statusColor, fontSize: AppTypography.microSize, fontWeight: AppTypography.headingWeight),
       ),
     );
   }
@@ -1467,7 +1467,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           child: Text(
             text,
             style: TextStyle(
-                color: statusColor, fontSize: 11, fontWeight: FontWeight.w600),
+                color: statusColor, fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight),
             textAlign: TextAlign.center,
           ),
         ),
@@ -1478,8 +1478,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       child: Text(
         text,
         style: TextStyle(
-          fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-          fontSize: isHeader ? 12 : 13,
+          fontWeight: isHeader ? AppTypography.headingWeight : AppTypography.bodyWeight,
+          fontSize: isHeader ? AppTypography.captionSize : AppTypography.actionSize,
           color: isDark ? Colors.white : AppColors.textPrimary,
         ),
       ),
@@ -1563,7 +1563,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             Text('Export Report',
                                 style: AppTypography.h6.copyWith(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
+                                    fontWeight: AppTypography.headingWeight)),
                             Text('Download farm analytics',
                                 style: AppTypography.bodySmall
                                     .copyWith(color: Colors.white70)),
@@ -1584,8 +1584,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     children: [
                       Text('Export Format',
                           style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: isDark
                                   ? Colors.white70
                                   : AppColors.textSecondary)),
@@ -1623,8 +1623,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       const SizedBox(height: AppSpacing.lg),
                       Text('Include in Export',
                           style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: isDark
                                   ? Colors.white70
                                   : AppColors.textSecondary)),
@@ -1658,7 +1658,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                 child: Text(
                                     'Export will include data for: $_selectedPeriod, $_selectedFarm',
                                     style: TextStyle(
-                                        fontSize: 12,
+                                        fontSize: AppTypography.captionSize,
                                         color: isDark
                                             ? Colors.white70
                                             : AppColors.textSecondary))),
@@ -1756,9 +1756,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             const SizedBox(height: 4),
             Text(format,
                 style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
+                        isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
                     color: isSelected
                         ? AppColors.primary
                         : (isDark ? Colors.white : AppColors.textPrimary))),
@@ -1775,7 +1775,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       onChanged: onChanged,
       title: Text(label,
           style: TextStyle(
-              fontSize: 13,
+              fontSize: AppTypography.actionSize,
               color: isDark ? Colors.white : AppColors.textPrimary)),
       controlAffinity: ListTileControlAffinity.leading,
       contentPadding: EdgeInsets.zero,
@@ -1886,7 +1886,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             Text('Schedule Report',
                                 style: AppTypography.h6.copyWith(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
+                                    fontWeight: AppTypography.headingWeight)),
                             Text('Automate report delivery',
                                 style: AppTypography.bodySmall
                                     .copyWith(color: Colors.white70)),
@@ -1907,8 +1907,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     children: [
                       Text('Frequency',
                           style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: isDark
                                   ? Colors.white70
                                   : AppColors.textSecondary)),
@@ -1938,8 +1938,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       const SizedBox(height: AppSpacing.lg),
                       Text('Delivery Method',
                           style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: isDark
                                   ? Colors.white70
                                   : AppColors.textSecondary)),
@@ -1981,8 +1981,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                           children: [
                             Text('Report Settings',
                                 style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: AppTypography.captionSize,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary)),
@@ -2069,12 +2069,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         children: [
           Text(label,
               style: TextStyle(
-                  fontSize: 11,
+                  fontSize: AppTypography.fieldLabelSize,
                   color: isDark ? Colors.white54 : AppColors.textSecondary)),
           Text(value,
               style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
+                  fontSize: AppTypography.fieldLabelSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary)),
         ],
       ),
@@ -2180,9 +2180,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

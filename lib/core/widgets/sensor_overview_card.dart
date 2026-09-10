@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'sensor_reading_history.dart';
 import '../utils/sensor_calibration_policy.dart';
 import 'package:flutter/material.dart';
@@ -72,13 +73,13 @@ class SensorOverviewCard extends StatelessWidget {
                                     children: [
                                   Text('${sensor['name']}',
                                       style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
+                                          fontSize: AppTypography.bodySize,
+                                          fontWeight: AppTypography.headingWeight,
                                           color: foreground)),
                                   const SizedBox(height: 4),
                                   Text('${sensor['type']}'.toUpperCase(),
                                       style: TextStyle(
-                                          fontSize: 10,
+                                          fontSize: AppTypography.microSize,
                                           letterSpacing: .6,
                                           color: secondary)),
                                 ])),
@@ -93,16 +94,16 @@ class SensorOverviewCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(6)),
                             child: Text(statusLabel,
                                 style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: AppTypography.fieldLabelSize,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: color))),
                         Text('${sensor['id']}',
-                            style: TextStyle(fontSize: 11, color: secondary)),
+                            style: TextStyle(fontSize: AppTypography.fieldLabelSize, color: secondary)),
                       ]),
                       if (sensor['connection_reason'] != null) ...[
                         const SizedBox(height: 6),
                         Text('${sensor['connection_reason']}',
-                            style: TextStyle(fontSize: 11, color: secondary)),
+                            style: TextStyle(fontSize: AppTypography.fieldLabelSize, color: secondary)),
                       ],
                       const SizedBox(height: 14),
                       Container(
@@ -122,7 +123,7 @@ class SensorOverviewCard extends StatelessWidget {
                                           ? 'Last recorded reading'
                                           : 'Latest reading',
                                       style: TextStyle(
-                                          fontSize: 11, color: secondary)),
+                                          fontSize: AppTypography.fieldLabelSize, color: secondary)),
                                   const SizedBox(height: 6),
                                   Wrap(
                                       crossAxisAlignment:
@@ -131,18 +132,18 @@ class SensorOverviewCard extends StatelessWidget {
                                       children: [
                                         Text('${sensor['value']}',
                                             style: TextStyle(
-                                                fontSize: 28,
-                                                fontWeight: FontWeight.w600,
+                                                fontSize: AppTypography.metricSize,
+                                                fontWeight: AppTypography.headingWeight,
                                                 color: foreground)),
                                         Text('${sensor['unit']}',
                                             style: TextStyle(
-                                                fontSize: 13,
+                                                fontSize: AppTypography.actionSize,
                                                 color: secondary)),
                                       ]),
                                   const SizedBox(height: 5),
                                   Text('Updated ${date('lastReading')}',
                                       style: TextStyle(
-                                          fontSize: 11, color: secondary)),
+                                          fontSize: AppTypography.fieldLabelSize, color: secondary)),
                                 ],
                                 if (isTemperature) ...[
                                   SensorReadingHistory(
@@ -166,7 +167,7 @@ class SensorOverviewCard extends StatelessWidget {
                             Expanded(
                                 child: Text('${sensor['location']}',
                                     style: TextStyle(
-                                        fontSize: 12, color: foreground)))
+                                        fontSize: AppTypography.captionSize, color: foreground)))
                           ]),
                       const SizedBox(height: 8),
                       Text(
@@ -175,7 +176,7 @@ class SensorOverviewCard extends StatelessWidget {
                               : calibration == null
                                   ? 'Calibration: check device specifications'
                                   : 'Calibrated ${date('lastCalibrated')}',
-                          style: TextStyle(fontSize: 11, color: secondary)),
+                          style: TextStyle(fontSize: AppTypography.fieldLabelSize, color: secondary)),
                       const SizedBox(height: 14),
                       Row(children: [
                         if (calibration == true)
@@ -183,13 +184,13 @@ class SensorOverviewCard extends StatelessWidget {
                               child: OutlinedButton(
                                   onPressed: onCalibrate,
                                   child: const Text('Calibrate',
-                                      style: TextStyle(fontSize: 12)))),
+                                      style: TextStyle(fontSize: AppTypography.captionSize)))),
                         if (calibration == true) const SizedBox(width: 10),
                         Expanded(
                             child: FilledButton.tonal(
                                 onPressed: onInspect,
                                 child: const Text('Inspect',
-                                    style: TextStyle(fontSize: 12))))
+                                    style: TextStyle(fontSize: AppTypography.captionSize))))
                       ]),
                     ]))));
   }

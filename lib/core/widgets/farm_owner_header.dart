@@ -102,8 +102,8 @@ class FarmOwnerHeader extends ConsumerWidget {
                   Text(
                     _getGreeting(),
                     style: AppTypography.h4.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 28,
+                      fontWeight: AppTypography.headingWeight,
+                      fontSize: AppTypography.metricSize,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                       letterSpacing: -0.5,
                     ),
@@ -112,8 +112,8 @@ class FarmOwnerHeader extends ConsumerWidget {
                   Text(
                     ', $userName',
                     style: AppTypography.h4.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 28,
+                      fontWeight: AppTypography.headingWeight,
+                      fontSize: AppTypography.metricSize,
                       color: isDark
                           ? Colors.white.withOpacity(0.9)
                           : AppColors.textPrimary.withOpacity(0.8),
@@ -136,11 +136,11 @@ class FarmOwnerHeader extends ConsumerWidget {
                   Text(
                     _getFormattedDate(),
                     style: AppTypography.bodyLarge.copyWith(
-                      fontSize: 14,
+                      fontSize: AppTypography.bodySize,
                       color: isDark
                           ? Colors.white.withOpacity(0.7)
                           : AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                       letterSpacing: 0.2,
                     ),
                   ),
@@ -222,8 +222,8 @@ class FarmOwnerHeader extends ConsumerWidget {
                       Text(
                         _getGreeting(),
                         style: AppTypography.h5.copyWith(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 20,
+                          fontWeight: AppTypography.headingWeight,
+                          fontSize: AppTypography.headingSize,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                           letterSpacing: -0.3,
                         ),
@@ -235,8 +235,8 @@ class FarmOwnerHeader extends ConsumerWidget {
                   Text(
                     userName,
                     style: AppTypography.bodyLarge.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: AppTypography.bodySize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark
                           ? Colors.white.withOpacity(0.85)
                           : AppColors.textPrimary.withOpacity(0.75),
@@ -260,11 +260,11 @@ class FarmOwnerHeader extends ConsumerWidget {
                       Text(
                         'Farm Owner',
                         style: AppTypography.bodySmall.copyWith(
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                           color: isDark
                               ? Colors.white.withOpacity(0.6)
                               : AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ],
@@ -329,11 +329,11 @@ class FarmOwnerHeader extends ConsumerWidget {
                 child: Text(
                   _getFormattedDate(),
                   style: AppTypography.bodyMedium.copyWith(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark
                         ? Colors.white.withOpacity(0.7)
                         : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     letterSpacing: 0.1,
                   ),
                   maxLines: 1,
@@ -414,8 +414,8 @@ class FarmOwnerHeader extends ConsumerWidget {
                   badge > 9 ? '9+' : badge.toString(),
                   style: AppTypography.caption.copyWith(
                     color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppTypography.microSize,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -480,8 +480,8 @@ class FarmOwnerHeader extends ConsumerWidget {
                   initials,
                   style: AppTypography.bodyMedium.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: AppTypography.bodySize,
                   ),
                 ),
               ),
@@ -604,8 +604,8 @@ class FarmOwnerHeader extends ConsumerWidget {
                   badge > 9 ? '9+' : badge.toString(),
                   style: AppTypography.caption.copyWith(
                     color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppTypography.microSize,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -730,8 +730,8 @@ class FarmOwnerHeader extends ConsumerWidget {
                           userName.isNotEmpty ? userName[0].toUpperCase() : 'O',
                           style: AppTypography.bodyMedium.copyWith(
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontWeight: AppTypography.headingWeight,
+                            fontSize: AppTypography.cardTitleSize,
                           ),
                         ),
                       ),
@@ -741,8 +741,8 @@ class FarmOwnerHeader extends ConsumerWidget {
                       userName.split(' ').first,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: AppTypography.bodySize,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
@@ -813,8 +813,8 @@ class FarmOwnerHeader extends ConsumerWidget {
                   farm,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: AppTypography.bodySize,
                   ),
                 ),
               );

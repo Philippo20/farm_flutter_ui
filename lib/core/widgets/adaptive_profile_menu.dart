@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +7,6 @@ import '../../providers/auth_provider.dart';
 import '../../screens/caretaker/chat_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// Uses a touch-friendly bottom sheet on mobile and a wider anchored menu on
 /// larger screens while preserving each header's existing actions.
@@ -103,16 +103,16 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Your account',
-                          style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.cardTitleSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: isDark
                                   ? Colors.white
                                   : AppColors.textPrimary)),
                       const SizedBox(height: 3),
                       Text('Profile and preferences',
-                          style: GoogleFonts.inter(
-                              fontSize: 12,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
                               color: isDark
                                   ? Colors.white38
                                   : AppColors.textSecondary)),
@@ -159,12 +159,12 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
                               backgroundColor:
                                   AppColors.primary.withValues(alpha: 0.12),
                               child: Text(_initials(user?.name),
-                                  style: GoogleFonts.inter(
-                                      fontSize: 15,
+                                  style: AppTypography.font(
+                                      fontSize: AppTypography.cardTitleSize,
                                       color: isDark
                                           ? Colors.white
                                           : AppColors.primary,
-                                      fontWeight: FontWeight.w600)),
+                                      fontWeight: AppTypography.headingWeight)),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -175,17 +175,17 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
                                   Text(user?.name ?? 'Farm Estates user',
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.inter(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
+                                      style: AppTypography.font(
+                                          fontSize: AppTypography.bodySize,
+                                          fontWeight: AppTypography.headingWeight,
                                           color: isDark
                                               ? Colors.white
                                               : AppColors.textPrimary)),
                                   const SizedBox(height: 4),
                                   Text(user?.role.displayName ?? 'Account',
-                                      style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
+                                      style: AppTypography.font(
+                                          fontSize: AppTypography.fieldLabelSize,
+                                          fontWeight: AppTypography.labelWeight,
                                           color: isDark
                                               ? Colors.white70
                                               : AppColors.primary)),
@@ -194,8 +194,8 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
                                     Text(user!.email,
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.inter(
-                                            fontSize: 12,
+                                        style: AppTypography.font(
+                                            fontSize: AppTypography.captionSize,
                                             color: isDark
                                                 ? Colors.white54
                                                 : AppColors.textSecondary)),
@@ -249,8 +249,8 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
                     side: BorderSide(
                         color: AppColors.error.withValues(alpha: 0.2)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    textStyle: GoogleFonts.inter(
-                        fontSize: 13, fontWeight: FontWeight.w600),
+                    textStyle: AppTypography.font(
+                        fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
@@ -301,15 +301,15 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Text(label,
-                      style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.actionSize,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
                   const SizedBox(height: 3),
                   Text(subtitle,
-                      style: GoogleFonts.inter(
-                          fontSize: 11,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.fieldLabelSize,
                           color: isDark
                               ? Colors.white54
                               : AppColors.textSecondary)),

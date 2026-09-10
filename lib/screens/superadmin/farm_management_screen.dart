@@ -687,7 +687,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
           Text(
             'Farm Management',
             style: AppTypography.h5.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -726,7 +726,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
             Text(
               'Farm Management',
               style: AppTypography.h4.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -773,7 +773,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                 child: Text(
                   'All Farms',
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -782,7 +782,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                 '${filteredFarms.length} records',
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white60 : AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ],
@@ -835,7 +835,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           letterSpacing: 0.2,
         ),
       ),
@@ -856,8 +856,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
           text,
           style: TextStyle(
             color: color,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
+            fontSize: AppTypography.fieldLabelSize,
+            fontWeight: AppTypography.labelWeight,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -878,8 +878,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
         text,
         style: TextStyle(
           color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
+          fontSize: AppTypography.fieldLabelSize,
+          fontWeight: AppTypography.labelWeight,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -1048,8 +1048,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                     Text(
                       stat['value'] as String,
                       style: TextStyle(
-                          fontSize: isMobile ? 22 : 16,
-                          fontWeight: FontWeight.w500,
+                          fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.cardTitleSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: statColor),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1057,7 +1057,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                     Text(
                       stat['title'] as String,
                       style: TextStyle(
-                          fontSize: isMobile ? 12 : 10,
+                          fontSize: isMobile ? AppTypography.captionSize : AppTypography.microSize,
                           color: statColor.withValues(alpha: 0.8)),
                       maxLines: isMobile ? 2 : 1,
                       overflow: TextOverflow.ellipsis,
@@ -1094,7 +1094,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
             color: isSelected
                 ? AppColors.primary
                 : (isDark ? Colors.white70 : AppColors.textSecondary),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
           ),
         );
       }).toList(),
@@ -1147,15 +1147,15 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                         children: [
                           Text(farm['name'],
                               style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
+                                  fontWeight: AppTypography.labelWeight,
+                                  fontSize: AppTypography.bodySize,
                                   color: isDark
                                       ? Colors.white
                                       : AppColors.textPrimary)),
                           Text(
                               '${farm['id']} | Manager: ${farm['farmManager']} | Caretaker: ${farm['caretaker']}',
                               style: TextStyle(
-                                  fontSize: 11,
+                                  fontSize: AppTypography.fieldLabelSize,
                                   color: isDark
                                       ? Colors.white54
                                       : AppColors.textSecondary)),
@@ -1170,8 +1170,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                 child: Text(
                   farm['location'],
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                    fontSize: AppTypography.actionSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white70 : AppColors.textSecondary,
                   ),
                   maxLines: 1,
@@ -1183,8 +1183,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                 child: Text(
                   '${farm['batches']}',
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                    fontSize: AppTypography.actionSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white70 : AppColors.textSecondary,
                   ),
                 ),
@@ -1194,7 +1194,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                 child: Text(
                   farm['created'],
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
                   ),
                 ),
@@ -1226,7 +1226,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
             Expanded(
                 child: Text(text,
                     style: AppTypography.bodySmall
-                        .copyWith(color: secondary, fontSize: 12))),
+                        .copyWith(color: secondary, fontSize: AppTypography.captionSize))),
           ],
         );
     Widget metric(String label, String amount, IconData icon, Color color) =>
@@ -1241,14 +1241,14 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                 Expanded(
                     child: Text(label,
                         style: AppTypography.bodySmall
-                            .copyWith(color: secondary, fontSize: 12))),
+                            .copyWith(color: secondary, fontSize: AppTypography.captionSize))),
               ]),
               const SizedBox(height: 6),
               Text(amount,
                   style: AppTypography.bodyLarge.copyWith(
                       color: foreground,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600)),
+                      fontSize: AppTypography.sectionTitleSize,
+                      fontWeight: AppTypography.headingWeight)),
             ],
           ),
         );
@@ -1288,8 +1288,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                       Text(value('name'),
                           style: AppTypography.bodyLarge.copyWith(
                               color: foreground,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600)),
+                              fontSize: AppTypography.sectionTitleSize,
+                              fontWeight: AppTypography.headingWeight)),
                       const SizedBox(height: 6),
                       Wrap(spacing: 8, runSpacing: 6, children: [
                         _buildBadge(value('status'), statusColor),
@@ -1345,8 +1345,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                 Text('Assigned team',
                     style: AppTypography.bodySmall.copyWith(
                         color: foreground,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13)),
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: AppTypography.actionSize)),
                 const SizedBox(height: 10),
                 detail(
                     Icons.person_outline, 'Manager: ${value('farmManager')}'),
@@ -1684,7 +1684,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
           farm['name'],
           style: AppTypography.h4.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -1889,7 +1889,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                   value,
                   style: AppTypography.h6.copyWith(
                     color: color,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1953,7 +1953,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                       title,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     Text(
@@ -2012,7 +2012,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
               textAlign: TextAlign.end,
               style: AppTypography.bodyMedium.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -2115,7 +2115,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                   name,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -2182,7 +2182,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                   'Overall batch progress',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -2190,7 +2190,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                 '${(progress * 100).round()}%',
                 style: AppTypography.h6.copyWith(
                   color: AppColors.warning,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
             ],
@@ -2279,7 +2279,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                   'Payment progress',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -2287,7 +2287,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                 '${(stats.paidRatio * 100).round()}%',
                 style: AppTypography.h6.copyWith(
                   color: AppColors.success,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
             ],
@@ -2349,7 +2349,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                   value,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -2462,7 +2462,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                               'Add New Farm',
                               style: AppTypography.h6.copyWith(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w600),
+                                  fontWeight: AppTypography.headingWeight),
                             ),
                             Text(
                               'Register a new farm in the system',
@@ -2832,7 +2832,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                             Text('Edit Farm',
                                 style: AppTypography.h6.copyWith(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.w600)),
+                                    fontWeight: AppTypography.headingWeight)),
                             Text('Update farm information',
                                 style: AppTypography.bodySmall
                                     .copyWith(color: Colors.white70)),
@@ -2879,7 +2879,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                           children: [
                             Text(farm['name'],
                                 style: AppTypography.bodyLarge.copyWith(
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: AppTypography.labelWeight,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary)),
@@ -3273,7 +3273,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: AppTypography.headingWeight,
                               ),
                             ),
                             Text(
@@ -3423,7 +3423,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
               const SizedBox(height: AppSpacing.lg),
               Text('Delete Farm?',
                   style: AppTypography.h5.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary)),
               const SizedBox(height: AppSpacing.sm),
               Text(
@@ -3508,7 +3508,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
   Widget _buildFormLabel(String label, bool isDark) {
     return Text(label,
         style: AppTypography.bodyMedium.copyWith(
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
             color: isDark ? Colors.white : AppColors.textPrimary));
   }
 
@@ -3578,7 +3578,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
           dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
           style: TextStyle(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontSize: 14),
+              fontSize: AppTypography.bodySize),
           items: normalizedItems
               .map((item) => DropdownMenuItem(
                   value: item,
@@ -3744,7 +3744,7 @@ class _FarmRevenueAreaChart extends StatelessWidget {
                     ? '${(value / 1000).toStringAsFixed(1)}k'
                     : value.toStringAsFixed(0),
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: AppTypography.microSize,
                   color: isDark ? Colors.white54 : AppColors.textSecondary,
                 ),
               ),
@@ -3765,7 +3765,7 @@ class _FarmRevenueAreaChart extends StatelessWidget {
                   child: Text(
                     '${date.month}/${date.day}',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: AppTypography.microSize,
                       color: isDark ? Colors.white54 : AppColors.textSecondary,
                     ),
                   ),

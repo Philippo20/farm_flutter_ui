@@ -1,5 +1,5 @@
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart'; // Add to pubspec.yaml
 
 class SecondRow extends StatefulWidget {
@@ -87,9 +87,9 @@ class _SecondRowState extends State<SecondRow> {
             .map(
               (spot) => LineTooltipItem(
                 spot.y.toStringAsFixed(1),
-                GoogleFonts.poppins(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                AppTypography.font(
+                  fontSize: AppTypography.fieldLabelSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
@@ -140,9 +140,9 @@ class _SecondRowState extends State<SecondRow> {
           Expanded(
             child: Text(
               'Temperature & Humidity',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.font(
+                fontSize: AppTypography.cardTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: widget.isDark ? Colors.white : Colors.white,
               ),
             ),
@@ -275,9 +275,9 @@ class _SecondRowState extends State<SecondRow> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
+                fontWeight: AppTypography.labelWeight,
                 color: isDark ? Colors.white : Colors.black,
               ),
             ),
@@ -290,9 +290,9 @@ class _SecondRowState extends State<SecondRow> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.headingWeight,
                 color: statusColor,
               ),
             ),
@@ -319,9 +319,9 @@ class _SecondRowState extends State<SecondRow> {
       child: Text(
         count.toString(),
         textAlign: TextAlign.center,
-        style: GoogleFonts.poppins(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
+        style: AppTypography.font(
+          fontSize: AppTypography.microSize,
+          fontWeight: AppTypography.headingWeight,
           color: count == 0 ? Colors.white : Colors.white,
           height: 1,
         ),
@@ -358,9 +358,9 @@ class _SecondRowState extends State<SecondRow> {
               children: [
                 Text(
                   'Humidity',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
@@ -377,9 +377,9 @@ class _SecondRowState extends State<SecondRow> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Text(
               "${humidity.toStringAsFixed(1)}%",
-              style: GoogleFonts.poppins(
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.font(
+                fontSize: AppTypography.metricSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),
@@ -462,9 +462,9 @@ class _SecondRowState extends State<SecondRow> {
               children: [
                 Text(
                   'Temperature',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
@@ -481,9 +481,9 @@ class _SecondRowState extends State<SecondRow> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Text(
               "${temperature.toStringAsFixed(1)}°C",
-              style: GoogleFonts.poppins(
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.font(
+                fontSize: AppTypography.metricSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),
@@ -565,9 +565,9 @@ class _SecondRowState extends State<SecondRow> {
               children: [
                 Text(
                   'Water Temperature',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
@@ -584,9 +584,9 @@ class _SecondRowState extends State<SecondRow> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Text(
               "${waterTemp.toStringAsFixed(1)}°C",
-              style: GoogleFonts.poppins(
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.font(
+                fontSize: AppTypography.metricSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),

@@ -1,5 +1,5 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 
 class WeatherInfo {
@@ -58,19 +58,19 @@ class WeatherInfoChip extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '${temperature.toStringAsFixed(1)}°C',
-            style: GoogleFonts.poppins(
+            style: AppTypography.font(
               color: textColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
+              fontWeight: AppTypography.headingWeight,
+              fontSize: AppTypography.actionSize,
             ),
           ),
           const SizedBox(width: 6),
           Text(
             condition,
-            style: GoogleFonts.inter(
+            style: AppTypography.font(
               color: textColor,
-              fontWeight: FontWeight.w500,
-              fontSize: 12,
+              fontWeight: AppTypography.labelWeight,
+              fontSize: AppTypography.captionSize,
             ),
           ),
         ],

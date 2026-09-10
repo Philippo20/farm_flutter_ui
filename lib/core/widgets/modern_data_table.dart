@@ -164,7 +164,7 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
                 Text(
                   widget.title,
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 if (widget.subtitle != null) ...[
@@ -284,7 +284,7 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
                 Text(
                   column.label,
                   style: AppTypography.labelLarge.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ],
@@ -376,8 +376,8 @@ class _ModernDataTableState<T> extends State<ModernDataTable<T>> {
                                   ? Colors.white
                                   : colorScheme.onSurface,
                               fontWeight: pageIndex == _currentPage
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
+                                  ? AppTypography.headingWeight
+                                  : AppTypography.bodyWeight,
                             ),
                           ),
                         ),

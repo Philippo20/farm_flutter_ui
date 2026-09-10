@@ -1,7 +1,6 @@
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -366,9 +365,9 @@ class _FarmManagerSettingsScreenState
             children: [
               Text(
                 'Settings',
-                style: GoogleFonts.inter(
-                  fontSize: isMobile ? 22 : 28,
-                  fontWeight: FontWeight.w800,
+                style: AppTypography.font(
+                  fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                   letterSpacing: -0.5,
                 ),
@@ -376,8 +375,8 @@ class _FarmManagerSettingsScreenState
               const SizedBox(height: 4),
               Text(
                 'Manage your preferences and account settings',
-                style: GoogleFonts.inter(
-                  fontSize: isMobile ? 13 : 14,
+                style: AppTypography.font(
+                  fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
                   color: isDark ? Colors.white54 : AppColors.textSecondary,
                 ),
               ),
@@ -417,9 +416,9 @@ class _FarmManagerSettingsScreenState
             const SizedBox(height: 12),
             Text(
               'Unable to load settings',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+              style: AppTypography.font(
+                fontSize: AppTypography.cardTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -427,8 +426,8 @@ class _FarmManagerSettingsScreenState
             Text(
               _errorMessage ?? '',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white54 : AppColors.textSecondary,
               ),
             ),
@@ -486,9 +485,9 @@ class _FarmManagerSettingsScreenState
                 child: Center(
                   child: Text(
                     initials,
-                    style: GoogleFonts.inter(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.pageTitleSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: Colors.white,
                     ),
                   ),
@@ -501,17 +500,17 @@ class _FarmManagerSettingsScreenState
                   children: [
                     Text(
                       name,
-                      style: GoogleFonts.inter(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       email,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.actionSize,
                         color:
                             isDark ? Colors.white54 : AppColors.textSecondary,
                       ),
@@ -528,9 +527,9 @@ class _FarmManagerSettingsScreenState
                       ),
                       child: Text(
                         'Farm Manager',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.fieldLabelSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: AppColors.primary,
                         ),
                       ),
@@ -618,9 +617,9 @@ class _FarmManagerSettingsScreenState
           const SizedBox(height: 16),
           Text(
             'Theme',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white54 : AppColors.textSecondary,
             ),
           ),
@@ -701,9 +700,9 @@ class _FarmManagerSettingsScreenState
               const SizedBox(height: 6),
               Text(
                 label,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
+                  fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
                   color: isSelected
                       ? AppColors.primary
                       : (isDark ? Colors.white54 : AppColors.textSecondary),
@@ -792,9 +791,9 @@ class _FarmManagerSettingsScreenState
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white54 : AppColors.textSecondary,
           ),
         ),
@@ -820,9 +819,9 @@ class _FarmManagerSettingsScreenState
                 Icons.keyboard_arrow_down_rounded,
                 color: isDark ? Colors.white38 : AppColors.textSecondary,
               ),
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.actionSize,
+                fontWeight: AppTypography.labelWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
               items: options
@@ -848,9 +847,9 @@ class _FarmManagerSettingsScreenState
           const SizedBox(height: 12),
           Text(
             'ALERT TYPES',
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
+            style: AppTypography.font(
+              fontSize: AppTypography.microSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white38 : AppColors.textSecondary,
               letterSpacing: 1,
             ),
@@ -899,9 +898,9 @@ class _FarmManagerSettingsScreenState
           const SizedBox(height: 12),
           Text(
             'CHANNELS',
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
+            style: AppTypography.font(
+              fontSize: AppTypography.microSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white38 : AppColors.textSecondary,
               letterSpacing: 1,
             ),
@@ -1018,8 +1017,8 @@ class _FarmManagerSettingsScreenState
           const SizedBox(height: 12),
           Text(
             'These actions are irreversible. Please proceed with caution.',
-            style: GoogleFonts.inter(
-              fontSize: 12,
+            style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
               color: isDark ? Colors.white38 : AppColors.textSecondary,
             ),
           ),
@@ -1130,9 +1129,9 @@ class _FarmManagerSettingsScreenState
               const SizedBox(height: 16),
               Text(
                 title,
-                style: GoogleFonts.inter(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+                style: AppTypography.font(
+                  fontSize: AppTypography.sectionTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -1140,8 +1139,8 @@ class _FarmManagerSettingsScreenState
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
+                style: AppTypography.font(
+                  fontSize: AppTypography.actionSize,
                   color: isDark ? Colors.white54 : AppColors.textSecondary,
                 ),
               ),
@@ -1230,9 +1229,9 @@ class _FarmManagerSettingsScreenState
         const SizedBox(width: 10),
         Text(
           title,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
+          style: AppTypography.font(
+            fontSize: AppTypography.cardTitleSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -1278,16 +1277,16 @@ class _FarmManagerSettingsScreenState
                     children: [
                       Text(
                         title,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.actionSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       Text(
                         subtitle,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.fieldLabelSize,
                           color:
                               isDark ? Colors.white38 : AppColors.textSecondary,
                         ),
@@ -1412,9 +1411,9 @@ class _FarmManagerSettingsScreenState
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

@@ -1,6 +1,6 @@
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
 /// A clean, professional radial gauge card for sensor readings.
@@ -136,9 +136,9 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
                   child: Text(widget.label,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: compact ? 11 : 12,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: compact ? AppTypography.fieldLabelSize : AppTypography.captionSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark
                             ? Colors.white.withOpacity(0.7)
                             : AppColors.textSecondary,
@@ -181,9 +181,9 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
                                               widget.currentValue
                                           ? 0
                                           : 1),
-                                  style: GoogleFonts.inter(
-                                    fontSize: compact ? 18 : 22,
-                                    fontWeight: FontWeight.w700,
+                                  style: AppTypography.font(
+                                    fontSize: compact ? AppTypography.sectionTitleSize : AppTypography.pageTitleSize,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: sc,
                                     height: 1,
                                   ),
@@ -191,9 +191,9 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
                                 const SizedBox(height: 1),
                                 Text(
                                   widget.unit,
-                                  style: GoogleFonts.inter(
-                                    fontSize: compact ? 9 : 10,
-                                    fontWeight: FontWeight.w500,
+                                  style: AppTypography.font(
+                                    fontSize: compact ? AppTypography.microSize : AppTypography.microSize,
+                                    fontWeight: AppTypography.labelWeight,
                                     color: isDark
                                         ? Colors.white38
                                         : AppColors.textSecondary,
@@ -214,8 +214,8 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
                 Expanded(
                   child: Text(
                     '${widget.optimalMin.toStringAsFixed(0)}–${widget.optimalMax.toStringAsFixed(0)} ${widget.unit}',
-                    style: GoogleFonts.inter(
-                      fontSize: compact ? 8 : 9,
+                    style: AppTypography.font(
+                      fontSize: compact ? AppTypography.microSize : AppTypography.microSize,
                       color: isDark
                           ? Colors.white24
                           : AppColors.textSecondary.withOpacity(0.6),
@@ -238,9 +238,9 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
                     const SizedBox(width: 2),
                     Text(
                       widget.trendText!,
-                      style: GoogleFonts.inter(
-                        fontSize: compact ? 9 : 10,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: compact ? AppTypography.microSize : AppTypography.microSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: widget.trendUp
                             ? AppColors.success
                             : AppColors.error,

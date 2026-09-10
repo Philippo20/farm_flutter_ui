@@ -207,7 +207,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
                   Text(
                     result['title'] as String,
                     style: AppTypography.bodyLarge.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -246,8 +246,7 @@ class _GlobalSearchScreenState extends ConsumerState<GlobalSearchScreen> {
         Text(
           'Recent Searches',
           style: AppTypography.h6.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),

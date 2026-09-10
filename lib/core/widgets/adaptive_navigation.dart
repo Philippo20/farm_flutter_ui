@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
@@ -44,7 +45,7 @@ class AdaptiveNavigation extends StatelessWidget {
       ),
       selectedLabelTextStyle: const TextStyle(
         color: AppColors.primary,
-        fontWeight: FontWeight.w600,
+        fontWeight: AppTypography.headingWeight,
       ),
       unselectedLabelTextStyle: TextStyle(
         color: isDark ? AppColors.neutral400 : AppColors.neutral300,

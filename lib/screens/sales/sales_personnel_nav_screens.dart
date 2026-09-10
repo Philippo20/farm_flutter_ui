@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -398,7 +397,7 @@ class SalesPersonnelPipelineScreen extends StatelessWidget {
                 'Pipeline Board',
                 style: AppTypography.h5.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
               _PipelineSummaryChip(
@@ -894,7 +893,7 @@ class _SalesPersonnelPage extends StatelessWidget {
             sectionTitle,
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -956,8 +955,8 @@ class _Hero extends StatelessWidget {
                   title,
                   style: AppTypography.h4.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: isMobile ? 24 : 28,
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -1013,7 +1012,7 @@ class _ResponsiveGrid extends StatelessWidget {
               'No assigned records yet',
               style: AppTypography.h6.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
             const SizedBox(height: 4),
@@ -1100,7 +1099,7 @@ class _SalesPersonnelCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -1232,8 +1231,8 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.inter(
-        fontSize: 12,
+      hintStyle: AppTypography.font(
+        fontSize: AppTypography.captionSize,
         color: isDark ? Colors.white24 : AppColors.textSecondary,
       ),
       prefixIcon: Icon(
@@ -1271,9 +1270,9 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Text(
       label,
-      style: GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
+      style: AppTypography.font(
+        fontSize: AppTypography.fieldLabelSize,
+        fontWeight: AppTypography.headingWeight,
         color: isDark ? Colors.white54 : AppColors.textSecondary,
       ),
     );
@@ -1327,8 +1326,8 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                 value,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -1407,9 +1406,9 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                     children: [
                       Text(
                         'Delivery Handover',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.cardTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -1417,8 +1416,8 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                         'Confirm the off-taker receipt and payment status',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
                           color:
                               isDark ? Colors.white38 : AppColors.textSecondary,
                         ),
@@ -1500,9 +1499,9 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                       icon: const Icon(Icons.print_outlined, size: 16),
                       label: Text(
                         'Open printable invoice',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -1525,8 +1524,8 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                       child: DropdownButtonFormField<String>(
                         initialValue: _status,
                         isExpanded: true,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                         dropdownColor:
@@ -1557,8 +1556,8 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                       child: TextFormField(
                         controller: _receiptController,
                         enabled: !_saving,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                         decoration: _decoration(
@@ -1586,16 +1585,16 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                       contentPadding: EdgeInsets.zero,
                       title: Text(
                         'Payment received',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       subtitle: Text(
                         'Confirm only after payment is verified',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.fieldLabelSize,
                           color:
                               isDark ? Colors.white38 : AppColors.textSecondary,
                         ),
@@ -1612,8 +1611,8 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                       child: DropdownButtonFormField<String>(
                         initialValue: _paymentMode,
                         isExpanded: true,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                         dropdownColor:
@@ -1643,8 +1642,8 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                       enabled: !_saving,
                       minLines: 3,
                       maxLines: 5,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                       decoration: _decoration(
@@ -1658,9 +1657,9 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
                         _error!,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: AppColors.error,
                         ),
                       ),
@@ -1690,9 +1689,9 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                     ),
                     child: Text(
                       'Cancel',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.actionSize,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                   ),
@@ -1710,9 +1709,9 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                         : const Icon(Icons.save_outlined, size: 18),
                     label: Text(
                       _saving ? 'Saving...' : 'Save Handover',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.actionSize,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -1793,7 +1792,7 @@ class _SalesCollectionPanel extends StatelessWidget {
                       'Collection Health',
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1872,7 +1871,7 @@ class _SalesLedgerPanel extends StatelessWidget {
                       'Sales Orders',
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -1932,7 +1931,7 @@ class _SaleOrderCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -2020,7 +2019,7 @@ class _CollectionProgress extends StatelessWidget {
               value,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ],
@@ -2074,7 +2073,7 @@ class _PaymentStatusRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -2083,7 +2082,7 @@ class _PaymentStatusRow extends StatelessWidget {
             sale['amount']! as String,
             style: AppTypography.caption.copyWith(
               color: color,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -2104,7 +2103,7 @@ class _SalesPerformanceNotesSection extends StatelessWidget {
           'Performance Notes',
           style: AppTypography.h5.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -2140,7 +2139,7 @@ class _SalesInsightCard extends StatelessWidget {
               'Focus on collecting Green Basket and North Ridge balances before opening new credit sales. FreshMart remains the strongest margin account this week.',
               style: AppTypography.bodyMedium.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -2243,7 +2242,7 @@ class _PipelineStage extends StatelessWidget {
                       stage['stage']! as String,
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -2315,7 +2314,7 @@ class _PipelineDealCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.bodyMedium.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -2376,7 +2375,7 @@ class _PipelineDealCard extends StatelessWidget {
                   '$probability%',
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ],
@@ -2548,7 +2547,7 @@ class _PipelineDealDetailsContent extends StatelessWidget {
                       deal['buyer']! as String,
                       style: AppTypography.h5.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -2620,7 +2619,7 @@ class _PipelineDealDetailsContent extends StatelessWidget {
             'Opportunity Controls',
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -2720,7 +2719,7 @@ class _PipelineMetric extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -2766,7 +2765,7 @@ class _PipelineNextAction extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -2811,7 +2810,7 @@ class _PipelineSummaryChip extends StatelessWidget {
             '$label: $value',
             style: AppTypography.caption.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -2863,7 +2862,7 @@ class _KpiCard extends StatelessWidget {
                   data.value,
                   style: AppTypography.h5.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -2946,7 +2945,7 @@ class _SettingRow extends StatelessWidget {
                   title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -2992,7 +2991,7 @@ class _MetricPill extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -3045,7 +3044,7 @@ class _StatusBadge extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -3067,7 +3066,7 @@ class _MutedText extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       style: AppTypography.caption.copyWith(
         color: isDark ? Colors.white60 : AppColors.textSecondary,
-        fontWeight: FontWeight.w500,
+        fontWeight: AppTypography.labelWeight,
       ),
     );
   }

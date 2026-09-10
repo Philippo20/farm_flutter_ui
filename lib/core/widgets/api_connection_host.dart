@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import '../../services/api_connection.dart';
 
@@ -46,14 +47,14 @@ class ApiConnectionHost extends StatelessWidget {
                                   Text('Let’s reconnect',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.w600,
+                                          fontSize: AppTypography.pageTitleSize,
+                                          fontWeight: AppTypography.headingWeight,
                                           color: colors.onSurface)),
                                   const SizedBox(height: 12),
                                   Text(connectionMessage,
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                          fontSize: 14,
+                                          fontSize: AppTypography.bodySize,
                                           height: 1.5,
                                           color: colors.onSurfaceVariant)),
                                   const SizedBox(height: 12),
@@ -63,7 +64,7 @@ class ApiConnectionHost extends StatelessWidget {
                                           : 'Your place is saved. Pending data will refresh when you reconnect.',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: AppTypography.captionSize,
                                           height: 1.5,
                                           color: colors.onSurfaceVariant)),
                                   const SizedBox(height: 24),

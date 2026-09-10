@@ -48,8 +48,8 @@ class _TechnicianDashboardNewState
                     '3',
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                      fontSize: AppTypography.microSize,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),
@@ -82,7 +82,7 @@ class _TechnicianDashboardNewState
               Text(
                 'Maintenance Operations',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -135,7 +135,7 @@ class _TechnicianDashboardNewState
                   'Maintenance Dashboard',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -224,7 +224,7 @@ class _TechnicianDashboardNewState
           Text(
             count,
             style: AppTypography.h4.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: color,
             ),
           ),
@@ -232,7 +232,7 @@ class _TechnicianDashboardNewState
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
             ),
             textAlign: TextAlign.center,
           ),
@@ -341,7 +341,7 @@ class _TechnicianDashboardNewState
             Text(
               feature.title,
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
@@ -353,7 +353,7 @@ class _TechnicianDashboardNewState
               feature.subtitle,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontSize: 10,
+                fontSize: AppTypography.microSize,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -379,7 +379,7 @@ class _TechnicianDashboardNewState
                 Text(
                   'Upcoming Maintenance',
                   style: AppTypography.h6.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -398,8 +398,8 @@ class _TechnicianDashboardNewState
                 '3 Due',
                 style: AppTypography.bodySmall.copyWith(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10,
+                  fontWeight: AppTypography.headingWeight,
+                  fontSize: AppTypography.microSize,
                 ),
               ),
             ),
@@ -478,7 +478,7 @@ class _TechnicianDashboardNewState
                       child: Text(
                         title,
                         style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -497,8 +497,8 @@ class _TechnicianDashboardNewState
                         frequency,
                         style: AppTypography.bodySmall.copyWith(
                           color: color,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ),
@@ -516,8 +516,8 @@ class _TechnicianDashboardNewState
                   dueDate,
                   style: AppTypography.bodySmall.copyWith(
                     color: color,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppTypography.microSize,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ],
@@ -543,7 +543,7 @@ class _TechnicianDashboardNewState
             Text(
               'Recent Issues',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -626,7 +626,7 @@ class _TechnicianDashboardNewState
                       child: Text(
                         title,
                         style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -645,8 +645,8 @@ class _TechnicianDashboardNewState
                         status,
                         style: AppTypography.bodySmall.copyWith(
                           color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ),
@@ -664,7 +664,7 @@ class _TechnicianDashboardNewState
                   time,
                   style: AppTypography.bodySmall.copyWith(
                     color: color,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                 ),
               ],

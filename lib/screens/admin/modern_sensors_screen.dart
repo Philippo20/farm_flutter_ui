@@ -1,5 +1,4 @@
 import '../../core/widgets/sensor_form_dialog.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/widgets/device_telemetry_details_modal.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -754,7 +753,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
             'Unable to load sensors',
             style: AppTypography.titleMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w400,
+              fontWeight: AppTypography.bodyWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -833,7 +832,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                       'IoT Sensor Fleet',
                       style: AppTypography.h3.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w400,
+                        fontWeight: AppTypography.bodyWeight,
                         letterSpacing: -1,
                       ),
                     ),
@@ -892,7 +891,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
             'Live telemetry stream',
             style: AppTypography.label.copyWith(
               color: isDark ? Colors.white : AppColors.primaryDark,
-              fontWeight: FontWeight.w400,
+              fontWeight: AppTypography.bodyWeight,
             ),
           ),
         ],
@@ -970,7 +969,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
               color: isDark
                   ? Colors.white.withValues(alpha: 0.72)
                   : AppColors.textSecondary,
-              fontWeight: FontWeight.w400,
+              fontWeight: AppTypography.bodyWeight,
             ),
           ),
         ),
@@ -978,7 +977,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
           value,
           style: AppTypography.titleSmall.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w400,
+            fontWeight: AppTypography.bodyWeight,
           ),
         ),
       ],
@@ -1183,7 +1182,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
               'No IoT devices match these filters',
               style: AppTypography.bodyLarge.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w400,
+                fontWeight: AppTypography.bodyWeight,
               ),
             ),
           ],
@@ -1201,7 +1200,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                 'Device Telemetry',
                 style: AppTypography.h5.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w400,
+                  fontWeight: AppTypography.bodyWeight,
                 ),
               ),
             ),
@@ -1209,7 +1208,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
               '${sensors.length} devices',
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontWeight: FontWeight.w400,
+                fontWeight: AppTypography.bodyWeight,
               ),
             ),
           ],
@@ -1331,14 +1330,14 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.caption.copyWith(
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                         color: selected
                             ? AppColors.primary
                             : (isDark
                                 ? Colors.white.withValues(alpha: 0.62)
                                 : AppColors.textSecondary),
                         fontWeight:
-                            selected ? FontWeight.w400 : FontWeight.w400,
+                            selected ? AppTypography.bodyWeight : AppTypography.bodyWeight,
                       ),
                     ),
                   ],
@@ -1457,8 +1456,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                 'Delete Sensor?',
                 textAlign: TextAlign.center,
                 style: AppTypography.titleLarge.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
+                  fontSize: AppTypography.headingSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -1566,7 +1565,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                     'Delete Sensor?',
                     style: AppTypography.titleMedium.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ),
@@ -2220,8 +2219,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         label,
         isDark,
         TextFormField(
-          style: GoogleFonts.inter(
-              fontSize: 12,
+          style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
               color: isDark ? Colors.white : AppColors.textPrimary),
           controller: controller,
           enabled: enabled,
@@ -2244,8 +2243,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         isDark,
         DropdownButtonFormField<String>(
           isExpanded: true,
-          style: GoogleFonts.inter(
-              fontSize: 12,
+          style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
               color: isDark ? Colors.white : AppColors.textPrimary),
           initialValue: items.contains(value) ? value : null,
           items: items
@@ -2260,9 +2259,9 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
   Widget _sensorFieldLabel(String label, bool dark, Widget field) =>
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label,
-            style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+                fontSize: AppTypography.fieldLabelSize,
+                fontWeight: AppTypography.headingWeight,
                 color: dark ? Colors.white70 : AppColors.textSecondary)),
         const SizedBox(height: 6),
         field,
@@ -2373,7 +2372,7 @@ class _SensorFormSectionHeader extends StatelessWidget {
                   title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: AppTypography.bodyWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -2440,7 +2439,7 @@ class _SensorDeviceCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.titleSmall.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w400,
+                        fontWeight: AppTypography.bodyWeight,
                       ),
                     ),
                     Text(
@@ -2451,7 +2450,7 @@ class _SensorDeviceCard extends StatelessWidget {
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.62)
                             : AppColors.textSecondary,
-                        fontWeight: FontWeight.w400,
+                        fontWeight: AppTypography.bodyWeight,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -2520,7 +2519,7 @@ class _SensorDeviceCard extends StatelessWidget {
                 sensor.reading,
                 style: AppTypography.h3.copyWith(
                   color: sensor.color,
-                  fontWeight: FontWeight.w400,
+                  fontWeight: AppTypography.bodyWeight,
                   letterSpacing: -1,
                 ),
               ),
@@ -2533,7 +2532,7 @@ class _SensorDeviceCard extends StatelessWidget {
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.62)
                         : AppColors.textSecondary,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: AppTypography.bodyWeight,
                   ),
                 ),
               ),
@@ -2550,7 +2549,7 @@ class _SensorDeviceCard extends StatelessWidget {
               color: isDark
                   ? Colors.white.withValues(alpha: 0.60)
                   : AppColors.textSecondary,
-              fontWeight: FontWeight.w400,
+              fontWeight: AppTypography.bodyWeight,
             ),
           ),
           const SizedBox(height: 4),
@@ -2562,7 +2561,7 @@ class _SensorDeviceCard extends StatelessWidget {
               color: isDark
                   ? Colors.white.withValues(alpha: 0.52)
                   : AppColors.textSecondary,
-              fontWeight: FontWeight.w400,
+              fontWeight: AppTypography.bodyWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -2614,7 +2613,7 @@ class _SensorDeviceCard extends StatelessWidget {
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.64)
                         : AppColors.textSecondary,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: AppTypography.bodyWeight,
                   ),
                 ),
               ),
@@ -2630,7 +2629,7 @@ class _SensorDeviceCard extends StatelessWidget {
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.52)
                         : AppColors.textSecondary,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: AppTypography.bodyWeight,
                   ),
                 ),
               ),
@@ -2698,7 +2697,7 @@ class _FleetStatCard extends StatelessWidget {
                   stat.value,
                   style: AppTypography.titleMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: AppTypography.bodyWeight,
                   ),
                 ),
                 Text(
@@ -2709,7 +2708,7 @@ class _FleetStatCard extends StatelessWidget {
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.62)
                         : AppColors.textSecondary,
-                    fontWeight: FontWeight.w400,
+                    fontWeight: AppTypography.bodyWeight,
                   ),
                 ),
               ],
@@ -2740,8 +2739,8 @@ class _StatusBadge extends StatelessWidget {
         label,
         style: TextStyle(
           color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w400,
+          fontSize: AppTypography.fieldLabelSize,
+          fontWeight: AppTypography.bodyWeight,
         ),
       ),
     );
@@ -2777,8 +2776,8 @@ class _TrendPill extends StatelessWidget {
             label,
             style: TextStyle(
               color: color,
-              fontSize: 11,
-              fontWeight: FontWeight.w400,
+              fontSize: AppTypography.fieldLabelSize,
+              fontWeight: AppTypography.bodyWeight,
             ),
           ),
         ],
@@ -2823,7 +2822,7 @@ class _TelemetryChip extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: AppTypography.caption.copyWith(
                 color: color,
-                fontWeight: FontWeight.w400,
+                fontWeight: AppTypography.bodyWeight,
               ),
             ),
           ),
@@ -2860,7 +2859,7 @@ class _HealthBar extends StatelessWidget {
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.62)
                       : AppColors.textSecondary,
-                  fontWeight: FontWeight.w400,
+                  fontWeight: AppTypography.bodyWeight,
                 ),
               ),
             ),
@@ -2868,7 +2867,7 @@ class _HealthBar extends StatelessWidget {
               '$value%',
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w400,
+                fontWeight: AppTypography.bodyWeight,
               ),
             ),
           ],

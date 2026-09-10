@@ -32,8 +32,7 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
         title: Text(
           'Caretaker Dashboard',
           style: AppTypography.h5.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         actions: [
@@ -137,8 +136,7 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                     Text(
                       'Good ${_getGreeting()}, $name!',
                       style: AppTypography.h5.copyWith(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -146,7 +144,6 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                     Text(
                       dateStr,
                       style: AppTypography.bodyMedium.copyWith(
-                        fontFamily: 'Roboto',
                         color: isDark ? Colors.white70 : AppColors.textSecondary,
                       ),
                     ),
@@ -169,9 +166,8 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                 Text(
                   'Assigned Farm: Green Valley Farm',
                   style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -234,9 +230,8 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                     child: Text(
                       action['title'] as String,
                       style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: AppTypography.fieldLabelSize,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -271,8 +266,7 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
           Text(
             'Today\'s Tasks',
             style: AppTypography.h6.copyWith(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -302,17 +296,15 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                       Text(
                         task['task'] as String,
                         style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
+                          fontWeight: AppTypography.headingWeight,
+                          fontSize: AppTypography.captionSize,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       Text(
                         task['time'] as String,
                         style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                           color: isDark ? Colors.white60 : AppColors.textSecondary,
                         ),
                       ),
@@ -328,10 +320,9 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                   child: Text(
                     task['status'] as String,
                     style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 9,
+                      fontSize: AppTypography.microSize,
                       color: task['color'] as Color,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),
@@ -362,8 +353,7 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
           Text(
             'Assigned Batches',
             style: AppTypography.h6.copyWith(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -384,9 +374,8 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                     Text(
                       batch['batch'] as String,
                       style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: AppTypography.fieldLabelSize,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -399,10 +388,9 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                       child: Text(
                         batch['stage'] as String,
                         style: const TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 9,
+                          fontSize: AppTypography.microSize,
                           color: AppColors.success,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ),
@@ -412,8 +400,7 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                 Text(
                   batch['plant'] as String,
                   style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
                   ),
                 ),
@@ -459,8 +446,7 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
               Text(
                 'Recent Records',
                 style: AppTypography.h6.copyWith(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -491,17 +477,15 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                       Text(
                         record['type'] as String,
                         style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       Text(
                         record['time'] as String,
                         style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                           color: isDark ? Colors.white60 : AppColors.textSecondary,
                         ),
                       ),
@@ -536,8 +520,7 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
           Text(
             'Input Requests',
             style: AppTypography.h6.copyWith(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -556,9 +539,8 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                   child: Text(
                     input['item'] as String,
                     style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                      fontSize: AppTypography.captionSize,
+                      fontWeight: AppTypography.labelWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -572,10 +554,9 @@ class _CaretakerDashboardState extends ConsumerState<CaretakerDashboard> {
                   child: Text(
                     input['status'] as String,
                     style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 9,
+                      fontSize: AppTypography.microSize,
                       color: input['color'] as Color,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),

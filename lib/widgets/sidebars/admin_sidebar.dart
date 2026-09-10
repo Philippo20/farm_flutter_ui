@@ -1,5 +1,5 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 import '../../core/widgets/sidebar_collapse_state.dart';
 
@@ -143,9 +143,9 @@ class _AdminSidebarState extends State<AdminSidebar>
                     if (!_isCollapsed)
                       Text(
                         'MENU',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: textColor.withOpacity(0.5),
                           letterSpacing: 1.2,
                         ),
@@ -226,14 +226,14 @@ class _AdminSidebarState extends State<AdminSidebar>
                                     Expanded(
                                       child: Text(
                                         item.label,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 14,
+                                        style: AppTypography.font(
+                                          fontSize: AppTypography.bodySize,
                                           color: selected
                                               ? selectedColor
                                               : textColor,
                                           fontWeight: selected
-                                              ? FontWeight.w500
-                                              : FontWeight.w500,
+                                              ? AppTypography.labelWeight
+                                              : AppTypography.labelWeight,
                                         ),
                                       ),
                                     ),
@@ -280,10 +280,10 @@ class _AdminSidebarState extends State<AdminSidebar>
                                 const SizedBox(width: 16),
                                 Text(
                                   'Logout',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
+                                  style: AppTypography.font(
+                                    fontSize: AppTypography.bodySize,
                                     color: AppColors.danger,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: AppTypography.labelWeight,
                                   ),
                                 ),
                               ],
@@ -351,11 +351,11 @@ class _AdminSidebarState extends State<AdminSidebar>
                         const SizedBox(height: 4),
                         Text(
                           item.label,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.fieldLabelSize,
                             color: color,
                             fontWeight:
-                                selected ? FontWeight.w500 : FontWeight.normal,
+                                selected ? AppTypography.labelWeight : AppTypography.bodyWeight,
                           ),
                         ),
                       ],

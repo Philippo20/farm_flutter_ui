@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -225,9 +226,8 @@ class _SessionSecurityHostState extends ConsumerState<SessionSecurityHost>
                               const Expanded(
                                   child: Text('Are you still there?',
                                       style: TextStyle(
-                                          fontFamily: 'Inter',
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold))),
+                                          fontSize: AppTypography.cardTitleSize,
+                                          fontWeight: AppTypography.headingWeight))),
                             ])),
                         Flexible(
                             child: SingleChildScrollView(
@@ -243,15 +243,14 @@ class _SessionSecurityHostState extends ConsumerState<SessionSecurityHost>
                                       Text(
                                           'For your security, you will be signed out after inactivity. Your session ends in ${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}.',
                                           style: const TextStyle(
-                                              fontFamily: 'Inter',
-                                              fontSize: 12)),
+                                              fontSize: AppTypography.captionSize)),
                                       if (_error != null)
                                         Padding(
                                             padding:
                                                 const EdgeInsets.only(top: 14),
                                             child: Text(_error!,
                                                 style: TextStyle(
-                                                    fontSize: 12,
+                                                    fontSize: AppTypography.captionSize,
                                                     color: Theme.of(context)
                                                         .colorScheme
                                                         .error))),
@@ -265,8 +264,7 @@ class _SessionSecurityHostState extends ConsumerState<SessionSecurityHost>
                                           padding: const EdgeInsets.symmetric(
                                               vertical: 12),
                                           textStyle: const TextStyle(
-                                              fontFamily: 'Inter',
-                                              fontSize: 13),
+                                              fontSize: AppTypography.actionSize),
                                           shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(10))),
@@ -279,8 +277,7 @@ class _SessionSecurityHostState extends ConsumerState<SessionSecurityHost>
                                           padding: const EdgeInsets.symmetric(
                                               vertical: 12),
                                           textStyle: const TextStyle(
-                                              fontFamily: 'Inter',
-                                              fontSize: 13),
+                                              fontSize: AppTypography.actionSize),
                                           shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(10))),

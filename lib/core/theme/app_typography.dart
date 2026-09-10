@@ -2,208 +2,239 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
-/// Grow Room Monitoring App - Typography System
-/// Poppins for Titles (Bold, SemiBold) | Roboto for Body Text (Regular)
+/// Shared Inter typography: semibold headings, medium labels, regular body.
 class AppTypography {
-  // ========== TITLES (Poppins) ==========
-  
-  /// AppBar, Section Titles - Poppins Bold 22px
-  static TextStyle get title => GoogleFonts.poppins(
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
+  static const microSize = 10.0;
+  static const fieldLabelSize = 11.0;
+  static const captionSize = 12.0;
+  static const actionSize = 13.0;
+  static const bodySize = 14.0;
+  static const cardTitleSize = 16.0;
+  static const sectionTitleSize = 18.0;
+  static const headingSize = 20.0;
+  static const pageTitleSize = 24.0;
+  static const metricSize = 28.0;
+  static const displaySize = 32.0;
+
+  /// Quantize custom responsive text to the shared scale before Flutter applies
+  /// the user's accessibility text scaling.
+  static double? resolveSize(double? size) {
+    if (size == null) return null;
+    const scale = [
+      microSize,
+      fieldLabelSize,
+      captionSize,
+      actionSize,
+      bodySize,
+      cardTitleSize,
+      sectionTitleSize,
+      headingSize,
+      pageTitleSize,
+      metricSize,
+      displaySize
+    ];
+    return scale.reduce((a, b) => (a - size).abs() < (b - size).abs() ? a : b);
+  }
+
+  static const headingWeight = FontWeight.w600;
+  static const labelWeight = FontWeight.w500;
+  static const bodyWeight = FontWeight.w400;
+
+  /// One font factory for shared tokens and custom screen text.
+  static final font = GoogleFonts.inter;
+
+  static TextTheme get textTheme => TextTheme(
+        displayLarge: h1,
+        displayMedium: h2,
+        displaySmall: h3,
+        headlineLarge: h4,
+        headlineMedium: h5,
+        headlineSmall: h6,
+        titleLarge: titleMedium,
+        titleMedium: font(
+            fontSize: AppTypography.cardTitleSize, fontWeight: headingWeight),
+        titleSmall:
+            font(fontSize: AppTypography.bodySize, fontWeight: labelWeight),
+        bodyLarge: bodyLarge,
+        bodyMedium: bodyMedium,
+        bodySmall: bodySmall,
+        labelLarge: labelLarge,
+        labelMedium: labelSmall,
+        labelSmall: caption,
+      );
+
+  // ========== TITLES (Inter) ==========
+
+  static TextStyle get title => font(
+        fontSize: AppTypography.headingSize,
+        fontWeight: headingWeight,
         height: 1.3,
       );
-  
-  /// Large Titles - Poppins Bold 28px
-  static TextStyle get titleLarge => GoogleFonts.poppins(
-        fontSize: 28,
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
+
+  static TextStyle get titleLarge => font(
+        fontSize: AppTypography.pageTitleSize,
+        fontWeight: headingWeight,
         height: 1.2,
       );
-  
-  /// Medium Titles - Poppins SemiBold 20px
-  static TextStyle get titleMedium => GoogleFonts.poppins(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+
+  static TextStyle get titleMedium => font(
+        fontSize: AppTypography.sectionTitleSize,
+        fontWeight: headingWeight,
         height: 1.3,
       );
-  
-  /// Small Titles - Poppins SemiBold 18px
-  static TextStyle get titleSmall => GoogleFonts.poppins(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+
+  static TextStyle get titleSmall => font(
+        fontSize: AppTypography.cardTitleSize,
+        fontWeight: headingWeight,
         height: 1.4,
       );
-  
-  // ========== SENSOR VALUES (Poppins) ==========
-  
-  /// Big sensor numbers - Poppins SemiBold 24px
-  static TextStyle get sensorValue => GoogleFonts.poppins(
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+
+  // ========== SENSOR VALUES (Inter) ==========
+
+  static TextStyle get sensorValue => font(
+        fontSize: AppTypography.pageTitleSize,
+        fontWeight: headingWeight,
         height: 1.2,
       );
-  
-  /// Large sensor numbers - Poppins SemiBold 32px
-  static TextStyle get sensorValueLarge => GoogleFonts.poppins(
-        fontSize: 32,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+
+  static TextStyle get sensorValueLarge => font(
+        fontSize: AppTypography.displaySize,
+        fontWeight: headingWeight,
         height: 1.2,
       );
-  
-  /// Small sensor numbers - Poppins SemiBold 18px
-  static TextStyle get sensorValueSmall => GoogleFonts.poppins(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+
+  static TextStyle get sensorValueSmall => font(
+        fontSize: AppTypography.headingSize,
+        fontWeight: headingWeight,
         height: 1.3,
       );
-  
-  // ========== BODY TEXT (Roboto) ==========
-  
-  /// Standard body text - Roboto Regular 16px
-  static TextStyle get body => GoogleFonts.roboto(
-        fontSize: 16,
-        fontWeight: FontWeight.normal,
-        color: AppColors.textPrimary,
+
+  // ========== BODY TEXT (Inter) ==========
+
+  static TextStyle get body => font(
+        fontSize: AppTypography.bodySize,
+        fontWeight: bodyWeight,
         height: 1.5,
       );
-  
-  /// Large body text - Roboto Regular 18px
-  static TextStyle get bodyLarge => GoogleFonts.roboto(
-        fontSize: 18,
-        fontWeight: FontWeight.normal,
-        color: AppColors.textPrimary,
+
+  static TextStyle get bodyLarge => font(
+        fontSize: AppTypography.cardTitleSize,
+        fontWeight: bodyWeight,
         height: 1.5,
       );
-  
-  /// Medium body text - Roboto Regular 16px
-  static TextStyle get bodyMedium => GoogleFonts.roboto(
-        fontSize: 16,
-        fontWeight: FontWeight.normal,
-        color: AppColors.textPrimary,
+
+  static TextStyle get bodyMedium => font(
+        fontSize: AppTypography.bodySize,
+        fontWeight: bodyWeight,
         height: 1.5,
       );
-  
-  /// Small body text - Roboto Regular 14px
-  static TextStyle get bodySmall => GoogleFonts.roboto(
-        fontSize: 14,
-        fontWeight: FontWeight.normal,
-        color: AppColors.textPrimary,
+
+  static TextStyle get bodySmall => font(
+        fontSize: AppTypography.captionSize,
+        fontWeight: bodyWeight,
         height: 1.5,
       );
-  
+
   // ========== LABELS & CAPTIONS ==========
-  
-  /// Button labels - Roboto Medium 14px
-  static TextStyle get button => GoogleFonts.roboto(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
+
+  static TextStyle get button => font(
+        fontSize: AppTypography.actionSize,
+        fontWeight: labelWeight,
         color: AppColors.textOnPrimary,
         height: 1.4,
         letterSpacing: 0.5,
       );
-  
-  /// Form labels - Roboto Medium 14px
-  static TextStyle get label => GoogleFonts.roboto(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: AppColors.textSecondary,
+
+  static TextStyle get label => font(
+        fontSize: AppTypography.fieldLabelSize,
+        fontWeight: labelWeight,
         height: 1.4,
       );
-  
-  /// Small labels - Roboto Medium 12px
-  static TextStyle get labelSmall => GoogleFonts.roboto(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: AppColors.textSecondary,
+
+  static TextStyle get labelSmall => font(
+        fontSize: AppTypography.captionSize,
+        fontWeight: labelWeight,
         height: 1.4,
       );
-  
-  /// Caption text - Roboto Regular 12px
-  static TextStyle get caption => GoogleFonts.roboto(
-        fontSize: 12,
-        fontWeight: FontWeight.normal,
-        color: AppColors.textSecondary,
+
+  static TextStyle get caption => font(
+        fontSize: AppTypography.captionSize,
+        fontWeight: bodyWeight,
         height: 1.3,
       );
-  
-  /// Overline text - Roboto Medium 10px
-  static TextStyle get overline => GoogleFonts.roboto(
-        fontSize: 10,
-        fontWeight: FontWeight.w500,
-        color: AppColors.textSecondary,
+
+  static TextStyle get overline => font(
+        fontSize: AppTypography.microSize,
+        fontWeight: labelWeight,
         height: 1.6,
         letterSpacing: 1.5,
       );
-  
+
   // ========== SPECIALIZED STYLES ==========
-  
+
   /// Sensor unit labels (°C, %, ppm, etc.)
-  static TextStyle get sensorUnit => GoogleFonts.roboto(
-        fontSize: 14,
-        fontWeight: FontWeight.normal,
-        color: AppColors.textSecondary,
+  static TextStyle get sensorUnit => font(
+        fontSize: AppTypography.captionSize,
+        fontWeight: bodyWeight,
         height: 1.4,
       );
-  
+
   /// Alert message text
-  static TextStyle get alertText => GoogleFonts.roboto(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: AppColors.textPrimary,
+  static TextStyle get alertText => font(
+        fontSize: AppTypography.bodySize,
+        fontWeight: labelWeight,
         height: 1.5,
       );
-  
+
   /// Status badge text
-  static TextStyle get statusBadge => GoogleFonts.roboto(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
+  static TextStyle get statusBadge => font(
+        fontSize: AppTypography.fieldLabelSize,
+        fontWeight: headingWeight,
         height: 1.2,
         letterSpacing: 0.5,
       );
-  
+
   /// Chart axis labels
-  static TextStyle get chartLabel => GoogleFonts.roboto(
-        fontSize: 11,
-        fontWeight: FontWeight.normal,
-        color: AppColors.textSecondary,
+  static TextStyle get chartLabel => font(
+        fontSize: AppTypography.fieldLabelSize,
+        fontWeight: bodyWeight,
         height: 1.3,
       );
-  
+
   // ========== HELPER METHODS ==========
-  
+
   /// Apply color to any text style
   static TextStyle withColor(TextStyle style, Color color) {
     return style.copyWith(color: color);
   }
-  
+
   /// Apply weight to any text style
   static TextStyle withWeight(TextStyle style, FontWeight weight) {
     return style.copyWith(fontWeight: weight);
   }
-  
+
   /// Apply size to any text style
   static TextStyle withSize(TextStyle style, double size) {
-    return style.copyWith(fontSize: size);
+    return style.copyWith(fontSize: AppTypography.resolveSize(size));
   }
-  
+
   // ========== BACKWARD COMPATIBILITY ALIASES ==========
-  
+
   /// Legacy h1-h6 aliases for existing code
-  static TextStyle get h1 => titleLarge.copyWith(fontSize: 48);
-  static TextStyle get h2 => titleLarge.copyWith(fontSize: 40);
-  static TextStyle get h3 => titleLarge.copyWith(fontSize: 32);
-  static TextStyle get h4 => titleMedium.copyWith(fontSize: 28);
-  static TextStyle get h5 => titleMedium.copyWith(fontSize: 24);
-  static TextStyle get h6 => titleSmall.copyWith(fontSize: 20);
-  
+  static TextStyle get h1 =>
+      titleLarge.copyWith(fontSize: AppTypography.displaySize);
+  static TextStyle get h2 =>
+      titleLarge.copyWith(fontSize: AppTypography.metricSize);
+  static TextStyle get h3 =>
+      titleLarge.copyWith(fontSize: AppTypography.pageTitleSize);
+  static TextStyle get h4 =>
+      titleMedium.copyWith(fontSize: AppTypography.headingSize);
+  static TextStyle get h5 =>
+      titleMedium.copyWith(fontSize: AppTypography.sectionTitleSize);
+  static TextStyle get h6 =>
+      titleSmall.copyWith(fontSize: AppTypography.cardTitleSize);
+
   /// Legacy label alias
-  static TextStyle get labelLarge => label.copyWith(fontSize: 14);
+  static TextStyle get labelLarge =>
+      label.copyWith(fontSize: AppTypography.actionSize);
 }

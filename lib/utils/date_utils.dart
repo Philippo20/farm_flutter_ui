@@ -1,3 +1,4 @@
+import '../core/theme/app_typography.dart';
 
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
@@ -59,23 +60,23 @@ Future<void> showDateRangeDropdown({
                         backgroundColor: isDark ? Color(0xFF232635) : Colors.white,
                         textStyle: TextStyle(
                           color: isDark ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                       monthCellStyle: DateRangePickerMonthCellStyle(
                         textStyle: TextStyle(
                           color: isDark ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                       yearCellStyle: DateRangePickerYearCellStyle(
                           textStyle: TextStyle(
-                              fontWeight: FontWeight.w400, fontSize: 15,
+                              fontWeight: AppTypography.bodyWeight, fontSize: AppTypography.cardTitleSize,
                                     color: isDark ? Colors.white : Colors.black),
                           todayTextStyle: TextStyle(
                               fontStyle: FontStyle.italic,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
+                              fontSize: AppTypography.cardTitleSize,
+                              fontWeight: AppTypography.labelWeight,
                               color: Colors.red),
                           leadingDatesDecoration: BoxDecoration(
                               color: const Color(0xFFDFDFDF),
@@ -91,7 +92,7 @@ Future<void> showDateRangeDropdown({
                         viewHeaderStyle: DateRangePickerViewHeaderStyle(
                           textStyle: TextStyle(
                             color: isDark ? Colors.white : AppColors.secondary,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                       ),

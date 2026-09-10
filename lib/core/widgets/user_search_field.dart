@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
@@ -41,11 +42,11 @@ class _UserSearchFieldState extends State<UserSearchField> {
         widget.onChanged(value);
       },
       style: TextStyle(
-          fontSize: 13, color: dark ? Colors.white : AppColors.textPrimary),
+          fontSize: AppTypography.actionSize, color: dark ? Colors.white : AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: 'Search users',
         hintText: 'Name, email, role or phone',
-        hintStyle: const TextStyle(fontSize: 12),
+        hintStyle: const TextStyle(fontSize: AppTypography.captionSize),
         prefixIcon: const Icon(Icons.search_rounded, size: 20),
         suffixIcon: _controller.text.isEmpty
             ? null

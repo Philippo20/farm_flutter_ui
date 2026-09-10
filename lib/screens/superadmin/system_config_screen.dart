@@ -545,7 +545,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
             'Unable to load system configuration',
             style: AppTypography.h6.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -646,7 +646,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
               Text(
                 'System Configuration',
                 style: AppTypography.h4.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: titleColor,
                   letterSpacing: -0.5,
                 ),
@@ -694,8 +694,8 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                 : 'Configuration in sync',
             style: TextStyle(
               color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -794,7 +794,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 SizedBox(height: isMobile ? 3 : 4),
@@ -803,7 +803,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.titleMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 SizedBox(height: isMobile ? 1 : 2),
@@ -812,7 +812,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
-                    fontSize: 11,
+                    fontSize: AppTypography.fieldLabelSize,
                   ),
                 ),
               ],
@@ -1084,8 +1084,8 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                     Text(
                       title,
                       style: AppTypography.h6.copyWith(
-                        fontSize: mobile ? 15 : null,
-                        fontWeight: FontWeight.w600,
+                        fontSize: mobile ? AppTypography.cardTitleSize : null,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -1135,14 +1135,14 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
           activeThumbColor: accent,
           title: Text(title,
               style: AppTypography.bodySmall.copyWith(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontSize: AppTypography.actionSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary)),
           subtitle: Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(subtitle,
                 style: AppTypography.bodySmall.copyWith(
-                    fontSize: 11,
+                    fontSize: AppTypography.fieldLabelSize,
                     height: 1.4,
                     color: isDark ? Colors.white60 : AppColors.textSecondary)),
           ),
@@ -1185,8 +1185,8 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                       child: Text(
                         title,
                         style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
+                          fontWeight: AppTypography.labelWeight,
+                          fontSize: AppTypography.bodySize,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -1204,8 +1204,8 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                         child: const Text(
                           'ACTIVE',
                           style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w500,
+                            fontSize: AppTypography.microSize,
+                            fontWeight: AppTypography.labelWeight,
                             color: AppColors.error,
                           ),
                         ),
@@ -1217,7 +1217,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
                     height: 1.35,
                   ),
@@ -1299,7 +1299,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                   'Sensor Hardware API',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
               ),
@@ -1377,7 +1377,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                   label,
                   style: AppTypography.caption.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1429,7 +1429,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
           hintText: 'Select platform currency',
           labelStyle: TextStyle(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -1455,7 +1455,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
         dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
         style: TextStyle(
           color: isDark ? Colors.white : AppColors.textPrimary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -1479,7 +1479,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
           suffixText: suffix,
           labelStyle: TextStyle(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
           hintStyle: TextStyle(
             color: isDark
@@ -1488,7 +1488,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
           ),
           suffixStyle: TextStyle(
             color: isDark ? Colors.white54 : AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
@@ -1513,7 +1513,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
         ),
         style: TextStyle(
           color: isDark ? Colors.white : AppColors.textPrimary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -1595,7 +1595,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                         : 'All configuration values are synchronized.',
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark ? Colors.white70 : AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ),
@@ -1689,7 +1689,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                           Text('Reset to Defaults',
                               style: AppTypography.h6.copyWith(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w600)),
+                                  fontWeight: AppTypography.headingWeight)),
                           Text('Restore all settings',
                               style: AppTypography.bodySmall
                                   .copyWith(color: Colors.white70)),
@@ -1722,7 +1722,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                             child: Text(
                               'This will reset all configuration settings to their default values. This action cannot be undone.',
                               style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: AppTypography.actionSize,
                                   color: isDark
                                       ? Colors.white70
                                       : AppColors.textSecondary),
@@ -1735,7 +1735,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                     Text(
                       'The following settings will be reset:',
                       style: TextStyle(
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary),
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -1749,7 +1749,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                               Expanded(
                                 child: Text(setting,
                                     style: TextStyle(
-                                        fontSize: 12,
+                                        fontSize: AppTypography.captionSize,
                                         color: isDark
                                             ? Colors.white60
                                             : AppColors.textSecondary)),
@@ -1955,7 +1955,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                           Text('Enable Maintenance Mode',
                               style: AppTypography.h6.copyWith(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w600)),
+                                  fontWeight: AppTypography.headingWeight)),
                           Text('System will be unavailable',
                               style: AppTypography.bodySmall
                                   .copyWith(color: Colors.white70)),
@@ -1988,7 +1988,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                             child: Text(
                               'Enabling maintenance mode will prevent all users from accessing the system. Only super admins will be able to log in.',
                               style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: AppTypography.actionSize,
                                   color: isDark
                                       ? Colors.white70
                                       : AppColors.textSecondary),
@@ -2012,8 +2012,8 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                         children: [
                           Text('What happens:',
                               style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 13,
+                                  fontWeight: AppTypography.labelWeight,
+                                  fontSize: AppTypography.actionSize,
                                   color: isDark
                                       ? Colors.white
                                       : AppColors.textPrimary)),
@@ -2104,7 +2104,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
           Expanded(
             child: Text(text,
                 style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary)),
           ),
         ],
@@ -2143,10 +2143,10 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('Configuration Saved!',
-                        style: TextStyle(fontWeight: FontWeight.w500)),
+                        style: TextStyle(fontWeight: AppTypography.labelWeight)),
                     Text(
                         '${_getCurrentConfig().length} settings updated successfully',
-                        style: const TextStyle(fontSize: 12)),
+                        style: const TextStyle(fontSize: AppTypography.captionSize)),
                   ],
                 ),
               ),
@@ -2217,7 +2217,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                           Text('Validation Errors',
                               style: AppTypography.h6.copyWith(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w600)),
+                                  fontWeight: AppTypography.headingWeight)),
                           Text('${errors.length} issue(s) found',
                               style: AppTypography.bodySmall
                                   .copyWith(color: Colors.white70)),
@@ -2236,7 +2236,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                     Text(
                       'Please fix the following issues before saving:',
                       style: TextStyle(
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary),
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -2251,7 +2251,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                               Expanded(
                                 child: Text(error,
                                     style: TextStyle(
-                                        fontSize: 13,
+                                        fontSize: AppTypography.actionSize,
                                         color: isDark
                                             ? Colors.white70
                                             : AppColors.textSecondary)),

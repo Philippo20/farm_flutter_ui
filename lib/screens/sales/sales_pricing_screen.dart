@@ -286,7 +286,7 @@ class _SalesPricingScreenState extends ConsumerState<SalesPricingScreen> {
             Expanded(
               child: Text('Off-taker Price List',
                   style: AppTypography.titleLarge
-                      .copyWith(fontWeight: FontWeight.w700)),
+                      .copyWith(fontWeight: AppTypography.headingWeight)),
             ),
             IconButton(
               tooltip: 'Refresh pricing',
@@ -348,8 +348,8 @@ class _PricingHero extends StatelessWidget {
       children: [
         Text('Sales Pricing',
             style: AppTypography.titleLarge.copyWith(
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
+              fontSize: AppTypography.metricSize,
+              fontWeight: AppTypography.headingWeight,
             )),
         const SizedBox(height: 4),
         Text('Set the regular and bulk price charged per packaged unit.',
@@ -414,7 +414,7 @@ class _PricingMetric extends StatelessWidget {
           children: [
             Text(value,
                 style: AppTypography.titleLarge
-                    .copyWith(fontWeight: FontWeight.w700)),
+                    .copyWith(fontWeight: AppTypography.headingWeight)),
             const SizedBox(height: 4),
             Text(label, style: AppTypography.bodySmall),
           ],
@@ -472,7 +472,7 @@ class _PricingCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.titleMedium
-                          .copyWith(fontWeight: FontWeight.w700)),
+                          .copyWith(fontWeight: AppTypography.headingWeight)),
                   Text(_text('packaging'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -550,7 +550,7 @@ class _PriceValue extends StatelessWidget {
             const SizedBox(height: 4),
             Text(value,
                 style: AppTypography.titleSmall
-                    .copyWith(fontWeight: FontWeight.w700)),
+                    .copyWith(fontWeight: AppTypography.headingWeight)),
           ],
         ),
       );
@@ -792,7 +792,7 @@ class _SalesPricingEditorState extends State<_SalesPricingEditor> {
                     children: [
                       Text(_editing ? 'Update Sales Price' : 'Add Sales Price',
                           style: AppTypography.titleLarge
-                              .copyWith(fontWeight: FontWeight.w700)),
+                              .copyWith(fontWeight: AppTypography.headingWeight)),
                       Text('Set the amount charged for each packaged unit',
                           style: AppTypography.bodySmall),
                     ],
@@ -1025,7 +1025,7 @@ class _PricingEmpty extends StatelessWidget {
           const SizedBox(height: 12),
           Text('No sales prices configured',
               style: AppTypography.titleMedium
-                  .copyWith(fontWeight: FontWeight.w700)),
+                  .copyWith(fontWeight: AppTypography.headingWeight)),
           const SizedBox(height: 6),
           Text('Add a price before allocating packaged products.',
               textAlign: TextAlign.center, style: AppTypography.bodySmall),

@@ -1,5 +1,5 @@
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart'; // Add to pubspec.yaml
 
 class ThirdRow extends StatefulWidget {
@@ -32,9 +32,9 @@ class _ThirdRowState extends State<ThirdRow> {
             .map(
               (spot) => LineTooltipItem(
                 spot.y.toStringAsFixed(1),
-                GoogleFonts.poppins(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                AppTypography.font(
+                  fontSize: AppTypography.fieldLabelSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : Colors.black87,
                 ),
               ),
@@ -126,9 +126,9 @@ class _ThirdRowState extends State<ThirdRow> {
           Expanded(
             child: Text(
               'EC, PH, TDS & CO₂',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              style: AppTypography.font(
+                fontSize: AppTypography.cardTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: widget.isDark ? Colors.white : Colors.white,
               ),
             ),
@@ -249,9 +249,9 @@ class _ThirdRowState extends State<ThirdRow> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                style: AppTypography.font(
+                  fontSize: AppTypography.bodySize,
+                  fontWeight: AppTypography.labelWeight,
                   color: widget.isDark ? Colors.white : Colors.black,
                 ),
               ),
@@ -261,9 +261,9 @@ class _ThirdRowState extends State<ThirdRow> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: statusColor,
                 ),
               ),
@@ -291,9 +291,9 @@ class _ThirdRowState extends State<ThirdRow> {
       child: Text(
         count.toString(),
         textAlign: TextAlign.center,
-        style: GoogleFonts.poppins(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
+        style: AppTypography.font(
+          fontSize: AppTypography.microSize,
+          fontWeight: AppTypography.headingWeight,
           color: Colors.white,
           height: 1,
         ),
@@ -391,9 +391,9 @@ class _ThirdRowState extends State<ThirdRow> {
           // Value Text
           Text(
             value,
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+            style: AppTypography.font(
+              fontSize: AppTypography.headingSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : Colors.black,
             ),
           ),
@@ -401,8 +401,8 @@ class _ThirdRowState extends State<ThirdRow> {
           // Label
           Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
               color: isDark ? Colors.white70 : Colors.black54,
             ),
           ),
@@ -444,18 +444,18 @@ class _ThirdRowState extends State<ThirdRow> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   value.toStringAsFixed(2),
-                  style: GoogleFonts.poppins(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.metricSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
@@ -486,7 +486,7 @@ class _ThirdRowState extends State<ThirdRow> {
                           return Text(
                             value.toStringAsFixed(1),
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: AppTypography.microSize,
                               color: isDark ? Colors.white70 : Colors.black54,
                             ),
                           );
@@ -504,7 +504,7 @@ class _ThirdRowState extends State<ThirdRow> {
                             return Text(
                               timeLabels[index],
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: AppTypography.microSize,
                                 color: isDark ? Colors.white70 : Colors.black54,
                               ),
                             );
@@ -591,9 +591,9 @@ class _ThirdRowState extends State<ThirdRow> {
               children: [
                 Text(
                   'Co2 Sensor',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
@@ -610,9 +610,9 @@ class _ThirdRowState extends State<ThirdRow> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Text(
               "${co2.toStringAsFixed(1)}ppm",
-              style: GoogleFonts.poppins(
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.font(
+                fontSize: AppTypography.metricSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),

@@ -72,7 +72,7 @@ class PumpControlCard extends StatelessWidget {
                     Text(
                       pumpName,
                       style: AppTypography.h6.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -80,7 +80,7 @@ class PumpControlCard extends StatelessWidget {
                       isOn ? 'Running' : 'Stopped',
                       style: AppTypography.bodySmall.copyWith(
                         color: isOn ? AppColors.success : Colors.grey,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ],
@@ -170,7 +170,7 @@ class PumpControlCard extends StatelessWidget {
           Text(
             value,
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -178,7 +178,7 @@ class PumpControlCard extends StatelessWidget {
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
             ),
           ),
         ],

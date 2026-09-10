@@ -113,7 +113,7 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
             Text(
               'Caretaker Dashboard',
               style: AppTypography.h4.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -185,9 +185,9 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
                     Text(
                       stat['completed'] as String,
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: AppTypography.fieldLabelSize,
                         color: AppColors.success,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                 ],
@@ -196,14 +196,14 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
               Text(
                 stat['value'] as String,
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: stat['color'] as Color,
                 ),
               ),
               Text(
                 stat.containsKey('subtitle') ? stat['subtitle'] as String : stat['title'] as String,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: AppTypography.fieldLabelSize,
                   color: (stat['color'] as Color).withOpacity(0.8),
                 ),
               ),
@@ -231,7 +231,7 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
               Text(
                 'Today\'s Tasks',
                 style: AppTypography.h6.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -311,7 +311,7 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
                       child: Text(
                         task['title'],
                         style: TextStyle(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                           decoration: task['status'] == 'Completed' 
                               ? TextDecoration.lineThrough 
@@ -328,9 +328,9 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
                       child: Text(
                         task['priority'],
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                           color: priorityColor,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ),
@@ -343,14 +343,14 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
                     const SizedBox(width: 4),
                     Text(
                       task['time'],
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textSecondary),
+                      style: TextStyle(fontSize: AppTypography.captionSize, color: isDark ? Colors.white60 : AppColors.textSecondary),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Icon(Icons.location_on_outlined, size: 14, color: isDark ? Colors.white60 : AppColors.textSecondary),
                     const SizedBox(width: 4),
                     Text(
                       task['location'],
-                      style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : AppColors.textSecondary),
+                      style: TextStyle(fontSize: AppTypography.captionSize, color: isDark ? Colors.white60 : AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -368,9 +368,9 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
             child: Text(
               task['status'],
               style: TextStyle(
-                fontSize: 11,
+                fontSize: AppTypography.fieldLabelSize,
                 color: statusColor,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
           ),
@@ -395,7 +395,7 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
         Text(
           'Quick Actions',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -429,9 +429,9 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
                     Text(
                       action['label'] as String,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                         color: action['color'] as Color,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -466,7 +466,7 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
           Text(
             'Recent Activities',
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -478,9 +478,9 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
                 Text(
                   activity['time'] as String,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -488,7 +488,7 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
                   child: Text(
                     activity['action'] as String,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: AppTypography.actionSize,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -502,9 +502,9 @@ class _ModernCaretakerDashboardState extends ConsumerState<ModernCaretakerDashbo
                   child: Text(
                     activity['status'] as String,
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: AppTypography.microSize,
                       color: AppColors.success,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),

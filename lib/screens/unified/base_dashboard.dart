@@ -298,8 +298,8 @@ abstract class BaseDashboardState<T extends BaseDashboard>
                                   ? Colors.white.withOpacity(0.5)
                                   : AppColors.textSecondary),
                           fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.normal,
+                              ? AppTypography.headingWeight
+                              : AppTypography.bodyWeight,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

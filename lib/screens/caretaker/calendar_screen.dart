@@ -171,8 +171,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   children: [
                 Text('Calendar',
                     style: AppTypography.h5.copyWith(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
+                        fontSize: AppTypography.pageTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: _primaryTextColor(dark))),
                 const SizedBox(height: 4),
                 Text('Your tasks and farm schedule',
@@ -220,8 +220,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           Expanded(
               child: Text(DateFormat('MMMM yyyy').format(_focusedDate),
                   style: AppTypography.bodyMedium.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: AppTypography.cardTitleSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: _primaryTextColor(dark)))),
           IconButton(
               tooltip: 'Previous month',
@@ -255,7 +255,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         const SizedBox(width: 6),
         Text(label,
             style: AppTypography.caption
-                .copyWith(fontSize: 11, color: _secondaryTextColor(dark))),
+                .copyWith(fontSize: AppTypography.fieldLabelSize, color: _secondaryTextColor(dark))),
       ]);
 
   Widget _buildCalendarGrid(bool dark) {
@@ -270,8 +270,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   child: Center(
                       child: Text(day,
                           style: AppTypography.caption.copyWith(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                              fontSize: AppTypography.fieldLabelSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: _secondaryTextColor(dark))))))
               .toList()),
       const SizedBox(height: 8),
@@ -324,11 +324,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                                   const TextScaler.linear(1),
                                               style: AppTypography.bodySmall
                                                   .copyWith(
-                                                      fontSize: 13,
+                                                      fontSize: AppTypography.actionSize,
                                                       fontWeight:
                                                           selected || today
-                                                              ? FontWeight.w600
-                                                              : FontWeight.w400,
+                                                              ? AppTypography.headingWeight
+                                                              : AppTypography.bodyWeight,
                                                       color: selected
                                                           ? Colors.white
                                                           : _primaryTextColor(
@@ -358,8 +358,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(DateFormat('EEEE, d MMMM').format(_selectedDate),
               style: AppTypography.bodyMedium.copyWith(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  fontSize: AppTypography.cardTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: _primaryTextColor(dark))),
           const SizedBox(height: 5),
           Text('${events.length} scheduled · Preview events',
@@ -380,7 +380,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   const SizedBox(height: 12),
                   Text('A clear day',
                       style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color: _primaryTextColor(dark))),
                   const SizedBox(height: 5),
                   Text('No events scheduled for this date.',
@@ -419,8 +419,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               children: [
                             Text(event['title'] as String,
                                 style: AppTypography.bodyMedium.copyWith(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: AppTypography.actionSize,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: _primaryTextColor(dark))),
                             const SizedBox(height: 7),
                             Wrap(spacing: 8, runSpacing: 5, children: [
@@ -430,7 +430,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               Text(type[0].toUpperCase() + type.substring(1),
                                   style: AppTypography.caption.copyWith(
                                       color: color,
-                                      fontWeight: FontWeight.w600)),
+                                      fontWeight: AppTypography.headingWeight)),
                             ]),
                           ])),
                     ]));

@@ -56,7 +56,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
               Text(
                 'Quick Actions',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -69,7 +69,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
               Text(
                 'Farm Operations',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -120,7 +120,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
                       'Good Morning!',
                       style: AppTypography.h5.copyWith(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -172,14 +172,14 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
           value,
           style: AppTypography.h6.copyWith(
             color: Colors.white,
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         Text(
           label,
           style: AppTypography.bodySmall.copyWith(
             color: Colors.white.withOpacity(0.8),
-            fontSize: 10,
+            fontSize: AppTypography.microSize,
           ),
         ),
       ],
@@ -206,7 +206,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
               Text(
                 'Today\'s Summary',
                 style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -237,7 +237,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
         Text(
           value,
           style: AppTypography.h4.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: color,
           ),
         ),
@@ -245,7 +245,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
           unit,
           style: AppTypography.bodySmall.copyWith(
             color: color,
-            fontSize: 10,
+            fontSize: AppTypography.microSize,
           ),
         ),
         const SizedBox(height: 4),
@@ -309,7 +309,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
             Text(
               title,
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: color,
               ),
               textAlign: TextAlign.center,
@@ -407,7 +407,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
                 Text(
                   feature.title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                   textAlign: TextAlign.center,
@@ -419,7 +419,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
                   feature.subtitle,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
@@ -444,8 +444,8 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
                     feature.badge!,
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
+                      fontSize: AppTypography.microSize,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),
@@ -466,7 +466,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
             Text(
               'Recent Activities',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -542,7 +542,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
                 Text(
                   title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -558,7 +558,7 @@ class _CaretakerDashboardNewState extends ConsumerState<CaretakerDashboardNew> {
                   time,
                   style: AppTypography.bodySmall.copyWith(
                     color: color,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                 ),
               ],

@@ -71,7 +71,7 @@ class _LogoutConfirmationDialog extends StatelessWidget {
       title: Text(
         title,
         style: AppTypography.titleMedium.copyWith(
-          fontWeight: FontWeight.w600,
+          fontWeight: AppTypography.headingWeight,
           color: isDark ? Colors.white : AppColors.textPrimary,
         ),
       ),
@@ -88,7 +88,7 @@ class _LogoutConfirmationDialog extends StatelessWidget {
             'Cancel',
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ),
@@ -174,8 +174,8 @@ class _LogoutConfirmationSheet extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: AppTypography.titleLarge.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+              fontSize: AppTypography.headingSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),

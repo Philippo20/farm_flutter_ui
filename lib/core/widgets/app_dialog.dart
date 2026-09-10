@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'app_bottom_sheet.dart';
 
@@ -144,7 +145,7 @@ class AppAlertDialog extends AlertDialog {
                     child: DefaultTextStyle(
                         style: titleTextStyle ??
                             Theme.of(context).textTheme.titleMedium!.copyWith(
-                                fontSize: 16, fontWeight: FontWeight.bold),
+                                fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight),
                         child: title!))),
           if (content != null)
             Flexible(
@@ -159,7 +160,7 @@ class AppAlertDialog extends AlertDialog {
                             Theme.of(context)
                                 .textTheme
                                 .bodyMedium!
-                                .copyWith(fontSize: 12),
+                                .copyWith(fontSize: AppTypography.captionSize),
                         child: content!))),
           if (actions != null && actions!.isNotEmpty)
             Padding(

@@ -85,7 +85,7 @@ class AlertCard extends StatelessWidget {
                             alert.severity.displayName.toUpperCase(),
                             style: AppTypography.labelSmall.copyWith(
                               color: severityColor,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: AppTypography.headingWeight,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -122,7 +122,7 @@ class AlertCard extends StatelessWidget {
                               'Resolved',
                               style: AppTypography.caption.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: AppTypography.headingWeight,
                               ),
                             ),
                           ],
@@ -262,7 +262,7 @@ class AlertBanner extends StatelessWidget {
                   alert.sensorType.displayName,
                   style: AppTypography.labelSmall.copyWith(
                     color: severityColor,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 Text(

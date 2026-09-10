@@ -56,7 +56,7 @@ class _QualityAssuranceDashboardState
               Text(
                 'Quality Control',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -109,7 +109,7 @@ class _QualityAssuranceDashboardState
                   'Quality Control',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -198,7 +198,7 @@ class _QualityAssuranceDashboardState
           Text(
             count,
             style: AppTypography.h4.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: color,
             ),
           ),
@@ -206,7 +206,7 @@ class _QualityAssuranceDashboardState
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
             ),
             textAlign: TextAlign.center,
           ),
@@ -299,7 +299,7 @@ class _QualityAssuranceDashboardState
             Text(
               feature.title,
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
@@ -311,7 +311,7 @@ class _QualityAssuranceDashboardState
               feature.subtitle,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontSize: 10,
+                fontSize: AppTypography.microSize,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -333,7 +333,7 @@ class _QualityAssuranceDashboardState
             Text(
               'Pending Inspections',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -350,8 +350,8 @@ class _QualityAssuranceDashboardState
                 '8',
                 style: AppTypography.bodySmall.copyWith(
                   color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 10,
+                  fontWeight: AppTypography.labelWeight,
+                  fontSize: AppTypography.microSize,
                 ),
               ),
             ),
@@ -417,7 +417,7 @@ class _QualityAssuranceDashboardState
                 Text(
                   batchNumber,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -445,8 +445,8 @@ class _QualityAssuranceDashboardState
                         status,
                         style: AppTypography.bodySmall.copyWith(
                           color: color,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w500,
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -456,7 +456,7 @@ class _QualityAssuranceDashboardState
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white38 : AppColors.textSecondary,
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                       ),
                     ),
                   ],
@@ -481,7 +481,7 @@ class _QualityAssuranceDashboardState
         Text(
           'Recent Rejections',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -539,7 +539,7 @@ class _QualityAssuranceDashboardState
                 Text(
                   batchNumber,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -560,8 +560,8 @@ class _QualityAssuranceDashboardState
                         reason,
                         style: AppTypography.bodySmall.copyWith(
                           color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w500,
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -572,7 +572,7 @@ class _QualityAssuranceDashboardState
                         style: AppTypography.bodySmall.copyWith(
                           color:
                               isDark ? Colors.white60 : AppColors.textSecondary,
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                         ),
                       ),
                     ),

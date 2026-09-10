@@ -72,7 +72,7 @@ class NutrientSystemCard extends StatelessWidget {
                       Text(
                         'Nutrient System',
                         style: AppTypography.h6.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -154,7 +154,7 @@ class NutrientSystemCard extends StatelessWidget {
                           'Last Adjustment',
                           style: AppTypography.bodySmall.copyWith(
                             color: isDark ? Colors.white60 : AppColors.textSecondary,
-                            fontSize: 11,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -162,7 +162,7 @@ class NutrientSystemCard extends StatelessWidget {
                           _getLastAdjustmentText(),
                           style: AppTypography.bodyMedium.copyWith(
                             color: isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                       ],
@@ -257,7 +257,7 @@ class NutrientSystemCard extends StatelessWidget {
                   label,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white70 : AppColors.textSecondary,
-                    fontSize: 11,
+                    fontSize: AppTypography.fieldLabelSize,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -267,7 +267,7 @@ class NutrientSystemCard extends StatelessWidget {
                   state.toUpperCase(),
                   style: AppTypography.bodyMedium.copyWith(
                     color: statusColor,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ],
@@ -316,8 +316,8 @@ class NutrientSystemCard extends StatelessWidget {
             status.toUpperCase(),
             style: AppTypography.bodySmall.copyWith(
               color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 10,
+              fontWeight: AppTypography.headingWeight,
+              fontSize: AppTypography.microSize,
             ),
           ),
         ],

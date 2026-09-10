@@ -1,5 +1,5 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import '../theme/app_colors.dart';
@@ -51,9 +51,9 @@ class _SensorDateRangeModalState extends State<SensorDateRangeModal> {
     final foreground = dark ? Colors.white : AppColors.textPrimary;
     final secondary = dark ? Colors.white60 : AppColors.textSecondary;
     TextStyle text(double size, {bool bold = false, Color? color}) =>
-        GoogleFonts.inter(
-            fontSize: size,
-            fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
+        AppTypography.font(
+            fontSize: AppTypography.resolveSize(size),
+            fontWeight: bold ? AppTypography.headingWeight : AppTypography.bodyWeight,
             color: color ?? foreground);
     Widget dateBox(String title, DateTime? date) => Expanded(
         child: Container(
@@ -108,9 +108,9 @@ class _SensorDateRangeModalState extends State<SensorDateRangeModal> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                           Text('Reading period',
-                              style: GoogleFonts.inter(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.cardTitleSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: foreground)),
                           const SizedBox(height: 4),
                           Text('Choose a day or date range',

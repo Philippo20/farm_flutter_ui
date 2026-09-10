@@ -57,7 +57,7 @@ class _FarmManagerDashboardNewState extends ConsumerState<FarmManagerDashboardNe
               Text(
                 'Farm Management',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -97,7 +97,7 @@ class _FarmManagerDashboardNewState extends ConsumerState<FarmManagerDashboardNe
                   'Welcome Back!',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -180,7 +180,7 @@ class _FarmManagerDashboardNewState extends ConsumerState<FarmManagerDashboardNe
               Text(
                 value,
                 style: AppTypography.h4.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: color,
                 ),
               ),
@@ -316,7 +316,7 @@ class _FarmManagerDashboardNewState extends ConsumerState<FarmManagerDashboardNe
             Text(
               feature.title,
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.bold,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
               textAlign: TextAlign.center,
@@ -328,7 +328,7 @@ class _FarmManagerDashboardNewState extends ConsumerState<FarmManagerDashboardNe
               feature.subtitle,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontSize: 11,
+                fontSize: AppTypography.fieldLabelSize,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -347,7 +347,7 @@ class _FarmManagerDashboardNewState extends ConsumerState<FarmManagerDashboardNe
         Text(
           'Pending Actions',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -407,7 +407,7 @@ class _FarmManagerDashboardNewState extends ConsumerState<FarmManagerDashboardNe
                 Text(
                   title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),

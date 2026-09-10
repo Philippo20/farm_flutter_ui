@@ -75,7 +75,7 @@ class ClimateControlCard extends StatelessWidget {
                     Text(
                       systemName,
                       style: AppTypography.h6.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -83,7 +83,7 @@ class ClimateControlCard extends StatelessWidget {
                       isOn ? 'Running - $mode Mode' : 'Stopped',
                       style: AppTypography.bodySmall.copyWith(
                         color: isOn ? AppColors.info : Colors.grey,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ],
@@ -104,7 +104,7 @@ class ClimateControlCard extends StatelessWidget {
             Text(
               'Mode',
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -126,7 +126,7 @@ class ClimateControlCard extends StatelessWidget {
             Text(
               'Temperature Setpoint',
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -186,7 +186,7 @@ class ClimateControlCard extends StatelessWidget {
           Text(
             value,
             style: AppTypography.h6.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -194,7 +194,7 @@ class ClimateControlCard extends StatelessWidget {
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white60 : AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
             ),
           ),
         ],

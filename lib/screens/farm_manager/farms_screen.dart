@@ -1,7 +1,6 @@
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
@@ -558,9 +557,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             const SizedBox(height: 12),
             Text(
               'Could not load farms',
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
+              style: AppTypography.font(
+                fontSize: AppTypography.sectionTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -568,8 +567,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             Text(
               _errorMessage ?? 'The farm service did not return data.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white54 : AppColors.textSecondary,
               ),
             ),
@@ -594,9 +593,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             children: [
               Text(
                 'My Farms',
-                style: GoogleFonts.inter(
-                  fontSize: isMobile ? 22 : 28,
-                  fontWeight: FontWeight.w800,
+                style: AppTypography.font(
+                  fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                   letterSpacing: -0.5,
                 ),
@@ -604,8 +603,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               const SizedBox(height: 4),
               Text(
                 'Manage your farms, teams and track performance',
-                style: GoogleFonts.inter(
-                  fontSize: isMobile ? 13 : 14,
+                style: AppTypography.font(
+                  fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
                   color: isDark ? Colors.white54 : AppColors.textSecondary,
                 ),
               ),
@@ -699,17 +698,17 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                   stat['value'] as String,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                      fontSize: isMobile ? 20 : 24,
-                      fontWeight: FontWeight.w800,
+                  style: AppTypography.font(
+                      fontSize: isMobile ? AppTypography.headingSize : AppTypography.pageTitleSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary),
                 ),
                 Text(
                   stat['label'] as String,
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.fieldLabelSize,
                       color: isDark ? Colors.white54 : AppColors.textSecondary,
-                      fontWeight: FontWeight.w500),
+                      fontWeight: AppTypography.labelWeight),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -778,9 +777,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                         children: [
                           Text(
                             'Farms Overview',
-                            style: GoogleFonts.inter(
-                              fontSize: isMobile ? 16 : 18,
-                              fontWeight: FontWeight.w700,
+                            style: AppTypography.font(
+                              fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                              fontWeight: AppTypography.headingWeight,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
                             ),
@@ -788,8 +787,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                           const SizedBox(height: 2),
                           Text(
                             'Showing ${filtered.length} assigned farms',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
+                            style: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
                               color: isDark
                                   ? Colors.white54
                                   : AppColors.textSecondary,
@@ -813,14 +812,14 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               const SizedBox(height: 14),
               TextField(
                 onChanged: (v) => setState(() => _searchQuery = v),
-                style: GoogleFonts.inter(
-                  fontSize: 13,
+                style: AppTypography.font(
+                  fontSize: AppTypography.actionSize,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Search farms by name, location, crop or team...',
-                  hintStyle: GoogleFonts.inter(
-                    fontSize: 13,
+                  hintStyle: AppTypography.font(
+                    fontSize: AppTypography.actionSize,
                     color: isDark ? Colors.white38 : AppColors.textSecondary,
                   ),
                   prefixIcon: Icon(Icons.search_rounded,
@@ -926,9 +925,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
         ),
         child: Text(
           label,
-          style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+          style: AppTypography.font(
+              fontSize: AppTypography.fieldLabelSize,
+              fontWeight: AppTypography.headingWeight,
               color: isSelected
                   ? Colors.white
                   : (isDark ? Colors.white60 : AppColors.textSecondary)),
@@ -946,14 +945,14 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               size: 56, color: isDark ? Colors.white24 : AppColors.neutral400),
           const SizedBox(height: 12),
           Text('No farms found',
-              style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+              style: AppTypography.font(
+                  fontSize: AppTypography.cardTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white54 : AppColors.textSecondary)),
           const SizedBox(height: 4),
           Text('Try adjusting your search or filter',
-              style: GoogleFonts.inter(
-                  fontSize: 12,
+              style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
                   color: isDark ? Colors.white38 : AppColors.textSecondary)),
         ],
       ),
@@ -1035,9 +1034,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                 children: [
                                   Text(
                                     farm['name']?.toString() ?? '',
-                                    style: GoogleFonts.inter(
-                                      fontSize: isMobile ? 16 : 18,
-                                      fontWeight: FontWeight.w700,
+                                    style: AppTypography.font(
+                                      fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                                      fontWeight: AppTypography.headingWeight,
                                       color: isDark
                                           ? Colors.white
                                           : AppColors.textPrimary,
@@ -1127,9 +1126,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                         Expanded(
                             child: Text(
                           'Operational progress',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.captionSize,
+                            fontWeight: AppTypography.labelWeight,
                             color: isDark
                                 ? Colors.white60
                                 : AppColors.textSecondary,
@@ -1138,9 +1137,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                         const SizedBox(width: 8),
                         Text(
                           '${(progress * 100).round()}%',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.captionSize,
+                            fontWeight: AppTypography.headingWeight,
                             color: AppColors.primary,
                           ),
                         ),
@@ -1231,8 +1230,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
         Flexible(
             child: Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
             color: isDark ? Colors.white54 : AppColors.textSecondary,
           ),
         )),
@@ -1259,9 +1258,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
           const SizedBox(width: 6),
           Text(
             status,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: AppTypography.fieldLabelSize,
+              fontWeight: AppTypography.headingWeight,
               color: color,
             ),
           ),
@@ -1283,9 +1282,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
         children: [
           Text(
             'View details',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.headingWeight,
               color: AppColors.primary,
             ),
           ),
@@ -1330,9 +1329,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               children: [
                 Text(
                   value,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                   maxLines: 1,
@@ -1341,8 +1340,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                 const SizedBox(height: 2),
                 Text(
                   label,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
                   maxLines: 1,
@@ -1369,8 +1368,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
         crops.isEmpty
             ? Text(
                 'No crop varieties assigned',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
                   color: isDark ? Colors.white38 : AppColors.textSecondary,
                 ),
               )
@@ -1409,9 +1408,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                 team.isEmpty
                     ? 'No team assigned'
                     : '$teamNames${team.length > 2 ? ' +${team.length - 2} more' : ''}',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white70 : AppColors.textPrimary,
                 ),
                 maxLines: 2,
@@ -1436,9 +1435,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
         const SizedBox(width: 6),
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white60 : AppColors.textSecondary,
           ),
         ),
@@ -1458,9 +1457,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
+        style: AppTypography.font(
+          fontSize: AppTypography.fieldLabelSize,
+          fontWeight: AppTypography.labelWeight,
           color: isDark ? Colors.white70 : AppColors.textSecondary,
         ),
       ),
@@ -1512,9 +1511,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                     team[i]['avatar']?.toString().isNotEmpty == true
                         ? team[i]['avatar'].toString()
                         : _initialsForName(team[i]['name']?.toString() ?? ''),
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.fieldLabelSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: AppColors.primary,
                     ),
                   ),
@@ -1590,9 +1589,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                             Expanded(
                               child: Text(
                                 farm['name'] ?? '',
-                                style: GoogleFonts.inter(
-                                    fontSize: isMobile ? 16 : 18,
-                                    fontWeight: FontWeight.w700,
+                                style: AppTypography.font(
+                                    fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary),
@@ -1618,9 +1617,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                           color: statusColor)),
                                   const SizedBox(width: 5),
                                   Text(farm['status'] ?? '',
-                                      style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
+                                      style: AppTypography.font(
+                                          fontSize: AppTypography.fieldLabelSize,
+                                          fontWeight: AppTypography.headingWeight,
                                           color: statusColor)),
                                 ],
                               ),
@@ -1644,8 +1643,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                   const SizedBox(width: 4),
                                   Text(
                                     farm['location'] ?? '',
-                                    style: GoogleFonts.inter(
-                                        fontSize: 12,
+                                    style: AppTypography.font(
+                                        fontSize: AppTypography.captionSize,
                                         color: isDark
                                             ? Colors.white54
                                             : AppColors.textSecondary),
@@ -1663,8 +1662,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                   const SizedBox(width: 4),
                                   Text(
                                     farm['size'] ?? '',
-                                    style: GoogleFonts.inter(
-                                        fontSize: 12,
+                                    style: AppTypography.font(
+                                        fontSize: AppTypography.captionSize,
                                         color: isDark
                                             ? Colors.white54
                                             : AppColors.textSecondary),
@@ -1683,8 +1682,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                       : AppColors.textSecondary),
                               const SizedBox(width: 4),
                               Text(farm['location'] ?? '',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12,
+                                  style: AppTypography.font(
+                                      fontSize: AppTypography.captionSize,
                                       color: isDark
                                           ? Colors.white54
                                           : AppColors.textSecondary)),
@@ -1696,8 +1695,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                       : AppColors.textSecondary),
                               const SizedBox(width: 4),
                               Text(farm['size'] ?? '',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12,
+                                  style: AppTypography.font(
+                                      fontSize: AppTypography.captionSize,
                                       color: isDark
                                           ? Colors.white54
                                           : AppColors.textSecondary)),
@@ -1763,17 +1762,17 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               Row(
                 children: [
                   Text('Overall Progress',
-                      style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.fieldLabelSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: isDark
                               ? Colors.white38
                               : AppColors.textSecondary)),
                   const Spacer(),
                   Text('${(progress * 100).toInt()}%',
-                      style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.fieldLabelSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: AppColors.primary)),
                 ],
               ),
@@ -1807,9 +1806,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(c,
-                              style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.fieldLabelSize,
+                                  fontWeight: AppTypography.labelWeight,
                                   color: isDark
                                       ? Colors.white60
                                       : AppColors.textSecondary)),
@@ -1833,9 +1832,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                 : AppColors.textSecondary),
                         const SizedBox(width: 6),
                         Text('Team',
-                            style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
+                                fontWeight: AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white54
                                     : AppColors.textSecondary)),
@@ -1847,9 +1846,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                               color: AppColors.info.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8)),
                           child: Text('${team.length}',
-                              style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.microSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: AppColors.info)),
                         ),
                       ],
@@ -1860,9 +1859,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                       child: GestureDetector(
                         onTap: () => _openFarmDetails(farm),
                         child: Text('View All',
-                            style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.fieldLabelSize,
+                                fontWeight: AppTypography.headingWeight,
                                 color: AppColors.primary)),
                       ),
                     ),
@@ -1877,9 +1876,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                             isDark ? Colors.white38 : AppColors.textSecondary),
                     const SizedBox(width: 6),
                     Text('Team',
-                        style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.captionSize,
+                            fontWeight: AppTypography.headingWeight,
                             color: isDark
                                 ? Colors.white54
                                 : AppColors.textSecondary)),
@@ -1891,18 +1890,18 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                           color: AppColors.info.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8)),
                       child: Text('${team.length}',
-                          style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.microSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: AppColors.info)),
                     ),
                     const Spacer(),
                     GestureDetector(
                       onTap: () => _openFarmDetails(farm),
                       child: Text('View All',
-                          style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.fieldLabelSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: AppColors.primary)),
                     ),
                   ],
@@ -1920,9 +1919,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                   child: Center(
                     child: Text(
                       '+${team.length - 3} more members',
-                      style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.fieldLabelSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: AppColors.primary),
                     ),
                   ),
@@ -1949,8 +1948,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
           const SizedBox(width: 5),
           Flexible(
             child: Text(label,
-                style: GoogleFonts.inter(
-                    fontSize: 11, fontWeight: FontWeight.w600, color: color),
+                style: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight, color: color),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
           ),
@@ -2008,9 +2007,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                       child: Center(
                         child: Text(
                           member['avatar'] ?? '',
-                          style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: Colors.white),
                         ),
                       ),
@@ -2041,16 +2040,16 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                     children: [
                       Text(
                         member['name'] ?? '',
-                        style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.actionSize,
+                            fontWeight: AppTypography.headingWeight,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary),
                       ),
                       Text(
                         member['role'] ?? '',
-                        style: GoogleFonts.inter(
-                            fontSize: 11,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.fieldLabelSize,
                             color: isDark
                                 ? Colors.white54
                                 : AppColors.textSecondary),
@@ -2064,9 +2063,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                   children: [
                     Text(
                       _taskProgressLabel(member),
-                      style: GoogleFonts.inter(
-                          fontSize: hasTaskData ? 12 : 10,
-                          fontWeight: FontWeight.w700,
+                      style: AppTypography.font(
+                          fontSize: hasTaskData ? AppTypography.captionSize : AppTypography.microSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: hasTaskData
                               ? _progressColor(progress)
                               : (isDark
@@ -2381,7 +2380,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                       farm['name']?.toString() ?? 'Farm',
                       style: AppTypography.h4.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -2454,7 +2453,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
         label,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: AppTypography.headingWeight,
         ),
       ),
     );
@@ -2547,7 +2546,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                 Text(
                   value,
                   style: AppTypography.h6
-                      .copyWith(color: color, fontWeight: FontWeight.w600),
+                      .copyWith(color: color, fontWeight: AppTypography.headingWeight),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2610,7 +2609,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                       title,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     Text(
@@ -2693,7 +2692,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               textAlign: TextAlign.end,
               style: AppTypography.bodyMedium.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -2745,7 +2744,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             child: Text(
               member['avatar']?.toString() ?? '',
               style: AppTypography.caption
-                  .copyWith(color: color, fontWeight: FontWeight.w700),
+                  .copyWith(color: color, fontWeight: AppTypography.headingWeight),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -2757,7 +2756,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                   member['name']?.toString() ?? '',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 Text(
@@ -2838,14 +2837,14 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                   'Overall batch progress',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
               Text(
                 '${(progress * 100).round()}%',
                 style: AppTypography.h6.copyWith(
-                    color: AppColors.warning, fontWeight: FontWeight.w600),
+                    color: AppColors.warning, fontWeight: AppTypography.headingWeight),
               ),
             ],
           ),
@@ -2943,7 +2942,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                       'Farm Tasks',
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     Text(
@@ -3034,7 +3033,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                       _value(task, ['title'], fallback: 'Untitled task'),
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                       maxLines: isMobile ? null : 1,
                       overflow: isMobile
@@ -3179,7 +3178,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             label,
             style: AppTypography.caption.copyWith(
               color: color,
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(width: 4),
@@ -3344,7 +3343,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                     color: isDark
                                         ? Colors.white54
                                         : AppColors.textSecondary,
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: AppTypography.headingWeight,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -3355,7 +3354,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary,
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: AppTypography.headingWeight,
                                   ),
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
@@ -3676,7 +3675,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                       title,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -3734,7 +3733,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                   value,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -3925,7 +3924,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                 'Assign Farm Task',
                                 style: AppTypography.h6.copyWith(
                                   color: Colors.white,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: AppTypography.headingWeight,
                                 ),
                               ),
                               Text(
@@ -4095,7 +4094,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                         modalError!,
                                         style: AppTypography.bodySmall.copyWith(
                                           color: AppColors.error,
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: AppTypography.headingWeight,
                                         ),
                                       ),
                                     ),
@@ -4268,14 +4267,14 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                   'Payment progress',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
               Text(
                 '${(stats.paidRatio * 100).round()}%',
                 style: AppTypography.h6.copyWith(
-                    color: AppColors.success, fontWeight: FontWeight.w600),
+                    color: AppColors.success, fontWeight: AppTypography.headingWeight),
               ),
             ],
           ),
@@ -4328,7 +4327,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                   value,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -4393,9 +4392,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                       ),
                       child: Center(
                           child: Text(member['avatar'] ?? '',
-                              style: GoogleFonts.inter(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.sectionTitleSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: Colors.white))),
                     ),
                     const SizedBox(width: 14),
@@ -4404,14 +4403,14 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(member['name'] ?? '',
-                              style: GoogleFonts.inter(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w700,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.sectionTitleSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: Colors.white)),
                           const SizedBox(height: 2),
                           Text(member['role'] ?? '',
-                              style: GoogleFonts.inter(
-                                  fontSize: 12, color: Colors.white70)),
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.captionSize, color: Colors.white70)),
                         ],
                       ),
                     ),
@@ -4433,9 +4432,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                     Row(
                       children: [
                         Text('Status',
-                            style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.fieldLabelSize,
+                                fontWeight: AppTypography.labelWeight,
                                 color: isDark
                                     ? Colors.white38
                                     : AppColors.textSecondary)),
@@ -4459,9 +4458,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                       color: memberColor)),
                               const SizedBox(width: 6),
                               Text(memberStatus,
-                                  style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
+                                  style: AppTypography.font(
+                                      fontSize: AppTypography.fieldLabelSize,
+                                      fontWeight: AppTypography.headingWeight,
                                       color: memberColor)),
                             ],
                           ),
@@ -4500,9 +4499,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                           Row(
                             children: [
                               Text('Task Progress',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                  style: AppTypography.font(
+                                      fontSize: AppTypography.captionSize,
+                                      fontWeight: AppTypography.headingWeight,
                                       color: isDark
                                           ? Colors.white70
                                           : AppColors.textPrimary)),
@@ -4511,9 +4510,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                   hasTaskData
                                       ? '$completed/$tasks'
                                       : 'Not configured',
-                                  style: GoogleFonts.inter(
-                                      fontSize: hasTaskData ? 13 : 11,
-                                      fontWeight: FontWeight.w700,
+                                  style: AppTypography.font(
+                                      fontSize: hasTaskData ? AppTypography.actionSize : AppTypography.fieldLabelSize,
+                                      fontWeight: AppTypography.headingWeight,
                                       color: hasTaskData
                                           ? _progressColor(progress)
                                           : (isDark
@@ -4544,15 +4543,15 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('Completion',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 10,
+                                  style: AppTypography.font(
+                                      fontSize: AppTypography.microSize,
                                       color: isDark
                                           ? Colors.white38
                                           : AppColors.textSecondary)),
                               Text(_taskProgressLabel(member),
-                                  style: GoogleFonts.inter(
-                                      fontSize: hasTaskData ? 12 : 10,
-                                      fontWeight: FontWeight.w800,
+                                  style: AppTypography.font(
+                                      fontSize: hasTaskData ? AppTypography.captionSize : AppTypography.microSize,
+                                      fontWeight: AppTypography.headingWeight,
                                       color: hasTaskData
                                           ? _progressColor(progress)
                                           : (isDark
@@ -4643,15 +4642,15 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label,
-                  style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.microSize,
+                      fontWeight: AppTypography.labelWeight,
                       color:
                           isDark ? Colors.white38 : AppColors.textSecondary)),
               Text(value,
-                  style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.actionSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary)),
             ],
           ),
@@ -4757,9 +4756,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -4878,7 +4877,7 @@ class _FarmRevenueAreaChart extends StatelessWidget {
                     '${date.month}/${date.day}',
                     style: AppTypography.caption.copyWith(
                       color: isDark ? Colors.white54 : AppColors.textSecondary,
-                      fontSize: 10,
+                      fontSize: AppTypography.microSize,
                     ),
                   ),
                 );
@@ -4896,7 +4895,7 @@ class _FarmRevenueAreaChart extends StatelessWidget {
                 'GHS ${spot.y.toStringAsFixed(1)}',
                 AppTypography.caption.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               );
             }).toList(),

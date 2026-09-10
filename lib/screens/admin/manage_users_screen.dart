@@ -1,6 +1,6 @@
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:math' as math;
 import '../../constants/colors.dart';
 import '../../widgets/cards/admin_user_stat_card.dart';
@@ -410,9 +410,9 @@ class _UsersScreenState extends State<UsersScreen>
         Expanded(
           child: Text(
             'User Management',
-            style: GoogleFonts.poppins(
-              fontSize: isMobile ? 24 : 28,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor,
               letterSpacing: 0.3,
             ),
@@ -432,9 +432,9 @@ class _UsersScreenState extends State<UsersScreen>
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
-            textStyle: GoogleFonts.poppins(
-              fontWeight: FontWeight.w500,
-              fontSize: isMobile ? 14 : 15,
+            textStyle: AppTypography.font(
+              fontWeight: AppTypography.labelWeight,
+              fontSize: isMobile ? AppTypography.bodySize : AppTypography.cardTitleSize,
               letterSpacing: 0.2,
             ),
             elevation: 0,
@@ -539,9 +539,9 @@ class _UsersScreenState extends State<UsersScreen>
           children: [
             Text(
               'Recent User Logs',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.sectionTitleSize,
+                fontWeight: AppTypography.labelWeight,
                 color: textColor,
               ),
             ),
@@ -572,7 +572,7 @@ class _UsersScreenState extends State<UsersScreen>
                 },
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primary,
-                  textStyle: GoogleFonts.inter(fontWeight: FontWeight.w500),
+                  textStyle: AppTypography.font(fontWeight: AppTypography.labelWeight),
                 ),
                 child: const Text('View All Logs'),
               ),
@@ -601,16 +601,16 @@ class _UsersScreenState extends State<UsersScreen>
               children: [
                 Text(
                   action,
-                  style: GoogleFonts.inter(
+                  style: AppTypography.font(
                     color: isDark ? Colors.white70 : Colors.black87,
-                    fontSize: 13,
+                    fontSize: AppTypography.actionSize,
                   ),
                 ),
                 Text(
                   timestamp,
-                  style: GoogleFonts.inter(
+                  style: AppTypography.font(
                     color: isDark ? Colors.grey[500] : Colors.grey[600],
-                    fontSize: 11,
+                    fontSize: AppTypography.fieldLabelSize,
                   ),
                 ),
               ],
@@ -648,11 +648,11 @@ class _UsersScreenState extends State<UsersScreen>
                 decoration: InputDecoration(
                   hintText: 'Search users',
                   border: InputBorder.none,
-                  hintStyle: GoogleFonts.inter(
+                  hintStyle: AppTypography.font(
                     color: secondaryTextColor,
                   ),
                 ),
-                style: GoogleFonts.inter(
+                style: AppTypography.font(
                     color: isDark ? Colors.white : Colors.black),
               ),
             ),
@@ -682,11 +682,11 @@ class _UsersScreenState extends State<UsersScreen>
                   value: choice,
                   child: Text(
                     choice,
-                    style: GoogleFonts.inter(
+                    style: AppTypography.font(
                       color: textColor,
                       fontWeight: _selectedRoleFilter == choice
-                          ? FontWeight.w500
-                          : FontWeight.normal,
+                          ? AppTypography.labelWeight
+                          : AppTypography.bodyWeight,
                     ),
                   ),
                 );
@@ -735,44 +735,44 @@ class _UsersScreenState extends State<UsersScreen>
                 Expanded(
                   flex: 2,
                   child: Text('User',
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                        fontWeight: AppTypography.labelWeight,
                         color: secondaryTextColor,
                         letterSpacing: 0.2,
-                        fontSize: 14,
+                        fontSize: AppTypography.bodySize,
                       )),
                 ),
                 if (!isMobile) ...[
                   Expanded(
                     child: Text('Role',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                          fontWeight: AppTypography.labelWeight,
                           color: secondaryTextColor,
-                          fontSize: 13,
+                          fontSize: AppTypography.actionSize,
                         )),
                   ),
                   Expanded(
                     child: Text('Status',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                          fontWeight: AppTypography.labelWeight,
                           color: secondaryTextColor,
-                          fontSize: 13,
+                          fontSize: AppTypography.actionSize,
                         )),
                   ),
                   Expanded(
                     child: Text('Last Active',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                          fontWeight: AppTypography.labelWeight,
                           color: secondaryTextColor,
-                          fontSize: 13,
+                          fontSize: AppTypography.actionSize,
                         )),
                   ),
                   Expanded(
                     child: Text('Department',
-                        style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                          fontWeight: AppTypography.labelWeight,
                           color: secondaryTextColor,
-                          fontSize: 13,
+                          fontSize: AppTypography.actionSize,
                         )),
                   ),
                 ],
@@ -791,7 +791,7 @@ class _UsersScreenState extends State<UsersScreen>
               padding: const EdgeInsets.all(24.0),
               child: Text(
                 'No users found matching your criteria.',
-                style: GoogleFonts.inter(color: secondaryTextColor),
+                style: AppTypography.font(color: secondaryTextColor),
               ),
             ),
 
@@ -809,9 +809,9 @@ class _UsersScreenState extends State<UsersScreen>
                     children: [
                       Text(
                         'Items per page:',
-                        style: GoogleFonts.inter(
+                        style: AppTypography.font(
                           color: secondaryTextColor,
-                          fontSize: 12,
+                          fontSize: AppTypography.captionSize,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -824,9 +824,9 @@ class _UsersScreenState extends State<UsersScreen>
                             value: value,
                             child: Text(
                               value.toString(),
-                              style: GoogleFonts.inter(
+                              style: AppTypography.font(
                                 color: textColor,
-                                fontSize: 12,
+                                fontSize: AppTypography.captionSize,
                               ),
                             ),
                           );
@@ -848,9 +848,9 @@ class _UsersScreenState extends State<UsersScreen>
                     children: [
                       Text(
                         '${startIndex + 1}-$endIndex of $totalItems',
-                        style: GoogleFonts.inter(
+                        style: AppTypography.font(
                           color: secondaryTextColor,
-                          fontSize: 12,
+                          fontSize: AppTypography.captionSize,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -920,8 +920,8 @@ class _UsersScreenState extends State<UsersScreen>
                       child: user.avatar == null || user.avatar!.isEmpty
                           ? Text(
                               user.name[0].toUpperCase(),
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w500,
+                              style: AppTypography.font(
+                                fontWeight: AppTypography.labelWeight,
                                 color: AppColors.primary,
                               ),
                             )
@@ -932,13 +932,13 @@ class _UsersScreenState extends State<UsersScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(user.name,
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w500,
+                            style: AppTypography.font(
+                              fontWeight: AppTypography.labelWeight,
                               color: textColor,
                             )),
                         Text(user.email,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
+                            style: AppTypography.font(
+                              fontSize: AppTypography.actionSize,
                               color: secondaryTextColor,
                             )),
                       ],
@@ -949,9 +949,9 @@ class _UsersScreenState extends State<UsersScreen>
               if (!isMobile) ...[
                 Expanded(
                   child: Text(user.role,
-                      style: GoogleFonts.inter(
+                      style: AppTypography.font(
                         color: textColor,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       )),
                 ),
                 Expanded(
@@ -964,10 +964,10 @@ class _UsersScreenState extends State<UsersScreen>
                     ),
                     child: Text(
                       user.status,
-                      style: GoogleFonts.inter(
+                      style: AppTypography.font(
                         color: statusColor,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
+                        fontWeight: AppTypography.labelWeight,
+                        fontSize: AppTypography.actionSize,
                       ),
                     ),
                   ),
@@ -975,19 +975,19 @@ class _UsersScreenState extends State<UsersScreen>
                 Expanded(
                   child: Text(
                     user.lastActive,
-                    style: GoogleFonts.inter(
+                    style: AppTypography.font(
                       color: secondaryTextColor,
-                      fontSize: 13,
+                      fontSize: AppTypography.actionSize,
                     ),
                   ),
                 ),
                 Expanded(
                   child: Text(
                     user.department,
-                    style: GoogleFonts.inter(
+                    style: AppTypography.font(
                       color: textColor,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
+                      fontWeight: AppTypography.labelWeight,
+                      fontSize: AppTypography.actionSize,
                     ),
                   ),
                 ),
@@ -999,23 +999,23 @@ class _UsersScreenState extends State<UsersScreen>
                   PopupMenuItem<String>(
                     value: 'Edit User',
                     child: Text('Edit User',
-                        style: GoogleFonts.inter(color: textColor)),
+                        style: AppTypography.font(color: textColor)),
                   ),
                   PopupMenuItem<String>(
                     value: 'Reset Password',
                     child: Text('Reset Password',
-                        style: GoogleFonts.inter(color: textColor)),
+                        style: AppTypography.font(color: textColor)),
                   ),
                   PopupMenuItem<String>(
                     value: user.status == 'Active' ? 'Deactivate' : 'Activate',
                     child: Text(
                         user.status == 'Active' ? 'Deactivate' : 'Activate',
-                        style: GoogleFonts.inter(color: textColor)),
+                        style: AppTypography.font(color: textColor)),
                   ),
                   PopupMenuItem<String>(
                     value: 'Delete',
                     child: Text('Delete',
-                        style: GoogleFonts.inter(color: Colors.red)),
+                        style: AppTypography.font(color: Colors.red)),
                   ),
                 ].toList(),
                 onSelected: (value) => _handleUserAction(value, user),
@@ -1079,9 +1079,9 @@ class _UsersScreenState extends State<UsersScreen>
                         children: [
                           Text(
                             'Add New User',
-                            style: GoogleFonts.poppins(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
+                            style: AppTypography.font(
+                              fontSize: AppTypography.headingSize,
+                              fontWeight: AppTypography.labelWeight,
                               color: Colors.white,
                             ),
                           ),
@@ -1165,7 +1165,7 @@ class _UsersScreenState extends State<UsersScreen>
                           Step(
                             title: Text('User Info',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: AppTypography.labelWeight,
                                   color: isDark
                                       ? AppColors.card
                                       : AppColors.darkCard,
@@ -1283,7 +1283,7 @@ class _UsersScreenState extends State<UsersScreen>
                           Step(
                             title: Text('Permissions',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: AppTypography.labelWeight,
                                   color: isDark
                                       ? AppColors.card
                                       : AppColors.darkCard,
@@ -1316,7 +1316,7 @@ class _UsersScreenState extends State<UsersScreen>
                           Step(
                             title: Text('Congratulations',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.w500,
+                                  fontWeight: AppTypography.labelWeight,
                                   color: isDark
                                       ? AppColors.card
                                       : AppColors.darkCard,
@@ -1328,7 +1328,7 @@ class _UsersScreenState extends State<UsersScreen>
                                 Text(
                                   'ðŸŽ‰ ${nameController.text} has been successfully added!',
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.w500),
+                                      fontWeight: AppTypography.labelWeight),
                                 ),
                                 const SizedBox(height: 10),
                                 Text(
@@ -1339,7 +1339,7 @@ class _UsersScreenState extends State<UsersScreen>
                                 const SizedBox(height: 10),
                                 SelectableText(
                                   'Temporary Password: $tempPassword',
-                                  style: const TextStyle(fontSize: 16),
+                                  style: const TextStyle(fontSize: AppTypography.cardTitleSize),
                                 ),
                                 const SizedBox(height: 20),
                                 /*
@@ -1456,7 +1456,7 @@ class _UsersScreenState extends State<UsersScreen>
                   : AppColors.text.withOpacity(0.6),
               indicatorColor: AppColors.primary,
               indicatorSize: TabBarIndicatorSize.tab,
-              labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500),
+              labelStyle: AppTypography.font(fontWeight: AppTypography.labelWeight),
               tabs: const [
                 Tab(text: 'User Details'),
                 Tab(text: 'Performance'),
@@ -1525,17 +1525,17 @@ class _UsersScreenState extends State<UsersScreen>
                 children: [
                   Text(
                     user.name,
-                    style: GoogleFonts.poppins(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.pageTitleSize,
+                      fontWeight: AppTypography.labelWeight,
                       color: isDark ? AppColors.darkText : AppColors.text,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     user.role,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.bodySize,
                       color: isDark
                           ? AppColors.darkText.withOpacity(0.7)
                           : AppColors.text.withOpacity(0.7),
@@ -1594,9 +1594,9 @@ class _UsersScreenState extends State<UsersScreen>
         const SizedBox(height: 24),
         Text(
           'Permissions',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
+          style: AppTypography.font(
+            fontSize: AppTypography.cardTitleSize,
+            fontWeight: AppTypography.labelWeight,
             color: isDark
                 ? AppColors.darkText.withOpacity(0.8)
                 : AppColors.text.withOpacity(0.8),
@@ -1618,9 +1618,9 @@ class _UsersScreenState extends State<UsersScreen>
                 label: Text(permission),
                 backgroundColor:
                     AppColors.primary.withOpacity(isDark ? 0.2 : 0.1),
-                labelStyle: GoogleFonts.inter(
+                labelStyle: AppTypography.font(
                   color: AppColors.primary,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -1631,7 +1631,7 @@ class _UsersScreenState extends State<UsersScreen>
         else
           Text(
             'No specific permissions assigned',
-            style: GoogleFonts.inter(
+            style: AppTypography.font(
               color: isDark
                   ? AppColors.darkText.withOpacity(0.5)
                   : AppColors.text.withOpacity(0.5),
@@ -1647,9 +1647,9 @@ class _UsersScreenState extends State<UsersScreen>
       children: [
         Text(
           'Performance Metrics',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
+          style: AppTypography.font(
+            fontSize: AppTypography.sectionTitleSize,
+            fontWeight: AppTypography.labelWeight,
             color: isDark ? AppColors.darkText : AppColors.text,
           ),
         ),
@@ -1704,7 +1704,7 @@ class _UsersScreenState extends State<UsersScreen>
           child: Center(
             child: Text(
               'Performance Trend Chart',
-              style: GoogleFonts.inter(
+              style: AppTypography.font(
                 color: isDark
                     ? AppColors.darkText.withOpacity(0.6)
                     : AppColors.text.withOpacity(0.6),
@@ -1730,8 +1730,8 @@ class _UsersScreenState extends State<UsersScreen>
             ),
             child: Text(
               'Edit Profile',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -1754,8 +1754,8 @@ class _UsersScreenState extends State<UsersScreen>
             ),
             child: Text(
               'Close',
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontWeight: AppTypography.labelWeight,
                 color: isDark ? AppColors.darkText : AppColors.text,
               ),
             ),
@@ -1791,8 +1791,8 @@ class _UsersScreenState extends State<UsersScreen>
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: isDark
                         ? AppColors.darkText.withOpacity(0.6)
                         : AppColors.text.withOpacity(0.6),
@@ -1801,9 +1801,9 @@ class _UsersScreenState extends State<UsersScreen>
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: AppTypography.labelWeight,
                     color: valueColor ??
                         (isDark ? AppColors.darkText : AppColors.text),
                   ),
@@ -1848,8 +1848,8 @@ class _UsersScreenState extends State<UsersScreen>
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: isDark
                         ? AppColors.darkText.withOpacity(0.6)
                         : AppColors.text.withOpacity(0.6),
@@ -1860,9 +1860,9 @@ class _UsersScreenState extends State<UsersScreen>
                   children: [
                     Text(
                       value,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.cardTitleSize,
+                        fontWeight: AppTypography.labelWeight,
                         color: isDark ? AppColors.darkText : AppColors.text,
                       ),
                     ),
@@ -1878,9 +1878,9 @@ class _UsersScreenState extends State<UsersScreen>
                       ),
                       child: Text(
                         change,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.fieldLabelSize,
+                          fontWeight: AppTypography.labelWeight,
                           color:
                               isPositive ? AppColors.primary : AppColors.danger,
                         ),
@@ -1959,9 +1959,9 @@ class _UsersScreenState extends State<UsersScreen>
                       children: [
                         Text(
                           'Edit User Profile',
-                          style: GoogleFonts.poppins(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w500,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.headingSize,
+                            fontWeight: AppTypography.labelWeight,
                             color: Colors.white,
                           ),
                         ),
@@ -1990,12 +1990,12 @@ class _UsersScreenState extends State<UsersScreen>
                           color: primaryColor,
                         ),
                       ),
-                      labelStyle: GoogleFonts.inter(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
+                      labelStyle: AppTypography.font(
+                        fontWeight: AppTypography.labelWeight,
+                        fontSize: AppTypography.bodySize,
                       ),
-                      unselectedLabelStyle: GoogleFonts.inter(
-                        fontWeight: FontWeight.w500,
+                      unselectedLabelStyle: AppTypography.font(
+                        fontWeight: AppTypography.labelWeight,
                       ),
                       tabs: const [
                         Tab(text: 'Basic Info'),
@@ -2135,17 +2135,17 @@ class _UsersScreenState extends State<UsersScreen>
                             children: [
                               Text(
                                 'User Permissions',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
+                                style: AppTypography.font(
+                                  fontSize: AppTypography.sectionTitleSize,
+                                  fontWeight: AppTypography.labelWeight,
                                   color: textColor,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 'Select the permissions this user should have',
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
+                                style: AppTypography.font(
+                                  fontSize: AppTypography.bodySize,
                                   color: secondaryTextColor,
                                 ),
                               ),
@@ -2332,9 +2332,9 @@ class _UsersScreenState extends State<UsersScreen>
       keyboardType: keyboardType,
       validator: (value) =>
           isRequired && value!.isEmpty ? 'Required field' : null,
-      style: GoogleFonts.inter(
+      style: AppTypography.font(
         color: textColor,
-        fontSize: 14,
+        fontSize: AppTypography.bodySize,
       ),
       decoration: InputDecoration(
         labelText: label,
@@ -2355,7 +2355,7 @@ class _UsersScreenState extends State<UsersScreen>
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: primaryColor, width: 1.5),
         ),
-        labelStyle: GoogleFonts.inter(
+        labelStyle: AppTypography.font(
           color: isDark ? AppColors.darkText.withOpacity(0.7) : Colors.black54,
         ),
       ),
@@ -2386,9 +2386,9 @@ class _UsersScreenState extends State<UsersScreen>
           value: value,
           child: Text(
             value,
-            style: GoogleFonts.inter(
+            style: AppTypography.font(
               color: textColor,
-              fontSize: 14,
+              fontSize: AppTypography.bodySize,
             ),
           ),
         );
@@ -2411,15 +2411,15 @@ class _UsersScreenState extends State<UsersScreen>
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: primaryColor, width: 1.5),
         ),
-        labelStyle: GoogleFonts.inter(
+        labelStyle: AppTypography.font(
           color: secondaryTextColor,
         ),
       ),
       dropdownColor: cardColor,
       icon: Icon(Icons.arrow_drop_down, color: secondaryTextColor),
-      style: GoogleFonts.inter(
+      style: AppTypography.font(
         color: textColor,
-        fontSize: 14,
+        fontSize: AppTypography.bodySize,
       ),
       borderRadius: BorderRadius.circular(8),
     );
@@ -2473,9 +2473,9 @@ class _UsersScreenState extends State<UsersScreen>
               Expanded(
                 child: Text(
                   permission,
-                  style: GoogleFonts.inter(
+                  style: AppTypography.font(
                     color: textColor,
-                    fontSize: 14,
+                    fontSize: AppTypography.bodySize,
                   ),
                 ),
               ),
@@ -2533,20 +2533,20 @@ class _UsersScreenState extends State<UsersScreen>
           backgroundColor: dialogCardColor,
           title: Text(
             'Delete User',
-            style: GoogleFonts.poppins(
+            style: AppTypography.font(
               color: dialogTextColor,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
           content: Text(
             'Are you sure you want to delete ${user.name}? This action cannot be undone.',
-            style: GoogleFonts.inter(color: dialogTextColor),
+            style: AppTypography.font(color: dialogTextColor),
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text('Cancel',
-                  style: GoogleFonts.inter(color: dialogActiveColor)),
+                  style: AppTypography.font(color: dialogActiveColor)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -2583,7 +2583,7 @@ Widget _buildPermissionChip({
   return FilterChip(
     label: Text(
       permission,
-      style: GoogleFonts.inter(
+      style: AppTypography.font(
         color: isSelected ? (isDark ? Colors.black : Colors.white) : textColor,
       ),
     ),

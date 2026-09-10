@@ -1,6 +1,6 @@
+import '../../core/theme/app_typography.dart';
 // Caretaker dashboard
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 //import '../../constants/colors.dart';
 import '../../widgets/headers/caretaker_header.dart';
 import '../../core/widgets/caretaker_mobile_bottom_nav.dart';
@@ -76,22 +76,22 @@ class _CaretakerDashboardScreenState extends State<CaretakerDashboardScreen> {
                             const SizedBox(height: 12),
                             Text(
                               "Dashboard Overview",
-                              style: GoogleFonts.poppins(
-                                fontSize: isWide ? 20 : 18,
+                              style: AppTypography.font(
+                                fontSize: isWide ? AppTypography.headingSize : AppTypography.sectionTitleSize,
                                 color: isDark ? Colors.white : Colors.black,
-                                fontWeight: FontWeight.w700,
+                                fontWeight: AppTypography.headingWeight,
                                 letterSpacing: 0.2,
                               ),
                             ),
                             const SizedBox(height: 6),
                             Text(
                               "Below are today's key performance indicators and insights of the farm",
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
+                              style: AppTypography.font(
+                                fontSize: AppTypography.cardTitleSize,
                                 color: isDark
                                     ? Colors.white.withOpacity(0.7)
                                     : Colors.black.withOpacity(0.68),
-                                fontWeight: FontWeight.w500,
+                                fontWeight: AppTypography.labelWeight,
                               ),
                             ),
                             const SizedBox(height: 20),

@@ -57,7 +57,7 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                         userName.isNotEmpty ? userName[0].toUpperCase() : 'F',
                         style: AppTypography.bodyMedium.copyWith(
                           color: Colors.white,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ),
@@ -70,8 +70,8 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                         Text(
                           userName,
                           style: AppTypography.bodyMedium.copyWith(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
+                            fontSize: AppTypography.cardTitleSize,
+                            fontWeight: AppTypography.headingWeight,
                             color: Colors.white,
                           ),
                           maxLines: 1,
@@ -82,7 +82,7 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                           userRole,
                           style: AppTypography.bodySmall.copyWith(
                             color: Colors.white.withOpacity(0.9),
-                            fontWeight: FontWeight.w500,
+                            fontWeight: AppTypography.labelWeight,
                           ),
                         ),
                       ],
@@ -137,9 +137,9 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                       child: Text(
                         userName.isNotEmpty ? userName[0].toUpperCase() : 'F',
                         style: AppTypography.bodyMedium.copyWith(
-                          fontSize: 18,
+                          fontSize: AppTypography.sectionTitleSize,
                           color: Colors.white,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -154,7 +154,7 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.bodyMedium.copyWith(
-                            fontSize: 15,
+                            fontSize: AppTypography.cardTitleSize,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
                           ),
@@ -165,7 +165,7 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.caption.copyWith(
-                            fontSize: 12,
+                            fontSize: AppTypography.captionSize,
                             color: isDark
                                 ? Colors.white.withOpacity(0.7)
                                 : AppColors.textSecondary,
@@ -211,9 +211,9 @@ class FarmManagerMobileDrawer extends StatelessWidget {
                         Text(
                           'Logout',
                           style: AppTypography.bodyMedium.copyWith(
-                            fontSize: 15,
+                            fontSize: AppTypography.cardTitleSize,
                             color: AppColors.error,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                       ],
@@ -323,8 +323,8 @@ class FarmManagerMobileDrawer extends StatelessWidget {
           title: Text(
             item['label'] as String,
             style: AppTypography.bodyMedium.copyWith(
-              fontSize: 15,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
               color: isSelected
                   ? AppColors.primary
                   : (isDark ? Colors.white : AppColors.textPrimary),

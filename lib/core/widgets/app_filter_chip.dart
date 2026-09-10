@@ -39,7 +39,7 @@ class AppFilterChip extends StatelessWidget {
           Text(
             label,
             style: AppTypography.bodySmall.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isSelected
                   ? Colors.white
                   : (isDark ? Colors.white.withOpacity(0.8) : color),

@@ -98,8 +98,8 @@ class ModernAdminHeader extends ConsumerWidget {
                   Text(
                     _getGreeting(),
                     style: AppTypography.h4.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 28,
+                      fontWeight: AppTypography.headingWeight,
+                      fontSize: AppTypography.metricSize,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                       letterSpacing: -0.5,
                     ),
@@ -108,8 +108,8 @@ class ModernAdminHeader extends ConsumerWidget {
                   Text(
                     ', $userName',
                     style: AppTypography.h4.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 28,
+                      fontWeight: AppTypography.headingWeight,
+                      fontSize: AppTypography.metricSize,
                       color: isDark
                           ? Colors.white.withOpacity(0.9)
                           : AppColors.textPrimary.withOpacity(0.8),
@@ -132,11 +132,11 @@ class ModernAdminHeader extends ConsumerWidget {
                   Text(
                     _getFormattedDate(),
                     style: AppTypography.bodyLarge.copyWith(
-                      fontSize: 14,
+                      fontSize: AppTypography.bodySize,
                       color: isDark
                           ? Colors.white.withOpacity(0.7)
                           : AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: AppTypography.labelWeight,
                       letterSpacing: 0.2,
                     ),
                   ),
@@ -223,8 +223,8 @@ class ModernAdminHeader extends ConsumerWidget {
                         child: Text(
                           _getGreeting(),
                           style: AppTypography.h5.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 18,
+                            fontWeight: AppTypography.headingWeight,
+                            fontSize: AppTypography.sectionTitleSize,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
                             letterSpacing: -0.3,
@@ -240,8 +240,8 @@ class ModernAdminHeader extends ConsumerWidget {
                   Text(
                     userName,
                     style: AppTypography.bodyLarge.copyWith(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                      fontSize: AppTypography.actionSize,
+                      fontWeight: AppTypography.labelWeight,
                       color: isDark
                           ? Colors.white.withOpacity(0.85)
                           : AppColors.textPrimary.withOpacity(0.75),
@@ -310,11 +310,11 @@ class ModernAdminHeader extends ConsumerWidget {
                 child: Text(
                   _getFormattedDate(),
                   style: AppTypography.bodyMedium.copyWith(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark
                         ? Colors.white.withOpacity(0.7)
                         : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     letterSpacing: 0.1,
                   ),
                   maxLines: 1,
@@ -395,8 +395,8 @@ class ModernAdminHeader extends ConsumerWidget {
                   badge > 9 ? '9+' : badge.toString(),
                   style: AppTypography.caption.copyWith(
                     color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w500,
+                    fontSize: AppTypography.microSize,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -505,8 +505,8 @@ class ModernAdminHeader extends ConsumerWidget {
                   userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
                   style: AppTypography.bodyMedium.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
+                    fontWeight: AppTypography.labelWeight,
+                    fontSize: AppTypography.bodySize,
                   ),
                 ),
               ),
@@ -575,8 +575,8 @@ class ModernAdminHeader extends ConsumerWidget {
                   badge > 9 ? '9+' : badge.toString(),
                   style: AppTypography.caption.copyWith(
                     color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                    fontSize: AppTypography.microSize,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -701,8 +701,8 @@ class ModernAdminHeader extends ConsumerWidget {
                           userName.isNotEmpty ? userName[0].toUpperCase() : 'A',
                           style: AppTypography.bodyMedium.copyWith(
                             color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
+                            fontWeight: AppTypography.labelWeight,
+                            fontSize: AppTypography.cardTitleSize,
                           ),
                         ),
                       ),
@@ -712,8 +712,8 @@ class ModernAdminHeader extends ConsumerWidget {
                       userName.split(' ').first,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
+                        fontWeight: AppTypography.labelWeight,
+                        fontSize: AppTypography.bodySize,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
@@ -784,8 +784,8 @@ class ModernAdminHeader extends ConsumerWidget {
                   farm,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
+                    fontWeight: AppTypography.labelWeight,
+                    fontSize: AppTypography.bodySize,
                   ),
                 ),
               );

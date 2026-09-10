@@ -76,7 +76,7 @@ class EnvironmentMonitoringCard extends StatelessWidget {
                       Text(
                         'Environment',
                         style: AppTypography.h6.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -165,7 +165,7 @@ class EnvironmentMonitoringCard extends StatelessWidget {
                       _getRecommendation(),
                       style: AppTypography.bodySmall.copyWith(
                         color: isDark ? Colors.white70 : AppColors.textSecondary,
-                        fontSize: 11,
+                        fontSize: AppTypography.fieldLabelSize,
                       ),
                     ),
                   ),
@@ -231,7 +231,7 @@ class EnvironmentMonitoringCard extends StatelessWidget {
                       child: Text(
                         value,
                         style: AppTypography.h4.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                           color: statusColor,
                         ),
                         maxLines: 1,
@@ -271,8 +271,8 @@ class EnvironmentMonitoringCard extends StatelessWidget {
                   trend.toUpperCase(),
                   style: AppTypography.bodySmall.copyWith(
                     color: trendColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 10,
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: AppTypography.microSize,
                   ),
                 ),
               ],
@@ -319,7 +319,7 @@ class EnvironmentMonitoringCard extends StatelessWidget {
                   label,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white70 : AppColors.textSecondary,
-                    fontSize: 11,
+                    fontSize: AppTypography.fieldLabelSize,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -336,7 +336,7 @@ class EnvironmentMonitoringCard extends StatelessWidget {
                 child: Text(
                   value,
                   style: AppTypography.h5.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                     color: statusColor,
                   ),
                   maxLines: 1,
@@ -350,7 +350,7 @@ class EnvironmentMonitoringCard extends StatelessWidget {
                   unit,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                 ),
               ),
@@ -382,8 +382,8 @@ class EnvironmentMonitoringCard extends StatelessWidget {
             status.toUpperCase(),
             style: AppTypography.bodySmall.copyWith(
               color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 10,
+              fontWeight: AppTypography.headingWeight,
+              fontSize: AppTypography.microSize,
             ),
           ),
         ],

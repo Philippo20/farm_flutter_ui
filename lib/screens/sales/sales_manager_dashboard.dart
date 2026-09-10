@@ -54,7 +54,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
               Text(
                 'Sales Operations',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -107,7 +107,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
                   'Sales Department',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -164,7 +164,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
               Text(
                 'Revenue Overview',
                 style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -199,7 +199,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
         Text(
           value,
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: color,
           ),
         ),
@@ -208,7 +208,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
           label,
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
-            fontSize: 11,
+            fontSize: AppTypography.fieldLabelSize,
           ),
         ),
       ],
@@ -317,7 +317,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
                 Text(
                   feature.title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                   textAlign: TextAlign.center,
@@ -329,7 +329,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
                   feature.subtitle,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
@@ -355,8 +355,8 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
                     feature.badge!,
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.w500,
+                      fontSize: AppTypography.microSize,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ),
@@ -374,7 +374,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
         Text(
           'Sales Personnel Performance',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -444,7 +444,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
                 Text(
                   name,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -475,8 +475,8 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
           value,
           style: AppTypography.bodySmall.copyWith(
             color: color,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
+            fontSize: AppTypography.fieldLabelSize,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -493,7 +493,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
             Text(
               'Recent Transactions',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -563,7 +563,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
                 Text(
                   batchNumber,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -591,8 +591,8 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
                         status,
                         style: AppTypography.bodySmall.copyWith(
                           color: Colors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w500,
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -602,7 +602,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white38 : AppColors.textSecondary,
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                       ),
                     ),
                   ],
@@ -613,7 +613,7 @@ class _SalesManagerDashboardState extends ConsumerState<SalesManagerDashboard> {
           Text(
             amount,
             style: AppTypography.bodyLarge.copyWith(
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
               color: color,
             ),
           ),

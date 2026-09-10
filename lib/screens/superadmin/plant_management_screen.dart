@@ -344,7 +344,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         Text(
           'Plant Type Management',
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -381,8 +381,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         Text(
           'All Plant Types',
           style: AppTypography.h6.copyWith(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
+            fontWeight: AppTypography.headingWeight,
+            fontSize: AppTypography.bodySize,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -420,7 +420,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                 children: [
                   Text('Plant Type Management',
                       style: AppTypography.h4.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
                   Text(
@@ -483,7 +483,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                             ? 'All Plant Types'
                             : '$_selectedCategoryFilter Plant Types',
                         style: AppTypography.h6.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -493,7 +493,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                   ],
@@ -581,7 +581,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
             color: isSelected
                 ? AppColors.success
                 : (isDark ? Colors.white70 : AppColors.textSecondary),
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.headingWeight,
           ),
         );
       }).toList()
@@ -598,7 +598,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
             ),
             labelStyle: TextStyle(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ),
@@ -640,7 +640,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                     child: Text(
                       stat['title'] as String,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                         color: statColor.withValues(alpha: 0.9),
                       ),
                       maxLines: 1,
@@ -653,8 +653,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               Text(
                 stat['value'] as String,
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  fontSize: AppTypography.cardTitleSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: statColor,
                 ),
                 maxLines: 1,
@@ -750,8 +750,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                             Text(
                               stat['value'] as String,
                               style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: AppTypography.sectionTitleSize,
+                                  fontWeight: AppTypography.labelWeight,
                                   color: stat['color'] as Color),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -759,7 +759,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                             Text(
                               stat['title'] as String,
                               style: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: AppTypography.microSize,
                                   color: (stat['color'] as Color)
                                       .withValues(alpha: 0.8)),
                               maxLines: 1,
@@ -794,13 +794,13 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               Expanded(
                   child: Text(label,
                       style: AppTypography.bodySmall
-                          .copyWith(fontSize: 11, color: secondary))),
+                          .copyWith(fontSize: AppTypography.fieldLabelSize, color: secondary))),
             ]),
             const SizedBox(height: 6),
             Text(value,
                 style: AppTypography.bodySmall.copyWith(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: foreground)),
           ]),
         );
@@ -835,13 +835,13 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                   children: [
                 Text('${plant['name'] ?? 'Unnamed plant'}',
                     style: AppTypography.bodyMedium.copyWith(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                        fontSize: AppTypography.cardTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: foreground)),
                 const SizedBox(height: 4),
                 Text('${plant['category'] ?? 'Uncategorized'}',
                     style: AppTypography.bodySmall
-                        .copyWith(fontSize: 12, color: secondary)),
+                        .copyWith(fontSize: AppTypography.captionSize, color: secondary)),
               ])),
         ]),
         const SizedBox(height: 12),
@@ -869,7 +869,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                 side: BorderSide(
                     color: isDark ? Colors.white12 : AppColors.neutral200),
                 shape: RoundedRectangleBorder(
@@ -888,7 +888,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: 12, fontWeight: FontWeight.w600),
+                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10))),
           )),
@@ -935,7 +935,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           letterSpacing: 0.2,
         ),
       ),
@@ -956,8 +956,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
           category,
           style: const TextStyle(
             color: AppColors.info,
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
+            fontSize: AppTypography.fieldLabelSize,
+            fontWeight: AppTypography.labelWeight,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -978,8 +978,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         status,
         style: TextStyle(
           color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
+          fontSize: AppTypography.fieldLabelSize,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -1019,14 +1019,14 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                     children: [
                       Text(plant['name'],
                           style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
+                              fontWeight: AppTypography.labelWeight,
+                              fontSize: AppTypography.bodySize,
                               color: isDark
                                   ? Colors.white
                                   : AppColors.textPrimary)),
                       Text(plant['id'],
                           style: TextStyle(
-                              fontSize: 11,
+                              fontSize: AppTypography.fieldLabelSize,
                               color: isDark
                                   ? Colors.white54
                                   : AppColors.textSecondary)),
@@ -1044,8 +1044,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
             child: Text(
               _maturityLabel(plant),
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.labelWeight,
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
               ),
             ),
@@ -1059,7 +1059,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
           Expanded(
             child: Text(plant['created'],
                 style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary)),
           ),
           Row(
@@ -1129,7 +1129,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                             style: AppTypography.h6.copyWith(
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: AppTypography.headingWeight,
                             ),
                           ),
                           Text(
@@ -1374,7 +1374,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                             Text('Add Plant Type',
                                 style: AppTypography.h6.copyWith(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.w600)),
+                                    fontWeight: AppTypography.headingWeight)),
                             Text('Register plant catalog details',
                                 style: AppTypography.bodySmall
                                     .copyWith(color: Colors.white70)),
@@ -1619,7 +1619,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                             Text('Edit Plant Type',
                                 style: AppTypography.h6.copyWith(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.w600)),
+                                    fontWeight: AppTypography.headingWeight)),
                             Text('Update plant information',
                                 style: AppTypography.bodySmall
                                     .copyWith(color: Colors.white70))
@@ -1660,7 +1660,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                               children: [
                             Text(plant['name'],
                                 style: AppTypography.bodyLarge.copyWith(
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: AppTypography.labelWeight,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary)),
@@ -1698,7 +1698,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                               formError!,
                               style: TextStyle(
                                 color: AppColors.error,
-                                fontSize: 12,
+                                fontSize: AppTypography.captionSize,
                               ),
                             ),
                           ),
@@ -1903,7 +1903,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               const SizedBox(height: AppSpacing.lg),
               Text('Delete Plant Type?',
                   style: AppTypography.h5.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary)),
               const SizedBox(height: AppSpacing.sm),
               Text('Are you sure you want to delete "${plant['name']}"?',
@@ -1941,15 +1941,15 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                         children: [
                           Text(plant['name'],
                               style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14,
+                                  fontWeight: AppTypography.labelWeight,
+                                  fontSize: AppTypography.bodySize,
                                   color: isDark
                                       ? Colors.white
                                       : AppColors.textPrimary)),
                           Text(
                               '${plant['category']} | ${_maturityLabel(plant)}',
                               style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: AppTypography.captionSize,
                                   color: isDark
                                       ? Colors.white60
                                       : AppColors.textSecondary)),
@@ -1972,8 +1972,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                               color: plant['status'] == 'Active'
                                   ? AppColors.success
                                   : AppColors.warning,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500)),
+                              fontSize: AppTypography.fieldLabelSize,
+                              fontWeight: AppTypography.labelWeight)),
                     ),
                   ],
                 ),
@@ -1997,7 +1997,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                         child: Text(
                             'This will also delete all associated pricing and batch data. This action cannot be undone.',
                             style: TextStyle(
-                                fontSize: 12,
+                                fontSize: AppTypography.captionSize,
                                 color: isDark
                                     ? Colors.white70
                                     : AppColors.textSecondary))),
@@ -2064,7 +2064,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   // Helper widgets
   Widget _buildFormLabel(String label, bool isDark) => Text(label,
       style: AppTypography.bodyMedium.copyWith(
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           color: isDark ? Colors.white : AppColors.textPrimary));
 
   Widget _buildTextField(
@@ -2103,7 +2103,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               borderSide: const BorderSide(color: AppColors.success, width: 2)),
           errorStyle: TextStyle(
-              color: AppColors.error.withValues(alpha: 0.9), fontSize: 12),
+              color: AppColors.error.withValues(alpha: 0.9), fontSize: AppTypography.captionSize),
           contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md, vertical: AppSpacing.md)),
       validator: validator,
@@ -2139,8 +2139,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                 child: Text(
                   '-',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppTypography.sectionTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
                 ),
@@ -2186,8 +2186,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
           child: Text(
             '-',
             style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+              fontSize: AppTypography.sectionTitleSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white54 : AppColors.textSecondary,
             ),
           ),
@@ -2254,7 +2254,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
           dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
           style: TextStyle(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontSize: 14),
+              fontSize: AppTypography.bodySize),
           items: items
               .map((item) => DropdownMenuItem(
                     value: item,
@@ -2295,7 +2295,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
               style: TextStyle(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: 14),
+                  fontSize: AppTypography.bodySize),
               items: items
                   .map((item) => DropdownMenuItem(
                       value: item,

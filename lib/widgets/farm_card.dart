@@ -88,7 +88,7 @@ class FarmCard extends StatelessWidget {
                             farm.name,
                             style: AppTypography.titleMedium.copyWith(
                               color: AppColors.textPrimary,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: AppTypography.headingWeight,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -143,7 +143,7 @@ class FarmCard extends StatelessWidget {
                             farm.status.displayName,
                             style: AppTypography.caption.copyWith(
                               color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: AppTypography.headingWeight,
                             ),
                           ),
                         ],
@@ -269,14 +269,14 @@ class FarmCard extends StatelessWidget {
                   label,
                   style: AppTypography.caption.copyWith(
                     color: AppColors.textSecondary,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                 ),
                 Text(
                   value,
                   style: AppTypography.labelSmall.copyWith(
                     color: color,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -340,7 +340,7 @@ class CompactFarmCard extends StatelessWidget {
               Text(
                 farm.name,
                 style: AppTypography.titleSmall.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

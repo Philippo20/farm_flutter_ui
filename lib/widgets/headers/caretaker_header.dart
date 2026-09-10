@@ -1,6 +1,6 @@
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 import '../../core/widgets/adaptive_logout_confirmation.dart';
 import '../../core/widgets/notification_center.dart';
@@ -95,9 +95,9 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         title: Text(
           "Edit Profile",
-          style: GoogleFonts.poppins(
+          style: AppTypography.font(
             color: isDark ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         content: Column(
@@ -106,11 +106,11 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
             TextFormField(
               decoration: InputDecoration(
                 labelText: "Full Name",
-                labelStyle: GoogleFonts.poppins(
+                labelStyle: AppTypography.font(
                   color: isDark ? Colors.white70 : Colors.grey[600],
                 ),
               ),
-              style: GoogleFonts.poppins(
+              style: AppTypography.font(
                 color: isDark ? Colors.white : Colors.black,
               ),
               initialValue: adminName,
@@ -119,11 +119,11 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
             TextFormField(
               decoration: InputDecoration(
                 labelText: "Email",
-                labelStyle: GoogleFonts.poppins(
+                labelStyle: AppTypography.font(
                   color: isDark ? Colors.white70 : Colors.grey[600],
                 ),
               ),
-              style: GoogleFonts.poppins(
+              style: AppTypography.font(
                 color: isDark ? Colors.white : Colors.black,
               ),
               initialValue: "acquaye@farmcare.com",
@@ -132,11 +132,11 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
             TextFormField(
               decoration: InputDecoration(
                 labelText: "Phone Number",
-                labelStyle: GoogleFonts.poppins(
+                labelStyle: AppTypography.font(
                   color: isDark ? Colors.white70 : Colors.grey[600],
                 ),
               ),
-              style: GoogleFonts.poppins(
+              style: AppTypography.font(
                 color: isDark ? Colors.white : Colors.black,
               ),
             ),
@@ -147,7 +147,7 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
             onPressed: () => Navigator.pop(context),
             child: Text(
               "Cancel",
-              style: GoogleFonts.poppins(
+              style: AppTypography.font(
                 color: isDark ? Colors.white70 : Colors.grey[600],
               ),
             ),
@@ -159,7 +159,7 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
                 SnackBar(
                   content: Text(
                     "Profile updated successfully",
-                    style: GoogleFonts.poppins(),
+                    style: AppTypography.font(),
                   ),
                   backgroundColor: Colors.green,
                 ),
@@ -180,9 +180,9 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         title: Text(
           "Help & Support",
-          style: GoogleFonts.poppins(
+          style: AppTypography.font(
             color: isDark ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         content: Column(
@@ -227,7 +227,7 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
             onPressed: () => Navigator.pop(context),
             child: Text(
               "Close",
-              style: GoogleFonts.poppins(
+              style: AppTypography.font(
                 color: isDark ? Colors.white70 : Colors.grey[600],
               ),
             ),
@@ -248,16 +248,16 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: Text(
         title,
-        style: GoogleFonts.poppins(
+        style: AppTypography.font(
           color: isDark ? Colors.white : Colors.black,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: GoogleFonts.poppins(
+        style: AppTypography.font(
           color: isDark ? Colors.white70 : Colors.grey[600],
-          fontSize: 12,
+          fontSize: AppTypography.captionSize,
         ),
       ),
       onTap: onTap,
@@ -292,9 +292,9 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
         backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         title: Text(
           "About FarmCare",
-          style: GoogleFonts.poppins(
+          style: AppTypography.font(
             color: isDark ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         content: Column(
@@ -313,25 +313,25 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
             const SizedBox(height: 16),
             Text(
               "FarmCare v1.0.0",
-              style: GoogleFonts.poppins(
+              style: AppTypography.font(
                 color: isDark ? Colors.white : Colors.black,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               "Comprehensive farm management solution for modern agriculture.",
-              style: GoogleFonts.poppins(
+              style: AppTypography.font(
                 color: isDark ? Colors.white70 : Colors.grey[600],
-                fontSize: 12,
+                fontSize: AppTypography.captionSize,
               ),
             ),
             const SizedBox(height: 16),
             Text(
               "Features:",
-              style: GoogleFonts.poppins(
+              style: AppTypography.font(
                 color: isDark ? Colors.white : Colors.black,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
             const SizedBox(height: 8),
@@ -346,7 +346,7 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
             onPressed: () => Navigator.pop(context),
             child: Text(
               "Close",
-              style: GoogleFonts.poppins(
+              style: AppTypography.font(
                 color: isDark ? Colors.white70 : Colors.grey[600],
               ),
             ),
@@ -369,9 +369,9 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
           const SizedBox(width: 8),
           Text(
             feature,
-            style: GoogleFonts.poppins(
+            style: AppTypography.font(
               color: isDark ? Colors.white70 : Colors.grey[600],
-              fontSize: 12,
+              fontSize: AppTypography.captionSize,
             ),
           ),
         ],
@@ -395,7 +395,7 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
       SnackBar(
         content: Text(
           "Logged out successfully",
-          style: GoogleFonts.poppins(),
+          style: AppTypography.font(),
         ),
         backgroundColor: Colors.green,
       ),
@@ -454,9 +454,9 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
                 // Greeting text below logo on small screens
                 Text(
                   "${_greeting()}, $adminName",
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    fontSize: isVerySmall ? 16 : 18,
+                  style: AppTypography.font(
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: isVerySmall ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
                     color: isDark ? Colors.white : AppColors.darkBackground,
                     letterSpacing: 0.2,
                   ),
@@ -468,9 +468,9 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
                   children: [
                     Text(
                       subtitle,
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w400,
-                        fontSize: isVerySmall ? 12 : 13,
+                      style: AppTypography.font(
+                        fontWeight: AppTypography.bodyWeight,
+                        fontSize: isVerySmall ? AppTypography.captionSize : AppTypography.actionSize,
                         color: isDark
                             ? Colors.grey.shade400
                             : Colors.grey.shade600,
@@ -484,10 +484,10 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
                     const SizedBox(width: 4),
                     Text(
                       "Your Panel",
-                      style: GoogleFonts.poppins(
+                      style: AppTypography.font(
                         color: isDark ? Colors.white : AppColors.darkBackground,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
+                        fontSize: AppTypography.bodySize,
+                        fontWeight: AppTypography.bodyWeight,
                       ),
                     ),
                   ],
@@ -516,9 +516,9 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
                     children: [
                       Text(
                         "${_greeting()}, $adminName",
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          fontSize: isVerySmall ? 16 : 20,
+                        style: AppTypography.font(
+                          fontWeight: AppTypography.headingWeight,
+                          fontSize: isVerySmall ? AppTypography.cardTitleSize : AppTypography.headingSize,
                           color:
                               isDark ? Colors.white : AppColors.darkBackground,
                           letterSpacing: 0.2,
@@ -531,9 +531,9 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
                         children: [
                           Text(
                             subtitle,
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.w400,
-                              fontSize: isVerySmall ? 12 : 14,
+                            style: AppTypography.font(
+                              fontWeight: AppTypography.bodyWeight,
+                              fontSize: isVerySmall ? AppTypography.captionSize : AppTypography.bodySize,
                               color: isDark
                                   ? Colors.grey.shade400
                                   : Colors.grey.shade600,
@@ -549,12 +549,12 @@ class CaretakerHeader extends StatelessWidget implements PreferredSizeWidget {
                             const SizedBox(width: 4),
                             Text(
                               "Your Panel",
-                              style: GoogleFonts.poppins(
+                              style: AppTypography.font(
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.darkBackground,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
+                                fontSize: AppTypography.bodySize,
+                                fontWeight: AppTypography.bodyWeight,
                               ),
                             ),
                           ],

@@ -163,7 +163,7 @@ class _ModernDashboardScaffoldState
                             color: isDark
                                 ? Colors.white.withOpacity(0.6)
                                 : AppColors.textSecondary,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: AppTypography.headingWeight,
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -224,7 +224,7 @@ class _ModernDashboardScaffoldState
                           'Logout',
                           style: AppTypography.bodyMedium.copyWith(
                             color: AppColors.error,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: AppTypography.labelWeight,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -279,7 +279,7 @@ class _ModernDashboardScaffoldState
                         ? AppColors.primary
                         : (isDark ? Colors.white70 : AppColors.textPrimary),
                     fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                        isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
                   ),
                 ),
               ),
@@ -297,8 +297,8 @@ class _ModernDashboardScaffoldState
                     item.badge!,
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                      fontSize: AppTypography.microSize,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),
@@ -341,7 +341,7 @@ class _ModernDashboardScaffoldState
                   userName,
                   style: AppTypography.h6.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ],
@@ -380,7 +380,7 @@ class _ModernDashboardScaffoldState
                     _getInitials(userName),
                     style: AppTypography.bodyMedium.copyWith(
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),
@@ -564,8 +564,8 @@ class CompactStatCard extends StatelessWidget {
                         title,
                         style: AppTypography.bodySmall.copyWith(
                           color: color.withOpacity(0.8),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 10,
+                          fontWeight: AppTypography.headingWeight,
+                          fontSize: AppTypography.microSize,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -579,10 +579,10 @@ class CompactStatCard extends StatelessWidget {
                         child: Text(
                           value,
                           style: AppTypography.h6.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: AppTypography.headingWeight,
                             color: color,
                             letterSpacing: -0.5,
-                            fontSize: 18,
+                            fontSize: AppTypography.sectionTitleSize,
                           ),
                         ),
                       ),
@@ -626,8 +626,8 @@ class CompactStatCard extends StatelessWidget {
                       Text(
                         trend!,
                         style: AppTypography.bodySmall.copyWith(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isPositive == true
                               ? AppColors.success
                               : AppColors.error,

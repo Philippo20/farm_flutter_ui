@@ -158,8 +158,8 @@ class _TechnicianSettingsScreenState
         'Technician Settings',
         style: AppTypography.h4.copyWith(
           color: isDark ? Colors.white : AppColors.textPrimary,
-          fontWeight: FontWeight.w600,
-          fontSize: 20,
+          fontWeight: AppTypography.headingWeight,
+          fontSize: AppTypography.headingSize,
         ),
       ),
       const SizedBox(height: AppSpacing.xs),
@@ -311,7 +311,7 @@ class _TechnicianSettingsScreenState
           title,
           style: AppTypography.h6.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
       ],
@@ -347,7 +347,7 @@ class _TechnicianSettingsScreenState
                 label,
                 style: AppTypography.bodyMedium.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
             ),
@@ -389,7 +389,7 @@ class _TechnicianSettingsScreenState
                   title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: 2),

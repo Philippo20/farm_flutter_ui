@@ -228,7 +228,7 @@ class _InputConfirmationScreenState
           Text(
             'Unable to load input confirmations',
             style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -307,7 +307,7 @@ class _InputConfirmationScreenState
                     Text(
                       'Input Confirmation',
                       style: AppTypography.h5.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -372,7 +372,7 @@ class _InputConfirmationScreenState
           Text(
             value,
             style: AppTypography.bodySmall.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
               color: color,
             ),
           ),
@@ -531,7 +531,7 @@ class _InputConfirmationScreenState
             Text(
               'No input requests found',
               style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
               ),
             ),
@@ -562,7 +562,7 @@ class _InputConfirmationScreenState
               child: Text(
                 request['item'] as String,
                 style: AppTypography.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
                 maxLines: 1,
@@ -732,7 +732,7 @@ class _InputConfirmationScreenState
         status,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: AppTypography.headingWeight,
         ),
       ),
     );
@@ -901,9 +901,9 @@ class _InputConfirmationScreenState
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

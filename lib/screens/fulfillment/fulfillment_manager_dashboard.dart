@@ -55,7 +55,7 @@ class _FulfillmentManagerDashboardState
               Text(
                 'Fulfillment Operations',
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -108,7 +108,7 @@ class _FulfillmentManagerDashboardState
                   'Fulfillment Center',
                   style: AppTypography.h5.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -165,7 +165,7 @@ class _FulfillmentManagerDashboardState
               Text(
                 'Today\'s Overview',
                 style: AppTypography.bodyLarge.copyWith(
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -204,7 +204,7 @@ class _FulfillmentManagerDashboardState
         Text(
           value,
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
             color: color,
           ),
         ),
@@ -212,7 +212,7 @@ class _FulfillmentManagerDashboardState
           unit,
           style: AppTypography.bodySmall.copyWith(
             color: color,
-            fontSize: 10,
+            fontSize: AppTypography.microSize,
           ),
         ),
         const SizedBox(height: 4),
@@ -220,7 +220,7 @@ class _FulfillmentManagerDashboardState
           label,
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
-            fontSize: 11,
+            fontSize: AppTypography.fieldLabelSize,
           ),
         ),
       ],
@@ -314,7 +314,7 @@ class _FulfillmentManagerDashboardState
                 Text(
                   feature.title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                   textAlign: TextAlign.center,
@@ -326,7 +326,7 @@ class _FulfillmentManagerDashboardState
                   feature.subtitle,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
@@ -351,8 +351,8 @@ class _FulfillmentManagerDashboardState
                     feature.badge!,
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.w500,
+                      fontSize: AppTypography.microSize,
+                      fontWeight: AppTypography.labelWeight,
                     ),
                   ),
                 ),
@@ -373,7 +373,7 @@ class _FulfillmentManagerDashboardState
             Text(
               'Pending Confirmations',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -390,8 +390,8 @@ class _FulfillmentManagerDashboardState
                 '5',
                 style: AppTypography.bodySmall.copyWith(
                   color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 10,
+                  fontWeight: AppTypography.labelWeight,
+                  fontSize: AppTypography.microSize,
                 ),
               ),
             ),
@@ -457,7 +457,7 @@ class _FulfillmentManagerDashboardState
                 Text(
                   title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -485,8 +485,8 @@ class _FulfillmentManagerDashboardState
                         status,
                         style: AppTypography.bodySmall.copyWith(
                           color: color,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w500,
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                     ),
@@ -496,7 +496,7 @@ class _FulfillmentManagerDashboardState
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white38 : AppColors.textSecondary,
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                       ),
                     ),
                   ],
@@ -524,7 +524,7 @@ class _FulfillmentManagerDashboardState
             Text(
               'Recent Activities',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -600,7 +600,7 @@ class _FulfillmentManagerDashboardState
                 Text(
                   title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -616,7 +616,7 @@ class _FulfillmentManagerDashboardState
                   time,
                   style: AppTypography.bodySmall.copyWith(
                     color: color,
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                   ),
                 ),
               ],

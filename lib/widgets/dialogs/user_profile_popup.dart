@@ -1,6 +1,6 @@
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class UserProfilePopup extends StatelessWidget {
   final bool isDark;
@@ -56,9 +56,9 @@ class UserProfilePopup extends StatelessWidget {
                   children: [
                     Text(
                       "Profile",
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : Colors.black,
                       ),
                     ),
@@ -126,9 +126,9 @@ class UserProfilePopup extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       userName,
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : Colors.black,
                       ),
                       textAlign: TextAlign.center,
@@ -136,8 +136,8 @@ class UserProfilePopup extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       userEmail,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color: isDark ? Colors.white70 : Colors.grey[600],
                       ),
                       textAlign: TextAlign.center,
@@ -151,9 +151,9 @@ class UserProfilePopup extends StatelessWidget {
                       ),
                       child: Text(
                         userRole,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: isDark ? Colors.greenAccent : Colors.green[700],
                         ),
                       ),
@@ -243,9 +243,9 @@ class UserProfilePopup extends StatelessWidget {
           const SizedBox(width: 12),
           Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
+              fontWeight: AppTypography.labelWeight,
               color: textColor ?? (isDark ? Colors.white : Colors.black),
             ),
           ),

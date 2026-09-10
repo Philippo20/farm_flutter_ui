@@ -479,8 +479,8 @@ class _FarmOwnerDashboardRedesignedState
                 children: [
                   Text('Farm Details',
                       style: AppTypography.h6.copyWith(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                          fontSize: AppTypography.cardTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
                   const SizedBox(height: 4),
@@ -489,7 +489,7 @@ class _FarmOwnerDashboardRedesignedState
                           ? 'No farms linked to your account'
                           : farmNames.join(' • '),
                       style: AppTypography.bodySmall.copyWith(
-                          fontSize: 12,
+                          fontSize: AppTypography.captionSize,
                           color: isDark
                               ? Colors.white70
                               : AppColors.textSecondary)),
@@ -536,8 +536,8 @@ class _FarmOwnerDashboardRedesignedState
                                       children: [
                                     Text(detail['label'] as String,
                                         style: AppTypography.caption.copyWith(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w500,
+                                            fontSize: AppTypography.fieldLabelSize,
+                                            fontWeight: AppTypography.labelWeight,
                                             color: isDark
                                                 ? Colors.white60
                                                 : AppColors.textSecondary)),
@@ -545,8 +545,8 @@ class _FarmOwnerDashboardRedesignedState
                                     Text(detail['value'] as String,
                                         style: AppTypography.bodyMedium
                                             .copyWith(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
+                                                fontSize: AppTypography.actionSize,
+                                                fontWeight: AppTypography.headingWeight,
                                                 color: isDark
                                                     ? Colors.white
                                                     : AppColors.textPrimary)),
@@ -685,19 +685,19 @@ class _FarmOwnerDashboardRedesignedState
           const SizedBox(height: 12),
           Text(stat['label'] as String,
               style: AppTypography.bodySmall.copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontSize: AppTypography.fieldLabelSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white70 : AppColors.textSecondary)),
           const SizedBox(height: 6),
           Text(stat['value'] as String,
               style: AppTypography.h5.copyWith(
-                  fontSize: isMobile ? 22 : 26,
-                  fontWeight: FontWeight.w700,
+                  fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary)),
           const SizedBox(height: 10),
           Text(stat['change'] as String,
               style: AppTypography.caption.copyWith(
-                  fontSize: 11,
+                  fontSize: AppTypography.fieldLabelSize,
                   color: isDark ? Colors.white60 : AppColors.textSecondary)),
         ],
       ),
@@ -733,8 +733,8 @@ class _FarmOwnerDashboardRedesignedState
               Text(
                 'Quick Actions',
                 style: TextStyle(
-                  fontSize: isMobile ? 16 : 18,
-                  fontWeight: FontWeight.w700,
+                  fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
@@ -778,8 +778,8 @@ class _FarmOwnerDashboardRedesignedState
               Text(
                 'Recent Activity',
                 style: TextStyle(
-                  fontSize: isMobile ? 16 : 18,
-                  fontWeight: FontWeight.w700,
+                  fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
@@ -890,8 +890,8 @@ class _FarmOwnerDashboardRedesignedState
                 Text(
                   activity['title'] as String,
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppTypography.actionSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
                   ),
                 ),
@@ -899,7 +899,7 @@ class _FarmOwnerDashboardRedesignedState
                 Text(
                   activity['desc'] as String,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white54 : const Color(0xFF64748B),
                   ),
                 ),
@@ -909,7 +909,7 @@ class _FarmOwnerDashboardRedesignedState
           Text(
             activity['time'] as String,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
               color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
             ),
           ),
@@ -1031,9 +1031,9 @@ class _FarmOwnerDashboardRedesignedState
                                       ? Colors.white.withOpacity(0.5)
                                       : AppColors.textSecondary),
                               fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                              fontSize: 11,
+                                  ? AppTypography.headingWeight
+                                  : AppTypography.bodyWeight,
+                              fontSize: AppTypography.fieldLabelSize,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1262,9 +1262,9 @@ class _FarmOwnerDashboardRedesignedState
                 title,
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: isMobile ? 12 : (isTablet ? 13 : 14),
+                  fontSize: isMobile ? AppTypography.captionSize : (isTablet ? AppTypography.actionSize : AppTypography.bodySize),
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -1277,7 +1277,7 @@ class _FarmOwnerDashboardRedesignedState
                 textAlign: TextAlign.center,
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white60 : AppColors.textSecondary,
-                  fontSize: isMobile ? 10 : (isTablet ? 10.5 : 11),
+                  fontSize: isMobile ? AppTypography.microSize : (isTablet ? AppTypography.fieldLabelSize : AppTypography.fieldLabelSize),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

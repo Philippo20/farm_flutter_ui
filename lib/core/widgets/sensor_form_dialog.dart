@@ -1,5 +1,5 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import 'app_dialog.dart';
 
@@ -22,7 +22,7 @@ class SensorFormDialog extends StatelessWidget {
     final buttons = ButtonStyle(
         minimumSize: const WidgetStatePropertyAll(Size(0, 44)),
         textStyle: WidgetStatePropertyAll(
-            GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+            AppTypography.font(fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
         padding:
             const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 12)),
         shape: WidgetStatePropertyAll(
@@ -49,92 +49,102 @@ class SensorFormDialog extends StatelessWidget {
                           blurRadius: 24,
                           offset: const Offset(0, 12))
                     ]),
-                child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-                      child: Row(children: [
-                        Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                                gradient: const LinearGradient(colors: [
-                                  AppColors.primary,
-                                  Color(0xff15803d)
-                                ]),
-                                borderRadius: BorderRadius.circular(10)),
-                            child: const Icon(Icons.sensors_rounded,
-                                size: 20, color: Colors.white)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                              Text(
-                                  editing ? 'Update Sensor' : 'Register Sensor',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      color: foreground)),
-                              const SizedBox(height: 3),
-                              Text('Device settings and operating limits',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12, color: secondary)),
-                            ])),
-                        IconButton(
-                            tooltip: 'Close',
-                            onPressed:
-                                saving ? null : () => Navigator.pop(context),
-                            constraints: const BoxConstraints(
-                                minWidth: 28, minHeight: 28),
-                            padding: const EdgeInsets.all(6),
-                            icon: Icon(Icons.close_rounded,
-                                size: 16, color: secondary)),
-                      ])),
-                  Expanded(
-                      child: SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          physics: const BouncingScrollPhysics(),
-                          keyboardDismissBehavior:
-                              ScrollViewKeyboardDismissBehavior.onDrag,
-                          child: child)),
-                  Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 16),
-                      decoration: BoxDecoration(
-                          color: surface,
-                          border: Border(
-                              top: BorderSide(
-                                  color: dark
-                                      ? Colors.white10
-                                      : AppColors.neutral200)),
-                          borderRadius: const BorderRadius.vertical(
-                              bottom: Radius.circular(16))),
-                      child: Row(children: [
-                        Expanded(
-                            child: OutlinedButton(
-                                style: buttons,
+                child: Material(
+                    color: surface,
+                    borderRadius: BorderRadius.circular(16),
+                    clipBehavior: Clip.antiAlias,
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                          child: Row(children: [
+                            Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                    gradient: const LinearGradient(colors: [
+                                      AppColors.primary,
+                                      Color(0xff15803d)
+                                    ]),
+                                    borderRadius: BorderRadius.circular(10)),
+                                child: const Icon(Icons.sensors_rounded,
+                                    size: 20, color: Colors.white)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                  Text(
+                                      editing
+                                          ? 'Update Sensor'
+                                          : 'Register Sensor',
+                                      style: AppTypography.font(
+                                          fontSize: AppTypography.cardTitleSize,
+                                          fontWeight: AppTypography.headingWeight,
+                                          color: foreground)),
+                                  const SizedBox(height: 3),
+                                  Text('Device settings and operating limits',
+                                      style: AppTypography.font(
+                                          fontSize: AppTypography.captionSize, color: secondary)),
+                                ])),
+                            IconButton(
+                                tooltip: 'Close',
                                 onPressed: saving
                                     ? null
                                     : () => Navigator.pop(context),
-                                child: const Text('Cancel'))),
-                        const SizedBox(width: 12),
-                        Expanded(
-                            child: FilledButton.icon(
-                                style: buttons,
-                                onPressed: saving ? null : onSave,
-                                icon: saving
-                                    ? const SizedBox(
-                                        width: 14,
-                                        height: 14,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 2))
-                                    : const Icon(Icons.save_outlined, size: 16),
-                                label: Text(saving
-                                    ? 'Saving…'
-                                    : editing
-                                        ? 'Update'
-                                        : 'Save'))),
-                      ])),
-                ]))));
+                                constraints: const BoxConstraints(
+                                    minWidth: 28, minHeight: 28),
+                                padding: const EdgeInsets.all(6),
+                                icon: Icon(Icons.close_rounded,
+                                    size: 16, color: secondary)),
+                          ])),
+                      Expanded(
+                          child: SingleChildScrollView(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24),
+                              physics: const BouncingScrollPhysics(),
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.onDrag,
+                              child: child)),
+                      Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 16),
+                          decoration: BoxDecoration(
+                              color: surface,
+                              border: Border(
+                                  top: BorderSide(
+                                      color: dark
+                                          ? Colors.white10
+                                          : AppColors.neutral200)),
+                              borderRadius: const BorderRadius.vertical(
+                                  bottom: Radius.circular(16))),
+                          child: Row(children: [
+                            Expanded(
+                                child: OutlinedButton(
+                                    style: buttons,
+                                    onPressed: saving
+                                        ? null
+                                        : () => Navigator.pop(context),
+                                    child: const Text('Cancel'))),
+                            const SizedBox(width: 12),
+                            Expanded(
+                                child: FilledButton.icon(
+                                    style: buttons,
+                                    onPressed: saving ? null : onSave,
+                                    icon: saving
+                                        ? const SizedBox(
+                                            width: 14,
+                                            height: 14,
+                                            child: CircularProgressIndicator(
+                                                strokeWidth: 2))
+                                        : const Icon(Icons.save_outlined,
+                                            size: 16),
+                                    label: Text(saving
+                                        ? 'Saving…'
+                                        : editing
+                                            ? 'Update'
+                                            : 'Save'))),
+                          ])),
+                    ])))));
   }
 }
 

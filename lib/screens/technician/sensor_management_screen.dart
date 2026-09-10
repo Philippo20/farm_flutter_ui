@@ -442,9 +442,9 @@ class _SensorManagementScreenState
                 child: Text(
                   'Sensor Management',
                   style: AppTypography.h5.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: isMobile ? 18 : 20,
+                    fontSize: isMobile ? AppTypography.sectionTitleSize : AppTypography.headingSize,
                   ),
                 ),
               ),
@@ -485,10 +485,10 @@ class _SensorManagementScreenState
                         child: Text(
                           '${filteredSensors.length} Sensors',
                           style: AppTypography.bodyLarge.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontSize: isMobile ? 15 : 16,
+                            fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.cardTitleSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -499,8 +499,8 @@ class _SensorManagementScreenState
                           '${sensors.where((s) => s['connection'] == 'online').length} Online',
                           style: AppTypography.bodyMedium.copyWith(
                             color: AppColors.success,
-                            fontWeight: FontWeight.w600,
-                            fontSize: isMobile ? 13 : 14,
+                            fontWeight: AppTypography.headingWeight,
+                            fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -641,7 +641,7 @@ class _SensorManagementScreenState
               key: ValueKey(_searchReset),
               initialValue: _searchQuery,
               onChanged: (value) => setState(() => _searchQuery = value),
-              style: const TextStyle(fontSize: 13),
+              style: const TextStyle(fontSize: AppTypography.actionSize),
               decoration: InputDecoration(
                   hintText: 'Search sensors',
                   prefixIcon: const Icon(Icons.search, size: 20),
@@ -709,7 +709,7 @@ class _SensorManagementScreenState
           label,
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
-            fontWeight: FontWeight.w600,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -741,7 +741,7 @@ class _SensorManagementScreenState
                           : item,
                       style: TextStyle(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontSize: isMobile ? 12 : 13,
+                        fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -759,7 +759,7 @@ class _SensorManagementScreenState
             ),
             style: TextStyle(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontSize: isMobile ? 12 : 13,
+              fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
             ),
             dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
           ),
@@ -808,14 +808,14 @@ class _SensorManagementScreenState
           'Add New Sensor',
           style: TextStyle(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: isMobile ? 18 : 20,
+            fontSize: isMobile ? AppTypography.sectionTitleSize : AppTypography.headingSize,
           ),
         ),
         content: Text(
           'Sensor addition feature coming soon!',
           style: TextStyle(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
-            fontSize: isMobile ? 13 : 14,
+            fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
           ),
         ),
         actions: [
@@ -832,7 +832,7 @@ class _SensorManagementScreenState
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Add',
-              style: TextStyle(fontSize: isMobile ? 13 : 14),
+              style: TextStyle(fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize),
             ),
           ),
         ],

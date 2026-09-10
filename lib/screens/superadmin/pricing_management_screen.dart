@@ -586,7 +586,7 @@ class _PricingManagementScreenState
                 'Hub and spoke price control',
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white : AppColors.warning,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ],
@@ -597,7 +597,7 @@ class _PricingManagementScreenState
           'Pricing Management',
           style: AppTypography.h4.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
         const SizedBox(height: 6),
@@ -739,7 +739,7 @@ class _PricingManagementScreenState
                 color: isSelected
                     ? Colors.white
                     : (isDark ? Colors.white70 : AppColors.textPrimary),
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
               ),
             ),
           ],
@@ -819,7 +819,7 @@ class _PricingManagementScreenState
               farm.name,
               style: AppTypography.bodyMedium.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -982,7 +982,7 @@ class _PricingManagementScreenState
                         price.plant,
                         style: AppTypography.bodyMedium.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: AppTypography.labelWeight,
                         ),
                       ),
                       Text(
@@ -1006,7 +1006,7 @@ class _PricingManagementScreenState
               price.pricingType == 'hub_sale' ? price.packaging : price.farm,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1076,7 +1076,7 @@ class _PricingManagementScreenState
                       price.plant,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     Text(
@@ -1236,7 +1236,7 @@ class _PricingManagementScreenState
                   item.type,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 Text(
@@ -1886,7 +1886,7 @@ class _PricingManagementScreenState
               Text(
                 title,
                 style: AppTypography.h5.copyWith(
-                  fontWeight: FontWeight.w500,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -1974,7 +1974,7 @@ class _PricingManagementScreenState
                   title,
                   style: AppTypography.h6.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 Text(
@@ -2071,7 +2071,7 @@ class _PricingManagementScreenState
           title,
           style: AppTypography.h6.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
         const SizedBox(height: 4),
@@ -2110,7 +2110,7 @@ class _PricingManagementScreenState
           value,
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
+            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -2134,7 +2134,7 @@ class _PricingManagementScreenState
             label,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white54 : AppColors.textSecondary,
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
             ),
           ),
           const SizedBox(height: 3),
@@ -2142,7 +2142,7 @@ class _PricingManagementScreenState
             value,
             style: AppTypography.bodySmall.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -2157,7 +2157,7 @@ class _PricingManagementScreenState
       value,
       style: AppTypography.bodyMedium.copyWith(
         color: color,
-        fontWeight: FontWeight.w500,
+        fontWeight: AppTypography.labelWeight,
       ),
     );
   }
@@ -2176,8 +2176,8 @@ class _PricingManagementScreenState
           text,
           style: AppTypography.bodySmall.copyWith(
             color: color,
-            fontWeight: FontWeight.w500,
-            fontSize: 11,
+            fontWeight: AppTypography.labelWeight,
+            fontSize: AppTypography.fieldLabelSize,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -2199,7 +2199,7 @@ class _PricingManagementScreenState
         text,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white : AppColors.primary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
         ),
       ),
     );
@@ -2216,7 +2216,7 @@ class _PricingManagementScreenState
         label,
         style: AppTypography.bodySmall.copyWith(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           letterSpacing: 0.2,
         ),
       ),
@@ -2245,7 +2245,7 @@ class _PricingManagementScreenState
   Widget _buildFormLabel(String label, bool isDark) => Text(
         label,
         style: AppTypography.bodyMedium.copyWith(
-          fontWeight: FontWeight.w500,
+          fontWeight: AppTypography.labelWeight,
           color: isDark ? Colors.white : AppColors.textPrimary,
         ),
       );
@@ -2334,7 +2334,7 @@ class _PricingManagementScreenState
           dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
           style: TextStyle(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: 14,
+            fontSize: AppTypography.bodySize,
           ),
           items: normalizedItems
               .map(

@@ -1,5 +1,5 @@
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../constants/colors.dart';
 import 'package:intl/intl.dart';
 
@@ -85,17 +85,17 @@ class _FirstRowState extends State<FirstRow> {
             children: [
               Text(
                 'Hello, Abacca Philip (CTO)',
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
+                style: AppTypography.font(
+                  fontSize: AppTypography.cardTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: widget.isDark ? Colors.white : Colors.black,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Good Afternoon',
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
                   color: widget.isDark ? Colors.grey[400] : Colors.grey[600],
                 ),
               ),
@@ -145,9 +145,9 @@ class _FirstRowState extends State<FirstRow> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text("Date & Time",
-                    style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.cardTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: widget.isDark ? Colors.white : Colors.black)),
                 const SizedBox(height: 4),
                 Wrap(
@@ -156,16 +156,16 @@ class _FirstRowState extends State<FirstRow> {
                   children: [
                     Text(
                       time,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color:
                             widget.isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
                     ),
                     Text(
                       date,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color:
                             widget.isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
@@ -225,17 +225,17 @@ class _FirstRowState extends State<FirstRow> {
                   children: [
                     Text(
                       "Partly Cloudy",
-                      style: GoogleFonts.poppins(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: widget.isDark ? Colors.white : Colors.black,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       "Outside Temperature",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color:
                             widget.isDark ? Colors.grey[400] : Colors.grey[600],
                       ),
@@ -249,9 +249,9 @@ class _FirstRowState extends State<FirstRow> {
                   children: [
                     Text(
                       "28°C",
-                      style: GoogleFonts.poppins(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.pageTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: widget.isDark ? Colors.white : Colors.black87,
                       ),
                     ),
@@ -267,8 +267,8 @@ class _FirstRowState extends State<FirstRow> {
                         ),
                         Text(
                           " 60%",
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.captionSize,
                             color: widget.isDark
                                 ? Colors.grey[400]
                                 : Colors.grey[600],
@@ -291,9 +291,9 @@ class _FirstRowState extends State<FirstRow> {
       alignment: Alignment.centerLeft,
       child: Text(
         title,
-        style: GoogleFonts.poppins(
-          fontSize: fontSize,
-          fontWeight: FontWeight.w500,
+        style: AppTypography.font(
+          fontSize: AppTypography.resolveSize(fontSize),
+          fontWeight: AppTypography.labelWeight,
           color: widget.isDark ? Colors.white : AppColors.darkCard,
         ),
       ),
@@ -343,17 +343,17 @@ class _FirstRowState extends State<FirstRow> {
             const SizedBox(height: 8),
             Text(
               stage,
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.font(
+                fontSize: AppTypography.sectionTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : Colors.black87,
               ),
             ),
             const SizedBox(height: 3),
             Text(
               "Day: $day",
-              style: GoogleFonts.poppins(
-                fontSize: 14,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
                 color: isDark ? Colors.grey[400] : Colors.grey[600],
               ),
             ),
@@ -388,9 +388,9 @@ class _FirstRowState extends State<FirstRow> {
           // Title
           Text(
             "Product Grow Stage",
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.headingSize,
+              fontWeight: AppTypography.labelWeight,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
@@ -435,9 +435,9 @@ class _FirstRowState extends State<FirstRow> {
               // Percentage
               Text(
                 "${(progress * 100).toStringAsFixed(0)}%",
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+                style: AppTypography.font(
+                  fontSize: AppTypography.actionSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white70 : Colors.black87,
                 ),
               ),
@@ -547,7 +547,7 @@ class _FirstRowState extends State<FirstRow> {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: AppTypography.bodySize),
             ),
           ),
         ],
@@ -563,9 +563,9 @@ class _FirstRowState extends State<FirstRow> {
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
           child: Text(
             "Rack Lights",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            style: AppTypography.font(
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
@@ -587,9 +587,9 @@ class _FirstRowState extends State<FirstRow> {
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
           child: Text(
             "Pump Controls",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            style: AppTypography.font(
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
@@ -611,9 +611,9 @@ class _FirstRowState extends State<FirstRow> {
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
           child: Text(
             "pH & Air Monitoring",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            style: AppTypography.font(
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
@@ -674,9 +674,9 @@ class _FirstRowState extends State<FirstRow> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
@@ -686,9 +686,9 @@ class _FirstRowState extends State<FirstRow> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.labelWeight,
               color: isActive
                   ? (isDark ? Colors.greenAccent : Colors.green)
                   : Colors.redAccent,
@@ -729,9 +729,9 @@ class _FirstRowState extends State<FirstRow> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
@@ -741,9 +741,9 @@ class _FirstRowState extends State<FirstRow> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.labelWeight,
               color: isActive
                   ? (isDark ? Colors.greenAccent : Colors.green)
                   : Colors.redAccent,
@@ -785,9 +785,9 @@ class _FirstRowState extends State<FirstRow> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : Colors.black87,
             ),
           ),
@@ -797,9 +797,9 @@ class _FirstRowState extends State<FirstRow> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.labelWeight,
               color: isActive
                   ? (isDark ? Colors.greenAccent : Colors.green)
                   : Colors.redAccent,

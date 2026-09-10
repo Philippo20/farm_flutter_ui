@@ -1,5 +1,5 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/colors.dart';
 
 class OwnerSidebar extends StatelessWidget {
@@ -87,10 +87,10 @@ class OwnerSidebar extends StatelessWidget {
                             const SizedBox(height: 8),
                             Text(
                               item.label,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
+                              style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
                                 color: selected ? selectedColor : textColor.withOpacity(0.9),
-                                fontWeight: selected ? FontWeight.w500 : FontWeight.normal,
+                                fontWeight: selected ? AppTypography.labelWeight : AppTypography.bodyWeight,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -186,10 +186,10 @@ class OwnerSidebar extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           item.label,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.fieldLabelSize,
                             color: color,
-                            fontWeight: selected ? FontWeight.w500 : FontWeight.normal,
+                            fontWeight: selected ? AppTypography.labelWeight : AppTypography.bodyWeight,
                           ),
                         ),
                       ],

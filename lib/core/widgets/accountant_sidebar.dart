@@ -214,11 +214,11 @@ class _AccountantSidebarState extends State<AccountantSidebar>
                                   .textTheme
                                   .labelSmall
                                   ?.copyWith(
-                                      fontSize: 11,
+                                      fontSize: AppTypography.fieldLabelSize,
                                       color: isDark
                                           ? Colors.white.withOpacity(0.7)
                                           : AppColors.textSecondary,
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: AppTypography.labelWeight,
                                       letterSpacing: 0.2),
                               overflow: TextOverflow.ellipsis),
                         ),
@@ -368,15 +368,15 @@ class _AccountantSidebarState extends State<AccountantSidebar>
                           child: Text(item.label,
                               textAlign: TextAlign.left,
                               style: AppTypography.bodyMedium.copyWith(
-                                  fontSize: 13,
+                                  fontSize: AppTypography.actionSize,
                                   color: isSelected
                                       ? AppColors.primary
                                       : (isDark
                                           ? Colors.white
                                           : AppColors.textPrimary),
                                   fontWeight: isSelected
-                                      ? FontWeight.w500
-                                      : FontWeight.w500,
+                                      ? AppTypography.labelWeight
+                                      : AppTypography.labelWeight,
                                   letterSpacing: 0.1)),
                         ),
                       ),
@@ -447,9 +447,9 @@ class _AccountantSidebarState extends State<AccountantSidebar>
                           ? widget.userName[0].toUpperCase()
                           : 'A',
                       style: AppTypography.bodyMedium.copyWith(
-                          fontSize: 18,
+                          fontSize: AppTypography.sectionTitleSize,
                           color: Colors.white,
-                          fontWeight: FontWeight.w500))),
+                          fontWeight: AppTypography.labelWeight))),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -459,19 +459,19 @@ class _AccountantSidebarState extends State<AccountantSidebar>
                 children: [
                   Text(widget.userName,
                       style: AppTypography.bodyMedium.copyWith(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
+                          fontSize: AppTypography.cardTitleSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
                   Text(widget.userRole,
                       style: AppTypography.caption.copyWith(
-                          fontSize: 13,
+                          fontSize: AppTypography.actionSize,
                           color: isDark
                               ? Colors.white.withOpacity(0.7)
                               : AppColors.textSecondary,
-                          fontWeight: FontWeight.w500),
+                          fontWeight: AppTypography.labelWeight),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
                 ],
@@ -522,9 +522,9 @@ class _AccountantSidebarState extends State<AccountantSidebar>
                           duration: const Duration(milliseconds: 200),
                           child: Text('Logout',
                               style: AppTypography.bodyMedium.copyWith(
-                                  fontSize: 13,
+                                  fontSize: AppTypography.actionSize,
                                   color: AppColors.error,
-                                  fontWeight: FontWeight.w500))),
+                                  fontWeight: AppTypography.labelWeight))),
                     ],
                   ),
           ),

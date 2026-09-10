@@ -24,8 +24,7 @@ class AnalyticsDashboard extends ConsumerWidget {
         title: Text(
           'Analytics Dashboard',
           style: AppTypography.h5.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         actions: [
@@ -94,8 +93,7 @@ class AnalyticsDashboard extends ConsumerWidget {
     return Text(
       title,
       style: AppTypography.h6.copyWith(
-        fontFamily: 'Poppins',
-        fontWeight: FontWeight.bold,
+        fontWeight: AppTypography.headingWeight,
         color: isDark ? Colors.white : AppColors.textPrimary,
       ),
     );
@@ -174,8 +172,7 @@ class AnalyticsDashboard extends ConsumerWidget {
           Text(
             value,
             style: AppTypography.h5.copyWith(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -242,7 +239,7 @@ class AnalyticsDashboard extends ConsumerWidget {
                       analytics.productionTrend[index].label,
                       style: AppTypography.bodySmall.copyWith(
                         color: isDark ? Colors.white60 : AppColors.textSecondary,
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                       ),
                     );
                   }
@@ -323,7 +320,7 @@ class AnalyticsDashboard extends ConsumerWidget {
                       analytics.revenueTrend[index].label,
                       style: AppTypography.bodySmall.copyWith(
                         color: isDark ? Colors.white60 : AppColors.textSecondary,
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                       ),
                     );
                   }
@@ -379,8 +376,8 @@ class AnalyticsDashboard extends ConsumerWidget {
                     color: color,
                     radius: 60,
                     titleStyle: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                      fontSize: AppTypography.bodySize,
+                      fontWeight: AppTypography.headingWeight,
                       color: Colors.white,
                     ),
                   );
@@ -469,7 +466,7 @@ class AnalyticsDashboard extends ConsumerWidget {
                         farms[index].split(' ')[0],
                         style: AppTypography.bodySmall.copyWith(
                           color: isDark ? Colors.white60 : AppColors.textSecondary,
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                         ),
                       ),
                     );

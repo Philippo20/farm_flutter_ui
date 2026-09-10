@@ -1,10 +1,10 @@
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/caretaker_mobile_bottom_nav.dart';
 import '../../core/widgets/caretaker_sidebar.dart';
@@ -246,8 +246,8 @@ class _CaretakerDashboardRedesignedState
               elevation: 4,
               icon: const Icon(Icons.add_rounded, size: 20),
               label: Text(isMobile ? 'Record' : 'New Record',
-                  style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w600, fontSize: 13)),
+                  style: AppTypography.font(
+                      fontWeight: AppTypography.headingWeight, fontSize: AppTypography.actionSize)),
             ),
       bottomNavigationBar: isMobile
           ? CaretakerMobileBottomNav(
@@ -482,9 +482,9 @@ class _CaretakerDashboardRedesignedState
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.captionSize,
+                      fontWeight: selected ? AppTypography.headingWeight : AppTypography.headingWeight,
                       color: selected ? AppColors.primary : inactiveColor,
                     ),
                   ),
@@ -548,9 +548,9 @@ class _CaretakerDashboardRedesignedState
                   farmCount == 0
                       ? 'No assigned farm found'
                       : '$farmCount assigned farm${farmCount == 1 ? '' : 's'}',
-                  style: GoogleFonts.inter(
-                    fontSize: narrow ? 16 : 18,
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.font(
+                    fontSize: narrow ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -559,8 +559,8 @@ class _CaretakerDashboardRedesignedState
                   farmCount == 0
                       ? 'Ask an admin or farm manager to assign a farm to your caretaker account.'
                       : '$openTasks open task${openTasks == 1 ? '' : 's'} across your assigned farms.',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
                 ),
@@ -600,9 +600,9 @@ class _CaretakerDashboardRedesignedState
             const SizedBox(height: 12),
             Text(
               'Unable to load dashboard',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+              style: AppTypography.font(
+                fontSize: AppTypography.cardTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -610,8 +610,8 @@ class _CaretakerDashboardRedesignedState
             Text(
               _errorMessage ?? '',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white54 : AppColors.textSecondary,
               ),
             ),
@@ -917,15 +917,15 @@ class _CaretakerDashboardRedesignedState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('My Assigned Tasks',
-                        style: GoogleFonts.inter(
-                          fontSize: narrow ? 16 : 19,
-                          fontWeight: FontWeight.w700,
+                        style: AppTypography.font(
+                          fontSize: narrow ? AppTypography.cardTitleSize : AppTypography.headingSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         )),
                     const SizedBox(height: 4),
                     Text('$open open • $completed completed',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
                         )),
@@ -1021,16 +1021,16 @@ class _CaretakerDashboardRedesignedState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(value,
-                    style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary)),
                 const SizedBox(height: 2),
                 Text(label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                        fontSize: 11,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.fieldLabelSize,
                         color:
                             isDark ? Colors.white54 : AppColors.textSecondary)),
               ],
@@ -1120,9 +1120,9 @@ class _CaretakerDashboardRedesignedState
                   children: [
                     Text(
                       'My Assigned Tasks',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.cardTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -1131,8 +1131,8 @@ class _CaretakerDashboardRedesignedState
                       tasks.isEmpty
                           ? 'No tasks assigned yet'
                           : '$open open of ${tasks.length} task${tasks.length == 1 ? '' : 's'}',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color:
                             isDark ? Colors.white54 : AppColors.textSecondary,
                       ),
@@ -1202,8 +1202,8 @@ class _CaretakerDashboardRedesignedState
           Expanded(
             child: Text(
               'Assigned work will appear here when a farm manager creates a task for you.',
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white54 : AppColors.textSecondary,
               ),
             ),
@@ -1256,9 +1256,9 @@ class _CaretakerDashboardRedesignedState
                       Text(title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.actionSize,
+                            fontWeight: AppTypography.headingWeight,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
                           )),
@@ -1269,8 +1269,8 @@ class _CaretakerDashboardRedesignedState
                             : '$farm • Due ${_taskDateLabel(due)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.fieldLabelSize,
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
                         ),
@@ -1286,8 +1286,8 @@ class _CaretakerDashboardRedesignedState
                                     : AppColors.textSecondary),
                             const SizedBox(width: 4),
                             Text('Reply added',
-                                style: GoogleFonts.inter(
-                                  fontSize: 10,
+                                style: AppTypography.font(
+                                  fontSize: AppTypography.microSize,
                                   color: isDark
                                       ? Colors.white54
                                       : AppColors.textSecondary,
@@ -1326,8 +1326,8 @@ class _CaretakerDashboardRedesignedState
       child: Text(status,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: GoogleFonts.inter(
-              fontSize: 10, fontWeight: FontWeight.w700, color: color)),
+          style: AppTypography.font(
+              fontSize: AppTypography.microSize, fontWeight: AppTypography.headingWeight, color: color)),
     );
   }
 
@@ -1441,9 +1441,9 @@ class _CaretakerDashboardRedesignedState
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('TASK REVIEW',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
+                                    style: AppTypography.font(
+                                      fontSize: AppTypography.microSize,
+                                      fontWeight: AppTypography.headingWeight,
                                       letterSpacing: 1.1,
                                       color: statusColor,
                                     )),
@@ -1451,9 +1451,9 @@ class _CaretakerDashboardRedesignedState
                                 Text(taskTitle,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
+                                    style: AppTypography.font(
+                                      fontSize: AppTypography.headingSize,
+                                      fontWeight: AppTypography.headingWeight,
                                       color: isDark
                                           ? Colors.white
                                           : AppColors.textPrimary,
@@ -1524,8 +1524,8 @@ class _CaretakerDashboardRedesignedState
                                   'Review the work assigned by your manager.',
                               icon: Icons.notes_rounded,
                               child: Text(instructions,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 13,
+                                  style: AppTypography.font(
+                                    fontSize: AppTypography.actionSize,
                                     height: 1.5,
                                     color: isDark
                                         ? Colors.white70
@@ -1540,8 +1540,8 @@ class _CaretakerDashboardRedesignedState
                                 subtitle: 'Additional guidance for this task.',
                                 icon: Icons.campaign_outlined,
                                 child: Text(managerComment,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13,
+                                    style: AppTypography.font(
+                                      fontSize: AppTypography.actionSize,
                                       height: 1.5,
                                       color: isDark
                                           ? Colors.white70
@@ -1712,17 +1712,17 @@ class _CaretakerDashboardRedesignedState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: GoogleFonts.inter(
-                        fontSize: 10,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.microSize,
                         color:
                             isDark ? Colors.white54 : AppColors.textSecondary)),
                 const SizedBox(height: 3),
                 Text(value.isEmpty ? 'Not provided' : value,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary)),
               ],
             ),
@@ -1762,15 +1762,15 @@ class _CaretakerDashboardRedesignedState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title,
-                        style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.actionSize,
+                            fontWeight: AppTypography.headingWeight,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary)),
                     const SizedBox(height: 2),
                     Text(subtitle,
-                        style: GoogleFonts.inter(
-                            fontSize: 10,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.microSize,
                             color: isDark
                                 ? Colors.white54
                                 : AppColors.textSecondary)),
@@ -1802,8 +1802,8 @@ class _CaretakerDashboardRedesignedState
           const SizedBox(width: 8),
           Expanded(
             child: Text(message,
-                style: GoogleFonts.inter(
-                    fontSize: 12,
+                style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white70 : AppColors.error)),
           ),
         ],
@@ -1963,17 +1963,17 @@ class _CaretakerDashboardRedesignedState
               children: [
                 Text(
                   'All Sensor Readings',
-                  style: GoogleFonts.inter(
-                    fontSize: narrow ? 16 : 18,
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.font(
+                    fontSize: narrow ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   'Detailed farm monitoring panels for the assigned farm.',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
                 ),
@@ -2078,9 +2078,9 @@ class _CaretakerDashboardRedesignedState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(value,
-                    style: GoogleFonts.inter(
-                      fontSize: compact ? 16 : 18,
-                      fontWeight: FontWeight.w700,
+                    style: AppTypography.font(
+                      fontSize: compact ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                       height: 1.1,
                     ),
@@ -2088,8 +2088,8 @@ class _CaretakerDashboardRedesignedState
                     overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 2),
                 Text(sub ?? title,
-                    style: GoogleFonts.inter(
-                      fontSize: compact ? 10 : 11,
+                    style: AppTypography.font(
+                      fontSize: compact ? AppTypography.microSize : AppTypography.fieldLabelSize,
                       color: isDark ? Colors.white38 : AppColors.textSecondary,
                     ),
                     maxLines: 1,
@@ -2205,9 +2205,9 @@ class _CaretakerDashboardRedesignedState
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: denseDesktop ? 12 : (compact ? 12 : 13),
-                    fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                    fontSize: denseDesktop ? AppTypography.captionSize : (compact ? AppTypography.captionSize : AppTypography.actionSize),
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   )),
               const SizedBox(height: 2),
@@ -2215,8 +2215,8 @@ class _CaretakerDashboardRedesignedState
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: denseDesktop ? 10 : (compact ? 10 : 11),
+                  style: AppTypography.font(
+                    fontSize: denseDesktop ? AppTypography.microSize : (compact ? AppTypography.microSize : AppTypography.fieldLabelSize),
                     color: isDark ? Colors.white38 : AppColors.textSecondary,
                   )),
             ],
@@ -2234,9 +2234,9 @@ class _CaretakerDashboardRedesignedState
           size: 18, color: isDark ? Colors.white54 : AppColors.textSecondary),
       const SizedBox(width: 8),
       Text(text,
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
+          style: AppTypography.font(
+            fontSize: AppTypography.cardTitleSize,
+            fontWeight: AppTypography.headingWeight,
             letterSpacing: 0.2,
             color: isDark ? Colors.white : AppColors.textPrimary,
           )),
@@ -2322,9 +2322,9 @@ class _CaretakerDashboardRedesignedState
                       Text(m['label'] as String,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: sel ? FontWeight.w600 : FontWeight.w500,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.microSize,
+                            fontWeight: sel ? AppTypography.headingWeight : AppTypography.labelWeight,
                             color: c,
                           )),
                       if (sel)

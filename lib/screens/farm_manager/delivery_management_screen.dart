@@ -1,8 +1,8 @@
+import '../../core/theme/app_typography.dart';
 import '../../core/widgets/delivery_details_modal.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/widgets/farm_manager_sidebar.dart';
@@ -373,9 +373,9 @@ class _DeliveryManagementScreenState
             const SizedBox(height: 12),
             Text(
               'Unable to load deliveries',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+              style: AppTypography.font(
+                fontSize: AppTypography.cardTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -383,8 +383,8 @@ class _DeliveryManagementScreenState
             Text(
               _errorMessage ?? '',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 12,
+              style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white54 : AppColors.textSecondary,
               ),
             ),
@@ -413,9 +413,9 @@ class _DeliveryManagementScreenState
             children: [
               Text(
                 'Delivery Management',
-                style: GoogleFonts.inter(
-                  fontSize: isMobile ? 20 : 24,
-                  fontWeight: FontWeight.w700,
+                style: AppTypography.font(
+                  fontSize: isMobile ? AppTypography.headingSize : AppTypography.pageTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                   letterSpacing: -0.5,
                 ),
@@ -423,8 +423,8 @@ class _DeliveryManagementScreenState
               const SizedBox(height: 2),
               Text(
                 'Schedule, track, and manage produce deliveries',
-                style: GoogleFonts.inter(
-                  fontSize: isMobile ? 12 : 14,
+                style: AppTypography.font(
+                  fontSize: isMobile ? AppTypography.captionSize : AppTypography.bodySize,
                   color: isDark
                       ? Colors.white.withOpacity(0.5)
                       : AppColors.textSecondary,
@@ -439,8 +439,8 @@ class _DeliveryManagementScreenState
             onPressed: _showCreateDeliveryDialog,
             icon: const Icon(Icons.add_rounded, size: 18),
             label: Text('Schedule Delivery',
-                style: GoogleFonts.inter(
-                    fontSize: 13, fontWeight: FontWeight.w600)),
+                style: AppTypography.font(
+                    fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -539,9 +539,9 @@ class _DeliveryManagementScreenState
               children: [
                 Text(
                   stat['value'] as String,
-                  style: GoogleFonts.inter(
-                    fontSize: isMobile ? 20 : 24,
-                    fontWeight: FontWeight.w700,
+                  style: AppTypography.font(
+                    fontSize: isMobile ? AppTypography.headingSize : AppTypography.pageTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                     height: 1,
                   ),
@@ -549,9 +549,9 @@ class _DeliveryManagementScreenState
                 const SizedBox(height: 2),
                 Text(
                   stat['label'] as String,
-                  style: GoogleFonts.inter(
-                    fontSize: isMobile ? 10 : 11,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark
                         ? Colors.white.withOpacity(0.4)
                         : AppColors.textSecondary,
@@ -609,9 +609,9 @@ class _DeliveryManagementScreenState
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text('Delivery Tracking',
-                      style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.cardTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
                 ),
@@ -624,9 +624,9 @@ class _DeliveryManagementScreenState
                   ),
                   child: Text(
                     '${deliveries.length} deliveries',
-                    style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.microSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: AppColors.info),
                   ),
                 ),
@@ -670,10 +670,10 @@ class _DeliveryManagementScreenState
                 unselectedLabelColor: isDark
                     ? Colors.white.withOpacity(0.4)
                     : AppColors.textSecondary,
-                labelStyle: GoogleFonts.inter(
-                    fontSize: 11, fontWeight: FontWeight.w600),
-                unselectedLabelStyle: GoogleFonts.inter(
-                    fontSize: 11, fontWeight: FontWeight.w500),
+                labelStyle: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight),
+                unselectedLabelStyle: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.labelWeight),
                 labelPadding: const EdgeInsets.symmetric(horizontal: 10),
                 tabs: _statusTabs.map((t) {
                   final count =
@@ -697,8 +697,8 @@ class _DeliveryManagementScreenState
                           ),
                           child: Text(
                             '$count',
-                            style: GoogleFonts.inter(
-                                fontSize: 9, fontWeight: FontWeight.w700),
+                            style: AppTypography.font(
+                                fontSize: AppTypography.microSize, fontWeight: AppTypography.headingWeight),
                           ),
                         ),
                       ],
@@ -717,13 +717,13 @@ class _DeliveryManagementScreenState
                 Expanded(
                   child: TextField(
                     onChanged: (v) => setState(() => _searchQuery = v),
-                    style: GoogleFonts.inter(
-                        fontSize: 13,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.actionSize,
                         color: isDark ? Colors.white : AppColors.textPrimary),
                     decoration: InputDecoration(
                       hintText: 'Search deliveries...',
-                      hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
+                      hintStyle: AppTypography.font(
+                          fontSize: AppTypography.actionSize,
                           color: isDark
                               ? Colors.white24
                               : AppColors.textSecondary),
@@ -763,8 +763,8 @@ class _DeliveryManagementScreenState
                     onPressed: _showCreateDeliveryDialog,
                     icon: const Icon(Icons.add_rounded, size: 16),
                     label: Text('New Delivery',
-                        style: GoogleFonts.inter(
-                            fontSize: 12, fontWeight: FontWeight.w600)),
+                        style: AppTypography.font(
+                            fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
@@ -821,22 +821,22 @@ class _DeliveryManagementScreenState
             ),
             const SizedBox(height: 16),
             Text('No deliveries found',
-                style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white54 : AppColors.textSecondary)),
             const SizedBox(height: 4),
             Text('Schedule a delivery to get started',
-                style: GoogleFonts.inter(
-                    fontSize: 12,
+                style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white24 : AppColors.textSecondary)),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _showCreateDeliveryDialog,
               icon: const Icon(Icons.add_rounded, size: 16),
               label: Text('Schedule Delivery',
-                  style: GoogleFonts.inter(
-                      fontSize: 12, fontWeight: FontWeight.w600)),
+                  style: AppTypography.font(
+                      fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -903,9 +903,9 @@ class _DeliveryManagementScreenState
       flex: flex,
       child: Text(
         label,
-        style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
+        style: AppTypography.font(
+          fontSize: AppTypography.fieldLabelSize,
+          fontWeight: AppTypography.headingWeight,
           color: isDark ? Colors.white38 : AppColors.textSecondary,
           letterSpacing: 0.3,
         ),
@@ -955,9 +955,9 @@ class _DeliveryManagementScreenState
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(d['id'] as String,
-                          style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: isDark
                                   ? Colors.white
                                   : AppColors.textPrimary),
@@ -974,16 +974,16 @@ class _DeliveryManagementScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(d['destination'] as String,
-                        style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.captionSize,
+                            fontWeight: AppTypography.labelWeight,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                     Text(d['address'] as String,
-                        style: GoogleFonts.inter(
-                            fontSize: 10,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.microSize,
                             color: isDark
                                 ? Colors.white24
                                 : AppColors.textSecondary),
@@ -1002,8 +1002,8 @@ class _DeliveryManagementScreenState
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(d['crop'] as String,
-                          style: GoogleFonts.inter(
-                              fontSize: 12,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
                               color: isDark
                                   ? Colors.white70
                                   : AppColors.textPrimary),
@@ -1017,9 +1017,9 @@ class _DeliveryManagementScreenState
               Expanded(
                 flex: 1,
                 child: Text('${d['quantity']} ${d['unit']}',
-                    style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
+                        fontWeight: AppTypography.labelWeight,
                         color: isDark ? Colors.white70 : AppColors.textPrimary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
@@ -1044,9 +1044,9 @@ class _DeliveryManagementScreenState
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(status,
-                                style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
+                                style: AppTypography.font(
+                                    fontSize: AppTypography.microSize,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: sColor),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis),
@@ -1069,8 +1069,8 @@ class _DeliveryManagementScreenState
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(d['driver'] as String,
-                          style: GoogleFonts.inter(
-                              fontSize: 12,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
                               color: isDark
                                   ? Colors.white54
                                   : AppColors.textSecondary),
@@ -1084,8 +1084,8 @@ class _DeliveryManagementScreenState
               Expanded(
                 flex: 2,
                 child: Text(d['scheduledDate'] as String,
-                    style: GoogleFonts.inter(
-                        fontSize: 12,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color:
                             isDark ? Colors.white54 : AppColors.textSecondary)),
               ),
@@ -1101,9 +1101,9 @@ class _DeliveryManagementScreenState
                   ),
                   child: Text(priority,
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: pColor)),
                 ),
               ),
@@ -1204,15 +1204,15 @@ class _DeliveryManagementScreenState
                     Text(d['id'] as String,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.bodySize,
+                            fontWeight: AppTypography.headingWeight,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary)),
                     const SizedBox(height: 1),
                     Text(d['destination'] as String,
-                        style: GoogleFonts.inter(
-                            fontSize: 11,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.fieldLabelSize,
                             color: isDark
                                 ? Colors.white70
                                 : AppColors.textSecondary),
@@ -1234,9 +1234,9 @@ class _DeliveryManagementScreenState
                 border: Border.all(color: sColor.withOpacity(0.2)),
               ),
               child: Text(status,
-                  style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.microSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: sColor)),
             ),
           ]),
@@ -1291,9 +1291,9 @@ class _DeliveryManagementScreenState
                     Icon(Icons.flag_rounded, size: 10, color: pColor),
                     const SizedBox(width: 3),
                     Text(priority,
-                        style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.microSize,
+                            fontWeight: AppTypography.headingWeight,
                             color: pColor)),
                   ],
                 ),
@@ -1313,9 +1313,9 @@ class _DeliveryManagementScreenState
                           size: 10, color: AppColors.info),
                       const SizedBox(width: 3),
                       Text(d['temperature'] as String,
-                          style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                          style: AppTypography.font(
+                              fontSize: AppTypography.microSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: AppColors.info)),
                     ],
                   ),
@@ -1339,8 +1339,8 @@ class _DeliveryManagementScreenState
                           : Colors.black.withOpacity(0.08)),
                 ),
                 child: Text('View delivery',
-                    style: GoogleFonts.inter(
-                        fontSize: 11, fontWeight: FontWeight.w500)),
+                    style: AppTypography.font(
+                        fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.labelWeight)),
               )),
         ],
       ),
@@ -1360,14 +1360,14 @@ class _DeliveryManagementScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: GoogleFonts.inter(
-                        fontSize: 10,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.microSize,
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary)),
                 Text(value,
-                    style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.fieldLabelSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis),
@@ -1583,16 +1583,16 @@ class _DeliveryManagementScreenState
                                   isEditing
                                       ? 'Edit Delivery'
                                       : 'Schedule Delivery',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
+                                  style: AppTypography.font(
+                                      fontSize: AppTypography.cardTitleSize,
+                                      fontWeight: AppTypography.headingWeight,
                                       color: isDark
                                           ? Colors.white
                                           : AppColors.textPrimary)),
                               Text(
                                   'Keep farm-to-hub delivery data synced with the backend',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 12,
+                                  style: AppTypography.font(
+                                      fontSize: AppTypography.captionSize,
                                       color: isDark
                                           ? Colors.white38
                                           : AppColors.textSecondary)),
@@ -1630,8 +1630,8 @@ class _DeliveryManagementScreenState
                                                 .withOpacity(0.2)),
                                       ),
                                       child: Text(formError,
-                                          style: GoogleFonts.inter(
-                                              fontSize: 12,
+                                          style: AppTypography.font(
+                                              fontSize: AppTypography.captionSize,
                                               color: AppColors.error)),
                                     ),
                                     const SizedBox(height: 12),
@@ -1843,9 +1843,9 @@ class _DeliveryManagementScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+                fontSize: AppTypography.fieldLabelSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white54 : AppColors.textSecondary)),
         const SizedBox(height: 6),
         TextFormField(
@@ -1859,13 +1859,13 @@ class _DeliveryManagementScreenState
             return null;
           },
           keyboardType: inputType,
-          style: GoogleFonts.inter(
-              fontSize: 12,
+          style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
               color: isDark ? Colors.white : AppColors.textPrimary),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.inter(
-                fontSize: 12,
+            hintStyle: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: isDark ? Colors.white24 : AppColors.textSecondary),
             prefixIcon: Icon(icon,
                 size: 16,
@@ -1908,9 +1908,9 @@ class _DeliveryManagementScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+                fontSize: AppTypography.fieldLabelSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white54 : AppColors.textSecondary)),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
@@ -1938,8 +1938,8 @@ class _DeliveryManagementScreenState
               ),
             ),
           ),
-          style: GoogleFonts.inter(
-            fontSize: 12,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
           dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
@@ -2060,10 +2060,10 @@ class _DeliveryManagementScreenState
                         const SizedBox(height: 3),
                         Text(
                           item['label'] as String,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.microSize,
                             fontWeight:
-                                isSelected ? FontWeight.w600 : FontWeight.w500,
+                                isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
                             color: isSelected
                                 ? AppColors.primary
                                 : (isDark

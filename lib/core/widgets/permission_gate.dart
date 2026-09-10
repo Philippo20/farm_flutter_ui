@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/enhanced_auth_provider.dart';
@@ -198,7 +199,7 @@ class UnauthorizedScreen extends StatelessWidget {
             Text(
               'Unauthorized Access',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
             ),
             const SizedBox(height: 12),

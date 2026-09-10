@@ -527,7 +527,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
             'Unable to load wallet data',
             style: AppTypography.h6.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -603,8 +603,8 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white70 : AppColors.textSecondary,
-                        fontSize: isMobile ? 11 : 12,
-                        fontWeight: FontWeight.w600,
+                        fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -630,8 +630,8 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                     _formatMoney(_walletBalance),
                     style: AppTypography.h3.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: isMobile ? 28 : (isTablet ? 32 : 36),
+                      fontWeight: AppTypography.headingWeight,
+                      fontSize: isMobile ? AppTypography.metricSize : (isTablet ? AppTypography.displaySize : AppTypography.displaySize),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -644,8 +644,8 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
-                        fontSize: isMobile ? 10 : 11,
-                        fontWeight: FontWeight.w600,
+                        fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -675,8 +675,8 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                           style: AppTypography.caption.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontSize: isMobile ? 10 : 11,
-                            fontWeight: FontWeight.w600,
+                            fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                       ],
@@ -691,7 +691,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                       style: AppTypography.bodySmall.copyWith(
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
-                        fontSize: isMobile ? 10 : 11,
+                        fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -722,7 +722,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     textStyle: AppTypography.bodySmall.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppTypography.headingWeight,
                     ),
                   ),
                 ),
@@ -826,8 +826,8 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                           'Updated',
                           style: AppTypography.caption.copyWith(
                             color: stat['color'] as Color,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w600,
+                            fontSize: AppTypography.microSize,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                       ),
@@ -837,9 +837,9 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                   Text(
                     stat['value'] as String,
                     style: AppTypography.h5.copyWith(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontSize: isMobile ? 20 : (isTablet ? 22 : 24),
+                      fontSize: isMobile ? AppTypography.headingSize : (isTablet ? AppTypography.pageTitleSize : AppTypography.pageTitleSize),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -851,7 +851,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                       color: isDark
                           ? Colors.white.withOpacity(0.6)
                           : AppColors.textSecondary,
-                      fontSize: isMobile ? 11 : (isTablet ? 11.5 : 12),
+                      fontSize: isMobile ? AppTypography.fieldLabelSize : (isTablet ? AppTypography.captionSize : AppTypography.captionSize),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -897,9 +897,9 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                     Text(
                       'Recent Transactions',
                       style: AppTypography.h5.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontSize: 18,
+                        fontSize: AppTypography.sectionTitleSize,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -930,10 +930,10 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                           child: Text(
                             'Recent Transactions',
                             style: AppTypography.h5.copyWith(
-                              fontWeight: FontWeight.bold,
+                              fontWeight: AppTypography.headingWeight,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
-                              fontSize: isTablet ? 20 : 22,
+                              fontSize: isTablet ? AppTypography.headingSize : AppTypography.pageTitleSize,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -995,7 +995,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
             'No wallet transactions found',
             style: AppTypography.bodyLarge.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(height: 4),
@@ -1044,12 +1044,12 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
         ),
         hintStyle: TextStyle(
           color: isDark ? Colors.white54 : AppColors.textSecondary,
-          fontSize: isMobile ? 12 : 13,
+          fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
         ),
       ),
       style: TextStyle(
         color: isDark ? Colors.white : AppColors.textPrimary,
-        fontSize: isMobile ? 12 : 13,
+        fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
       ),
     );
   }
@@ -1074,7 +1074,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
               filter,
               style: TextStyle(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontSize: isMobile ? 12 : 13,
+                fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
               ),
             ),
           );
@@ -1090,7 +1090,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
         dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
         style: TextStyle(
           color: isDark ? Colors.white : AppColors.textPrimary,
-          fontSize: isMobile ? 12 : 13,
+          fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
         ),
       ),
     );
@@ -1243,7 +1243,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
         message,
         style: AppTypography.bodySmall.copyWith(
           color: AppColors.error,
-          fontWeight: FontWeight.w600,
+          fontWeight: AppTypography.headingWeight,
         ),
       ),
     );
@@ -1285,7 +1285,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
               'No payout account added',
               style: AppTypography.bodyMedium.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
           ),
@@ -1338,7 +1338,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                       'Add Payout Account',
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const Spacer(),
@@ -1423,7 +1423,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                                           : (isDark
                                               ? Colors.white70
                                               : AppColors.textSecondary),
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: AppTypography.headingWeight,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -1698,7 +1698,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                       'Withdraw From Wallet',
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     const Spacer(),
@@ -2057,14 +2057,14 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
   Widget _buildTransactionsTable(
       bool isDark, bool isTablet, List<Map<String, dynamic>> transactions) {
     final headerStyle = AppTypography.bodySmall.copyWith(
-      fontWeight: FontWeight.w600,
+      fontWeight: AppTypography.headingWeight,
       color: isDark ? Colors.white70 : AppColors.textSecondary,
-      fontSize: isTablet ? 11 : 12,
+      fontSize: isTablet ? AppTypography.fieldLabelSize : AppTypography.captionSize,
     );
 
     final cellStyle = AppTypography.bodySmall.copyWith(
       color: isDark ? Colors.white : AppColors.textPrimary,
-      fontSize: isTablet ? 12 : 13,
+      fontSize: isTablet ? AppTypography.captionSize : AppTypography.actionSize,
     );
 
     return Column(
@@ -2179,7 +2179,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                         transaction['type'] as String,
                         style: cellStyle.copyWith(
                           color: color,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ),
@@ -2197,8 +2197,8 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                           transaction['status'] as String,
                           style: AppTypography.caption.copyWith(
                             color: statusColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                            fontSize: AppTypography.microSize,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -2212,7 +2212,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                         '${isCredit ? '+' : '-'}${_formatMoney(amount)}',
                         style: AppTypography.bodyMedium.copyWith(
                           color: color,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                         textAlign: TextAlign.end,
                       ),
@@ -2279,9 +2279,9 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                   Text(
                     transaction['description'] as String,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontSize: isMobile ? 13 : (isTablet ? 14 : 15),
+                      fontSize: isMobile ? AppTypography.actionSize : (isTablet ? AppTypography.bodySize : AppTypography.cardTitleSize),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -2296,7 +2296,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                             color: isDark
                                 ? Colors.white.withOpacity(0.6)
                                 : AppColors.textSecondary,
-                            fontSize: isMobile ? 10 : 11,
+                            fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -2315,8 +2315,8 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                           transaction['status'] as String,
                           style: AppTypography.caption.copyWith(
                             color: statusColor,
-                            fontSize: isMobile ? 9 : 10,
-                            fontWeight: FontWeight.w600,
+                            fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -2333,8 +2333,8 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                 '${isCredit ? '+' : '-'}${_formatMoney(amount)}',
                 style: AppTypography.h6.copyWith(
                   color: color,
-                  fontWeight: FontWeight.bold,
-                  fontSize: isMobile ? 16 : (isTablet ? 17 : 18),
+                  fontWeight: AppTypography.headingWeight,
+                  fontSize: isMobile ? AppTypography.cardTitleSize : (isTablet ? AppTypography.sectionTitleSize : AppTypography.sectionTitleSize),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -2384,7 +2384,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                   'Transaction Details',
                   style: AppTypography.h6.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -2424,7 +2424,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                       '${isCredit ? '+' : '-'}${_formatMoney(amount)}',
                       style: AppTypography.bodyLarge.copyWith(
                         color: color,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ],
@@ -2460,7 +2460,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
               label,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
           ),
@@ -2470,7 +2470,7 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
               style: AppTypography.bodyMedium.copyWith(
                 color:
                     accent ?? (isDark ? Colors.white : AppColors.textPrimary),
-                fontWeight: accent != null ? FontWeight.w600 : FontWeight.w500,
+                fontWeight: accent != null ? AppTypography.headingWeight : AppTypography.labelWeight,
               ),
             ),
           ),
@@ -2596,9 +2596,9 @@ class _DigitalWalletScreenState extends ConsumerState<DigitalWalletScreen> {
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

@@ -1,5 +1,5 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_colors.dart';
 import 'app_dialog.dart';
 
@@ -37,7 +37,7 @@ class DeliveryDetailsModal extends StatelessWidget {
         padding:
             const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 12)),
         textStyle: WidgetStatePropertyAll(
-            GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+            AppTypography.font(fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
         shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
     return AppDialog(
@@ -66,14 +66,14 @@ class DeliveryDetailsModal extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                           Text('Delivery details',
-                              style: GoogleFonts.inter(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.cardTitleSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: foreground)),
                           const SizedBox(height: 4),
                           Text('Shipment and delivery information',
-                              style: GoogleFonts.inter(
-                                  fontSize: 12, color: secondary)),
+                              style: AppTypography.font(
+                                  fontSize: AppTypography.captionSize, color: secondary)),
                         ])),
                     IconButton(
                         tooltip: 'Close',
@@ -102,9 +102,9 @@ class DeliveryDetailsModal extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text('DELIVERY REFERENCE',
-                                          style: GoogleFonts.inter(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w600,
+                                          style: AppTypography.font(
+                                              fontSize: AppTypography.microSize,
+                                              fontWeight: AppTypography.headingWeight,
                                               letterSpacing: .7,
                                               color: secondary)),
                                       const SizedBox(height: 6),
@@ -112,9 +112,9 @@ class DeliveryDetailsModal extends StatelessWidget {
                                           reference.isEmpty
                                               ? 'Not available'
                                               : reference,
-                                          style: GoogleFonts.inter(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
+                                          style: AppTypography.font(
+                                              fontSize: AppTypography.actionSize,
+                                              fontWeight: AppTypography.headingWeight,
                                               color: foreground)),
                                       const SizedBox(height: 12),
                                       Wrap(
@@ -141,9 +141,9 @@ class DeliveryDetailsModal extends StatelessWidget {
                                         const SizedBox(width: 8),
                                         Expanded(
                                             child: Text(section.title,
-                                                style: GoogleFonts.inter(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w600,
+                                                style: AppTypography.font(
+                                                    fontSize: AppTypography.captionSize,
+                                                    fontWeight: AppTypography.headingWeight,
                                                     color: foreground)))
                                       ]),
                                       const SizedBox(height: 10),
@@ -190,9 +190,9 @@ class DeliveryDetailsModal extends StatelessWidget {
                                                                     .start,
                                                             children: [
                                                               Text(field.$1,
-                                                                  style: GoogleFonts.inter(
+                                                                  style: AppTypography.font(
                                                                       fontSize:
-                                                                          11,
+                                                                          AppTypography.fieldLabelSize,
                                                                       color:
                                                                           secondary)),
                                                               const SizedBox(
@@ -204,9 +204,9 @@ class DeliveryDetailsModal extends StatelessWidget {
                                                                       ? 'Not provided'
                                                                       : field
                                                                           .$2,
-                                                                  style: GoogleFonts.inter(
+                                                                  style: AppTypography.font(
                                                                       fontSize:
-                                                                          12,
+                                                                          AppTypography.captionSize,
                                                                       fontWeight:
                                                                           FontWeight
                                                                               .w500,
@@ -256,7 +256,7 @@ class DeliveryDetailsModal extends StatelessWidget {
         const SizedBox(width: 6),
         Flexible(
             child: Text(label,
-                style: GoogleFonts.inter(
-                    fontSize: 11, fontWeight: FontWeight.w600, color: color)))
+                style: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight, color: color)))
       ]));
 }

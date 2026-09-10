@@ -1,5 +1,5 @@
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../constants/colors.dart';
 
 class FourthRow extends StatefulWidget {
@@ -67,9 +67,9 @@ class _FourthRowState extends State<FourthRow> {
           Expanded(
             child: Text(
               'Farm Energy Consumption',
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+              style: AppTypography.font(
+                fontSize: AppTypography.cardTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: widget.isDark ? Colors.white : Colors.white,
               ),
             ),
@@ -140,18 +140,18 @@ class _FourthRowState extends State<FourthRow> {
               const SizedBox(height: 10),
               Text(
                 label,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                style: AppTypography.font(
+                  fontSize: AppTypography.bodySize,
+                  fontWeight: AppTypography.labelWeight,
                   color: widget.isDark ? Colors.white : Colors.black,
                 ),
               ),
               const SizedBox(height: 6),
               Text(
                 status,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: status == "ACTIVE"
                       ? (widget.isDark ? Colors.greenAccent : Colors.green)
                       : Colors.orange,
@@ -169,9 +169,9 @@ class _FourthRowState extends State<FourthRow> {
       alignment: Alignment.centerLeft,
       child: Text(
         title,
-        style: GoogleFonts.poppins(
-          fontSize: fontSize,
-          fontWeight: FontWeight.w500,
+        style: AppTypography.font(
+          fontSize: AppTypography.resolveSize(fontSize),
+          fontWeight: AppTypography.labelWeight,
           color: widget.isDark ? Colors.white : AppColors.darkCard,
         ),
       ),
@@ -274,7 +274,7 @@ class _FourthRowState extends State<FourthRow> {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: AppTypography.bodySize),
             ),
           ),
         ],
@@ -320,9 +320,9 @@ class _FourthRowState extends State<FourthRow> {
           padding: const EdgeInsets.only(bottom: 12.0),
           child: Text(
             "Grid Supply",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.headingWeight,
               color: textColor,
             ),
           ),
@@ -345,17 +345,17 @@ class _FourthRowState extends State<FourthRow> {
                   Expanded(
                     child: Text(
                       param["label"] as String,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color: textColor,
                       ),
                     ),
                   ),
                   Text(
                     param["value"] as String,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.bodySize,
+                      fontWeight: AppTypography.labelWeight,
                       color: textColor,
                     ),
                   ),
@@ -406,9 +406,9 @@ class _FourthRowState extends State<FourthRow> {
           padding: const EdgeInsets.only(bottom: 8.0),
           child: Text(
             "Solar Supply",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.headingWeight,
               color: textColor,
             ),
           ),
@@ -431,17 +431,17 @@ class _FourthRowState extends State<FourthRow> {
                   Expanded(
                     child: Text(
                       param["label"] as String,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color: textColor,
                       ),
                     ),
                   ),
                   Text(
                     param["value"] as String,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.bodySize,
+                      fontWeight: AppTypography.labelWeight,
                       color: textColor,
                     ),
                   ),
@@ -492,9 +492,9 @@ class _FourthRowState extends State<FourthRow> {
           padding: const EdgeInsets.only(bottom: 12.0),
           child: Text(
             "Battery Supply",
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.headingWeight,
               color: textColor,
             ),
           ),
@@ -517,17 +517,17 @@ class _FourthRowState extends State<FourthRow> {
                   Expanded(
                     child: Text(
                       param["label"] as String,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color: textColor,
                       ),
                     ),
                   ),
                   Text(
                     param["value"] as String,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.bodySize,
+                      fontWeight: AppTypography.labelWeight,
                       color: textColor,
                     ),
                   ),

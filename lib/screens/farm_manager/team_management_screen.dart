@@ -1,7 +1,6 @@
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -409,7 +408,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                 'Team',
                 style:
                     (isMobile ? AppTypography.h5 : AppTypography.h4).copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -417,7 +416,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
               Text(
                 'Manage staff across farms, roles, and performance',
                 style: AppTypography.bodyMedium.copyWith(
-                  fontSize: isMobile ? 12 : 13,
+                  fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
                   color: isDark ? Colors.white60 : AppColors.textSecondary,
                 ),
               ),
@@ -521,17 +520,17 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                 Text(
                   stat['value'] as String,
                   style: AppTypography.h6.copyWith(
-                    fontSize: isMobile ? 18 : 22,
-                    fontWeight: FontWeight.w700,
+                    fontSize: isMobile ? AppTypography.sectionTitleSize : AppTypography.pageTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
                 Text(
                   stat['label'] as String,
                   style: AppTypography.caption.copyWith(
-                    fontSize: 11,
+                    fontSize: AppTypography.fieldLabelSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: AppTypography.labelWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -557,13 +556,13 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
         children: [
           TextField(
             onChanged: (v) => setState(() => _searchQuery = v),
-            style: GoogleFonts.inter(
-                fontSize: 13,
+            style: AppTypography.font(
+                fontSize: AppTypography.actionSize,
                 color: isDark ? Colors.white : AppColors.textPrimary),
             decoration: InputDecoration(
               hintText: 'Search team members...',
-              hintStyle: GoogleFonts.inter(
-                  fontSize: 13,
+              hintStyle: AppTypography.font(
+                  fontSize: AppTypography.actionSize,
                   color: isDark ? Colors.white38 : AppColors.textSecondary),
               prefixIcon: Icon(Icons.search,
                   size: 20,
@@ -661,8 +660,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
             label: Text(
               role,
               style: AppTypography.bodySmall.copyWith(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isSelected
                     ? Colors.white
                     : (isDark ? Colors.white70 : AppColors.textPrimary),
@@ -699,8 +698,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
       children: [
         Text(label,
             style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white70 : AppColors.textSecondary)),
         const SizedBox(height: 6),
         Container(
@@ -816,8 +815,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                       child: Text(
                     title,
                     style: AppTypography.titleSmall.copyWith(
-                      fontSize: isMobile ? 15 : 17,
-                      fontWeight: FontWeight.w700,
+                      fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   )),
@@ -832,8 +831,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                     child: Text(
                       '${members.length}',
                       style: AppTypography.caption.copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                        fontSize: AppTypography.fieldLabelSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: color,
                       ),
                     ),
@@ -929,7 +928,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
             child: Text('Actions',
                 textAlign: TextAlign.end,
                 style: AppTypography.caption.copyWith(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white60 : AppColors.textSecondary)),
           ),
         ],
@@ -942,9 +941,9 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
     final icon = isActive
         ? (_sortAsc ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded)
         : Icons.unfold_more_rounded;
-    final baseStyle = GoogleFonts.inter(
-      fontSize: 11,
-      fontWeight: FontWeight.w600,
+    final baseStyle = AppTypography.font(
+      fontSize: AppTypography.fieldLabelSize,
+      fontWeight: AppTypography.headingWeight,
       letterSpacing: 0.3,
       color: isDark ? Colors.white38 : AppColors.textSecondary,
     );
@@ -996,8 +995,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
               Text(
                 'then Performance',
                 style: baseStyle.copyWith(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w500,
+                  fontSize: AppTypography.microSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white38 : AppColors.textSecondary,
                 ),
               ),
@@ -1052,7 +1051,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                       child: Text(
                         member['avatar'] ?? '',
                         style: AppTypography.caption.copyWith(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -1065,7 +1064,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                           Text(
                             member['name'] ?? '',
                             style: AppTypography.bodySmall.copyWith(
-                              fontWeight: FontWeight.w700,
+                              fontWeight: AppTypography.headingWeight,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
                             ),
@@ -1139,7 +1138,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                         style: AppTypography.caption.copyWith(
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       )
                     : Row(
@@ -1162,7 +1161,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                           Text(
                             '${(performance * 100).toInt()}%',
                             style: AppTypography.caption.copyWith(
-                              fontWeight: FontWeight.w700,
+                              fontWeight: AppTypography.headingWeight,
                               color: _progressColor(performance),
                             ),
                           ),
@@ -1184,7 +1183,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                       child: Text(
                         status,
                         style: AppTypography.caption.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                           color: statusColor,
                         ),
                       ),
@@ -1324,7 +1323,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                   child: Text(
                     member['avatar'] ?? '',
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -1337,8 +1336,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                       Text(
                         member['name'] ?? '',
                         style: AppTypography.bodyMedium.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                          fontSize: AppTypography.bodySize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -1346,7 +1345,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                       Text(
                         member['role'] ?? '',
                         style: AppTypography.bodySmall.copyWith(
-                          fontSize: 12,
+                          fontSize: AppTypography.captionSize,
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
                         ),
@@ -1357,7 +1356,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.caption.copyWith(
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                           color:
                               isDark ? Colors.white38 : AppColors.textSecondary,
                         ),
@@ -1385,8 +1384,8 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                       Text(
                         status,
                         style: AppTypography.caption.copyWith(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                          fontSize: AppTypography.microSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: statusColor,
                         ),
                       ),
@@ -1418,23 +1417,23 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                 children: [
                   Text('Tasks: ',
                       style: AppTypography.caption.copyWith(
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                           color: isDark
                               ? Colors.white38
                               : AppColors.textSecondary)),
                   Text(
                     '$completed/$tasks completed',
                     style: AppTypography.caption.copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                        fontSize: AppTypography.fieldLabelSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white70 : AppColors.textPrimary),
                   ),
                   const Spacer(),
                   Text(
                     '${(performance * 100).toInt()}%',
                     style: AppTypography.bodySmall.copyWith(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        fontSize: AppTypography.captionSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: _progressColor(performance)),
                   ),
                 ],
@@ -1561,7 +1560,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                       child: Text(
                         member['avatar'] ?? '',
                         style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: AppTypography.headingWeight,
                           color: Colors.white,
                         ),
                       ),
@@ -1575,7 +1574,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                             member['name'] ?? '',
                             style: AppTypography.titleMedium.copyWith(
                               color: Colors.white,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: AppTypography.headingWeight,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -1631,7 +1630,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                           child: Text(
                             status,
                             style: AppTypography.caption.copyWith(
-                              fontWeight: FontWeight.w600,
+                              fontWeight: AppTypography.headingWeight,
                               color: statusColor,
                             ),
                           ),
@@ -1659,7 +1658,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                                 Text(
                                   'Task Progress',
                                   style: AppTypography.bodySmall.copyWith(
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: isDark
                                         ? Colors.white70
                                         : AppColors.textPrimary,
@@ -1669,7 +1668,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                                 Text(
                                   '$completed/$tasks',
                                   style: AppTypography.bodySmall.copyWith(
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: _progressColor(performance),
                                   ),
                                 ),
@@ -1700,7 +1699,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                                 Text(
                                   '${(performance * 100).toInt()}%',
                                   style: AppTypography.bodySmall.copyWith(
-                                    fontWeight: FontWeight.w800,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: _progressColor(performance),
                                   ),
                                 ),
@@ -1789,7 +1788,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                 Text(
                   value,
                   style: AppTypography.bodySmall.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -1822,9 +1821,9 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
             constraints: const BoxConstraints(maxWidth: 150),
             child: Text(
               label,
-              style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                  fontSize: AppTypography.microSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white54 : AppColors.textSecondary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1850,7 +1849,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppTypography.caption.copyWith(
-              fontSize: 11,
+              fontSize: AppTypography.fieldLabelSize,
               color: isDark ? Colors.white54 : AppColors.textSecondary,
             ),
           ),
@@ -1898,7 +1897,7 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
             Text(
               'Unable to load team',
               style: AppTypography.titleSmall.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -2044,9 +2043,9 @@ class _TeamManagementScreenState extends ConsumerState<TeamManagementScreen> {
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

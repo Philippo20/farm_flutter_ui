@@ -1,6 +1,6 @@
+import '../../core/theme/app_typography.dart';
 // Farm settings
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/headers/owner_header.dart';
 import '../../widgets/sidebars/owner_sidebar.dart';
 
@@ -179,9 +179,9 @@ class FarmInfoCard extends StatelessWidget {
                 left: 20,
                 child: Text(
                   "Green Valley Farm",
-                  style: GoogleFonts.poppins(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.pageTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: Colors.white,
                   ),
                 ),
@@ -203,8 +203,8 @@ class FarmInfoCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       "Central Region, Ghana",
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color: isDark ? Colors.white70 : Colors.black87,
                       ),
                     ),
@@ -219,8 +219,8 @@ class FarmInfoCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       "Lettuce (Batavia)",
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color: isDark ? Colors.white70 : Colors.black87,
                       ),
                     ),
@@ -231,9 +231,9 @@ class FarmInfoCard extends StatelessWidget {
                 // Progress
                 Text(
                   "Growth Progress: 65%",
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
@@ -290,9 +290,9 @@ class FarmInfoCard extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.actionSize,
+              fontWeight: AppTypography.labelWeight,
               color: color,
             ),
           ),
@@ -365,9 +365,9 @@ class _TabCardState extends State<_TabCard> {
                     ),
                     child: Text(
                       _tabs[index],
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isSelected ? activeText : borderColor,
                       ),
                     ),
@@ -481,9 +481,9 @@ class _TabCardState extends State<_TabCard> {
                         children: [
                           Text(
                             "John Doe",
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
+                            style: AppTypography.font(
+                              fontSize: AppTypography.sectionTitleSize,
+                              fontWeight: AppTypography.headingWeight,
                               color:
                                   widget.isDark ? Colors.white : Colors.black,
                             ),
@@ -500,9 +500,9 @@ class _TabCardState extends State<_TabCard> {
                             ),
                             child: Text(
                               "Farm Owner",
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                              style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
+                                fontWeight: AppTypography.labelWeight,
                                 color: widget.isDark
                                     ? Colors.greenAccent
                                     : Colors.green[800],
@@ -563,9 +563,9 @@ class _TabCardState extends State<_TabCard> {
                     const SizedBox(width: 12),
                     Text(
                       "Access Permissions",
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: widget.isDark ? Colors.white : Colors.black,
                       ),
                     ),
@@ -611,9 +611,9 @@ class _TabCardState extends State<_TabCard> {
                     const SizedBox(width: 12),
                     Text(
                       "Assigned Caretakers",
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: widget.isDark ? Colors.white : Colors.black,
                       ),
                     ),
@@ -661,17 +661,17 @@ class _TabCardState extends State<_TabCard> {
           children: [
             Text(
               label,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
+              style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
                 color: widget.isDark ? Colors.white60 : Colors.grey[600],
               ),
             ),
             const SizedBox(height: 2),
             Text(
               value,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
+                fontWeight: AppTypography.labelWeight,
                 color: widget.isDark ? Colors.white : Colors.black,
               ),
             ),
@@ -702,16 +702,16 @@ class _TabCardState extends State<_TabCard> {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.bodySize,
                     color: widget.isDark ? Colors.white70 : Colors.grey[600],
                   ),
                 ),
                 Text(
                   value,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: widget.isDark ? Colors.white : Colors.black,
                   ),
                 ),
@@ -760,16 +760,16 @@ class _TabCardState extends State<_TabCard> {
                   children: [
                     Text(
                       name,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.cardTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: widget.isDark ? Colors.white : Colors.black,
                       ),
                     ),
                     Text(
                       role,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color:
                             widget.isDark ? Colors.white70 : Colors.grey[600],
                       ),
@@ -795,9 +795,9 @@ class _TabCardState extends State<_TabCard> {
                 ),
                 child: Text(
                   status,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: status == "Active"
                         ? (widget.isDark
                             ? Colors.greenAccent
@@ -832,8 +832,8 @@ class _TabCardState extends State<_TabCard> {
             children: [
               Text(
                 "Last active: $lastActive",
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
                   color: widget.isDark ? Colors.white60 : Colors.grey[600],
                 ),
               ),
@@ -876,8 +876,8 @@ class _TabCardState extends State<_TabCard> {
         Expanded(
           child: Text(
             text,
-            style: GoogleFonts.poppins(
-              fontSize: 13,
+            style: AppTypography.font(
+              fontSize: AppTypography.actionSize,
               color: widget.isDark ? Colors.white70 : Colors.grey[600],
             ),
             overflow: TextOverflow.ellipsis,
@@ -925,7 +925,7 @@ class _TabCardState extends State<_TabCard> {
             SwitchListTile(
               title: Text(
                 "Enable Push Notifications",
-                style: GoogleFonts.poppins(
+                style: AppTypography.font(
                   color: widget.isDark ? Colors.white : Colors.black,
                 ),
               ),
@@ -936,7 +936,7 @@ class _TabCardState extends State<_TabCard> {
             SwitchListTile(
               title: Text(
                 "Email Alerts",
-                style: GoogleFonts.poppins(
+                style: AppTypography.font(
                   color: widget.isDark ? Colors.white : Colors.black,
                 ),
               ),
@@ -947,7 +947,7 @@ class _TabCardState extends State<_TabCard> {
             SwitchListTile(
               title: Text(
                 "SMS Notifications",
-                style: GoogleFonts.poppins(
+                style: AppTypography.font(
                   color: widget.isDark ? Colors.white : Colors.black,
                 ),
               ),
@@ -1013,16 +1013,16 @@ class _TabCardState extends State<_TabCard> {
             children: [
               Text(
                 name,
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.font(
+                  fontSize: AppTypography.cardTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: widget.isDark ? Colors.white : Colors.black,
                 ),
               ),
               Text(
                 role,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
+                style: AppTypography.font(
+                  fontSize: AppTypography.bodySize,
                   color: widget.isDark ? Colors.white70 : Colors.grey[600],
                 ),
               ),
@@ -1037,8 +1037,8 @@ class _TabCardState extends State<_TabCard> {
                   const SizedBox(width: 8),
                   Text(
                     contact,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.bodySize,
                       color: widget.isDark ? Colors.white70 : Colors.grey[600],
                     ),
                   ),
@@ -1075,16 +1075,16 @@ class _TabCardState extends State<_TabCard> {
       ),
       title: Text(
         title,
-        style: GoogleFonts.poppins(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+        style: AppTypography.font(
+          fontSize: AppTypography.bodySize,
+          fontWeight: AppTypography.labelWeight,
           color: widget.isDark ? Colors.white : Colors.black,
         ),
       ),
       subtitle: Text(
         time,
-        style: GoogleFonts.poppins(
-          fontSize: 12,
+        style: AppTypography.font(
+          fontSize: AppTypography.captionSize,
           color: widget.isDark ? Colors.white60 : Colors.grey[600],
         ),
       ),
@@ -1121,9 +1121,9 @@ class _TabCardState extends State<_TabCard> {
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: widget.isDark ? Colors.white : Colors.black,
                   ),
                 ),
@@ -1147,8 +1147,8 @@ class _TabCardState extends State<_TabCard> {
             width: 120,
             child: Text(
               label,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
                 color: widget.isDark ? Colors.white70 : Colors.grey[600],
               ),
             ),
@@ -1156,9 +1156,9 @@ class _TabCardState extends State<_TabCard> {
           Expanded(
             child: Text(
               value,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
+                fontWeight: AppTypography.labelWeight,
                 color: widget.isDark ? Colors.white : Colors.black,
               ),
             ),

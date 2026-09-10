@@ -29,8 +29,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
         title: Text(
           'Farm Owner Dashboard',
           style: AppTypography.h5.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -119,8 +118,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
                 Text(
                   'Welcome, $name!',
                   style: AppTypography.h5.copyWith(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -128,7 +126,6 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
                 Text(
                   'Monitor your farm performance and manage finances',
                   style: AppTypography.bodyMedium.copyWith(
-                    fontFamily: 'Roboto',
                     color: isDark ? Colors.white70 : AppColors.textSecondary,
                   ),
                 ),
@@ -170,8 +167,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
                   Text(
                     'Available Balance',
                     style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 14,
+                      fontSize: AppTypography.bodySize,
                       color: Colors.white.withOpacity(0.9),
                     ),
                   ),
@@ -179,9 +175,8 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
                   Text(
                     '\$24,580.50',
                     style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
+                      fontSize: AppTypography.displaySize,
+                      fontWeight: AppTypography.headingWeight,
                       color: Colors.white,
                     ),
                   ),
@@ -249,17 +244,15 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
                 Text(
                   label,
                   style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                     color: Colors.white.withOpacity(0.8),
                   ),
                 ),
                 Text(
                   value,
                   style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: AppTypography.headingWeight,
                     color: Colors.white,
                   ),
                 ),
@@ -309,9 +302,8 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
                   Text(
                     stat['value'] as String,
                     style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontSize: AppTypography.headingSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -321,8 +313,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
               Text(
                 stat['title'] as String,
                 style: TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 11,
+                  fontSize: AppTypography.fieldLabelSize,
                   color: isDark ? Colors.white60 : AppColors.textSecondary,
                 ),
               ),
@@ -347,8 +338,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
           Text(
             'Financial Overview',
             style: AppTypography.h6.copyWith(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -372,17 +362,15 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
           Text(
             label,
             style: TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 13,
+              fontSize: AppTypography.actionSize,
               color: isDark ? Colors.white70 : AppColors.textSecondary,
             ),
           ),
           Text(
             amount,
             style: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
+              fontSize: AppTypography.cardTitleSize,
+              fontWeight: AppTypography.headingWeight,
               color: color,
             ),
           ),
@@ -411,8 +399,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
           Text(
             'Farm Activity',
             style: AppTypography.h6.copyWith(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -433,9 +420,8 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
                     Text(
                       activity['farm'] as String,
                       style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: AppTypography.captionSize,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -448,10 +434,9 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
                       child: Text(
                         activity['status'] as String,
                         style: const TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 9,
+                          fontSize: AppTypography.microSize,
                           color: AppColors.success,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ),
@@ -461,8 +446,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
                 Text(
                   'Batch: ${activity['batch']}',
                   style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
                   ),
                 ),
@@ -504,8 +488,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
               Text(
                 'Recent Transactions',
                 style: AppTypography.h6.copyWith(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -545,17 +528,15 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
                       Text(
                         transaction['description'] as String,
                         style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.labelWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       Text(
                         transaction['date'] as String,
                         style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                           color: isDark ? Colors.white60 : AppColors.textSecondary,
                         ),
                       ),
@@ -565,9 +546,8 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
                 Text(
                   transaction['amount'] as String,
                   style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                    fontSize: AppTypography.bodySize,
+                    fontWeight: AppTypography.headingWeight,
                     color: transaction['color'] as Color,
                   ),
                 ),
@@ -590,7 +570,7 @@ class _FarmOwnerDashboardState extends ConsumerState<FarmOwnerDashboard> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Available Balance: \$24,580.50', style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold, color: isDark ? Colors.white : AppColors.textPrimary)),
+            Text('Available Balance: \$24,580.50', style: AppTypography.bodyLarge.copyWith(fontWeight: AppTypography.headingWeight, color: isDark ? Colors.white : AppColors.textPrimary)),
             const SizedBox(height: AppSpacing.lg),
             TextField(
               controller: amountController,

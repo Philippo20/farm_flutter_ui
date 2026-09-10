@@ -1,6 +1,6 @@
+import '../../core/theme/app_typography.dart';
 import 'package:farmestates_ai_dashbaord/constants/colors.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class SensorTabsContainer extends StatefulWidget {
   final bool isDark;
@@ -87,9 +87,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                       child: Text(
                         tab,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.bodySize,
+                          fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
                           color: isSelected ? activeColor : inactiveColor,
                           letterSpacing: 0.3,
                         ),
@@ -163,9 +163,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                       const SizedBox(height: 10),
                       Text(
                         'ENVIRONMENT MONITORING',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: secondaryTextColor,
                           letterSpacing: 0.5,
                         ),
@@ -173,9 +173,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                       const SizedBox(height: 2),
                       Text(
                         'Ambient Controls',
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.sectionTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: textColor,
                         ),
                       ),
@@ -239,9 +239,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                         Expanded(
                           child: Text(
                             'CRITICAL ALERT: TEMPERATURE SPIKE',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
+                            style: AppTypography.font(
+                              fontSize: AppTypography.bodySize,
+                              fontWeight: AppTypography.headingWeight,
                               color: Colors.red,
                               letterSpacing: 0.3,
                             ),
@@ -252,8 +252,8 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                     const SizedBox(height: 12),
                     Text(
                       'Zone 3 temperature has reached 32.5°C (max safe: 28°C). Cooling system activated.',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
                         color: textColor,
                       ),
                     ),
@@ -329,9 +329,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                 children: [
                   Text(
                     'SENSOR NETWORK STATUS',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.captionSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: secondaryTextColor,
                       letterSpacing: 0.5,
                     ),
@@ -421,9 +421,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.bodyWeight,
                     color: secondaryColor,
                     letterSpacing: 0.5,
                   ),
@@ -431,9 +431,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: GoogleFonts.inter(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.headingSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: textColor,
                   ),
                 ),
@@ -447,9 +447,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
               ),
               child: Text(
                 status,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.font(
+                  fontSize: AppTypography.actionSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: statusColor,
                 ),
               ),
@@ -472,17 +472,17 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
       children: [
         Text(
           count.toString(),
-          style: GoogleFonts.inter(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
+          style: AppTypography.font(
+            fontSize: AppTypography.pageTitleSize,
+            fontWeight: AppTypography.headingWeight,
             color: color,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 12,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
             color: textColor,
           ),
         ),
@@ -503,9 +503,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
             children: [
               Text(
                 'Nutrient Monitoring',
-                style: GoogleFonts.inter(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
+                style: AppTypography.font(
+                  fontSize: AppTypography.pageTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: widget.isDark ? Colors.white : Colors.black,
                 ),
               ),
@@ -521,9 +521,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                     /*
                   Text(
                     DateFormat('MMM dd, yyyy').format(DateTime.now()),
-                    style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.labelWeight,
                     color: widget.isDark ? Colors.white70 : Colors.black54,
                 ),
               ),
@@ -543,8 +543,8 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
           const SizedBox(height: 8),
           Text(
             'Real-time hydroponic system metrics',
-            style: GoogleFonts.inter(
-              fontSize: 14,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
               color: widget.isDark ? Colors.white60 : Colors.black54,
             ),
           ),
@@ -601,9 +601,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
           // Nutrient Levels Section
           Text(
             'Nutrient Concentrations',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: AppTypography.sectionTitleSize,
+              fontWeight: AppTypography.headingWeight,
               color: widget.isDark ? Colors.white : Colors.black,
             ),
           ),
@@ -657,9 +657,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                   children: [
                     Text(
                       'System Status',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.cardTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: widget.isDark ? Colors.white : Colors.black,
                       ),
                     ),
@@ -679,8 +679,8 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                           const SizedBox(width: 4),
                           Text(
                             'Active',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
+                            style: AppTypography.font(
+                              fontSize: AppTypography.captionSize,
                               color: Colors.green[400],
                             ),
                           ),
@@ -766,25 +766,25 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
           const SizedBox(height: 12),
           Text(
             title,
-            style: GoogleFonts.inter(
-              fontSize: 13,
+            style: AppTypography.font(
+              fontSize: AppTypography.actionSize,
               color: isDark ? Colors.white70 : Colors.black54,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: GoogleFonts.inter(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
+            style: AppTypography.font(
+              fontSize: AppTypography.headingSize,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : Colors.black,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             status,
-            style: GoogleFonts.inter(
-              fontSize: 12,
+            style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
               color: isCritical
                   ? (isDark ? Colors.orange[400] : Colors.orange[600])
                   : (isDark ? Colors.teal[400] : Colors.teal[600]),
@@ -827,17 +827,17 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
             children: [
               Text(
                 nutrient,
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                style: AppTypography.font(
+                  fontSize: AppTypography.cardTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : Colors.black,
                 ),
               ),
               Text(
                 "$value $unit",
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
+                style: AppTypography.font(
+                  fontSize: AppTypography.cardTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: _getValueColor(value, nutrient, isDark),
                 ),
               ),
@@ -857,16 +857,16 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
             children: [
               Text(
                 optimalRange,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
                   color: isDark ? Colors.white60 : Colors.black54,
                 ),
               ),
               Text(
                 _getLevelStatus(currentLevel),
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                style: AppTypography.font(
+                  fontSize: AppTypography.captionSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: _getProgressColor(currentLevel, isDark),
                 ),
               ),
@@ -899,17 +899,17 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
           Expanded(
             child: Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 14,
+              style: AppTypography.font(
+                fontSize: AppTypography.bodySize,
                 color: isDark ? Colors.white70 : Colors.black54,
               ),
             ),
           ),
           Text(
             value,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+              fontSize: AppTypography.bodySize,
+              fontWeight: AppTypography.headingWeight,
               color: isGood
                   ? (isDark ? Colors.tealAccent[400] : Colors.teal[600])
                   : (isDark ? Colors.orange[400] : Colors.orange[600]),
@@ -976,16 +976,16 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                   children: [
                     Text(
                       'Device Controls',
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: widget.isDark ? Colors.white : Colors.black,
                       ),
                     ),
                     Text(
                       '${relays.where((r) => r['status'] as bool).length} of ${relays.length} active',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
+                      style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
                         color: widget.isDark ? Colors.white60 : Colors.black54,
                       ),
                     ),
@@ -1120,9 +1120,9 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
             ),
             Text(
               name,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+              style: AppTypography.font(
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.headingWeight,
                 color: widget.isDark ? Colors.white : Colors.black,
               ),
               maxLines: 1,
@@ -1141,8 +1141,8 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
                 ),
                 Text(
                   lastActive,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.microSize,
                     color: widget.isDark ? Colors.white60 : Colors.black54,
                   ),
                 ),
@@ -1173,7 +1173,7 @@ class _SensorTabsContainerState extends State<SensorTabsContainer>
   }) {
     return OutlinedButton.icon(
       icon: Icon(icon, size: 18, color: isDark ? Colors.white : Colors.black),
-      label: Text(label, style: GoogleFonts.inter(color: isDark ? Colors.white : Colors.black)),
+      label: Text(label, style: AppTypography.font(color: isDark ? Colors.white : Colors.black)),
       style: OutlinedButton.styleFrom(
         // foregroundColor: isDark ? color : color[700],
         side: BorderSide(

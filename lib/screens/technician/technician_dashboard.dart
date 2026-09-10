@@ -154,8 +154,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
         title: Text(
           'Technician Dashboard',
           style: AppTypography.h5.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         actions: [
@@ -289,8 +288,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                 Text(
                   'Welcome, $name!',
                   style: AppTypography.h5.copyWith(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -298,7 +296,6 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                 Text(
                   'Manage maintenance and resolve technical issues',
                   style: AppTypography.bodyMedium.copyWith(
-                    fontFamily: 'Roboto',
                     color: isDark ? Colors.white70 : AppColors.textSecondary,
                   ),
                 ),
@@ -388,9 +385,8 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                   Text(
                     stat['value'] as String,
                     style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      fontSize: AppTypography.headingSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -403,8 +399,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                     child: Text(
                       stat['title'] as String,
                       style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 11,
+                        fontSize: AppTypography.fieldLabelSize,
                         color:
                             isDark ? Colors.white60 : AppColors.textSecondary,
                       ),
@@ -414,12 +409,11 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                     Text(
                       stat['change'] as String,
                       style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 10,
+                        fontSize: AppTypography.microSize,
                         color: (stat['change'] as String).startsWith('+')
                             ? AppColors.success
                             : AppColors.error,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                 ],
@@ -495,9 +489,8 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                     child: Text(
                       action['title'] as String,
                       style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: AppTypography.fieldLabelSize,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -547,8 +540,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
               Text(
                 'Urgent Issues',
                 style: AppTypography.h6.copyWith(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -561,10 +553,9 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                 child: Text(
                   '${issues.length}',
                   style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: AppColors.error,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -592,9 +583,8 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                           child: Text(
                             issue['title'] as String,
                             style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                              fontWeight: AppTypography.headingWeight,
+                              fontSize: AppTypography.captionSize,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
                             ),
@@ -611,10 +601,9 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                           child: Text(
                             issue['severity'] as String,
                             style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 9,
+                              fontSize: AppTypography.microSize,
                               color: issue['color'] as Color,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: AppTypography.headingWeight,
                             ),
                           ),
                         ),
@@ -632,8 +621,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                         Text(
                           issue['farm'] as String,
                           style: TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 10,
+                            fontSize: AppTypography.microSize,
                             color: isDark
                                 ? Colors.white60
                                 : AppColors.textSecondary,
@@ -649,8 +637,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                         Text(
                           issue['time'] as String,
                           style: TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 10,
+                            fontSize: AppTypography.microSize,
                             color: isDark
                                 ? Colors.white60
                                 : AppColors.textSecondary,
@@ -701,8 +688,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
           Text(
             'Today\'s Schedule',
             style: AppTypography.h6.copyWith(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -741,9 +727,8 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                         Text(
                           item['task'] as String,
                           style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 11,
+                            fontWeight: AppTypography.headingWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
                           ),
@@ -760,8 +745,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                             Text(
                               item['time'] as String,
                               style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 10,
+                                fontSize: AppTypography.microSize,
                                 color: isDark
                                     ? Colors.white60
                                     : AppColors.textSecondary,
@@ -777,8 +761,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                             Text(
                               item['farm'] as String,
                               style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 10,
+                                fontSize: AppTypography.microSize,
                                 color: isDark
                                     ? Colors.white60
                                     : AppColors.textSecondary,
@@ -800,10 +783,9 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                     child: Text(
                       item['status'] as String,
                       style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 9,
+                        fontSize: AppTypography.microSize,
                         color: color,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -852,8 +834,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
               Text(
                 'Upcoming Maintenance',
                 style: AppTypography.h6.copyWith(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.bold,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -888,9 +869,8 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                           Text(
                             (item['date'] as String).split(' ')[0],
                             style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
+                              fontSize: AppTypography.microSize,
+                              fontWeight: AppTypography.headingWeight,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
                             ),
@@ -898,9 +878,8 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                           Text(
                             (item['date'] as String).split(' ')[1],
                             style: const TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
+                              fontSize: AppTypography.bodySize,
+                              fontWeight: AppTypography.headingWeight,
                               color: AppColors.primary,
                             ),
                           ),
@@ -915,9 +894,8 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                           Text(
                             item['task'] as String,
                             style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.labelWeight,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
                             ),
@@ -925,8 +903,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                           Text(
                             item['type'] as String,
                             style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 10,
+                              fontSize: AppTypography.microSize,
                               color: isDark
                                   ? Colors.white60
                                   : AppColors.textSecondary,
@@ -972,8 +949,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
           Text(
             'Equipment Status',
             style: AppTypography.h6.copyWith(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -1006,9 +982,8 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                           Text(
                             item['name'] as String,
                             style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                              fontWeight: AppTypography.headingWeight,
+                              fontSize: AppTypography.captionSize,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
                             ),
@@ -1016,8 +991,7 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                           Text(
                             'Last check: ${item['lastCheck']}',
                             style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 10,
+                              fontSize: AppTypography.microSize,
                               color: isDark
                                   ? Colors.white60
                                   : AppColors.textSecondary,
@@ -1037,10 +1011,9 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                       child: Text(
                         item['status'] as String,
                         style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 9,
+                          fontSize: AppTypography.microSize,
                           color: item['color'] as Color,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ),
@@ -1165,8 +1138,8 @@ class _TechnicianDashboardState extends ConsumerState<TechnicianDashboard> {
                               child: Text('Schedule Maintenance',
                                   style: TextStyle(
                                       color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700))),
+                                      fontSize: AppTypography.sectionTitleSize,
+                                      fontWeight: AppTypography.headingWeight))),
                           IconButton(
                               onPressed: submitting
                                   ? null

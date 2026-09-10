@@ -1,7 +1,7 @@
+import '../theme/app_typography.dart';
 import 'app_dialog.dart';
 import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../models/batch/batch_model.dart';
@@ -294,7 +294,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
-      errorStyle: GoogleFonts.poppins(fontSize: 10.5, height: 1.25),
+      errorStyle: AppTypography.font(fontSize: AppTypography.fieldLabelSize, height: 1.25),
     );
   }
 
@@ -302,9 +302,9 @@ class _BatchEditFormState extends State<_BatchEditForm> {
         padding: const EdgeInsets.only(bottom: 7),
         child: Text(
           text,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.labelWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -328,7 +328,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
           enabled: !_saving,
           keyboardType: keyboardType,
           maxLines: maxLines,
-          style: GoogleFonts.poppins(fontSize: 13),
+          style: AppTypography.font(fontSize: AppTypography.actionSize),
           decoration: _decoration(isDark, label, icon),
           validator: validator,
         ),
@@ -388,17 +388,17 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                     children: [
                       Text(
                         'Edit Batch',
-                        style: GoogleFonts.poppins(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w600,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.sectionTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       Text(
                         widget.batch.batchNumber,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11.5,
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
                           color:
                               isDark ? Colors.white60 : AppColors.textSecondary,
                         ),
@@ -436,8 +436,8 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                         ),
                         child: Text(
                           _formError!,
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
+                          style: AppTypography.font(
+                            fontSize: AppTypography.fieldLabelSize,
                             height: 1.4,
                             color: AppColors.error,
                           ),
@@ -484,7 +484,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                               child: Text(
                                 variety,
                                 overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(fontSize: 13),
+                                style: AppTypography.font(fontSize: AppTypography.actionSize),
                               ),
                             ),
                           )
@@ -618,7 +618,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                               value: status,
                               child: Text(
                                 status,
-                                style: GoogleFonts.poppins(fontSize: 13),
+                                style: AppTypography.font(fontSize: AppTypography.actionSize),
                               ),
                             ),
                           )
@@ -718,9 +718,9 @@ class _ReadOnlyBatchField extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 7),
           child: Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.labelWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -746,7 +746,7 @@ class _ReadOnlyBatchField extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.poppins(fontSize: 13),
+                  style: AppTypography.font(fontSize: AppTypography.actionSize),
                 ),
               ),
             ],
@@ -781,9 +781,9 @@ class _EditDateField extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 7),
           child: Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.labelWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -814,7 +814,7 @@ class _EditDateField extends StatelessWidget {
                       value,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(fontSize: 12.5),
+                      style: AppTypography.font(fontSize: AppTypography.actionSize),
                     ),
                   ),
                 ],

@@ -506,8 +506,8 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                               style: AppTypography.caption.copyWith(
                                 color: color,
                                 fontWeight: isSelected || isComplete
-                                    ? FontWeight.w600
-                                    : FontWeight.w500,
+                                    ? AppTypography.headingWeight
+                                    : AppTypography.labelWeight,
                               ),
                             ),
                           ],
@@ -685,7 +685,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                 title,
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
               const SizedBox(height: 2),
@@ -777,7 +777,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                           style: AppTypography.bodySmall.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                       ],
@@ -865,7 +865,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -891,7 +891,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
               status,
               style: AppTypography.caption.copyWith(
                 color: AppColors.success,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
           ),
@@ -1145,9 +1145,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1285,8 +1285,8 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                       child: Text(
                         'Farm Record Entry',
                         style: AppTypography.titleSmall.copyWith(
-                          fontSize: isMobile ? 16 : 18,
-                          fontWeight: FontWeight.w700,
+                          fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -1386,7 +1386,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                     Text(
                       title,
                       style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -1468,7 +1468,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             Text(
               'Unable to load record form',
               style: AppTypography.titleSmall.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -1665,7 +1665,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           label: Text(
             activity,
             style: AppTypography.caption.copyWith(
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
               color: isSelected
                   ? AppColors.success
                   : (isDark ? Colors.white70 : AppColors.textPrimary),
@@ -1730,7 +1730,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                 Text(
                   'Report issues or concerns',
                   style: AppTypography.bodySmall.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -1890,7 +1890,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           _isSubmitting ? 'Submitting...' : 'Submit Record',
           style: AppTypography.bodySmall.copyWith(
             color: Colors.white,
-            fontWeight: FontWeight.w700,
+            fontWeight: AppTypography.headingWeight,
             letterSpacing: 0.2,
           ),
         ),

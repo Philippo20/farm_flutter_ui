@@ -30,8 +30,7 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
         title: Text(
           'Farm Manager Dashboard',
           style: AppTypography.h5.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
           ),
         ),
         actions: [
@@ -112,8 +111,7 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
                 Text(
                   'Welcome back, $name!',
                   style: AppTypography.h5.copyWith(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -121,7 +119,6 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
                 Text(
                   'Manage your farms, inventory, and production batches',
                   style: AppTypography.bodyMedium.copyWith(
-                    fontFamily: 'Roboto',
                     color: isDark ? Colors.white70 : AppColors.textSecondary,
                   ),
                 ),
@@ -187,8 +184,7 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
                 Text(
                   stat['title'] as String,
                   style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
                   ),
                 ),
@@ -197,9 +193,8 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
                     Text(
                       stat['value'] as String,
                       style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontSize: AppTypography.sectionTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
@@ -208,12 +203,11 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
                       Text(
                         stat['change'] as String,
                         style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                           color: (stat['change'] as String).startsWith('+')
                               ? AppColors.success
                               : AppColors.error,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ],
@@ -243,8 +237,7 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
         Text(
           'Quick Actions',
           style: AppTypography.h6.copyWith(
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -290,9 +283,8 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
               child: Text(
                 action['title'] as String,
                 style: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
+                  fontWeight: AppTypography.headingWeight,
+                  fontSize: AppTypography.captionSize,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -324,8 +316,7 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
           Text(
             'Active Batches',
             style: AppTypography.h6.copyWith(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -358,9 +349,8 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
                 child: Text(
                   batch['batch'] as String,
                   style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: AppTypography.fieldLabelSize,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -374,10 +364,9 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
                 child: Text(
                   batch['status'] as String,
                   style: const TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 9,
+                    fontSize: AppTypography.microSize,
                     color: AppColors.success,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -387,8 +376,7 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
           Text(
             '${batch['farm']} • ${batch['plant']}',
             style: TextStyle(
-              fontFamily: 'Roboto',
-              fontSize: 10,
+              fontSize: AppTypography.microSize,
               color: isDark ? Colors.white60 : AppColors.textSecondary,
             ),
           ),
@@ -423,8 +411,7 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
           Text(
             'Inventory Alerts',
             style: AppTypography.h6.copyWith(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -460,17 +447,15 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
                 Text(
                   alert['item'] as String,
                   style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: AppTypography.fieldLabelSize,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
                 Text(
                   '${alert['level']} • ${alert['quantity']}',
                   style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                     color: alert['color'] as Color,
                   ),
                 ),
@@ -507,8 +492,7 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
           Text(
             'Recent Activity',
             style: AppTypography.h6.copyWith(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -533,16 +517,14 @@ class _FarmManagerDashboardState extends ConsumerState<FarmManagerDashboard> {
                       Text(
                         activity['action'] as String,
                         style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 12,
+                          fontSize: AppTypography.captionSize,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       Text(
                         activity['time'] as String,
                         style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 10,
+                          fontSize: AppTypography.microSize,
                           color: isDark ? Colors.white60 : AppColors.textSecondary,
                         ),
                       ),

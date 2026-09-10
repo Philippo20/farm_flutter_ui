@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
@@ -96,12 +97,12 @@ class MobileNavigationDestination extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                                fontSize: 10,
+                                fontSize: AppTypography.microSize,
                                 height: 1.4,
                                 color: color,
                                 fontWeight: selected
-                                    ? FontWeight.w600
-                                    : FontWeight.w500))),
+                                    ? AppTypography.headingWeight
+                                    : AppTypography.labelWeight))),
                   ]),
                 ),
               ),

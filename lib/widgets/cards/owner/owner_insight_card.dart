@@ -1,5 +1,5 @@
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class OwnerInsightCard extends StatelessWidget {
   final String title;
@@ -48,17 +48,17 @@ class OwnerInsightCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   description,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
+                  style: AppTypography.font(
+                    fontSize: AppTypography.bodySize,
                     color: isDark ? Colors.white.withOpacity(0.75) : Colors.black.withOpacity(0.75),
                   ),
                 ),

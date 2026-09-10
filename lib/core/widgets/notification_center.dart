@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -98,7 +99,7 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
       showBadge: unreadCount > 0,
       badgeContent: Text(
         unreadCount.toString(),
-        style: const TextStyle(color: Colors.white, fontSize: 10),
+        style: const TextStyle(color: Colors.white, fontSize: AppTypography.microSize),
       ),
       child: IconButton(
         icon: const Icon(Icons.notifications_outlined),
@@ -207,8 +208,8 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
                       children: [
                         Text('Notifications',
                             style: TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w700,
+                              fontSize: AppTypography.headingSize,
+                              fontWeight: AppTypography.headingWeight,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
                             )),
@@ -218,7 +219,7 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
                               ? 'You are all caught up'
                               : '$unreadCount unread notification${unreadCount == 1 ? '' : 's'}',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: AppTypography.captionSize,
                             color: isDark
                                 ? Colors.white54
                                 : AppColors.textSecondary,
@@ -283,14 +284,14 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
             const SizedBox(height: 12),
             Text('No notifications yet',
                 style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary)),
             const SizedBox(height: 5),
             Text('New farm alerts and system updates will appear here.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontSize: 12,
+                    fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary)),
           ],
         ),
@@ -353,10 +354,10 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: AppTypography.actionSize,
                                 fontWeight: notification.isRead
-                                    ? FontWeight.w600
-                                    : FontWeight.w700,
+                                    ? AppTypography.headingWeight
+                                    : AppTypography.headingWeight,
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -377,7 +378,7 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                            fontSize: 12,
+                            fontSize: AppTypography.captionSize,
                             height: 1.35,
                             color: isDark
                                 ? Colors.white60
@@ -423,7 +424,7 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
           const SizedBox(width: 4),
           Text(label,
               style: TextStyle(
-                  fontSize: 9, fontWeight: FontWeight.w700, color: color)),
+                  fontSize: AppTypography.microSize, fontWeight: AppTypography.headingWeight, color: color)),
         ],
       ),
     );

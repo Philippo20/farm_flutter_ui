@@ -504,8 +504,8 @@ class _FarmManagerDashboardRedesignedState
                 child: Text(
                   stat['change'] as String,
                   style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppTypography.microSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: color,
                   ),
                 ),
@@ -519,8 +519,8 @@ class _FarmManagerDashboardRedesignedState
               Text(
                 stat['value'] as String,
                 style: TextStyle(
-                  fontSize: isMobile ? 26 : 32,
-                  fontWeight: FontWeight.w700,
+                  fontSize: isMobile ? AppTypography.metricSize : AppTypography.displaySize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                   height: 1,
                 ),
@@ -531,7 +531,7 @@ class _FarmManagerDashboardRedesignedState
                 child: Text(
                   stat['unit'] as String,
                   style: TextStyle(
-                    fontSize: isMobile ? 12 : 13,
+                    fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
                     color: isDark ? Colors.white54 : const Color(0xFF64748B),
                   ),
                 ),
@@ -542,8 +542,8 @@ class _FarmManagerDashboardRedesignedState
           Text(
             stat['label'] as String,
             style: TextStyle(
-              fontSize: isMobile ? 12 : 13,
-              fontWeight: FontWeight.w500,
+              fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
+              fontWeight: AppTypography.labelWeight,
               color: isDark ? Colors.white60 : const Color(0xFF64748B),
             ),
           ),
@@ -615,8 +615,8 @@ class _FarmManagerDashboardRedesignedState
               Text(
                 'Tasks Overview',
                 style: TextStyle(
-                  fontSize: isMobile ? 16 : 18,
-                  fontWeight: FontWeight.w700,
+                  fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
@@ -631,8 +631,8 @@ class _FarmManagerDashboardRedesignedState
                 child: Text(
                   '$pendingCount Pending',
                   style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppTypography.fieldLabelSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: const Color(0xFFDC2626),
                   ),
                 ),
@@ -691,8 +691,8 @@ class _FarmManagerDashboardRedesignedState
                       Text(
                         task['title'] as String,
                         style: TextStyle(
-                          fontSize: isMobile ? 14 : 15,
-                          fontWeight: FontWeight.w600,
+                          fontSize: isMobile ? AppTypography.bodySize : AppTypography.cardTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : const Color(0xFF0F172A),
                         ),
@@ -701,7 +701,7 @@ class _FarmManagerDashboardRedesignedState
                       Text(
                         task['subtitle'] as String,
                         style: TextStyle(
-                          fontSize: isMobile ? 12 : 13,
+                          fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
                           color:
                               isDark ? Colors.white54 : const Color(0xFF64748B),
                         ),
@@ -720,8 +720,8 @@ class _FarmManagerDashboardRedesignedState
                     child: Text(
                       task['badge'] as String,
                       style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                        fontSize: AppTypography.actionSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: Colors.white,
                       ),
                     ),
@@ -765,8 +765,8 @@ class _FarmManagerDashboardRedesignedState
               Text(
                 'Quick Actions',
                 style: TextStyle(
-                  fontSize: isMobile ? 16 : 18,
-                  fontWeight: FontWeight.w700,
+                  fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
@@ -810,8 +810,8 @@ class _FarmManagerDashboardRedesignedState
               Text(
                 'Activity',
                 style: TextStyle(
-                  fontSize: isMobile ? 16 : 18,
-                  fontWeight: FontWeight.w700,
+                  fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
               ),
@@ -825,7 +825,7 @@ class _FarmManagerDashboardRedesignedState
                 ),
                 child: const Text('View All',
                     style:
-                        TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                        TextStyle(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight)),
               ),
             ],
           ),
@@ -940,7 +940,7 @@ class _FarmManagerDashboardRedesignedState
         textAlign: TextAlign.center,
         style: TextStyle(
           color: isDark ? Colors.white60 : AppColors.textSecondary,
-          fontSize: 13,
+          fontSize: AppTypography.actionSize,
         ),
       ),
     );
@@ -968,7 +968,7 @@ class _FarmManagerDashboardRedesignedState
               'Farm manager dashboard could not be loaded',
               style: AppTypography.h6.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -1033,8 +1033,8 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   activity['title'] as String,
                   style: TextStyle(
-                    fontSize: isMobile ? 13 : 14,
-                    fontWeight: FontWeight.w600,
+                    fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : const Color(0xFF0F172A),
                   ),
                 ),
@@ -1042,7 +1042,7 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   activity['desc'] as String,
                   style: TextStyle(
-                    fontSize: isMobile ? 11 : 12,
+                    fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
                     color: isDark ? Colors.white54 : const Color(0xFF64748B),
                   ),
                 ),
@@ -1050,7 +1050,7 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   activity['time'] as String,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                     color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
                   ),
                 ),
@@ -1213,8 +1213,8 @@ class _FarmManagerDashboardRedesignedState
                             'Harvest Approval',
                             style: AppTypography.h5.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: isMobile ? 18 : 20),
+                                fontWeight: AppTypography.headingWeight,
+                                fontSize: isMobile ? AppTypography.sectionTitleSize : AppTypography.headingSize),
                           ),
                           Text(
                             '${pendingHarvests.length} pending approvals',
@@ -1269,8 +1269,8 @@ class _FarmManagerDashboardRedesignedState
                   Text(
                     'Pending Approvals',
                     style: TextStyle(
-                      fontSize: isMobile ? 16 : 18,
-                      fontWeight: FontWeight.bold,
+                      fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -1286,9 +1286,9 @@ class _FarmManagerDashboardRedesignedState
                     child: Text(
                       '${pendingHarvests.length} items',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: AppTypography.captionSize,
                         color: AppColors.warning,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -1441,15 +1441,15 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   stat['value'] as String,
                   style: TextStyle(
-                    fontSize: isMobile ? 16 : 20,
-                    fontWeight: FontWeight.bold,
+                    fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.headingSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
                 Text(
                   stat['label'] as String,
                   style: TextStyle(
-                    fontSize: isMobile ? 10 : 12,
+                    fontSize: isMobile ? AppTypography.microSize : AppTypography.captionSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
                   maxLines: 1,
@@ -1482,7 +1482,7 @@ class _FarmManagerDashboardRedesignedState
                     hintStyle: TextStyle(
                         color:
                             isDark ? Colors.white38 : AppColors.textSecondary,
-                        fontSize: 13),
+                        fontSize: AppTypography.actionSize),
                     prefixIcon: Icon(Icons.search,
                         color:
                             isDark ? Colors.white38 : AppColors.textSecondary,
@@ -1513,7 +1513,7 @@ class _FarmManagerDashboardRedesignedState
                   ),
                   style: TextStyle(
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontSize: 13),
+                      fontSize: AppTypography.actionSize),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 // Filter Chips Row
@@ -1541,7 +1541,7 @@ class _FarmManagerDashboardRedesignedState
                       hintStyle: TextStyle(
                           color:
                               isDark ? Colors.white38 : AppColors.textSecondary,
-                          fontSize: 13),
+                          fontSize: AppTypography.actionSize),
                       prefixIcon: Icon(Icons.search,
                           color:
                               isDark ? Colors.white38 : AppColors.textSecondary,
@@ -1575,7 +1575,7 @@ class _FarmManagerDashboardRedesignedState
                     ),
                     style: TextStyle(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontSize: 13),
+                        fontSize: AppTypography.actionSize),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -1614,7 +1614,7 @@ class _FarmManagerDashboardRedesignedState
       child: FilterChip(
         label: Text(label,
             style: TextStyle(
-                fontSize: 12,
+                fontSize: AppTypography.captionSize,
                 color: isSelected
                     ? Colors.white
                     : (isDark ? Colors.white70 : AppColors.textSecondary))),
@@ -1745,8 +1745,8 @@ class _FarmManagerDashboardRedesignedState
                               child: Text(
                                 harvest['crop']!,
                                 style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: AppTypography.cardTitleSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: isDark
                                       ? Colors.white
                                       : AppColors.textPrimary,
@@ -1764,9 +1764,9 @@ class _FarmManagerDashboardRedesignedState
                               child: Text(
                                 'Grade ${harvest['quality']}',
                                 style: TextStyle(
-                                    fontSize: 9,
+                                    fontSize: AppTypography.microSize,
                                     color: qualityColor,
-                                    fontWeight: FontWeight.w600),
+                                    fontWeight: AppTypography.headingWeight),
                               ),
                             ),
                           ],
@@ -1775,7 +1775,7 @@ class _FarmManagerDashboardRedesignedState
                         Text(
                           '${harvest['batch']} • ${harvest['farm']}',
                           style: TextStyle(
-                              fontSize: 11,
+                              fontSize: AppTypography.fieldLabelSize,
                               color: isDark
                                   ? Colors.white54
                                   : AppColors.textSecondary),
@@ -1831,7 +1831,7 @@ class _FarmManagerDashboardRedesignedState
                     Text(
                       'Yield: $yieldPercent%',
                       style: TextStyle(
-                          fontSize: 11,
+                          fontSize: AppTypography.fieldLabelSize,
                           color: isDark
                               ? Colors.white54
                               : AppColors.textSecondary),
@@ -1848,8 +1848,8 @@ class _FarmManagerDashboardRedesignedState
                                 .take(2)
                                 .join(),
                             style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
+                                fontSize: AppTypography.microSize,
+                                fontWeight: AppTypography.headingWeight,
                                 color: AppColors.primary),
                           ),
                         ),
@@ -1857,8 +1857,8 @@ class _FarmManagerDashboardRedesignedState
                         Text(
                           harvest['caretaker']!,
                           style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            fontSize: AppTypography.captionSize,
+                            fontWeight: AppTypography.labelWeight,
                             color:
                                 isDark ? Colors.white70 : AppColors.textPrimary,
                           ),
@@ -1926,8 +1926,8 @@ class _FarmManagerDashboardRedesignedState
                           Text(
                             'Details',
                             style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.labelWeight,
                               color: isDark
                                   ? Colors.white70
                                   : AppColors.textSecondary,
@@ -1976,8 +1976,8 @@ class _FarmManagerDashboardRedesignedState
                           Text(
                             'Reject',
                             style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: AppColors.error,
                             ),
                           ),
@@ -2035,8 +2035,8 @@ class _FarmManagerDashboardRedesignedState
                           Text(
                             'Approve',
                             style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              fontSize: AppTypography.captionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: Colors.white,
                             ),
                           ),
@@ -2063,8 +2063,8 @@ class _FarmManagerDashboardRedesignedState
         Text(
           value,
           style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
+              fontSize: AppTypography.fieldLabelSize,
+              fontWeight: AppTypography.labelWeight,
               color: isDark ? Colors.white70 : AppColors.textPrimary),
         ),
       ],
@@ -2087,7 +2087,7 @@ class _FarmManagerDashboardRedesignedState
             Text(
               label,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: AppTypography.microSize,
                 color: isDark ? Colors.white38 : AppColors.textSecondary,
               ),
             ),
@@ -2097,8 +2097,8 @@ class _FarmManagerDashboardRedesignedState
         Text(
           value,
           style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
+            fontSize: AppTypography.actionSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
           textAlign: TextAlign.center,
@@ -2197,8 +2197,8 @@ class _FarmManagerDashboardRedesignedState
                           Text(
                             '${harvestDetails['crop']} Harvest Details',
                             style: TextStyle(
-                              fontSize: isMobile ? 18 : 20,
-                              fontWeight: FontWeight.bold,
+                              fontSize: isMobile ? AppTypography.sectionTitleSize : AppTypography.headingSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: Colors.white,
                             ),
                           ),
@@ -2215,16 +2215,16 @@ class _FarmManagerDashboardRedesignedState
                                 child: Text(
                                   harvestDetails['batch']!,
                                   style: const TextStyle(
-                                      fontSize: 11,
+                                      fontSize: AppTypography.fieldLabelSize,
                                       color: Colors.white,
-                                      fontWeight: FontWeight.w500),
+                                      fontWeight: AppTypography.labelWeight),
                                 ),
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 harvestDetails['farm']!,
                                 style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: AppTypography.actionSize,
                                     color: Colors.white.withOpacity(0.8)),
                               ),
                             ],
@@ -2409,7 +2409,7 @@ class _FarmManagerDashboardRedesignedState
                       onPressed: () {},
                       icon: Icon(Icons.print, size: isMobile ? 16 : 18),
                       label: Text('Print',
-                          style: TextStyle(fontSize: isMobile ? 12 : 13)),
+                          style: TextStyle(fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor:
                             isDark ? Colors.white70 : AppColors.textSecondary,
@@ -2441,7 +2441,7 @@ class _FarmManagerDashboardRedesignedState
                       },
                       icon: Icon(Icons.close, size: isMobile ? 16 : 18),
                       label: Text('Reject',
-                          style: TextStyle(fontSize: isMobile ? 12 : 13)),
+                          style: TextStyle(fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.error,
                         side: const BorderSide(color: AppColors.error),
@@ -2470,7 +2470,7 @@ class _FarmManagerDashboardRedesignedState
                       },
                       icon: Icon(Icons.check, size: isMobile ? 16 : 18),
                       label: Text('Approve',
-                          style: TextStyle(fontSize: isMobile ? 12 : 13)),
+                          style: TextStyle(fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.success,
                         foregroundColor: Colors.white,
@@ -2574,15 +2574,15 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   stat['value'] as String,
                   style: TextStyle(
-                    fontSize: isMobile ? 14 : 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: isMobile ? AppTypography.bodySize : AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
                 Text(
                   stat['label'] as String,
                   style: TextStyle(
-                    fontSize: isMobile ? 9 : 10,
+                    fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
                   maxLines: 1,
@@ -2623,8 +2623,8 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: isMobile ? 13 : 14,
-                    fontWeight: FontWeight.bold,
+                    fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -2666,7 +2666,7 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                     color: isDark ? Colors.white38 : AppColors.textSecondary,
                   ),
                 ),
@@ -2674,8 +2674,8 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   value,
                   style: TextStyle(
-                    fontSize: isMobile ? 12 : 13,
-                    fontWeight: FontWeight.w600,
+                    fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -2709,8 +2709,8 @@ class _FarmManagerDashboardRedesignedState
             child: Text(
               harvest['caretaker']!.split(' ').map((n) => n[0]).take(2).join(),
               style: TextStyle(
-                fontSize: isMobile ? 14 : 16,
-                fontWeight: FontWeight.bold,
+                fontSize: isMobile ? AppTypography.bodySize : AppTypography.cardTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: AppColors.primary,
               ),
             ),
@@ -2723,7 +2723,7 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   'Responsible Caretaker',
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
                 ),
@@ -2731,8 +2731,8 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   harvest['caretaker']!,
                   style: TextStyle(
-                    fontSize: isMobile ? 15 : 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -2740,7 +2740,7 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   '${harvest['farm']} • ${harvest['section']}',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: AppTypography.fieldLabelSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
                 ),
@@ -2761,8 +2761,8 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   'Verified',
                   style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                    fontSize: AppTypography.fieldLabelSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: AppColors.success,
                   ),
                 ),
@@ -2850,8 +2850,8 @@ class _FarmManagerDashboardRedesignedState
                                 Text(
                                   harvest['crop']!,
                                   style: TextStyle(
-                                    fontSize: isMobile ? 16 : 18,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary,
@@ -2868,9 +2868,9 @@ class _FarmManagerDashboardRedesignedState
                                   child: Text(
                                     'Grade ${harvest['quality']}',
                                     style: TextStyle(
-                                        fontSize: 10,
+                                        fontSize: AppTypography.microSize,
                                         color: qualityColor,
-                                        fontWeight: FontWeight.w600),
+                                        fontWeight: AppTypography.headingWeight),
                                   ),
                                 ),
                               ],
@@ -2887,11 +2887,11 @@ class _FarmManagerDashboardRedesignedState
                                 Text(
                                   harvest['batch']!,
                                   style: TextStyle(
-                                      fontSize: 12,
+                                      fontSize: AppTypography.captionSize,
                                       color: isDark
                                           ? Colors.white54
                                           : AppColors.textSecondary,
-                                      fontWeight: FontWeight.w500),
+                                      fontWeight: AppTypography.labelWeight),
                                 ),
                                 const SizedBox(width: 12),
                                 Icon(Icons.location_on_outlined,
@@ -2904,7 +2904,7 @@ class _FarmManagerDashboardRedesignedState
                                   child: Text(
                                     '${harvest['farm']} • ${harvest['section']}',
                                     style: TextStyle(
-                                        fontSize: 12,
+                                        fontSize: AppTypography.captionSize,
                                         color: isDark
                                             ? Colors.white54
                                             : AppColors.textSecondary),
@@ -2941,9 +2941,9 @@ class _FarmManagerDashboardRedesignedState
                             Text(
                               harvest['status']!,
                               style: const TextStyle(
-                                  fontSize: 11,
+                                  fontSize: AppTypography.fieldLabelSize,
                                   color: AppColors.warning,
-                                  fontWeight: FontWeight.w600),
+                                  fontWeight: AppTypography.headingWeight),
                             ),
                           ],
                         ),
@@ -3050,7 +3050,7 @@ class _FarmManagerDashboardRedesignedState
                               Text(
                                 'Yield Achievement',
                                 style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: AppTypography.captionSize,
                                     color: isDark
                                         ? Colors.white54
                                         : AppColors.textSecondary),
@@ -3058,8 +3058,8 @@ class _FarmManagerDashboardRedesignedState
                               Text(
                                 '$yieldPercent%',
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: AppTypography.captionSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: yieldPercent >= 90
                                       ? AppColors.success
                                       : AppColors.warning,
@@ -3086,7 +3086,7 @@ class _FarmManagerDashboardRedesignedState
                           Text(
                             '${harvest['actualYield']} of ${harvest['expectedYield']} kg expected',
                             style: TextStyle(
-                                fontSize: 10,
+                                fontSize: AppTypography.microSize,
                                 color: isDark
                                     ? Colors.white38
                                     : AppColors.textSecondary),
@@ -3118,8 +3118,8 @@ class _FarmManagerDashboardRedesignedState
                                   .take(2)
                                   .join(),
                               style: TextStyle(
-                                  fontSize: isMobile ? 10 : 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: AppColors.primary),
                             ),
                           ),
@@ -3130,8 +3130,8 @@ class _FarmManagerDashboardRedesignedState
                               Text(
                                 harvest['caretaker']!,
                                 style: TextStyle(
-                                  fontSize: isMobile ? 11 : 12,
-                                  fontWeight: FontWeight.w600,
+                                  fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: isDark
                                       ? Colors.white
                                       : AppColors.textPrimary,
@@ -3140,7 +3140,7 @@ class _FarmManagerDashboardRedesignedState
                               Text(
                                 'Caretaker',
                                 style: TextStyle(
-                                    fontSize: 10,
+                                    fontSize: AppTypography.microSize,
                                     color: isDark
                                         ? Colors.white38
                                         : AppColors.textSecondary),
@@ -3174,7 +3174,7 @@ class _FarmManagerDashboardRedesignedState
                           child: Text(
                             harvest['notes']!,
                             style: TextStyle(
-                                fontSize: 11,
+                                fontSize: AppTypography.fieldLabelSize,
                                 color: isDark
                                     ? Colors.white70
                                     : AppColors.textSecondary),
@@ -3231,8 +3231,8 @@ class _FarmManagerDashboardRedesignedState
                           Text(
                             'Details',
                             style: TextStyle(
-                              fontSize: isMobile ? 12 : 13,
-                              fontWeight: FontWeight.w500,
+                              fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
+                              fontWeight: AppTypography.labelWeight,
                               color: isDark
                                   ? Colors.white70
                                   : AppColors.textSecondary,
@@ -3282,8 +3282,8 @@ class _FarmManagerDashboardRedesignedState
                           Text(
                             'Reject',
                             style: TextStyle(
-                              fontSize: isMobile ? 12 : 13,
-                              fontWeight: FontWeight.w600,
+                              fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: AppColors.error,
                             ),
                           ),
@@ -3342,8 +3342,8 @@ class _FarmManagerDashboardRedesignedState
                           Text(
                             'Approve',
                             style: TextStyle(
-                              fontSize: isMobile ? 12 : 13,
-                              fontWeight: FontWeight.w600,
+                              fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
+                              fontWeight: AppTypography.headingWeight,
                               color: Colors.white,
                             ),
                           ),
@@ -3376,14 +3376,14 @@ class _FarmManagerDashboardRedesignedState
               Text(
                 label,
                 style: TextStyle(
-                    fontSize: isMobile ? 9 : 10,
+                    fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
                     color: isDark ? Colors.white38 : AppColors.textSecondary),
               ),
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: isMobile ? 12 : 13,
-                  fontWeight: FontWeight.w600,
+                  fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -3458,8 +3458,8 @@ class _FarmManagerDashboardRedesignedState
                             'Delivery Management',
                             style: AppTypography.h5.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: isMobile ? 18 : 20),
+                                fontWeight: AppTypography.headingWeight,
+                                fontSize: isMobile ? AppTypography.sectionTitleSize : AppTypography.headingSize),
                           ),
                           Text(
                             'Schedule and manage deliveries',
@@ -3551,15 +3551,15 @@ class _FarmManagerDashboardRedesignedState
             Text(
               value,
               style: TextStyle(
-                fontSize: isMobile ? 18 : 24,
-                fontWeight: FontWeight.bold,
+                fontSize: isMobile ? AppTypography.sectionTitleSize : AppTypography.pageTitleSize,
+                fontWeight: AppTypography.headingWeight,
                 color: color,
               ),
             ),
             Text(
               label,
               style: TextStyle(
-                fontSize: isMobile ? 10 : 12,
+                fontSize: isMobile ? AppTypography.microSize : AppTypography.captionSize,
                 color: isDark ? Colors.white60 : AppColors.textSecondary,
               ),
             ),
@@ -3579,8 +3579,8 @@ class _FarmManagerDashboardRedesignedState
           title,
           style: AppTypography.h6.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: isMobile ? 16 : 18,
+            fontWeight: AppTypography.headingWeight,
+            fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
           ),
         ),
       ],
@@ -3728,8 +3728,8 @@ class _FarmManagerDashboardRedesignedState
         Text(
           label,
           style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white70 : AppColors.textSecondary,
           ),
         ),
@@ -3784,8 +3784,8 @@ class _FarmManagerDashboardRedesignedState
         Text(
           label,
           style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white70 : AppColors.textSecondary,
           ),
         ),
@@ -3919,15 +3919,15 @@ class _FarmManagerDashboardRedesignedState
                 Text(
                   delivery['batch']!,
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: isMobile ? 13 : 14,
+                    fontWeight: AppTypography.headingWeight,
+                    fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
                 Text(
                   '${delivery['dest']} • ${delivery['vehicle']}',
                   style: TextStyle(
-                    fontSize: isMobile ? 11 : 12,
+                    fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
                   ),
                 ),
@@ -3946,9 +3946,9 @@ class _FarmManagerDashboardRedesignedState
                 child: Text(
                   delivery['status']!,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: AppTypography.microSize,
                     color: statusColor,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -3956,7 +3956,7 @@ class _FarmManagerDashboardRedesignedState
               Text(
                 delivery['date']!,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: AppTypography.fieldLabelSize,
                   color: isDark ? Colors.white54 : AppColors.textSecondary,
                 ),
               ),
@@ -4070,9 +4070,9 @@ class _FarmManagerDashboardRedesignedState
                                     ? Colors.white.withOpacity(0.5)
                                     : AppColors.textSecondary),
                             fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            fontSize: 11,
+                                ? AppTypography.headingWeight
+                                : AppTypography.bodyWeight,
+                            fontSize: AppTypography.fieldLabelSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -4214,8 +4214,8 @@ class _FarmManagerDashboardRedesignedState
                 title,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: isMobile ? 11 : 12,
-                  fontWeight: FontWeight.w600,
+                  fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
+                  fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white70 : const Color(0xFF475569),
                 ),
                 maxLines: 1,
@@ -4286,7 +4286,7 @@ class _FarmManagerDashboardRedesignedState
                             Text('Budget Request',
                                 style: AppTypography.h6.copyWith(
                                     color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
+                                    fontWeight: AppTypography.headingWeight)),
                             Text('Request funds for farm operations',
                                 style: AppTypography.bodySmall
                                     .copyWith(color: Colors.white70)),
@@ -4405,10 +4405,10 @@ class _FarmManagerDashboardRedesignedState
                                     child: Text(p,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
-                                            fontSize: 11,
+                                            fontSize: AppTypography.fieldLabelSize,
                                             fontWeight: isSelected
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
+                                                ? AppTypography.headingWeight
+                                                : AppTypography.bodyWeight,
                                             color: isSelected
                                                 ? color
                                                 : (isDark
@@ -4467,7 +4467,7 @@ class _FarmManagerDashboardRedesignedState
                                   child: Text(
                                       'Request will be sent to Admin for approval. You will be notified once approved.',
                                       style: TextStyle(
-                                          fontSize: 11,
+                                          fontSize: AppTypography.fieldLabelSize,
                                           color: isDark
                                               ? Colors.white70
                                               : AppColors.textSecondary))),
@@ -4556,8 +4556,8 @@ class _FarmManagerDashboardRedesignedState
   Widget _buildDialogLabel(String label, bool isDark) {
     return Text(label,
         style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white70 : AppColors.textSecondary));
   }
 
@@ -4598,12 +4598,12 @@ class _FarmManagerDashboardRedesignedState
         children: [
           Text(label,
               style: TextStyle(
-                  fontSize: 11,
+                  fontSize: AppTypography.fieldLabelSize,
                   color: isDark ? Colors.white54 : AppColors.textSecondary)),
           Text(value,
               style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
+                  fontSize: AppTypography.fieldLabelSize,
+                  fontWeight: AppTypography.labelWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary)),
         ],
       ),

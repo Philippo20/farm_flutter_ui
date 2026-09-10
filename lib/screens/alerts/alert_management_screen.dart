@@ -218,7 +218,7 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
         Text(
           value,
           style: AppTypography.h5.copyWith(
-            fontWeight: FontWeight.bold,
+            fontWeight: AppTypography.headingWeight,
             color: color,
           ),
         ),
@@ -226,7 +226,7 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
           label,
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white60 : AppColors.textSecondary,
-            fontSize: 11,
+            fontSize: AppTypography.fieldLabelSize,
           ),
         ),
       ],
@@ -243,7 +243,7 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
           Text(
             'Filters',
             style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -347,7 +347,7 @@ class _AlertManagementScreenState extends State<AlertManagementScreen> {
           color: selected
               ? chipColor
               : (isDark ? Colors.white70 : AppColors.textPrimary),
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+          fontWeight: selected ? AppTypography.headingWeight : AppTypography.bodyWeight,
         ),
         side: BorderSide(
           color:
@@ -515,7 +515,7 @@ class _AlertDetailsSheet extends StatelessWidget {
                       Text(
                         alert.sensorType.displayName,
                         style: AppTypography.h6.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -523,7 +523,7 @@ class _AlertDetailsSheet extends StatelessWidget {
                         alert.severity.displayName.toUpperCase(),
                         style: AppTypography.bodySmall.copyWith(
                           color: severityColor,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: AppTypography.headingWeight,
                         ),
                       ),
                     ],
@@ -547,7 +547,7 @@ class _AlertDetailsSheet extends StatelessWidget {
                   'Alert Message',
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white60 : AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -586,7 +586,7 @@ class _AlertDetailsSheet extends StatelessWidget {
                               'Resolved',
                               style: AppTypography.bodyMedium.copyWith(
                                 color: AppColors.success,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: AppTypography.headingWeight,
                               ),
                             ),
                           ],

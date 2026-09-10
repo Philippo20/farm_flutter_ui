@@ -1,6 +1,6 @@
+import '../theme/app_typography.dart';
 import 'app_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../theme/app_colors.dart';
@@ -189,11 +189,11 @@ Future<bool?> showBatchCreationDialog({
       {String? hint, IconData? icon}) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: GoogleFonts.poppins(
-        fontSize: 12.5,
+      hintStyle: AppTypography.font(
+        fontSize: AppTypography.actionSize,
         color: isDark ? Colors.white54 : AppColors.textSecondary,
       ),
-      errorStyle: GoogleFonts.poppins(fontSize: 10.5, height: 1.25),
+      errorStyle: AppTypography.font(fontSize: AppTypography.fieldLabelSize, height: 1.25),
       prefixIcon: icon == null ? null : Icon(icon, size: 18),
       filled: true,
       fillColor:
@@ -215,9 +215,9 @@ Future<bool?> showBatchCreationDialog({
     );
   }
 
-  TextStyle inputTextStyle(bool isDark) => GoogleFonts.poppins(
-        fontSize: 13,
-        fontWeight: FontWeight.w400,
+  TextStyle inputTextStyle(bool isDark) => AppTypography.font(
+        fontSize: AppTypography.actionSize,
+        fontWeight: AppTypography.bodyWeight,
         color: isDark ? Colors.white : AppColors.textPrimary,
       );
 
@@ -225,9 +225,9 @@ Future<bool?> showBatchCreationDialog({
         padding: const EdgeInsets.only(bottom: 7),
         child: Text(
           label,
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+          style: AppTypography.font(
+            fontSize: AppTypography.captionSize,
+            fontWeight: AppTypography.labelWeight,
             height: 1.35,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
@@ -318,9 +318,9 @@ Future<bool?> showBatchCreationDialog({
                             children: [
                               Text(
                                 'Create Batch Number',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
+                                style: AppTypography.font(
+                                  fontSize: AppTypography.sectionTitleSize,
+                                  fontWeight: AppTypography.headingWeight,
                                   color: Colors.white,
                                   height: 1.25,
                                 ),
@@ -329,9 +329,9 @@ Future<bool?> showBatchCreationDialog({
                               Text('Generate a production batch for $farmName',
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w400,
+                                  style: AppTypography.font(
+                                    fontSize: AppTypography.captionSize,
+                                    fontWeight: AppTypography.bodyWeight,
                                     color: Colors.white70,
                                     height: 1.35,
                                   )),
@@ -376,8 +376,8 @@ Future<bool?> showBatchCreationDialog({
                                 ),
                                 child: Text(
                                   formError!,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 10.5,
+                                  style: AppTypography.font(
+                                    fontSize: AppTypography.fieldLabelSize,
                                     height: 1.4,
                                     color: AppColors.error,
                                   ),
@@ -438,8 +438,8 @@ Future<bool?> showBatchCreationDialog({
                                             child: Text(
                                               variety,
                                               overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 13,
+                                              style: AppTypography.font(
+                                                fontSize: AppTypography.actionSize,
                                                 color: isDark
                                                     ? Colors.white
                                                     : AppColors.textPrimary,
@@ -516,8 +516,8 @@ Future<bool?> showBatchCreationDialog({
                                     selectedDuration.value > 0
                                         ? 'Calculated from ${selectedDuration.value} ${selectedDuration.unit}'
                                         : 'Add a duration to this crop variety before creating a batch.',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10.5,
+                                    style: AppTypography.font(
+                                      fontSize: AppTypography.fieldLabelSize,
                                       color: selectedDuration.value > 0
                                           ? (isDark
                                               ? Colors.white60
@@ -621,9 +621,9 @@ Future<bool?> showBatchCreationDialog({
                               style: OutlinedButton.styleFrom(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 13),
-                                textStyle: GoogleFonts.poppins(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
+                                textStyle: AppTypography.font(
+                                  fontSize: AppTypography.actionSize,
+                                  fontWeight: AppTypography.headingWeight,
                                 ),
                               ),
                               child: const Text('Cancel'),
@@ -715,9 +715,9 @@ Future<bool?> showBatchCreationDialog({
                                 foregroundColor: Colors.white,
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 13),
-                                textStyle: GoogleFonts.poppins(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
+                                textStyle: AppTypography.font(
+                                  fontSize: AppTypography.actionSize,
+                                  fontWeight: AppTypography.headingWeight,
                                 ),
                               ),
                             ),
@@ -763,9 +763,9 @@ class _BatchDateField extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 7),
           child: Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: AppTypography.font(
+              fontSize: AppTypography.captionSize,
+              fontWeight: AppTypography.labelWeight,
               height: 1.35,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
@@ -798,9 +798,9 @@ class _BatchDateField extends StatelessWidget {
             ),
             child: Text(
               value,
-              style: GoogleFonts.poppins(
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
+              style: AppTypography.font(
+                fontSize: AppTypography.actionSize,
+                fontWeight: AppTypography.bodyWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),

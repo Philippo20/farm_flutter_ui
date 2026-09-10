@@ -101,7 +101,7 @@ class _SystemControlPanelState extends ConsumerState<SystemControlPanel>
           Text(
             'Pump Controls',
             style: AppTypography.h5.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -152,7 +152,7 @@ class _SystemControlPanelState extends ConsumerState<SystemControlPanel>
           Text(
             'Lighting Controls',
             style: AppTypography.h5.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -197,7 +197,7 @@ class _SystemControlPanelState extends ConsumerState<SystemControlPanel>
           Text(
             'Climate Controls',
             style: AppTypography.h5.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -242,7 +242,7 @@ class _SystemControlPanelState extends ConsumerState<SystemControlPanel>
           Text(
             'pH Control System',
             style: AppTypography.h5.copyWith(
-              fontWeight: FontWeight.bold,
+              fontWeight: AppTypography.headingWeight,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),

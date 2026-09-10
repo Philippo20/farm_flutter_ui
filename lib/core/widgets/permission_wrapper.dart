@@ -1,3 +1,4 @@
+import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/role_permissions.dart';
@@ -195,8 +196,8 @@ class ProtectedRoute extends ConsumerWidget {
             const Text(
               'Access Denied',
               style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+                fontSize: AppTypography.pageTitleSize,
+                fontWeight: AppTypography.headingWeight,
               ),
             ),
             const SizedBox(height: 8),

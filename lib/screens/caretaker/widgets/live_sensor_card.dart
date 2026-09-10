@@ -1,6 +1,6 @@
+import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
 /// A compact live-sensor card with a smooth bezier sparkline.
@@ -126,9 +126,9 @@ class _LiveSensorCardState extends State<LiveSensorCard>
                     widget.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: compact ? 10 : 11,
-                      fontWeight: FontWeight.w600,
+                    style: AppTypography.font(
+                      fontSize: compact ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                      fontWeight: AppTypography.headingWeight,
                       letterSpacing: 0.2,
                       color: isDark
                           ? Colors.white.withOpacity(0.55)
@@ -152,9 +152,9 @@ class _LiveSensorCardState extends State<LiveSensorCard>
                       widget.value,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: compact ? 20 : 24,
-                        fontWeight: FontWeight.w700,
+                      style: AppTypography.font(
+                        fontSize: compact ? AppTypography.headingSize : AppTypography.pageTitleSize,
+                        fontWeight: AppTypography.headingWeight,
                         height: 1,
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
@@ -164,9 +164,9 @@ class _LiveSensorCardState extends State<LiveSensorCard>
                     padding: const EdgeInsets.only(bottom: 2, left: 3),
                     child: Text(
                       widget.unit,
-                      style: GoogleFonts.inter(
-                        fontSize: compact ? 10 : 11,
-                        fontWeight: FontWeight.w500,
+                      style: AppTypography.font(
+                        fontSize: compact ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                        fontWeight: AppTypography.labelWeight,
                         color: isDark
                             ? Colors.white38
                             : AppColors.textSecondary,
@@ -213,8 +213,8 @@ class _LiveSensorCardState extends State<LiveSensorCard>
                     _timeAgo,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: compact ? 8 : 9,
+                    style: AppTypography.font(
+                      fontSize: compact ? AppTypography.microSize : AppTypography.microSize,
                       color: isDark
                           ? Colors.white24
                           : AppColors.textSecondary.withOpacity(0.5),
@@ -230,9 +230,9 @@ class _LiveSensorCardState extends State<LiveSensorCard>
                   ),
                   child: Text(
                     widget.status,
-                    style: GoogleFonts.inter(
-                      fontSize: compact ? 7 : 8,
-                      fontWeight: FontWeight.w600,
+                    style: AppTypography.font(
+                      fontSize: compact ? AppTypography.microSize : AppTypography.microSize,
+                      fontWeight: AppTypography.headingWeight,
                       color: sc,
                     ),
                   ),
@@ -256,9 +256,9 @@ class _LiveSensorCardState extends State<LiveSensorCard>
             size: compact ? 8 : 9, color: c),
         const SizedBox(width: 1),
         Text(text,
-            style: GoogleFonts.inter(
-                fontSize: compact ? 8 : 9,
-                fontWeight: FontWeight.w600,
+            style: AppTypography.font(
+                fontSize: compact ? AppTypography.microSize : AppTypography.microSize,
+                fontWeight: AppTypography.headingWeight,
                 color: c)),
       ]),
     );

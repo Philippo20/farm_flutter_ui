@@ -733,7 +733,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
             Text(
               'Unable to load farms',
               style: AppTypography.h6.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -771,7 +771,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                   Text(
                     'Farm Management',
                     style: AppTypography.h4.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -887,7 +887,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                           stat.$2,
                           style: AppTypography.h6.copyWith(
                             color: stat.$4,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: AppTypography.headingWeight,
                           ),
                         ),
                         Text(
@@ -978,7 +978,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
             Expanded(
                 child: Text(text,
                     style: AppTypography.bodySmall
-                        .copyWith(color: secondary, fontSize: 12))),
+                        .copyWith(color: secondary, fontSize: AppTypography.captionSize))),
           ],
         );
     Widget metric(String label, String amount, IconData icon, Color color) =>
@@ -993,14 +993,14 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                 Expanded(
                     child: Text(label,
                         style: AppTypography.bodySmall
-                            .copyWith(color: secondary, fontSize: 12))),
+                            .copyWith(color: secondary, fontSize: AppTypography.captionSize))),
               ]),
               const SizedBox(height: 6),
               Text(amount,
                   style: AppTypography.bodyLarge.copyWith(
                       color: foreground,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600)),
+                      fontSize: AppTypography.sectionTitleSize,
+                      fontWeight: AppTypography.headingWeight)),
             ],
           ),
         );
@@ -1040,8 +1040,8 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                       Text(value('name'),
                           style: AppTypography.bodyLarge.copyWith(
                               color: foreground,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600)),
+                              fontSize: AppTypography.sectionTitleSize,
+                              fontWeight: AppTypography.headingWeight)),
                       const SizedBox(height: 6),
                       Wrap(spacing: 8, runSpacing: 6, children: [
                         _badge(value('status'), statusColor),
@@ -1097,8 +1097,8 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                 Text('Assigned team',
                     style: AppTypography.bodySmall.copyWith(
                         color: foreground,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13)),
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: AppTypography.actionSize)),
                 const SizedBox(height: 10),
                 detail(
                     Icons.person_outline, 'Manager: ${value('farmManager')}'),
@@ -1219,7 +1219,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                                 Text(
                                   farm['name'],
                                   style: AppTypography.bodyLarge.copyWith(
-                                    fontWeight: FontWeight.w600,
+                                    fontWeight: AppTypography.headingWeight,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary,
@@ -1538,7 +1538,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                       farm['name'],
                       style: AppTypography.h4.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -1708,7 +1708,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                   metric.value,
                   style: AppTypography.h6.copyWith(
                     color: metric.color,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1780,7 +1780,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                   'Overall batch progress',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -1788,7 +1788,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                 '${(progress * 100).round()}%',
                 style: AppTypography.h6.copyWith(
                   color: AppColors.warning,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
             ],
@@ -1907,7 +1907,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                   value,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1969,7 +1969,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                   'Payment progress',
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
               ),
@@ -1977,7 +1977,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                 '${(stats.paidRatio * 100).round()}%',
                 style: AppTypography.h6.copyWith(
                   color: AppColors.success,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
               ),
             ],
@@ -2039,7 +2039,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                   value,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -2267,7 +2267,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                                   color: isDark
                                       ? Colors.white
                                       : AppColors.textPrimary,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: AppTypography.headingWeight,
                                 ),
                               ),
                               Text(
@@ -2588,7 +2588,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: AppTypography.headingWeight,
                               ),
                             ),
                             Text(
@@ -2622,7 +2622,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                       _maskedFarmSensorKey(apiKey),
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                   ),
@@ -2736,7 +2736,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                       title,
                       style: AppTypography.h6.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: AppTypography.headingWeight,
                       ),
                     ),
                     Text(
@@ -2798,7 +2798,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
               textAlign: TextAlign.end,
               style: AppTypography.bodyMedium.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
+                fontWeight: AppTypography.headingWeight,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -2844,7 +2844,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                   name,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: AppTypography.headingWeight,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -2899,7 +2899,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                 label,
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white54 : AppColors.textSecondary,
-                  fontSize: 10,
+                  fontSize: AppTypography.microSize,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -2908,7 +2908,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                 value,
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: AppTypography.headingWeight,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -2962,7 +2962,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
             'Details',
             style: AppTypography.bodySmall.copyWith(
               color: AppColors.primary,
-              fontWeight: FontWeight.w600,
+              fontWeight: AppTypography.headingWeight,
             ),
           ),
           const SizedBox(width: 4),
@@ -3097,7 +3097,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
               message,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ),
@@ -3119,7 +3119,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
             'No farms found',
             style: AppTypography.bodyMedium.copyWith(
               color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -3211,8 +3211,8 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                                   ? Colors.white.withValues(alpha: 0.5)
                                   : AppColors.textSecondary),
                           fontWeight:
-                              selected ? FontWeight.w500 : FontWeight.normal,
-                          fontSize: 11,
+                              selected ? AppTypography.labelWeight : AppTypography.bodyWeight,
+                          fontSize: AppTypography.fieldLabelSize,
                         ),
                       ),
                     ],
@@ -3327,7 +3327,7 @@ class _FarmRevenueAreaChart extends StatelessWidget {
                     ? '${(value / 1000).toStringAsFixed(1)}k'
                     : value.toStringAsFixed(0),
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: AppTypography.microSize,
                   color: isDark ? Colors.white54 : AppColors.textSecondary,
                 ),
               ),
@@ -3348,7 +3348,7 @@ class _FarmRevenueAreaChart extends StatelessWidget {
                   child: Text(
                     '${date.month}/${date.day}',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: AppTypography.microSize,
                       color: isDark ? Colors.white54 : AppColors.textSecondary,
                     ),
                   ),

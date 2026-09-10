@@ -1,9 +1,9 @@
+import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
@@ -138,8 +138,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       backgroundColor: background,
       appBar: AppBar(
         title: Text('My profile',
-            style: GoogleFonts.inter(
-                fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
+            style: AppTypography.font(
+                fontSize: AppTypography.sectionTitleSize, fontWeight: AppTypography.headingWeight, color: _text)),
         backgroundColor: background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -222,9 +222,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(user.initials,
-                style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
+                style: AppTypography.font(
+                    fontSize: AppTypography.headingSize,
+                    fontWeight: AppTypography.headingWeight,
                     color: Colors.white)),
           ),
           const SizedBox(width: 14),
@@ -233,14 +233,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                 Text(user.name,
-                    style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.headingSize,
+                        fontWeight: AppTypography.headingWeight,
                         color: _text)),
                 const SizedBox(height: 5),
                 Text(user.email,
-                    style: GoogleFonts.inter(
-                        fontSize: 12, height: 1.5, color: _muted)),
+                    style: AppTypography.font(
+                        fontSize: AppTypography.captionSize, height: 1.5, color: _muted)),
               ])),
         ]),
         const SizedBox(height: 16),
@@ -265,9 +265,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(width: 6),
           Flexible(
               child: Text(label,
-                  style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
+                  style: AppTypography.font(
+                      fontSize: AppTypography.fieldLabelSize,
+                      fontWeight: AppTypography.labelWeight,
                       color: _muted))),
         ]),
       );
@@ -330,8 +330,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: Text('Use at least 8 characters for your new password.',
-                style: GoogleFonts.inter(
-                    fontSize: 11, height: 1.5, color: _muted)),
+                style: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize, height: 1.5, color: _muted)),
           ),
           _action('Update password', 'Updating password…',
               Icons.lock_reset_rounded, _savingPassword, _changePassword,
@@ -370,14 +370,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Text(title,
-                      style: GoogleFonts.inter(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
+                      style: AppTypography.font(
+                          fontSize: AppTypography.cardTitleSize,
+                          fontWeight: AppTypography.headingWeight,
                           color: _text)),
                   const SizedBox(height: 4),
                   Text(subtitle,
-                      style: GoogleFonts.inter(
-                          fontSize: 12, height: 1.5, color: _muted)),
+                      style: AppTypography.font(
+                          fontSize: AppTypography.captionSize, height: 1.5, color: _muted)),
                 ])),
           ]),
           const SizedBox(height: 20),
@@ -397,8 +397,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label,
-            style: GoogleFonts.inter(
-                fontSize: 11, fontWeight: FontWeight.w600, color: _text)),
+            style: AppTypography.font(
+                fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight, color: _text)),
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
@@ -409,7 +409,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           keyboardType: keyboard,
           autocorrect: suffix == null,
           enableSuggestions: suffix == null,
-          style: GoogleFonts.inter(fontSize: 12, height: 1.5, color: _text),
+          style: AppTypography.font(fontSize: AppTypography.captionSize, height: 1.5, color: _text),
           decoration: InputDecoration(
             filled: true,
             fillColor: dark
@@ -454,7 +454,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       padding: const WidgetStatePropertyAll(
           EdgeInsets.symmetric(horizontal: 16, vertical: 13)),
       textStyle: WidgetStatePropertyAll(
-          GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+          AppTypography.font(fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
       shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
     );

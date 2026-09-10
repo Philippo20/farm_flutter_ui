@@ -1,9 +1,9 @@
+import '../theme/app_typography.dart';
 import 'sensor_date_range_modal.dart';
 import 'app_dialog.dart';
 import 'sensor_readings_chart.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../services/superadmin_api_service.dart';
 
@@ -128,13 +128,13 @@ class _SensorReadingHistoryState extends State<SensorReadingHistory> {
   @override
   Widget build(BuildContext context) {
     final secondary = Theme.of(context).colorScheme.onSurfaceVariant;
-    final style = GoogleFonts.inter(fontSize: 12);
+    final style = AppTypography.font(fontSize: AppTypography.captionSize);
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       Row(children: [
         Expanded(
             child: Text(widget.compact ? 'Recent trend' : 'Reading history',
-                style: GoogleFonts.inter(
-                    fontSize: 12, fontWeight: FontWeight.w600))),
+                style: AppTypography.font(
+                    fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight))),
         IconButton(
             tooltip: 'Refresh readings',
             onPressed: _loading || widget.serialNumber.isEmpty ? null : _load,
@@ -173,7 +173,7 @@ class _SensorReadingHistoryState extends State<SensorReadingHistory> {
           'Showing ' +
               _readings.length.toString() +
               ' readings · updates every 30 seconds',
-          style: GoogleFonts.inter(fontSize: 11, color: secondary)),
+          style: AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary)),
       const SizedBox(height: 12),
       if (widget.serialNumber.isEmpty)
         Text(
@@ -220,17 +220,17 @@ class _SensorReadingHistoryState extends State<SensorReadingHistory> {
                       children: [
                         Text(
                             '${reading['value'] ?? '—'} ${reading['unit'] ?? ''}',
-                            style: style.copyWith(fontWeight: FontWeight.w600)),
+                            style: style.copyWith(fontWeight: AppTypography.headingWeight)),
                         Text('${reading['status'] ?? 'Unknown'}',
                             style: style.copyWith(color: secondary))
                       ]),
                   const SizedBox(height: 5),
                   Text(_timestamp(reading['timestamp']),
-                      style: GoogleFonts.inter(fontSize: 11, color: secondary)),
+                      style: AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary)),
                   if ('${reading['source'] ?? ''}'.isNotEmpty)
                     Text('Source: ${reading['source']}',
                         style:
-                            GoogleFonts.inter(fontSize: 11, color: secondary)),
+                            AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary)),
                 ])),
       if (_hasMore)
         TextButton(

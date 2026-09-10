@@ -42,25 +42,35 @@ void main() {
                                         child: Column(
                                             children: List.generate(
                                                 8,
-                                                (i) => Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            bottom: 14),
-                                                    child: SensorFormRow(
-                                                        children: [
-                                                          Expanded(
-                                                              child: TextFormField(
-                                                                  decoration: InputDecoration(
-                                                                      labelText:
-                                                                          'Value $i'))),
-                                                          const SizedBox(
-                                                              width: 10),
-                                                          Expanded(
-                                                              child: TextFormField(
-                                                                  decoration: InputDecoration(
-                                                                      labelText:
-                                                                          'Unit $i'))),
-                                                        ]))))))))))));
+                                                (i) => i == 0
+                                                    ? SwitchListTile.adaptive(
+                                                        title: const Text(
+                                                            'Alerts enabled'),
+                                                        value: true,
+                                                        onChanged: (_) {},
+                                                        contentPadding:
+                                                            EdgeInsets.zero,
+                                                      )
+                                                    : Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(
+                                                                bottom: 14),
+                                                        child: SensorFormRow(
+                                                            children: [
+                                                              Expanded(
+                                                                  child: TextFormField(
+                                                                      decoration:
+                                                                          InputDecoration(
+                                                                              labelText: 'Value $i'))),
+                                                              const SizedBox(
+                                                                  width: 10),
+                                                              Expanded(
+                                                                  child: TextFormField(
+                                                                      decoration:
+                                                                          InputDecoration(
+                                                                              labelText: 'Unit $i'))),
+                                                            ]))))))))))));
         await tester.tap(find.text('Open'));
         await tester.pumpAndSettle();
         if (width < 600) {
