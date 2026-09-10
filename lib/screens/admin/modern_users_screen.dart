@@ -1,3 +1,5 @@
+import '../../core/widgets/create_user_modal.dart';
+import '../../core/widgets/user_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -657,22 +659,10 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     );
   }
 
-  Widget _buildSearchField(bool isDark) {
-    return TextField(
-      onChanged: (value) => setState(() => _searchQuery = value),
-      decoration: InputDecoration(
-        hintText: 'Search users...',
-        prefixIcon: const Icon(Icons.search),
-        filled: true,
-        fillColor: isDark ? Colors.white10 : AppColors.neutral100,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      ),
-    );
-  }
+  Widget _buildSearchField(bool isDark) => UserSearchField(
+        value: _searchQuery,
+        onChanged: (value) => setState(() => _searchQuery = value),
+      );
 
   Widget _buildMobileUsersList(
     List<Map<String, dynamic>> filteredUsers,
@@ -1420,329 +1410,77 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     _showUserFormDialog(context: context, isDark: isDark, user: user);
   }
 
-  void _showUserFormDialog({
+  Future<void> _showUserFormDialog({
     required BuildContext context,
     required bool isDark,
     Map<String, dynamic>? user,
-  }) {
-    final isEdit = user != null;
-    final nameController =
-        TextEditingController(text: isEdit ? user['name'] : '');
-    final emailController =
-        TextEditingController(text: isEdit ? user['email'] : '');
-    final passwordController = TextEditingController(
-      text: isEdit ? _text(user['password'], fallback: 'FarmDemo#2026New') : '',
-    );
-    final phoneController =
-        TextEditingController(text: isEdit ? user['phone'] : '');
-    final addressController =
-        TextEditingController(text: isEdit ? user['address'] : '');
-    final licenseController =
-        TextEditingController(text: isEdit ? user['driverLicenseNumber'] : '');
-    final vehicleController =
-        TextEditingController(text: isEdit ? user['vehicle'] : '');
-    final vehicleTypeController =
-        TextEditingController(text: isEdit ? user['vehicleType'] : '');
-    final vehicleCapacityController =
-        TextEditingController(text: isEdit ? user['vehicleCapacityKg'] : '');
-    String selectedRole = isEdit ? user['role'] : 'Caretaker';
-    String selectedStatus = isEdit ? user['status'] : 'Pending';
-    String? errorText;
-    bool isSaving = false;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    showDialog(
-      context: context,
-      barrierDismissible: !isSaving,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) {
-          final department = _departmentForRole(selectedRole);
-          Future<void> save() async {
-            final name = nameController.text.trim();
-            final email = emailController.text.trim();
-            final password = passwordController.text.trim();
-            final phone = phoneController.text.trim();
-            final address = addressController.text.trim();
-            final isDriver = selectedRole == 'Driver';
-            final driverLicenseNumber = licenseController.text.trim();
-            final vehicle = vehicleController.text.trim();
-            final vehicleType = vehicleTypeController.text.trim();
-            final vehicleCapacityKg =
-                double.tryParse(vehicleCapacityController.text.trim()) ?? 0;
-
-            if (name.isEmpty || email.isEmpty || password.isEmpty) {
-              setDialogState(
-                () => errorText = 'Name, email, and password are required.',
-              );
-              return;
-            }
-            if (!email.contains('@')) {
-              setDialogState(() => errorText = 'Enter a valid email address.');
-              return;
-            }
-            if (isDriver &&
-                (driverLicenseNumber.isEmpty ||
-                    vehicle.isEmpty ||
-                    vehicleType.isEmpty)) {
-              setDialogState(() => errorText =
-                  'Driver license number, vehicle registration, and vehicle type are required.');
-              return;
-            }
-
-            final navigator = Navigator.of(dialogContext);
-            final messenger = ScaffoldMessenger.of(context);
-            setDialogState(() {
-              isSaving = true;
-              errorText = null;
-            });
-            try {
-              if (isEdit) {
-                await _updateUser(
-                  user: user,
-                  name: name,
-                  email: email,
-                  password: password,
-                  phone: phone.isEmpty ? '+233000000000' : phone,
-                  address: address.isEmpty ? 'Farm Estates' : address,
-                  role: selectedRole,
-                  department: department,
-                  status: selectedStatus,
-                  driverLicenseNumber: driverLicenseNumber,
-                  vehicle: vehicle,
-                  vehicleType: vehicleType,
-                  vehicleCapacityKg: vehicleCapacityKg,
-                );
-              } else {
-                await _createUser(
-                  name: name,
-                  email: email,
-                  password: password,
-                  phone: phone.isEmpty ? '+233000000000' : phone,
-                  address: address.isEmpty ? 'Farm Estates' : address,
-                  role: selectedRole,
-                  department: department,
-                  status: selectedStatus,
-                  driverLicenseNumber: driverLicenseNumber,
-                  vehicle: vehicle,
-                  vehicleType: vehicleType,
-                  vehicleCapacityKg: vehicleCapacityKg,
-                );
-              }
-              if (!mounted || !dialogContext.mounted) return;
-              navigator.pop();
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    isEdit
-                        ? '$name updated successfully.'
-                        : '$name created successfully.',
-                  ),
-                  backgroundColor: AppColors.success,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            } catch (error) {
-              if (!mounted) return;
-              setDialogState(() {
-                isSaving = false;
-                errorText = error.toString();
-              });
-            }
-          }
-
-          return Dialog(
-            backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            ),
-            insetPadding: EdgeInsets.symmetric(
-              horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
-              vertical: AppSpacing.xl,
-            ),
-            child: Container(
-              width: isMobile ? double.infinity : 560,
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.9,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildModalHeader(
-                    isDark: isDark,
-                    icon: isEdit ? Icons.edit : Icons.person_add,
-                    title: isEdit ? 'Edit User' : 'Add New User',
-                    subtitle: isEdit
-                        ? 'Update backend account details'
-                        : 'Create a backend user account',
-                    color: isEdit ? AppColors.info : AppColors.primary,
-                    onClose:
-                        isSaving ? null : () => Navigator.pop(dialogContext),
-                  ),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildFormLabel('Full Name', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildFormTextField(
-                            controller: nameController,
-                            hint: 'e.g., John Smith',
-                            icon: Icons.person,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Email Address', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildFormTextField(
-                            controller: emailController,
-                            hint: 'e.g., user@farm.com',
-                            icon: Icons.email,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Password', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildFormTextField(
-                            controller: passwordController,
-                            hint: 'Temporary password',
-                            icon: Icons.lock,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildFormLabel('Role', isDark),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    _buildFormDropdown(
-                                      value: selectedRole,
-                                      items: _roleOptions,
-                                      icon: Icons.badge,
-                                      isDark: isDark,
-                                      onChanged: isSaving
-                                          ? null
-                                          : (v) => setDialogState(
-                                                () => selectedRole = v!,
-                                              ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildFormLabel('Status', isDark),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    _buildFormDropdown(
-                                      value: selectedStatus,
-                                      items: _statusOptions,
-                                      icon: Icons.toggle_on,
-                                      isDark: isDark,
-                                      onChanged: isSaving
-                                          ? null
-                                          : (v) => setDialogState(
-                                                () => selectedStatus = v!,
-                                              ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Phone', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildFormTextField(
-                            controller: phoneController,
-                            hint: '+233...',
-                            icon: Icons.phone,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Address', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildFormTextField(
-                            controller: addressController,
-                            hint: 'Farm Estates',
-                            icon: Icons.location_on,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildReadOnlyField(
-                            label: 'Department',
-                            value: department,
-                            isDark: isDark,
-                          ),
-                          if (selectedRole == 'Driver') ...[
-                            const SizedBox(height: AppSpacing.lg),
-                            _buildFormLabel('Driver License Number', isDark),
-                            const SizedBox(height: AppSpacing.sm),
-                            _buildFormTextField(
-                              controller: licenseController,
-                              hint: 'e.g., DVLA-1234567',
-                              icon: Icons.badge_outlined,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            _buildFormLabel('Vehicle Registration', isDark),
-                            const SizedBox(height: AppSpacing.sm),
-                            _buildFormTextField(
-                              controller: vehicleController,
-                              hint: 'e.g., GT 1234-26',
-                              icon: Icons.local_shipping_outlined,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            _buildFormLabel('Vehicle Type', isDark),
-                            const SizedBox(height: AppSpacing.sm),
-                            _buildFormTextField(
-                              controller: vehicleTypeController,
-                              hint: 'e.g., Refrigerated van',
-                              icon: Icons.fire_truck_outlined,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            _buildFormLabel('Capacity (kg)', isDark),
-                            const SizedBox(height: AppSpacing.sm),
-                            _buildFormTextField(
-                              controller: vehicleCapacityController,
-                              hint: 'e.g., 1500',
-                              icon: Icons.scale_outlined,
-                              isDark: isDark,
-                              keyboardType: TextInputType.number,
-                            ),
-                          ],
-                          if (errorText != null) ...[
-                            const SizedBox(height: AppSpacing.lg),
-                            _buildModalError(errorText!, isDark),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-                  _buildModalActions(
-                    isDark: isDark,
-                    isSaving: isSaving,
-                    primaryLabel: isEdit ? 'Save Changes' : 'Add User',
-                    primaryIcon: isEdit ? Icons.save : Icons.person_add,
-                    onCancel: () => Navigator.pop(dialogContext),
-                    onSave: save,
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
+  }) async {
+    final saved = await showCreateUserModal(context,
+        roles: _roleOptions,
+        departments: _roleOptions.map(_departmentForRole).toSet().toList(),
+        includeAccountFields: true,
+        departmentForRole: _departmentForRole,
+        initialValues: user == null
+            ? null
+            : {
+                'name': user['name'],
+                'email': user['email'],
+                'password':
+                    _text(user['password'], fallback: 'FarmDemo#2026New'),
+                'phone': user['phone'],
+                'address': user['address'],
+                'role': user['role'],
+                'department': _departmentForRole(user['role']),
+                'status': user['status'],
+                'license': user['driverLicenseNumber'],
+                'vehicle': user['vehicle'],
+                'vehicleType': user['vehicleType'],
+                'capacity': user['vehicleCapacityKg'],
+              }, onSubmit: (values) async {
+      final phone = (values['phone'] as String).isEmpty
+          ? '+233000000000'
+          : values['phone'] as String;
+      final address = (values['address'] as String).isEmpty
+          ? 'Farm Estates'
+          : values['address'] as String;
+      if (user == null) {
+        await _createUser(
+            name: values['name'] as String,
+            email: values['email'] as String,
+            password: values['password'] as String,
+            phone: phone,
+            address: address,
+            role: values['role'] as String,
+            department: values['department'] as String,
+            status: values['status'] as String,
+            driverLicenseNumber: values['license'] as String,
+            vehicle: values['vehicle'] as String,
+            vehicleType: values['vehicleType'] as String,
+            vehicleCapacityKg: values['capacity'] as double);
+      } else {
+        await _updateUser(
+            user: user,
+            name: values['name'] as String,
+            email: values['email'] as String,
+            password: values['password'] as String,
+            phone: phone,
+            address: address,
+            role: values['role'] as String,
+            department: values['department'] as String,
+            status: values['status'] as String,
+            driverLicenseNumber: values['license'] as String,
+            vehicle: values['vehicle'] as String,
+            vehicleType: values['vehicleType'] as String,
+            vehicleCapacityKg: values['capacity'] as double);
+      }
+    });
+    if (saved == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(user == null
+              ? 'User created successfully.'
+              : 'User updated successfully.'),
+          backgroundColor: AppColors.success));
+    }
   }
 
   void _showDeleteUserDialog(
@@ -1880,117 +1618,6 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     );
   }
 
-  Widget _buildModalHeader({
-    required bool isDark,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback? onClose,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppSpacing.radiusXl),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.h6.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: onClose,
-            icon: const Icon(Icons.close, color: Colors.white70),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildModalActions({
-    required bool isDark,
-    required bool isSaving,
-    required String primaryLabel,
-    required IconData primaryIcon,
-    required VoidCallback onCancel,
-    required VoidCallback onSave,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(AppSpacing.radiusXl),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: isSaving ? null : onCancel,
-              child: const Text('Cancel'),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            flex: 2,
-            child: ElevatedButton.icon(
-              onPressed: isSaving ? null : onSave,
-              icon: isSaving
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Icon(primaryIcon, size: 18),
-              label: Text(isSaving ? 'Saving...' : primaryLabel),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildModalError(String message, bool isDark) {
     return Container(
       width: double.infinity,
@@ -2011,174 +1638,6 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white70 : AppColors.textSecondary,
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFormLabel(String label, bool isDark) {
-    return Text(
-      label,
-      style: AppTypography.bodyMedium.copyWith(
-        fontWeight: FontWeight.w500,
-        color: isDark ? Colors.white : AppColors.textPrimary,
-      ),
-    );
-  }
-
-  Widget _buildFormTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    required bool isDark,
-    TextInputType? keyboardType,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-          color: isDark
-              ? Colors.white38
-              : AppColors.textSecondary.withOpacity(0.5),
-        ),
-        prefixIcon: Icon(
-          icon,
-          color: isDark ? Colors.white54 : AppColors.textSecondary,
-          size: 20,
-        ),
-        filled: true,
-        fillColor:
-            isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: BorderSide(
-            color: isDark ? Colors.white12 : AppColors.neutral200,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: BorderSide(
-            color: isDark ? Colors.white12 : AppColors.neutral200,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFormDropdown({
-    required String value,
-    required List<String> items,
-    required IconData icon,
-    required bool isDark,
-    required Function(String?)? onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: isDark ? Colors.white12 : AppColors.neutral200,
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: items.contains(value) ? value : items.first,
-          isExpanded: true,
-          icon: Icon(
-            Icons.keyboard_arrow_down,
-            color: isDark ? Colors.white54 : AppColors.textSecondary,
-          ),
-          dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
-          style: TextStyle(
-            color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: 14,
-          ),
-          items: items
-              .map(
-                (item) => DropdownMenuItem(
-                  value: item,
-                  child: Row(
-                    children: [
-                      Icon(
-                        icon,
-                        color:
-                            isDark ? Colors.white54 : AppColors.textSecondary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Text(
-                          item,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-              .toList(),
-          onChanged: onChanged,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReadOnlyField({
-    required String label,
-    required String value,
-    required bool isDark,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(
-          color: isDark ? Colors.white12 : AppColors.neutral200,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.apartment,
-            size: 20,
-            color: isDark ? Colors.white54 : AppColors.textSecondary,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: isDark ? Colors.white54 : AppColors.textSecondary,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
             ),
           ),
         ],

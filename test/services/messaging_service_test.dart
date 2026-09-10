@@ -5,6 +5,27 @@ import 'package:http/testing.dart';
 import '../../lib/services/messaging_service.dart';
 
 void main() {
+  test('loads the authenticated notification inbox and conversation target',
+      () async {
+    final service = MessagingService(
+      token: () => 'session-token',
+      client: MockClient((request) async {
+        expect(request.url.path, '/messages/notifications');
+        expect(request.headers['Authorization'], 'Bearer session-token');
+        return http.Response(
+            jsonEncode({
+              'notifications': [
+                {'id': 'message:one', 'peer_id': 'alice', 'is_read': false}
+              ]
+            }),
+            200);
+      }),
+    );
+    final rows = await service.notifications();
+    expect(rows.single['peer_id'], 'alice');
+    expect(rows.single['is_read'], false);
+    service.dispose();
+  });
   test('sends authenticated text and a stable retry identifier', () async {
     final service = MessagingService(
         token: () => 'session-token',

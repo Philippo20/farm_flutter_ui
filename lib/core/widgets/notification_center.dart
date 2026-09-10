@@ -5,6 +5,7 @@ import '../providers/notification_provider.dart';
 import '../models/notification/notification_model.dart';
 import '../theme/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../screens/caretaker/chat_screen.dart';
 
 void showNotificationDialog(BuildContext context) {
   final screenWidth = MediaQuery.sizeOf(context).width;
@@ -312,6 +313,16 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
                 notification.id,
                 recipientId: recipientId,
               );
+          final peerId = notification.metadata?['peerId']?.toString();
+          if (notification.type == NotificationType.message &&
+              peerId != null &&
+              peerId.isNotEmpty) {
+            final navigator = Navigator.of(context);
+            navigator.pop();
+            navigator.push(MaterialPageRoute<void>(
+              builder: (_) => ChatScreen(initialPeerId: peerId),
+            ));
+          }
         },
         borderRadius: BorderRadius.circular(13),
         child: Padding(
@@ -419,6 +430,8 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
 
   IconData _getIconForType(NotificationType type) {
     switch (type) {
+      case NotificationType.message:
+        return Icons.chat_bubble_outline_rounded;
       case NotificationType.task:
         return Icons.task_alt_rounded;
       case NotificationType.batch:
@@ -442,6 +455,8 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
 
   Color _getColorForType(NotificationType type) {
     switch (type) {
+      case NotificationType.message:
+        return AppColors.primary;
       case NotificationType.task:
         return AppColors.primary;
       case NotificationType.batch:

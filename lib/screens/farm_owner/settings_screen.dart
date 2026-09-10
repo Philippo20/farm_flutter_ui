@@ -463,7 +463,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'Settings',
                 style: AppTypography.h4.copyWith(
                   fontSize: isMobile ? 22 : 28,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                 ),
               ),
@@ -502,7 +502,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Text(
               'Unable to load settings',
               style: AppTypography.titleMedium.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : AppColors.textPrimary,
               ),
             ),
@@ -560,7 +560,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       initials.isNotEmpty ? initials : 'FO',
                       style: AppTypography.h5.copyWith(
                         color: Colors.white,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -573,7 +573,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Text(
                         _userName,
                         style: AppTypography.titleMedium.copyWith(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                         maxLines: 1,
@@ -947,10 +947,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       validator: validator,
       style: AppTypography.bodyMedium.copyWith(
         color: isDark ? Colors.white : AppColors.textPrimary,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w400,
       ),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle:
+            AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w400),
         prefixIcon: Icon(icon, size: 20),
         filled: true,
         fillColor:
@@ -990,7 +992,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Text(
           label,
           style: AppTypography.bodySmall.copyWith(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
             color: isDark ? Colors.white60 : AppColors.textSecondary,
           ),
         ),
@@ -1009,6 +1011,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
+              style: AppTypography.bodyMedium.copyWith(
+                fontWeight: FontWeight.w400,
+                color: isDark ? Colors.white : AppColors.textPrimary,
+              ),
               value: value,
               isExpanded: true,
               dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
@@ -1082,7 +1088,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       : isDark
                           ? Colors.white60
                           : AppColors.textSecondary,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),
             ],
@@ -1121,7 +1127,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 Text(
                   title,
                   style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -1168,7 +1174,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Text(
                     title,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -1247,7 +1253,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           child: Text(
             title,
             style: AppTypography.titleMedium.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -1267,7 +1273,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         label,
         style: AppTypography.caption.copyWith(
           color: color,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

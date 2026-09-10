@@ -1,3 +1,4 @@
+import '../../core/utils/caretaker_batch_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -68,6 +69,11 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   List<Map<String, dynamic>> _farms = [];
   List<Map<String, dynamic>> _batches = [];
   List<Map<String, dynamic>> _tasks = [];
+  List<Map<String, dynamic>> _fulfillments = [];
+
+  bool get _batchComplete =>
+      _selectedBatchDoc != null &&
+      isCaretakerBatchComplete(_selectedBatchDoc!, _fulfillments);
 
   @override
   void initState() {
@@ -218,12 +224,14 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         _api.getFarms(),
         _api.getBatches(),
         _api.getFarmTasks(),
+        _api.getFulfillments(),
       ]);
       if (!mounted) return;
       setState(() {
         _farms = results[0];
         _batches = results[1];
         _tasks = results[2];
+        _fulfillments = results[3];
         final assigned = _assignedFarms;
         if (assigned.isNotEmpty && _selectedFarm == null) {
           _selectedFarm = _farmId(assigned.first);
@@ -232,7 +240,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         if (batches.isEmpty) {
           _selectedBatch = null;
         } else if (!batches.any((batch) => _batchId(batch) == _selectedBatch)) {
-          _selectedBatch = _batchId(batches.first);
+          _selectedBatch = _batchId(batches.firstWhere(
+              (batch) => !isCaretakerBatchComplete(batch, _fulfillments),
+              orElse: () => batches.first));
         }
         _populateBatchProgress();
         _isLoading = false;
@@ -357,15 +367,22 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           children: [
             _buildHeader(isDark),
             SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
-            _buildRecordTabs(isDark),
+            if (!_batchComplete) _buildRecordTabs(isDark),
             SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
-            _buildActiveRecordSection(isDark, isMobile),
+            if (_batchComplete) ...[
+              _buildFarmSelector(isDark),
+              const SizedBox(height: 12),
+              _buildBatchSelector(isDark),
+              const SizedBox(height: 16),
+              _buildCompletedBatchNotice(isDark),
+            ] else
+              _buildActiveRecordSection(isDark, isMobile),
             SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
             if (_submitError != null) ...[
               _buildSubmitError(isDark),
               SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
             ],
-            _buildStepActions(isDark),
+            if (!_batchComplete) _buildStepActions(isDark),
             SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
           ],
         ),
@@ -391,6 +408,29 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           icon: Icons.fact_check_outlined
         ),
       ];
+
+  Widget _buildCompletedBatchNotice(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.success.withOpacity(0.3))),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.task_alt_rounded, color: AppColors.success, size: 32),
+        const SizedBox(height: 10),
+        Text('Complete',
+            style: AppTypography.h6.copyWith(color: AppColors.success)),
+        const SizedBox(height: 6),
+        Text(
+            'This batch has completed farm production and delivery. No further caretaker records can be taken. Select an active batch to continue.',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+                color: isDark ? Colors.white70 : AppColors.textSecondary)),
+      ]),
+    );
+  }
 
   Widget _buildRecordTabs(bool isDark) {
     final tabs = _recordTabs;
@@ -1251,24 +1291,6 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                         ),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.12),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusFull),
-                        border: Border.all(
-                            color: AppColors.success.withOpacity(0.35)),
-                      ),
-                      child: Text(
-                        'Draft',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.success,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -1474,6 +1496,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     final batches = _farmBatches;
 
     return DropdownButtonFormField<String>(
+      isExpanded: true,
       value: batches.any((batch) => _batchId(batch) == _selectedBatch)
           ? _selectedBatch
           : null,
@@ -1489,15 +1512,22 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       items: batches
           .map((batch) => DropdownMenuItem(
                 value: _batchId(batch),
-                child: Text(_value(
-                  batch,
-                  const ['batch_no', 'batch_number', 'batch_id'],
-                  fallback: 'Batch',
-                )),
+                child: Text(
+                    (_value(
+                          batch,
+                          const ['batch_no', 'batch_number', 'batch_id'],
+                          fallback: 'Batch',
+                        )) +
+                        (isCaretakerBatchComplete(batch, _fulfillments)
+                            ? ' · Complete'
+                            : ''),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis),
               ))
           .toList(),
       onChanged: (value) => setState(() {
         _selectedBatch = value;
+        _selectedRecordTab = 0;
         _maxUnlockedStep = 0;
         _submitError = null;
         _populateBatchProgress();
@@ -1801,6 +1831,12 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   }
 
   void _continueToNextStep() {
+    if (_batchComplete) {
+      _rejectSubmission(
+          'This batch is complete. No further records can be taken.',
+          tab: 0);
+      return;
+    }
     if (_selectedRecordTab == 0) {
       if (_selectedFarmDoc == null) {
         _rejectSubmission('Select one of your assigned farms to continue.');
@@ -1906,6 +1942,13 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   }
 
   Future<void> _submitRecord() async {
+    if (_isSubmitting) return;
+    if (_selectedBatchDoc == null || _batchComplete) {
+      _rejectSubmission(
+          'Select an active batch. Completed batches cannot accept records.',
+          tab: 0);
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
 
     final user = ref.read(authProvider).user;
@@ -1990,6 +2033,23 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     );
 
     try {
+      final latest = await Future.wait([
+        _api.getBatches(),
+        _api.getFulfillments(),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _batches = latest[0];
+        _fulfillments = latest[1];
+      });
+      final submittedBatches =
+          _batches.where((item) => _batchId(item) == record.batchId);
+      if (submittedBatches.isEmpty ||
+          isCaretakerBatchComplete(submittedBatches.first, _fulfillments)) {
+        _rejectSubmission('This batch is no longer open for caretaker records.',
+            tab: 0);
+        return;
+      }
       await _api.createFarmRecord(
         data: {
           'farm_id': record.farmId,

@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/services.dart';
 import 'core/providers/theme_provider.dart';
+import 'core/widgets/message_notification_host.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'screens/admin/redesigned_admin_dashboard.dart';
@@ -121,6 +122,8 @@ class MyApp extends ConsumerWidget {
         : '/login';
 
     return MaterialApp(
+      navigatorKey: messageNavigatorKey,
+      scaffoldMessengerKey: messageScaffoldKey,
       title: 'Room Dashboard',
       debugShowCheckedModeBanner: false,
       //home: AdminDashboardScreen(),
@@ -145,7 +148,8 @@ class MyApp extends ConsumerWidget {
             systemStatusBarContrastEnforced: false,
             systemNavigationBarContrastEnforced: false,
           ),
-          child: child ?? const SizedBox.shrink(),
+          child:
+              MessageNotificationHost(child: child ?? const SizedBox.shrink()),
         );
       },
       onGenerateRoute: (settings) {

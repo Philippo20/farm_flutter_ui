@@ -1,3 +1,5 @@
+import '../../core/widgets/create_user_modal.dart';
+import '../../core/widgets/user_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -52,86 +54,15 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   ];
 
   String _selectedFilter = 'All';
+  String _searchQuery = '';
+  final Map<String, String> _userActions = {};
   int _selectedNavIndex = 1;
   bool _isLoadingUsers = false;
   String? _usersError;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final SuperAdminApiService _api = SuperAdminApiService();
 
-  final List<Map<String, dynamic>> _users = [
-    {
-      'id': 'U001',
-      'name': 'Sarah SuperAdmin',
-      'email': 'superadmin@farm.com',
-      'role': 'Super Admin',
-      'status': 'Active',
-      'department': 'Administration',
-      'joined': '2024-01-01'
-    },
-    {
-      'id': 'U002',
-      'name': 'John Admin',
-      'email': 'admin@farm.com',
-      'role': 'Admin',
-      'status': 'Active',
-      'department': 'Management',
-      'joined': '2024-01-15'
-    },
-    {
-      'id': 'U003',
-      'name': 'Alice Owner',
-      'email': 'owner@farm.com',
-      'role': 'Owner',
-      'status': 'Active',
-      'department': 'Farm Operations',
-      'joined': '2024-02-01'
-    },
-    {
-      'id': 'U004',
-      'name': 'Bob Caretaker',
-      'email': 'caretaker@farm.com',
-      'role': 'Caretaker',
-      'status': 'Active',
-      'department': 'Field Work',
-      'joined': '2024-02-10'
-    },
-    {
-      'id': 'U005',
-      'name': 'John Smith',
-      'email': 'john@example.com',
-      'role': 'Caretaker',
-      'status': 'Pending',
-      'department': 'Field Work',
-      'joined': '2024-10-28'
-    },
-    {
-      'id': 'U006',
-      'name': 'Mary Johnson',
-      'email': 'mary@example.com',
-      'role': 'Owner',
-      'status': 'Pending',
-      'department': 'Farm Operations',
-      'joined': '2024-10-29'
-    },
-    {
-      'id': 'U007',
-      'name': 'Tom Davis',
-      'email': 'tom@example.com',
-      'role': 'Caretaker',
-      'status': 'Suspended',
-      'department': 'Field Work',
-      'joined': '2024-03-15'
-    },
-    {
-      'id': 'U008',
-      'name': 'Emma Wilson',
-      'email': 'emma@example.com',
-      'role': 'Owner',
-      'status': 'Active',
-      'department': 'Farm Operations',
-      'joined': '2024-04-01'
-    },
-  ];
+  final List<Map<String, dynamic>> _users = [];
 
   @override
   void initState() {
@@ -143,7 +74,6 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     setState(() {
       _isLoadingUsers = true;
       _usersError = null;
-      _users.clear();
     });
 
     try {
@@ -297,9 +227,16 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth < 1200 && screenWidth >= 600;
 
-    final filteredUsers = _selectedFilter == 'All'
-        ? _users
-        : _users.where((u) => u['status'] == _selectedFilter).toList();
+    final query = _searchQuery.trim().toLowerCase();
+    final filteredUsers = _users.where((user) {
+      if (_selectedFilter != 'All' && user['status'] != _selectedFilter)
+        return false;
+      final searchable = ['name', 'email', 'role', 'department', 'phone']
+          .map((key) => (user[key] ?? '').toString())
+          .join(' ')
+          .toLowerCase();
+      return query.isEmpty || searchable.contains(query);
+    }).toList();
 
     final userName = user?.name ?? 'Super Admin';
     final userEmail = user?.email ?? '';
@@ -436,6 +373,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           isMobile: isMobile,
         ),
         SizedBox(height: sectionSpacing),
+        UserSearchField(
+            value: _searchQuery,
+            onChanged: (value) => setState(() => _searchQuery = value)),
+        const SizedBox(height: 12),
         _buildFilters(isDark),
         const SizedBox(height: AppSpacing.lg),
         if (_usersError != null) ...[
@@ -444,6 +385,19 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         ],
         if (_isLoadingUsers && _users.isEmpty)
           const AdminDataSkeleton(showStats: false)
+        else if (filteredUsers.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            child: const Column(children: [
+              Icon(Icons.search_off_rounded, size: 28),
+              SizedBox(height: 8),
+              Text('No users found'),
+              SizedBox(height: 4),
+              Text('Try another search or status filter.',
+                  textAlign: TextAlign.center),
+            ]),
+          )
         else if (isCompact)
           _buildUserCards(filteredUsers, isDark, isMobile: isMobile)
         else
@@ -595,7 +549,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           const SizedBox(height: AppSpacing.lg),
           _buildUserTableHeader(isDark),
           const SizedBox(height: AppSpacing.sm),
-          ...filteredUsers.map((u) => _buildUserRow(u, isDark)),
+          ...filteredUsers
+              .map((u) => _withUserProgress(u, _buildUserRow(u, isDark))),
         ],
       ),
     );
@@ -737,9 +692,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       children: [
         for (var index = 0; index < filteredUsers.length; index++) ...[
           if (isMobile)
-            _buildMobileUserCard(filteredUsers[index], isDark)
+            _withUserProgress(filteredUsers[index],
+                _buildMobileUserCard(filteredUsers[index], isDark))
           else
-            _buildCompactUserCard(filteredUsers[index], isDark),
+            _withUserProgress(filteredUsers[index],
+                _buildCompactUserCard(filteredUsers[index], isDark)),
           if (isMobile && index < filteredUsers.length - 1)
             const SizedBox(height: 12),
         ],
@@ -1363,6 +1320,35 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     }
   }
 
+  Widget _withUserProgress(Map<String, dynamic> user, Widget child) {
+    final label = _userActions[user['id'].toString()];
+    return Stack(children: [
+      AbsorbPointer(absorbing: label != null, child: child),
+      if (label != null)
+        Positioned.fill(
+            child: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+              color:
+                  Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
+              borderRadius: BorderRadius.circular(12)),
+          child: Semantics(
+              liveRegion: true,
+              child:
+                  Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2)),
+                const SizedBox(width: 10),
+                Text(label,
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600)),
+              ])),
+        )),
+    ]);
+  }
+
   Future<void> _approveUser(Map<String, dynamic> user) async {
     await _updateUserStatus(user, 'Active', 'approved');
   }
@@ -1382,6 +1368,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     String status,
     String action,
   ) async {
+    final id = user['id'].toString();
+    if (_userActions.containsKey(id)) return;
+    setState(() =>
+        _userActions[id] = action == 'approved' ? 'Approving…' : 'Updating…');
     final messenger = ScaffoldMessenger.of(context);
     final actor = ref.read(authProvider).user;
     try {
@@ -1422,6 +1412,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
+    } finally {
+      if (mounted) setState(() => _userActions.remove(id));
     }
   }
 
@@ -1461,45 +1453,24 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     required String vehicleType,
     required double vehicleCapacityKg,
   }) async {
-    final messenger = ScaffoldMessenger.of(context);
     final actor = ref.read(authProvider).user;
-    try {
-      await _api.createUser(
-        name: name,
-        email: email,
-        password: 'FarmDemo#2026New',
-        address: 'Farm Estates',
-        role: _roleValue(role),
-        phone: '+233000000000',
-        department: department,
-        status: 'Pending',
-        actorId: actor?.id ?? '',
-        actorRole: 'superadmin',
-        driverLicenseNumber: driverLicenseNumber,
-        vehicle: vehicle,
-        vehicleType: vehicleType,
-        vehicleCapacityKg: vehicleCapacityKg,
-      );
-      if (!mounted) return;
-      await _loadUsers();
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('$name added as Pending.'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Create failed: ${error.toString()}'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    await _api.createUser(
+      name: name,
+      email: email,
+      password: 'FarmDemo#2026New',
+      address: 'Farm Estates',
+      role: _roleValue(role),
+      phone: '+233000000000',
+      department: department,
+      status: 'Pending',
+      actorId: actor?.id ?? '',
+      actorRole: 'superadmin',
+      driverLicenseNumber: driverLicenseNumber,
+      vehicle: vehicle,
+      vehicleType: vehicleType,
+      vehicleCapacityKg: vehicleCapacityKg,
+    );
+    if (mounted) await _loadUsers();
   }
 
   String _roleValueFromUser(Map<String, dynamic> user) {
@@ -1534,815 +1505,74 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     return text.isEmpty ? fallback : text;
   }
 
-  Future<void> _saveUserEdit({
-    required BuildContext dialogContext,
-    required void Function(void Function()) setDialogState,
-    required Map<String, dynamic> user,
-    required TextEditingController nameController,
-    required TextEditingController emailController,
-    required String selectedRole,
-    required String selectedDepartment,
-    required String selectedStatus,
-    required void Function(bool value) setSaving,
-    required TextEditingController licenseController,
-    required TextEditingController vehicleController,
-    required TextEditingController vehicleTypeController,
-    required TextEditingController vehicleCapacityController,
-  }) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(dialogContext);
-    final name = nameController.text.trim();
-    final email = emailController.text.trim();
-    final actor = ref.read(authProvider).user;
-    final isDriver = selectedRole == 'Driver';
-    final driverLicenseNumber = licenseController.text.trim();
-    final vehicle = vehicleController.text.trim();
-    final vehicleType = vehicleTypeController.text.trim();
-    final vehicleCapacityKg =
-        double.tryParse(vehicleCapacityController.text.trim()) ?? 0;
-
-    if (name.isEmpty || email.isEmpty) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: const Text('Name and email are required.'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
+  Future<void> _showAddUserDialog(BuildContext context, bool isDark) async {
+    final saved = await showCreateUserModal(context,
+        roles: _roleOptions,
+        departments: _departmentOptions,
+        onSubmit: (values) => _createUser(
+              name: values['name'] as String,
+              email: values['email'] as String,
+              role: values['role'] as String,
+              department: values['department'] as String,
+              driverLicenseNumber: values['license'] as String,
+              vehicle: values['vehicle'] as String,
+              vehicleType: values['vehicleType'] as String,
+              vehicleCapacityKg: values['capacity'] as double,
+            ));
+    if (saved == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('User created successfully. Ready for approval.'),
+          backgroundColor: AppColors.success));
     }
-    if (isDriver &&
-        (driverLicenseNumber.isEmpty ||
-            vehicle.isEmpty ||
-            vehicleType.isEmpty)) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-              'Driver license number, vehicle registration, and vehicle type are required.'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
+  }
 
-    setDialogState(() => setSaving(true));
-    try {
+  Future<void> _showEditUserDialog(
+      BuildContext context, Map<String, dynamic> user, bool isDark) async {
+    final role = _roleLabel(user['role']);
+    final saved = await showCreateUserModal(context,
+        roles: _roleOptions,
+        departments: _departmentOptions,
+        initialValues: {
+          'name': user['name'],
+          'email': user['email'],
+          'role': role,
+          'department': _departmentOptions.contains(user['department'])
+              ? user['department']
+              : _departmentForRole(role),
+          'status': user['status'],
+          'license': user['driverLicenseNumber'],
+          'vehicle': user['vehicle'],
+          'vehicleType': user['vehicleType'],
+          'capacity': user['vehicleCapacityKg'],
+        }, onDelete: () {
+      if (context.mounted) _showDeleteConfirmDialog(context, user, isDark);
+    }, onSubmit: (values) async {
+      final actor = ref.read(authProvider).user;
       await _api.updateUser(
         id: user['id'].toString(),
-        name: name,
-        email: email,
+        name: values['name'] as String,
+        email: values['email'] as String,
         password:
             _safeRequired(user['password']?.toString(), 'FarmDemo#2026New'),
         address: _safeRequired(user['address']?.toString(), 'Farm Estates'),
-        role: _roleValue(selectedRole),
         phone: _safeRequired(user['phone']?.toString(), '+233000000000'),
-        department: selectedDepartment,
-        status: selectedStatus,
+        role: _roleValue(values['role'] as String),
+        department: values['department'] as String,
+        status: values['status'] as String,
         actorId: actor?.id ?? '',
         actorRole: 'superadmin',
-        driverLicenseNumber: driverLicenseNumber,
-        vehicle: vehicle,
-        vehicleType: vehicleType,
-        vehicleCapacityKg: vehicleCapacityKg,
+        driverLicenseNumber: values['license'] as String,
+        vehicle: values['vehicle'] as String,
+        vehicleType: values['vehicleType'] as String,
+        vehicleCapacityKg: values['capacity'] as double,
       );
-      if (!mounted) return;
-      await _loadUsers();
-      if (!mounted) return;
-      navigator.pop();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('$name updated successfully.'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      setDialogState(() => setSaving(false));
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('Update failed: ${error.toString()}'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      if (mounted) await _loadUsers();
+    });
+    if (saved == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('User updated successfully.'),
+          backgroundColor: AppColors.success));
     }
-  }
-
-  void _showAddUserDialog(BuildContext context, bool isDark) {
-    final nameController = TextEditingController();
-    final emailController = TextEditingController();
-    final licenseController = TextEditingController();
-    final vehicleController = TextEditingController();
-    final vehicleTypeController = TextEditingController();
-    final vehicleCapacityController = TextEditingController();
-    String selectedRole = 'Caretaker';
-    String selectedDepartment = 'Field Work';
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-          insetPadding: EdgeInsets.symmetric(
-            horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
-            vertical: AppSpacing.xl,
-          ),
-          child: Container(
-            width: isMobile ? double.infinity : 480,
-            constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.85),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primary.withOpacity(0.8)
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(AppSpacing.radiusXl)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusMd),
-                        ),
-                        child: const Icon(Icons.person_add,
-                            color: Colors.white, size: 24),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Add New User',
-                              style: AppTypography.h6.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              'Create a new user account',
-                              style: AppTypography.bodySmall
-                                  .copyWith(color: Colors.white70),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close, color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Form Content
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Full Name Field
-                        _buildFormLabel('Full Name', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildTextField(
-                          controller: nameController,
-                          hint: 'Enter full name',
-                          icon: Icons.person_outline,
-                          isDark: isDark,
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Email Field
-                        _buildFormLabel('Email Address', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildTextField(
-                          controller: emailController,
-                          hint: 'Enter email address',
-                          icon: Icons.email_outlined,
-                          isDark: isDark,
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Role Dropdown
-                        _buildFormLabel('Role', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(
-                          value: selectedRole,
-                          items: _roleOptions,
-                          icon: Icons.badge_outlined,
-                          isDark: isDark,
-                          onChanged: (value) => setDialogState(() {
-                            selectedRole = value!;
-                            selectedDepartment =
-                                _departmentForRole(selectedRole);
-                          }),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Department Dropdown
-                        _buildFormLabel('Department', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(
-                          value: selectedDepartment,
-                          items: _departmentOptions,
-                          icon: Icons.business_outlined,
-                          isDark: isDark,
-                          onChanged: (value) =>
-                              setDialogState(() => selectedDepartment = value!),
-                        ),
-                        if (selectedRole == 'Driver') ...[
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Driver License Number', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildTextField(
-                            controller: licenseController,
-                            hint: 'e.g., DVLA-1234567',
-                            icon: Icons.badge_outlined,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Vehicle Registration', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildTextField(
-                            controller: vehicleController,
-                            hint: 'e.g., GT 1234-26',
-                            icon: Icons.local_shipping_outlined,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Vehicle Type', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildTextField(
-                            controller: vehicleTypeController,
-                            hint: 'e.g., Refrigerated van',
-                            icon: Icons.fire_truck_outlined,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Capacity (kg)', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildTextField(
-                            controller: vehicleCapacityController,
-                            hint: 'e.g., 1500',
-                            icon: Icons.scale_outlined,
-                            isDark: isDark,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Actions
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.03)
-                        : AppColors.neutral50,
-                    borderRadius: const BorderRadius.vertical(
-                        bottom: Radius.circular(AppSpacing.radiusXl)),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.md),
-                            side: BorderSide(
-                                color: isDark
-                                    ? Colors.white24
-                                    : AppColors.neutral300),
-                            shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusMd)),
-                          ),
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                                color: isDark
-                                    ? Colors.white70
-                                    : AppColors.textSecondary),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton.icon(
-                          onPressed: () async {
-                            final name = nameController.text.trim();
-                            final email = emailController.text.trim();
-                            if (name.isEmpty || email.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text(
-                                      'Name and email are required.'),
-                                  backgroundColor: AppColors.error,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                              return;
-                            }
-                            if (selectedRole == 'Driver' &&
-                                (licenseController.text.trim().isEmpty ||
-                                    vehicleController.text.trim().isEmpty ||
-                                    vehicleTypeController.text
-                                        .trim()
-                                        .isEmpty)) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Complete the driver license and vehicle details.'),
-                                  backgroundColor: AppColors.error,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                              return;
-                            }
-                            Navigator.pop(context);
-                            await _createUser(
-                              name: name,
-                              email: email,
-                              role: selectedRole,
-                              department: selectedDepartment,
-                              driverLicenseNumber:
-                                  licenseController.text.trim(),
-                              vehicle: vehicleController.text.trim(),
-                              vehicleType: vehicleTypeController.text.trim(),
-                              vehicleCapacityKg: double.tryParse(
-                                      vehicleCapacityController.text.trim()) ??
-                                  0,
-                            );
-                          },
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Add User'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.md),
-                            shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusMd)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showEditUserDialog(
-      BuildContext context, Map<String, dynamic> user, bool isDark) {
-    final nameController = TextEditingController(text: user['name']);
-    final emailController = TextEditingController(text: user['email']);
-    final licenseController =
-        TextEditingController(text: user['driverLicenseNumber']);
-    final vehicleController = TextEditingController(text: user['vehicle']);
-    final vehicleTypeController =
-        TextEditingController(text: user['vehicleType']);
-    final vehicleCapacityController =
-        TextEditingController(text: user['vehicleCapacityKg']);
-    String selectedRole = _roleLabel(user['role']);
-    String selectedDepartment = _departmentOptions.contains(user['department'])
-        ? user['department']
-        : _departmentForRole(selectedRole);
-    String selectedStatus = user['status'];
-    bool isSaving = false;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-          insetPadding: EdgeInsets.symmetric(
-            horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
-            vertical: AppSpacing.xl,
-          ),
-          child: Container(
-            width: isMobile ? double.infinity : 480,
-            constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.9),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primary.withOpacity(0.8)
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(AppSpacing.radiusXl)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusMd),
-                        ),
-                        child: const Icon(Icons.edit,
-                            color: Colors.white, size: 24),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Edit User',
-                              style: AppTypography.h6.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              'Update user information',
-                              style: AppTypography.bodySmall
-                                  .copyWith(color: Colors.white70),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close, color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // User Info Preview
-                Container(
-                  margin: const EdgeInsets.all(AppSpacing.lg),
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.05)
-                        : AppColors.neutral50,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    border: Border.all(
-                        color: isDark
-                            ? Colors.white10
-                            : Colors.black.withOpacity(0.08)),
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundColor: AppColors.primary.withOpacity(0.1),
-                        child: Text(
-                          user['name'].toString().substring(0, 1),
-                          style: const TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 18),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user['name'],
-                              style: AppTypography.bodyLarge.copyWith(
-                                fontWeight: FontWeight.w500,
-                                color: isDark
-                                    ? Colors.white
-                                    : AppColors.textPrimary,
-                              ),
-                            ),
-                            Text(
-                              'ID: ${user['id']} | Joined: ${user['joined']}',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: isDark
-                                    ? Colors.white60
-                                    : AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Form Content
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Full Name Field
-                        _buildFormLabel('Full Name', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildTextField(
-                          controller: nameController,
-                          hint: 'Enter full name',
-                          icon: Icons.person_outline,
-                          isDark: isDark,
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Email Field
-                        _buildFormLabel('Email Address', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildTextField(
-                          controller: emailController,
-                          hint: 'Enter email address',
-                          icon: Icons.email_outlined,
-                          isDark: isDark,
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Role & Status Row
-                        if (!isMobile)
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildFormLabel('Role', isDark),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    _buildDropdownField(
-                                      value: selectedRole,
-                                      items: _roleOptions,
-                                      icon: Icons.badge_outlined,
-                                      isDark: isDark,
-                                      onChanged: (value) => setDialogState(() {
-                                        selectedRole = value!;
-                                        selectedDepartment =
-                                            _departmentForRole(selectedRole);
-                                      }),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildFormLabel('Status', isDark),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    _buildDropdownField(
-                                      value: selectedStatus,
-                                      items: ['Active', 'Pending', 'Suspended'],
-                                      icon: Icons.toggle_on_outlined,
-                                      isDark: isDark,
-                                      onChanged: (value) => setDialogState(
-                                          () => selectedStatus = value!),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          )
-                        else ...[
-                          _buildFormLabel('Role', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildDropdownField(
-                            value: selectedRole,
-                            items: _roleOptions,
-                            icon: Icons.badge_outlined,
-                            isDark: isDark,
-                            onChanged: (value) => setDialogState(() {
-                              selectedRole = value!;
-                              selectedDepartment =
-                                  _departmentForRole(selectedRole);
-                            }),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Status', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildDropdownField(
-                            value: selectedStatus,
-                            items: ['Active', 'Pending', 'Suspended'],
-                            icon: Icons.toggle_on_outlined,
-                            isDark: isDark,
-                            onChanged: (value) =>
-                                setDialogState(() => selectedStatus = value!),
-                          ),
-                        ],
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Department Dropdown
-                        _buildFormLabel('Department', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(
-                          value: selectedDepartment,
-                          items: _departmentOptions,
-                          icon: Icons.business_outlined,
-                          isDark: isDark,
-                          onChanged: (value) =>
-                              setDialogState(() => selectedDepartment = value!),
-                        ),
-                        if (selectedRole == 'Driver') ...[
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Driver License Number', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildTextField(
-                            controller: licenseController,
-                            hint: 'e.g., DVLA-1234567',
-                            icon: Icons.badge_outlined,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Vehicle Registration', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildTextField(
-                            controller: vehicleController,
-                            hint: 'e.g., GT 1234-26',
-                            icon: Icons.local_shipping_outlined,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Vehicle Type', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildTextField(
-                            controller: vehicleTypeController,
-                            hint: 'e.g., Refrigerated van',
-                            icon: Icons.fire_truck_outlined,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Capacity (kg)', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildTextField(
-                            controller: vehicleCapacityController,
-                            hint: 'e.g., 1500',
-                            icon: Icons.scale_outlined,
-                            isDark: isDark,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ],
-                        const SizedBox(height: AppSpacing.lg),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Actions
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.03)
-                        : AppColors.neutral50,
-                    borderRadius: const BorderRadius.vertical(
-                        bottom: Radius.circular(AppSpacing.radiusXl)),
-                  ),
-                  child: Row(
-                    children: [
-                      // Delete Button
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _showDeleteConfirmDialog(context, user, isDark);
-                        },
-                        icon: const Icon(Icons.delete_outline, size: 18),
-                        label: const Text('Delete'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.error,
-                          padding: const EdgeInsets.symmetric(
-                              vertical: AppSpacing.md,
-                              horizontal: AppSpacing.md),
-                          side: BorderSide(
-                              color: AppColors.error.withOpacity(0.5)),
-                          shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd)),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.md),
-                            side: BorderSide(
-                                color: isDark
-                                    ? Colors.white24
-                                    : AppColors.neutral300),
-                            shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusMd)),
-                          ),
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                                color: isDark
-                                    ? Colors.white70
-                                    : AppColors.textSecondary),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: isSaving
-                              ? null
-                              : () async {
-                                  await _saveUserEdit(
-                                    dialogContext: context,
-                                    setDialogState: setDialogState,
-                                    user: user,
-                                    nameController: nameController,
-                                    emailController: emailController,
-                                    selectedRole: selectedRole,
-                                    selectedDepartment: selectedDepartment,
-                                    selectedStatus: selectedStatus,
-                                    setSaving: (value) => isSaving = value,
-                                    licenseController: licenseController,
-                                    vehicleController: vehicleController,
-                                    vehicleTypeController:
-                                        vehicleTypeController,
-                                    vehicleCapacityController:
-                                        vehicleCapacityController,
-                                  );
-                                },
-                          icon: isSaving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.save, size: 18),
-                          label: Text(isSaving ? 'Saving...' : 'Save'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.md),
-                            shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusMd)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   void _showDeleteConfirmDialog(
@@ -2438,102 +1668,4 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   }
 
   // Helper widgets for form fields
-  Widget _buildFormLabel(String label, bool isDark) {
-    return Text(
-      label,
-      style: AppTypography.bodyMedium.copyWith(
-        fontWeight: FontWeight.w500,
-        color: isDark ? Colors.white : AppColors.textPrimary,
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    required bool isDark,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-            color: isDark
-                ? Colors.white38
-                : AppColors.textSecondary.withOpacity(0.5)),
-        prefixIcon: Icon(icon,
-            color: isDark ? Colors.white54 : AppColors.textSecondary, size: 20),
-        filled: true,
-        fillColor:
-            isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide:
-              BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide:
-              BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md, vertical: AppSpacing.md),
-      ),
-    );
-  }
-
-  Widget _buildDropdownField({
-    required String value,
-    required List<String> items,
-    required IconData icon,
-    required bool isDark,
-    required Function(String?) onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border:
-            Border.all(color: isDark ? Colors.white12 : AppColors.neutral200),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          isExpanded: true,
-          icon: Icon(Icons.keyboard_arrow_down,
-              color: isDark ? Colors.white54 : AppColors.textSecondary),
-          dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
-          style: TextStyle(
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              fontSize: 14),
-          items: items
-              .map((item) => DropdownMenuItem(
-                    value: item,
-                    child: Row(
-                      children: [
-                        Icon(icon,
-                            color: isDark
-                                ? Colors.white54
-                                : AppColors.textSecondary,
-                            size: 20),
-                        const SizedBox(width: AppSpacing.md),
-                        Text(item),
-                      ],
-                    ),
-                  ))
-              .toList(),
-          onChanged: onChanged,
-        ),
-      ),
-    );
-  }
 }

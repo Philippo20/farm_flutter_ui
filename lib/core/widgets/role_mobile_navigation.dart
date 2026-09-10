@@ -1,3 +1,4 @@
+import 'mobile_navigation_bar.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -293,7 +294,6 @@ class RoleMobileBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final primary = items.where((item) => item.primary).toList();
     final selectedItem = selectedIndex >= 0 && selectedIndex < items.length
         ? items[selectedIndex]
@@ -310,86 +310,20 @@ class RoleMobileBottomNav extends StatelessWidget {
               dynamicItem,
           ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        border: Border(
-            top: BorderSide(
-                color: isDark
-                    ? Colors.white.withOpacity(0.08)
-                    : Colors.black.withOpacity(0.08))),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.24 : 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 76,
-          child: Row(
-            children: visible.map((item) {
-              final index = items.indexOf(item);
-              final selected = index == selectedIndex;
-              final color = selected
-                  ? AppColors.primary
-                  : (isDark
-                      ? AppColors.textOnDark.withOpacity(0.74)
-                      : AppColors.textSecondary);
-              return Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      onItemSelected(index);
-                      if (!selected)
-                        Navigator.pushReplacementNamed(context, item.route);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 8),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 180),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? AppColors.primary
-                                      .withOpacity(isDark ? 0.16 : 0.10)
-                                  : Colors.transparent,
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusFull),
-                            ),
-                            child: Icon(selected ? item.activeIcon : item.icon,
-                                size: 22, color: color),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(item.label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.caption.copyWith(
-                                  color: color,
-                                  fontSize: 11,
-                                  fontWeight: selected
-                                      ? FontWeight.w700
-                                      : FontWeight.w500)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
+    return MobileNavigationBar(
+        children: visible
+            .map((item) => MobileNavigationDestination(
+                icon: item.icon,
+                activeIcon: item.activeIcon,
+                label: item.label,
+                selected: items.indexOf(item) == selectedIndex,
+                onTap: () {
+                  final index = items.indexOf(item);
+                  onItemSelected(index);
+                  if (index != selectedIndex)
+                    Navigator.pushReplacementNamed(context, item.route);
+                }))
+            .toList());
   }
 }
 

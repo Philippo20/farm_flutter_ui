@@ -86,7 +86,8 @@ class _FarmOwnerDashboardRedesignedState
   }
 
   String _docId(Map<String, dynamic> doc) =>
-      (doc[r'$id'] ?? doc['id'] ?? doc['farm_id'] ?? '').toString();
+      (doc[r'$id'] ?? doc['id'] ?? doc['farm_id'] ?? doc['farmID'] ?? '')
+          .toString();
 
   String _value(Map<String, dynamic> doc, List<String> keys,
       {String fallback = ''}) {
@@ -141,13 +142,31 @@ class _FarmOwnerDashboardRedesignedState
       .map(_normalise)
       .toSet();
 
+  Set<String> get _ownerBatchIds => _batches
+      .where((batch) {
+        final farmId = _value(batch, ['farm_id', 'farmID', 'farmId']);
+        final farmName = _value(batch, ['farm_name', 'farmName']);
+        return (farmId.isNotEmpty && _ownerFarmIds.contains(farmId)) ||
+            (farmName.isNotEmpty &&
+                _ownerFarmNames.contains(_normalise(farmName)));
+      })
+      .expand((batch) => [
+            _value(batch, ['batch_id']),
+            _value(batch, ['batch_no']),
+            _value(batch, ['batch_number']),
+            _docId(batch),
+          ])
+      .where((id) => id.isNotEmpty)
+      .toSet();
+
   bool _matchesOwnerFarm(Map<String, dynamic> doc) {
-    final ids = _ownerFarmIds;
-    final names = _ownerFarmNames;
     final farmId = _value(doc, ['farm_id', 'farmID', 'farmId']);
     final farmName = _value(doc, ['farm_name', 'farmName']);
-    return (farmId.isNotEmpty && ids.contains(farmId)) ||
-        (farmName.isNotEmpty && names.contains(_normalise(farmName)));
+    final batchId = _value(doc, ['batch_id', 'batch_no', 'batch_number']);
+    return (farmId.isNotEmpty && _ownerFarmIds.contains(farmId)) ||
+        (farmName.isNotEmpty &&
+            _ownerFarmNames.contains(_normalise(farmName))) ||
+        (batchId.isNotEmpty && _ownerBatchIds.contains(batchId));
   }
 
   List<Map<String, dynamic>> get _ownerBatches =>
@@ -309,6 +328,8 @@ class _FarmOwnerDashboardRedesignedState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _buildFarmDetailsCard(isDark),
+        const SizedBox(height: AppSpacing.md),
         _buildModernStatsRow(isDark, isMobile),
         SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.xl),
         if (isMobile) ...[
@@ -378,15 +399,184 @@ class _FarmOwnerDashboardRedesignedState
     );
   }
 
+  Widget _buildFarmDetailsCard(bool isDark) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    final primaryFarm = _ownerFarms.isNotEmpty ? _ownerFarms.first : null;
+    final crops = <String>{
+      for (final farm in _ownerFarms)
+        _value(farm, ['plant_type', 'plant_variety']),
+      for (final batch in _ownerBatches)
+        _value(batch, ['plant_name', 'plant_type']),
+    }..removeWhere((crop) => crop.trim().isEmpty);
+    final cropSummary = crops.isEmpty
+        ? 'No crop assigned'
+        : (crops.toList()..sort()).join(', ');
+    final farmNames = _ownerFarms
+        .map((farm) => _value(farm, ['name', 'farm_name']))
+        .where((name) => name.isNotEmpty)
+        .toList();
+    final locations = _ownerFarms
+        .map((farm) => _value(farm, ['location']))
+        .where((location) => location.isNotEmpty)
+        .toSet()
+        .toList();
+    final details = [
+      {
+        'icon': Icons.agriculture_outlined,
+        'label': 'Owned Farms',
+        'value': farmNames.isEmpty
+            ? 'No linked farms'
+            : '${farmNames.length} farm${farmNames.length == 1 ? '' : 's'}'
+      },
+      {'icon': Icons.eco_outlined, 'label': 'Crops', 'value': cropSummary},
+      {
+        'icon': Icons.layers_outlined,
+        'label': 'Primary Farm Tier',
+        'value': primaryFarm == null
+            ? 'Not assigned'
+            : _value(primaryFarm, ['tier_type'], fallback: 'Not assigned')
+      },
+      {
+        'icon': Icons.location_on_outlined,
+        'label': 'Location',
+        'value': locations.isEmpty ? 'Not assigned' : locations.join(', ')
+      },
+    ];
+
+    return Container(
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color:
+              isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.agriculture_rounded,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Farm Details',
+                      style: AppTypography.h6.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              isDark ? Colors.white : AppColors.textPrimary)),
+                  const SizedBox(height: 4),
+                  Text(
+                      farmNames.isEmpty
+                          ? 'No farms linked to your account'
+                          : farmNames.join(' • '),
+                      style: AppTypography.bodySmall.copyWith(
+                          fontSize: 12,
+                          color: isDark
+                              ? Colors.white70
+                              : AppColors.textSecondary)),
+                ],
+              )),
+            ],
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 820
+                ? 4
+                : constraints.maxWidth >= 340
+                    ? 2
+                    : 1;
+            final width = (constraints.maxWidth - 10 * (columns - 1)) / columns;
+            return Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: details.map((detail) {
+                  return SizedBox(
+                      width: width,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.04)
+                              : AppColors.neutral50,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: isDark
+                                  ? Colors.white10
+                                  : AppColors.neutral200),
+                        ),
+                        child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(detail['icon'] as IconData,
+                                  size: 18, color: AppColors.primary),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                    Text(detail['label'] as String,
+                                        style: AppTypography.caption.copyWith(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: isDark
+                                                ? Colors.white60
+                                                : AppColors.textSecondary)),
+                                    const SizedBox(height: 6),
+                                    Text(detail['value'] as String,
+                                        style: AppTypography.bodyMedium
+                                            .copyWith(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: isDark
+                                                    ? Colors.white
+                                                    : AppColors.textPrimary)),
+                                  ])),
+                            ]),
+                      ));
+                }).toList());
+          }),
+        ],
+      ),
+    );
+  }
+
   Widget _buildModernStatsRow(bool isDark, bool isMobile) {
-    final revenue = _ownerSales.fold<num>(
+    final periodStart = DateTime.now().subtract(const Duration(days: 30));
+    // Match Reports' default: all owned farms, all statuses, last 30 days.
+    final revenueSales = _ownerSales.where((sale) {
+      final date = _dateValue(
+          sale['payment_date'] ?? sale['delivered_at'] ?? sale[r'$createdAt']);
+      return date == null || !date.isBefore(periodStart);
+    }).toList();
+    final revenue = revenueSales.fold<num>(
       0,
       (sum, sale) =>
           sum + _numValue(sale['total_amount'] ?? sale['amount'] ?? 0),
     );
     final thisMonth = DateTime(DateTime.now().year, DateTime.now().month);
     final monthlyRevenue = _ownerSales.where((sale) {
-      final date = _dateValue(sale['created_at'] ?? sale[r'$createdAt']);
+      final date = _dateValue(
+          sale['payment_date'] ?? sale['delivered_at'] ?? sale[r'$createdAt']);
       return date != null &&
           DateTime(date.year, date.month).isAtSameMomentAs(thisMonth);
     }).fold<num>(
@@ -409,7 +599,7 @@ class _FarmOwnerDashboardRedesignedState
         'unit': 'earned',
         'icon': Icons.account_balance_wallet_rounded,
         'color': const Color(0xFF6366F1),
-        'change': '${_ownerSales.length} sales',
+        'change': 'Last 30 days · ${revenueSales.length} sales',
       },
       {
         'label': 'Monthly Revenue',
@@ -473,99 +663,42 @@ class _FarmOwnerDashboardRedesignedState
   Widget _buildModernStatCard(
       Map<String, dynamic> stat, bool isDark, bool isMobile) {
     final color = stat['color'] as Color;
-
     return Container(
-      padding: EdgeInsets.all(isMobile ? 16 : 20),
+      padding: EdgeInsets.all(isMobile ? 14 : 20),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color:
-              isDark ? Colors.white.withOpacity(0.08) : const Color(0xFFE2E8F0),
-        ),
-        boxShadow: isDark
-            ? null
-            : [
-                BoxShadow(
-                  color: color.withOpacity(0.08),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+        border:
+            Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(stat['icon'] as IconData,
-                    size: isMobile ? 20 : 22, color: color),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  stat['change'] as String,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
-                ),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10)),
+            child: Icon(stat['icon'] as IconData, color: color, size: 20),
           ),
-          SizedBox(height: isMobile ? 16 : 20),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    stat['value'] as String,
-                    style: TextStyle(
-                      fontSize: isMobile ? 24 : 30,
-                      fontWeight: FontWeight.w700,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                      height: 1,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  stat['unit'] as String,
-                  style: TextStyle(
-                    fontSize: isMobile ? 12 : 13,
-                    color: isDark ? Colors.white54 : const Color(0xFF64748B),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            stat['label'] as String,
-            style: TextStyle(
-              fontSize: isMobile ? 12 : 13,
-              fontWeight: FontWeight.w500,
-              color: isDark ? Colors.white60 : const Color(0xFF64748B),
-            ),
-          ),
+          const SizedBox(height: 12),
+          Text(stat['label'] as String,
+              style: AppTypography.bodySmall.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white70 : AppColors.textSecondary)),
+          const SizedBox(height: 6),
+          Text(stat['value'] as String,
+              style: AppTypography.h5.copyWith(
+                  fontSize: isMobile ? 22 : 26,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : AppColors.textPrimary)),
+          const SizedBox(height: 10),
+          Text(stat['change'] as String,
+              style: AppTypography.caption.copyWith(
+                  fontSize: 11,
+                  color: isDark ? Colors.white60 : AppColors.textSecondary)),
         ],
       ),
     );
@@ -715,8 +848,9 @@ class _FarmOwnerDashboardRedesignedState
       activities.add({
         'title': 'Batch ${status.isEmpty ? 'Updated' : status}',
         'desc': '${_value(batch, [
-              'batch_code',
-              'batch_id'
+              'batch_no',
+              'batch_number',
+              'batch_code'
             ], fallback: 'Batch')} at ${_value(batch, ['farm_name'], fallback: 'owned farm')}',
         'time': _relativeTime(
             _dateValue(batch['updated_at'] ?? batch['created_at'])),

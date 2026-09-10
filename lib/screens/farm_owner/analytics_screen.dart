@@ -987,19 +987,22 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         .toList();
     final details = [
       {
+        'icon': Icons.agriculture_outlined,
         'label': 'Owned Farms',
         'value': farmNames.isEmpty
             ? 'No linked farms'
             : '${farmNames.length} farm${farmNames.length == 1 ? '' : 's'}'
       },
-      {'label': 'Primary Crop', 'value': cropSummary},
+      {'icon': Icons.eco_outlined, 'label': 'Crops', 'value': cropSummary},
       {
-        'label': 'Farm Tier',
+        'icon': Icons.layers_outlined,
+        'label': 'Primary Farm Tier',
         'value': primaryFarm == null
             ? 'Not assigned'
             : _value(primaryFarm, ['tier_type'], fallback: 'Not assigned')
       },
       {
+        'icon': Icons.location_on_outlined,
         'label': 'Location',
         'value': locations.isEmpty ? 'Not assigned' : locations.join(', ')
       },
@@ -1033,50 +1036,88 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                'Farm Details',
-                style: AppTypography.h6.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                ),
-              ),
+              Expanded(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Farm Details',
+                      style: AppTypography.h6.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color:
+                              isDark ? Colors.white : AppColors.textPrimary)),
+                  const SizedBox(height: 4),
+                  Text(
+                      farmNames.isEmpty
+                          ? 'No farms linked to your account'
+                          : farmNames.join(' • '),
+                      style: AppTypography.bodySmall.copyWith(
+                          fontSize: 12,
+                          color: isDark
+                              ? Colors.white70
+                              : AppColors.textSecondary)),
+                ],
+              )),
             ],
           ),
-          SizedBox(height: isMobile ? AppSpacing.md : AppSpacing.lg),
-          Wrap(
-            spacing: isMobile ? AppSpacing.md : AppSpacing.lg,
-            runSpacing: AppSpacing.md,
-            children: details.map((detail) {
-              return SizedBox(
-                width: isMobile ? double.infinity : 220,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      detail['label'] as String,
-                      style: AppTypography.caption.copyWith(
-                        color:
-                            isDark ? Colors.white60 : AppColors.textSecondary,
-                        fontSize: isMobile ? 11 : 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      detail['value'] as String,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontSize: isMobile ? 13 : 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 820
+                ? 4
+                : constraints.maxWidth >= 340
+                    ? 2
+                    : 1;
+            final width = (constraints.maxWidth - 10 * (columns - 1)) / columns;
+            return Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: details.map((detail) {
+                  return SizedBox(
+                      width: width,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withOpacity(0.04)
+                              : AppColors.neutral50,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: isDark
+                                  ? Colors.white10
+                                  : AppColors.neutral200),
+                        ),
+                        child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(detail['icon'] as IconData,
+                                  size: 18, color: AppColors.primary),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                    Text(detail['label'] as String,
+                                        style: AppTypography.caption.copyWith(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: isDark
+                                                ? Colors.white60
+                                                : AppColors.textSecondary)),
+                                    const SizedBox(height: 6),
+                                    Text(detail['value'] as String,
+                                        style: AppTypography.bodyMedium
+                                            .copyWith(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: isDark
+                                                    ? Colors.white
+                                                    : AppColors.textPrimary)),
+                                  ])),
+                            ]),
+                      ));
+                }).toList());
+          }),
         ],
       ),
     );

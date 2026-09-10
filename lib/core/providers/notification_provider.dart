@@ -3,18 +3,36 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/notification/notification_model.dart';
 import '../../services/superadmin_api_service.dart';
+import '../../services/messaging_service.dart';
 
 class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
   NotificationNotifier() : super(const []);
 
   final SuperAdminApiService _api = SuperAdminApiService();
+  final MessagingService _messages = MessagingService();
+  int _generation = 0;
+
+  void replaceMessages(List<NotificationModel> messages) {
+    state = [
+      ...state.where((item) => item.type != NotificationType.message),
+      ...messages,
+    ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  @override
+  void dispose() {
+    _messages.dispose();
+    super.dispose();
+  }
 
   Future<void> refreshFromBackend({String? recipientId}) async {
+    final generation = _generation;
     final results = await Future.wait([
       _api.getAlerts(),
       if (recipientId != null && recipientId.trim().isNotEmpty)
         _api.getNotifications(recipientId),
     ]);
+    if (!mounted || generation != _generation) return;
     final alerts = results.first;
     final notifications =
         results.length > 1 ? results[1] : <Map<String, dynamic>>[];
@@ -29,8 +47,11 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
         .map((notification) => _fromNotification(
             notification, readIds.contains(_notificationId(notification))))
         .whereType<NotificationModel>();
-    state = [...mappedAlerts, ...mappedNotifications]
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    state = [
+      ...mappedAlerts,
+      ...mappedNotifications,
+      ...state.where((item) => item.type == NotificationType.message)
+    ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
   NotificationModel? _fromNotification(
@@ -121,6 +142,11 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
   }
 
   void markAsRead(String id, {String? recipientId}) {
+    final selected = state.where((item) => item.id == id).firstOrNull;
+    if (selected?.type == NotificationType.message) {
+      unawaited(_persistMessageRead(selected!));
+      return;
+    }
     state = [
       for (final notification in state)
         if (notification.id == id)
@@ -134,6 +160,20 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
     }
   }
 
+  Future<void> _persistMessageRead(NotificationModel item) async {
+    try {
+      await _messages.markRead(item.metadata!['peerId'] as String,
+          [item.metadata!['messageId'] as String]);
+      if (!mounted) return;
+      state = [
+        for (final entry in state)
+          if (entry.id == item.id) entry.copyWith(isRead: true) else entry
+      ];
+    } catch (_) {
+      // Leave unread so a failed request can be retried from the center.
+    }
+  }
+
   Future<void> _persistRead(String id) async {
     try {
       await _api.markNotificationAsRead(id);
@@ -143,8 +183,16 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
   }
 
   void markAllAsRead({String? recipientId}) {
+    for (final item in state.where(
+        (item) => item.type == NotificationType.message && !item.isRead)) {
+      unawaited(_persistMessageRead(item));
+    }
     state = [
-      for (final notification in state) notification.copyWith(isRead: true),
+      for (final notification in state)
+        if (notification.type == NotificationType.message)
+          notification
+        else
+          notification.copyWith(isRead: true),
     ];
     final resolvedRecipientId = recipientId;
     if (resolvedRecipientId != null && resolvedRecipientId.trim().isNotEmpty) {
@@ -165,6 +213,7 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
   }
 
   void clearAll() {
+    _generation++;
     state = [];
   }
 

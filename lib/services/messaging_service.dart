@@ -25,7 +25,8 @@ class MessagingService {
       });
     if (data != null) request.body = jsonEncode(data);
     final response = await http.Response.fromStream(
-        await _client.send(request).timeout(const Duration(seconds: 20)));
+            await _client.send(request).timeout(const Duration(seconds: 20)))
+        .timeout(const Duration(seconds: 20));
     dynamic body;
     try {
       body = jsonDecode(response.body);
@@ -44,6 +45,11 @@ class MessagingService {
   Future<List<Map<String, dynamic>>> conversations() async {
     final data = await _request('GET', '/conversations');
     return List<Map<String, dynamic>>.from(data['conversations']);
+  }
+
+  Future<List<Map<String, dynamic>>> notifications() async {
+    final data = await _request('GET', '/notifications');
+    return List<Map<String, dynamic>>.from(data['notifications']);
   }
 
   Future<List<Map<String, dynamic>>> messages(String peer) async {

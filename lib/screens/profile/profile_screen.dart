@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_typography.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/superadmin_api_service.dart';
@@ -52,7 +52,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_savingProfile || !_formKey.currentState!.validate()) return;
     final user = ref.read(currentUserProvider);
     if (user == null) return;
     setState(() => _savingProfile = true);
@@ -78,6 +78,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _changePassword() async {
     final user = ref.read(currentUserProvider);
+    if (_savingPassword) return;
     final password = _newPasswordController.text;
     if (user == null) return;
     if (password.length < 8) {
@@ -91,6 +92,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     setState(() => _savingPassword = true);
     try {
       await _api.updateUserPassword(id: user.id, password: password);
+      if (!mounted) return;
       _currentPasswordController.clear();
       _newPasswordController.clear();
       _confirmPasswordController.clear();
@@ -104,7 +106,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   String _messageFromError(Object error) {
     final message = error.toString().replaceFirst('Exception: ', '');
-    return message.isEmpty ? 'Something went wrong. Please try again.' : message;
+    return message.isEmpty
+        ? 'Something went wrong. Please try again.'
+        : message;
   }
 
   void _showMessage(String message, {bool isError = true}) {
@@ -117,320 +121,353 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  Color get _text => Theme.of(context).brightness == Brightness.dark
+      ? Colors.white
+      : AppColors.textPrimary;
+  Color get _muted => Theme.of(context).brightness == Brightness.dark
+      ? Colors.white54
+      : AppColors.textSecondary;
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    if (user == null) {
-      return const Scaffold(body: Center(child: Text('No active profile')));
-    }
-
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final background =
+        dark ? AppColors.backgroundDark : AppColors.backgroundLight;
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor: background,
       appBar: AppBar(
-        title: const Text('My Profile'),
-        backgroundColor: Colors.transparent,
+        title: Text('My profile',
+            style: GoogleFonts.inter(
+                fontSize: 18, fontWeight: FontWeight.w600, color: _text)),
+        backgroundColor: background,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle(
-          statusBarColor: isDark
-              ? AppColors.backgroundDark
-              : AppColors.backgroundLight,
-          statusBarIconBrightness:
-              isDark ? Brightness.light : Brightness.dark,
-          statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+          statusBarColor: background,
+          statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+          statusBarBrightness: dark ? Brightness.dark : Brightness.light,
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.sm,
-            AppSpacing.md,
-            AppSpacing.xxl,
-          ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 980),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _profileHero(user, isDark),
-                  const SizedBox(height: AppSpacing.lg),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final wide = constraints.maxWidth >= 760;
-                      final profile = _profileCard(user, isDark);
-                      final security = _securityCard(isDark);
-                      if (wide) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: profile),
-                            const SizedBox(width: AppSpacing.md),
-                            Expanded(child: security),
-                          ],
-                        );
-                      }
-                      return Column(children: [profile, security]);
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  _accessCard(user, isDark),
-                ],
-              ),
+      body: user == null
+          ? const Center(child: Text('Sign in to view your profile.'))
+          : SafeArea(
+              top: false,
+              child: LayoutBuilder(builder: (context, viewport) {
+                final compact = viewport.maxWidth < 760;
+                return SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: EdgeInsets.fromLTRB(
+                      compact ? 16 : 32, 8, compact ? 16 : 32, 16),
+                  child: Center(
+                      child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1040),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _identity(user, dark),
+                          const SizedBox(height: 16),
+                          LayoutBuilder(builder: (context, constraints) {
+                            if (constraints.maxWidth < 760) {
+                              return Column(children: [
+                                _personal(dark),
+                                const SizedBox(height: 16),
+                                _security(dark),
+                              ]);
+                            }
+                            return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(flex: 6, child: _personal(dark)),
+                                  const SizedBox(width: 16),
+                                  Expanded(flex: 5, child: _security(dark)),
+                                ]);
+                          }),
+                        ]),
+                  )),
+                );
+              }),
             ),
-          ),
-        ),
-      ),
     );
   }
 
-  Widget _profileHero(UserModel user, bool isDark) {
+  BoxDecoration _surface(bool dark) => BoxDecoration(
+        color: dark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: dark ? Colors.white10 : AppColors.neutral200),
+        boxShadow: [
+          if (!dark)
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.025),
+                blurRadius: 16,
+                offset: const Offset(0, 4))
+        ],
+      );
+
+  Widget _identity(UserModel user, bool dark) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, AppColors.primaryDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 38,
-            backgroundColor: Colors.white.withOpacity(0.18),
-            child: Text(
-              user.initials,
-              style: AppTypography.h4.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
+      decoration: _surface(dark),
+      padding: const EdgeInsets.all(20),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            width: 56,
+            height: 56,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  colors: [AppColors.primary, AppColors.primaryDark]),
+              borderRadius: BorderRadius.circular(16),
             ),
+            child: Text(user.initials,
+                style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white)),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: 14),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                 Text(user.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.h4.copyWith(
-                        color: Colors.white, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
+                    style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: _text)),
+                const SizedBox(height: 5),
                 Text(user.email,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodyMedium
-                        .copyWith(color: Colors.white.withOpacity(0.86))),
-                const SizedBox(height: AppSpacing.sm),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                  child: Text(user.role.displayName,
-                      style: AppTypography.caption.copyWith(
-                          color: Colors.white, fontWeight: FontWeight.w600)),
-                ),
-              ],
-            ),
-          ),
-          Icon(Icons.verified_user_outlined,
-              color: Colors.white.withOpacity(0.85), size: 28),
-        ],
-      ),
+                    style: GoogleFonts.inter(
+                        fontSize: 12, height: 1.5, color: _muted)),
+              ])),
+        ]),
+        const SizedBox(height: 16),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          _detailChip(Icons.work_outline_rounded, user.role.displayName, dark),
+          _detailChip(Icons.calendar_today_outlined,
+              'Joined ${DateFormat('MMM yyyy').format(user.createdAt)}', dark),
+        ]),
+      ]),
     );
   }
 
-  Widget _profileCard(UserModel user, bool isDark) {
-    return _card(
-      isDark,
-      title: 'Personal information',
-      subtitle: 'Keep your account details current.',
-      icon: Icons.badge_outlined,
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            _field(_nameController, 'Full name', Icons.person_outline,
-                validator: (value) => value!.trim().length < 2
-                    ? 'Enter your full name'
-                    : null),
-            const SizedBox(height: AppSpacing.sm),
-            _field(_emailController, 'Email address', Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) => value!.contains('@')
-                    ? null
-                    : 'Enter a valid email address'),
-            const SizedBox(height: AppSpacing.sm),
-            _field(_addressController, 'Address', Icons.location_on_outlined),
-            const SizedBox(height: AppSpacing.md),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.icon(
-                onPressed: _savingProfile ? null : _saveProfile,
-                icon: _savingProfile
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.save_outlined),
-                label: const Text('Save changes'),
-              ),
-            ),
-          ],
+  Widget _detailChip(IconData icon, String label, bool dark) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        decoration: BoxDecoration(
+          color:
+              dark ? Colors.white.withValues(alpha: 0.04) : AppColors.neutral50,
+          borderRadius: BorderRadius.circular(8),
         ),
-      ),
-    );
-  }
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 14, color: _muted),
+          const SizedBox(width: 6),
+          Flexible(
+              child: Text(label,
+                  style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: _muted))),
+        ]),
+      );
 
-  Widget _securityCard(bool isDark) {
-    return _card(
-      isDark,
-      title: 'Security',
-      subtitle: 'Protect access to your Farm Estates account.',
-      icon: Icons.lock_outline,
-      child: Column(
-        children: [
-          _field(_currentPasswordController, 'Current password', Icons.lock,
-              obscureText: _obscureCurrent,
-              suffix: IconButton(
-                  onPressed: () => setState(() => _obscureCurrent = !_obscureCurrent),
-                  icon: Icon(_obscureCurrent ? Icons.visibility : Icons.visibility_off))),
-          const SizedBox(height: AppSpacing.sm),
-          _field(_newPasswordController, 'New password', Icons.password,
-              obscureText: _obscureNew,
-              suffix: IconButton(
-                  onPressed: () => setState(() => _obscureNew = !_obscureNew),
-                  icon: Icon(_obscureNew ? Icons.visibility : Icons.visibility_off))),
-          const SizedBox(height: AppSpacing.sm),
-          _field(_confirmPasswordController, 'Confirm new password', Icons.password,
-              obscureText: _obscureConfirm,
-              suffix: IconButton(
-                  onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
-                  icon: Icon(_obscureConfirm ? Icons.visibility : Icons.visibility_off))),
-          const SizedBox(height: AppSpacing.md),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _savingPassword ? null : _changePassword,
-              icon: _savingPassword
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.key_outlined),
-              label: const Text('Change password'),
-            ),
+  Widget _personal(bool dark) => _section(
+        dark,
+        Icons.person_outline_rounded,
+        'Personal information',
+        'Manage the details associated with your account.',
+        Form(
+            key: _formKey,
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _field(_nameController, 'Full name', Icons.person_outline_rounded,
+                  enabled: !_savingProfile,
+                  validator: (value) => (value ?? '').trim().length < 2
+                      ? 'Enter your full name'
+                      : null),
+              _field(_emailController, 'Email address',
+                  Icons.alternate_email_rounded,
+                  enabled: !_savingProfile,
+                  keyboard: TextInputType.emailAddress,
+                  validator: (value) => RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+                          .hasMatch((value ?? '').trim())
+                      ? null
+                      : 'Enter a valid email address'),
+              _field(_addressController, 'Address', Icons.location_on_outlined,
+                  enabled: !_savingProfile,
+                  keyboard: TextInputType.streetAddress,
+                  lines: 2),
+              const SizedBox(height: 2),
+              _action('Save changes', 'Saving changes…', Icons.check_rounded,
+                  _savingProfile, _saveProfile),
+            ])),
+      );
+
+  Widget _security(bool dark) => _section(
+        dark,
+        Icons.lock_outline_rounded,
+        'Password & security',
+        'Update your password to keep your account secure.',
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _field(_currentPasswordController, 'Current password',
+              Icons.lock_outline_rounded,
+              enabled: !_savingPassword,
+              obscure: _obscureCurrent,
+              suffix: _visibility(_obscureCurrent,
+                  () => setState(() => _obscureCurrent = !_obscureCurrent))),
+          _field(_newPasswordController, 'New password', Icons.key_outlined,
+              enabled: !_savingPassword,
+              obscure: _obscureNew,
+              suffix: _visibility(_obscureNew,
+                  () => setState(() => _obscureNew = !_obscureNew))),
+          _field(_confirmPasswordController, 'Confirm new password',
+              Icons.key_outlined,
+              enabled: !_savingPassword,
+              obscure: _obscureConfirm,
+              suffix: _visibility(_obscureConfirm,
+                  () => setState(() => _obscureConfirm = !_obscureConfirm))),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text('Use at least 8 characters for your new password.',
+                style: GoogleFonts.inter(
+                    fontSize: 11, height: 1.5, color: _muted)),
           ),
-        ],
-      ),
-    );
-  }
+          _action('Update password', 'Updating password…',
+              Icons.lock_reset_rounded, _savingPassword, _changePassword,
+              outlined: true),
+        ]),
+      );
 
-  Widget _accessCard(UserModel user, bool isDark) {
-    return _card(
-      isDark,
-      title: 'Account access',
-      subtitle: 'Your role and account identity used across the platform.',
-      icon: Icons.admin_panel_settings_outlined,
-      child: Wrap(
-        spacing: AppSpacing.lg,
-        runSpacing: AppSpacing.md,
-        children: [
-          _fact('Role', user.role.displayName, Icons.work_outline, isDark),
-          _fact('User ID', user.id, Icons.fingerprint, isDark),
-          _fact('Member since', _date(user.createdAt), Icons.calendar_today_outlined, isDark),
-          _fact('Status', 'Active session', Icons.circle, isDark),
-        ],
-      ),
-    );
-  }
+  Widget _visibility(bool obscure, VoidCallback action) => IconButton(
+        tooltip: obscure ? 'Show password' : 'Hide password',
+        onPressed: action,
+        icon: Icon(
+            obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            size: 18,
+            color: _muted),
+      );
 
-  String _date(DateTime date) => '${date.day.toString().padLeft(2, '0')}/'
-      '${date.month.toString().padLeft(2, '0')}/${date.year}';
-
-  Widget _card(bool isDark,
-      {required String title,
-      required String subtitle,
-      required IconData icon,
-      required Widget child}) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: isDark ? Colors.white10 : AppColors.neutral200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Icon(icon, color: AppColors.primary),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(child: Text(title, style: AppTypography.h6.copyWith(
-                color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w600))),
+  Widget _section(bool dark, IconData icon, String title, String subtitle,
+          Widget child) =>
+      Container(
+        width: double.infinity,
+        decoration: _surface(dark),
+        padding: const EdgeInsets.all(20),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10)),
+              child: Icon(icon,
+                  size: 18, color: dark ? Colors.white70 : AppColors.primary),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(title,
+                      style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: _text)),
+                  const SizedBox(height: 4),
+                  Text(subtitle,
+                      style: GoogleFonts.inter(
+                          fontSize: 12, height: 1.5, color: _muted)),
+                ])),
           ]),
-          const SizedBox(height: 4),
-          Text(subtitle, style: AppTypography.bodySmall.copyWith(
-              color: isDark ? Colors.white70 : AppColors.textSecondary)),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: 20),
           child,
-        ],
-      ),
-    );
-  }
+        ]),
+      );
 
   Widget _field(TextEditingController controller, String label, IconData icon,
-      {String? Function(String?)? validator,
-      TextInputType? keyboardType,
-      bool obscureText = false,
-      Widget? suffix}) {
-    return TextFormField(
-      controller: controller,
-      validator: validator,
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        suffixIcon: suffix,
-        border: const OutlineInputBorder(),
-      ),
+      {bool enabled = true,
+      bool obscure = false,
+      int lines = 1,
+      Widget? suffix,
+      TextInputType? keyboard,
+      String? Function(String?)? validator}) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label,
+            style: GoogleFonts.inter(
+                fontSize: 11, fontWeight: FontWeight.w600, color: _text)),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: controller,
+          validator: validator,
+          readOnly: !enabled,
+          obscureText: obscure,
+          maxLines: lines,
+          keyboardType: keyboard,
+          autocorrect: suffix == null,
+          enableSuggestions: suffix == null,
+          style: GoogleFonts.inter(fontSize: 12, height: 1.5, color: _text),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: dark
+                ? Colors.white.withValues(alpha: 0.04)
+                : AppColors.neutral50,
+            prefixIcon: Icon(icon, size: 16, color: _muted),
+            suffixIcon: suffix,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                    color: dark ? Colors.white10 : AppColors.neutral200)),
+            focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: AppColors.primary, width: 1.5)),
+            errorMaxLines: 2,
+          ),
+        ),
+      ]),
     );
   }
 
-  Widget _fact(String label, String value, IconData icon, bool isDark) {
-    return SizedBox(
-      width: 210,
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(label, style: AppTypography.caption.copyWith(
-                  color: isDark ? Colors.white60 : AppColors.textSecondary)),
-              Text(value, maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodySmall.copyWith(
-                      color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w600)),
-            ]),
-          ),
-        ],
-      ),
+  Widget _action(String label, String loadingLabel, IconData icon, bool loading,
+      VoidCallback onPressed,
+      {bool outlined = false}) {
+    final content = Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+      if (loading)
+        const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2))
+      else
+        Icon(icon, size: 17),
+      const SizedBox(width: 8),
+      Flexible(
+          child: Text(loading ? loadingLabel : label,
+              textAlign: TextAlign.center)),
+    ]);
+    final style = ButtonStyle(
+      padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(horizontal: 16, vertical: 13)),
+      textStyle: WidgetStatePropertyAll(
+          GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+      shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
     );
+    return SizedBox(
+        width: double.infinity,
+        child: outlined
+            ? OutlinedButton(
+                onPressed: loading ? null : onPressed,
+                style: style,
+                child: content)
+            : FilledButton(
+                onPressed: loading ? null : onPressed,
+                style: style,
+                child: content));
   }
 }

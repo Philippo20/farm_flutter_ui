@@ -1,3 +1,4 @@
+import 'mobile_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -366,96 +367,30 @@ class FarmOwnerMobileBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final current = _allItems.where((item) =>
         _routeIndex(item.route) == selectedIndex &&
         !_primaryItems.contains(item));
-    final dynamicItem = current.isNotEmpty
-        ? current.first
-        : _defaultDynamicItem;
+    final dynamicItem =
+        current.isNotEmpty ? current.first : _defaultDynamicItem;
     final visible = [
       ..._primaryItems,
       dynamicItem,
     ];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: isDark
-                ? Colors.white.withOpacity(0.08)
-                : Colors.black.withOpacity(0.08),
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.24 : 0.08),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 76,
-          child: Row(
-            children: visible.map((item) {
-              final index = _routeIndex(item.route);
-              final selected = index == selectedIndex;
-              final color = selected
-                  ? AppColors.primary
-                  : (isDark
-                      ? AppColors.textOnDark.withOpacity(0.74)
-                      : AppColors.textSecondary);
-              return Expanded(
-                child: InkWell(
-                  onTap: () {
-                    onItemSelected(index);
-                    if (index != selectedIndex) {
-                      Navigator.pushReplacementNamed(context, item.route);
-                    }
-                  },
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? AppColors.primary
-                                    .withOpacity(isDark ? 0.16 : 0.10)
-                                : Colors.transparent,
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusFull),
-                          ),
-                          child: Icon(selected ? item.activeIcon : item.icon,
-                              size: 22, color: color),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(item.label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.caption.copyWith(
-                                color: color,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500)),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
+    return MobileNavigationBar(
+        children: visible
+            .map((item) => MobileNavigationDestination(
+                icon: item.icon,
+                activeIcon: item.activeIcon,
+                label: item.label,
+                selected: _routeIndex(item.route) == selectedIndex,
+                onTap: () {
+                  final index = _routeIndex(item.route);
+                  onItemSelected(index);
+                  if (index != selectedIndex)
+                    Navigator.pushReplacementNamed(context, item.route);
+                }))
+            .toList());
   }
 }
 

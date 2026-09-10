@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math';
 import 'package:intl/intl.dart';
 import '../../services/messaging_service.dart';
+import '../../core/widgets/message_notification_host.dart';
+import '../../core/widgets/notification_center.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -15,7 +17,8 @@ import '../../providers/auth_provider.dart';
 /// Chat Screen for Caretaker
 /// Communicate with farm owners and managers
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({super.key});
+  const ChatScreen({super.key, this.initialPeerId});
+  final String? initialPeerId;
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -47,6 +50,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   String? _requestId;
   String? _requestText;
   String? _requestPeer;
+  bool _openedInitialPeer = false;
+  bool _foreground = true;
 
   @override
   void initState() {
@@ -60,7 +65,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _foreground = state == AppLifecycleState.resumed;
     _poll?.cancel();
+    if (state != AppLifecycleState.resumed) {
+      ref.read(activeMessagePeerProvider.notifier).state = null;
+    }
     if (state == AppLifecycleState.resumed) {
       _refresh();
       _poll = Timer.periodic(const Duration(seconds: 5), (_) => _refresh());
@@ -80,7 +89,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   }
 
   Future<void> _refresh() async {
+    if (mounted && _foreground) {
+      ref.read(activeMessagePeerProvider.notifier).state =
+          ModalRoute.of(context)?.isCurrent == true ? _selectedChat : null;
+    }
     if (!mounted ||
+        !_foreground ||
         _refreshing ||
         _sending ||
         ModalRoute.of(context)?.isCurrent == false) return;
@@ -118,8 +132,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
           _selectedChat = null;
         _loading = false;
         _syncError = null;
+        if (!_openedInitialPeer) {
+          _openedInitialPeer = true;
+          if (_chats.any((chat) => chat['id'] == widget.initialPeerId)) {
+            _selectedChat = widget.initialPeerId;
+          }
+        }
       });
       if (peer == _selectedChat &&
+          _foreground &&
           messages != null &&
           ModalRoute.of(context)?.isCurrent != false) {
         if (wasNearEnd) _scrollToLatest();
@@ -213,6 +234,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   @override
   void dispose() {
+    final activePeer = ref.read(activeMessagePeerProvider.notifier);
+    final peer = _selectedChat;
+    Future.microtask(() {
+      if (activePeer.mounted && activePeer.state == peer)
+        activePeer.state = null;
+    });
     WidgetsBinding.instance.removeObserver(this);
     _poll?.cancel();
     _api.dispose();
@@ -240,6 +267,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         },
         child: Scaffold(
           appBar: AppBar(
+              actions: const [NotificationCenter()],
               title: const Text('Messages'),
               leading: BackButton(
                   onPressed: () => _selectedChat == null

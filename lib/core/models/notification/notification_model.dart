@@ -74,7 +74,8 @@ class NotificationModel {
       title: json['title'] as String,
       message: json['message'] as String,
       type: NotificationType.fromString(json['type'] as String),
-      priority: NotificationPriority.fromString(json['priority'] as String? ?? 'normal'),
+      priority: NotificationPriority.fromString(
+          json['priority'] as String? ?? 'normal'),
       createdAt: DateTime.parse(json['createdAt'] as String),
       isRead: json['isRead'] as bool? ?? false,
       actionUrl: json['actionUrl'] as String?,
@@ -100,6 +101,7 @@ class NotificationModel {
 
 /// Notification Type
 enum NotificationType {
+  message('message', 'Message'),
   task('task', 'Task Update'),
   batch('batch', 'Batch Update'),
   harvest('harvest', 'Harvest Alert'),
