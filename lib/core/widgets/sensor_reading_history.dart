@@ -1,3 +1,5 @@
+import 'sensor_date_range_modal.dart';
+import 'app_dialog.dart';
 import 'sensor_readings_chart.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -24,15 +26,21 @@ class _SensorReadingHistoryState extends State<SensorReadingHistory> {
   final _api = SuperAdminApiService();
   Timer? _timer;
   bool _loading = false;
+  bool _fetching = false;
+  int _requestId = 0;
   String? _error;
   List<Map<String, dynamic>> _readings = [];
   int _visible = 20;
   bool _showRecords = false;
+  DateTimeRange? _range;
+  bool _hasMore = false;
+  int _pages = 1;
   @override
   void initState() {
     super.initState();
     _load();
-    _timer = Timer.periodic(const Duration(seconds: 30), (_) => _load());
+    _timer =
+        Timer.periodic(const Duration(seconds: 30), (_) => _load(silent: true));
   }
 
   @override
@@ -41,26 +49,80 @@ class _SensorReadingHistoryState extends State<SensorReadingHistory> {
     super.dispose();
   }
 
-  Future<void> _load() async {
-    if (_loading || widget.serialNumber.isEmpty) return;
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  Future<void> _load({bool more = false, bool silent = false}) async {
+    if (widget.serialNumber.isEmpty || (silent && _fetching)) return;
+    final requestId = ++_requestId;
+    final range = _range;
+    _fetching = true;
+    if (!silent)
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
     try {
-      final rows = await (widget.loadReadings ??
-          _api.getSensorReadings)(widget.serialNumber);
-      rows.sort((a, b) => (DateTime.tryParse('${b['timestamp']}') ??
+      final end = range == null
+          ? null
+          : DateTime(range.end.year, range.end.month, range.end.day + 1);
+      final rows = <Map<String, dynamic>>[];
+      var hasMore = false;
+      final targetPages = more ? _pages + 1 : _pages;
+      if (widget.loadReadings != null) {
+        rows.addAll(await widget.loadReadings!(widget.serialNumber));
+      } else {
+        for (var page = more ? _pages : 0; page < targetPages; page++) {
+          final batch = await _api.getSensorReadingsForPeriod(
+              widget.serialNumber,
+              start: range?.start,
+              end: end,
+              offset: page * 500);
+          rows.addAll(batch);
+          hasMore = batch.length == 500;
+          if (!hasMore) break;
+        }
+      }
+      final filtered = rows.where((row) {
+        if (range == null) return true;
+        final time = DateTime.tryParse(row['timestamp'].toString());
+        return time != null &&
+            !time.isBefore(range!.start) &&
+            time.isBefore(end!);
+      }).toList();
+      filtered.sort((a, b) => (DateTime.tryParse('${b['timestamp']}') ??
               DateTime(1970))
           .compareTo(DateTime.tryParse('${a['timestamp']}') ?? DateTime(1970)));
-      if (mounted) setState(() => _readings = rows);
+      if (mounted && requestId == _requestId)
+        setState(() {
+          _error = null;
+          _readings = more ? [..._readings, ...filtered] : filtered;
+          _hasMore = hasMore;
+          _pages = targetPages;
+        });
     } catch (_) {
-      if (mounted)
+      if (mounted && requestId == _requestId && !silent)
         setState(
             () => _error = 'Unable to refresh readings. Please try again.');
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (requestId == _requestId) {
+        _fetching = false;
+        if (mounted && !silent) setState(() => _loading = false);
+      }
     }
+  }
+
+  Future<void> _selectRange() async {
+    final selected = await showAppDialog<DateTimeRange>(
+      context: context,
+      builder: (_) => SensorDateRangeModal(initialRange: _range),
+    );
+    if (selected == null || !mounted) return;
+    setState(() {
+      _range = selected;
+      _pages = 1;
+      _readings = [];
+      _visible = 20;
+      _hasMore = false;
+    });
+    await _load();
   }
 
   @override
@@ -83,10 +145,34 @@ class _SensorReadingHistoryState extends State<SensorReadingHistory> {
                     child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.refresh, size: 18))
       ]),
+      Wrap(spacing: 8, runSpacing: 4, children: [
+        OutlinedButton.icon(
+            onPressed: _loading ? null : _selectRange,
+            icon: const Icon(Icons.date_range, size: 16),
+            label: Text(_range == null
+                ? 'Select date range'
+                : DateFormat('d MMM yy').format(_range!.start) +
+                    ' – ' +
+                    DateFormat('d MMM yy').format(_range!.end))),
+        if (_range != null)
+          TextButton(
+              onPressed: _loading
+                  ? null
+                  : () {
+                      setState(() {
+                        _range = null;
+                        _pages = 1;
+                        _readings = [];
+                        _visible = 20;
+                      });
+                      _load();
+                    },
+              child: const Text('Clear dates')),
+      ]),
       Text(
-          widget.compact
-              ? 'Updates every 30 seconds'
-              : 'Latest 500 saved readings · refreshes every 30 seconds',
+          'Showing ' +
+              _readings.length.toString() +
+              ' readings · updates every 30 seconds',
           style: GoogleFonts.inter(fontSize: 11, color: secondary)),
       const SizedBox(height: 12),
       if (widget.serialNumber.isEmpty)
@@ -100,7 +186,11 @@ class _SensorReadingHistoryState extends State<SensorReadingHistory> {
                 style:
                     style.copyWith(color: Theme.of(context).colorScheme.error)))
       else if (!_loading && _readings.isEmpty)
-        Text('No readings recorded yet.', style: style),
+        Text(
+            _range == null
+                ? 'No readings recorded yet.'
+                : 'No readings in the selected date range.',
+            style: style),
       if (_readings.isNotEmpty) ...[
         SensorReadingsChart(
             readings: _readings,
@@ -142,6 +232,10 @@ class _SensorReadingHistoryState extends State<SensorReadingHistory> {
                         style:
                             GoogleFonts.inter(fontSize: 11, color: secondary)),
                 ])),
+      if (_hasMore)
+        TextButton(
+            onPressed: _loading ? null : () => _load(more: true),
+            child: const Text('Load more readings')),
       if (_showRecords && _visible < _readings.length)
         TextButton(
             onPressed: () => setState(() => _visible += 20),

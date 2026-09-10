@@ -433,6 +433,20 @@ class SuperAdminApiService {
 
   Future<List<Map<String, dynamic>>> getSensorReadings(String serialNumber) =>
       _getDocuments('/sensors/${Uri.encodeComponent(serialNumber)}/readings');
+  Future<List<Map<String, dynamic>>> getSensorReadingsForPeriod(
+      String serialNumber,
+      {DateTime? start,
+      DateTime? end,
+      int offset = 0}) {
+    final query = Uri(queryParameters: {
+      if (start != null) 'start': start.toUtc().toIso8601String(),
+      if (end != null) 'end': end.toUtc().toIso8601String(),
+      'offset': offset.toString(),
+    }).query;
+    return _getDocuments(
+        '/sensors/' + Uri.encodeComponent(serialNumber) + '/readings?' + query);
+  }
+
   Future<List<Map<String, dynamic>>> getSensorReadingsAll() =>
       _getDocuments('/sensor-readings');
 

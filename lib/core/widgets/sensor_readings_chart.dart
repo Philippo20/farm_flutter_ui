@@ -32,7 +32,7 @@ class SensorReadingsChart extends StatelessWidget {
     }).toList()
       ..sort((a, b) => DateTime.parse('${b['timestamp']}')
           .compareTo(DateTime.parse('${a['timestamp']}')));
-    final latest = valid.take(20).toList().reversed;
+    final latest = valid.reversed;
     final groups = <String, List<Map<String, dynamic>>>{};
     for (final row in latest) {
       groups.putIfAbsent('${row['unit'] ?? ''}'.trim(), () => []).add(row);
@@ -93,35 +93,87 @@ class SensorReadingsChart extends StatelessWidget {
                   : 'Reading value ($unit)',
               style:
                   GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 5),
-          Text('${rows.length} samples · oldest to newest',
-              style: GoogleFonts.inter(fontSize: 11, color: secondary)),
-          const SizedBox(height: 12),
-          Wrap(spacing: 16, runSpacing: 6, children: [
-            Text('Low ${number.format(values.reduce(math.min))}',
+          if (MediaQuery.sizeOf(context).width < 600) ...[
+            const SizedBox(height: 8),
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(
+                  child: Text(rows.length.toString() + ' samples',
+                      style:
+                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Text('Oldest to newest',
+                      style:
+                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+            ]),
+            const SizedBox(height: 8),
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(
+                  child: Text('Low ' + number.format(values.reduce(math.min)),
+                      style:
+                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Text('High ' + number.format(values.reduce(math.max)),
+                      style:
+                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+            ]),
+            const SizedBox(height: 8),
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(
+                  child: Text(
+                      thresholds.valid
+                          ? thresholds.normalLabel + ' ' + unit
+                          : 'Thresholds unavailable for this unit or configuration',
+                      style:
+                          GoogleFonts.inter(fontSize: 11, color: secondary))),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Wrap(spacing: 8, runSpacing: 6, children: [
+                for (final label in ['Good', 'Bad', 'Unrated'])
+                  Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.circle, size: 8, color: _statusColor(label)),
+                    const SizedBox(width: 4),
+                    Text(label,
+                        style:
+                            GoogleFonts.inter(fontSize: 10, color: secondary)),
+                  ]),
+              ])),
+            ]),
+            const SizedBox(height: 6),
+            Text('Colors use current sensor thresholds',
+                style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+          ] else ...[
+            const SizedBox(height: 5),
+            Text('${rows.length} samples · oldest to newest',
                 style: GoogleFonts.inter(fontSize: 11, color: secondary)),
-            Text('High ${number.format(values.reduce(math.max))}',
+            const SizedBox(height: 12),
+            Wrap(spacing: 16, runSpacing: 6, children: [
+              Text('Low ${number.format(values.reduce(math.min))}',
+                  style: GoogleFonts.inter(fontSize: 11, color: secondary)),
+              Text('High ${number.format(values.reduce(math.max))}',
+                  style: GoogleFonts.inter(fontSize: 11, color: secondary)),
+            ]),
+            const SizedBox(height: 12),
+            Text(
+                thresholds.valid
+                    ? '${thresholds.normalLabel} $unit'
+                    : 'Thresholds unavailable for this unit or configuration',
                 style: GoogleFonts.inter(fontSize: 11, color: secondary)),
-          ]),
-          const SizedBox(height: 12),
-          Text(
-              thresholds.valid
-                  ? '${thresholds.normalLabel} $unit'
-                  : 'Thresholds unavailable for this unit or configuration',
-              style: GoogleFonts.inter(fontSize: 11, color: secondary)),
-          const SizedBox(height: 8),
-          Wrap(spacing: 12, runSpacing: 8, children: [
-            for (final label in ['Good', 'Bad', 'Unrated'])
-              Row(mainAxisSize: MainAxisSize.min, children: [
-                Icon(Icons.circle, size: 8, color: _statusColor(label)),
-                const SizedBox(width: 5),
-                Text(label,
-                    style: GoogleFonts.inter(fontSize: 10, color: secondary))
-              ])
-          ]),
-          const SizedBox(height: 6),
-          Text('Colors use current sensor thresholds',
-              style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+            const SizedBox(height: 8),
+            Wrap(spacing: 12, runSpacing: 8, children: [
+              for (final label in ['Good', 'Bad', 'Unrated'])
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.circle, size: 8, color: _statusColor(label)),
+                  const SizedBox(width: 5),
+                  Text(label,
+                      style: GoogleFonts.inter(fontSize: 10, color: secondary))
+                ])
+            ]),
+            const SizedBox(height: 6),
+            Text('Colors use current sensor thresholds',
+                style: GoogleFonts.inter(fontSize: 10, color: secondary)),
+          ],
           const SizedBox(height: 18),
           LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
@@ -130,7 +182,9 @@ class SensorReadingsChart extends StatelessWidget {
                   child: SizedBox(
                       width: math.max(
                           constraints.maxWidth, rows.length * 46.0 + 48),
-                      height: compact ? 160 : 220,
+                      height: MediaQuery.sizeOf(context).width < 600
+                          ? (compact ? 220 : 260)
+                          : (compact ? 160 : 220),
                       child: Semantics(
                           label:
                               '${rows.length} sensor readings in $unit. Exact values are available in Show reading records.',

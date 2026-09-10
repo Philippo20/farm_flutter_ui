@@ -127,7 +127,8 @@ class _SensorManagementScreenState
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = error.toString();
+        if (!silent || _backendSensors.isEmpty)
+          _errorMessage = error.toString();
       });
     } finally {
       _fetching = false;

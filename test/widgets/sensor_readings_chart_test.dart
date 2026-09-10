@@ -37,18 +37,18 @@ void main() {
           tester.widgetList<BarChart>(find.byType(BarChart)).toList();
       expect(charts.length, 2);
       final celsius = charts.first.data;
-      expect(celsius.barGroups.length, 19);
-      expect(celsius.barGroups.first.barRods.single.toY, -14);
+      expect(celsius.barGroups.length, 25);
+      expect(celsius.barGroups.first.barRods.single.toY, -20);
       expect(celsius.barGroups.last.barRods.single.toY, 4);
-      expect(celsius.minY, lessThan(-14));
+      expect(celsius.minY, lessThan(-20));
       expect(celsius.maxY, greaterThan(4));
       final tooltip = celsius.barTouchData.touchTooltipData.getTooltipItem(
           celsius.barGroups.first,
           0,
           celsius.barGroups.first.barRods.single,
           0);
-      expect(tooltip!.text, contains('-14 C'));
-      expect(tooltip.text, contains('00:06:00'));
+      expect(tooltip!.text, contains('-20 C'));
+      expect(tooltip.text, contains('00:00:00'));
       expect(charts.last.data.minY, 0);
       expect(charts.last.data.maxY, greaterThan(0));
       await tester.drag(
