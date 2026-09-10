@@ -255,6 +255,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
   String _typeLabel(dynamic value) {
     final raw = value?.toString().trim() ?? '';
     switch (raw.toLowerCase()) {
+      case 'vpd':
+        return 'VPD';
       case 'temperature':
         return 'Temperature';
       case 'humidity':
@@ -355,6 +357,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
 
   String _unitForType(String type) {
     switch (type) {
+      case 'VPD':
+        return 'psi';
       case 'Temperature':
         return 'C';
       case 'Humidity':
@@ -1679,16 +1683,20 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
       text: sensor?.unit ?? _unitForType(selectedType),
     );
     final rangeMinController = TextEditingController(
-      text: sensor?.raw['range_min']?.toString() ?? '${defaultLimits.$1}',
+      text: sensor?.raw['range_min']?.toString() ??
+          (selectedType == 'VPD' ? '' : '${defaultLimits.$1}'),
     );
     final rangeMaxController = TextEditingController(
-      text: sensor?.raw['range_max']?.toString() ?? '${defaultLimits.$2}',
+      text: sensor?.raw['range_max']?.toString() ??
+          (selectedType == 'VPD' ? '' : '${defaultLimits.$2}'),
     );
     final warningMinController = TextEditingController(
-      text: sensor?.raw['warning_min']?.toString() ?? '${defaultLimits.$3}',
+      text: sensor?.raw['warning_min']?.toString() ??
+          (selectedType == 'VPD' ? '' : '${defaultLimits.$3}'),
     );
     final warningMaxController = TextEditingController(
-      text: sensor?.raw['warning_max']?.toString() ?? '${defaultLimits.$4}',
+      text: sensor?.raw['warning_max']?.toString() ??
+          (selectedType == 'VPD' ? '' : '${defaultLimits.$4}'),
     );
     final maintenanceController = TextEditingController(
       text: sensor?.raw['maintenance_frequency']?.toString() ?? 'Monthly',
@@ -1819,6 +1827,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                               'Current',
                               'Voltage',
                               'Wattage',
+                              'VPD',
                             ],
                             isDark: isDark,
                             onChanged: isSaving
@@ -1831,12 +1840,22 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                                       final limits = _defaultLimitsForType(
                                         selectedType,
                                       );
-                                      rangeMinController.text = '${limits.$1}';
-                                      rangeMaxController.text = '${limits.$2}';
+                                      rangeMinController.text =
+                                          selectedType == 'VPD'
+                                              ? ''
+                                              : '${limits.$1}';
+                                      rangeMaxController.text =
+                                          selectedType == 'VPD'
+                                              ? ''
+                                              : '${limits.$2}';
                                       warningMinController.text =
-                                          '${limits.$3}';
+                                          selectedType == 'VPD'
+                                              ? ''
+                                              : '${limits.$3}';
                                       warningMaxController.text =
-                                          '${limits.$4}';
+                                          selectedType == 'VPD'
+                                              ? ''
+                                              : '${limits.$4}';
                                     });
                                   },
                           ),
@@ -2052,7 +2071,9 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                         Expanded(
                           child: _dialogField(
                             controller: unitController,
-                            label: 'Unit',
+                            label: selectedType == 'VPD'
+                                ? 'Unit (kPa / psi)'
+                                : 'Unit',
                             isDark: isDark,
                             enabled: !isSaving,
                             validator: _requiredValidator,
