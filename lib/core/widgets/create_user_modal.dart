@@ -121,7 +121,10 @@ class _CreateUserModalState extends State<_CreateUserModal> {
     });
     try {
       await widget.onSubmit({
-        for (final entry in _fields.entries) entry.key: entry.value.text.trim(),
+        for (final entry in _fields.entries)
+          entry.key: entry.key == 'password'
+              ? entry.value.text
+              : entry.value.text.trim(),
         'role': _role,
         'department': widget.departmentForRole?.call(_role) ?? _department,
         'status': _status,
