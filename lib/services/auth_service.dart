@@ -5,14 +5,15 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../models/enums.dart';
-import '../core/config/demo_accounts.dart';
 
 /// Authentication Service
 /// Handles user authentication, session management, and role-based access
 class AuthService {
   static final AuthService _instance = AuthService._internal();
+  AuthService.forTesting(http.Client client) : _client = client;
+  final http.Client _client;
   factory AuthService() => _instance;
-  AuthService._internal();
+  AuthService._internal() : _client = http.Client();
 
   // Session keys
   static const String _keyUserId = 'user_id';
@@ -46,21 +47,11 @@ class AuthService {
     final token = _jwt;
     final session = _sessionId;
     if (token == null) throw const SessionExpiredException();
-    try {
-      final claims = jsonDecode(utf8.decode(base64Url.decode(
-        base64Url.normalize(token.split('.')[1]),
-      ))) as Map<String, dynamic>;
-      final expires = (claims['exp'] as num).toInt();
-      if (DateTime.now().millisecondsSinceEpoch >= expires * 1000) {
-        throw const SessionExpiredException();
-      }
-    } catch (_) {
-      throw const SessionExpiredException();
-    }
-    final response = await http.post(Uri.parse('$_apiBaseUrl/account/session'),
-        headers: {
-          'Authorization': 'Bearer $token'
-        }).timeout(const Duration(seconds: 10));
+    // Appwrite validates token expiry using its server clock.
+    final response = await _client
+        .post(Uri.parse('$_apiBaseUrl/account/session'), headers: {
+      'Authorization': 'Bearer $token'
+    }).timeout(const Duration(seconds: 10));
     if (session != _sessionId || token != _jwt) {
       throw StateError('The signed-in session changed.');
     }
@@ -161,77 +152,17 @@ class AuthService {
 
   /// Login with email and password
   Future<AuthResult> login(String email, String password) async {
-    try {
-      // Normalize email
-      final normalizedEmail = email.toLowerCase().trim();
-
-      final exactDemoAccount = DemoAccounts.getByEmail(normalizedEmail);
-
-      final apiResult = await _loginWithApi(normalizedEmail, password);
-      if (apiResult != null) {
-        // Demo credentials are intentionally displayed on the login screen.
-        // Keep them usable when the corresponding account has not been seeded,
-        // while preferring the real backend identity whenever login succeeds.
-        if (!apiResult.success &&
-            exactDemoAccount != null &&
-            exactDemoAccount.password == password) {
-          return _loginWithDemoAccount(exactDemoAccount);
-        }
-        return apiResult;
-      }
-
-      // Check demo accounts
-      final demoAccount = DemoAccounts.getByEmail(normalizedEmail);
-
-      if (demoAccount == null) {
-        return AuthResult(
-          success: false,
-          message: 'Invalid email or password',
-        );
-      }
-
-      // Verify password
-      if (demoAccount.password != password) {
-        return AuthResult(
-          success: false,
-          message: 'Invalid email or password',
-        );
-      }
-
-      return _loginWithDemoAccount(demoAccount);
-    } catch (e) {
-      return AuthResult(
-        success: false,
-        message: 'An error occurred during login: $e',
-      );
-    }
-  }
-
-  Future<AuthResult> _loginWithDemoAccount(DemoAccount account) async {
-    _dashboardRoute = account.dashboardRoute;
-    _jwt = null;
-    _sessionId = null;
-    _currentUser = UserModel(
-      id: account.role,
-      name: account.displayName,
-      email: account.email,
-      role: _mapRoleStringToEnum(account.role),
-      address: 'Farm Estates',
-      farmId: 'F001',
-      createdAt: DateTime.now(),
-    );
-    await _saveSession();
-    await _logActivity('User logged in with demo account', _currentUser!);
-    return AuthResult(
-      success: true,
-      message: 'Login successful',
-      user: _currentUser,
-    );
+    final result = await _loginWithApi(email.toLowerCase().trim(), password);
+    return result ??
+        AuthResult(
+            success: false,
+            message:
+                'Unable to reach the sign-in service. Check your connection and try again.');
   }
 
   Future<AuthResult?> _loginWithApi(String email, String password) async {
     try {
-      final response = await http.post(
+      final response = await _client.post(
         Uri.parse('$_apiBaseUrl/account/login'),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {
@@ -270,6 +201,15 @@ class AuthService {
 
       final role = UserRole.fromString(userJson['role'] as String);
       _dashboardRoute = _routeForRole(role);
+      if (payload['jwt'] is! String ||
+          (payload['jwt'] as String).isEmpty ||
+          payload['session_id'] is! String ||
+          (payload['session_id'] as String).isEmpty) {
+        return AuthResult(
+            success: false,
+            message:
+                'Sign-in did not return a valid session. Please try again.');
+      }
       _jwt = payload['jwt'] as String?;
       _sessionId = payload['session_id'] as String?;
       _currentUser = UserModel(
@@ -320,43 +260,6 @@ class AuthService {
   }
 
   /// Map role string to UserRole enum
-  UserRole _mapRoleStringToEnum(String role) {
-    switch (role) {
-      case 'super_admin':
-        return UserRole.superAdmin;
-      case 'admin':
-        return UserRole.admin;
-      case 'farm_manager':
-        return UserRole.farmManager;
-      case 'farm_owner':
-      case 'owner':
-        return UserRole.owner;
-      case 'caretaker':
-        return UserRole.caretaker;
-      case 'technician':
-        return UserRole.technician;
-      case 'fulfillment_manager':
-        return UserRole.fulfillmentManager;
-      case 'packaging_supervisor':
-        return UserRole.packagingSupervisor;
-      case 'quality_assurance':
-      case 'quality_officer':
-        return UserRole.qualityAssurance;
-      case 'sales_manager':
-        return UserRole.salesManager;
-      case 'sales_personnel':
-      case 'sales_person':
-        return UserRole.salesPersonnel;
-      case 'driver':
-      case 'delivery_agent':
-        return UserRole.driver;
-      case 'accountant':
-        return UserRole.accountant;
-      default:
-        return UserRole.caretaker;
-    }
-  }
-
   /// Logout current user
   Future<void> logout() async {
     try {
