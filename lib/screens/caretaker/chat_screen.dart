@@ -17,8 +17,9 @@ import '../../providers/auth_provider.dart';
 /// Chat Screen for Caretaker
 /// Communicate with farm owners and managers
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({super.key, this.initialPeerId});
+  const ChatScreen({super.key, this.initialPeerId, this.messagingService});
   final String? initialPeerId;
+  final MessagingService? messagingService;
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -40,7 +41,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   List<Map<String, dynamic>> get _messages =>
       _threads.putIfAbsent(_selectedChat ?? '', () => []);
 
-  final _api = MessagingService();
+  late final MessagingService _api;
+  late final StateController<String?> _activePeer;
+  bool _disposed = false;
   Timer? _poll;
   bool _refreshing = false;
   bool _sending = false;
@@ -56,6 +59,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   @override
   void initState() {
     super.initState();
+    _api = widget.messagingService ?? MessagingService();
+    _activePeer = ref.read(activeMessagePeerProvider.notifier);
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _refresh();
@@ -65,10 +70,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_disposed || !mounted || !_activePeer.mounted) return;
     _foreground = state == AppLifecycleState.resumed;
     _poll?.cancel();
     if (state != AppLifecycleState.resumed) {
-      ref.read(activeMessagePeerProvider.notifier).state = null;
+      _activePeer.state = null;
     }
     if (state == AppLifecycleState.resumed) {
       _refresh();
@@ -89,8 +95,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   }
 
   Future<void> _refresh() async {
+    if (_disposed || !mounted || !_activePeer.mounted) return;
     if (mounted && _foreground) {
-      ref.read(activeMessagePeerProvider.notifier).state =
+      _activePeer.state =
           ModalRoute.of(context)?.isCurrent == true ? _selectedChat : null;
     }
     if (!mounted ||
@@ -102,6 +109,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     final peer = _selectedChat;
     try {
       final chats = await _api.conversations();
+      if (_disposed || !mounted) return;
       final messages = peer == null ? null : await _api.messages(peer);
       if (!mounted) return;
       final wasNearEnd = !_messageScrollController.hasClients ||
@@ -234,14 +242,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   @override
   void dispose() {
-    final activePeer = ref.read(activeMessagePeerProvider.notifier);
+    _disposed = true;
+    _poll?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    final activePeer = _activePeer;
     final peer = _selectedChat;
     Future.microtask(() {
       if (activePeer.mounted && activePeer.state == peer)
         activePeer.state = null;
     });
-    WidgetsBinding.instance.removeObserver(this);
-    _poll?.cancel();
     _api.dispose();
     _messageScrollController.dispose();
     _messageController.dispose();
@@ -860,7 +869,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
         child: Row(children: [
           const Icon(Icons.info_outline, size: 18, color: AppColors.error),
           const SizedBox(width: 8),
-          Expanded(child: Text(message, style: const TextStyle(fontSize: AppTypography.captionSize))),
+          Expanded(
+              child: Text(message,
+                  style: const TextStyle(fontSize: AppTypography.captionSize))),
           TextButton(
               onPressed: _sending
                   ? null
