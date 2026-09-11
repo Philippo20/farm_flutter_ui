@@ -284,14 +284,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {
-                    // TODO: Implement forgot password
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Forgot password feature coming soon'),
-                      ),
-                    );
-                  },
+                  onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
                   child: Text(
                     'Forgot Password?',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(

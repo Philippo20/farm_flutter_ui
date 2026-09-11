@@ -1,3 +1,4 @@
+import 'screens/auth/password_recovery_screen.dart';
 import 'core/widgets/api_connection_host.dart';
 import 'core/widgets/session_security_host.dart';
 import 'package:farmestates_ai_dashbaord/screens/farm_manager/batch_generation_screen.dart';
@@ -119,7 +120,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
-    final requestedRoute = Uri.base.fragment.startsWith('/sales-invoice')
+    final requestedRoute = (Uri.base.fragment.startsWith('/sales-invoice') || Uri.base.fragment.startsWith('/reset-password'))
         ? Uri.base.fragment
         : '/login';
 
@@ -158,6 +159,10 @@ class MyApp extends ConsumerWidget {
       },
       onGenerateRoute: (settings) {
         final uri = Uri.tryParse(settings.name ?? '');
+        if (uri?.path == '/reset-password') {
+          final parameters = {...Uri.base.queryParameters, ...?uri?.queryParameters};
+          return MaterialPageRoute<void>(settings: settings, builder: (_) => PasswordRecoveryScreen(reset: true, userId: parameters['userId'] ?? parameters['user_id'] ?? '', secret: parameters['secret'] ?? ''));
+        }
         if (uri?.path == '/sales-invoice') {
           return MaterialPageRoute<void>(
             settings: settings,
@@ -171,6 +176,7 @@ class MyApp extends ConsumerWidget {
       routes: {
         // Auth
         '/login': (context) => const ModernLoginScreen(),
+        '/forgot-password': (context) => PasswordRecoveryScreen(initialEmail: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
         '/signup': (context) => const SignupScreen(),
         '/profile': (context) => const ProfileScreen(),
 

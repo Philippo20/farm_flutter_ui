@@ -346,7 +346,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
             // Forgot Password
             Center(
               child: TextButton(
-                onPressed: () {},
+                onPressed: () => Navigator.pushNamed(context, '/forgot-password', arguments: _emailController.text.trim()),
                 child: Text(
                   'Forgot Password?',
                   style: TextStyle(
