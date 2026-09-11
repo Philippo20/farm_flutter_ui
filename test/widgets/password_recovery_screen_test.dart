@@ -7,6 +7,30 @@ import 'package:farmestates_ai_dashbaord/screens/auth/password_recovery_screen.d
 import 'package:farmestates_ai_dashbaord/services/password_recovery_service.dart';
 
 void main() {
+  testWidgets('Successful reset offers app launch and falls back to web sign-in', (tester) async {
+    GoogleFonts.config.allowRuntimeFetching = false;
+    var launches = 0;
+    final service = PasswordRecoveryService(client: MockClient((_) async => http.Response('{}', 200)));
+    addTearDown(service.close);
+    await tester.pumpWidget(MaterialApp(
+      home: PasswordRecoveryScreen(reset: true, userId: 'user', secret: 'token',
+        service: service, appLauncher: () { launches++; throw StateError('No app'); }),
+      routes: {'/login': (_) => const Scaffold(body: Text('Web sign-in'))},
+    ));
+    expect(find.text('Open Farm Estates app'), findsNothing);
+    await tester.enterText(find.byType(TextFormField).first, 'new-password-123');
+    await tester.enterText(find.byType(TextFormField).last, 'new-password-123');
+    await tester.tap(find.text('Update password'));
+    await tester.pumpAndSettle();
+    expect(launches, 0);
+    await tester.tap(find.text('Open Farm Estates app'));
+    await tester.pump();
+    expect(launches, 1);
+    expect(find.text('Continue on web'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
+    expect(find.text('Web sign-in'), findsOneWidget);
+  });
   for (final width in [320.0, 1440.0]) {
     for (final reset in [false, true]) {
       testWidgets('password recovery width=$width reset=$reset',

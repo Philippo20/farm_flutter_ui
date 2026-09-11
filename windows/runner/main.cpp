@@ -5,6 +5,34 @@
 #include "flutter_window.h"
 #include "utils.h"
 
+namespace {
+// Per-user registration supports installed and portable builds without elevation.
+void RegisterAppProtocol() {
+  wchar_t executable[32768];
+  const DWORD length = GetModuleFileNameW(nullptr, executable, 32768);
+  if (length == 0 || length >= 32768) return;
+  HKEY key;
+  if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Classes\\farmestates",
+                     0, nullptr, 0, KEY_WRITE, nullptr, &key, nullptr) != ERROR_SUCCESS) return;
+  const wchar_t description[] = L"URL:Farm Estates";
+  RegSetValueExW(key, nullptr, 0, REG_SZ,
+                reinterpret_cast<const BYTE*>(description), sizeof(description));
+  const wchar_t empty[] = L"";
+  RegSetValueExW(key, L"URL Protocol", 0, REG_SZ,
+                reinterpret_cast<const BYTE*>(empty), sizeof(empty));
+  HKEY commandKey;
+  if (RegCreateKeyExW(key, L"shell\\open\\command", 0, nullptr, 0,
+                     KEY_WRITE, nullptr, &commandKey, nullptr) == ERROR_SUCCESS) {
+    const std::wstring command = L"\"" + std::wstring(executable, length) + L"\" \"%1\"";
+    RegSetValueExW(commandKey, nullptr, 0, REG_SZ,
+                  reinterpret_cast<const BYTE*>(command.c_str()),
+                  static_cast<DWORD>((command.size() + 1) * sizeof(wchar_t)));
+    RegCloseKey(commandKey);
+  }
+  RegCloseKey(key);
+}
+}  // namespace
+
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
   // Attach to console when present (e.g., 'flutter run') or create a
@@ -16,6 +44,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // Initialize COM, so that it is available for use in the library and/or
   // plugins.
   ::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+  RegisterAppProtocol();
 
   flutter::DartProject project(L"data");
 

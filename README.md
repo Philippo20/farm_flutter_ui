@@ -55,3 +55,18 @@ lib/
 ## Related repository
 
 The backend is maintained at [farm_appwrite_api](https://github.com/Philippo20/farm_appwrite_api).
+# Password recovery app handoff
+
+After a successful reset, Android and Windows browsers offer **Open Farm Estates
+app** and **Continue on web**. Opening the app requires a user click because
+browsers restrict external app launches after asynchronous requests. Android
+uses an intent with a browser fallback; Windows uses `farmestates://app/login`.
+The page falls back to web sign-in after three seconds. No reset credentials
+are included in the app link.
+
+Deploy the web build and distribute the updated Android/Windows builds. Android
+registers the link on installation. Open the updated Windows build once to
+register the per-user protocol handler (no administrator access required).
+Existing older app builds cannot handle the link. Other browser platforms
+continue with web sign-in. Browser prompts and installed-app detection remain
+controlled by the browser and operating system.

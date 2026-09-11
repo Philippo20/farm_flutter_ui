@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import '../../core/utils/recovery_app_handoff.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/theme/app_colors.dart';
 import '../../services/password_recovery_service.dart';
@@ -10,10 +12,12 @@ class PasswordRecoveryScreen extends StatefulWidget {
       this.reset = false,
       this.userId = '',
       this.secret = '',
-      this.service});
+      this.service,
+      this.appLauncher});
   final String initialEmail, userId, secret;
   final bool reset;
   final PasswordRecoveryService? service;
+  final VoidCallback? appLauncher;
   @override
   State<PasswordRecoveryScreen> createState() => _PasswordRecoveryScreenState();
 }
@@ -25,8 +29,30 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
   final _form = GlobalKey<FormState>();
   bool _busy = false, _done = false, _hidden = true;
   String? _error;
+  Timer? _handoffTimer;
+  bool _openingApp = false;
+  bool get _canOpenApp => widget.appLauncher != null || supportsRecoveryAppHandoff;
+
+  void _continueOnWeb() {
+    _handoffTimer?.cancel();
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+  }
+
+  void _openApp() {
+    if (_openingApp) return;
+    setState(() => _openingApp = true);
+    try {
+      (widget.appLauncher ?? openRecoveryApp)();
+    } catch (_) {
+      // Browser policy or a missing app must never block web sign-in.
+    }
+    _handoffTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) _continueOnWeb();
+    });
+  }
   @override
   void dispose() {
+    _handoffTimer?.cancel();
     _email.dispose();
     _password.dispose();
     _confirm.dispose();
@@ -47,6 +73,12 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
         await _service.request(_email.text.trim());
       }
       if (mounted) setState(() => _done = true);
+      if (mounted && widget.reset) {
+        _password.clear();
+        _confirm.clear();
+        // Browser app launches require a fresh user gesture after the API call.
+        // The success action below provides it without opening an app too early.
+      }
     } catch (error) {
       if (mounted)
         setState(
@@ -243,16 +275,17 @@ class _PasswordRecoveryScreenState extends State<PasswordRecoveryScreen> {
                                                 child: const Text(
                                                     'Request new link')),
                                           const SizedBox(height: 12),
+                                          if (_done && widget.reset && _canOpenApp)
+                                            FilledButton(
+                                              onPressed: _openingApp ? null : _openApp,
+                                              child: Text(_openingApp ? 'Opening app…' : 'Open Farm Estates app'),
+                                            ),
                                           TextButton(
                                               onPressed: _busy
                                                   ? null
-                                                  : () => Navigator
-                                                      .pushNamedAndRemoveUntil(
-                                                          context,
-                                                          '/login',
-                                                          (_) => false),
-                                              child: const Text(
-                                                  'Back to sign in')),
+                                                  : _continueOnWeb,
+                                              child: Text(_done && widget.reset && _canOpenApp
+                                                  ? 'Continue on web' : 'Back to sign in')),
                                         ]),
                                   )))),
                     ))));
