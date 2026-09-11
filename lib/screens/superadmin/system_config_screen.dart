@@ -1,3 +1,4 @@
+import '../../core/widgets/email_settings_card.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -984,6 +985,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
               inputFormatters: [FilteringTextInputFormatter.digitsOnly]),
         ],
       ),
+      const EmailSettingsCard(),
     ];
 
     if (isMobile) {
@@ -1034,6 +1036,8 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
               child: Column(
                 children: [
                   cards[4],
+                  const SizedBox(height: AppSpacing.lg),
+                  cards[6],
                 ],
               ),
             ),
