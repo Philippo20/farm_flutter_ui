@@ -23,7 +23,7 @@ void main() {
             'status': 'Active'
           },
         {'value': 'invalid', 'timestamp': 'bad'},
-        {'value': 0, 'unit': 'F', 'timestamp': '2026-09-10T00:25:00Z'}
+        {'value': 0, 'unit': 'F', 'timestamp': '2026-09-10T13:25:00Z'}
       ];
       await tester.pumpWidget(MaterialApp(
           theme: ThemeData(
@@ -48,7 +48,11 @@ void main() {
           celsius.barGroups.first.barRods.single,
           0);
       expect(tooltip!.text, contains('-20 C'));
-      expect(tooltip.text, contains('00:00:00'));
+      expect(tooltip.text, contains('12:00:00 AM'));
+      final afternoon = charts.last.data;
+      final afternoonTooltip = afternoon.barTouchData.touchTooltipData.getTooltipItem(
+          afternoon.barGroups.first, 0, afternoon.barGroups.first.barRods.single, 0);
+      expect(afternoonTooltip!.text, contains('1:25:00 PM'));
       expect(charts.last.data.minY, 0);
       expect(charts.last.data.maxY, greaterThan(0));
       await tester.drag(

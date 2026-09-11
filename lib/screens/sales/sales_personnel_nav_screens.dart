@@ -1581,7 +1581,11 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                             : Colors.black.withOpacity(0.06),
                       ),
                     ),
-                    child: SwitchListTile.adaptive(
+                    child: Material(
+          type: MaterialType.transparency,
+          borderRadius: BorderRadius.circular(10),
+          clipBehavior: Clip.antiAlias,
+          child: SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
                       title: Text(
                         'Payment received',
@@ -1603,7 +1607,7 @@ class _DeliveryHandoverModalState extends State<_DeliveryHandoverModal> {
                       onChanged: _saving
                           ? null
                           : (value) => setState(() => _paid = value),
-                    ),
+                    )),
                   ),
                   if (_paid)
                     _field(

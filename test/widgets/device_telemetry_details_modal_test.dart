@@ -51,6 +51,10 @@ void main() {
         await tester.tap(find.text('Open'));
         await tester.pumpAndSettle();
         expect(find.text('Device details'), findsOneWidget);
+        expect(find.text('Reading history'), findsOneWidget);
+        expect(find.text('Latest reading'), findsNothing);
+        expect(tester.getTopLeft(find.text('History')).dx,
+            lessThan(tester.getTopLeft(find.text('Overview')).dx));
         expect(find.text('Close'), findsOneWidget);
         expect(tester.takeException(), isNull);
         final closeY = tester.getTopLeft(find.text('Close')).dy;
@@ -58,6 +62,16 @@ void main() {
             find.byType(SingleChildScrollView).first, const Offset(0, -900));
         await tester.pumpAndSettle();
         expect(tester.getTopLeft(find.text('Close')).dy, closeY);
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.text('History'));
+        await tester.pumpAndSettle();
+        expect(find.text('Reading history'), findsOneWidget);
+        expect(find.text('Latest reading'), findsNothing);
+        expect(tester.getTopLeft(find.text('Close')).dy, closeY);
+        await tester.tap(find.text('Overview'));
+        await tester.pumpAndSettle();
+        expect(find.text('Configuration'), findsOneWidget);
+        expect(find.text('Reading history'), findsNothing);
         expect(tester.takeException(), isNull);
         await tester.tap(find.text('Close'));
         await tester.pumpAndSettle();

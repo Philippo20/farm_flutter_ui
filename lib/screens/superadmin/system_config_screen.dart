@@ -1127,7 +1127,11 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                   ? AppColors.error.withValues(alpha: .3)
                   : (isDark ? Colors.white10 : AppColors.neutral200)),
         ),
-        child: SwitchListTile.adaptive(
+        child: Material(
+          type: MaterialType.transparency,
+          borderRadius: BorderRadius.circular(10),
+          clipBehavior: Clip.antiAlias,
+          child: SwitchListTile.adaptive(
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           value: value,
@@ -1146,7 +1150,7 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
                     height: 1.4,
                     color: isDark ? Colors.white60 : AppColors.textSecondary)),
           ),
-        ),
+        )),
       );
     }
 

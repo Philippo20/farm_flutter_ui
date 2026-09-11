@@ -1,3 +1,4 @@
+import '../../core/widgets/traceability_experience_editor.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -438,7 +439,9 @@ class _TraceabilityConsoleScreenState
                   Text(
                     'Product Traceability',
                     style: AppTypography.font(
-                      fontSize: mobile ? AppTypography.pageTitleSize : AppTypography.displaySize,
+                      fontSize: mobile
+                          ? AppTypography.pageTitleSize
+                          : AppTypography.displaySize,
                       fontWeight: AppTypography.headingWeight,
                     ),
                   ),
@@ -519,7 +522,8 @@ class _TraceabilityConsoleScreenState
                         const SizedBox(height: 8),
                         Text('${item.$2}',
                             style: AppTypography.font(
-                                fontSize: AppTypography.pageTitleSize, fontWeight: AppTypography.headingWeight)),
+                                fontSize: AppTypography.pageTitleSize,
+                                fontWeight: AppTypography.headingWeight)),
                         const SizedBox(height: 2),
                         Text(item.$1,
                             style: AppTypography.font(
@@ -603,7 +607,7 @@ class _TraceabilityConsoleScreenState
           title: 'Published product records',
           subtitle: '${rows.length} production batches available',
           action: SizedBox(
-            width: mobile ? double.infinity : (mobile ? 190 : 280),
+            width: mobile ? double.infinity : 280,
             child: TextField(
               controller: _searchController,
               style: AppTypography.font(fontSize: AppTypography.actionSize),
@@ -615,26 +619,31 @@ class _TraceabilityConsoleScreenState
         if (rows.isEmpty)
           _empty(Icons.inventory_2_outlined, 'No matching batches')
         else
-          ...rows.map((batch) => Padding(
-                padding: EdgeInsets.only(
-                    bottom: mobile && identical(batch, rows.last) ? 0 : 10),
-                child: mobile
-                    ? _mobileProductCard(batch)
-                    : _BatchCard(
-                        batch: batch,
-                        onConfigure: () => _openPublication(batch),
-                        onCopy: () async {
-                          await Clipboard.setData(ClipboardData(
-                              text: '${batch['public_url'] ?? ''}'));
-                          if (mounted) _notice('Public product link copied');
-                        },
-                      ),
-              )),
+          LayoutBuilder(builder: (context, constraints) {
+            // Use the mobile card on every platform, without fixed card heights.
+            final columns = mobile
+                ? 1
+                : ((constraints.maxWidth + 12) / 332).floor().clamp(1, 3);
+            final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Wrap(
+                spacing: 12,
+                runSpacing: mobile ? 10 : 12,
+                children: rows
+                    .map((batch) => SizedBox(
+                          width: width,
+                          child: _productCard(batch),
+                        ))
+                    .toList(),
+              ),
+            );
+          }),
       ],
     );
   }
 
-  Widget _mobileProductCard(Map<String, dynamic> batch) {
+  Widget _productCard(Map<String, dynamic> batch) {
     final published = batch['published'] == true;
     final recall = '${batch['recall_status'] ?? 'none'}';
     final secondary = Theme.of(context).colorScheme.onSurfaceVariant;
@@ -648,11 +657,13 @@ class _TraceabilityConsoleScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Text(label,
-                      style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
+                      style: AppTypography.font(
+                          fontSize: AppTypography.microSize, color: secondary)),
                   const SizedBox(height: 4),
                   Text(value.trim().isEmpty ? 'Not provided' : value,
                       style: AppTypography.font(
-                          fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight)),
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.headingWeight)),
                 ])),
           ],
         );
@@ -677,11 +688,13 @@ class _TraceabilityConsoleScreenState
                       children: [
                     Text('${batch['product_name'] ?? 'Product'}',
                         style: AppTypography.font(
-                            fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight)),
+                            fontSize: AppTypography.cardTitleSize,
+                            fontWeight: AppTypography.headingWeight)),
                     const SizedBox(height: 4),
                     Text('${batch['batch_number'] ?? 'No batch number'}',
-                        style:
-                            AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary)),
+                        style: AppTypography.font(
+                            fontSize: AppTypography.fieldLabelSize,
+                            color: secondary)),
                   ])),
             ]),
             const SizedBox(height: 12),
@@ -724,7 +737,8 @@ class _TraceabilityConsoleScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 12),
                       textStyle: AppTypography.font(
-                          fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
+                          fontSize: AppTypography.captionSize,
+                          fontWeight: AppTypography.headingWeight),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10))),
                 )),
@@ -742,7 +756,8 @@ class _TraceabilityConsoleScreenState
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                     textStyle: AppTypography.font(
-                        fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
+                        fontSize: AppTypography.captionSize,
+                        fontWeight: AppTypography.headingWeight),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10))),
               )),
@@ -751,112 +766,38 @@ class _TraceabilityConsoleScreenState
         ));
   }
 
-  Widget _experience(bool mobile) => _Panel(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _sectionHeader(
-              title: 'Consumer experience',
-              subtitle:
-                  'Controls returned by the public configuration endpoint',
-            ),
-            const SizedBox(height: 20),
-            _responsiveFields(mobile, [
-              _field(_siteController, 'Public site URL', Icons.public_rounded),
-              _field(_brandController, 'Brand name', Icons.storefront_outlined),
-              _field(_headlineController, 'Consumer headline',
-                  Icons.title_rounded),
-              _field(_emailController, 'Support email',
-                  Icons.alternate_email_rounded),
-              _field(_primaryController, 'Primary color',
-                  Icons.color_lens_outlined),
-              _field(_secondaryController, 'Secondary color',
-                  Icons.palette_outlined),
-              _field(_logoController, 'Logo URL', Icons.image_outlined),
-              _field(_privacyController, 'Privacy notice URL',
-                  Icons.privacy_tip_outlined),
-            ]),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                const Icon(
-                  Icons.engineering_outlined,
-                  color: Colors.orange,
-                  size: 22,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Traceability maintenance mode',
-                        style: AppTypography.font(
-                          fontSize: AppTypography.actionSize,
-                          fontWeight: AppTypography.headingWeight,
-                        ),
-                      ),
-                      Text(
-                        'Temporarily pause public product verification while keeping this console available.',
-                        style: AppTypography.font(
-                          fontSize: AppTypography.fieldLabelSize,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch.adaptive(
-                  value: _settings['maintenance_mode'] == true,
-                  onChanged: (value) => _toggle('maintenance_mode', value),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Divider(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white.withValues(alpha: .06)
-                  : Colors.black.withValues(alpha: .06),
-            ),
-            const SizedBox(height: 14),
-            Text('Public data visibility',
-                style: AppTypography.font(fontWeight: AppTypography.headingWeight)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _settingSwitch('lookup_enabled', 'Product lookup'),
-                _settingSwitch('show_farm', 'Farm name'),
-                _settingSwitch('show_location', 'Farm location'),
-                _settingSwitch('show_dates', 'Production dates'),
-                _settingSwitch('show_quality', 'Quality status'),
-                _settingSwitch('show_journey', 'Product journey'),
-                _settingSwitch('analytics_enabled', 'Anonymous analytics'),
-                _settingSwitch('promotions_enabled', 'Promotions'),
-                _settingSwitch(
-                    'feedback_enabled', 'Feedback and issue reports'),
-              ],
-            ),
-            const SizedBox(height: 22),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton.icon(
-                onPressed: _savingSettings ? null : _saveSettings,
-                icon: _savingSettings
-                    ? const SizedBox(
-                        width: 17,
-                        height: 17,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Icon(Icons.save_outlined, size: 18),
-                label: Text(_savingSettings ? 'Saving...' : 'Save experience',
-                    style: AppTypography.font()),
-              ),
-            ),
-          ],
-        ),
+  Widget _experience(bool mobile) => TraceabilityExperienceEditor(
+        controllers: {
+          'site': _siteController,
+          'brand': _brandController,
+          'headline': _headlineController,
+          'email': _emailController,
+          'primary': _primaryController,
+          'secondary': _secondaryController,
+          'logo': _logoController,
+          'privacy': _privacyController,
+        },
+        settings: _settings,
+        onToggle: _toggle,
+        onSave: _saveSettings,
+        saving: _savingSettings,
+      );
+
+  Widget _cardRows(bool mobile, List<Widget> cards) => LayoutBuilder(
+        builder: (context, box) {
+          final columns =
+              mobile ? 1 : ((box.maxWidth + 12) / 352).floor().clamp(1, 3);
+          final width = (box.maxWidth - (columns - 1) * 12) / columns;
+          return Align(
+              alignment: Alignment.topLeft,
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: cards
+                    .map((card) => SizedBox(width: width, child: card))
+                    .toList(),
+              ));
+        },
       );
 
   Widget _promotionList(bool mobile) => Column(
@@ -867,27 +808,24 @@ class _TraceabilityConsoleScreenState
             action: FilledButton.icon(
               onPressed: () => _openPromotion(),
               icon: const Icon(Icons.add_rounded, size: 18),
-              label: Text('New promotion', style: AppTypography.font()),
+              label: Text('New promotion', style: AppTypography.labelLarge),
             ),
           ),
           const SizedBox(height: 12),
           if (_promotions.isEmpty)
             _empty(Icons.campaign_outlined, 'No promotions created')
           else
-            ..._promotions.map((promotion) => Padding(
-                  padding: EdgeInsets.only(
-                      bottom: mobile && identical(promotion, _promotions.last)
-                          ? 0
-                          : 10),
-                  child: _PromotionCard(
-                    compact: mobile,
-                    promotion: promotion,
-                    onEdit: () => _openPromotion(promotion),
-                    onDelete: widget.isSuperAdmin
-                        ? () => _deletePromotion(promotion)
-                        : null,
-                  ),
-                )),
+            _cardRows(
+                mobile,
+                _promotions
+                    .map((promotion) => TraceabilityPromotionCard(
+                          promotion: promotion,
+                          onEdit: () => _openPromotion(promotion),
+                          onDelete: widget.isSuperAdmin
+                              ? () => _deletePromotion(promotion)
+                              : null,
+                        ))
+                    .toList()),
         ],
       );
 
@@ -938,85 +876,58 @@ class _TraceabilityConsoleScreenState
       final device = '${event['device_type'] ?? 'unknown'}'.trim();
       byDevice[device] = (byDevice[device] ?? 0) + 1;
     }
-    final maxValue = byType.values.fold<int>(1, (a, b) => a > b ? a : b);
-    return _Panel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHeader(
-            title: 'Engagement analytics',
-            subtitle: 'Anonymous events from the public product experience',
-          ),
-          const SizedBox(height: 22),
-          if (byType.isEmpty)
-            _empty(Icons.insights_outlined, 'No consumer activity recorded yet')
-          else ...[
-            ...byType.entries.map((entry) => _AnalyticsBar(
-                  label: _friendly(entry.key),
-                  value: entry.value,
-                  fraction: entry.value / maxValue,
-                )),
-            if (byRegion.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              Text('Top regions',
-                  style: AppTypography.font(fontWeight: AppTypography.headingWeight)),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: byRegion.entries
-                    .map((entry) => Chip(
-                          label: Text('${entry.key}  ${entry.value}',
-                              style: AppTypography.font(fontSize: AppTypography.captionSize)),
-                        ))
-                    .toList(),
-              ),
-            ],
-            if (byDevice.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              Text('Devices',
-                  style: AppTypography.font(fontWeight: AppTypography.headingWeight)),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: byDevice.entries
-                    .map((entry) => Chip(
-                          avatar: Icon(_deviceIcon(entry.key), size: 16),
-                          label: Text('${_friendly(entry.key)}  ${entry.value}',
-                              style: AppTypography.font(fontSize: AppTypography.captionSize)),
-                        ))
-                    .toList(),
-              ),
-            ],
-            const SizedBox(height: 24),
-            Text('Recent visitors',
-                style: AppTypography.font(fontWeight: AppTypography.headingWeight)),
+    Widget breakdown(String title, String subtitle, Map<String, int> data) {
+      final sorted = data.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      final total = data.values.fold<int>(0, (sum, count) => sum + count);
+      return _Panel(
+          padding: 16,
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: AppTypography.titleSmall),
             const SizedBox(height: 4),
-            Text(
-              'Approximate IP location and server-detected device details',
-              style: AppTypography.font(
-                fontSize: AppTypography.fieldLabelSize,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 10),
-            ..._events.take(12).map((event) => _VisitorRow(event: event)),
-          ],
-        ],
-      ),
-    );
-  }
-
-  IconData _deviceIcon(String value) {
-    switch (value.toLowerCase()) {
-      case 'mobile':
-        return Icons.smartphone_rounded;
-      case 'tablet':
-        return Icons.tablet_mac_rounded;
-      default:
-        return Icons.computer_rounded;
+            Text(subtitle,
+                style: AppTypography.bodySmall.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
+            const SizedBox(height: 16),
+            if (sorted.isEmpty)
+              Text('No data recorded', style: AppTypography.bodySmall),
+            ...sorted.map((entry) => _AnalyticsBar(
+                label: _friendly(entry.key),
+                value: entry.value,
+                fraction: total == 0 ? 0 : entry.value / total)),
+          ]));
     }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _sectionHeader(
+          title: 'Engagement analytics',
+          subtitle:
+              '${_events.length} recorded events from the public product experience'),
+      const SizedBox(height: 12),
+      if (_events.isEmpty)
+        _empty(Icons.insights_outlined, 'No consumer activity recorded yet')
+      else ...[
+        _cardRows(mobile, [
+          breakdown(
+              'Activity', 'Event count and share of recorded activity', byType),
+          breakdown('Regions', 'Share of events with a known region', byRegion),
+          breakdown('Devices', 'Share of recorded events by device', byDevice),
+        ]),
+        const SizedBox(height: 20),
+        _sectionHeader(
+            title: 'Recent activity',
+            subtitle:
+                'Latest 12 events · approximate location and device details'),
+        const SizedBox(height: 12),
+        _cardRows(
+            mobile,
+            _events
+                .take(12)
+                .map((event) => TraceabilityActivityCard(event: event))
+                .toList()),
+      ],
+    ]);
   }
 
   Widget _feedbackList(bool mobile) {
@@ -1050,7 +961,8 @@ class _TraceabilityConsoleScreenState
                       child: ChoiceChip(
                         showCheckmark: false,
                         label: Text(entry.value,
-                            style: AppTypography.font(fontSize: AppTypography.captionSize)),
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize)),
                         selected: _feedbackFilter == entry.key,
                         onSelected: (_) =>
                             setState(() => _feedbackFilter = entry.key),
@@ -1063,14 +975,14 @@ class _TraceabilityConsoleScreenState
         if (rows.isEmpty)
           _empty(Icons.rate_review_outlined, 'No matching feedback or issues')
         else
-          ...rows.map((item) => Padding(
-                padding: EdgeInsets.only(
-                    bottom: mobile && identical(item, rows.last) ? 0 : 10),
-                child: _FeedbackCard(
-                  feedback: item,
-                  onTap: () => _openFeedback(item),
-                ),
-              )),
+          _cardRows(
+              mobile,
+              rows
+                  .map((item) => TraceabilityFeedbackCard(
+                        feedback: item,
+                        onTap: () => _openFeedback(item),
+                      ))
+                  .toList()),
       ],
     );
   }
@@ -1110,7 +1022,8 @@ class _TraceabilityConsoleScreenState
             children: [
               Text(title,
                   style: AppTypography.font(
-                      fontSize: AppTypography.sectionTitleSize, fontWeight: AppTypography.headingWeight)),
+                      fontSize: AppTypography.sectionTitleSize,
+                      fontWeight: AppTypography.headingWeight)),
               Text(subtitle,
                   style: AppTypography.font(
                       fontSize: AppTypography.captionSize,
@@ -1132,25 +1045,6 @@ class _TraceabilityConsoleScreenState
             ],
           );
         },
-      );
-
-  Widget _responsiveFields(bool mobile, List<Widget> fields) => GridView.count(
-        padding: mobile ? EdgeInsets.zero : null,
-        crossAxisCount: mobile ? 1 : 2,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
-        childAspectRatio: mobile ? 5.2 : 4.5,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        children: fields,
-      );
-
-  Widget _field(
-          TextEditingController controller, String label, IconData icon) =>
-      TextField(
-        controller: controller,
-        style: AppTypography.font(fontSize: AppTypography.actionSize),
-        decoration: _input(label, icon),
       );
 
   InputDecoration _input(String label, IconData icon) => InputDecoration(
@@ -1176,27 +1070,6 @@ class _TraceabilityConsoleScreenState
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-      );
-
-  Widget _settingSwitch(
-    String key,
-    String label, {
-    bool defaultValue = true,
-  }) =>
-      Container(
-        width: 220,
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white.withValues(alpha: .03)
-              : AppColors.neutral50,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: SwitchListTile.adaptive(
-          dense: true,
-          title: Text(label, style: AppTypography.font(fontSize: AppTypography.captionSize)),
-          value: _settings[key] is bool ? _settings[key] as bool : defaultValue,
-          onChanged: (value) => _toggle(key, value),
         ),
       );
 
@@ -1280,7 +1153,8 @@ class _MetricCard extends StatelessWidget {
             const Spacer(),
             Text(value,
                 style: AppTypography.font(
-                    fontSize: AppTypography.pageTitleSize, fontWeight: AppTypography.headingWeight)),
+                    fontSize: AppTypography.pageTitleSize,
+                    fontWeight: AppTypography.headingWeight)),
             Text(label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -1292,186 +1166,57 @@ class _MetricCard extends StatelessWidget {
       );
 }
 
-class _BatchCard extends StatelessWidget {
-  const _BatchCard(
-      {required this.batch, required this.onConfigure, required this.onCopy});
-  final Map<String, dynamic> batch;
-  final VoidCallback onConfigure;
-  final VoidCallback onCopy;
-
-  @override
-  Widget build(BuildContext context) {
-    final published = batch['published'] == true;
-    return _Panel(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: (published ? AppColors.primary : Colors.grey)
-                  .withValues(alpha: .12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.qr_code_2_rounded,
-                color: published ? AppColors.primary : Colors.grey),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 5,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text('${batch['batch_number'] ?? 'No batch number'}',
-                        style:
-                            AppTypography.font(fontWeight: AppTypography.headingWeight)),
-                    _StatusPill(
-                      text: published ? 'Published' : 'Private',
-                      color: published ? AppColors.primary : Colors.grey,
-                    ),
-                    if ('${batch['recall_status']}' != 'none')
-                      _StatusPill(
-                          text: '${batch['recall_status']}', color: Colors.red),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${batch['product_name'] ?? ''} - ${batch['variety'] ?? ''}  |  ${batch['farm_name'] ?? ''}',
-                  style: AppTypography.font(
-                      fontSize: AppTypography.captionSize,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant),
-                ),
-                if (published) ...[
-                  const SizedBox(height: 6),
-                  Text('${batch['scan_count'] ?? 0} product checks',
-                      style: AppTypography.font(fontSize: AppTypography.fieldLabelSize)),
-                ],
-              ],
-            ),
-          ),
-          if (published)
-            IconButton(
-              onPressed: onCopy,
-              tooltip: 'Copy public link',
-              icon: const Icon(Icons.copy_rounded, size: 19),
-            ),
-          IconButton(
-            onPressed: onConfigure,
-            tooltip: 'Configure publication',
-            icon: const Icon(Icons.tune_rounded, size: 20),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PromotionCard extends StatelessWidget {
-  const _PromotionCard(
-      {required this.promotion,
+class TraceabilityPromotionCard extends StatelessWidget {
+  const TraceabilityPromotionCard(
+      {super.key,
+      required this.promotion,
       required this.onEdit,
-      this.onDelete,
-      this.compact = false});
+      this.onDelete});
   final Map<String, dynamic> promotion;
   final VoidCallback onEdit;
   final VoidCallback? onDelete;
-  final bool compact;
 
   @override
-  Widget build(BuildContext context) => compact
-      ? _Panel(
-          padding: 16,
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Icon(Icons.campaign_outlined,
-                  color: Colors.orange, size: 24),
-              const SizedBox(width: 10),
-              Expanded(
-                  child: Text('${promotion['title'] ?? ''}',
-                      style: AppTypography.font(
-                          fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight))),
-            ]),
-            const SizedBox(height: 10),
-            _StatusPill(
-                text: '${promotion['status'] ?? 'draft'}',
-                color: promotion['status'] == 'active'
-                    ? AppColors.primary
-                    : Colors.grey),
-            const SizedBox(height: 12),
-            Text('${promotion['message'] ?? ''}',
-                style: AppTypography.font(
-                    fontSize: AppTypography.captionSize,
-                    height: 1.5,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
-            const SizedBox(height: 14),
-            Wrap(spacing: 10, runSpacing: 8, children: [
-              OutlinedButton.icon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined, size: 16),
-                  label: const Text('Edit promotion')),
-              if (onDelete != null)
-                TextButton.icon(
-                    onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline, size: 16),
-                    label: const Text('Delete'),
-                    style: TextButton.styleFrom(foregroundColor: Colors.red)),
-            ]),
-          ]))
-      : _Panel(
-          child: Row(
-            children: [
-              const Icon(Icons.campaign_outlined,
-                  color: Colors.orange, size: 28),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        Text('${promotion['title'] ?? ''}',
-                            style: AppTypography.font(
-                                fontWeight: AppTypography.headingWeight)),
-                        _StatusPill(
-                          text: '${promotion['status'] ?? 'draft'}',
-                          color: promotion['status'] == 'active'
-                              ? AppColors.primary
-                              : Colors.grey,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text('${promotion['message'] ?? ''}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.font(
-                            fontSize: AppTypography.captionSize,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant)),
-                  ],
-                ),
-              ),
-              IconButton(
-                  onPressed: onEdit, icon: const Icon(Icons.edit_outlined)),
-              if (onDelete != null)
-                IconButton(
-                    onPressed: onDelete,
-                    icon: const Icon(Icons.delete_outline, color: Colors.red)),
-            ],
-          ),
-        );
+  Widget build(BuildContext context) => _Panel(
+      padding: 16,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Icon(Icons.campaign_outlined, color: Colors.orange, size: 24),
+          const SizedBox(width: 10),
+          Expanded(
+              child: Text('${promotion['title'] ?? ''}',
+                  style: AppTypography.titleSmall)),
+        ]),
+        const SizedBox(height: 10),
+        _StatusPill(
+            text: '${promotion['status'] ?? 'draft'}',
+            color: promotion['status'] == 'active'
+                ? AppColors.primary
+                : Colors.grey),
+        const SizedBox(height: 12),
+        Text('${promotion['message'] ?? ''}',
+            style: AppTypography.bodySmall.copyWith(
+                height: 1.5,
+                color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        const SizedBox(height: 14),
+        Wrap(spacing: 10, runSpacing: 8, children: [
+          OutlinedButton.icon(
+              onPressed: onEdit,
+              icon: const Icon(Icons.edit_outlined, size: 16),
+              label: const Text('Edit promotion')),
+          if (onDelete != null)
+            TextButton.icon(
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline, size: 16),
+                label: const Text('Delete'),
+                style: TextButton.styleFrom(foregroundColor: Colors.red)),
+        ]),
+      ]));
 }
 
-class _FeedbackCard extends StatelessWidget {
-  const _FeedbackCard({required this.feedback, required this.onTap});
+class TraceabilityFeedbackCard extends StatelessWidget {
+  const TraceabilityFeedbackCard(
+      {super.key, required this.feedback, required this.onTap});
   final Map<String, dynamic> feedback;
   final VoidCallback onTap;
 
@@ -1484,100 +1229,77 @@ class _FeedbackCard extends StatelessWidget {
       '${feedback['region'] ?? ''}'.trim(),
       '${feedback['country'] ?? ''}'.trim(),
     ].where((value) => value.isNotEmpty).join(', ');
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: _Panel(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 42,
-                height: 42,
+    final secondary = Theme.of(context).colorScheme.onSurfaceVariant;
+    return _Panel(
+        padding: 16,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: (isIssue ? Colors.deepOrange : AppColors.primary)
-                      .withValues(alpha: .1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                    color: (isIssue ? AppColors.error : AppColors.primary)
+                        .withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(10)),
                 child: Icon(
-                  isIssue
-                      ? Icons.report_problem_outlined
-                      : Icons.rate_review_outlined,
-                  color: isIssue ? Colors.deepOrange : AppColors.primary,
-                  size: 21,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
+                    isIssue
+                        ? Icons.report_problem_outlined
+                        : Icons.rate_review_outlined,
+                    color: isIssue ? AppColors.error : AppColors.primary,
+                    size: 22)),
+            const SizedBox(width: 12),
+            Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 7,
-                      runSpacing: 5,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          isIssue ? 'Issue report' : 'Product feedback',
-                          style: AppTypography.font(
-                              fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight),
-                        ),
-                        _StatusPill(
-                          text: '${feedback['status'] ?? 'new'}',
-                          color: _feedbackStatusColor(
-                              '${feedback['status'] ?? 'new'}'),
-                        ),
-                        if (rating > 0)
-                          Text('$rating/5',
-                              style: AppTypography.font(
-                                  fontSize: AppTypography.fieldLabelSize,
-                                  color: Colors.amber.shade800,
-                                  fontWeight: AppTypography.headingWeight)),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${feedback['message'] ?? ''}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.font(
-                        fontSize: AppTypography.captionSize,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 4,
-                      children: [
-                        _MetaText(Icons.qr_code_rounded,
-                            '${feedback['batch_number'] ?? 'No batch'}'),
-                        _MetaText(
-                            Icons.location_on_outlined,
-                            location.isEmpty
-                                ? 'Location unavailable'
-                                : location),
-                        _MetaText(Icons.devices_outlined,
-                            '${feedback['device_type'] ?? 'unknown'}'),
-                        _MetaText(Icons.schedule_rounded,
-                            _formatTraceDate(feedback['created_at'])),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right_rounded, size: 21),
-            ],
-          ),
-        ),
-      ),
-    );
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(isIssue ? 'Issue report' : 'Product feedback',
+                      style: AppTypography.titleSmall),
+                  const SizedBox(height: 6),
+                  Wrap(spacing: 8, runSpacing: 6, children: [
+                    _StatusPill(
+                        text: '${feedback['status'] ?? 'new'}',
+                        color: _feedbackStatusColor(
+                            '${feedback['status'] ?? 'new'}')),
+                    if (rating > 0)
+                      Text('★ $rating/5',
+                          style: AppTypography.labelSmall
+                              .copyWith(color: secondary)),
+                  ]),
+                ])),
+          ]),
+          const SizedBox(height: 14),
+          Text('${feedback['message'] ?? ''}',
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodySmall.copyWith(color: secondary)),
+          const SizedBox(height: 14),
+          Wrap(spacing: 12, runSpacing: 8, children: [
+            _MetaText(Icons.qr_code_rounded,
+                '${feedback['batch_number'] ?? 'No batch'}'),
+            _MetaText(Icons.location_on_outlined,
+                location.isEmpty ? 'Location unavailable' : location),
+            _MetaText(Icons.devices_outlined,
+                '${feedback['device_type'] ?? 'unknown'}'),
+            _MetaText(Icons.schedule_rounded,
+                _formatTraceDate(feedback['created_at'])),
+          ]),
+          const SizedBox(height: 16),
+          SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                  onPressed: onTap,
+                  icon: const Icon(Icons.rate_review_outlined, size: 16),
+                  label: const Text('Review details'),
+                  style: OutlinedButton.styleFrom(
+                      textStyle: AppTypography.labelLarge,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10))))),
+        ]));
   }
 }
 
-class _VisitorRow extends StatelessWidget {
-  const _VisitorRow({required this.event});
+class TraceabilityActivityCard extends StatelessWidget {
+  const TraceabilityActivityCard({super.key, required this.event});
   final Map<String, dynamic> event;
 
   @override
@@ -1602,63 +1324,37 @@ class _VisitorRow extends StatelessWidget {
       '${event['isp'] ?? ''}'.trim(),
       coordinates,
     ].where((value) => value.isNotEmpty).join(' | ');
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.white.withValues(alpha: .03)
-            : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.public_rounded, size: 19, color: AppColors.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  location.isEmpty ? 'Location unavailable' : location,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.font(
-                      fontSize: AppTypography.captionSize, fontWeight: AppTypography.labelWeight),
-                ),
-                Text(
-                  '${event['ip_masked'] ?? 'unknown'}  |  ${device.isEmpty ? 'Unknown device' : device}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.font(
-                    fontSize: AppTypography.microSize,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                if (network.isNotEmpty)
-                  Text(
-                    network,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.font(
-                      fontSize: AppTypography.microSize,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            _formatTraceDate(event['occurred_at']),
-            style: AppTypography.font(
-              fontSize: AppTypography.microSize,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
+    final secondary = Theme.of(context).colorScheme.onSurfaceVariant;
+    return _Panel(
+        padding: 16,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Icon(Icons.public_rounded,
+                size: 22, color: AppColors.primary),
+            const SizedBox(width: 10),
+            Expanded(
+                child: Text(
+                    location.isEmpty ? 'Location unavailable' : location,
+                    style: AppTypography.titleSmall)),
+          ]),
+          const SizedBox(height: 12),
+          Text('${event['event_type'] ?? 'Activity'}'.replaceAll('_', ' '),
+              style: AppTypography.labelLarge),
+          const SizedBox(height: 8),
+          Text(device.isEmpty ? 'Unknown device' : device,
+              style: AppTypography.bodySmall.copyWith(color: secondary)),
+          const SizedBox(height: 6),
+          Text('Network: ${event['ip_masked'] ?? 'Unavailable'}',
+              style: AppTypography.bodySmall.copyWith(color: secondary)),
+          if (network.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(network,
+                style: AppTypography.bodySmall.copyWith(color: secondary)),
+          ],
+          const SizedBox(height: 12),
+          _MetaText(
+              Icons.schedule_rounded, _formatTraceDate(event['occurred_at'])),
+        ]));
   }
 }
 
@@ -1724,7 +1420,9 @@ class _StatusPill extends StatelessWidget {
         ),
         child: Text(text,
             style: AppTypography.font(
-                fontSize: AppTypography.microSize, color: color, fontWeight: AppTypography.labelWeight)),
+                fontSize: AppTypography.microSize,
+                color: color,
+                fontWeight: AppTypography.labelWeight)),
       );
 }
 
@@ -1743,10 +1441,11 @@ class _AnalyticsBar extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                    child:
-                        Text(label, style: AppTypography.font(fontSize: AppTypography.captionSize))),
-                Text('$value',
-                    style: AppTypography.font(fontWeight: AppTypography.headingWeight)),
+                    child: Text(label,
+                        style: AppTypography.font(
+                            fontSize: AppTypography.captionSize))),
+                Text('$value · ${(fraction * 100).toStringAsFixed(0)}%',
+                    style: AppTypography.labelSmall),
               ],
             ),
             const SizedBox(height: 6),
@@ -1859,7 +1558,8 @@ class _FeedbackReviewPanelState extends State<_FeedbackReviewPanel> {
                 ),
                 const SizedBox(height: 10),
                 Text('${item['message'] ?? ''}',
-                    style: AppTypography.font(fontSize: AppTypography.actionSize, height: 1.5)),
+                    style: AppTypography.font(
+                        fontSize: AppTypography.actionSize, height: 1.5)),
               ],
             ),
           ),
@@ -2033,9 +1733,11 @@ class _PublicationPanelState extends State<_PublicationPanel> {
             SwitchListTile.adaptive(
               contentPadding: EdgeInsets.zero,
               title: Text('Available to consumers',
-                  style: AppTypography.font(fontWeight: AppTypography.labelWeight)),
+                  style: AppTypography.font(
+                      fontWeight: AppTypography.labelWeight)),
               subtitle: Text('Creates a stable public token and product URL',
-                  style: AppTypography.font(fontSize: AppTypography.fieldLabelSize)),
+                  style: AppTypography.font(
+                      fontSize: AppTypography.fieldLabelSize)),
               value: _published,
               onChanged: (value) => setState(() => _published = value),
             ),
@@ -2078,7 +1780,9 @@ class _PublicationPanelState extends State<_PublicationPanel> {
 
 class _PromotionPanel extends StatefulWidget {
   const _PromotionPanel(
-      {required this.promotion, required this.batches, required this.onSubmit});
+      {required this.promotion,
+      required this.batches,
+      required this.onSubmit});
   final Map<String, dynamic>? promotion;
   final List<Map<String, dynamic>> batches;
   final Future<Map<String, dynamic>> Function(Map<String, dynamic>) onSubmit;
@@ -2286,7 +1990,8 @@ class _ModalFrame extends StatelessWidget {
                         children: [
                           Text(title,
                               style: AppTypography.font(
-                                  fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight)),
+                                  fontSize: AppTypography.cardTitleSize,
+                                  fontWeight: AppTypography.headingWeight)),
                           Text(subtitle,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -2333,7 +2038,8 @@ class _ModalFrame extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10)),
                           child: Text(error!,
                               style: AppTypography.font(
-                                  fontSize: AppTypography.captionSize, color: Colors.red.shade700)),
+                                  fontSize: AppTypography.captionSize,
+                                  color: Colors.red.shade700)),
                         ),
                         const SizedBox(height: 14),
                       ],
@@ -2356,13 +2062,15 @@ class _ModalFrame extends StatelessWidget {
                             style: OutlinedButton.styleFrom(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 12),
-                                textStyle: AppTypography.font(fontSize: AppTypography.actionSize),
+                                textStyle: AppTypography.font(
+                                    fontSize: AppTypography.actionSize),
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10))),
                             onPressed:
                                 saving ? null : () => Navigator.pop(context),
                             child: Text('Cancel',
-                                style: AppTypography.font(fontSize: AppTypography.actionSize)))),
+                                style: AppTypography.font(
+                                    fontSize: AppTypography.actionSize)))),
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
@@ -2375,10 +2083,12 @@ class _ModalFrame extends StatelessWidget {
                                     strokeWidth: 2, color: Colors.white))
                             : const Icon(Icons.check_rounded, size: 18),
                         label: Text(saving ? 'Saving...' : 'Save',
-                            style: AppTypography.font(fontSize: AppTypography.actionSize)),
+                            style: AppTypography.font(
+                                fontSize: AppTypography.actionSize)),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
-                          textStyle: AppTypography.font(fontSize: AppTypography.actionSize),
+                          textStyle: AppTypography.font(
+                              fontSize: AppTypography.actionSize),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
                           backgroundColor: AppColors.primary,

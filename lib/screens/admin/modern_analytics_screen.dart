@@ -1,3 +1,4 @@
+import '../../services/analytics_farm_resolver.dart';
 import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
@@ -122,42 +123,38 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
           ))
       .toList();
 
+  AnalyticsFarmResolver get _farmResolver => AnalyticsFarmResolver(
+    farms: _farms, batches: _batches, fulfillments: _fulfillments);
+
   List<_FarmAnalytics> get _farmAnalytics {
     final periodBatches = _periodBatches;
     final periodSales = _periodSales;
-    final batchesById = {
-      for (final batch in _batches) _id(batch): batch,
-    };
+    final resolver = _farmResolver;
     final salesByFarm = <String, List<Map<String, dynamic>>>{};
     final batchesByFarm = <String, List<Map<String, dynamic>>>{};
     final sensorsByFarm = <String, List<Map<String, dynamic>>>{};
     final inventoryByFarm = <String, List<Map<String, dynamic>>>{};
 
     for (final batch in periodBatches) {
-      final farmId = _value(batch, ['farm_id', 'farmId']);
+      final farmId = resolver.resolve(batch);
       if (farmId.isNotEmpty) {
         batchesByFarm.putIfAbsent(farmId, () => []).add(batch);
       }
     }
     for (final sale in periodSales) {
-      var farmId = _value(sale, ['farm_id', 'farmId']);
-      if (farmId.isEmpty) {
-        final batchId = _value(sale, ['batch_id', 'batchId']);
-        farmId =
-            _value(batchesById[batchId] ?? const {}, ['farm_id', 'farmId']);
-      }
+      final farmId = resolver.resolve(sale);
       if (farmId.isNotEmpty) {
         salesByFarm.putIfAbsent(farmId, () => []).add(sale);
       }
     }
     for (final sensor in _sensors) {
-      final farmId = _value(sensor, ['farm_id', 'farmId']);
+      final farmId = resolver.resolve(sensor);
       if (farmId.isNotEmpty) {
         sensorsByFarm.putIfAbsent(farmId, () => []).add(sensor);
       }
     }
     for (final item in _inventory) {
-      final farmId = _value(item, ['farm_id', 'farmId']);
+      final farmId = resolver.resolve(item);
       if (farmId.isNotEmpty) {
         inventoryByFarm.putIfAbsent(farmId, () => []).add(item);
       }
@@ -177,7 +174,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
       );
       final paidRevenue = farmSales
           .where(
-              (sale) => _status(sale, ['payment_status', 'status']) == 'paid')
+              (sale) => sale['paid'] == true || _status(sale, ['payment_status', 'status']) == 'paid')
           .fold<double>(
             0,
             (sum, sale) =>
@@ -319,7 +316,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
       ['actual_harvest_date', 'updated_at', 'created_at'],
       ['total_weight_kg', 'harvested_weight_kg', 'actual_yield_kg']);
 
-  List<_BarMetric> get _sensorBars {
+  List<AnalyticsBarMetric> get _sensorBars {
     final grouped = <String, List<Map<String, dynamic>>>{};
     for (final sensor in _sensors) {
       final type = _text(sensor, ['type', 'sensor_type', 'metric_type'],
@@ -327,11 +324,11 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
       grouped.putIfAbsent(type, () => []).add(sensor);
     }
     if (grouped.isEmpty) {
-      return const [_BarMetric('None', 0, AppColors.neutral400)];
+      return const [];
     }
-    return grouped.entries.take(5).map((entry) {
+    return grouped.entries.map((entry) {
       final value = _sensorHealth(entry.value).toDouble();
-      return _BarMetric(_shortLabel(entry.key), value, _barColor(value));
+      return AnalyticsBarMetric(entry.key, value, _barColor(value));
     }).toList();
   }
 
@@ -537,7 +534,6 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
             'Analytics data could not be loaded',
             style: AppTypography.titleMedium.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontWeight: AppTypography.labelWeight,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -607,9 +603,8 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
                       widget.isSuperAdmin
                           ? 'Platform Analytics Control Center'
                           : 'Farm Analytics Command Center',
-                      style: AppTypography.h3.copyWith(
+                      style: AppTypography.titleLarge.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -661,7 +656,6 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
             widget.isSuperAdmin ? '100% platform control' : '90% admin control',
             style: AppTypography.label.copyWith(
               color: isDark ? Colors.white : AppColors.info,
-              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ],
@@ -728,7 +722,6 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
               color: isDark
                   ? Colors.white.withValues(alpha: 0.72)
                   : AppColors.textSecondary,
-              fontWeight: AppTypography.labelWeight,
             ),
           ),
         ),
@@ -736,7 +729,6 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
           value,
           style: AppTypography.titleSmall.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -826,8 +818,12 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
       width: width ?? 230,
       child: DropdownButtonFormField<String>(
         initialValue: safeValue,
+        isExpanded: true,
+        style: AppTypography.bodySmall.copyWith(
+          color: isDark ? Colors.white : AppColors.textPrimary,
+        ),
         items: items
-            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+            .map((item) => DropdownMenuItem(value: item, child: Text(item, maxLines: 1, overflow: TextOverflow.ellipsis)))
             .toList(),
         onChanged: onChanged,
         decoration: InputDecoration(
@@ -932,7 +928,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
         final children = [
           Expanded(
             flex: wide ? 3 : 0,
-            child: _TrendChart(
+            child: AnalyticsTrendChart(
               title: _selectedFarm == 'All Farms'
                   ? 'Global Revenue vs Production'
                   : 'Farm Revenue vs Production',
@@ -946,7 +942,7 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
               height: wide ? 0 : AppSpacing.md),
           Expanded(
             flex: wide ? 2 : 0,
-            child: _SensorReliabilityChart(
+            child: AnalyticsSensorReliabilityChart(
               isDark: isDark,
               bars: _sensorBars,
             ),
@@ -1183,7 +1179,6 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
                             : (isDark
                                 ? Colors.white.withValues(alpha: 0.62)
                                 : AppColors.textSecondary),
-                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                   ],
@@ -1242,28 +1237,17 @@ class _ModernAnalyticsScreenState extends ConsumerState<ModernAnalyticsScreen> {
     return _id(farm);
   }
 
-  String _recordFarmId(Map<String, dynamic> record) {
-    final directFarmId = _value(record, ['farm_id', 'farmId']);
-    if (directFarmId.isNotEmpty) return directFarmId;
-    final batchId = _value(record, ['batch_id', 'batchId']);
-    if (batchId.isEmpty) return '';
-    final batch = _batches.firstWhere(
-      (item) => _id(item) == batchId,
-      orElse: () => const {},
-    );
-    return _value(batch, ['farm_id', 'farmId']);
-  }
-
   List<FlSpot> _trendFromRecords(
     List<Map<String, dynamic>> records,
     List<String> dateKeys,
     List<String> valueKeys,
   ) {
+    final resolver = _farmResolver;
     final filtered = records.where((record) {
       if (_selectedFarm == 'All Farms') return true;
       final selectedFarmId = _selectedFarmId;
       return selectedFarmId.isNotEmpty &&
-          _recordFarmId(record) == selectedFarmId;
+          resolver.resolve(record) == selectedFarmId;
     });
     final buckets = List<double>.filled(6, 0);
     final now = DateTime.now();
@@ -1320,8 +1304,8 @@ class _KpiCard extends StatelessWidget {
                 Text(
                   kpi.value,
                   style: AppTypography.titleMedium.copyWith(
+                    fontWeight: AppTypography.labelWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: AppTypography.headingWeight,
                   ),
                 ),
                 Text(
@@ -1332,7 +1316,6 @@ class _KpiCard extends StatelessWidget {
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.64)
                         : AppColors.textSecondary,
-                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 Text(
@@ -1354,8 +1337,8 @@ class _KpiCard extends StatelessWidget {
   }
 }
 
-class _TrendChart extends StatelessWidget {
-  const _TrendChart({
+class AnalyticsTrendChart extends StatelessWidget {
+  const AnalyticsTrendChart({
     required this.title,
     required this.revenueSpots,
     required this.productionSpots,
@@ -1370,7 +1353,6 @@ class _TrendChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 360,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: _cardDecoration(isDark),
       child: Column(
@@ -1378,17 +1360,21 @@ class _TrendChart extends StatelessWidget {
         children: [
           _SectionHeader(
             title: title,
-            subtitle: 'Six-week normalized trend from backend records.',
+            subtitle: 'Weekly index · each series peaks at 100. Values are relative, not GHS or kg.',
             isDark: isDark,
           ),
           const SizedBox(height: AppSpacing.lg),
-          Expanded(
+          SizedBox(
+            height: 240,
             child: LineChart(
               LineChartData(
+                minX: 0,
+                maxX: 5,
                 minY: 0,
                 maxY: 100,
                 gridData: FlGridData(
                   drawVerticalLine: false,
+                  horizontalInterval: 25,
                   getDrawingHorizontalLine: (_) => FlLine(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.08)
@@ -1397,8 +1383,11 @@ class _TrendChart extends StatelessWidget {
                   ),
                 ),
                 titlesData: FlTitlesData(
-                  leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: true, reservedSize: 36, interval: 25,
+                      getTitlesWidget: (value, meta) => Text('${value.toInt()}',
+                        style: AppTypography.caption.copyWith(
+                          color: isDark ? Colors.white60 : AppColors.textSecondary))),
                   ),
                   rightTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
@@ -1409,7 +1398,8 @@ class _TrendChart extends StatelessWidget {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 28,
+                      interval: 1,
+                      reservedSize: 32,
                       getTitlesWidget: (value, meta) {
                         const labels = [
                           'W-5',
@@ -1436,9 +1426,18 @@ class _TrendChart extends StatelessWidget {
                   ),
                 ),
                 borderData: FlBorderData(show: false),
+                lineTouchData: LineTouchData(
+                  touchTooltipData: LineTouchTooltipData(
+                    fitInsideHorizontally: true, fitInsideVertically: true,
+                    getTooltipItems: (spots) => spots.map((spot) => LineTooltipItem(
+                      '${spot.barIndex == 0 ? 'Revenue' : 'Production'}: ${spot.y.toStringAsFixed(1)} / 100',
+                      AppTypography.caption.copyWith(color: Colors.white),
+                    )).toList(),
+                  ),
+                ),
                 lineBarsData: [
-                  _line(AppColors.success, revenueSpots),
-                  _line(AppColors.primary, productionSpots),
+                  _line(AppColors.primary, revenueSpots),
+                  _line(AppColors.info, productionSpots),
                 ],
               ),
             ),
@@ -1446,9 +1445,10 @@ class _TrendChart extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           const Wrap(
             spacing: AppSpacing.md,
+            runSpacing: AppSpacing.sm,
             children: [
-              _Legend(label: 'Revenue Index', color: AppColors.success),
-              _Legend(label: 'Production Index', color: AppColors.primary),
+              _Legend(label: 'Revenue index', color: AppColors.primary),
+              _Legend(label: 'Production index', color: AppColors.info),
             ],
           ),
         ],
@@ -1459,26 +1459,25 @@ class _TrendChart extends StatelessWidget {
   LineChartBarData _line(Color color, List<FlSpot> spots) {
     return LineChartBarData(
       spots: spots,
-      isCurved: true,
+      isCurved: false,
       color: color,
       barWidth: 3,
-      dotData: const FlDotData(show: false),
+      dotData: const FlDotData(show: true),
       belowBarData:
-          BarAreaData(show: true, color: color.withValues(alpha: 0.10)),
+          BarAreaData(show: true, color: color.withValues(alpha: 0.04)),
     );
   }
 }
 
-class _SensorReliabilityChart extends StatelessWidget {
-  const _SensorReliabilityChart({required this.isDark, required this.bars});
+class AnalyticsSensorReliabilityChart extends StatelessWidget {
+  const AnalyticsSensorReliabilityChart({required this.isDark, required this.bars});
 
   final bool isDark;
-  final List<_BarMetric> bars;
+  final List<AnalyticsBarMetric> bars;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 360,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: _cardDecoration(isDark),
       child: Column(
@@ -1490,12 +1489,20 @@ class _SensorReliabilityChart extends StatelessWidget {
             isDark: isDark,
           ),
           const SizedBox(height: AppSpacing.lg),
-          Expanded(
+          if (bars.isEmpty)
+            Padding(padding: const EdgeInsets.symmetric(vertical: 48),
+              child: Text('No sensor readings available', style: AppTypography.bodySmall))
+          else LayoutBuilder(builder: (context, constraints) => SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: math.max(constraints.maxWidth, bars.length * 90.0 + 40),
+              height: 264,
             child: BarChart(
               BarChartData(
                 maxY: 100,
                 gridData: FlGridData(
                   drawVerticalLine: false,
+                  horizontalInterval: 25,
                   getDrawingHorizontalLine: (_) => FlLine(
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.08)
@@ -1504,8 +1511,11 @@ class _SensorReliabilityChart extends StatelessWidget {
                   ),
                 ),
                 titlesData: FlTitlesData(
-                  leftTitles: const AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(showTitles: true, reservedSize: 36, interval: 25,
+                      getTitlesWidget: (value, meta) => Text('${value.toInt()}%',
+                        style: AppTypography.caption.copyWith(
+                          color: isDark ? Colors.white60 : AppColors.textSecondary))),
                   ),
                   rightTitles: const AxisTitles(
                     sideTitles: SideTitles(showTitles: false),
@@ -1516,31 +1526,41 @@ class _SensorReliabilityChart extends StatelessWidget {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
+                      reservedSize: 48,
                       getTitlesWidget: (value, meta) {
                         final index = value.toInt();
                         if (index < 0 || index >= bars.length) {
                           return const SizedBox.shrink();
                         }
-                        return Text(
+                        return SizedBox(width: 80, child: Text(
                           bars[index].label,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: AppTypography.caption.copyWith(
                             color: isDark
                                 ? Colors.white.withValues(alpha: 0.54)
                                 : AppColors.textSecondary,
                           ),
-                        );
+                        ));
                       },
                     ),
                   ),
                 ),
                 borderData: FlBorderData(show: false),
+                barTouchData: BarTouchData(touchTooltipData: BarTouchTooltipData(
+                  fitInsideHorizontally: true, fitInsideVertically: true,
+                  getTooltipItem: (group, index, rod, rodIndex) => BarTooltipItem(
+                    '${bars[index].label}\n${rod.toY.toStringAsFixed(0)}% telemetry health',
+                    AppTypography.caption.copyWith(color: Colors.white)),
+                )),
                 barGroups: [
                   for (var i = 0; i < bars.length; i++)
                     _bar(i, bars[i].value, bars[i].color),
                 ],
               ),
             ),
-          ),
+          ))),
         ],
       ),
     );
@@ -1553,12 +1573,10 @@ class _SensorReliabilityChart extends StatelessWidget {
         BarChartRodData(
           toY: value,
           width: 24,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          gradient: LinearGradient(
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-            colors: [color.withValues(alpha: 0.62), color],
-          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+          color: color,
+          backDrawRodData: BackgroundBarChartRodData(
+            show: true, toY: 100, color: color.withValues(alpha: .06)),
         ),
       ],
     );
@@ -1608,7 +1626,6 @@ class _FarmComparisonCard extends StatelessWidget {
                       farm.name,
                       style: AppTypography.titleSmall.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: AppTypography.labelWeight,
                       ),
                     ),
                   ),
@@ -1719,7 +1736,6 @@ class _ProgressLine extends StatelessWidget {
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.64)
                       : AppColors.textSecondary,
-                  fontWeight: AppTypography.labelWeight,
                 ),
               ),
             ),
@@ -1727,7 +1743,6 @@ class _ProgressLine extends StatelessWidget {
               '$value%',
               style: AppTypography.bodySmall.copyWith(
                 color: isDark ? Colors.white : AppColors.textPrimary,
-                fontWeight: AppTypography.labelWeight,
               ),
             ),
           ],
@@ -1769,7 +1784,6 @@ class _MetricColumn extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: AppTypography.bodyLarge.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: AppTypography.labelWeight,
           ),
         ),
         Text(
@@ -1778,7 +1792,6 @@ class _MetricColumn extends StatelessWidget {
             color: isDark
                 ? Colors.white.withValues(alpha: 0.58)
                 : AppColors.textSecondary,
-            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -1827,7 +1840,6 @@ class _InsightRow extends StatelessWidget {
                   insight.title,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: AppTypography.labelWeight,
                   ),
                 ),
                 Text(
@@ -1867,7 +1879,6 @@ class _SectionHeader extends StatelessWidget {
           title,
           style: AppTypography.titleMedium.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontWeight: AppTypography.headingWeight,
           ),
         ),
         const SizedBox(height: 2),
@@ -1877,7 +1888,6 @@ class _SectionHeader extends StatelessWidget {
             color: isDark
                 ? Colors.white.withValues(alpha: 0.62)
                 : AppColors.textSecondary,
-            fontWeight: AppTypography.labelWeight,
           ),
         ),
       ],
@@ -1912,11 +1922,7 @@ class _ScopeChip extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
-              color: color,
-              fontSize: AppTypography.fieldLabelSize,
-              fontWeight: AppTypography.labelWeight,
-            ),
+            style: AppTypography.label.copyWith(color: color),
           ),
         ],
       ),
@@ -1941,7 +1947,7 @@ class _Legend extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: AppSpacing.xs),
-        Text(label, style: AppTypography.caption),
+        Flexible(child: Text(label, style: AppTypography.caption)),
       ],
     );
   }
@@ -1971,12 +1977,6 @@ Color _barColor(double value) {
   if (value >= 85) return AppColors.success;
   if (value >= 65) return AppColors.warning;
   return AppColors.error;
-}
-
-String _shortLabel(String value) {
-  final cleaned = value.trim();
-  if (cleaned.length <= 6) return cleaned;
-  return cleaned.substring(0, 6);
 }
 
 String _id(Map<String, dynamic> item) => _value(item, ['id', '\$id', '_id']);
@@ -2014,7 +2014,7 @@ double _number(Map<String, dynamic> item, List<String> keys) {
 }
 
 DateTime? _date(Map<String, dynamic> item, List<String> keys) {
-  for (final key in keys) {
+  for (final key in [...keys, r'$createdAt']) {
     final value = item[key];
     if (value is DateTime) return value;
     final parsed = DateTime.tryParse(value?.toString() ?? '');
@@ -2103,8 +2103,8 @@ class _InsightItem {
   final Color color;
 }
 
-class _BarMetric {
-  const _BarMetric(this.label, this.value, this.color);
+class AnalyticsBarMetric {
+  const AnalyticsBarMetric(this.label, this.value, this.color);
 
   final String label;
   final double value;

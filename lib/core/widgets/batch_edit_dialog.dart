@@ -1,3 +1,4 @@
+import 'batch_date_picker.dart';
 import '../theme/app_typography.dart';
 import 'app_dialog.dart';
 import 'app_bottom_sheet.dart';
@@ -221,7 +222,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
   }
 
   Future<void> _pickStartDate() async {
-    final picked = await showDatePicker(
+    final picked = await showBatchDatePicker(
       context: context,
       initialDate: _startDate,
       firstDate: DateTime(2020),
@@ -294,7 +295,8 @@ class _BatchEditFormState extends State<_BatchEditForm> {
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
       ),
-      errorStyle: AppTypography.font(fontSize: AppTypography.fieldLabelSize, height: 1.25),
+      errorStyle: AppTypography.font(
+          fontSize: AppTypography.fieldLabelSize, height: 1.25),
     );
   }
 
@@ -302,9 +304,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
         padding: const EdgeInsets.only(bottom: 7),
         child: Text(
           text,
-          style: AppTypography.font(
-            fontSize: AppTypography.captionSize,
-            fontWeight: AppTypography.labelWeight,
+          style: AppTypography.label.copyWith(
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -328,7 +328,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
           enabled: !_saving,
           keyboardType: keyboardType,
           maxLines: maxLines,
-          style: AppTypography.font(fontSize: AppTypography.actionSize),
+          style: AppTypography.bodySmall,
           decoration: _decoration(isDark, label, icon),
           validator: validator,
         ),
@@ -388,9 +388,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                     children: [
                       Text(
                         'Edit Batch',
-                        style: AppTypography.font(
-                          fontSize: AppTypography.sectionTitleSize,
-                          fontWeight: AppTypography.headingWeight,
+                        style: AppTypography.titleSmall.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
@@ -484,7 +482,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                               child: Text(
                                 variety,
                                 overflow: TextOverflow.ellipsis,
-                                style: AppTypography.font(fontSize: AppTypography.actionSize),
+                                style: AppTypography.bodySmall,
                               ),
                             ),
                           )
@@ -618,7 +616,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                               value: status,
                               child: Text(
                                 status,
-                                style: AppTypography.font(fontSize: AppTypography.actionSize),
+                                style: AppTypography.bodySmall,
                               ),
                             ),
                           )
@@ -718,9 +716,7 @@ class _ReadOnlyBatchField extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 7),
           child: Text(
             label,
-            style: AppTypography.font(
-              fontSize: AppTypography.captionSize,
-              fontWeight: AppTypography.labelWeight,
+            style: AppTypography.label.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -746,7 +742,7 @@ class _ReadOnlyBatchField extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.font(fontSize: AppTypography.actionSize),
+                  style: AppTypography.bodySmall,
                 ),
               ),
             ],
@@ -781,9 +777,7 @@ class _EditDateField extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 7),
           child: Text(
             label,
-            style: AppTypography.font(
-              fontSize: AppTypography.captionSize,
-              fontWeight: AppTypography.labelWeight,
+            style: AppTypography.label.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -814,7 +808,7 @@ class _EditDateField extends StatelessWidget {
                       value,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTypography.font(fontSize: AppTypography.actionSize),
+                      style: AppTypography.bodySmall,
                     ),
                   ),
                 ],

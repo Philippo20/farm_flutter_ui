@@ -2584,28 +2584,6 @@ class _SensorDeviceCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              Expanded(
-                child: _TelemetryChip(
-                  icon: Icons.battery_charging_full_rounded,
-                  label: '${sensor.battery}%',
-                  color: _batteryColor(sensor),
-                  isDark: isDark,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _TelemetryChip(
-                  icon: Icons.network_cell_rounded,
-                  label: '${sensor.signal} dBm',
-                  color: _signalColor(sensor),
-                  isDark: isDark,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
               Icon(
                 Icons.place_rounded,
                 size: 16,
@@ -2796,52 +2774,6 @@ class _TrendPill extends StatelessWidget {
   }
 }
 
-class _TelemetryChip extends StatelessWidget {
-  const _TelemetryChip({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.isDark,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: AppSpacing.xs),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.caption.copyWith(
-                color: color,
-                fontWeight: AppTypography.bodyWeight,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _HealthBar extends StatelessWidget {
   const _HealthBar({
     required this.label,
@@ -2929,18 +2861,6 @@ Color _statusColor(_IotSensor sensor) {
     default:
       return AppColors.textSecondary;
   }
-}
-
-Color _batteryColor(_IotSensor sensor) {
-  if (sensor.battery >= 60) return AppColors.success;
-  if (sensor.battery >= 25) return AppColors.warning;
-  return AppColors.error;
-}
-
-Color _signalColor(_IotSensor sensor) {
-  if (sensor.signal >= -60) return AppColors.success;
-  if (sensor.signal >= -78) return AppColors.warning;
-  return AppColors.error;
 }
 
 class _IotSensor {

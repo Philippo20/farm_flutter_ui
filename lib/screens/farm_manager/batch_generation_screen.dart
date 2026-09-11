@@ -17,6 +17,7 @@ import '../../core/widgets/skeleton_loader.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../core/widgets/batch_edit_dialog.dart';
+import '../../core/widgets/batch_date_picker.dart';
 import '../../services/superadmin_api_service.dart';
 
 /// Batch Management & Tracking Screen
@@ -395,33 +396,14 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    final DateTime? picked = await showDatePicker(
+    final now = DateUtils.dateOnly(DateTime.now());
+    final picked = await showBatchDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: AppColors.primary,
-              onPrimary: Colors.white,
-              surface: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.surfaceDark
-                  : Colors.white,
-              onSurface: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white
-                  : AppColors.textPrimary,
-            ),
-            dialogTheme: DialogThemeData(
-                backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.surfaceDark
-                    : Colors.white),
-          ),
-          child: child!,
-        );
-      },
+      initialDate: _startDate ?? now,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
     );
+    if (!mounted) return;
 
     if (picked != null) {
       setState(() {
@@ -641,6 +623,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   }) {
     final effectiveValue = options.contains(value) ? value : options.first;
     return DropdownButtonFormField<String>(
+      style: AppTypography.bodySmall.copyWith(
+        color: isDark ? Colors.white : AppColors.textPrimary,
+      ),
       value: effectiveValue,
       isExpanded: true,
       decoration: InputDecoration(
@@ -674,8 +659,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 child: Text(
                   option,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.font(
-                    fontSize: AppTypography.captionSize,
+                  style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
@@ -728,13 +712,17 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
               children: [
                 Text('Create New Batch',
                     style: AppTypography.font(
-                        fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                        fontSize: isMobile
+                            ? AppTypography.cardTitleSize
+                            : AppTypography.sectionTitleSize,
                         fontWeight: AppTypography.headingWeight,
                         color: isDark ? Colors.white : AppColors.textPrimary)),
                 const SizedBox(height: 2),
                 Text('Fill in the details to generate a new production batch',
                     style: AppTypography.font(
-                        fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
+                        fontSize: isMobile
+                            ? AppTypography.fieldLabelSize
+                            : AppTypography.captionSize,
                         color:
                             isDark ? Colors.white38 : AppColors.textSecondary)),
               ],
@@ -758,8 +746,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           children: [
                             Text(
                               'Farm',
-                              style: AppTypography.labelLarge.copyWith(
-                                fontWeight: AppTypography.headingWeight,
+                              style: AppTypography.label.copyWith(
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -767,6 +754,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             DropdownButtonFormField<String>(
+                              style: AppTypography.bodySmall.copyWith(
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
+                              ),
                               value: _selectedFarm,
                               decoration: InputDecoration(
                                 hintText: 'Select farm',
@@ -803,8 +795,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           children: [
                             Text(
                               'Plant Type',
-                              style: AppTypography.labelLarge.copyWith(
-                                fontWeight: AppTypography.headingWeight,
+                              style: AppTypography.label.copyWith(
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -812,6 +803,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             DropdownButtonFormField<String>(
+                              style: AppTypography.bodySmall.copyWith(
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
+                              ),
                               value: _selectedPlantType,
                               decoration: InputDecoration(
                                 hintText: 'Select plant type',
@@ -852,13 +848,15 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     children: [
                       Text(
                         'Farm',
-                        style: AppTypography.labelLarge.copyWith(
-                          fontWeight: AppTypography.headingWeight,
+                        style: AppTypography.label.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       DropdownButtonFormField<String>(
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
                         value: _selectedFarm,
                         decoration: InputDecoration(
                           hintText: 'Select farm',
@@ -893,13 +891,15 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     children: [
                       Text(
                         'Plant Type',
-                        style: AppTypography.labelLarge.copyWith(
-                          fontWeight: AppTypography.headingWeight,
+                        style: AppTypography.label.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       DropdownButtonFormField<String>(
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
                         value: _selectedPlantType,
                         decoration: InputDecoration(
                           hintText: 'Select plant type',
@@ -937,13 +937,15 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                   children: [
                     Text(
                       'Crop Variety',
-                      style: AppTypography.labelLarge.copyWith(
-                        fontWeight: AppTypography.headingWeight,
+                      style: AppTypography.label.copyWith(
                         color: isDark ? Colors.white : AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     DropdownButtonFormField<String>(
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
                       value: _selectedPlantVariety,
                       isExpanded: true,
                       decoration: InputDecoration(
@@ -996,8 +998,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                         children: [
                           Text(
                             'Start Date',
-                            style: AppTypography.labelLarge.copyWith(
-                              fontWeight: AppTypography.headingWeight,
+                            style: AppTypography.label.copyWith(
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
                             ),
@@ -1038,7 +1039,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                           ? DateFormat('MMM dd, yyyy')
                                               .format(_startDate!)
                                           : 'Select start date',
-                                      style: AppTypography.bodyMedium.copyWith(
+                                      style: AppTypography.bodySmall.copyWith(
                                         color: _startDate != null
                                             ? (isDark
                                                 ? Colors.white
@@ -1063,8 +1064,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           children: [
                             Text(
                               'End Date (Auto)',
-                              style: AppTypography.labelLarge.copyWith(
-                                fontWeight: AppTypography.headingWeight,
+                              style: AppTypography.label.copyWith(
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -1104,7 +1104,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                           ? DateFormat('MMM dd, yyyy')
                                               .format(_endDate!)
                                           : 'Auto-calculated',
-                                      style: AppTypography.bodyMedium.copyWith(
+                                      style: AppTypography.bodySmall.copyWith(
                                         color: _endDate != null
                                             ? AppColors.success
                                             : (isDark
@@ -1170,8 +1170,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           children: [
                             Text(
                               'Number of Seeds',
-                              style: AppTypography.labelLarge.copyWith(
-                                fontWeight: AppTypography.headingWeight,
+                              style: AppTypography.label.copyWith(
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -1179,6 +1178,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             TextFormField(
+                              style: AppTypography.bodySmall.copyWith(
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
+                              ),
                               initialValue: _nursedSeeds == 0
                                   ? ''
                                   : _nursedSeeds.toString(),
@@ -1222,8 +1226,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           children: [
                             Text(
                               'Assigned Caretaker',
-                              style: AppTypography.labelLarge.copyWith(
-                                fontWeight: AppTypography.headingWeight,
+                              style: AppTypography.label.copyWith(
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary,
@@ -1231,6 +1234,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             TextFormField(
+                              style: AppTypography.bodySmall.copyWith(
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
+                              ),
                               key: ValueKey(_caretakerId),
                               initialValue:
                                   _assignedCaretakerName(_caretakerId),
@@ -1264,13 +1272,15 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     children: [
                       Text(
                         'Number of Seeds',
-                        style: AppTypography.labelLarge.copyWith(
-                          fontWeight: AppTypography.headingWeight,
+                        style: AppTypography.label.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       TextFormField(
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
                         initialValue:
                             _nursedSeeds == 0 ? '' : _nursedSeeds.toString(),
                         keyboardType: TextInputType.number,
@@ -1313,13 +1323,15 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     children: [
                       Text(
                         'Assigned Caretaker',
-                        style: AppTypography.labelLarge.copyWith(
-                          fontWeight: AppTypography.headingWeight,
+                        style: AppTypography.label.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
                       TextFormField(
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isDark ? Colors.white : AppColors.textPrimary,
+                        ),
                         key: ValueKey(_caretakerId),
                         initialValue: _assignedCaretakerName(_caretakerId),
                         readOnly: true,
@@ -1348,13 +1360,15 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 // Notes
                 Text(
                   'Notes (Optional)',
-                  style: AppTypography.labelLarge.copyWith(
-                    fontWeight: AppTypography.headingWeight,
+                  style: AppTypography.label.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 TextFormField(
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
                   controller: _notesController,
                   maxLines: 3,
                   decoration: InputDecoration(
@@ -1434,9 +1448,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                   const SizedBox(width: AppSpacing.sm),
                                   Text(
                                     'Generate Batch',
-                                    style: AppTypography.button.copyWith(
-                                      fontWeight: AppTypography.headingWeight,
-                                    ),
+                                    style: AppTypography.button.copyWith(),
                                   ),
                                 ],
                               ),
@@ -1563,7 +1575,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     style: AppTypography.font(
                       fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
-                      fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                      fontSize: isMobile
+                          ? AppTypography.cardTitleSize
+                          : AppTypography.sectionTitleSize,
                     ),
                   ),
                 ],
@@ -1630,7 +1644,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 style: AppTypography.font(
                     fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: compact ? AppTypography.sectionTitleSize : AppTypography.pageTitleSize,
+                    fontSize: compact
+                        ? AppTypography.sectionTitleSize
+                        : AppTypography.pageTitleSize,
                     height: 1.1),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
@@ -1638,7 +1654,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             Text(stat['title'] as String,
                 style: AppTypography.font(
                     color: isDark ? Colors.white38 : AppColors.textSecondary,
-                    fontSize: compact ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                    fontSize: compact
+                        ? AppTypography.microSize
+                        : AppTypography.fieldLabelSize,
                     height: 1.2),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis),
@@ -1711,9 +1729,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       flex: flex,
       child: Text(
         label,
-        style: AppTypography.font(
-          fontSize: AppTypography.fieldLabelSize,
-          fontWeight: AppTypography.headingWeight,
+        style: AppTypography.label.copyWith(
           color: isDark ? Colors.white38 : AppColors.textSecondary,
           letterSpacing: 0.3,
         ),
@@ -1764,7 +1780,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                   batch.batchNumber,
                   style: AppTypography.font(
                       fontSize: AppTypography.actionSize,
-                      fontWeight: AppTypography.headingWeight,
+                      fontWeight: AppTypography.labelWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1775,8 +1791,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             Expanded(
               flex: 2,
               child: Text(batch.farmName,
-                  style: AppTypography.font(
-                      fontSize: AppTypography.captionSize,
+                  style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white70 : AppColors.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
@@ -1790,8 +1805,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 const SizedBox(width: 4),
                 Expanded(
                     child: Text(batch.plantType,
-                        style: AppTypography.font(
-                            fontSize: AppTypography.captionSize,
+                        style: AppTypography.bodySmall.copyWith(
                             color: isDark
                                 ? Colors.white70
                                 : AppColors.textPrimary),
@@ -1818,10 +1832,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 child: Text(
                   '${pct.toStringAsFixed(0)}%',
                   textAlign: TextAlign.center,
-                  style: AppTypography.font(
-                      fontSize: AppTypography.fieldLabelSize,
-                      fontWeight: AppTypography.headingWeight,
-                      color: pctColor),
+                  style: AppTypography.label.copyWith(color: pctColor),
                 ),
               ),
             ),
@@ -1830,8 +1841,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
               flex: 2,
               child: Text(
                 DateFormat('MMM dd, yyyy').format(batch.startDate),
-                style: AppTypography.font(
-                    fontSize: AppTypography.captionSize,
+                style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white54 : AppColors.textSecondary),
               ),
             ),
@@ -1929,7 +1939,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 '$value',
                 style: AppTypography.font(
                     fontSize: AppTypography.microSize,
-                    fontWeight: AppTypography.headingWeight,
+                    fontWeight: AppTypography.labelWeight,
                     color: isActive
                         ? color
                         : (isDark ? Colors.white24 : AppColors.neutral400)),
@@ -1966,13 +1976,12 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Text(label,
-                      style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
+                      style: AppTypography.font(
+                          fontSize: AppTypography.microSize, color: secondary)),
                   const SizedBox(height: 4),
                   Text(value.trim().isEmpty ? 'Not provided' : value,
-                      style: AppTypography.font(
-                          fontSize: AppTypography.captionSize,
-                          fontWeight: AppTypography.headingWeight,
-                          color: foreground)),
+                      style:
+                          AppTypography.bodySmall.copyWith(color: foreground)),
                 ])),
           ],
         );
@@ -1988,11 +1997,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(NumberFormat.decimalPattern().format(count),
-                style: AppTypography.font(
-                    fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight, color: color)),
+                style: AppTypography.titleSmall.copyWith(color: color)),
             const SizedBox(height: 4),
             Text(label,
-                style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
+                style: AppTypography.font(
+                    fontSize: AppTypography.microSize, color: secondary)),
           ]),
         );
     return Container(
@@ -2031,7 +2040,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                         color: foreground)),
                 const SizedBox(height: 4),
                 Text(batch.farmName,
-                    style: AppTypography.font(fontSize: AppTypography.captionSize, color: secondary)),
+                    style: AppTypography.bodySmall.copyWith(color: secondary)),
               ])),
         ]),
         const SizedBox(height: 12),
@@ -2059,7 +2068,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             ]),
             const SizedBox(height: 12),
             Text('Batch progress · ${progress.toStringAsFixed(0)}%',
-                style: AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary)),
+                style: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize, color: secondary)),
             const SizedBox(height: 6),
             ClipRRect(
                 borderRadius: BorderRadius.circular(4),
@@ -2097,7 +2107,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 textStyle: AppTypography.font(
-                    fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
+                    fontSize: AppTypography.actionSize,
+                    fontWeight: AppTypography.labelWeight),
                 side:
                     BorderSide(color: AppColors.primary.withValues(alpha: .25)),
                 shape: RoundedRectangleBorder(
@@ -2116,7 +2127,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 textStyle: AppTypography.font(
-                    fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
+                    fontSize: AppTypography.actionSize,
+                    fontWeight: AppTypography.labelWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10))),
           )),
@@ -2126,16 +2138,14 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   }
 
   TextStyle _tableHeaderStyle(bool isDark) {
-    return AppTypography.font(
-      fontWeight: AppTypography.headingWeight,
-      fontSize: AppTypography.captionSize,
+    return AppTypography.labelSmall.copyWith(
       color: isDark ? Colors.white54 : AppColors.textSecondary,
     );
   }
 
   TextStyle _tableCellStyle(bool isDark, {bool isBold = false, Color? color}) {
     return AppTypography.font(
-      fontWeight: isBold ? AppTypography.headingWeight : AppTypography.bodyWeight,
+      fontWeight: isBold ? AppTypography.labelWeight : AppTypography.bodyWeight,
       fontSize: AppTypography.actionSize,
       color: color ??
           (isDark ? Colors.white.withOpacity(0.9) : AppColors.textPrimary),
@@ -2183,15 +2193,12 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(batch.batchNumber,
-                            style: AppTypography.font(
-                                fontSize: AppTypography.cardTitleSize,
-                                fontWeight: AppTypography.headingWeight,
+                            style: AppTypography.titleSmall.copyWith(
                                 color: isDark
                                     ? Colors.white
                                     : AppColors.textPrimary)),
                         Text(batch.farmName,
-                            style: AppTypography.font(
-                                fontSize: AppTypography.captionSize,
+                            style: AppTypography.bodySmall.copyWith(
                                 color: isDark
                                     ? Colors.white38
                                     : AppColors.textSecondary)),
@@ -2232,9 +2239,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text('Overall Progress',
-                                style: AppTypography.font(
-                                    fontSize: AppTypography.captionSize,
-                                    fontWeight: AppTypography.headingWeight,
+                                style: AppTypography.labelSmall.copyWith(
                                     color: isDark
                                         ? Colors.white54
                                         : AppColors.textSecondary)),
@@ -2245,10 +2250,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                   color: pctColor.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(10)),
                               child: Text('${pct.toStringAsFixed(0)}%',
-                                  style: AppTypography.font(
-                                      fontSize: AppTypography.fieldLabelSize,
-                                      fontWeight: AppTypography.headingWeight,
-                                      color: pctColor)),
+                                  style: AppTypography.label
+                                      .copyWith(color: pctColor)),
                             ),
                           ]),
                       const SizedBox(height: 10),
@@ -2335,16 +2338,13 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Notes',
-                                style: AppTypography.font(
-                                    fontSize: AppTypography.fieldLabelSize,
-                                    fontWeight: AppTypography.headingWeight,
+                                style: AppTypography.label.copyWith(
                                     color: isDark
                                         ? Colors.white38
                                         : AppColors.textSecondary)),
                             const SizedBox(height: 4),
                             Text(batch.notes!,
-                                style: AppTypography.font(
-                                    fontSize: AppTypography.captionSize,
+                                style: AppTypography.bodySmall.copyWith(
                                     color: isDark
                                         ? Colors.white70
                                         : AppColors.textPrimary,
@@ -2369,7 +2369,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       ),
                       child: Text('Close',
                           style: AppTypography.font(
-                              fontSize: AppTypography.actionSize, fontWeight: AppTypography.labelWeight)),
+                              fontSize: AppTypography.actionSize,
+                              fontWeight: AppTypography.labelWeight)),
                     )),
                     const SizedBox(width: 8),
                     Expanded(
@@ -2381,7 +2382,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       icon: const Icon(Icons.edit_outlined, size: 15),
                       label: Text('Edit Batch',
                           style: AppTypography.font(
-                              fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
+                              fontSize: AppTypography.actionSize,
+                              fontWeight: AppTypography.labelWeight)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
@@ -2411,9 +2413,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         border: Border.all(color: color.withOpacity(0.12)),
       ),
       child: Column(children: [
-        Text(value,
-            style: AppTypography.font(
-                fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight, color: color)),
+        Text(value, style: AppTypography.titleSmall.copyWith(color: color)),
         const SizedBox(height: 2),
         Text(label,
             style: AppTypography.font(
@@ -2435,16 +2435,12 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         SizedBox(
           width: 100,
           child: Text(label,
-              style: AppTypography.font(
-                  fontSize: AppTypography.captionSize,
-                  fontWeight: AppTypography.labelWeight,
+              style: AppTypography.labelSmall.copyWith(
                   color: isDark ? Colors.white38 : AppColors.textSecondary)),
         ),
         Expanded(
             child: Text(value,
-                style: AppTypography.font(
-                    fontSize: AppTypography.captionSize,
-                    fontWeight: AppTypography.headingWeight,
+                style: AppTypography.bodySmall.copyWith(
                     color: isDark ? Colors.white : AppColors.textPrimary))),
       ]),
     );
@@ -2679,8 +2675,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                     children: [
                                       Text(
                                         'Batch Management & Tracking',
-                                        style: AppTypography.h4.copyWith(
-                                          fontWeight: AppTypography.headingWeight,
+                                        style: AppTypography.title.copyWith(
                                           color: isDark
                                               ? Colors.white
                                               : AppColors.textPrimary,
@@ -2734,8 +2729,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                   const SizedBox(width: AppSpacing.sm),
                                   Text(
                                     'Create New Batch',
-                                    style: AppTypography.h5.copyWith(
-                                      fontWeight: AppTypography.headingWeight,
+                                    style: AppTypography.titleMedium.copyWith(
                                       color: isDark
                                           ? Colors.white
                                           : AppColors.textPrimary,
@@ -2796,13 +2790,12 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                         const SizedBox(width: 10),
                                         Expanded(
                                             child: Text('Batch Tracking',
-                                                style: AppTypography.font(
-                                                    fontSize: AppTypography.cardTitleSize,
-                                                    fontWeight: AppTypography.headingWeight,
-                                                    color: isDark
-                                                        ? Colors.white
-                                                        : AppColors
-                                                            .textPrimary))),
+                                                style: AppTypography.titleSmall
+                                                    .copyWith(
+                                                        color: isDark
+                                                            ? Colors.white
+                                                            : AppColors
+                                                                .textPrimary))),
                                         Container(
                                           padding: const EdgeInsets.symmetric(
                                               horizontal: 6, vertical: 3),
@@ -2815,8 +2808,10 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                           child: Text(
                                               '${filteredBatches.length}/${batches.length} batches',
                                               style: AppTypography.font(
-                                                  fontSize: AppTypography.microSize,
-                                                  fontWeight: AppTypography.headingWeight,
+                                                  fontSize:
+                                                      AppTypography.microSize,
+                                                  fontWeight:
+                                                      AppTypography.labelWeight,
                                                   color: AppColors.primary)),
                                         ),
                                       ]),
@@ -2830,14 +2825,16 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                             onChanged: (value) => setState(
                                                 () => _searchQuery = value),
                                             style: AppTypography.font(
-                                                fontSize: AppTypography.actionSize,
+                                                fontSize:
+                                                    AppTypography.actionSize,
                                                 color: isDark
                                                     ? Colors.white
                                                     : AppColors.textPrimary),
                                             decoration: InputDecoration(
                                               hintText: 'Search batches...',
                                               hintStyle: AppTypography.font(
-                                                  fontSize: AppTypography.actionSize,
+                                                  fontSize:
+                                                      AppTypography.actionSize,
                                                   color: isDark
                                                       ? Colors.white24
                                                       : AppColors
@@ -2896,8 +2893,10 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                               size: 16),
                                           label: Text('New Batch',
                                               style: AppTypography.font(
-                                                  fontSize: AppTypography.captionSize,
-                                                  fontWeight: AppTypography.headingWeight)),
+                                                  fontSize:
+                                                      AppTypography.captionSize,
+                                                  fontWeight: AppTypography
+                                                      .labelWeight)),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: AppColors.primary,
                                             foregroundColor: Colors.white,
@@ -2999,25 +2998,24 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                                   _hasActiveBatchFilters
                                                       ? 'No batches match your filters'
                                                       : 'No batches created yet',
-                                                  style: AppTypography.font(
-                                                      fontSize: AppTypography.cardTitleSize,
-                                                      fontWeight:
-                                                          AppTypography.headingWeight,
-                                                      color: isDark
-                                                          ? Colors.white54
-                                                          : AppColors
-                                                              .textSecondary)),
+                                                  style: AppTypography
+                                                      .titleSmall
+                                                      .copyWith(
+                                                          color: isDark
+                                                              ? Colors.white54
+                                                              : AppColors
+                                                                  .textSecondary)),
                                               const SizedBox(height: 4),
                                               Text(
                                                   _hasActiveBatchFilters
                                                       ? 'Adjust or clear the filters to see more batches'
                                                       : 'Create your first batch to get started',
-                                                  style: AppTypography.font(
-                                                      fontSize: AppTypography.captionSize,
-                                                      color: isDark
-                                                          ? Colors.white24
-                                                          : AppColors
-                                                              .textSecondary)),
+                                                  style: AppTypography.bodySmall
+                                                      .copyWith(
+                                                          color: isDark
+                                                              ? Colors.white24
+                                                              : AppColors
+                                                                  .textSecondary)),
                                               const SizedBox(height: 16),
                                               ElevatedButton.icon(
                                                 onPressed: () => setState(
@@ -3028,9 +3026,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                                 label: Text(
                                                     'Create First Batch',
                                                     style: AppTypography.font(
-                                                        fontSize: AppTypography.captionSize,
+                                                        fontSize: AppTypography
+                                                            .captionSize,
                                                         fontWeight:
-                                                            AppTypography.headingWeight)),
+                                                            AppTypography
+                                                                .labelWeight)),
                                                 style: ElevatedButton.styleFrom(
                                                   backgroundColor:
                                                       AppColors.primary,
@@ -3091,8 +3091,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 Expanded(
                   child: Text(
                     'Create New Batch',
-                    style: AppTypography.h6.copyWith(
-                      fontWeight: AppTypography.headingWeight,
+                    style: AppTypography.titleSmall.copyWith(
                       color: isDark ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -3167,7 +3166,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                               '${filteredBatches.length}/${batches.length}',
                               style: AppTypography.font(
                                   fontSize: AppTypography.microSize,
-                                  fontWeight: AppTypography.headingWeight,
+                                  fontWeight: AppTypography.labelWeight,
                                   color: AppColors.primary)),
                         ),
                         const SizedBox(width: 8),
@@ -3175,7 +3174,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           icon: const Icon(Icons.add_rounded, size: 15),
                           label: Text('New',
                               style: AppTypography.font(
-                                  fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight)),
+                                  fontSize: AppTypography.fieldLabelSize,
+                                  fontWeight: AppTypography.labelWeight)),
                           onPressed: () => setState(() => _showForm = true),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
@@ -3194,14 +3194,12 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                         controller: _batchSearchController,
                         onChanged: (value) =>
                             setState(() => _searchQuery = value),
-                        style: AppTypography.font(
-                            fontSize: AppTypography.captionSize,
+                        style: AppTypography.bodySmall.copyWith(
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary),
                         decoration: InputDecoration(
                           hintText: 'Search batches...',
-                          hintStyle: AppTypography.font(
-                              fontSize: AppTypography.captionSize,
+                          hintStyle: AppTypography.bodySmall.copyWith(
                               color: isDark
                                   ? Colors.white24
                                   : AppColors.textSecondary),
@@ -3420,7 +3418,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                                       ? Colors.white.withOpacity(0.5)
                                       : AppColors.textSecondary),
                               fontWeight: isSelected
-                                  ? AppTypography.headingWeight
+                                  ? AppTypography.labelWeight
                                   : AppTypography.bodyWeight,
                               fontSize: AppTypography.fieldLabelSize,
                             ),

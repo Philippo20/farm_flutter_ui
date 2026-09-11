@@ -247,6 +247,6 @@ class _SensorReadingHistoryState extends State<SensorReadingHistory> {
     final time = DateTime.tryParse('$raw');
     return time == null
         ? 'Timestamp unavailable'
-        : DateFormat('d MMM yyyy, HH:mm:ss').format(time.toLocal());
+        : DateFormat('d MMM yyyy, h:mm:ss a').format(time.toLocal());
   }
 }

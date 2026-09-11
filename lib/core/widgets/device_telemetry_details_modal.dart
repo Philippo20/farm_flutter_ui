@@ -36,6 +36,7 @@ class _DeviceTelemetryDetailsModalState
     extends State<DeviceTelemetryDetailsModal> {
   Timer? _timer;
   bool _copied = false;
+  int _selectedTab = 1;
   @override
   void initState() {
     super.initState();
@@ -60,7 +61,8 @@ class _DeviceTelemetryDetailsModalState
     TextStyle text(double size, {bool bold = false, Color? color}) =>
         AppTypography.font(
             fontSize: AppTypography.resolveSize(size),
-            fontWeight: bold ? AppTypography.headingWeight : AppTypography.bodyWeight,
+            fontWeight:
+                bold ? AppTypography.headingWeight : AppTypography.bodyWeight,
             color: color ?? foreground);
     Widget fields(Map<String, String> values) =>
         LayoutBuilder(builder: (context, constraints) {
@@ -172,8 +174,44 @@ class _DeviceTelemetryDetailsModalState
                         icon: Icon(Icons.close_rounded,
                             size: 16, color: secondary)),
                   ])),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<int>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment(
+                          value: 1,
+                          label: Text('History'),
+                          icon: Icon(Icons.history_rounded, size: 16)),
+                      ButtonSegment(
+                          value: 0,
+                          label: Text('Overview'),
+                          icon: Icon(Icons.sensors_outlined, size: 16)),
+                    ],
+                    selected: {_selectedTab},
+                    onSelectionChanged: (value) =>
+                        setState(() => _selectedTab = value.first),
+                    style: SegmentedButton.styleFrom(
+                      textStyle: text(AppTypography.actionSize),
+                      selectedBackgroundColor:
+                          AppColors.primary.withValues(alpha: .12),
+                      selectedForegroundColor:
+                          dark ? Colors.white : AppColors.primaryDark,
+                      foregroundColor: secondary,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+              ),
               Flexible(
-                  child: SingleChildScrollView(
+                child: IndexedStack(
+                  index: _selectedTab,
+                  children: [
+                    SingleChildScrollView(
+                      key: const PageStorageKey('device-overview'),
                       physics: const BouncingScrollPhysics(),
                       keyboardDismissBehavior:
                           ScrollViewKeyboardDismissBehavior.onDrag,
@@ -234,13 +272,24 @@ class _DeviceTelemetryDetailsModalState
                             const SizedBox(height: 12),
                             section('Configuration', Icons.tune_rounded,
                                 fields(data.configuration)),
-                            const SizedBox(height: 12),
-                            SensorReadingHistory(
-                                serialNumber: data.serial,
-                                sensor: data.sensor,
-                                loadReadings: widget.loadReadings),
                             const SizedBox(height: 4),
-                          ]))),
+                          ]),
+                    ),
+                    SingleChildScrollView(
+                      key: const PageStorageKey('device-history'),
+                      physics: const BouncingScrollPhysics(),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: SensorReadingHistory(
+                        serialNumber: data.serial,
+                        sensor: data.sensor,
+                        loadReadings: widget.loadReadings,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Padding(
                   padding: const EdgeInsets.all(24),
                   child: SizedBox(

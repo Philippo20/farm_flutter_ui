@@ -174,7 +174,7 @@ class SensorReadingsChart extends StatelessWidget {
             Text('Colors use current sensor thresholds',
                 style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
           ],
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -244,15 +244,16 @@ class SensorReadingsChart extends StatelessWidget {
                                 bottomTitles: AxisTitles(
                                     sideTitles: SideTitles(
                                         showTitles: true,
-                                        reservedSize: 36,
+                                        reservedSize: 40,
                                         getTitlesWidget: (value, meta) {
                                           final index = value.toInt();
                                           if (index < 0 || index >= rows.length)
                                             return const SizedBox();
                                           return Padding(
                                               padding:
-                                                  const EdgeInsets.only(top: 8),
-                                              child: Text(stamp(index, 'HH:mm'),
+                                                  const EdgeInsets.only(top: 4),
+                                              child: Text('${stamp(index, 'h:mm')}\n${stamp(index, 'a')}',
+                                                  textAlign: TextAlign.center,
                                                   style: AppTypography.font(
                                                       fontSize: AppTypography.microSize,
                                                       color: secondary)));
@@ -267,8 +268,8 @@ class SensorReadingsChart extends StatelessWidget {
                                             rodIndex) =>
                                         BarTooltipItem(
                                             compact
-                                                ? '${rows[index]['value']} $unit\n${stamp(index, 'HH:mm:ss')} · ${thresholds.classify(values[index])}'
-                                                : '${rows[index]['value']} $unit\n${stamp(index, 'd MMM yyyy, HH:mm:ss')}\n${thresholds.classify(values[index])} · current thresholds\nRecorded: ${rows[index]['status'] ?? 'Unknown status'}',
+                                                ? '${rows[index]['value']} $unit\n${stamp(index, 'h:mm:ss a')} · ${thresholds.classify(values[index])}'
+                                                : '${rows[index]['value']} $unit\n${stamp(index, 'd MMM yyyy, h:mm:ss a')}\n${thresholds.classify(values[index])} · current thresholds\nRecorded: ${rows[index]['status'] ?? 'Unknown status'}',
                                             AppTypography.font(
                                                 fontSize: AppTypography.fieldLabelSize,
                                                 color: Colors.white)))),
@@ -293,7 +294,7 @@ class SensorReadingsChart extends StatelessWidget {
                           )))))),
           const SizedBox(height: 8),
           Text(
-              '${stamp(0, 'd MMM, HH:mm')} — ${stamp(rows.length - 1, 'd MMM, HH:mm')}',
+              '${stamp(0, 'd MMM, h:mm a')} — ${stamp(rows.length - 1, 'd MMM, h:mm a')}',
               style: AppTypography.font(fontSize: AppTypography.microSize, color: secondary)),
           const SizedBox(height: 4),
           Text('Tap or hover for details · scroll sideways for more',
