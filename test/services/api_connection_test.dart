@@ -38,6 +38,7 @@ void main() {
     expect(state.unavailable, isFalse);
     await tester.pump(const Duration(seconds: 2));
     expect(state.unavailable, isTrue);
+    state.setForeground(false);
   });
 
   testWidgets('requests wait while backgrounded then resume', (tester) async {
@@ -63,6 +64,7 @@ void main() {
 
   test('failed reads resume after one shared connection retry', () async {
     final state = ApiConnection();
+    addTearDown(state.dispose);
     var online = false;
     var reads = 0;
     final client = ConnectedApiClient(
@@ -75,7 +77,7 @@ void main() {
     final first = client.get(Uri.parse('https://example.test/farms'));
     final second = client.get(Uri.parse('https://example.test/tasks'));
     await Future<void>.delayed(Duration.zero);
-    expect(state.unavailable, isTrue);
+    expect(state.unavailable, isFalse);
     await state.retry();
     expect(state.unavailable, isTrue);
     online = true;
@@ -89,13 +91,14 @@ void main() {
 
   test('failed writes are never replayed and validation stays local', () async {
     final state = ApiConnection();
+    addTearDown(state.dispose);
     var writes = 0;
     final client = ConnectedApiClient(
         connection: state,
         inner: MockClient((r) async {
           if (r.method == 'POST') {
             writes++;
-            return http.Response('unavailable', 503);
+            throw http.ClientException('Transport interrupted');
           }
           return http.Response('', 404);
         }));
@@ -122,13 +125,66 @@ void main() {
   test('a timed out submission reports the global connection failure',
       () async {
     final state = ApiConnection();
+    addTearDown(state.dispose);
     final client = ConnectedApiClient(
         connection: state,
         timeout: const Duration(milliseconds: 5),
         inner: MockClient((_) => Completer<http.Response>().future));
     await expectLater(client.post(Uri.parse('https://example.test/users')),
         throwsA(isA<http.ClientException>()));
-    expect(state.unavailable, isTrue);
+    expect(state.unavailable, isFalse);
     client.close();
+  });
+  testWidgets('transient failure recovers without displaying offline',
+      (tester) async {
+    final state = ApiConnection();
+    addTearDown(state.dispose);
+    var reads = 0;
+    final client = ConnectedApiClient(
+        connection: state,
+        inner: MockClient((_) async {
+          if (++reads == 1) throw http.ClientException('stale socket');
+          return http.Response('ok', 200);
+        }));
+    addTearDown(client.close);
+    var displayedOffline = false;
+    state.addListener(() => displayedOffline |= state.unavailable);
+    final request = client.get(Uri.parse('https://example.test/farms'));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 1));
+    }
+    expect((await request).statusCode, 200);
+    expect(displayedOffline, isFalse);
+  });
+
+  testWidgets('offline recovery retries automatically without user interaction',
+      (tester) async {
+    final state = ApiConnection();
+    addTearDown(state.dispose);
+    var online = false;
+    var recovered = false;
+    unawaited(state.failed(() async => online).then((_) => recovered = true));
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(state.unavailable, isTrue);
+    online = true;
+    await tester.pump(const Duration(seconds: 5));
+    expect(recovered, isTrue);
+    expect(state.unavailable, isFalse);
+  });
+
+  test('HTTP server errors never show a global internet failure', () async {
+    final state = ApiConnection();
+    addTearDown(state.dispose);
+    final client = ConnectedApiClient(
+        connection: state,
+        inner: MockClient((_) async => http.Response('Server error', 500)));
+    addTearDown(client.close);
+    expect(
+        (await client.get(Uri.parse('https://example.test/farms'))).statusCode,
+        500);
+    expect(
+        (await client.post(Uri.parse('https://example.test/farms'))).statusCode,
+        500);
+    expect(state.unavailable, isFalse);
   });
 }

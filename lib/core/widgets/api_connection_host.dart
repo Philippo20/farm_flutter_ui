@@ -1,5 +1,6 @@
 import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../services/api_connection.dart';
 
 /// Sits above the navigator so every role uses the same recovery screen.
@@ -22,12 +23,24 @@ class _ApiConnectionHostState extends State<ApiConnectionHost>
     WidgetsBinding.instance.addObserver(this);
     final lifecycle = WidgetsBinding.instance.lifecycleState;
     if (lifecycle != null) {
-      state.setForeground(lifecycle == AppLifecycleState.resumed);
+      _updateLifecycle(lifecycle);
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState lifecycle) {
+    _updateLifecycle(lifecycle);
+  }
+
+  void _updateLifecycle(AppLifecycleState lifecycle) {
+    final desktop = !kIsWeb &&
+        const {
+          TargetPlatform.windows,
+          TargetPlatform.macOS,
+          TargetPlatform.linux,
+        }.contains(defaultTargetPlatform);
+    // Inactive on desktop means the visible window lost keyboard focus.
+    if (desktop && lifecycle == AppLifecycleState.inactive) return;
     state.setForeground(lifecycle == AppLifecycleState.resumed);
   }
 

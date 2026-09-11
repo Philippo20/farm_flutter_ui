@@ -18,6 +18,7 @@ class ApiConnection extends ChangeNotifier {
   int lifecycleEpoch = 0;
   Completer<void>? _resume;
   Timer? _resumeRetry;
+  bool _disposed = false;
   Future<void> get whenForeground => _resume?.future ?? Future.value();
 
   void setForeground(bool value) {
@@ -39,7 +40,7 @@ class ApiConnection extends ChangeNotifier {
 
   void _scheduleResumeRetry() {
     _resumeRetry?.cancel();
-    // Give Android's network transport time to resume after unlocking.
+    // Let the device's network transport settle after unlocking or resuming.
     _resumeRetry = Timer(const Duration(seconds: 2), () {
       _resuming = false;
       if (_recovery != null) retry();
@@ -48,6 +49,7 @@ class ApiConnection extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _resumeRetry?.cancel();
     super.dispose();
   }
@@ -58,36 +60,71 @@ class ApiConnection extends ChangeNotifier {
     final interrupted = !foreground ||
         _resuming ||
         (requestEpoch != null && requestEpoch != lifecycleEpoch);
-    unavailable = !interrupted;
+    // Confirm failures quietly before replacing the current screen.
+    if (interrupted) unavailable = false;
     if (interrupted && foreground) _scheduleResumeRetry();
     submissionInterrupted |= submission;
     _recovery ??= Completer<void>();
+    if (!interrupted) _scheduleProbe(Duration.zero);
     notifyListeners();
     return _recovery!.future;
   }
 
+  void _scheduleProbe(Duration delay) {
+    _resumeRetry?.cancel();
+    if (_disposed || !foreground) return;
+    _resumeRetry = Timer(delay, () {
+      if (!_disposed) retry();
+    });
+  }
+
+  void succeeded(int epoch) {
+    if (_disposed || !foreground || epoch != lifecycleEpoch) return;
+    if (_recovery == null && !unavailable) return;
+    _resumeRetry?.cancel();
+    _resuming = false;
+    unavailable = false;
+    submissionInterrupted = false;
+    final recovery = _recovery;
+    _recovery = null;
+    recovery?.complete();
+    notifyListeners();
+  }
+
   Future<void> retry() async {
-    if (checking || _probe == null || !foreground) return;
+    if (_disposed || checking || _probe == null || !foreground) return;
+    _resumeRetry?.cancel();
     final epoch = lifecycleEpoch;
     checking = true;
     notifyListeners();
     try {
       final reachable = await _probe!();
-      if (epoch != lifecycleEpoch || !foreground) return;
+      if (_disposed ||
+          epoch != lifecycleEpoch ||
+          !foreground ||
+          _recovery == null) {
+        return;
+      }
       if (reachable) {
-        unavailable = false;
-        submissionInterrupted = false;
-        final recovery = _recovery;
-        _recovery = null;
-        recovery?.complete();
+        succeeded(epoch);
       } else {
         unavailable = true;
       }
     } catch (_) {
-      if (foreground && epoch == lifecycleEpoch) unavailable = true;
+      if (!_disposed &&
+          foreground &&
+          epoch == lifecycleEpoch &&
+          _recovery != null) {
+        unavailable = true;
+      }
     } finally {
       checking = false;
-      notifyListeners();
+      if (!_disposed) {
+        if (_recovery != null && foreground) {
+          _scheduleProbe(const Duration(seconds: 5));
+        }
+        notifyListeners();
+      }
     }
   }
 }
@@ -98,14 +135,18 @@ class ConnectedApiClient extends http.BaseClient {
       {http.Client? inner,
       ApiConnection? connection,
       this.timeout = const Duration(seconds: 8)})
-      : _inner = inner ?? http.Client(),
+      : _ownsInner = inner == null,
+        _inner = inner ?? http.Client(),
         connection = connection ?? ApiConnection.instance;
+  final bool _ownsInner;
   final http.Client _inner;
   final ApiConnection connection;
   final Duration timeout;
 
-  Future<http.Response> _perform(http.BaseRequest request) =>
-      (() async => http.Response.fromStream(await _inner.send(request)))()
+  Future<http.Response> _perform(http.BaseRequest request,
+          {http.Client? client}) =>
+      (() async => http.Response.fromStream(
+              await (client ?? _inner).send(request)))()
           .timeout(timeout);
 
   @override
@@ -120,9 +161,9 @@ class ConnectedApiClient extends http.BaseClient {
       final requestEpoch = connection.lifecycleEpoch;
       try {
         final response = await _perform(attempt);
-        if (response.statusCode >= 500) {
-          throw http.ClientException(connectionMessage, url);
-        }
+        // An HTTP error still proves the server is reachable. Let the caller
+        // display its endpoint-specific error without declaring the app offline.
+        connection.succeeded(requestEpoch);
         return http.StreamedResponse(
             Stream.value(response.bodyBytes), response.statusCode,
             headers: response.headers,
@@ -140,8 +181,14 @@ class ConnectedApiClient extends http.BaseClient {
         final probe =
             http.Request(read ? method : 'GET', read ? url : url.resolve('/'))
               ..headers.addAll(headers);
-        final result = await _perform(probe);
-        return result.statusCode < 500;
+        // Recovery must not depend on a closed or stale caller-owned transport.
+        final transport = _ownsInner ? http.Client() : _inner;
+        try {
+          final result = await _perform(probe, client: transport);
+          return result.statusCode >= 100;
+        } finally {
+          if (_ownsInner) transport.close();
+        }
       }, submission: !read, requestEpoch: requestEpoch);
       if (!read) throw http.ClientException(connectionMessage, url);
       await recovered;
