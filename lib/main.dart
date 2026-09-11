@@ -1,4 +1,5 @@
 import 'screens/auth/password_recovery_screen.dart';
+import 'core/utils/initial_auth_route.dart';
 import 'core/widgets/api_connection_host.dart';
 import 'core/widgets/session_security_host.dart';
 import 'package:farmestates_ai_dashbaord/screens/farm_manager/batch_generation_screen.dart';
@@ -120,9 +121,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
-    final requestedRoute = (Uri.base.fragment.startsWith('/sales-invoice') || Uri.base.fragment.startsWith('/reset-password'))
-        ? Uri.base.fragment
-        : '/login';
+    final requestedRoute = initialAuthRoute(Uri.base);
 
     return MaterialApp(
       navigatorKey: messageNavigatorKey,
