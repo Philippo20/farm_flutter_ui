@@ -49,6 +49,28 @@ class SessionFake extends Fake implements AuthService {
 }
 
 void main() {
+  testWidgets('Expired saved session does not replace password recovery', (tester) async {
+    final auth = SessionFake();
+    final now = auth.lastActivity!.add(const Duration(minutes: 6));
+    await tester.pumpWidget(ProviderScope(
+      overrides: [authServiceProvider.overrideWithValue(auth)],
+      child: MaterialApp(
+        navigatorKey: messageNavigatorKey,
+        builder: (_, child) => SessionSecurityHost(
+          now: () => now, isPasswordRecovery: () => true, child: child!),
+        home: const Scaffold(body: Text('Reset password')),
+        routes: {'/login': (_) => const Scaffold(body: Text('Login screen'))},
+      ),
+    ));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    expect(auth.currentUser, isNull);
+    expect(find.text('Reset password'), findsOneWidget);
+    expect(find.text('Login screen'), findsNothing);
+    expect(find.text('Are you still there?'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
   for (final width in [320.0, 1200.0]) {
     testWidgets('Warning and verified continuation at width $width',
         (tester) async {

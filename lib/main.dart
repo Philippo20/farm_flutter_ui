@@ -95,6 +95,7 @@ import 'screens/shared/packaging_configuration_screen.dart';
 
 /// Main entry point for Farm Estates ADOM application
 void main() async {
+  final launchUri = Uri.base;
   // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -109,22 +110,32 @@ void main() async {
 
   // Run app with Riverpod state management
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      child: MyApp(launchUri: launchUri),
     ),
   );
 }
 
-class MyApp extends ConsumerWidget {
-  const MyApp({super.key});
+class MyApp extends ConsumerStatefulWidget {
+  const MyApp({super.key, this.launchUri});
+  final Uri? launchUri;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  late final Uri _launchUri = widget.launchUri ?? Uri.base;
+  final _routeObserver = _AuthRouteObserver();
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeProvider);
-    final requestedRoute = initialAuthRoute(Uri.base);
+    final requestedRoute = initialAuthRoute(_launchUri);
 
     return MaterialApp(
       navigatorKey: messageNavigatorKey,
+      navigatorObservers: [_routeObserver],
       scaffoldMessengerKey: messageScaffoldKey,
       title: 'Farm Estates - ADOM',
       debugShowCheckedModeBanner: false,
@@ -151,6 +162,7 @@ class MyApp extends ConsumerWidget {
             systemNavigationBarContrastEnforced: false,
           ),
           child: SessionSecurityHost(
+              isPasswordRecovery: () => _routeObserver.isPasswordRecovery,
               child: MessageNotificationHost(
                   child: ApiConnectionHost(
                       child: child ?? const SizedBox.shrink()))),
@@ -159,7 +171,7 @@ class MyApp extends ConsumerWidget {
       onGenerateRoute: (settings) {
         final uri = Uri.tryParse(settings.name ?? '');
         if (uri?.path == '/reset-password') {
-          final parameters = {...Uri.base.queryParameters, ...?uri?.queryParameters};
+          final parameters = {...recoveryLinkParameters(_launchUri), ...?uri?.queryParameters};
           return MaterialPageRoute<void>(settings: settings, builder: (_) => PasswordRecoveryScreen(reset: true, userId: parameters['userId'] ?? parameters['user_id'] ?? '', secret: parameters['secret'] ?? ''));
         }
         if (uri?.path == '/sales-invoice') {
@@ -435,5 +447,15 @@ class MyApp extends ConsumerWidget {
         */
       },
     );
+  }
+}
+
+class _AuthRouteObserver extends NavigatorObserver {
+  bool isPasswordRecovery = false;
+
+  @override
+  void didChangeTop(Route<dynamic> topRoute, Route<dynamic>? previousTopRoute) {
+    final path = Uri.tryParse(topRoute.settings.name ?? '')?.path;
+    isPasswordRecovery = path == '/reset-password' || path == '/forgot-password';
   }
 }

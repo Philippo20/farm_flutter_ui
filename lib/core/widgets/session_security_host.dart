@@ -9,9 +9,10 @@ import 'message_notification_host.dart';
 
 /// One wall-clock inactivity monitor around every route, for all roles/devices.
 class SessionSecurityHost extends ConsumerStatefulWidget {
-  const SessionSecurityHost({super.key, required this.child, this.now});
+  const SessionSecurityHost({super.key, required this.child, this.now, this.isPasswordRecovery});
   final Widget child;
   final DateTime Function()? now;
+  final bool Function()? isPasswordRecovery;
   @override
   ConsumerState<SessionSecurityHost> createState() =>
       _SessionSecurityHostState();
@@ -26,6 +27,7 @@ class _SessionSecurityHostState extends ConsumerState<SessionSecurityHost>
   DateTime? _checkedAt;
   DateTime _now() => widget.now?.call() ?? DateTime.now();
   AuthService get _auth => ref.read(authServiceProvider);
+  bool get _recovering => widget.isPasswordRecovery?.call() ?? false;
 
   @override
   void initState() {
@@ -50,6 +52,7 @@ class _SessionSecurityHostState extends ConsumerState<SessionSecurityHost>
   }
 
   void _activity() {
+    if (_recovering) return;
     if (_user == null || !_active || _ending || _warning) return;
     final now = _now();
     final last = _auth.lastActivity;
@@ -85,6 +88,10 @@ class _SessionSecurityHostState extends ConsumerState<SessionSecurityHost>
             .difference(_now());
     if (remaining <= Duration.zero) {
       unawaited(_end());
+      return;
+    }
+    if (_recovering) {
+      if (_warning) setState(() => _warning = false);
       return;
     }
     if (remaining <= Duration(minutes: _auth.sessionWarningMinutes) &&
@@ -148,15 +155,20 @@ class _SessionSecurityHostState extends ConsumerState<SessionSecurityHost>
     _ending = true;
     await ref.read(authProvider.notifier).logout();
     if (!mounted) return;
-    messageNavigatorKey.currentState
-        ?.pushNamedAndRemoveUntil('/login', (_) => false);
+    final preserveRecovery = _recovering;
+    if (!preserveRecovery) {
+      messageNavigatorKey.currentState
+          ?.pushNamedAndRemoveUntil('/login', (_) => false);
+    }
     setState(() {
       _user = null;
       _warning = false;
       _ending = false;
     });
-    messageScaffoldKey.currentState?.showSnackBar(const SnackBar(
-        content: Text('Your session has ended. Please sign in again.')));
+    if (!preserveRecovery) {
+      messageScaffoldKey.currentState?.showSnackBar(const SnackBar(
+          content: Text('Your session has ended. Please sign in again.')));
+    }
   }
 
   @override
