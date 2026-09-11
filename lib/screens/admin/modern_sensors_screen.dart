@@ -1,3 +1,4 @@
+import '../../core/utils/sensor_maintenance_policy.dart';
 import '../../core/widgets/sensor_form_dialog.dart';
 import '../../core/widgets/device_telemetry_details_modal.dart';
 import '../../core/widgets/app_dialog.dart';
@@ -550,6 +551,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
   }
 
   String _maintenanceLabel(_IotSensor sensor) {
+    if (!sensorRequiresMaintenance(sensor.raw)) return 'Not required';
     final frequency =
         (sensor.raw['maintenance_frequency'] ?? '').toString().trim();
     final lastDate =
@@ -1723,6 +1725,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final requiresMaintenance = sensorRequiresMaintenance({'sensortype': selectedType});
             Future<void> save() async {
               if (isSaving || !(formKey.currentState?.validate() ?? false))
                 return;
@@ -1751,10 +1754,9 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                   'status': selectedStatus,
                   'unit': unitController.text.trim(),
                   'alerts_enabled': alertsEnabled.toString(),
-                  'maintenance_frequency': maintenanceController.text.trim(),
+                  'maintenance_frequency': requiresMaintenance ? maintenanceController.text.trim() : 'Not required',
                   'timestamp': DateTime.now().toIso8601String(),
-                  'last_maintenance_date':
-                      lastMaintenanceController.text.trim(),
+                  if (requiresMaintenance) 'last_maintenance_date': lastMaintenanceController.text.trim(),
                 };
                 if (rangeMinController.text.trim().isNotEmpty) {
                   data['range_min'] = rangeMinController.text.trim();
@@ -2091,6 +2093,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                       ],
                     ),
                     const SizedBox(height: 14),
+                    if (requiresMaintenance)
                     SensorFormRow(
                       children: [
                         Expanded(
@@ -2113,7 +2116,13 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                           ),
                         ),
                       ],
-                    ),
+                    )
+                    else
+                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Icon(Icons.check_circle_outline, size: 18, color: AppColors.primary),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text('Routine maintenance is not required for this sensor type.', style: AppTypography.bodySmall.copyWith(color: isDark ? Colors.white70 : AppColors.textSecondary))),
+                      ]),
                     const SizedBox(height: 14),
                     SwitchListTile.adaptive(
                       value: alertsEnabled,
