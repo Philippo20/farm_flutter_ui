@@ -1,3 +1,5 @@
+import 'desktop_account_dialog.dart';
+import 'app_dialog.dart';
 import '../theme/app_typography.dart';
 import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -6,9 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../screens/caretaker/chat_screen.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_spacing.dart';
 
-/// Uses a touch-friendly bottom sheet on mobile and a wider anchored menu on
+/// Uses a touch-friendly bottom sheet on mobile and a compact account dialog on
 /// larger screens while preserving each header's existing actions.
 class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
   final Widget child;
@@ -30,25 +31,13 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isMobile = MediaQuery.of(context).size.width < 600;
     if (!isMobile) {
-      return PopupMenuButton<String>(
-        offset: offset,
-        constraints: const BoxConstraints(minWidth: 320, maxWidth: 380),
-        shape: shape ??
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-        itemBuilder: (context) => [
-          ...itemBuilder(context),
-          const PopupMenuItem(
-              value: 'team_messages',
-              child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.chat_bubble_outline),
-                  title: Text('Messages'))),
-        ],
-        onSelected: (value) => _handleSelection(context, value),
-        child: child,
-      );
+      return Tooltip(
+          message: 'Open account menu',
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: () => _showDesktopDialog(context, ref),
+            child: child,
+          ));
     }
 
     return GestureDetector(
@@ -56,6 +45,27 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
       onTap: () => _showMobileSheet(context, ref),
       child: child,
     );
+  }
+
+  Future<void> _showDesktopDialog(BuildContext context, WidgetRef ref) async {
+    final user = ref.read(currentUserProvider);
+    final items = itemBuilder(context)
+        .whereType<PopupMenuItem<String>>()
+        .where((item) => item.value != null)
+        .toList();
+    if (!items.any((item) => item.value == 'team_messages')) {
+      items.add(
+          const PopupMenuItem(value: 'team_messages', child: Text('Messages')));
+    }
+    final selected = await showAppDialog<String>(
+        context: context,
+        builder: (_) => DesktopAccountDialog(
+            name: user?.name ?? 'Farm Estates user',
+            email: user?.email ?? '',
+            role: user?.role.displayName ?? 'Account',
+            items: items));
+    if (selected != null && context.mounted)
+      _handleSelection(context, selected);
   }
 
   Future<void> _showMobileSheet(BuildContext context, WidgetRef ref) async {
@@ -177,14 +187,16 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
                                       overflow: TextOverflow.ellipsis,
                                       style: AppTypography.font(
                                           fontSize: AppTypography.bodySize,
-                                          fontWeight: AppTypography.headingWeight,
+                                          fontWeight:
+                                              AppTypography.headingWeight,
                                           color: isDark
                                               ? Colors.white
                                               : AppColors.textPrimary)),
                                   const SizedBox(height: 4),
                                   Text(user?.role.displayName ?? 'Account',
                                       style: AppTypography.font(
-                                          fontSize: AppTypography.fieldLabelSize,
+                                          fontSize:
+                                              AppTypography.fieldLabelSize,
                                           fontWeight: AppTypography.labelWeight,
                                           color: isDark
                                               ? Colors.white70
@@ -250,7 +262,8 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
                         color: AppColors.error.withValues(alpha: 0.2)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     textStyle: AppTypography.font(
-                        fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight),
+                        fontSize: AppTypography.actionSize,
+                        fontWeight: AppTypography.headingWeight),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
