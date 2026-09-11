@@ -63,47 +63,151 @@ class _LogoutConfirmationDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return AppAlertDialog(
-      backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      ),
-      title: Text(
-        title,
-        style: AppTypography.titleMedium.copyWith(
-          fontWeight: AppTypography.headingWeight,
-          color: isDark ? Colors.white : AppColors.textPrimary,
+    final foreground = isDark ? Colors.white : AppColors.textPrimary;
+    final secondary = isDark ? Colors.white60 : AppColors.textSecondary;
+    final border = isDark ? Colors.white12 : AppColors.neutral200;
+    final labelStyle = AppTypography.font(
+        fontSize: AppTypography.actionSize,
+        fontWeight: AppTypography.labelWeight);
+
+    return AppDialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 500,
+          maxHeight: MediaQuery.sizeOf(context).height * .9,
         ),
-      ),
-      content: Text(
-        message,
-        style: AppTypography.bodyMedium.copyWith(
-          color: isDark ? Colors.white70 : AppColors.textSecondary,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text(
-            'Cancel',
-            style: AppTypography.bodyMedium.copyWith(
-              color: isDark ? Colors.white70 : AppColors.textSecondary,
-              fontWeight: AppTypography.labelWeight,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? .24 : .12),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              )
+            ],
+          ),
+          child: Material(
+            color: isDark ? AppColors.surfaceDark : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                  child: Row(children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(colors: [
+                          AppColors.primary,
+                          AppColors.primary.withValues(alpha: .75),
+                        ]),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.logout_rounded,
+                          color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            title == 'Logout'
+                                ? 'Log out of Farm Estates?'
+                                : title,
+                            style: AppTypography.font(
+                                fontSize: AppTypography.cardTitleSize,
+                                fontWeight: AppTypography.headingWeight,
+                                color: foreground)),
+                        const SizedBox(height: 3),
+                        Text('Account session',
+                            style: AppTypography.font(
+                                fontSize: AppTypography.captionSize,
+                                color: secondary)),
+                      ],
+                    )),
+                    const SizedBox(width: 12),
+                    IconButton(
+                      tooltip: 'Close',
+                      onPressed: () => Navigator.of(context).pop(false),
+                      icon: const Icon(Icons.close_rounded, size: 16),
+                      color: secondary,
+                      style: IconButton.styleFrom(
+                        backgroundColor: isDark
+                            ? Colors.white.withValues(alpha: .04)
+                            : Colors.black.withValues(alpha: .04),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                  ]),
+                ),
+                Flexible(
+                    child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child: Text(
+                    message == 'Are you sure you want to logout?'
+                        ? 'You will need to sign in again to access your workspace.'
+                        : message,
+                    style: AppTypography.font(
+                      fontSize: AppTypography.captionSize,
+                      height: 1.6,
+                      color: secondary,
+                    ),
+                  ),
+                )),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                  decoration: BoxDecoration(
+                      border: Border(top: BorderSide(color: border))),
+                  child: Row(children: [
+                    Expanded(
+                        child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: foreground,
+                        textStyle: labelStyle,
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(color: border),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Text('Cancel'),
+                    )),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: FilledButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                        textStyle: labelStyle,
+                        minimumSize: const Size(0, 44),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Text(
+                          confirmLabel == 'Logout' ? 'Log out' : confirmLabel),
+                    )),
+                  ]),
+                ),
+              ],
             ),
           ),
         ),
-        ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.error,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-          ),
-          child: Text(confirmLabel),
-        ),
-      ],
+      ),
     );
   }
 }

@@ -5,6 +5,62 @@ import 'package:http/testing.dart';
 import 'package:farmestates_ai_dashbaord/services/api_connection.dart';
 
 void main() {
+  testWidgets('unlock quietly recovers interrupted requests', (tester) async {
+    final state = ApiConnection();
+    addTearDown(state.dispose);
+    final epoch = state.lifecycleEpoch;
+    state.setForeground(false);
+    var probes = 0;
+    var recovered = false;
+    state.failed(() async {
+      probes++;
+      return true;
+    }, requestEpoch: epoch).then((_) => recovered = true);
+    await tester.pump(const Duration(seconds: 10));
+    expect(state.unavailable, isFalse);
+    expect(probes, 0);
+    state.setForeground(true);
+    await tester.pump(const Duration(seconds: 2));
+    expect(probes, 1);
+    expect(recovered, isTrue);
+    expect(state.unavailable, isFalse);
+  });
+
+  testWidgets(
+      'late background failure verifies connection before showing error',
+      (tester) async {
+    final state = ApiConnection();
+    addTearDown(state.dispose);
+    final epoch = state.lifecycleEpoch;
+    state.setForeground(false);
+    state.setForeground(true);
+    unawaited(state.failed(() async => false, requestEpoch: epoch));
+    expect(state.unavailable, isFalse);
+    await tester.pump(const Duration(seconds: 2));
+    expect(state.unavailable, isTrue);
+  });
+
+  testWidgets('requests wait while backgrounded then resume', (tester) async {
+    final state = ApiConnection();
+    addTearDown(state.dispose);
+    var calls = 0;
+    final client = ConnectedApiClient(
+        connection: state,
+        inner: MockClient((_) async {
+          calls++;
+          return http.Response('ok', 200);
+        }));
+    addTearDown(client.close);
+    state.setForeground(false);
+    final response = client.get(Uri.parse('https://example.test/farms'));
+    await tester.pump(const Duration(seconds: 10));
+    expect(calls, 0);
+    state.setForeground(true);
+    await tester.pump(const Duration(seconds: 2));
+    expect((await response).statusCode, 200);
+    expect(calls, 1);
+  });
+
   test('failed reads resume after one shared connection retry', () async {
     final state = ApiConnection();
     var online = false;

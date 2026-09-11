@@ -640,20 +640,24 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
               children: [
                 Expanded(flex: 2, child: _buildSearchField(isDark)),
                 const SizedBox(width: AppSpacing.md),
-                _buildDropdown(
-                  'Role',
-                  _selectedRole,
-                  roleItems,
-                  (v) => setState(() => _selectedRole = v!),
-                  isDark,
+                Expanded(
+                  child: _buildDropdown(
+                    'Role',
+                    _selectedRole,
+                    roleItems,
+                    (v) => setState(() => _selectedRole = v!),
+                    isDark,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
-                _buildDropdown(
-                  'Status',
-                  _selectedStatus,
-                  ['All', ..._statusOptions],
-                  (v) => setState(() => _selectedStatus = v!),
-                  isDark,
+                Expanded(
+                  child: _buildDropdown(
+                    'Status',
+                    _selectedStatus,
+                    ['All', ..._statusOptions],
+                    (v) => setState(() => _selectedStatus = v!),
+                    isDark,
+                  ),
                 ),
               ],
             ),

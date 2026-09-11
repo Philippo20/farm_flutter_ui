@@ -126,7 +126,7 @@ class MyApp extends ConsumerWidget {
     return MaterialApp(
       navigatorKey: messageNavigatorKey,
       scaffoldMessengerKey: messageScaffoldKey,
-      title: 'Room Dashboard',
+      title: 'Farm Estates - ADOM',
       debugShowCheckedModeBanner: false,
       //home: AdminDashboardScreen(),
       initialRoute: requestedRoute,

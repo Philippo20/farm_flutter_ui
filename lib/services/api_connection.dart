@@ -13,10 +13,53 @@ class ApiConnection extends ChangeNotifier {
   Future<bool> Function()? _probe;
   Completer<void>? _recovery;
 
+  bool foreground = true;
+  bool _resuming = false;
+  int lifecycleEpoch = 0;
+  Completer<void>? _resume;
+  Timer? _resumeRetry;
+  Future<void> get whenForeground => _resume?.future ?? Future.value();
+
+  void setForeground(bool value) {
+    if (foreground == value) return;
+    foreground = value;
+    lifecycleEpoch++;
+    _resumeRetry?.cancel();
+    unavailable = false;
+    if (!value) {
+      _resume ??= Completer<void>();
+    } else {
+      _resume?.complete();
+      _resume = null;
+      _resuming = true;
+      _scheduleResumeRetry();
+    }
+    notifyListeners();
+  }
+
+  void _scheduleResumeRetry() {
+    _resumeRetry?.cancel();
+    // Give Android's network transport time to resume after unlocking.
+    _resumeRetry = Timer(const Duration(seconds: 2), () {
+      _resuming = false;
+      if (_recovery != null) retry();
+    });
+  }
+
+  @override
+  void dispose() {
+    _resumeRetry?.cancel();
+    super.dispose();
+  }
+
   Future<void> failed(Future<bool> Function() probe,
-      {bool submission = false}) {
+      {bool submission = false, int? requestEpoch}) {
     _probe = probe;
-    unavailable = true;
+    final interrupted = !foreground ||
+        _resuming ||
+        (requestEpoch != null && requestEpoch != lifecycleEpoch);
+    unavailable = !interrupted;
+    if (interrupted && foreground) _scheduleResumeRetry();
     submissionInterrupted |= submission;
     _recovery ??= Completer<void>();
     notifyListeners();
@@ -24,19 +67,24 @@ class ApiConnection extends ChangeNotifier {
   }
 
   Future<void> retry() async {
-    if (checking || _probe == null) return;
+    if (checking || _probe == null || !foreground) return;
+    final epoch = lifecycleEpoch;
     checking = true;
     notifyListeners();
     try {
-      if (await _probe!()) {
+      final reachable = await _probe!();
+      if (epoch != lifecycleEpoch || !foreground) return;
+      if (reachable) {
         unavailable = false;
         submissionInterrupted = false;
         final recovery = _recovery;
         _recovery = null;
         recovery?.complete();
+      } else {
+        unavailable = true;
       }
     } catch (_) {
-      // Keep the same connection panel until the service responds.
+      if (foreground && epoch == lifecycleEpoch) unavailable = true;
     } finally {
       checking = false;
       notifyListeners();
@@ -68,6 +116,8 @@ class ConnectedApiClient extends http.BaseClient {
     final headers = Map<String, String>.from(request.headers);
     var attempt = request;
     while (true) {
+      await connection.whenForeground;
+      final requestEpoch = connection.lifecycleEpoch;
       try {
         final response = await _perform(attempt);
         if (response.statusCode >= 500) {
@@ -92,7 +142,7 @@ class ConnectedApiClient extends http.BaseClient {
               ..headers.addAll(headers);
         final result = await _perform(probe);
         return result.statusCode < 500;
-      }, submission: !read);
+      }, submission: !read, requestEpoch: requestEpoch);
       if (!read) throw http.ClientException(connectionMessage, url);
       await recovered;
       attempt = http.Request(method, url)..headers.addAll(headers);

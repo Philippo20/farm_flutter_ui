@@ -3,14 +3,42 @@ import 'package:flutter/material.dart';
 import '../../services/api_connection.dart';
 
 /// Sits above the navigator so every role uses the same recovery screen.
-class ApiConnectionHost extends StatelessWidget {
+class ApiConnectionHost extends StatefulWidget {
   const ApiConnectionHost({super.key, required this.child, this.connection});
   final Widget child;
   final ApiConnection? connection;
 
   @override
+  State<ApiConnectionHost> createState() => _ApiConnectionHostState();
+}
+
+class _ApiConnectionHostState extends State<ApiConnectionHost>
+    with WidgetsBindingObserver {
+  ApiConnection get state => widget.connection ?? ApiConnection.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (lifecycle != null) {
+      state.setForeground(lifecycle == AppLifecycleState.resumed);
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState lifecycle) {
+    state.setForeground(lifecycle == AppLifecycleState.resumed);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final state = connection ?? ApiConnection.instance;
     return ListenableBuilder(
         listenable: state,
         builder: (context, _) {
@@ -18,8 +46,8 @@ class ApiConnectionHost extends StatelessWidget {
           return Stack(children: [
             ExcludeSemantics(
                 excluding: state.unavailable,
-                child:
-                    ExcludeFocus(excluding: state.unavailable, child: child)),
+                child: ExcludeFocus(
+                    excluding: state.unavailable, child: widget.child)),
             if (state.unavailable)
               Positioned.fill(
                 child: Material(
@@ -48,7 +76,8 @@ class ApiConnectionHost extends StatelessWidget {
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                           fontSize: AppTypography.pageTitleSize,
-                                          fontWeight: AppTypography.headingWeight,
+                                          fontWeight:
+                                              AppTypography.headingWeight,
                                           color: colors.onSurface)),
                                   const SizedBox(height: 12),
                                   Text(connectionMessage,

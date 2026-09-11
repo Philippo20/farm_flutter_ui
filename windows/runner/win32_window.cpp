@@ -1,6 +1,7 @@
 #include "win32_window.h"
 
 #include <dwmapi.h>
+#include <algorithm>
 #include <flutter_windows.h>
 
 #include "resource.h"
@@ -15,6 +16,14 @@ namespace {
 #ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 #endif
+
+// Logical dimensions, scaled for each monitor.
+constexpr int kMinimumWindowWidth = 1100;
+constexpr int kMinimumWindowHeight = 700;
+// Numeric DWM attributes support compilation with older SDK headers.
+constexpr DWORD kCaptionColorAttribute = 35;
+constexpr DWORD kTextColorAttribute = 36;
+constexpr DWORD kBorderColorAttribute = 34;
 
 constexpr const wchar_t kWindowClassName[] = L"FLUTTER_RUNNER_WIN32_WINDOW";
 
@@ -134,10 +143,19 @@ bool Win32Window::Create(const std::wstring& title,
   UINT dpi = FlutterDesktopGetDpiForMonitor(monitor);
   double scale_factor = dpi / 96.0;
 
+  MONITORINFO monitor_info{};
+  monitor_info.cbSize = sizeof(monitor_info);
+  GetMonitorInfo(monitor, &monitor_info);
+  const RECT work = monitor_info.rcWork;
+  const int width = std::min(Scale(size.width, scale_factor),
+                             static_cast<int>(work.right - work.left));
+  const int height = std::min(Scale(size.height, scale_factor),
+                              static_cast<int>(work.bottom - work.top));
+
   HWND window = CreateWindow(
       window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
-      Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
-      Scale(size.width, scale_factor), Scale(size.height, scale_factor),
+      work.left + (work.right - work.left - width) / 2,
+      work.top + (work.bottom - work.top - height) / 2, width, height,
       nullptr, nullptr, GetModuleHandle(nullptr), this);
 
   if (!window) {
@@ -179,6 +197,22 @@ Win32Window::MessageHandler(HWND hwnd,
                             WPARAM const wparam,
                             LPARAM const lparam) noexcept {
   switch (message) {
+    case WM_GETMINMAXINFO: {
+      auto limits = reinterpret_cast<MINMAXINFO*>(lparam);
+      HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+      const double scale = FlutterDesktopGetDpiForMonitor(monitor) / 96.0;
+      LONG width = Scale(kMinimumWindowWidth, scale);
+      LONG height = Scale(kMinimumWindowHeight, scale);
+      MONITORINFO info{};
+      info.cbSize = sizeof(info);
+      if (GetMonitorInfo(monitor, &info)) {
+        // Keep controls reachable on small or high-DPI displays.
+        width = std::min(width, info.rcWork.right - info.rcWork.left);
+        height = std::min(height, info.rcWork.bottom - info.rcWork.top);
+      }
+      limits->ptMinTrackSize = {width, height};
+      return 0;
+    }
     case WM_DESTROY:
       window_handle_ = nullptr;
       Destroy();
@@ -213,6 +247,8 @@ Win32Window::MessageHandler(HWND hwnd,
       }
       return 0;
 
+    case WM_SETTINGCHANGE:
+    case WM_THEMECHANGED:
     case WM_DWMCOLORIZATIONCOLORCHANGED:
       UpdateTheme(hwnd);
       return 0;
@@ -273,6 +309,14 @@ void Win32Window::OnDestroy() {
 }
 
 void Win32Window::UpdateTheme(HWND const window) {
+  // Retain native snapping, dragging and accessible window controls.
+  // Older Windows versions ignore unsupported color attributes.
+  const COLORREF caption = RGB(27, 67, 50);
+  const COLORREF text = RGB(255, 255, 255);
+  const COLORREF border = RGB(45, 90, 67);
+  DwmSetWindowAttribute(window, kCaptionColorAttribute, &caption, sizeof(caption));
+  DwmSetWindowAttribute(window, kTextColorAttribute, &text, sizeof(text));
+  DwmSetWindowAttribute(window, kBorderColorAttribute, &border, sizeof(border));
   DWORD light_mode;
   DWORD light_mode_size = sizeof(light_mode);
   LSTATUS result = RegGetValue(HKEY_CURRENT_USER, kGetPreferredBrightnessRegKey,

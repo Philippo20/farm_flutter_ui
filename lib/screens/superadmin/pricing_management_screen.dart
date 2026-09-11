@@ -507,26 +507,27 @@ class _PricingManagementScreenState
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isDark
-              ? [const Color(0xFF211B11), const Color(0xFF101923)]
-              : [const Color(0xFFFFF8E9), const Color(0xFFEFFAF4)],
+              ? [const Color(0xFF172A23), const Color(0xFF18221E)]
+              : [const Color(0xFFF1F7F3), const Color(0xFFFAFCFB)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: isDark
               ? Colors.white10
-              : AppColors.warning.withValues(alpha: 0.2),
+              : AppColors.primary.withValues(alpha: 0.2),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.06),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: isMobile
+      child: LayoutBuilder(
+        builder: (context, constraints) => isMobile || constraints.maxWidth < 1000
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -555,6 +556,7 @@ class _PricingManagementScreenState
                 SizedBox(width: 180, child: _buildHeroActions(isDark)),
               ],
             ),
+      ),
     );
   }
 
@@ -568,26 +570,28 @@ class _PricingManagementScreenState
             vertical: 8,
           ),
           decoration: BoxDecoration(
-            color: AppColors.warning.withValues(alpha: isDark ? 0.18 : 0.12),
+            color: AppColors.primary.withValues(alpha: isDark ? 0.18 : 0.12),
             borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
             border:
-                Border.all(color: AppColors.warning.withValues(alpha: 0.28)),
+                Border.all(color: AppColors.primary.withValues(alpha: 0.28)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
                 Icons.price_change_rounded,
-                color: AppColors.warning,
+                color: AppColors.primary,
                 size: 16,
               ),
               const SizedBox(width: 8),
-              Text(
-                'Hub and spoke price control',
+              Flexible(
+                child: Text(
+                'Hub & spoke pricing',
                 style: AppTypography.bodySmall.copyWith(
-                  color: isDark ? Colors.white : AppColors.warning,
+                  color: isDark ? Colors.white : AppColors.primary,
                   fontWeight: AppTypography.labelWeight,
                 ),
+              ),
               ),
             ],
           ),
@@ -602,7 +606,7 @@ class _PricingManagementScreenState
         ),
         const SizedBox(height: 6),
         Text(
-          'Manage raw prices the hub pays spoke farms, then packaged prices the hub sells to offtakers.',
+          'Manage farm purchase prices and hub selling prices in one place.',
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
             height: 1.5,
@@ -657,8 +661,8 @@ class _PricingManagementScreenState
           onPressed: () => _showPricingDialog(context, isDark),
           icon: const Icon(Icons.add_rounded, size: 18),
           label: Text(_selectedTab == 'sale'
-              ? 'Add Hub Sale Price'
-              : 'Add Raw Purchase Price'),
+              ? 'Add sale price'
+              : 'Add purchase price'),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
@@ -670,7 +674,7 @@ class _PricingManagementScreenState
         ),
         const SizedBox(height: AppSpacing.sm),
         OutlinedButton.icon(
-          onPressed: () {},
+          onPressed: null,
           icon: const Icon(Icons.file_download_rounded, size: 18),
           label: const Text('Export'),
           style: OutlinedButton.styleFrom(
@@ -758,19 +762,24 @@ class _PricingManagementScreenState
           isDark,
         ),
         const SizedBox(height: AppSpacing.md),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _farms.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isMobile ? 1 : 4,
-            crossAxisSpacing: AppSpacing.md,
-            mainAxisSpacing: AppSpacing.md,
-            childAspectRatio: isMobile ? 2.05 : 1.42,
-          ),
-          itemBuilder: (context, index) =>
-              _buildFarmScopeCard(_farms[index], isDark),
-        ),
+        LayoutBuilder(builder: (context, constraints) {
+          final columns = isMobile
+              ? 1
+              : (constraints.maxWidth / 260).floor().clamp(1, 4);
+          final width =
+              (constraints.maxWidth - AppSpacing.md * (columns - 1)) / columns;
+          return Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.md,
+            children: [
+              for (final farm in _farms)
+                SizedBox(
+                  width: width,
+                  child: _buildFarmScopeCard(farm, isDark),
+                ),
+            ],
+          );
+        }),
       ],
     );
   }
@@ -798,6 +807,7 @@ class _PricingManagementScreenState
           ),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -834,7 +844,7 @@ class _PricingManagementScreenState
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const Spacer(),
+            const SizedBox(height: AppSpacing.md),
             Row(
               children: [
                 Expanded(
