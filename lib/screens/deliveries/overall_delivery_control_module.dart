@@ -1,3 +1,4 @@
+import '../../core/widgets/delivery_filters.dart';
 import '../../core/widgets/delivery_kpi_grid.dart';
 import '../../core/widgets/delivery_details_modal.dart';
 import '../../core/widgets/app_dialog.dart';
@@ -33,7 +34,7 @@ class OverallDeliveryControlModule extends StatefulWidget {
 
 class _OverallDeliveryControlModuleState
     extends State<OverallDeliveryControlModule> {
-  bool get _mobileCards => widget.isMobile && widget.useMobileDataCards;
+  bool get _mobileCards => widget.useMobileDataCards;
   final TextEditingController _searchController = TextEditingController();
   final DateFormat _dateFormat = DateFormat('dd MMM yyyy, HH:mm');
   String _selectedFarm = 'All Farms';
@@ -457,6 +458,67 @@ class _OverallDeliveryControlModuleState
   }
 
   Widget _buildHeader(bool isDark) {
+    if (widget.isMobile) return _buildOriginalMobileHeader(isDark);
+    final activeDeliveries = _deliveries
+        .where((record) =>
+            record.status != _DeliveryStatus.delivered &&
+            record.status != _DeliveryStatus.cancelled)
+        .length;
+    final farmsCovered =
+        _deliveries.map((record) => record.farm).toSet().length;
+
+    return Container(
+      padding: EdgeInsets.all(widget.isMobile ? AppSpacing.lg : AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  AppColors.info.withOpacity(0.28),
+                  AppColors.surfaceDark,
+                  AppColors.backgroundDark,
+                ]
+              : [
+                  AppColors.info.withOpacity(0.12),
+                  Colors.white,
+                  AppColors.neutral50,
+                ],
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(
+          color: isDark ? Colors.white10 : AppColors.info.withOpacity(0.14),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.12 : 0.03),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) => widget.isMobile || constraints.maxWidth < 900
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeaderCopy(isDark),
+                const SizedBox(height: AppSpacing.lg),
+                _buildHeroMetrics(isDark, activeDeliveries, farmsCovered),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: _buildHeaderCopy(isDark)),
+                const SizedBox(width: AppSpacing.xl),
+                _buildHeroMetrics(isDark, activeDeliveries, farmsCovered),
+              ],
+            ),
+      ),
+    );
+  }
+
+  Widget _buildOriginalMobileHeader(bool isDark) {
     final activeDeliveries = _deliveries
         .where((record) =>
             record.status != _DeliveryStatus.delivered &&
@@ -683,6 +745,18 @@ class _OverallDeliveryControlModuleState
         delivered: delivered);
   }
 
+  Widget _responsiveCardCollection({required double minWidth, required List<Widget> children}) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final columns = widget.isMobile ? 1
+          : ((constraints.maxWidth + 12) / (minWidth + 12)).floor().clamp(1, 3);
+      final availableWidth = (constraints.maxWidth - 12 * (columns - 1)) / columns;
+      final width = widget.isMobile ? availableWidth : availableWidth.clamp(0.0, 400.0);
+      return Wrap(spacing: 12, runSpacing: 12, children: [
+        for (final child in children) SizedBox(width: width, child: child),
+      ]);
+    });
+  }
+
   Widget _buildFarmDeliveryOverview(bool isDark) {
     final summaries = _farmSummaries();
     if (_mobileCards) {
@@ -699,10 +773,10 @@ class _OverallDeliveryControlModuleState
                 title: 'No farm deliveries yet',
                 subtitle:
                     'Farm activity will appear when deliveries are created.'),
-          for (var index = 0; index < summaries.length; index++) ...[
-            _buildMobileFarmCard(summaries[index], isDark),
-            if (index < summaries.length - 1) const SizedBox(height: 12),
-          ],
+          _responsiveCardCollection(
+            minWidth: 300,
+            children: [for (final summary in summaries) _buildMobileFarmCard(summary, isDark)],
+          ),
         ],
       );
     }
@@ -768,7 +842,7 @@ class _OverallDeliveryControlModuleState
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              final columns = widget.isMobile ? 1 : (width > 1000 ? 4 : 2);
+              final columns = widget.isMobile ? 1 : (width / 300).floor().clamp(1, 4);
               final gap = AppSpacing.md;
               final cardWidth = columns == 1
                   ? width
@@ -793,103 +867,8 @@ class _OverallDeliveryControlModuleState
     );
   }
 
-  Widget _buildFarmDeliveryCard(_FarmDeliverySummary summary, bool isDark) {
-    final isSelected = _selectedFarm == summary.farm;
-    final riskColor = summary.onHold > 0
-        ? AppColors.error
-        : summary.pendingApproval > 0
-            ? AppColors.warning
-            : AppColors.success;
-
-    return InkWell(
-      onTap: () => setState(() => _selectedFarm = summary.farm),
-      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.info.withOpacity(isDark ? 0.2 : 0.09)
-              : (isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border.all(
-            color: isSelected
-                ? AppColors.info.withOpacity(0.55)
-                : (isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    summary.farm,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: AppTypography.labelWeight,
-                      color: isDark ? Colors.white : AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                Icon(
-                  isSelected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_off,
-                  color: isSelected
-                      ? AppColors.info
-                      : (isDark ? Colors.white38 : AppColors.textSecondary),
-                  size: 18,
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Expanded(
-                    child: _farmMetric(isDark, 'Total', '${summary.total}',
-                        AppColors.primary)),
-                Expanded(
-                    child: _farmMetric(
-                        isDark, 'Active', '${summary.active}', AppColors.info)),
-                Expanded(
-                    child: _farmMetric(isDark, 'Done', '${summary.delivered}',
-                        AppColors.success)),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-              decoration: BoxDecoration(
-                color: riskColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.circle, size: 8, color: riskColor),
-                  const SizedBox(width: 6),
-                  Text(
-                    summary.onHold > 0
-                        ? '${summary.onHold} on hold'
-                        : summary.pendingApproval > 0
-                            ? '${summary.pendingApproval} approval pending'
-                            : 'Operations normal',
-                    style: AppTypography.caption.copyWith(
-                      color: riskColor,
-                      fontWeight: AppTypography.labelWeight,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _buildFarmDeliveryCard(_FarmDeliverySummary summary, bool isDark) =>
+      _buildMobileFarmCard(summary, isDark);
 
   Widget _farmMetric(bool isDark, String label, String value, Color color) {
     return Column(
@@ -914,183 +893,21 @@ class _OverallDeliveryControlModuleState
     );
   }
 
-  Widget _buildFilters(bool isDark) {
-    return Container(
-      padding: EdgeInsets.all(_mobileCards ? 16 : AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-            color: isDark ? Colors.white10 : Colors.black.withOpacity(0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_mobileCards) ...[
-            _mobileSectionHeading(
-                isDark,
-                Icons.manage_search_rounded,
-                'Global Delivery Records',
-                '${_filteredDeliveries().length} results'),
-            const SizedBox(height: 6),
-            Text('Find deliveries by farm, status, or keyword.',
-                style: AppTypography.bodySmall.copyWith(
-                    fontSize: AppTypography.captionSize,
-                    color: isDark ? Colors.white60 : AppColors.textSecondary)),
-            if (_selectedFarm != 'All Farms')
-              TextButton.icon(
-                onPressed: () => setState(() => _selectedFarm = 'All Farms'),
-                icon: const Icon(Icons.close_rounded, size: 16),
-                label: const Text('Clear farm filter'),
-              ),
-          ] else
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _selectedFarm == 'All Farms'
-                        ? 'Global Delivery Records'
-                        : '$_selectedFarm Delivery Records',
-                    style: AppTypography.h6.copyWith(
-                      fontWeight: AppTypography.headingWeight,
-                      color: isDark ? Colors.white : AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                if (_selectedFarm != 'All Farms')
-                  TextButton.icon(
-                    onPressed: () =>
-                        setState(() => _selectedFarm = 'All Farms'),
-                    icon: const Icon(Icons.close_rounded, size: 16),
-                    label: const Text('Clear Farm'),
-                  ),
-              ],
-            ),
-          const SizedBox(height: AppSpacing.md),
-          if (widget.isMobile)
-            Column(
-              children: [
-                _buildSearchField(isDark),
-                const SizedBox(height: AppSpacing.sm),
-                _buildFarmDropdown(isDark),
-              ],
-            )
-          else
-            Row(
-              children: [
-                Expanded(flex: 2, child: _buildSearchField(isDark)),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(child: _buildFarmDropdown(isDark)),
-              ],
-            ),
-          const SizedBox(height: AppSpacing.sm),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              children: [
-                'All',
-                'Pending Approval',
-                'Scheduled',
-                'In Transit',
-                'Delivered',
-                'On Hold',
-                'Cancelled',
-              ].map((status) {
-                final selected = _selectedStatus == status;
-                return ChoiceChip(
-                  label: Text(status),
-                  selected: selected,
-                  onSelected: (value) {
-                    if (value) {
-                      setState(() => _selectedStatus = status);
-                    }
-                  },
-                  selectedColor: AppColors.primary.withOpacity(0.18),
-                  backgroundColor: isDark
-                      ? Colors.white.withOpacity(0.05)
-                      : AppColors.neutral100,
-                  labelStyle: AppTypography.bodySmall.copyWith(
-                    color: selected
-                        ? AppColors.primary
-                        : (isDark ? Colors.white70 : AppColors.textSecondary),
-                    fontWeight: selected ? AppTypography.headingWeight : AppTypography.labelWeight,
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchField(bool isDark) {
-    return TextField(
-      controller: _searchController,
-      onChanged: (_) => setState(() {}),
-      style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
-      decoration: InputDecoration(
-        hintText: 'Search delivery ID, destination, crop, driver...',
-        hintStyle:
-            TextStyle(color: isDark ? Colors.white38 : AppColors.textSecondary),
-        prefixIcon: Icon(Icons.search,
-            color: isDark ? Colors.white54 : AppColors.textSecondary),
-        filled: true,
-        fillColor:
-            isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide:
-              BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide:
-              BorderSide(color: isDark ? Colors.white12 : AppColors.neutral200),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFarmDropdown(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border:
-            Border.all(color: isDark ? Colors.white12 : AppColors.neutral200),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: _selectedFarm,
-          isExpanded: true,
-          icon: Icon(Icons.keyboard_arrow_down,
-              color: isDark ? Colors.white54 : AppColors.textSecondary),
-          dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
-          style:
-              TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
-          items: _farms
-              .map((farm) => DropdownMenuItem<String>(
-                    value: farm,
-                    child: Text(farm),
-                  ))
-              .toList(),
-          onChanged: (value) {
-            if (value != null) {
-              setState(() => _selectedFarm = value);
-            }
-          },
-        ),
-      ),
-    );
-  }
+  Widget _buildFilters(bool isDark) => DeliveryFilters(
+    searchController: _searchController,
+    farms: _farms,
+    farm: _selectedFarm,
+    status: _selectedStatus,
+    resultCount: _filteredDeliveries().length,
+    onSearchChanged: (_) => setState(() {}),
+    onFarmChanged: (value) => setState(() => _selectedFarm = value),
+    onStatusChanged: (value) => setState(() => _selectedStatus = value),
+    onReset: () => setState(() {
+      _searchController.clear();
+      _selectedFarm = 'All Farms';
+      _selectedStatus = 'All';
+    }),
+  );
 
   Widget _buildTabs(bool isDark) {
     return Align(
@@ -1190,10 +1007,10 @@ class _OverallDeliveryControlModuleState
                 icon: Icons.local_shipping_outlined,
                 title: 'No deliveries found',
                 subtitle: 'Try changing farm, status, or search filters.'),
-          for (var index = 0; index < records.length; index++) ...[
-            _buildMobileDeliveryCard(isDark, records[index]),
-            if (index < records.length - 1) const SizedBox(height: 12),
-          ],
+          _responsiveCardCollection(
+            minWidth: 300,
+            children: [for (final record in records) _buildMobileDeliveryCard(isDark, record)],
+          ),
         ],
       );
     }
@@ -1468,89 +1285,10 @@ class _OverallDeliveryControlModuleState
     );
   }
 
-  Widget _buildDeliveryCard(bool isDark, _DeliveryRecord record) {
-    final statusColor = _statusColor(record.status);
-    final priorityColor = _priorityColor(record.priority);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.03) : AppColors.neutral50,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                ),
-                child: const Icon(Icons.local_shipping,
-                    size: 18, color: AppColors.primary),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${record.id}  |  ${record.farm}',
-                      style: AppTypography.bodyMedium.copyWith(
-                        fontWeight: AppTypography.labelWeight,
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${record.crop}  |  ${record.quantity} ${record.unit}  |  ${record.destination}',
-                      style: AppTypography.caption.copyWith(
-                        color:
-                            isDark ? Colors.white60 : AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _pill(record.status.label, statusColor),
-                  const SizedBox(height: 4),
-                  _pill(record.priority.label, priorityColor),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Driver: ${record.driver}  |  Vehicle: ${record.vehicle}',
-            style: AppTypography.bodySmall.copyWith(
-              color: isDark ? Colors.white70 : AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Scheduled: ${record.scheduledAt}  |  ETA: ${record.eta}',
-            style: AppTypography.bodySmall.copyWith(
-              color: isDark ? Colors.white70 : AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: _buildActionsFor(record, isDark),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildDeliveryCard(bool isDark, _DeliveryRecord record) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: _buildMobileDeliveryCard(isDark, record),
+  );
 
   List<Widget> _buildActionsFor(_DeliveryRecord record, bool isDark) {
     final actions = <Widget>[];

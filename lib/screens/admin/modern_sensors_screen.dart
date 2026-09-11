@@ -1128,13 +1128,23 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     return SizedBox(
       width: width ?? 210,
       child: DropdownButtonFormField<String>(
-        initialValue: value,
+        initialValue: items.contains(value) ? value : null,
+        isExpanded: true,
+        style: AppTypography.bodySmall.copyWith(
+          color: isDark ? Colors.white : AppColors.textPrimary,
+          fontWeight: AppTypography.bodyWeight,
+        ),
         items: items
-            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+            .map((item) => DropdownMenuItem(value: item,
+                child: Text(item, maxLines: 1, overflow: TextOverflow.ellipsis)))
             .toList(),
         onChanged: onChanged,
         decoration: InputDecoration(
           labelText: label,
+          labelStyle: AppTypography.label.copyWith(
+            fontWeight: AppTypography.labelWeight,
+            color: isDark ? Colors.white70 : AppColors.textSecondary,
+          ),
           filled: true,
           fillColor: isDark
               ? Colors.white.withValues(alpha: 0.06)
@@ -1337,7 +1347,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                                 ? Colors.white.withValues(alpha: 0.62)
                                 : AppColors.textSecondary),
                         fontWeight:
-                            selected ? AppTypography.bodyWeight : AppTypography.bodyWeight,
+                            AppTypography.bodyWeight,
                       ),
                     ),
                   ],
@@ -2261,7 +2271,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         Text(label,
             style: AppTypography.font(
                 fontSize: AppTypography.fieldLabelSize,
-                fontWeight: AppTypography.headingWeight,
+                fontWeight: AppTypography.labelWeight,
                 color: dark ? Colors.white70 : AppColors.textSecondary)),
         const SizedBox(height: 6),
         field,

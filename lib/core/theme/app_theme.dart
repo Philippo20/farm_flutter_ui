@@ -12,6 +12,34 @@ class AppTheme {
       secondary: AppColors.secondary,
       error: AppColors.error,
       surface: AppColors.surfaceLight,
+      onSurface: AppColors.textPrimary,
+      onSurfaceVariant: AppColors.textSecondary,
+      outlineVariant: AppColors.neutral200,
+    ),
+    cardTheme: CardThemeData(
+      color: AppColors.surfaceLight,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.neutral200),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.surfaceLight,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      labelStyle: AppTypography.caption.copyWith(color: AppColors.textPrimary),
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: AppColors.neutral200)),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: AppColors.neutral200)),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
     ),
     scaffoldBackgroundColor: AppColors.backgroundLight,
     textTheme: AppTypography.textTheme,
@@ -27,6 +55,7 @@ class AppTheme {
     ),
     // BottomSheet theme for light mode
     bottomSheetTheme: BottomSheetThemeData(
+      surfaceTintColor: Colors.transparent,
       backgroundColor: Colors.white,
       modalBackgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
@@ -35,6 +64,7 @@ class AppTheme {
     ),
     // Dialog theme for light mode
     dialogTheme: DialogThemeData(
+      surfaceTintColor: Colors.transparent,
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -59,6 +89,34 @@ class AppTheme {
       secondary: AppColors.secondary,
       error: AppColors.error,
       surface: AppColors.surfaceDark,
+      onSurface: Colors.white,
+      onSurfaceVariant: Color(0xFFB5BEC8),
+      outlineVariant: Color(0xFF384148),
+    ),
+    cardTheme: CardThemeData(
+      color: AppColors.surfaceDark,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: const Color(0xFF384148)),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.surfaceDark,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      labelStyle: AppTypography.caption.copyWith(color: Colors.white),
+      border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: const Color(0xFF384148))),
+      enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: const Color(0xFF384148))),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
     ),
     scaffoldBackgroundColor: AppColors.backgroundDark,
     textTheme: AppTypography.textTheme.apply(
@@ -76,6 +134,7 @@ class AppTheme {
     ),
     // BottomSheet theme for dark mode
     bottomSheetTheme: BottomSheetThemeData(
+      surfaceTintColor: Colors.transparent,
       backgroundColor: AppColors.surfaceDark,
       modalBackgroundColor: AppColors.surfaceDark,
       shape: RoundedRectangleBorder(
@@ -84,6 +143,7 @@ class AppTheme {
     ),
     // Dialog theme for dark mode
     dialogTheme: DialogThemeData(
+      surfaceTintColor: Colors.transparent,
       backgroundColor: AppColors.surfaceDark,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),

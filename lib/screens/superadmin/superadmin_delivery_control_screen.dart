@@ -91,6 +91,7 @@ class _SuperAdminDeliveryControlScreenState
                     subtitle:
                         'Control delivery operations across all farms with approval, assignment, hold, cancellation, and traceable activity logs.',
                     isMobile: false,
+                    useMobileDataCards: true,
                     allowCreateDelivery: true,
                   ),
                 ),

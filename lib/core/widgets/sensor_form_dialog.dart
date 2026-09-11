@@ -22,7 +22,7 @@ class SensorFormDialog extends StatelessWidget {
     final buttons = ButtonStyle(
         minimumSize: const WidgetStatePropertyAll(Size(0, 44)),
         textStyle: WidgetStatePropertyAll(
-            AppTypography.font(fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
+            AppTypography.font(fontSize: AppTypography.actionSize, fontWeight: AppTypography.labelWeight)),
         padding:
             const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 12)),
         shape: WidgetStatePropertyAll(

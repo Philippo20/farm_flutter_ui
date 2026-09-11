@@ -31,8 +31,8 @@ class AppColors {
   // ========== NEUTRAL COLORS ==========
   static const Color neutral50 = Color(0xFFFAFAFA);
   static const Color neutral100 = Color(0xFFF5F5F5); // Light grey background
-  static const Color neutral200 = Color(0xFFEEEEEE);
-  static const Color neutral300 = Color(0xFFE0E0E0);
+  static const Color neutral200 = Color(0xFFDDE2E8);
+  static const Color neutral300 = Color(0xFFCBD2DA);
   static const Color neutral400 = Color(0xFFBDBDBD);
   static const Color neutral500 = Color(0xFF9E9E9E);
   static const Color neutral600 = Color(0xFF757575);
@@ -41,14 +41,14 @@ class AppColors {
   static const Color neutral900 = Color(0xFF212121); // Dark grey text
   
   // ========== BACKGROUND COLORS ==========
-  static const Color backgroundLight = Color(0xFFF5F5F5); // Clean neutral background
+  static const Color backgroundLight = Color(0xFFF0F2F4); // Neutral canvas for distinct data cards
   static const Color backgroundDark = Color(0xFF121212);
   static const Color surfaceLight = Color(0xFFFFFFFF); // White card background
   static const Color surfaceDark = Color(0xFF1E1E1E);
   
   // ========== TEXT COLORS ==========
   static const Color textPrimary = Color(0xFF212121); // Professional dark grey
-  static const Color textSecondary = Color(0xFF757575);
+  static const Color textSecondary = Color(0xFF596273);
   static const Color textDisabled = Color(0xFFBDBDBD);
   static const Color textOnPrimary = Colors.white;
   static const Color textOnDark = Colors.white;

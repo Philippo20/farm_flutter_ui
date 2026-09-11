@@ -134,7 +134,7 @@ class _SensorReadingHistoryState extends State<SensorReadingHistory> {
         Expanded(
             child: Text(widget.compact ? 'Recent trend' : 'Reading history',
                 style: AppTypography.font(
-                    fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight))),
+                    fontSize: AppTypography.captionSize, fontWeight: AppTypography.labelWeight))),
         IconButton(
             tooltip: 'Refresh readings',
             onPressed: _loading || widget.serialNumber.isEmpty ? null : _load,
@@ -220,7 +220,7 @@ class _SensorReadingHistoryState extends State<SensorReadingHistory> {
                       children: [
                         Text(
                             '${reading['value'] ?? '—'} ${reading['unit'] ?? ''}',
-                            style: style.copyWith(fontWeight: AppTypography.headingWeight)),
+                            style: style.copyWith(fontWeight: AppTypography.labelWeight)),
                         Text('${reading['status'] ?? 'Unknown'}',
                             style: style.copyWith(color: secondary))
                       ]),

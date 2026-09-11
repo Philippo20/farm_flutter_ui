@@ -76,7 +76,7 @@ class _LogoutConfirmationDialog extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 500,
+          maxWidth: 420,
           maxHeight: MediaQuery.sizeOf(context).height * .9,
         ),
         child: Container(
