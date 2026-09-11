@@ -1,3 +1,4 @@
+import '../../core/utils/stable_sensor_order.dart';
 import '../../core/utils/sensor_maintenance_policy.dart';
 import '../../core/widgets/sensor_form_dialog.dart';
 import '../../core/widgets/device_telemetry_details_modal.dart';
@@ -88,10 +89,11 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
               .where((sensor) => _matchesAnyFarm(sensor, farms))
               .toList()
           : results[0];
+      final orderedSensors = stableSensorOrder(_sensorDocuments, sensors);
       setState(() {
         _sensorDocuments
           ..clear()
-          ..addAll(sensors);
+          ..addAll(orderedSensors);
         _farmDocuments
           ..clear()
           ..addAll(farms);
@@ -153,18 +155,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     return farmIds.contains(sensorFarmId) || farmNames.contains(sensorFarmName);
   }
 
-  List<_IotSensor> get _sensors {
-    final sensors = _sensorDocuments.map(_mapSensorDocument).toList();
-    sensors.sort((a, b) {
-      final aTime = a.lastTelemetryAt;
-      final bTime = b.lastTelemetryAt;
-      if (aTime == null && bTime == null) return a.name.compareTo(b.name);
-      if (aTime == null) return 1;
-      if (bTime == null) return -1;
-      return bTime.compareTo(aTime);
-    });
-    return sensors;
-  }
+  List<_IotSensor> get _sensors =>
+      _sensorDocuments.map(_mapSensorDocument).toList();
 
   List<_IotSensor> get _filteredSensors {
     return _sensors.where((sensor) {
@@ -1242,6 +1234,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
               runSpacing: AppSpacing.md,
               children: sensors.map((sensor) {
                 return SizedBox(
+                  key: ValueKey(sensor.raw[r'$id'] ?? sensor.id),
                   width: cardWidth,
                   child: _SensorDeviceCard(
                     sensor: sensor,
