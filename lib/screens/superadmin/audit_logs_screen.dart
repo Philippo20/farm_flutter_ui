@@ -509,7 +509,10 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           ),
         ],
       ),
-      child: isMobile
+      child: LayoutBuilder(builder: (context, constraints) {
+        // Account for the sidebar and hero padding, not just viewport width.
+        final stacked = isMobile || constraints.maxWidth < 900;
+        return stacked
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -534,7 +537,8 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
                   child: _buildHeroActions(isDark, filteredLogs),
                 ),
               ],
-            ),
+            );
+      }),
     );
   }
 
@@ -556,11 +560,13 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               const Icon(Icons.manage_search_rounded,
                   color: AppColors.info, size: 16),
               const SizedBox(width: 8),
-              Text(
-                'Global audit intelligence',
-                style: AppTypography.bodySmall.copyWith(
-                  color: isDark ? Colors.white : AppColors.info,
-                  fontWeight: AppTypography.labelWeight,
+              Flexible(
+                child: Text(
+                  'Global audit intelligence',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white : AppColors.info,
+                    fontWeight: AppTypography.labelWeight,
+                  ),
                 ),
               ),
             ],
@@ -674,19 +680,26 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
           isDark,
         ),
         const SizedBox(height: AppSpacing.md),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _scopes.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isMobile ? 1 : 3,
-            crossAxisSpacing: AppSpacing.md,
-            mainAxisSpacing: AppSpacing.md,
-            childAspectRatio: isMobile ? 1.9 : 1.65,
-          ),
-          itemBuilder: (context, index) =>
-              _buildScopeCard(_scopes[index], isDark),
-        ),
+        LayoutBuilder(builder: (context, constraints) {
+          final columns = isMobile ? 1 : (constraints.maxWidth >= 1000 ? 3 : 2);
+          final width =
+              (constraints.maxWidth - AppSpacing.md * (columns - 1)) / columns;
+          return Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.md,
+            children: [
+              for (final scope in _scopes)
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minWidth: width,
+                    maxWidth: width,
+                    minHeight: width / (isMobile ? 1.9 : 1.65),
+                  ),
+                  child: _buildScopeCard(scope, isDark),
+                ),
+            ],
+          );
+        }),
       ],
     );
   }
@@ -760,7 +773,7 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            const Spacer(),
+            const SizedBox(height: AppSpacing.md),
             Row(
               children: [
                 Expanded(
@@ -926,7 +939,9 @@ class _AuditLogsScreenState extends ConsumerState<AuditLogsScreen> {
 
   Widget _buildLogCards(List<_AuditLog> logs, bool isDark) =>
       LayoutBuilder(builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 900 ? 2 : 1;
+        final columns = MediaQuery.sizeOf(context).width < 600
+            ? 1
+            : (constraints.maxWidth >= 1000 ? 3 : 2);
         final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
         return Wrap(
             spacing: 12,

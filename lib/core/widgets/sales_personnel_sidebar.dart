@@ -122,7 +122,7 @@ class _SalesPersonnelSidebarState extends State<SalesPersonnelSidebar>
         return Container(
           width: _widthAnimation.value,
           decoration: BoxDecoration(
-              color: isDark ? AppColors.backgroundDark : AppColors.neutral100),
+              color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

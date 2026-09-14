@@ -138,7 +138,7 @@ class AdminDrawer extends StatelessWidget {
         ].indexOf(item.route);
 
     return Drawer(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.neutral100,
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       child: SafeArea(
         child: Column(
           children: [
@@ -646,7 +646,7 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
         return Container(
           width: _widthAnimation.value,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.backgroundDark : AppColors.neutral100,
+            color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

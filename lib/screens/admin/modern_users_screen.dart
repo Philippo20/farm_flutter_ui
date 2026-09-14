@@ -1,3 +1,4 @@
+import '../../core/widgets/user_card_layout.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/create_user_modal.dart';
 import '../../core/widgets/user_search_field.dart';
@@ -362,10 +363,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 SizedBox(height: isMobile ? 16 : AppSpacing.xl),
                 _buildControls(isDark, isMobile),
                 SizedBox(height: isMobile ? 12 : AppSpacing.lg),
-                if (isMobile)
-                  _buildMobileUsersList(filteredUsers, isDark)
-                else
-                  _buildUsersTable(filteredUsers, isDark),
+                _buildMobileUsersList(filteredUsers, isDark, isMobile: isMobile),
               ],
             ),
           ],
@@ -672,14 +670,14 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
   Widget _buildMobileUsersList(
     List<Map<String, dynamic>> filteredUsers,
     bool isDark,
+    {required bool isMobile}
   ) {
     if (filteredUsers.isEmpty) return _buildEmptyState(isDark);
-    return Column(
+    return UserCardLayout(
+      singleColumn: isMobile,
       children: [
-        for (var index = 0; index < filteredUsers.length; index++) ...[
+        for (var index = 0; index < filteredUsers.length; index++)
           _buildMobileUserCard(filteredUsers[index], isDark),
-          if (index < filteredUsers.length - 1) const SizedBox(height: 12),
-        ],
       ],
     );
   }

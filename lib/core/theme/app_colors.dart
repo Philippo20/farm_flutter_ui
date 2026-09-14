@@ -41,7 +41,7 @@ class AppColors {
   static const Color neutral900 = Color(0xFF212121); // Dark grey text
   
   // ========== BACKGROUND COLORS ==========
-  static const Color backgroundLight = Color(0xFFF0F2F4); // Neutral canvas for distinct data cards
+  static const Color backgroundLight = neutral100; // Shared page and sidebar canvas
   static const Color backgroundDark = Color(0xFF121212);
   static const Color surfaceLight = Color(0xFFFFFFFF); // White card background
   static const Color surfaceDark = Color(0xFF1E1E1E);

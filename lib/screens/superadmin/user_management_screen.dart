@@ -1,3 +1,4 @@
+import '../../core/widgets/user_card_layout.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/create_user_modal.dart';
 import '../../core/widgets/user_search_field.dart';
@@ -399,10 +400,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   textAlign: TextAlign.center),
             ]),
           )
-        else if (isCompact)
-          _buildUserCards(filteredUsers, isDark, isMobile: isMobile)
         else
-          _buildUserTable(filteredUsers, isDark),
+          _buildUserCards(filteredUsers, isDark, isMobile: isMobile),
       ],
     );
   }
@@ -689,18 +688,12 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
 
   Widget _buildUserCards(List<Map<String, dynamic>> filteredUsers, bool isDark,
       {required bool isMobile}) {
-    return Column(
+    return UserCardLayout(
+      singleColumn: isMobile,
       children: [
-        for (var index = 0; index < filteredUsers.length; index++) ...[
-          if (isMobile)
+        for (var index = 0; index < filteredUsers.length; index++)
             _withUserProgress(filteredUsers[index],
-                _buildMobileUserCard(filteredUsers[index], isDark))
-          else
-            _withUserProgress(filteredUsers[index],
-                _buildCompactUserCard(filteredUsers[index], isDark)),
-          if (isMobile && index < filteredUsers.length - 1)
-            const SizedBox(height: 12),
-        ],
+                _buildMobileUserCard(filteredUsers[index], isDark)),
       ],
     );
   }
@@ -745,20 +738,20 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       },
     ];
 
-    return GridView.builder(
-      padding: isMobile ? EdgeInsets.zero : null,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: childAspectRatio,
-      ),
-      itemCount: stats.length,
-      itemBuilder: (context, index) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final cardWidth =
+          (constraints.maxWidth - AppSpacing.md * (crossAxisCount - 1)) /
+              crossAxisCount;
+      return Wrap(
+        spacing: AppSpacing.md,
+        runSpacing: AppSpacing.md,
+        children: List.generate(stats.length, (index) {
         final stat = stats[index];
         return Container(
+          width: cardWidth,
+          // Keep the preferred proportions, but allow text to determine the
+          // minimum height at narrow widths and larger accessibility scales.
+          constraints: BoxConstraints(minHeight: cardWidth / childAspectRatio),
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
             color: (stat['color'] as Color).withOpacity(0.1),
@@ -780,6 +773,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -806,8 +800,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             ],
           ),
         );
-      },
-    );
+        }),
+      );
+    });
   }
 
   Widget _buildFilters(bool isDark) {

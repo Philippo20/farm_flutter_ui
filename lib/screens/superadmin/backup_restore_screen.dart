@@ -1054,21 +1054,24 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
             ],
           ])
         else
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: cards.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: isMobile ? 1 : 3,
-              crossAxisSpacing: AppSpacing.md,
-              mainAxisSpacing: AppSpacing.md,
-              childAspectRatio: isMobile ? 1.8 : 1.65,
-            ),
-            itemBuilder: (context, index) {
-              final summary = cards[index];
-              return _buildFarmBackupCard(summary, isDark);
-            },
-          ),
+          LayoutBuilder(builder: (context, constraints) {
+            final width = (constraints.maxWidth - AppSpacing.md * 2) / 3;
+            return Wrap(
+              spacing: AppSpacing.md,
+              runSpacing: AppSpacing.md,
+              children: [
+                for (final summary in cards)
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: width,
+                      maxWidth: width,
+                      minHeight: width / 1.65,
+                    ),
+                    child: _buildFarmBackupCard(summary, isDark),
+                  ),
+              ],
+            );
+          }),
       ],
     );
   }
@@ -1146,7 +1149,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
-            if (mobile) const SizedBox(height: 14) else const Spacer(),
+            SizedBox(height: mobile ? 14 : AppSpacing.md),
             Row(
               children: [
                 Expanded(
