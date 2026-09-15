@@ -262,6 +262,9 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         return 'CO2';
       case 'light':
         return 'Light';
+      case 'light_switch':
+      case 'light switch':
+        return 'Light Switch';
       case 'ph level':
         return 'pH Level';
       case 'ec level':
@@ -291,6 +294,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         return 'Carbon Dioxide';
       case 'Light':
         return 'light';
+      case 'Light Switch':
+        return 'light_switch';
       case 'pH Level':
         return 'pH Level';
       case 'EC Level':
@@ -366,6 +371,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         return 'ppm';
       case 'Light':
         return 'lux';
+      case 'Light Switch':
+        return 'state';
       case 'pH Level':
         return 'pH';
       case 'EC Level':
@@ -467,6 +474,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         return Icons.water_drop_rounded;
       case 'CO2':
         return Icons.air_rounded;
+      case 'Light Switch':
+        return Icons.toggle_on_outlined;
       case 'Light':
         return Icons.wb_sunny_rounded;
       case 'pH Level':
@@ -1139,8 +1148,10 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
           fontWeight: AppTypography.bodyWeight,
         ),
         items: items
-            .map((item) => DropdownMenuItem(value: item,
-                child: Text(item, maxLines: 1, overflow: TextOverflow.ellipsis)))
+            .map((item) => DropdownMenuItem(
+                value: item,
+                child:
+                    Text(item, maxLines: 1, overflow: TextOverflow.ellipsis)))
             .toList(),
         onChanged: onChanged,
         decoration: InputDecoration(
@@ -1351,8 +1362,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                             : (isDark
                                 ? Colors.white.withValues(alpha: 0.62)
                                 : AppColors.textSecondary),
-                        fontWeight:
-                            AppTypography.bodyWeight,
+                        fontWeight: AppTypography.bodyWeight,
                       ),
                     ),
                   ],
@@ -1698,19 +1708,27 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     );
     final rangeMinController = TextEditingController(
       text: sensor?.raw['range_min']?.toString() ??
-          ((selectedType == 'VPD' || selectedType == 'Water Temperature') ? '' : '${defaultLimits.$1}'),
+          ((selectedType == 'VPD' || selectedType == 'Water Temperature')
+              ? ''
+              : '${defaultLimits.$1}'),
     );
     final rangeMaxController = TextEditingController(
       text: sensor?.raw['range_max']?.toString() ??
-          ((selectedType == 'VPD' || selectedType == 'Water Temperature') ? '' : '${defaultLimits.$2}'),
+          ((selectedType == 'VPD' || selectedType == 'Water Temperature')
+              ? ''
+              : '${defaultLimits.$2}'),
     );
     final warningMinController = TextEditingController(
       text: sensor?.raw['warning_min']?.toString() ??
-          ((selectedType == 'VPD' || selectedType == 'Water Temperature') ? '' : '${defaultLimits.$3}'),
+          ((selectedType == 'VPD' || selectedType == 'Water Temperature')
+              ? ''
+              : '${defaultLimits.$3}'),
     );
     final warningMaxController = TextEditingController(
       text: sensor?.raw['warning_max']?.toString() ??
-          ((selectedType == 'VPD' || selectedType == 'Water Temperature') ? '' : '${defaultLimits.$4}'),
+          ((selectedType == 'VPD' || selectedType == 'Water Temperature')
+              ? ''
+              : '${defaultLimits.$4}'),
     );
     final maintenanceController = TextEditingController(
       text: sensor?.raw['maintenance_frequency']?.toString() ?? 'Monthly',
@@ -1728,7 +1746,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final requiresMaintenance = sensorRequiresMaintenance({'sensortype': selectedType});
+            final requiresMaintenance =
+                sensorRequiresMaintenance({'sensortype': selectedType});
             Future<void> save() async {
               if (isSaving || !(formKey.currentState?.validate() ?? false))
                 return;
@@ -1753,24 +1772,38 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                   'sensortype': _backendType(selectedType),
                   'model_number': modelController.text.trim(),
                   'location': locationController.text.trim(),
-                  'value': valueController.text.trim(),
+                  'value': selectedType == 'Light Switch'
+                      ? (sensor?.raw['value']?.toString() ?? '0')
+                      : valueController.text.trim(),
                   'status': selectedStatus,
-                  'unit': unitController.text.trim(),
-                  'alerts_enabled': alertsEnabled.toString(),
-                  'maintenance_frequency': requiresMaintenance ? maintenanceController.text.trim() : 'Not required',
+                  'unit': selectedType == 'Light Switch'
+                      ? 'state'
+                      : unitController.text.trim(),
+                  'alerts_enabled': selectedType == 'Light Switch'
+                      ? 'false'
+                      : alertsEnabled.toString(),
+                  'maintenance_frequency': requiresMaintenance
+                      ? maintenanceController.text.trim()
+                      : 'Not required',
                   'timestamp': DateTime.now().toIso8601String(),
-                  if (requiresMaintenance) 'last_maintenance_date': lastMaintenanceController.text.trim(),
+                  if (requiresMaintenance)
+                    'last_maintenance_date':
+                        lastMaintenanceController.text.trim(),
                 };
-                if (rangeMinController.text.trim().isNotEmpty) {
+                if (selectedType != 'Light Switch' &&
+                    rangeMinController.text.trim().isNotEmpty) {
                   data['range_min'] = rangeMinController.text.trim();
                 }
-                if (rangeMaxController.text.trim().isNotEmpty) {
+                if (selectedType != 'Light Switch' &&
+                    rangeMaxController.text.trim().isNotEmpty) {
                   data['range_max'] = rangeMaxController.text.trim();
                 }
-                if (warningMinController.text.trim().isNotEmpty) {
+                if (selectedType != 'Light Switch' &&
+                    warningMinController.text.trim().isNotEmpty) {
                   data['warning_min'] = warningMinController.text.trim();
                 }
-                if (warningMaxController.text.trim().isNotEmpty) {
+                if (selectedType != 'Light Switch' &&
+                    warningMaxController.text.trim().isNotEmpty) {
                   data['warning_max'] = warningMaxController.text.trim();
                 }
                 if (isEditing) {
@@ -1836,6 +1869,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                               'Humidity',
                               'CO2',
                               'Light',
+                              'Light Switch',
                               'pH Level',
                               'EC Level',
                               'Water Level',
@@ -1856,19 +1890,27 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                                         selectedType,
                                       );
                                       rangeMinController.text =
-                                          (selectedType == 'VPD' || selectedType == 'Water Temperature')
+                                          (selectedType == 'VPD' ||
+                                                  selectedType ==
+                                                      'Water Temperature')
                                               ? ''
                                               : '${limits.$1}';
                                       rangeMaxController.text =
-                                          (selectedType == 'VPD' || selectedType == 'Water Temperature')
+                                          (selectedType == 'VPD' ||
+                                                  selectedType ==
+                                                      'Water Temperature')
                                               ? ''
                                               : '${limits.$2}';
                                       warningMinController.text =
-                                          (selectedType == 'VPD' || selectedType == 'Water Temperature')
+                                          (selectedType == 'VPD' ||
+                                                  selectedType ==
+                                                      'Water Temperature')
                                               ? ''
                                               : '${limits.$3}';
                                       warningMaxController.text =
-                                          (selectedType == 'VPD' || selectedType == 'Water Temperature')
+                                          (selectedType == 'VPD' ||
+                                                  selectedType ==
+                                                      'Water Temperature')
                                               ? ''
                                               : '${limits.$4}';
                                     });
@@ -1897,103 +1939,109 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                       ],
                     ),
                     const SizedBox(height: 14),
-                    _SensorFormSectionHeader(
-                      title: 'Range Settings',
-                      subtitle:
-                          'Set normal operating limits and wider warning limits for alerts.',
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    SensorFormRow(
-                      children: [
-                        Expanded(
-                          child: _dialogField(
-                            controller: rangeMinController,
-                            label: 'Normal Min',
-                            isDark: isDark,
-                            enabled: !isSaving,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (value) => _rangeValidator(
-                              value: value,
-                              normalMinText: value,
-                              normalMaxText: rangeMaxController.text,
-                              warningMinText: warningMinController.text,
-                              warningMaxText: warningMaxController.text,
-                              isMinimum: true,
-                              requiredField: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _dialogField(
-                            controller: rangeMaxController,
-                            label: 'Normal Max',
-                            isDark: isDark,
-                            enabled: !isSaving,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (value) => _rangeValidator(
-                              value: value,
-                              normalMinText: rangeMinController.text,
-                              normalMaxText: value,
-                              warningMinText: warningMinController.text,
-                              warningMaxText: warningMaxController.text,
-                              isMinimum: false,
-                              requiredField: true,
+                    if (selectedType != 'Light Switch') ...[
+                      _SensorFormSectionHeader(
+                        title: 'Range Settings',
+                        subtitle:
+                            'Set normal operating limits and wider warning limits for alerts.',
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      SensorFormRow(
+                        children: [
+                          Expanded(
+                            child: _dialogField(
+                              controller: rangeMinController,
+                              label: 'Normal Min',
+                              isDark: isDark,
+                              enabled: !isSaving,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              validator: (value) => _rangeValidator(
+                                value: value,
+                                normalMinText: value,
+                                normalMaxText: rangeMaxController.text,
+                                warningMinText: warningMinController.text,
+                                warningMaxText: warningMaxController.text,
+                                isMinimum: true,
+                                requiredField: true,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    SensorFormRow(
-                      children: [
-                        Expanded(
-                          child: _dialogField(
-                            controller: warningMinController,
-                            label: 'Warning Low',
-                            isDark: isDark,
-                            enabled: !isSaving,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (value) => _rangeValidator(
-                              value: value,
-                              normalMinText: rangeMinController.text,
-                              normalMaxText: rangeMaxController.text,
-                              warningMinText: value,
-                              warningMaxText: warningMaxController.text,
-                              isMinimum: true,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _dialogField(
+                              controller: rangeMaxController,
+                              label: 'Normal Max',
+                              isDark: isDark,
+                              enabled: !isSaving,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              validator: (value) => _rangeValidator(
+                                value: value,
+                                normalMinText: rangeMinController.text,
+                                normalMaxText: value,
+                                warningMinText: warningMinController.text,
+                                warningMaxText: warningMaxController.text,
+                                isMinimum: false,
+                                requiredField: true,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _dialogField(
-                            controller: warningMaxController,
-                            label: 'Warning High',
-                            isDark: isDark,
-                            enabled: !isSaving,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            validator: (value) => _rangeValidator(
-                              value: value,
-                              normalMinText: rangeMinController.text,
-                              normalMaxText: rangeMaxController.text,
-                              warningMinText: warningMinController.text,
-                              warningMaxText: value,
-                              isMinimum: false,
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      SensorFormRow(
+                        children: [
+                          Expanded(
+                            child: _dialogField(
+                              controller: warningMinController,
+                              label: 'Warning Low',
+                              isDark: isDark,
+                              enabled: !isSaving,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              validator: (value) => _rangeValidator(
+                                value: value,
+                                normalMinText: rangeMinController.text,
+                                normalMaxText: rangeMaxController.text,
+                                warningMinText: value,
+                                warningMaxText: warningMaxController.text,
+                                isMinimum: true,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _dialogField(
+                              controller: warningMaxController,
+                              label: 'Warning High',
+                              isDark: isDark,
+                              enabled: !isSaving,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              validator: (value) => _rangeValidator(
+                                value: value,
+                                normalMinText: rangeMinController.text,
+                                normalMaxText: rangeMaxController.text,
+                                warningMinText: warningMinController.text,
+                                warningMaxText: value,
+                                isMinimum: false,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                    ],
                     SensorFormRow(
                       stackOnMobile: true,
                       children: [
@@ -2061,82 +2109,103 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                       validator: _requiredValidator,
                     ),
                     const SizedBox(height: 14),
-                    SensorFormRow(
-                      children: [
-                        Expanded(
-                          child: _dialogField(
-                            controller: valueController,
-                            label: 'Current Reading',
-                            isDark: isDark,
-                            enabled: !isSaving,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
+                    if (selectedType == 'Light Switch')
+                      Text(
+                          'On/off light controller. The Lights card will show the state confirmed by the device.',
+                          style: AppTypography.bodySmall.copyWith(
+                              color: isDark
+                                  ? Colors.white70
+                                  : AppColors.textSecondary))
+                    else ...[
+                      SensorFormRow(
+                        children: [
+                          Expanded(
+                            child: _dialogField(
+                              controller: valueController,
+                              label: 'Current Reading',
+                              isDark: isDark,
+                              enabled: !isSaving,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              validator: (value) {
+                                if (_requiredValidator(value) != null) {
+                                  return _requiredValidator(value);
+                                }
+                                return double.tryParse(value!.trim()) == null
+                                    ? 'Enter a number'
+                                    : null;
+                              },
                             ),
-                            validator: (value) {
-                              if (_requiredValidator(value) != null) {
-                                return _requiredValidator(value);
-                              }
-                              return double.tryParse(value!.trim()) == null
-                                  ? 'Enter a number'
-                                  : null;
-                            },
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _dialogField(
-                            controller: unitController,
-                            label: (selectedType == 'VPD' || selectedType == 'Water Temperature')
-                                ? 'Unit (kPa / psi)'
-                                : 'Unit',
-                            isDark: isDark,
-                            enabled: !isSaving,
-                            validator: _requiredValidator,
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _dialogField(
+                              controller: unitController,
+                              label: (selectedType == 'VPD' ||
+                                      selectedType == 'Water Temperature')
+                                  ? 'Unit (kPa / psi)'
+                                  : 'Unit',
+                              isDark: isDark,
+                              enabled: !isSaving,
+                              validator: _requiredValidator,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    if (requiresMaintenance)
-                    SensorFormRow(
-                      children: [
-                        Expanded(
-                          child: _dialogField(
-                            controller: maintenanceController,
-                            label: 'Maintenance Frequency',
-                            isDark: isDark,
-                            enabled: !isSaving,
-                            validator: _requiredValidator,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _dialogField(
-                            controller: lastMaintenanceController,
-                            label: 'Last Maintenance Date',
-                            isDark: isDark,
-                            enabled: !isSaving,
-                            validator: _requiredValidator,
-                          ),
-                        ),
-                      ],
-                    )
-                    else
-                      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Icon(Icons.check_circle_outline, size: 18, color: AppColors.primary),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text('Routine maintenance is not required for this sensor type.', style: AppTypography.bodySmall.copyWith(color: isDark ? Colors.white70 : AppColors.textSecondary))),
-                      ]),
-                    const SizedBox(height: 14),
-                    SwitchListTile.adaptive(
-                      value: alertsEnabled,
-                      onChanged: isSaving
-                          ? null
-                          : (value) =>
-                              setModalState(() => alertsEnabled = value),
-                      title: const Text('Alerts enabled'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      if (requiresMaintenance)
+                        SensorFormRow(
+                          children: [
+                            Expanded(
+                              child: _dialogField(
+                                controller: maintenanceController,
+                                label: 'Maintenance Frequency',
+                                isDark: isDark,
+                                enabled: !isSaving,
+                                validator: _requiredValidator,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _dialogField(
+                                controller: lastMaintenanceController,
+                                label: 'Last Maintenance Date',
+                                isDark: isDark,
+                                enabled: !isSaving,
+                                validator: _requiredValidator,
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(Icons.check_circle_outline,
+                                  size: 18, color: AppColors.primary),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                  child: Text(
+                                      'Routine maintenance is not required for this sensor type.',
+                                      style: AppTypography.bodySmall.copyWith(
+                                          color: isDark
+                                              ? Colors.white70
+                                              : AppColors.textSecondary))),
+                            ]),
+                      const SizedBox(height: 14),
+                    ],
+                    if (selectedType != 'Light Switch')
+                      SwitchListTile.adaptive(
+                        value: alertsEnabled,
+                        onChanged: isSaving
+                            ? null
+                            : (value) =>
+                                setModalState(() => alertsEnabled = value),
+                        title: const Text('Alerts enabled'),
+                        contentPadding: EdgeInsets.zero,
+                      ),
                     if (modalError != null) ...[
                       Container(
                         key: errorKey,

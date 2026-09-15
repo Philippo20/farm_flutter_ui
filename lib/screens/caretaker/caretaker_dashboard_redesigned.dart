@@ -33,6 +33,7 @@ class _CaretakerDashboardRedesignedState
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedNavIndex = 0;
   WeatherInfo? _weatherInfo;
+  List<Map<String, dynamic>> _growthRecords = [];
   Timer? _refreshTimer;
   bool _isLoading = true;
   bool _isRefreshing = false;
@@ -186,6 +187,7 @@ class _CaretakerDashboardRedesignedState
         _api.getSensors(),
         _api.getSensorReadingsAll(),
         _api.getFarmTasks(),
+        _api.getFarmRecords(),
       ]);
       if (!mounted) return;
       setState(() {
@@ -195,6 +197,7 @@ class _CaretakerDashboardRedesignedState
         _sensors = results[3];
         _sensorReadings = results[4];
         _tasks = results[5];
+        _growthRecords = results[6];
         _isLoading = false;
         _isRefreshing = false;
         _errorMessage = null;
@@ -1788,7 +1791,7 @@ class _CaretakerDashboardRedesignedState
     children: [
       _nestedViewHeader(isDark, narrow),
       const SizedBox(height: 16),
-      FarmIotDashboard(isDark: isDark, sensors: _assignedSensors, readings: _sensorReadings, userName: ref.watch(authProvider).user?.name ?? '',
+      FarmIotDashboard(isDark: isDark, batches: _assignedBatches, records: _growthRecords, sensors: _assignedSensors, readings: _sensorReadings, userName: ref.watch(authProvider).user?.name ?? '',
         liveTemperature: _latestSensorValue('temperature'),
         liveTemperatureHistory: _sensorHistoryValues('temperature'),
         sensorCounts: _sensorTypeCounts(),

@@ -1,19 +1,142 @@
+import 'dart:async';
+import '../../../services/light_switch_service.dart';
+import 'batch_growth_tracker.dart';
 import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import '../../../constants/colors.dart';
 import 'package:intl/intl.dart';
 
 class FirstRow extends StatefulWidget {
+  final LightSwitchService? lightSwitchService;
   final bool isDark;
+  final List<Map<String, dynamic>> devices;
+  final List<Map<String, dynamic>> batches;
+  final List<Map<String, dynamic>> records;
   final String userName;
 
-  const FirstRow({super.key, required this.isDark, this.userName = ''});
+  const FirstRow(
+      {super.key,
+      required this.isDark,
+      this.lightSwitchService,
+      this.devices = const [],
+      this.userName = '',
+      this.batches = const [],
+      this.records = const []});
 
   @override
   State<FirstRow> createState() => _FirstRowState();
 }
 
 class _FirstRowState extends State<FirstRow> {
+  late final _switchService = widget.lightSwitchService ?? LightSwitchService();
+  final _lightStates = <String, Map<String, dynamic>>{};
+  final _lightErrors = <String, String>{};
+  final _submitting = <String>{};
+  final _revision = <String, int>{};
+  final _clock = Stopwatch()..start();
+  final _receivedAt = <String, int>{};
+  Timer? _pollLights;
+  bool _polling = false;
+  List<Map<String, dynamic>> get _lights => widget.devices
+      .where((d) => '${d['sensortype'] ?? d['type']}' == 'light_switch')
+      .toList()
+    ..sort(
+        (a, b) => '${a['serial_number']}'.compareTo('${b['serial_number']}'));
+  @override
+  void initState() {
+    super.initState();
+    _refreshLights();
+    _pollLights =
+        Timer.periodic(const Duration(seconds: 2), (_) => _refreshLights());
+  }
+
+  @override
+  void didUpdateWidget(covariant FirstRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_lights.any((d) => !_lightStates.containsKey('${d['serial_number']}')))
+      _refreshLights();
+  }
+
+  @override
+  void dispose() {
+    _pollLights?.cancel();
+    _switchService.dispose();
+    _clock.stop();
+    super.dispose();
+  }
+
+  Future<void> _refreshLights() async {
+    if (_polling || !mounted) return;
+    _polling = true;
+    try {
+      await Future.wait(_lights.map((device) async {
+        final serial = '${device['serial_number']}';
+        if (_submitting.contains(serial)) return;
+        final revision = _revision[serial] ?? 0;
+        try {
+          final state = await _switchService.state(serial);
+          if (!mounted ||
+              _submitting.contains(serial) ||
+              revision != (_revision[serial] ?? 0)) return;
+          setState(() {
+            _lightStates[serial] = state;
+            _receivedAt[serial] = _clock.elapsedMilliseconds;
+            _lightErrors.remove(serial);
+          });
+        } catch (error) {
+          if (mounted &&
+              !_submitting.contains(serial) &&
+              revision == (_revision[serial] ?? 0))
+            setState(() => _lightErrors[serial] = '$error');
+        }
+      }));
+    } finally {
+      _polling = false;
+    }
+  }
+
+  bool _lightOnline(String serial) {
+    final state = _lightStates[serial];
+    if (state == null ||
+        state['online'] != true ||
+        _lightErrors.containsKey(serial)) return false;
+    final server = DateTime.tryParse('${state['server_time']}');
+    final seen = DateTime.tryParse('${state['seen_at']}');
+    if (server == null || seen == null) return false;
+    return server.difference(seen).inMilliseconds +
+            _clock.elapsedMilliseconds -
+            (_receivedAt[serial] ?? 0) <=
+        15000;
+  }
+
+  Future<void> _toggleLight(String serial) async {
+    final state = _lightStates[serial];
+    if (!_lightOnline(serial) ||
+        state?['pending'] == true ||
+        state?['reported_on'] is! bool ||
+        _submitting.contains(serial)) return;
+    final desired = !(state!['reported_on'] as bool);
+    setState(() {
+      _submitting.add(serial);
+      _revision[serial] = (_revision[serial] ?? 0) + 1;
+      _lightStates[serial] = {...state, 'desired_on': desired};
+    });
+    try {
+      final result = await _switchService.command(
+          serial, desired, _switchService.requestId());
+      if (!mounted) return;
+      setState(() {
+        _lightStates[serial] = result;
+        _receivedAt[serial] = _clock.elapsedMilliseconds;
+        _lightErrors.remove(serial);
+      });
+    } catch (error) {
+      if (mounted) setState(() => _lightErrors[serial] = '$error');
+    } finally {
+      if (mounted) setState(() => _submitting.remove(serial));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -26,18 +149,7 @@ class _FirstRowState extends State<FirstRow> {
         SizedBox(height: 20),
         _buildTitle("Grow Stage Tracker", 30),
         SizedBox(height: 16),
-        _buildStageCard(
-          icon: Icons.eco,
-          stage: "Vegetation",
-          day: 23,
-          isDark: widget.isDark,
-        ),
-        SizedBox(height: 16),
-        _buildTrackerProgressbarCard(
-          isDark: widget.isDark,
-          progress: 0.65, // 65% progress
-          icon: Icons.eco,
-        ),
+        BatchGrowthTracker(batches: widget.batches, records: widget.records),
         SizedBox(height: 16),
         _buildTitle("Farm Equipment Status", 25),
         SizedBox(height: 16),
@@ -225,29 +337,32 @@ class _FirstRowState extends State<FirstRow> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Column 1: Weather Type + Outside Temp label
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Partly Cloudy",
-                      style: AppTypography.font(
-                        fontSize: AppTypography.sectionTitleSize,
-                        fontWeight: AppTypography.headingWeight,
-                        color: widget.isDark ? Colors.white : Colors.black,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Partly Cloudy",
+                        style: AppTypography.font(
+                          fontSize: AppTypography.sectionTitleSize,
+                          fontWeight: AppTypography.headingWeight,
+                          color: widget.isDark ? Colors.white : Colors.black,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Outside Temperature",
-                      style: AppTypography.font(
-                        fontSize: AppTypography.captionSize,
-                        color:
-                            widget.isDark ? Colors.grey[400] : Colors.grey[600],
+                      const SizedBox(height: 4),
+                      Text(
+                        "Outside Temperature",
+                        style: AppTypography.font(
+                          fontSize: AppTypography.captionSize,
+                          color: widget.isDark
+                              ? Colors.grey[400]
+                              : Colors.grey[600],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-
+                const SizedBox(width: 8),
                 // Column 2: Temperature + Humidity
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -301,154 +416,6 @@ class _FirstRowState extends State<FirstRow> {
           fontWeight: AppTypography.labelWeight,
           color: widget.isDark ? Colors.white : AppColors.darkCard,
         ),
-      ),
-    );
-  }
-
-  Widget _buildStageCard({
-    required IconData icon,
-    required String stage,
-    required int day,
-    required bool isDark,
-  }) {
-    return Align(
-      alignment: Alignment.centerLeft, // Push card to the left
-      child: Container(
-        width: 230,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.grey[850] : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          //border: Border.all(color: Colors.grey[600]!, width: 1)  ,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Icon with circular background
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDark ? Colors.green[900] : Colors.green[100],
-              ),
-              child: Icon(
-                icon,
-                size: 30,
-                color: isDark ? Colors.green[300] : Colors.green[800],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              stage,
-              style: AppTypography.font(
-                fontSize: AppTypography.sectionTitleSize,
-                fontWeight: AppTypography.headingWeight,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              "Day: $day",
-              style: AppTypography.font(
-                fontSize: AppTypography.bodySize,
-                color: isDark ? Colors.grey[400] : Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTrackerProgressbarCard({
-    required bool isDark,
-    required double progress, // 0.0 to 1.0
-    required IconData icon,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title
-          Text(
-            "Product Grow Stage",
-            style: AppTypography.font(
-              fontSize: AppTypography.headingSize,
-              fontWeight: AppTypography.labelWeight,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Icon + progress bar + percentage
-          Row(
-            children: [
-              // Icon
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isDark ? Colors.green[900] : Colors.green[100],
-                ),
-                child: Icon(
-                  icon,
-                  size: 20,
-                  color: isDark ? Colors.green[300] : Colors.green[800],
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // Wider Progress bar using flex
-              Expanded(
-                flex: 3,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 40, // Slightly taller too if you want
-                    backgroundColor:
-                        isDark ? Colors.grey[700] : Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      isDark ? Colors.greenAccent : Colors.green,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // Percentage
-              Text(
-                "${(progress * 100).toStringAsFixed(0)}%",
-                style: AppTypography.font(
-                  fontSize: AppTypography.actionSize,
-                  fontWeight: AppTypography.labelWeight,
-                  color: isDark ? Colors.white70 : Colors.black87,
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -575,11 +542,21 @@ class _FirstRowState extends State<FirstRow> {
             ),
           ),
         ),
+        if (_lights.isEmpty)
+          Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text('No light switches registered for your farms.',
+                  style: AppTypography.bodySmall)),
         _equipmentCardRow([
-          _lightStatusCard("E RACK", true, isDark),
-          _lightStatusCard("F RACK", false, isDark),
-          _lightStatusCard("P RACK", true, isDark),
+          for (final device in _lights) _registeredLightCard(device, isDark)
         ]),
+        if (_lightErrors.isNotEmpty)
+          Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                  _lightErrors.values.first.replaceFirst('Exception: ', ''),
+                  style: AppTypography.bodySmall
+                      .copyWith(color: Colors.redAccent))),
       ],
     );
   }
@@ -650,7 +627,41 @@ class _FirstRowState extends State<FirstRow> {
 
   /// TAB MORE FEATURES
   /// LIGHTS, PUMPS, PH/AIR
-  Widget _lightStatusCard(String name, bool isActive, bool isDark) {
+  Widget _registeredLightCard(Map<String, dynamic> device, bool isDark) {
+    final serial = '${device['serial_number']}';
+    final state = _lightStates[serial];
+    final online = _lightOnline(serial);
+    final pending = _submitting.contains(serial) || state?['pending'] == true;
+    final label = pending
+        ? (state?['desired_on'] == false ? 'TURNING OFF…' : 'TURNING ON…')
+        : _lightErrors.containsKey(serial)
+            ? 'UNAVAILABLE'
+            : state == null
+                ? 'CONNECTING…'
+                : !online
+                    ? 'OFFLINE'
+                    : state['reported_on'] == true
+                        ? 'ON'
+                        : 'OFF';
+    return Tooltip(
+        message: '$serial — $label',
+        child: Semantics(
+            button: true,
+            enabled: online && !pending,
+            label: '$serial, $label',
+            child: InkWell(
+              onTap: online && !pending ? () => _toggleLight(serial) : null,
+              borderRadius: BorderRadius.circular(12),
+              child: _lightStatusCard(
+                  '${device['location'] ?? device['model_number'] ?? serial}',
+                  online && state?['reported_on'] == true,
+                  isDark,
+                  statusLabel: label),
+            )));
+  }
+
+  Widget _lightStatusCard(String name, bool isActive, bool isDark,
+      {String? statusLabel}) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -687,7 +698,7 @@ class _FirstRowState extends State<FirstRow> {
           ),
           const SizedBox(height: 4),
           Text(
-            isActive ? "ACTIVE" : "NOT ACTIVE",
+            statusLabel ?? (isActive ? "ACTIVE" : "NOT ACTIVE"),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,

@@ -15,11 +15,15 @@ class FarmIotDashboard extends StatelessWidget {
     this.liveTemperatureHistory,
     this.userName = '',
     this.sensors = const [],
+    this.batches = const [],
+    this.records = const [],
     this.readings = const [],
     this.sensorCounts = const {},
     this.activeSensorCounts = const {},
   });
   final bool isDark;
+  final List<Map<String, dynamic>> batches;
+  final List<Map<String, dynamic>> records;
   final List<Map<String, dynamic>> readings;
   final List<Map<String, dynamic>> sensors;
   final String userName;
@@ -45,7 +49,7 @@ class FarmIotDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, box) {
         final panels = <Widget>[
-          FirstRow(isDark: isDark, userName: userName),
+          FirstRow(isDark: isDark, devices: sensors, userName: userName, batches: batches, records: records),
           SecondRow(
               loadTelemetry: _telemetryApi.getLiveSensorTelemetry,
               sensors: sensors, readings: readings,
