@@ -1,3 +1,4 @@
+import '../../../services/superadmin_api_service.dart';
 import 'package:flutter/material.dart';
 import 'first_row.dart';
 import 'second_row.dart';
@@ -6,6 +7,7 @@ import 'fourth_row.dart';
 
 /// Shared responsive monitoring panels for caretaker and farm owner views.
 class FarmIotDashboard extends StatelessWidget {
+  static final _telemetryApi = SuperAdminApiService();
   const FarmIotDashboard({
     super.key,
     required this.isDark,
@@ -45,6 +47,7 @@ class FarmIotDashboard extends StatelessWidget {
         final panels = <Widget>[
           FirstRow(isDark: isDark, userName: userName),
           SecondRow(
+              loadTelemetry: _telemetryApi.getLiveSensorTelemetry,
               sensors: sensors, readings: readings,
               sensorSerials: _serials,
               isDark: isDark,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
 import '../../../core/utils/registered_sensor_readings.dart';
@@ -7,6 +8,7 @@ import 'package:fl_chart/fl_chart.dart'; // Add to pubspec.yaml
 
 class SecondRow extends StatefulWidget {
   final bool isDark;
+  final Future<(List<Map<String, dynamic>>, DateTime?)> Function()? loadTelemetry;
   final List<Map<String, dynamic>> sensors;
   final List<Map<String, dynamic>> readings;
   final Map<String, List<String>> sensorSerials;
@@ -18,6 +20,7 @@ class SecondRow extends StatefulWidget {
   const SecondRow({
     super.key,
     required this.isDark,
+    this.loadTelemetry,
     this.sensors = const [],
     this.readings = const [],
     this.sensorSerials = const {},
@@ -32,6 +35,44 @@ class SecondRow extends StatefulWidget {
 }
 
 class _SecondRowState extends State<SecondRow> {
+  Timer? _statusClock;
+  Timer? _telemetryClock;
+  bool _loadingTelemetry = false;
+  List<Map<String, dynamic>> _latestReadings = const [];
+  DateTime? _serverTime;
+  final Stopwatch _serverElapsed = Stopwatch();
+  List<Map<String, dynamic>> get _readings => [...widget.readings, ..._latestReadings];
+  DateTime get _now => _serverTime?.add(_serverElapsed.elapsed) ?? DateTime.now().toUtc();
+
+  Future<void> _refreshTelemetry() async {
+    final loader = widget.loadTelemetry;
+    if (loader == null || _loadingTelemetry || !mounted) return;
+    _loadingTelemetry = true;
+    try {
+      final result = await loader();
+      if (!mounted) return;
+      setState(() {
+        _latestReadings = result.$1;
+        if (result.$2 != null) {
+          _serverTime = result.$2;
+          _serverElapsed..reset()..start();
+        }
+      });
+    } catch (_) {
+      // A failed request must not reset receipt times or mark stale data online.
+    } finally { _loadingTelemetry = false; }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshTelemetry();
+    _telemetryClock = Timer.periodic(const Duration(seconds: 5), (_) => _refreshTelemetry());
+    _statusClock = Timer.periodic(const Duration(seconds: 1), (_) { if (mounted) setState(() {}); });
+  }
+  @override
+  void dispose() { _statusClock?.cancel(); _telemetryClock?.cancel(); _serverElapsed.stop(); super.dispose(); }
+
   String _shortSerial(String serial) => serial.length <= 3 ? serial : serial.substring(serial.length - 3);
   @override
   Widget build(BuildContext context) {
@@ -55,7 +96,7 @@ class _SecondRowState extends State<SecondRow> {
   }
 
   Widget _registeredCard(Map<String, dynamic> sensor, String type) {
-    final rows = readingsForRegisteredSensor(sensor, widget.readings);
+    final rows = readingsForRegisteredSensor(sensor, _readings);
     final value = rows.isEmpty ? null : registeredReadingValue(rows.last);
     final activity = latestSensorActivity(rows);
     final chart = List.generate(activity.length, (i) => FlSpot(registeredReadingTime(activity[i])!.millisecondsSinceEpoch / 1000, registeredReadingValue(activity[i])!));
@@ -72,7 +113,7 @@ class _SecondRowState extends State<SecondRow> {
   Widget _pairedCard(List<Map<String, dynamic>> sensors, String type) {
     final isDark = widget.isDark;
     final colors = [type == 'humidity' ? Colors.blue : Colors.orange, Colors.teal];
-    final histories = sensors.map((sensor) => readingsForRegisteredSensor(sensor, widget.readings)).toList();
+    final histories = sensors.map((sensor) => readingsForRegisteredSensor(sensor, _readings)).toList();
     final charts = histories.map((rows) => latestSensorActivity(rows).map((row) => FlSpot(registeredReadingTime(row)!.millisecondsSinceEpoch / 1000, registeredReadingValue(row)!)).toList()).toList();
     final serials = sensors.map((sensor) => sensorText(sensor, ['serial_number', r'$id', 'sensor_id', 'id'])).toList();
     final units = sensors.map((sensor) => sensorText(sensor, ['unit', 'measurement_unit'])).toList();
@@ -227,13 +268,20 @@ class _SecondRowState extends State<SecondRow> {
   }
 
   Widget _IndicatorsCard({required bool isDark}) {
-    final tempCount = widget.sensorCounts['temperature'] ?? 0;
-    final humidityCount = widget.sensorCounts['humidity'] ?? 0;
-    final waterTempCount = widget.sensorCounts['water_temperature'] ?? 0;
-    final activeTemp = (widget.activeSensorCounts['temperature'] ?? 0) > 0;
-    final activeHumidity = (widget.activeSensorCounts['humidity'] ?? 0) > 0;
-    final activeWaterTemp =
-        (widget.activeSensorCounts['water_temperature'] ?? 0) > 0;
+    final counts = <String, int>{};
+    final active = <String, int>{};
+    final now = _now;
+    for (final sensor in widget.sensors) {
+      final type = registeredSensorType(sensor);
+      counts[type] = (counts[type] ?? 0) + 1;
+      if (registeredSensorOnline(sensor, _readings, now: now)) active[type] = (active[type] ?? 0) + 1;
+    }
+    final tempCount = counts['temperature'] ?? 0;
+    final humidityCount = counts['humidity'] ?? 0;
+    final waterTempCount = counts['water_temperature'] ?? 0;
+    final activeTemp = (active['temperature'] ?? 0) > 0;
+    final activeHumidity = (active['humidity'] ?? 0) > 0;
+    final activeWaterTemp = (active['water_temperature'] ?? 0) > 0;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

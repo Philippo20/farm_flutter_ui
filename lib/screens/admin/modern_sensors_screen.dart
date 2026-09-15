@@ -251,6 +251,10 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         return 'VPD';
       case 'temperature':
         return 'Temperature';
+      case 'water_temperature':
+      case 'water_temp':
+      case 'water temperature':
+        return 'Water Temperature';
       case 'humidity':
         return 'Humidity';
       case 'carbon dioxide':
@@ -279,6 +283,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     switch (type) {
       case 'Temperature':
         return 'temperature';
+      case 'Water Temperature':
+        return 'water_temperature';
       case 'Humidity':
         return 'humidity';
       case 'CO2':
@@ -351,6 +357,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     switch (type) {
       case 'VPD':
         return 'psi';
+      case 'Water Temperature':
       case 'Temperature':
         return 'C';
       case 'Humidity':
@@ -453,6 +460,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
 
   IconData _iconForType(String type) {
     switch (type) {
+      case 'Water Temperature':
       case 'Temperature':
         return Icons.thermostat_rounded;
       case 'Humidity':
@@ -477,6 +485,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
 
   Color _colorForType(String type) {
     switch (type) {
+      case 'Water Temperature':
+        return AppColors.chartBlue;
       case 'Temperature':
         return AppColors.chartOrange;
       case 'Humidity':
@@ -1688,19 +1698,19 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     );
     final rangeMinController = TextEditingController(
       text: sensor?.raw['range_min']?.toString() ??
-          (selectedType == 'VPD' ? '' : '${defaultLimits.$1}'),
+          ((selectedType == 'VPD' || selectedType == 'Water Temperature') ? '' : '${defaultLimits.$1}'),
     );
     final rangeMaxController = TextEditingController(
       text: sensor?.raw['range_max']?.toString() ??
-          (selectedType == 'VPD' ? '' : '${defaultLimits.$2}'),
+          ((selectedType == 'VPD' || selectedType == 'Water Temperature') ? '' : '${defaultLimits.$2}'),
     );
     final warningMinController = TextEditingController(
       text: sensor?.raw['warning_min']?.toString() ??
-          (selectedType == 'VPD' ? '' : '${defaultLimits.$3}'),
+          ((selectedType == 'VPD' || selectedType == 'Water Temperature') ? '' : '${defaultLimits.$3}'),
     );
     final warningMaxController = TextEditingController(
       text: sensor?.raw['warning_max']?.toString() ??
-          (selectedType == 'VPD' ? '' : '${defaultLimits.$4}'),
+          ((selectedType == 'VPD' || selectedType == 'Water Temperature') ? '' : '${defaultLimits.$4}'),
     );
     final maintenanceController = TextEditingController(
       text: sensor?.raw['maintenance_frequency']?.toString() ?? 'Monthly',
@@ -1822,6 +1832,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                             value: selectedType,
                             items: const [
                               'Temperature',
+                              'Water Temperature',
                               'Humidity',
                               'CO2',
                               'Light',
@@ -1845,19 +1856,19 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                                         selectedType,
                                       );
                                       rangeMinController.text =
-                                          selectedType == 'VPD'
+                                          (selectedType == 'VPD' || selectedType == 'Water Temperature')
                                               ? ''
                                               : '${limits.$1}';
                                       rangeMaxController.text =
-                                          selectedType == 'VPD'
+                                          (selectedType == 'VPD' || selectedType == 'Water Temperature')
                                               ? ''
                                               : '${limits.$2}';
                                       warningMinController.text =
-                                          selectedType == 'VPD'
+                                          (selectedType == 'VPD' || selectedType == 'Water Temperature')
                                               ? ''
                                               : '${limits.$3}';
                                       warningMaxController.text =
-                                          selectedType == 'VPD'
+                                          (selectedType == 'VPD' || selectedType == 'Water Temperature')
                                               ? ''
                                               : '${limits.$4}';
                                     });
@@ -2075,7 +2086,7 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                         Expanded(
                           child: _dialogField(
                             controller: unitController,
-                            label: selectedType == 'VPD'
+                            label: (selectedType == 'VPD' || selectedType == 'Water Temperature')
                                 ? 'Unit (kPa / psi)'
                                 : 'Unit',
                             isDark: isDark,

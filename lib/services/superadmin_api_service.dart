@@ -466,6 +466,15 @@ class SuperAdminApiService {
         '/sensors/' + Uri.encodeComponent(serialNumber) + '/readings?' + query);
   }
 
+  Future<(List<Map<String, dynamic>>, DateTime?)> getLiveSensorTelemetry() async {
+    final response = await _client.get(Uri.parse('$baseUrl/sensor-readings'),
+      headers: {'Cache-Control': 'no-cache'}).withApiTimeout();
+    if (response.statusCode != 200) throw SuperAdminApiException('Sensor refresh failed (${response.statusCode})');
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final rows = (body['users'] as List).whereType<Map>().map((row) => Map<String, dynamic>.from(row)).toList();
+    return (rows, DateTime.tryParse('${body['server_time'] ?? ''}')?.toUtc());
+  }
+
   Future<List<Map<String, dynamic>>> getSensorReadingsAll() =>
       _getDocuments('/sensor-readings');
 

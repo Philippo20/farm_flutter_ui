@@ -79,3 +79,24 @@ List<List<Map<String, dynamic>>> registeredSensorPairs(List<Map<String, dynamic>
   final ordered = [...sensors]..sort((a,b) => sensorText(a, ['serial_number', r'$id', 'sensor_id', 'id']).compareTo(sensorText(b, ['serial_number', r'$id', 'sensor_id', 'id'])));
   return [for (var i = 0; i < ordered.length; i += 2) ordered.sublist(i, i + 2 > ordered.length ? ordered.length : i + 2)];
 }
+
+DateTime? latestRegisteredSensorTimestamp(Map<String, dynamic> sensor, List<Map<String, dynamic>> readings) {
+  final id = sensorText(sensor, [r'$id', 'sensor_id', 'id']);
+  final serial = sensorText(sensor, ['serial_number']);
+  DateTime? latest;
+  for (final row in readings) {
+    final rowId = sensorText(row, ['sensor_id']);
+    final matches = rowId.isNotEmpty && id.isNotEmpty ? rowId == id : serial.isNotEmpty && sensorText(row, ['serial_number']) == serial;
+    if (!matches || registeredReadingValue(row) == null) continue;
+    final timestamp = DateTime.tryParse(sensorText(row, [r'$createdAt']))?.toUtc() ?? registeredReadingTime(row);
+    if (timestamp != null && (latest == null || timestamp.isAfter(latest))) latest = timestamp;
+  }
+  return latest ?? (registeredReadingValue(sensor) == null ? null : registeredReadingTime(sensor));
+}
+
+bool registeredSensorOnline(Map<String, dynamic> sensor, List<Map<String, dynamic>> readings, {DateTime? now}) {
+  final latest = latestRegisteredSensorTimestamp(sensor, readings);
+  if (latest == null) return false;
+  final age = (now ?? DateTime.now()).toUtc().difference(latest);
+  return !age.isNegative && age <= const Duration(seconds: 15);
+}

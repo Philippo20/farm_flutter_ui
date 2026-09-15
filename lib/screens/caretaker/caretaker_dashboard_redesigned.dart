@@ -1,3 +1,4 @@
+import '../../core/utils/registered_sensor_readings.dart';
 import '../../widgets/cards/farm/farm_iot_dashboard.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
@@ -167,6 +168,7 @@ class _CaretakerDashboardRedesignedState
       _sensorReadings.where(_matchesAssignedFarm).toList();
 
   Future<void> _loadDashboardData({bool silent = false}) async {
+    if (!mounted || (silent && (_isLoading || _isRefreshing))) return;
     if (!silent) {
       setState(() {
         _isLoading = true;
@@ -715,34 +717,7 @@ class _CaretakerDashboardRedesignedState
     }
   }
 
-  bool _isSensorActive(Map<String, dynamic> sensor) {
-    final latest = _latestTelemetryAt(sensor);
-    if (latest == null) return false;
-    final age = DateTime.now().toUtc().difference(latest.toUtc());
-    return age.inSeconds <= 30;
-  }
-
-  DateTime? _latestTelemetryAt(Map<String, dynamic> sensor) {
-    final serial = _value(sensor, const ['serial_number']);
-    final sensorId = _value(sensor, const [r'$id', 'sensor_id', 'id']);
-    DateTime? latest = _date(sensor['timestamp']);
-
-    for (final reading in _assignedSensorReadings) {
-      final readingSerial = _value(reading, const ['serial_number']);
-      final readingSensorId = _value(reading, const ['sensor_id']);
-      final matchesSerial = serial.isNotEmpty && readingSerial == serial;
-      final matchesSensorId =
-          sensorId.isNotEmpty && readingSensorId == sensorId;
-      if (!matchesSerial && !matchesSensorId) continue;
-
-      final readingAt = _date(reading['timestamp']);
-      if (readingAt != null && (latest == null || readingAt.isAfter(latest))) {
-        latest = readingAt;
-      }
-    }
-
-    return latest;
-  }
+  bool _isSensorActive(Map<String, dynamic> sensor) => registeredSensorOnline(sensor, _sensorReadings);
 
   Map<String, int> _sensorTypeCounts({bool activeOnly = false}) {
     final counts = <String, int>{};

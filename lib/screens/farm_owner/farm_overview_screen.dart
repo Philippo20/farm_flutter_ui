@@ -1,3 +1,4 @@
+import '../../core/utils/registered_sensor_readings.dart';
 import '../../widgets/cards/farm/farm_iot_dashboard.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -40,6 +41,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
   final List<Map<String, dynamic>> _sales = [];
   final List<Map<String, dynamic>> _sensorReadings = [];
   bool _isLoading = true;
+  bool _fetching = false;
   String? _errorMessage;
   Timer? _refreshTimer;
 
@@ -48,7 +50,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
     super.initState();
     _loadFarmData();
     _refreshTimer = Timer.periodic(
-      const Duration(seconds: 15),
+      const Duration(seconds: 5),
       (_) => _loadFarmData(showLoading: false),
     );
   }
@@ -60,6 +62,8 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
   }
 
   Future<void> _loadFarmData({bool showLoading = true}) async {
+    if (!mounted || _fetching) return;
+    _fetching = true;
     if (showLoading) {
       setState(() {
         _isLoading = true;
@@ -103,6 +107,8 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
         _errorMessage = error.toString();
         _isLoading = false;
       });
+    } finally {
+      _fetching = false;
     }
   }
 
@@ -763,7 +769,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
         'co₂': 'co2', 'carbon_dioxide': 'co2'}[rawType] ?? rawType;
       counts[type] = (counts[type] ?? 0) + 1;
       final timestamp = _dateValue(sensor['timestamp'] ?? sensor['last_seen']);
-      if (timestamp != null && DateTime.now().toUtc().difference(timestamp.toUtc()).inSeconds <= 10) {
+      if (registeredSensorOnline(sensor, _sensorReadings)) {
         activeCounts[type] = (activeCounts[type] ?? 0) + 1;
       }
       if (type == 'temperature') {
