@@ -32,6 +32,7 @@ class SecondRow extends StatefulWidget {
 }
 
 class _SecondRowState extends State<SecondRow> {
+  String _shortSerial(String serial) => serial.length <= 3 ? serial : serial.substring(serial.length - 3);
   @override
   Widget build(BuildContext context) {
     final sensors = widget.sensors.where((s) => ['humidity', 'temperature', 'water_temperature'].contains(registeredSensorType(s))).toList()
@@ -42,9 +43,13 @@ class _SecondRowState extends State<SecondRow> {
       _IndicatorsCard(isDark: widget.isDark),
       if (sensors.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('No registered sensors assigned.')),
       for (final type in ['humidity', 'temperature', 'water_temperature'])
-        for (final sensor in sensors.where((s) => registeredSensorType(s) == type)) ...[
+        for (final pair in (type == 'water_temperature'
+            ? sensors.where((s) => registeredSensorType(s) == type).map((sensor) => [sensor]).toList()
+            : registeredSensorPairs(sensors.where((s) => registeredSensorType(s) == type).toList()))) ...[
           const SizedBox(height: 16),
-          _registeredCard(sensor, type),
+          pair.length == 2 && type != 'water_temperature'
+            ? _pairedCard(pair, type)
+            : Column(children: [for (final sensor in pair) _registeredCard(sensor, type)]),
         ],
     ]);
   }
@@ -64,13 +69,61 @@ class _SecondRowState extends State<SecondRow> {
     return KeyedSubtree(key: ValueKey(sensorText(sensor, [r'$id', 'sensor_id', 'id', 'serial_number'])), child: card);
   }
 
-  Widget _areaChart(List<FlSpot> source, Color color, bool isDark) {
-    if (source.isEmpty) return const SizedBox(height: 150, child: Center(child: Text('No reading history')));
-    // A timestamp identifies one observation. Avoid vertical curves at duplicate times.
-    final byTime = <double, FlSpot>{for (final point in source) point.x: point};
-    final ordered = byTime.values.toList()..sort((a,b) => a.x.compareTo(b.x));
-    final origin = ordered.first.x;
-    final points = ordered.map((point) => FlSpot(point.x - origin, point.y)).toList();
+  Widget _pairedCard(List<Map<String, dynamic>> sensors, String type) {
+    final isDark = widget.isDark;
+    final colors = [type == 'humidity' ? Colors.blue : Colors.orange, Colors.teal];
+    final histories = sensors.map((sensor) => readingsForRegisteredSensor(sensor, widget.readings)).toList();
+    final charts = histories.map((rows) => latestSensorActivity(rows).map((row) => FlSpot(registeredReadingTime(row)!.millisecondsSinceEpoch / 1000, registeredReadingValue(row)!)).toList()).toList();
+    final serials = sensors.map((sensor) => sensorText(sensor, ['serial_number', r'$id', 'sensor_id', 'id'])).toList();
+    final units = sensors.map((sensor) => sensorText(sensor, ['unit', 'measurement_unit'])).toList();
+    Widget reading(int index) => Expanded(child: Column(crossAxisAlignment: index == 0 ? CrossAxisAlignment.start : CrossAxisAlignment.end, children: [
+      Text(histories[index].isEmpty ? 'No reading' : '${registeredReadingValue(histories[index].last)!.toStringAsFixed(1)} ${units[index]}',
+        textAlign: index == 0 ? TextAlign.left : TextAlign.right,
+        style: AppTypography.font(fontSize: AppTypography.metricSize, fontWeight: AppTypography.headingWeight, color: isDark ? Colors.white : Colors.black87)),
+      const SizedBox(height: 8),
+      Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(padding: const EdgeInsets.only(top: 4), child: Icon(Icons.circle, size: 8, color: colors[index])),
+        const SizedBox(width: 6),
+        Flexible(child: Text('Serial: ${_shortSerial(serials[index])}', style: AppTypography.bodySmall.copyWith(color: isDark ? Colors.white60 : Colors.black54))),
+      ]),
+    ]));
+    return Container(
+      key: ValueKey(serials.join('|')),
+      width: double.infinity,
+      decoration: BoxDecoration(color: isDark ? Colors.grey[850] : Colors.white, borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: .08), blurRadius: 6, offset: const Offset(0, 3))]),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Padding(padding: const EdgeInsets.fromLTRB(16,16,16,0), child: Row(children: [
+          Expanded(child: Text(type == 'humidity' ? 'Humidity' : 'Temperature', style: AppTypography.font(fontSize: AppTypography.cardTitleSize, fontWeight: AppTypography.headingWeight, color: isDark ? Colors.white : Colors.black87))),
+          Icon(type == 'humidity' ? Icons.water_drop : Icons.thermostat_rounded, color: colors.first),
+        ])),
+        Padding(padding: const EdgeInsets.fromLTRB(16,8,16,12), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [reading(0), const SizedBox(width: 12), reading(1)])),
+        Padding(padding: const EdgeInsets.only(bottom: 6), child: Text('Each sensor scaled independently', textAlign: TextAlign.center, style: AppTypography.caption.copyWith(color: isDark ? Colors.white54 : Colors.black45))),
+        // Different units must never share a numerical axis.
+        if (units[0] == units[1])
+          Padding(padding: const EdgeInsets.fromLTRB(10,0,12,0), child: _areaChart(charts[0], colors[0], isDark, secondary: charts[1], secondaryColor: colors[1], labels: serials))
+        else
+          for (var i = 0; i < 2; i++) Padding(padding: const EdgeInsets.fromLTRB(10,0,12,0), child: _areaChart(charts[i], colors[i], isDark, labels: [serials[i]])),
+      ]),
+    );
+  }
+
+  Widget _areaChart(List<FlSpot> source, Color color, bool isDark, {List<FlSpot> secondary = const [], Color secondaryColor = Colors.teal, List<String> labels = const []}) {
+    if (source.isEmpty && secondary.isEmpty) return const SizedBox(height: 150, child: Center(child: Text('No reading history')));
+    List<FlSpot> ordered(List<FlSpot> input) => (<double, FlSpot>{for (final point in input) point.x: point}).values.toList()..sort((a,b) => a.x.compareTo(b.x));
+    final rawSeries = [ordered(source), if (secondary.isNotEmpty) ordered(secondary)];
+    final allRaw = rawSeries.expand((s) => s).toList()..sort((a,b) => a.x.compareTo(b.x));
+    final origin = allRaw.first.x;
+    final independent = secondary.isNotEmpty;
+    final series = rawSeries.map((items) {
+      if (items.isEmpty) return <FlSpot>[];
+      final minimum = items.map((p) => p.y).reduce(math.min);
+      final maximum = items.map((p) => p.y).reduce(math.max);
+      return items.map((point) => FlSpot(point.x - origin,
+        !independent ? point.y : maximum == minimum ? .5 : .14 + .72 * (point.y - minimum) / (maximum - minimum))).toList();
+    }).toList();
+    final points = series.expand((s) => s).toList()..sort((a,b) => a.x.compareTo(b.x));
+    final seriesColors = [color, secondaryColor];
     // Leave room for the latest point and its rounded stroke inside the plot.
     final timeSpan = points.last.x - points.first.x;
     final edgeRoom = timeSpan > 0 ? timeSpan * .035 : 1.0;
@@ -81,7 +134,7 @@ class _SecondRowState extends State<SecondRow> {
     return Tooltip(message: 'Latest continuous readings, up to 15 minutes. Gaps over one minute start a new segment.', child: SizedBox(height: 150, child: LineChart(LineChartData(
         minX: points.first.x - edgeRoom,
         maxX: points.last.x + edgeRoom,
-        minY: low - padding, maxY: high + padding,
+        minY: independent ? 0 : low - padding, maxY: independent ? 1 : high + padding,
         clipData: const FlClipData.all(),
         gridData: const FlGridData(show: false),
         titlesData: const FlTitlesData(show: false),
@@ -89,30 +142,30 @@ class _SecondRowState extends State<SecondRow> {
         lineTouchData: LineTouchData(touchTooltipData: LineTouchTooltipData(
           fitInsideHorizontally: true, fitInsideVertically: true,
           maxContentWidth: 130,
-          getTooltipColor: (_) => isDark ? Colors.grey.shade900 : Colors.white,
+          getTooltipColor: (_) => Colors.grey.shade900,
           getTooltipItems: (spots) => spots.map((spot) => LineTooltipItem(
-            '${spot.y.toStringAsFixed(2)}\n${time(spot.x)}\nLatest activity (up to 15 min)',
-            AppTypography.bodySmall.copyWith(color: isDark ? Colors.white : Colors.black87),
+            '${spot.barIndex < labels.length ? _shortSerial(labels[spot.barIndex]) + '\n' : ''}${rawSeries[spot.barIndex][spot.spotIndex].y.toStringAsFixed(2)}\n${time(spot.x)}',
+            AppTypography.bodySmall.copyWith(color: Colors.white),
           )).toList(),
         )),
-        lineBarsData: [LineChartBarData(
-          spots: points, isCurved: true, curveSmoothness: .4,
+        lineBarsData: [for (var index = 0; index < series.length; index++) LineChartBarData(
+          spots: series[index], isCurved: true, curveSmoothness: .4,
           preventCurveOverShooting: true,
           preventCurveOvershootingThreshold: 1,
-          color: color, barWidth: 2.5, isStrokeCapRound: true,
+          color: seriesColors[index], barWidth: 2.5, isStrokeCapRound: true,
           dotData: FlDotData(
             show: true,
-            checkToShowDot: (spot, _) => spot.x == points.last.x,
-            getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
-              radius: 3, color: color, strokeWidth: 1.5,
+            checkToShowDot: (spot, _) => series[index].isNotEmpty && spot.x == series[index].last.x,
+            getDotPainter: (spot, percent, bar, spotIndex) => FlDotCirclePainter(
+              radius: 3, color: seriesColors[index], strokeWidth: 1.5,
               strokeColor: isDark ? Colors.grey[850]! : Colors.white,
             ),
           ),
           belowBarData: BarAreaData(show: true, gradient: LinearGradient(
             begin: Alignment.topCenter, end: Alignment.bottomCenter,
             colors: [
-              color.withValues(alpha: isDark ? .30 : .24),
-              color.withValues(alpha: isDark ? .04 : .02),
+              seriesColors[index].withValues(alpha: isDark ? .30 : .24),
+              seriesColors[index].withValues(alpha: isDark ? .04 : .02),
             ],
           )),
         )],
@@ -352,7 +405,7 @@ class _SecondRowState extends State<SecondRow> {
 
   Widget _serialLabel(String serial) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-    child: Text('Serial: ${serial.isEmpty ? 'Not provided' : serial}', style: AppTypography.bodySmall.copyWith(color: widget.isDark ? Colors.white60 : Colors.black54)),
+    child: Text('Serial: ${serial.isEmpty ? 'Not provided' : _shortSerial(serial)}', style: AppTypography.bodySmall.copyWith(color: widget.isDark ? Colors.white60 : Colors.black54)),
   );
 
   Widget _humidityCard({

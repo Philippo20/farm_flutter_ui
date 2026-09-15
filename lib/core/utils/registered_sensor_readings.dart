@@ -73,3 +73,9 @@ List<Map<String, dynamic>> latestSensorActivity(List<Map<String, dynamic>> rows)
   }
   return [for (final stamp in stamps.skip(start)) byTime[stamp]!];
 }
+
+/// Stable pairs within one sensor type; callers keep types separate.
+List<List<Map<String, dynamic>>> registeredSensorPairs(List<Map<String, dynamic>> sensors) {
+  final ordered = [...sensors]..sort((a,b) => sensorText(a, ['serial_number', r'$id', 'sensor_id', 'id']).compareTo(sensorText(b, ['serial_number', r'$id', 'sensor_id', 'id'])));
+  return [for (var i = 0; i < ordered.length; i += 2) ordered.sublist(i, i + 2 > ordered.length ? ordered.length : i + 2)];
+}
