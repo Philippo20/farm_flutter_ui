@@ -1,3 +1,4 @@
+import '../../widgets/cards/farm/farm_iot_dashboard.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'dart:async';
@@ -13,10 +14,6 @@ import '../../core/widgets/skeleton_loader.dart';
 import '../../core/widgets/weather_time_widget.dart';
 import '../../core/widgets/weather_info_chip.dart';
 import '../../widgets/alert_summary_card.dart';
-import '../../widgets/cards/farm/first_row.dart';
-import '../../widgets/cards/farm/second_row.dart';
-import '../../widgets/cards/farm/third_row.dart';
-import '../../widgets/cards/farm/fourth_row.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/superadmin_api_service.dart';
 
@@ -1811,97 +1808,18 @@ class _CaretakerDashboardRedesignedState
     );
   }
 
-  Widget _sensorNestedView(bool isDark, {required bool narrow}) {
-    final sensorCounts = _sensorTypeCounts();
-    final activeSensorCounts = _sensorTypeCounts(activeOnly: true);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _nestedViewHeader(isDark, narrow),
-        const SizedBox(height: 16),
-        LayoutBuilder(builder: (context, box) {
-          final width = box.maxWidth;
-          if (width > 1100) {
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: FirstRow(isDark: isDark)),
-                const SizedBox(width: 14),
-                Expanded(
-                    child: SecondRow(
-                  isDark: isDark,
-                  liveTemperature: _latestSensorValue('temperature'),
-                  liveTemperatureHistory: _sensorHistoryValues('temperature'),
-                  sensorCounts: sensorCounts,
-                  activeSensorCounts: activeSensorCounts,
-                )),
-                const SizedBox(width: 14),
-                Expanded(
-                    child: ThirdRow(
-                  isDark: isDark,
-                  sensorCounts: sensorCounts,
-                  activeSensorCounts: activeSensorCounts,
-                )),
-                const SizedBox(width: 14),
-                Expanded(child: FourthRow(isDark: isDark)),
-              ],
-            );
-          }
-          if (width > 700) {
-            return Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                SizedBox(
-                    width: (width - 16) / 2, child: FirstRow(isDark: isDark)),
-                SizedBox(
-                    width: (width - 16) / 2,
-                    child: SecondRow(
-                      isDark: isDark,
-                      liveTemperature: _latestSensorValue('temperature'),
-                      liveTemperatureHistory:
-                          _sensorHistoryValues('temperature'),
-                      sensorCounts: sensorCounts,
-                      activeSensorCounts: activeSensorCounts,
-                    )),
-                SizedBox(
-                    width: (width - 16) / 2,
-                    child: ThirdRow(
-                      isDark: isDark,
-                      sensorCounts: sensorCounts,
-                      activeSensorCounts: activeSensorCounts,
-                    )),
-                SizedBox(
-                    width: (width - 16) / 2, child: FourthRow(isDark: isDark)),
-              ],
-            );
-          }
-          return Column(
-            children: [
-              FirstRow(isDark: isDark),
-              const SizedBox(height: 16),
-              SecondRow(
-                isDark: isDark,
-                liveTemperature: _latestSensorValue('temperature'),
-                liveTemperatureHistory: _sensorHistoryValues('temperature'),
-                sensorCounts: sensorCounts,
-                activeSensorCounts: activeSensorCounts,
-              ),
-              const SizedBox(height: 16),
-              ThirdRow(
-                isDark: isDark,
-                sensorCounts: sensorCounts,
-                activeSensorCounts: activeSensorCounts,
-              ),
-              const SizedBox(height: 16),
-              FourthRow(isDark: isDark),
-            ],
-          );
-        }),
-      ],
-    );
-  }
+  Widget _sensorNestedView(bool isDark, {required bool narrow}) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _nestedViewHeader(isDark, narrow),
+      const SizedBox(height: 16),
+      FarmIotDashboard(isDark: isDark, userName: ref.watch(authProvider).user?.name ?? '',
+        liveTemperature: _latestSensorValue('temperature'),
+        liveTemperatureHistory: _sensorHistoryValues('temperature'),
+        sensorCounts: _sensorTypeCounts(),
+        activeSensorCounts: _sensorTypeCounts(activeOnly: true)),
+    ],
+  );
 
   Widget _nestedViewHeader(bool isDark, bool narrow) {
     return Container(

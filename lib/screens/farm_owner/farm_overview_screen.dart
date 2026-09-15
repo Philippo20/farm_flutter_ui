@@ -1,3 +1,4 @@
+import '../../widgets/cards/farm/farm_iot_dashboard.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/responsive_metric_grid.dart';
@@ -445,11 +446,11 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
-            _buildMonitoringCards(isDark),
-            SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
             _buildTabBar(isDark),
             SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
             if (_selectedTab == 0) ...[
+              _buildMonitoringCards(isDark),
+              SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
               _buildOverviewTab(isDark, isTabletOrMobile),
             ] else ...[
               _buildIotDashboard(isDark, isTabletOrMobile),
@@ -747,86 +748,36 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
   }
 
   Widget _buildIotDashboard(bool isDark, bool isTabletOrMobile) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    final sensors = _ownerSensorDashboardItems;
-
-    const categoryOrder = [
-      'Air Quality',
-      'Room Temp/Humidity',
-      'Water & Nutrients',
-      'Energy',
-    ];
-    final categorySensorsCrossAxisCount = isMobile ? 1 : 2;
-    final categorySensorsAspectRatio = isMobile ? 1.95 : 1.4;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildIotLiveHeader(isDark, sensors, isMobile),
-        SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
-        if (sensors.isEmpty)
-          _buildNoSensorState(isDark)
-        else if (isMobile)
-          ...categoryOrder.map((category) {
-            final categorySensors = sensors
-                .where((sensor) => sensor['category'] == category)
-                .toList();
-            if (categorySensors.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-              child: _buildIotCategorySection(
-                isDark: isDark,
-                title: category,
-                sensors: categorySensors,
-                crossAxisCount: categorySensorsCrossAxisCount,
-                childAspectRatio: categorySensorsAspectRatio,
-                isMobile: isMobile,
-              ),
-            );
-          })
-        else
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final sectionWidth = (constraints.maxWidth - AppSpacing.md) / 2;
-              return Wrap(
-                spacing: AppSpacing.md,
-                runSpacing: AppSpacing.md,
-                children: categoryOrder.map((category) {
-                  final categorySensors = sensors
-                      .where((sensor) => sensor['category'] == category)
-                      .toList();
-                  if (categorySensors.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  return SizedBox(
-                    width: sectionWidth,
-                    child: _buildIotCategorySection(
-                      isDark: isDark,
-                      title: category,
-                      sensors: categorySensors,
-                      crossAxisCount: categorySensorsCrossAxisCount,
-                      childAspectRatio: categorySensorsAspectRatio,
-                      isMobile: isMobile,
-                    ),
-                  );
-                }).toList(),
-              );
-            },
-          ),
-        if (sensors.isNotEmpty) ...[
-          SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
-          _buildDetailedSensorReadingsSection(
-            isDark: isDark,
-            sensors: sensors,
-            isMobile: isMobile,
-          ),
-        ],
-      ],
-    );
+    final sensors = _ownerSensors;
+    final counts = <String, int>{};
+    final activeCounts = <String, int>{};
+    double? temperature;
+    DateTime? latestTemperatureAt;
+    for (final sensor in sensors) {
+      final rawType = _value(sensor, ['sensortype', 'sensor_type', 'type']).toLowerCase().trim().replaceAll(' ', '_').replaceAll('-', '_');
+      final type = const {'temp': 'temperature', 'humid': 'humidity',
+        'water_temp': 'water_temperature', 'ph_level': 'ph', 'ec_level': 'ec',
+        'co₂': 'co2', 'carbon_dioxide': 'co2'}[rawType] ?? rawType;
+      counts[type] = (counts[type] ?? 0) + 1;
+      final timestamp = _dateValue(sensor['timestamp'] ?? sensor['last_seen']);
+      if (timestamp != null && DateTime.now().toUtc().difference(timestamp.toUtc()).inSeconds <= 10) {
+        activeCounts[type] = (activeCounts[type] ?? 0) + 1;
+      }
+      if (type == 'temperature') {
+        final value = double.tryParse('${sensor['last_value'] ?? sensor['current_value'] ?? sensor['value'] ?? ''}');
+        if (value != null && (temperature == null || (timestamp != null && (latestTemperatureAt == null || timestamp.isAfter(latestTemperatureAt))))) {
+          temperature = value;
+          latestTemperatureAt = timestamp;
+        }
+      }
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _buildIotLiveHeader(isDark, _ownerSensorDashboardItems, MediaQuery.sizeOf(context).width < 600),
+      const SizedBox(height: 16),
+      if (sensors.isEmpty) _buildNoSensorState(isDark)
+      else FarmIotDashboard(isDark: isDark, userName: ref.watch(authProvider).user?.name ?? '', liveTemperature: temperature,
+        liveTemperatureHistory: const [], sensorCounts: counts, activeSensorCounts: activeCounts),
+    ]);
   }
 
   Widget _buildNoSensorState(bool isDark) {

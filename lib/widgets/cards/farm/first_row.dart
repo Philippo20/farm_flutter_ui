@@ -5,8 +5,9 @@ import 'package:intl/intl.dart';
 
 class FirstRow extends StatefulWidget {
   final bool isDark;
+  final String userName;
 
-  const FirstRow({super.key, required this.isDark});
+  const FirstRow({super.key, required this.isDark, this.userName = ''});
 
   @override
   State<FirstRow> createState() => _FirstRowState();
@@ -85,7 +86,9 @@ class _FirstRowState extends State<FirstRow> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hello, Abacca Philip (CTO)',
+                  widget.userName.trim().isEmpty
+                      ? 'Welcome back'
+                      : 'Hello, ${widget.userName}',
                   style: AppTypography.font(
                     fontSize: AppTypography.cardTitleSize,
                     fontWeight: AppTypography.headingWeight,
