@@ -1,6 +1,7 @@
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
+import '../../core/widgets/user_card_layout.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -337,7 +338,7 @@ class _SalesManagerDashboardRedesignedState
               AppSpacing.md,
               AppSpacing.md,
               AppSpacing.md,
-              92,
+              16,
             ),
             child: _buildDashboardContent(isDark, true),
           ),
@@ -373,10 +374,8 @@ class _SalesManagerDashboardRedesignedState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHero(isDark, isMobile),
-        const SizedBox(height: AppSpacing.lg),
-        Wrap(
-          spacing: AppSpacing.md,
-          runSpacing: AppSpacing.md,
+        SizedBox(height: isMobile ? 16 : AppSpacing.lg),
+        UserCardLayout(
           children: [
             _SalesKpi(
               title: 'Revenue',
@@ -415,7 +414,7 @@ class _SalesManagerDashboardRedesignedState
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: isMobile ? 16 : AppSpacing.lg),
         _buildSalesIntakePanel(),
         const SizedBox(height: AppSpacing.md),
         _buildMainGrid(),
@@ -593,24 +592,16 @@ class _SalesManagerDashboardRedesignedState
           : LayoutBuilder(builder: (context, constraints) {
               final columns = constraints.maxWidth >= 940 ? 3 : 1;
               final visible = _releasedBatches.take(6).toList();
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: visible.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: columns,
-                  mainAxisExtent: 164,
-                  crossAxisSpacing: AppSpacing.sm,
-                  mainAxisSpacing: AppSpacing.sm,
-                ),
-                itemBuilder: (_, index) {
+              final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
+              return Wrap(spacing: 12, runSpacing: 12,
+                children: List.generate(visible.length, (index) {
                   final record = visible[index];
-                  return _SalesIntakeCard(
+                  return SizedBox(width: width, child: _SalesIntakeCard(
                     record: record,
                     saleRecorded: _hasSaleForBatch(record),
                     onTap: () => _showReleasedBatch(record),
-                  );
-                },
+                  ));
+                }),
               );
             }),
     );
@@ -766,7 +757,7 @@ class _SalesIntakeCard extends StatelessWidget {
                       color: isDark ? Colors.white54 : AppColors.textSecondary),
                 ],
               ),
-              const Spacer(),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -1154,23 +1145,14 @@ class _SalesKpi extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final width =
-        MediaQuery.of(context).size.width < 600 ? double.infinity : 230.0;
 
     return Container(
-      width: width,
+      width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: color.withOpacity(isDark ? 0.26 : 0.16)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.12 : 0.035),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -1224,15 +1206,8 @@ class _DashboardPanel extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: color.withOpacity(isDark ? 0.24 : 0.16)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.14 : 0.04),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1282,17 +1257,11 @@ class _ResponsiveGrid extends StatelessWidget {
       builder: (context, constraints) {
         final columns = constraints.maxWidth >= 760 ? 2 : 1;
 
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: itemCount,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            mainAxisExtent: 230,
-            crossAxisSpacing: AppSpacing.md,
-            mainAxisSpacing: AppSpacing.md,
-          ),
-          itemBuilder: (context, index) => itemBuilder(index),
+        final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: List.generate(itemCount, (index) => SizedBox(width: width, child: itemBuilder(index))),
         );
       },
     );
@@ -1315,9 +1284,9 @@ class _PipelineCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.04) : AppColors.neutral50,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border.all(color: color.withOpacity(isDark ? 0.28 : 0.18)),
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1353,10 +1322,11 @@ class _PipelineCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                _StatusBadge(label: item['status']! as String, color: color),
               ],
             ),
-            const Spacer(),
+            const SizedBox(height: 12),
+            _StatusBadge(label: item['status']! as String, color: color),
+            const SizedBox(height: 16),
             _MetricBlock(
               label: 'Current metric',
               value: item['metric']! as String,

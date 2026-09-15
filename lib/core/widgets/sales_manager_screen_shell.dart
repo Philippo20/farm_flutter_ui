@@ -57,7 +57,7 @@ class SalesManagerScreenShell extends ConsumerWidget {
                       AppSpacing.md,
                       AppSpacing.md,
                       AppSpacing.md,
-                      96,
+                      16,
                     ),
                     child: child,
                   ),

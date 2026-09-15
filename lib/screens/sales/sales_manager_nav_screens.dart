@@ -1,3 +1,5 @@
+import '../../core/widgets/buyer_account_card.dart';
+import '../../core/widgets/user_card_layout.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'dart:convert';
@@ -928,6 +930,12 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
         .where(
             (item) => '${item['status'] ?? 'Active'}'.toLowerCase() == 'active')
         .length;
+    final mobile = MediaQuery.sizeOf(context).width < 600;
+    Widget addBuyerButton() => FilledButton.icon(
+      onPressed: _openAddForm,
+      icon: const Icon(Icons.person_add_alt_outlined, size: 18),
+      label: const Text('Add Off-Taker'),
+    );
     final cards = _offTakers.map<Map<String, Object>>((item) {
       final status = '${item['status'] ?? 'Active'}';
       final color = status == 'Active'
@@ -955,15 +963,10 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
           icon: Icons.people_outlined,
           colors: const [Color(0xFF1D4ED8), Color(0xFF0F766E)],
         ),
-        const SizedBox(height: AppSpacing.md),
-        Align(
-          alignment: Alignment.centerRight,
-          child: FilledButton.icon(
-            onPressed: _openAddForm,
-            icon: const Icon(Icons.person_add_alt_outlined),
-            label: const Text('Add Off-Taker'),
-          ),
-        ),
+        if (mobile) ...[
+          const SizedBox(height: AppSpacing.md),
+          Align(alignment: Alignment.centerRight, child: addBuyerButton()),
+        ],
         const SizedBox(height: AppSpacing.lg),
         Wrap(
           spacing: AppSpacing.md,
@@ -992,7 +995,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                     AppColors.warning)),
           ],
         ),
-        const SizedBox(height: AppSpacing.xl),
+        SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 16 : AppSpacing.xl),
         if (!widget.forSalesPersonnel &&
             _updateRequests.any((item) => item['status'] == 'Pending')) ...[
           Text('Pending Change Requests',
@@ -1068,8 +1071,25 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
           }),
           const SizedBox(height: AppSpacing.md),
         ],
-        Text('Buyer Accounts',
-            style: AppTypography.h5.copyWith(fontWeight: AppTypography.headingWeight)),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(
+                alpha: Theme.of(context).brightness == Brightness.dark ? .12 : .06),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primary.withValues(alpha: .16)),
+          ),
+          child: Row(children: [
+            const Icon(Icons.storefront_outlined, color: AppColors.primary, size: 22),
+            const SizedBox(width: 12),
+            Expanded(child: Text('Buyer Accounts',
+                style: AppTypography.h5.copyWith(fontWeight: AppTypography.headingWeight))),
+            if (!mobile) ...[
+              const SizedBox(width: 16),
+              addBuyerButton(),
+            ],
+          ]),
+        ),
         const SizedBox(height: AppSpacing.md),
         if (_loading)
           const Center(child: CircularProgressIndicator())
@@ -1080,9 +1100,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
           const _EmptySalesState(
               label: 'No off-takers have been registered yet.')
         else
-          _ResponsiveGrid(
-              itemCount: cards.length,
-              itemBuilder: (index) => _OffTakerCard(
+          UserCardLayout(children: List.generate(_offTakers.length, (index) => BuyerAccountCard(
                     item: _offTakers[index],
                     isSalesPersonnel: widget.forSalesPersonnel,
                     hasPendingUpdate: _updateRequests.any(
@@ -1093,7 +1111,7 @@ class _SalesOffTakersScreenState extends ConsumerState<SalesOffTakersScreen> {
                     ),
                     onEdit: () => _openAddForm(existing: _offTakers[index]),
                     onDelete: () => _deleteOffTaker(_offTakers[index]),
-                  )),
+                  ))),
       ],
     );
 
@@ -1198,161 +1216,6 @@ class _ReviewInfoBlock extends StatelessWidget {
           Text(value,
               style: AppTypography.bodyMedium.copyWith(
                   color: isDark ? Colors.white : AppColors.textPrimary)),
-        ],
-      ),
-    );
-  }
-}
-
-class _OffTakerCard extends StatelessWidget {
-  final Map<String, dynamic> item;
-  final bool isSalesPersonnel;
-  final bool hasPendingUpdate;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  const _OffTakerCard({
-    required this.item,
-    required this.isSalesPersonnel,
-    required this.hasPendingUpdate,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final status = '${item['status'] ?? 'Active'}';
-    final statusColor = status == 'Active'
-        ? AppColors.success
-        : status == 'Prospect'
-            ? AppColors.primary
-            : AppColors.warning;
-    final textColor = isDark ? Colors.white : AppColors.textPrimary;
-    final secondaryColor = isDark ? Colors.white70 : AppColors.textSecondary;
-
-    Widget detail(IconData icon, String value) {
-      if (value.trim().isEmpty) return const SizedBox.shrink();
-      return Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, size: 16, color: secondaryColor),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                value,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.bodySmall.copyWith(color: secondaryColor),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: statusColor.withOpacity(isDark ? 0.3 : 0.18)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.14 : 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _IconBox(icon: Icons.business_outlined, color: statusColor),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${item['name'] ?? 'Unnamed off-taker'}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.h6.copyWith(
-                        color: textColor,
-                        fontWeight: AppTypography.headingWeight,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${item['business_type'] ?? 'Business type not set'}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodySmall
-                          .copyWith(color: secondaryColor),
-                    ),
-                  ],
-                ),
-              ),
-              _StatusBadge(label: status, color: statusColor),
-              if (hasPendingUpdate)
-                Container(
-                  margin: const EdgeInsets.only(left: 8),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border:
-                        Border.all(color: AppColors.warning.withOpacity(0.3)),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.hourglass_top_rounded,
-                          size: 13, color: AppColors.warning),
-                      SizedBox(width: 4),
-                      Text('Pending',
-                          style: TextStyle(
-                              fontSize: AppTypography.fieldLabelSize,
-                              color: AppColors.warning,
-                              fontWeight: AppTypography.headingWeight)),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-          detail(Icons.person_outline, '${item['contact_person'] ?? ''}'),
-          detail(Icons.phone_outlined, '${item['phone'] ?? ''}'),
-          detail(Icons.email_outlined, '${item['email'] ?? ''}'),
-          detail(Icons.location_on_outlined, '${item['location'] ?? ''}'),
-          const Spacer(),
-          const Divider(height: AppSpacing.lg),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined, size: 16),
-                  label: Text(isSalesPersonnel ? 'Request Update' : 'Edit'),
-                ),
-              ),
-              if (!isSalesPersonnel) ...[
-                const SizedBox(width: AppSpacing.sm),
-                IconButton(
-                  onPressed: onDelete,
-                  tooltip: 'Delete off-taker',
-                  icon: const Icon(Icons.delete_outline),
-                  color: AppColors.error,
-                ),
-              ],
-            ],
-          ),
         ],
       ),
     );
@@ -1812,7 +1675,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 16 : AppSpacing.xl),
             _SalesSectionHeader(
               icon: Icons.verified_outlined,
               title: 'QA-Approved Batch Inventory',
@@ -1843,7 +1706,7 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
                         ))
                     .toList(),
               ),
-            const SizedBox(height: AppSpacing.xl),
+            SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 16 : AppSpacing.xl),
             _SalesSectionHeader(
               icon: Icons.local_shipping_outlined,
               title: 'Delivery Records',
@@ -2052,7 +1915,15 @@ class _SalesSectionHeader extends StatelessWidget {
             )),
       ],
     );
-    return LayoutBuilder(builder: (_, constraints) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: dark ? .12 : .06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.primary.withValues(alpha: .16)),
+      ),
+      child: LayoutBuilder(builder: (_, constraints) {
       if (constraints.maxWidth < 480) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2074,7 +1945,7 @@ class _SalesSectionHeader extends StatelessWidget {
         const SizedBox(width: 10),
         trailing,
       ]);
-    });
+    }));
   }
 }
 
@@ -2808,9 +2679,19 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
   InputDecoration _decoration(String label, IconData icon, {String? hint}) {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return InputDecoration(
-      labelText: label,
+
       hintText: hint,
-      prefixIcon: Icon(icon, size: 19),
+      prefixIcon: Icon(icon, size: 16,
+          color: Theme.of(context).colorScheme.onSurfaceVariant),
+      labelStyle: AppTypography.font(fontSize: 11, fontWeight: FontWeight.w600,
+          color: Theme.of(context).colorScheme.onSurfaceVariant),
+      floatingLabelStyle: AppTypography.font(fontSize: 11, fontWeight: FontWeight.w600,
+          color: Theme.of(context).colorScheme.primary),
+      hintStyle: AppTypography.font(fontSize: 12,
+          color: Theme.of(context).colorScheme.onSurfaceVariant),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
       filled: true,
       fillColor:
           dark ? Colors.white.withValues(alpha: .04) : AppColors.neutral50,
@@ -2827,17 +2708,35 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
   Widget build(BuildContext context) {
     final mobile = MediaQuery.sizeOf(context).width < 600;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final content = Material(
+    final baseTheme = Theme.of(context);
+    final fieldStyle = AppTypography.font(fontSize: 12, fontWeight: FontWeight.w400,
+        color: baseTheme.colorScheme.onSurface);
+    final actionStyle = ButtonStyle(
+      textStyle: WidgetStatePropertyAll(AppTypography.font(fontSize: 13, fontWeight: FontWeight.w500)),
+      padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 12, horizontal: 8)),
+      shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+    );
+    final content = Theme(
+      data: baseTheme.copyWith(
+        textTheme: baseTheme.textTheme.apply(
+          bodyColor: baseTheme.colorScheme.onSurface,
+          displayColor: baseTheme.colorScheme.onSurface,
+        ).copyWith(titleMedium: fieldStyle, bodyLarge: fieldStyle, bodyMedium: fieldStyle),
+        iconTheme: baseTheme.iconTheme.copyWith(color: baseTheme.colorScheme.onSurfaceVariant),
+        filledButtonTheme: FilledButtonThemeData(style: actionStyle),
+        outlinedButtonTheme: OutlinedButtonThemeData(style: actionStyle),
+      ),
+      child: Material(
       color: dark ? AppColors.surfaceDark : Colors.white,
       borderRadius: BorderRadius.vertical(
-        top: const Radius.circular(20),
-        bottom: Radius.circular(mobile ? 0 : 20),
+        top: const Radius.circular(16),
+        bottom: Radius.circular(mobile ? 0 : 16),
       ),
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 760,
-          maxHeight: MediaQuery.sizeOf(context).height * (mobile ? .95 : .9),
+          maxWidth: 500,
+          maxHeight: MediaQuery.sizeOf(context).height * .9,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -2854,16 +2753,16 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
               ),
             ],
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 16, 16),
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
               child: Row(children: [
                 Container(
-                  padding: const EdgeInsets.all(11),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: .12),
+                    gradient: LinearGradient(colors: [AppColors.primary, AppColors.primary.withValues(alpha: .75)]),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.local_shipping_outlined,
-                      color: AppColors.primary, size: 21),
+                      color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -2871,7 +2770,8 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(_editing ? 'Update Delivery' : 'Allocate Delivery',
-                          style: AppTypography.titleLarge
+                          style: AppTypography.font(fontSize: 16, fontWeight: FontWeight.w700,
+                              color: baseTheme.colorScheme.onSurface)
                               .copyWith(fontWeight: AppTypography.headingWeight)),
                       Text('Assign verified packs to an off-taker',
                           style: AppTypography.bodySmall.copyWith(
@@ -2881,33 +2781,50 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                     ],
                   ),
                 ),
-                IconButton(
-                  tooltip: 'Close',
-                  onPressed: _saving ? null : () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded),
+                Tooltip(
+                  message: 'Close',
+                  child: InkWell(
+                    onTap: _saving ? null : () => Navigator.pop(context),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: dark ? Colors.white.withValues(alpha: .04) : Colors.black.withValues(alpha: .04),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.close_rounded, size: 16, color: baseTheme.colorScheme.onSurfaceVariant),
+                    ),
+                  ),
                 ),
               ]),
             ),
             Divider(
                 height: 1, color: dark ? Colors.white10 : AppColors.neutral200),
             Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+              child: SingleChildScrollView(physics: const BouncingScrollPhysics(), keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Form(
                   key: _formKey,
                   child: LayoutBuilder(builder: (_, constraints) {
-                    final fieldWidth = constraints.maxWidth < 620
+                    final fieldWidth = mobile
                         ? constraints.maxWidth
-                        : (constraints.maxWidth - 14) / 2;
-                    Widget sized(Widget child, {bool full = false}) => SizedBox(
+                        : (constraints.maxWidth - 10) / 2;
+                    Widget sized(String? label, Widget child, {bool full = false}) => SizedBox(
                           width: full ? constraints.maxWidth : fieldWidth,
-                          child: child,
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                            if (label != null) ...[
+                              Text(label, style: AppTypography.font(fontSize: 11, fontWeight: FontWeight.w600,
+                                color: baseTheme.colorScheme.onSurfaceVariant)),
+                              const SizedBox(height: 6),
+                            ],
+                            child,
+                          ]),
                         );
                     return Wrap(
-                      spacing: 14,
-                      runSpacing: 16,
+                      spacing: 10,
+                      runSpacing: 14,
                       children: [
-                        sized(DropdownButtonFormField<String>(
+                        sized('QA-approved batch', DropdownButtonFormField<String>(
                           initialValue: _batchId,
                           isExpanded: true,
                           decoration: _decoration(
@@ -2937,7 +2854,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                               ? 'Select a batch released by QA.'
                               : null,
                         )),
-                        sized(DropdownButtonFormField<String>(
+                        sized('Off-taker', DropdownButtonFormField<String>(
                           initialValue: _offTakerId,
                           isExpanded: true,
                           decoration:
@@ -2964,7 +2881,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                               ? 'Select an active off-taker.'
                               : null,
                         )),
-                        sized(DropdownButtonFormField<String>(
+                        sized('Sales Personnel', DropdownButtonFormField<String>(
                           initialValue: _salesPersonId,
                           isExpanded: true,
                           decoration: _decoration(
@@ -2986,7 +2903,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                               ? 'Assign Sales Personnel for the handover.'
                               : null,
                         )),
-                        sized(DropdownButtonFormField<String>(
+                        sized('Delivery method', DropdownButtonFormField<String>(
                           initialValue: _deliveryType,
                           isExpanded: true,
                           decoration: _decoration(
@@ -3013,7 +2930,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                   }),
                         )),
                         if (!_isThirdParty)
-                          sized(DropdownButtonFormField<String>(
+                          sized('Delivery Agent', DropdownButtonFormField<String>(
                             initialValue: _deliveryAgentId,
                             isExpanded: true,
                             decoration: _decoration('Delivery Agent',
@@ -3038,7 +2955,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                 : null,
                           )),
                         if (_isThirdParty)
-                          sized(DropdownButtonFormField<String>(
+                          sized('Delivery provider', DropdownButtonFormField<String>(
                             key: ValueKey(_deliveryProvider),
                             initialValue: _deliveryProvider,
                             isExpanded: true,
@@ -3059,7 +2976,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                 : null,
                           )),
                         if (_isThirdParty)
-                          sized(TextFormField(
+                          sized('Driver name', TextFormField(
                             controller: _thirdPartyDriverController,
                             textCapitalization: TextCapitalization.words,
                             decoration: _decoration(
@@ -3073,7 +2990,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                     : null,
                           )),
                         if (_isThirdParty)
-                          sized(TextFormField(
+                          sized('Plate number', TextFormField(
                             controller: _plateNumberController,
                             textCapitalization: TextCapitalization.characters,
                             decoration: _decoration(
@@ -3087,7 +3004,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                     : null,
                           )),
                         if (_selectedBatch != null)
-                          sized(
+                          sized(null,
                               Container(
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
@@ -3111,7 +3028,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                 ]),
                               ),
                               full: true),
-                        sized(DropdownButtonFormField<String>(
+                        sized('Sales pricing', DropdownButtonFormField<String>(
                           key: ValueKey('pricing-$_batchId-$_pricingId'),
                           initialValue: _pricingId,
                           isExpanded: true,
@@ -3135,7 +3052,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                               ? 'Select the approved price for these packs.'
                               : null,
                         )),
-                        sized(DropdownButtonFormField<String>(
+                        sized('Price tier', DropdownButtonFormField<String>(
                           initialValue: _priceTier,
                           decoration: _decoration(
                               'Price tier', Icons.local_offer_outlined),
@@ -3147,7 +3064,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                               ? null
                               : (value) => setState(() => _priceTier = value!),
                         )),
-                        sized(TextFormField(
+                        sized('Number of packs', TextFormField(
                           controller: _packsController,
                           keyboardType: TextInputType.number,
                           onChanged: (_) => setState(() {}),
@@ -3165,18 +3082,18 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                             return null;
                           },
                         )),
-                        sized(InputDecorator(
+                        sized('Calculated weight', InputDecorator(
                           decoration: _decoration(
                               'Calculated weight', Icons.scale_outlined),
                           child:
                               Text('${_allocatedWeight.toStringAsFixed(2)} kg'),
                         )),
-                        sized(InputDecorator(
+                        sized('Price per pack', InputDecorator(
                           decoration: _decoration(
                               'Price per pack', Icons.sell_outlined),
                           child: Text('GHS ${_unitPrice.toStringAsFixed(2)}'),
                         )),
-                        sized(
+                        sized(null,
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
@@ -3210,7 +3127,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                           ),
                           full: true,
                         ),
-                        sized(InkWell(
+                        sized('Scheduled date', InkWell(
                           onTap: _saving ? null : _pickDate,
                           borderRadius: BorderRadius.circular(10),
                           child: InputDecorator(
@@ -3220,7 +3137,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                 '${_scheduledDate.day.toString().padLeft(2, '0')}/${_scheduledDate.month.toString().padLeft(2, '0')}/${_scheduledDate.year}'),
                           ),
                         )),
-                        sized(DropdownButtonFormField<String>(
+                        sized('Payment mode', DropdownButtonFormField<String>(
                           initialValue: _paymentMode,
                           decoration: _decoration('Payment mode',
                               Icons.account_balance_wallet_outlined),
@@ -3238,7 +3155,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                               : (value) =>
                                   setState(() => _paymentMode = value!),
                         )),
-                        sized(DropdownButtonFormField<String>(
+                        sized('Delivery status', DropdownButtonFormField<String>(
                           initialValue: _status,
                           decoration: _decoration(
                               'Delivery status', Icons.flag_outlined),
@@ -3255,13 +3172,13 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                               ? null
                               : (value) => setState(() => _status = value!),
                         )),
-                        sized(TextFormField(
+                        sized('Receipt / reference', TextFormField(
                           controller: _receiptController,
                           decoration: _decoration('Receipt / reference',
                               Icons.receipt_long_outlined,
                               hint: 'Optional'),
                         )),
-                        sized(
+                        sized('Delivery address',
                             TextFormField(
                               controller: _addressController,
                               decoration: _decoration('Delivery address',
@@ -3272,7 +3189,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                       : null,
                             ),
                             full: true),
-                        sized(
+                        sized('Delivery notes',
                             TextFormField(
                               controller: _notesController,
                               minLines: 3,
@@ -3283,7 +3200,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                                       'Handoff instructions or buyer requirements'),
                             ),
                             full: true),
-                        sized(
+                        sized(null,
                             SwitchListTile.adaptive(
                               contentPadding: EdgeInsets.zero,
                               title: const Text('Payment received'),
@@ -3296,7 +3213,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                             ),
                             full: true),
                         if (widget.batches.isEmpty)
-                          sized(
+                          sized(null,
                             const _SalesDeliveryError(
                               message:
                                   'No QA-approved batch is available for allocation.',
@@ -3304,7 +3221,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                             full: true,
                           ),
                         if (widget.offTakers.isEmpty)
-                          sized(
+                          sized(null,
                             const _SalesDeliveryError(
                               message:
                                   'Create or activate an off-taker before scheduling a delivery.',
@@ -3312,7 +3229,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                             full: true,
                           ),
                         if (widget.salesPersonnel.isEmpty)
-                          sized(
+                          sized(null,
                             const _SalesDeliveryError(
                               message:
                                   'Create or activate a Sales Personnel user before scheduling a delivery.',
@@ -3320,7 +3237,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                             full: true,
                           ),
                         if (!_isThirdParty && widget.deliveryAgents.isEmpty)
-                          sized(
+                          sized(null,
                             const _SalesDeliveryError(
                               message:
                                   'Create or activate a Driver or Delivery Agent user before scheduling a delivery.',
@@ -3328,7 +3245,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                             full: true,
                           ),
                         if (_selectedBatch != null && _matchingPrices.isEmpty)
-                          sized(
+                          sized(null,
                             const _SalesDeliveryError(
                               message:
                                   'No active Hub sale price matches this crop variety and package. Add one from Sales Pricing first.',
@@ -3336,7 +3253,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
                             full: true,
                           ),
                         if (_error != null)
-                          sized(
+                          sized(null,
                             _SalesDeliveryError(message: _error!),
                             full: true,
                           ),
@@ -3349,7 +3266,7 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
             Divider(
                 height: 1, color: dark ? Colors.white10 : AppColors.neutral200),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
               child: Row(children: [
                 Expanded(
                   child: OutlinedButton(
@@ -3383,14 +3300,14 @@ class _SalesDeliveryEditorState extends State<_SalesDeliveryEditor> {
           ],
         ),
       ),
-    );
+    ));
     return mobile
         ? Padding(
             padding: EdgeInsets.only(
                 bottom: MediaQuery.viewInsetsOf(context).bottom),
             child: content,
           )
-        : AppDialog(backgroundColor: Colors.transparent, child: content);
+        : AppDialog(backgroundColor: Colors.transparent, insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24), child: content);
   }
 }
 
@@ -3651,10 +3568,17 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
         'subtitle':
             '$batch | ${_text(sale, ['payment_mode'], fallback: 'Sale')}',
         'metric': _money(amount),
+        'batch': batch,
+        'payment': _text(sale, ['payment_mode'], fallback: 'Not provided'),
+        'paid': _isPaid(sale),
         'status': status,
         'color': color,
       };
     }).toList();
+    if (widget.kind == _SalesManagerPageKind.financial ||
+        widget.kind == _SalesManagerPageKind.reports) {
+      return salesCards;
+    }
     if (widget.kind != _SalesManagerPageKind.deliveries) {
       return salesCards.take(6).toList();
     }
@@ -3757,7 +3681,7 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
     }
   }
 
-  _SalesPage _page(
+  Widget _page(
       {required List<_KpiData> kpis,
       required List<Map<String, Object>> cards}) {
     switch (widget.kind) {
@@ -3771,6 +3695,7 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
           colors: const [Color(0xFF166534), Color(0xFF0F766E)],
           kpis: kpis,
           sectionTitle: 'Recent Sales Performance',
+          performanceCards: true,
           cards: cards,
         );
       case _SalesManagerPageKind.deliveries:
@@ -3786,28 +3711,9 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
           cards: cards,
         );
       case _SalesManagerPageKind.financial:
-        return _SalesPage(
-          selectedIndex: widget.selectedIndex,
-          title: 'Sales Financials',
-          subtitle: 'Monitor recorded revenue, collections, and unpaid sales.',
-          icon: Icons.account_balance_wallet_outlined,
-          colors: const [Color(0xFF7C2D12), Color(0xFFEA580C)],
-          kpis: kpis,
-          sectionTitle: 'Financial Records',
-          cards: cards,
-        );
+        return _SalesRecordsPage(selectedIndex: widget.selectedIndex, kpis: kpis, cards: cards);
       case _SalesManagerPageKind.reports:
-        return _SalesPage(
-          selectedIndex: widget.selectedIndex,
-          title: 'Sales Reports',
-          subtitle:
-              'Review reportable sales, buyer coverage, and collection follow-up.',
-          icon: Icons.assessment_outlined,
-          colors: const [Color(0xFF1E3A8A), Color(0xFF0F766E)],
-          kpis: kpis,
-          sectionTitle: 'Recent Report Data',
-          cards: cards,
-        );
+        return _SalesRecordsPage(selectedIndex: widget.selectedIndex, kpis: kpis, cards: cards, reports: true);
     }
   }
 
@@ -3850,7 +3756,7 @@ class _SalesManagerDataPageState extends ConsumerState<_SalesManagerDataPage> {
             icon: Icons.analytics_outlined,
             colors: const [Color(0xFF334155), Color(0xFF1D4ED8)],
           ),
-          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 16 : AppSpacing.xl),
           SizedBox(height: 240, child: shellChild),
         ],
       ),
@@ -3867,7 +3773,7 @@ class SalesManagerSettingsScreen extends StatelessWidget {
       selectedIndex: 7,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           _Hero(
             title: 'Sales Settings',
             subtitle:
@@ -3875,7 +3781,7 @@ class SalesManagerSettingsScreen extends StatelessWidget {
             icon: Icons.settings_outlined,
             colors: [Color(0xFF334155), Color(0xFF475569)],
           ),
-          SizedBox(height: AppSpacing.lg),
+          SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 16 : AppSpacing.lg),
           _SettingsPanel(),
         ],
       ),
@@ -3883,7 +3789,102 @@ class SalesManagerSettingsScreen extends StatelessWidget {
   }
 }
 
+class _SalesRecordsPage extends StatefulWidget {
+  const _SalesRecordsPage({required this.selectedIndex, required this.kpis, required this.cards, this.reports = false});
+  final bool reports;
+  final int selectedIndex;
+  final List<_KpiData> kpis;
+  final List<Map<String, Object>> cards;
+
+  @override
+  State<_SalesRecordsPage> createState() => _SalesRecordsPageState();
+}
+
+class _SalesRecordsPageState extends State<_SalesRecordsPage> {
+  String _query = '';
+  String _payment = 'All';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final records = widget.cards.where((item) {
+      final matchesPayment = _payment == 'All' || (item['paid'] == true) == (_payment == 'Paid');
+      return matchesPayment && ['title', 'batch', 'payment'].any((key) => '${item[key]}'.toLowerCase().contains(_query.trim().toLowerCase()));
+    }).toList();
+    Widget panel(Widget child) => Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: colors.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: colors.outlineVariant)),
+      child: child,
+    );
+    return SalesManagerScreenShell(
+      selectedIndex: widget.selectedIndex,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        panel(Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: .1), borderRadius: BorderRadius.circular(12)),
+            child: Icon(widget.reports ? Icons.assessment_outlined : Icons.account_balance_wallet_outlined, color: AppColors.primary, size: 24)),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(widget.reports ? 'Sales reports' : 'Sales financials', style: AppTypography.titleLarge.copyWith(color: colors.onSurface)),
+            const SizedBox(height: 6),
+            Text(widget.reports ? 'Review recorded sales, buyer activity and payment follow-up.' : 'Monitor sales revenue, collections and outstanding payments.', style: theme.textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
+          ])),
+        ])),
+        const SizedBox(height: 16),
+        UserCardLayout(children: widget.kpis.map((data) => panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [Icon(data.icon, size: 18, color: AppColors.primary), const SizedBox(width: 8), Expanded(child: Text(data.title, style: theme.textTheme.bodySmall))]),
+          const SizedBox(height: 12),
+          Text(data.value, style: AppTypography.titleLarge.copyWith(color: colors.onSurface)),
+          const SizedBox(height: 6),
+          Text(data.subtitle, style: theme.textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant)),
+        ]))).toList()),
+        const SizedBox(height: 16),
+        panel(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Icon(Icons.receipt_long_outlined, size: 20, color: AppColors.primary),
+            const SizedBox(width: 10),
+            Expanded(child: Text(widget.reports ? 'Sales report records' : 'Financial records', style: theme.textTheme.titleMedium)),
+            Text('${records.length}', style: theme.textTheme.bodySmall),
+          ]),
+          const SizedBox(height: 14),
+          TextField(
+            onChanged: (value) => setState(() => _query = value),
+            style: theme.textTheme.bodyMedium,
+            decoration: InputDecoration(
+              hintText: 'Search buyer, batch or payment method',
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              filled: true, fillColor: colors.surfaceContainerLow,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.outlineVariant)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.outlineVariant)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, children: ['All', 'Paid', 'Unpaid'].map((value) => ChoiceChip(
+            label: Text(value), selected: _payment == value, showCheckmark: false,
+            onSelected: (_) => setState(() => _payment = value),
+          )).toList()),
+        ])),
+        const SizedBox(height: 12),
+        if (records.isEmpty)
+          panel(Column(children: [
+            Icon(Icons.receipt_long_outlined, size: 28, color: colors.onSurfaceVariant),
+            const SizedBox(height: 12),
+            Text(widget.cards.isEmpty ? (widget.reports ? 'No sales reports yet' : 'No financial records yet') : 'No matching records', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 6),
+            Text(widget.cards.isEmpty ? 'Recorded sales will appear here.' : 'Try another search or payment filter.', textAlign: TextAlign.center, style: theme.textTheme.bodySmall),
+          ]))
+        else
+          UserCardLayout(children: records.map((item) => _PerformanceCard(item: item, financial: !widget.reports)).toList()),
+      ]),
+    );
+  }
+}
+
 class _SalesPage extends StatelessWidget {
+  final bool performanceCards;
   final int selectedIndex;
   final String title;
   final String subtitle;
@@ -3894,6 +3895,7 @@ class _SalesPage extends StatelessWidget {
   final List<Map<String, Object>> cards;
 
   const _SalesPage({
+    this.performanceCards = false,
     required this.selectedIndex,
     required this.title,
     required this.subtitle,
@@ -3914,13 +3916,13 @@ class _SalesPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _Hero(title: title, subtitle: subtitle, icon: icon, colors: colors),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 16 : AppSpacing.lg),
           Wrap(
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.md,
             children: kpis.map((kpi) => _KpiCard(data: kpi)).toList(),
           ),
-          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 16 : AppSpacing.xl),
           Text(
             sectionTitle,
             style: AppTypography.h5.copyWith(
@@ -3929,12 +3931,69 @@ class _SalesPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          _ResponsiveGrid(
+          if (performanceCards)
+            UserCardLayout(children: cards.map((item) => _PerformanceCard(item: item)).toList())
+          else _ResponsiveGrid(
             itemCount: cards.length,
             itemBuilder: (index) => _SalesCard(item: cards[index]),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PerformanceCard extends StatelessWidget {
+  const _PerformanceCard({required this.item, this.financial = false});
+  final Map<String, Object> item;
+  final bool financial;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final accent = item['color'] as Color;
+    Widget field(String label, String value, IconData icon) => Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: colors.onSurfaceVariant),
+        const SizedBox(width: 8),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: AppTypography.label.copyWith(color: colors.onSurfaceVariant)),
+          const SizedBox(height: 4),
+          Text(value, style: AppTypography.bodySmall.copyWith(color: colors.onSurface)),
+        ])),
+      ],
+    );
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: colors.surface, borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.outlineVariant)),
+      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: .1), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.receipt_long_outlined, size: 22, color: AppColors.primary)),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('Buyer', style: AppTypography.label.copyWith(color: colors.onSurfaceVariant)),
+            const SizedBox(height: 4),
+            Text(item['title'] as String, style: AppTypography.titleSmall.copyWith(color: colors.onSurface)),
+          ])),
+        ]),
+        const SizedBox(height: 12),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          _StatusBadge(label: item['status'] as String, color: accent),
+          _StatusBadge(label: item['paid'] == true ? 'Paid' : 'Unpaid', color: item['paid'] == true ? AppColors.success : AppColors.warning),
+        ]),
+        const SizedBox(height: 18),
+        Text(financial ? 'Recorded amount' : 'Sale amount', style: AppTypography.label.copyWith(color: colors.onSurfaceVariant)),
+        const SizedBox(height: 4),
+        Text(item['metric'] as String, style: AppTypography.h4.copyWith(color: colors.onSurface)),
+        const SizedBox(height: 18),
+        field('Batch', item['batch'] as String, Icons.inventory_2_outlined),
+        const SizedBox(height: 14),
+        field('Payment method', item['payment'] as String, Icons.payments_outlined),
+      ]),
     );
   }
 }
@@ -4024,6 +4083,7 @@ class _ResponsiveGrid extends StatelessWidget {
         final columns = constraints.maxWidth >= 820 ? 2 : 1;
 
         return GridView.builder(
+          padding: isMobile ? EdgeInsets.zero : null,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: itemCount,

@@ -80,26 +80,28 @@ class _FirstRowState extends State<FirstRow> {
           const SizedBox(width: 16),
 
           // Greeting text column
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Hello, Abacca Philip (CTO)',
-                style: AppTypography.font(
-                  fontSize: AppTypography.cardTitleSize,
-                  fontWeight: AppTypography.headingWeight,
-                  color: widget.isDark ? Colors.white : Colors.black,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Hello, Abacca Philip (CTO)',
+                  style: AppTypography.font(
+                    fontSize: AppTypography.cardTitleSize,
+                    fontWeight: AppTypography.headingWeight,
+                    color: widget.isDark ? Colors.white : Colors.black,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Good Afternoon',
-                style: AppTypography.font(
-                  fontSize: AppTypography.captionSize,
-                  color: widget.isDark ? Colors.grey[400] : Colors.grey[600],
+                const SizedBox(height: 4),
+                Text(
+                  'Good Afternoon',
+                  style: AppTypography.font(
+                    fontSize: AppTypography.captionSize,
+                    color: widget.isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

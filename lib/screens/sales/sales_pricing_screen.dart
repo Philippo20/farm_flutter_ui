@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/sales_manager_screen_shell.dart';
 import '../../core/widgets/skeleton_loader.dart';
+import '../../core/widgets/user_card_layout.dart';
 import '../../services/superadmin_api_service.dart';
 
 class SalesPricingScreen extends ConsumerStatefulWidget {
@@ -240,92 +241,119 @@ class _SalesPricingScreenState extends ConsumerState<SalesPricingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final active = _salePricing
-        .where((price) => _text(price, ['status']) == 'Active')
-        .length;
-    final average = _salePricing.isEmpty
+    final allPrices = _pricing
+        .where((price) =>
+            _text(price, ['pricing_type']).toLowerCase() == 'hub_sale')
+        .toList();
+    final active =
+        allPrices.where((price) => _text(price, ['status']) == 'Active').length;
+    final average = allPrices.isEmpty
         ? 0.0
-        : _salePricing.fold<double>(
+        : allPrices.fold<double>(
                 0, (sum, price) => sum + _number(price, 'regular_price')) /
-            _salePricing.length;
+            allPrices.length;
     return SalesManagerScreenShell(
       selectedIndex: 4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _PricingHero(onAdd: () => _openEditor()),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
+          SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 16 : 20),
+          UserCardLayout(
             children: [
               _PricingMetric(
-                  label: 'Price records', value: '${_salePricing.length}'),
-              _PricingMetric(label: 'Active', value: '$active'),
+                  icon: Icons.sell_outlined,
+                  label: 'Price records',
+                  value: '${allPrices.length}'),
               _PricingMetric(
+                  icon: Icons.check_circle_outline,
+                  label: 'Active prices',
+                  value: '$active'),
+              _PricingMetric(
+                  icon: Icons.payments_outlined,
                   label: 'Average per pack',
                   value: 'GHS ${average.toStringAsFixed(2)}'),
             ],
           ),
-          const SizedBox(height: 20),
-          TextField(
-            onChanged: (value) => setState(() => _search = value),
-            decoration: InputDecoration(
-              hintText: 'Search crop variety or package...',
-              prefixIcon: const Icon(Icons.search_rounded),
-              filled: true,
-              fillColor: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.surfaceDark
-                  : Colors.white,
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 16 : 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: _pricingDecoration(context),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  const Icon(Icons.inventory_2_outlined,
+                      color: AppColors.primary, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                      child: Text('Off-taker price list',
+                          style: Theme.of(context).textTheme.titleMedium)),
+                  IconButton(
+                    tooltip: 'Refresh pricing',
+                    onPressed: _loading ? null : _load,
+                    icon: const Icon(Icons.refresh_rounded, size: 20),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                TextField(
+                  onChanged: (value) => setState(() => _search = value),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  decoration: InputDecoration(
+                    hintText: 'Search variety, package or status',
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                    filled: true,
+                    fillColor:
+                        Theme.of(context).colorScheme.surfaceContainerLow,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 12),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                            color:
+                                Theme.of(context).colorScheme.outlineVariant)),
+                    enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(
+                            color:
+                                Theme.of(context).colorScheme.outlineVariant)),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 18),
-          Row(children: [
-            Expanded(
-              child: Text('Off-taker Price List',
-                  style: AppTypography.titleLarge
-                      .copyWith(fontWeight: AppTypography.headingWeight)),
-            ),
-            IconButton(
-              tooltip: 'Refresh pricing',
-              onPressed: _loading ? null : _load,
-              icon: const Icon(Icons.refresh_rounded),
-            ),
-          ]),
           const SizedBox(height: 12),
           if (_loading && _pricing.isEmpty)
             const AdminDataSkeleton()
           else if (_error != null)
             _PricingMessage(message: _error!, error: true)
+          else if (_salePricing.isEmpty && _search.trim().isNotEmpty)
+            const _PricingMessage(
+                message:
+                    'No prices match your search. Try a different variety, package or status.')
           else if (_salePricing.isEmpty)
             _PricingEmpty(onAdd: () => _openEditor())
           else
-            LayoutBuilder(builder: (context, constraints) {
-              final width = constraints.maxWidth < 720
-                  ? constraints.maxWidth
-                  : (constraints.maxWidth - 14) / 2;
-              return Wrap(
-                spacing: 14,
-                runSpacing: 14,
-                children: _salePricing
-                    .map((price) => SizedBox(
-                          width: width,
-                          child: _PricingCard(
-                            price: price,
-                            onEdit: () => _openEditor(price),
-                            onDelete: () => _delete(price),
-                          ),
-                        ))
-                    .toList(),
-              );
-            }),
+            UserCardLayout(
+              children: _salePricing
+                  .map((price) => _PricingCard(
+                        price: price,
+                        onEdit: () => _openEditor(price),
+                        onDelete: () => _delete(price),
+                      ))
+                  .toList(),
+            ),
         ],
       ),
     );
   }
 }
+
+BoxDecoration _pricingDecoration(BuildContext context) => BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+    );
 
 class _PricingHero extends StatelessWidget {
   const _PricingHero({required this.onAdd});
@@ -333,200 +361,200 @@ class _PricingHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mobile = MediaQuery.sizeOf(context).width < 600;
-    final icon = Container(
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .72),
-        borderRadius: BorderRadius.circular(10),
+    final theme = Theme.of(context);
+    final heading =
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: .12),
+            borderRadius: BorderRadius.circular(12)),
+        child: const Icon(Icons.price_change_outlined,
+            color: AppColors.primary, size: 24),
       ),
-      child: const Icon(Icons.price_change_outlined,
-          color: AppColors.primary, size: 28),
-    );
-    final copy = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Sales Pricing',
-            style: AppTypography.titleLarge.copyWith(
-              fontSize: AppTypography.metricSize,
-              fontWeight: AppTypography.headingWeight,
-            )),
-        const SizedBox(height: 4),
-        Text('Set the regular and bulk price charged per packaged unit.',
-            style: AppTypography.bodyMedium),
-      ],
-    );
+      const SizedBox(width: 12),
+      Expanded(
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Sales pricing',
+            style: AppTypography.titleLarge
+                .copyWith(color: theme.colorScheme.onSurface)),
+        const SizedBox(height: 6),
+        Text('Manage regular and bulk rates for each crop and package.',
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+      ])),
+    ]);
     final button = FilledButton.icon(
       onPressed: onAdd,
-      icon: const Icon(Icons.add_rounded),
-      label: const Text('Add Sales Price'),
+      style: FilledButton.styleFrom(
+          minimumSize: const Size(0, 44),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+      icon: const Icon(Icons.add_rounded, size: 18),
+      label: const Text('Add sales price'),
     );
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: .08),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: mobile
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Align(alignment: Alignment.centerLeft, child: icon),
-                const SizedBox(height: 14),
-                copy,
-                const SizedBox(height: 16),
-                button,
-              ],
-            )
-          : Row(children: [
-              icon,
-              const SizedBox(width: 14),
-              Expanded(child: copy),
-              const SizedBox(width: 14),
-              button,
-            ]),
+      decoration: _pricingDecoration(context),
+      child: LayoutBuilder(
+          builder: (context, constraints) => constraints.maxWidth < 640
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [heading, const SizedBox(height: 16), button])
+              : Row(children: [
+                  Expanded(child: heading),
+                  const SizedBox(width: 20),
+                  button
+                ])),
     );
   }
 }
 
 class _PricingMetric extends StatelessWidget {
-  const _PricingMetric({required this.label, required this.value});
+  const _PricingMetric(
+      {required this.label, required this.value, required this.icon});
   final String label;
   final String value;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) => Container(
-        width: MediaQuery.sizeOf(context).width < 600 ? 160 : 210,
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? AppColors.surfaceDark
-              : Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white10
-                  : AppColors.neutral200),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(value,
-                style: AppTypography.titleLarge
-                    .copyWith(fontWeight: AppTypography.headingWeight)),
-            const SizedBox(height: 4),
-            Text(label, style: AppTypography.bodySmall),
-          ],
-        ),
+        decoration: _pricingDecoration(context),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Icon(icon, size: 18, color: AppColors.primary),
+            const SizedBox(width: 8),
+            Expanded(
+                child:
+                    Text(label, style: Theme.of(context).textTheme.bodySmall))
+          ]),
+          const SizedBox(height: 12),
+          Text(value,
+              style: AppTypography.titleLarge
+                  .copyWith(color: Theme.of(context).colorScheme.onSurface)),
+        ]),
       );
 }
 
 class _PricingCard extends StatelessWidget {
-  const _PricingCard({
-    required this.price,
-    required this.onEdit,
-    required this.onDelete,
-  });
+  const _PricingCard(
+      {required this.price, required this.onEdit, required this.onDelete});
   final Map<String, dynamic> price;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  String _text(String key, [String fallback = '-']) =>
+  String _text(String key, [String fallback = 'Not specified']) =>
       price[key]?.toString().trim().isNotEmpty == true
           ? price[key].toString()
           : fallback;
-
   double _number(String key) => double.tryParse(_text(key, '0')) ?? 0;
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final active = _text('status') == 'Active';
+    final theme = Theme.of(context);
+    final active = _text('status').toLowerCase() == 'active';
+    final statusColor =
+        active ? AppColors.primary : theme.colorScheme.onSurfaceVariant;
     return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: dark ? AppColors.surfaceDark : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: dark ? Colors.white10 : AppColors.neutral200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Container(
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: .1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.sell_outlined,
-                  color: AppColors.primary, size: 20),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
+      padding: const EdgeInsets.all(16),
+      decoration: _pricingDecoration(context),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: .10),
+                borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.eco_outlined,
+                color: AppColors.primary, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(_text('crop_variety'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.titleMedium
-                          .copyWith(fontWeight: AppTypography.headingWeight)),
-                  Text(_text('packaging'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodySmall),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-              decoration: BoxDecoration(
-                color: (active ? AppColors.success : AppColors.warning)
-                    .withValues(alpha: .1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(_text('status'),
-                  style: AppTypography.labelSmall.copyWith(
-                      color: active ? AppColors.success : AppColors.warning)),
-            ),
-          ]),
-          const SizedBox(height: 18),
-          Row(children: [
-            Expanded(
-              child: _PriceValue(
-                label: 'Regular / pack',
-                value: 'GHS ${_number('regular_price').toStringAsFixed(2)}',
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _PriceValue(
-                label: 'Bulk / pack',
-                value: 'GHS ${_number('bulk_price').toStringAsFixed(2)}',
-              ),
-            ),
-          ]),
-          const SizedBox(height: 14),
-          Row(children: [
-            Expanded(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(_text('crop_variety'), style: theme.textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(_text('plant_type', 'Crop pricing'),
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              ])),
+        ]),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+              color: statusColor.withValues(alpha: .10),
+              borderRadius: BorderRadius.circular(8)),
+          child: Text(_text('status'),
+              style: theme.textTheme.labelSmall?.copyWith(color: statusColor)),
+        ),
+        const SizedBox(height: 14),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(Icons.inventory_2_outlined,
+              size: 18, color: theme.colorScheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+          Expanded(
+              child:
+                  Text(_text('packaging'), style: theme.textTheme.bodyMedium)),
+        ]),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(12)),
+          child: LayoutBuilder(builder: (context, constraints) {
+            final values = [
+              _PriceValue(
+                  label: 'Regular / pack',
+                  value: _number('regular_price').toStringAsFixed(2)),
+              _PriceValue(
+                  label: 'Bulk / pack',
+                  value: _number('bulk_price').toStringAsFixed(2)),
+            ];
+            if (constraints.maxWidth < 240 ||
+                MediaQuery.textScalerOf(context).scale(14) > 20) {
+              return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [values[0], const SizedBox(height: 14), values[1]]);
+            }
+            return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(child: values[0]),
+              const SizedBox(width: 12),
+              Expanded(child: values[1])
+            ]);
+          }),
+        ),
+        const SizedBox(height: 16),
+        Row(children: [
+          Expanded(
               child: OutlinedButton.icon(
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: const Text('Edit'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            IconButton.outlined(
-              tooltip: 'Delete price',
-              onPressed: onDelete,
-              color: AppColors.error,
-              icon: const Icon(Icons.delete_outline),
-            ),
-          ]),
-        ],
-      ),
+            onPressed: onDelete,
+            style: OutlinedButton.styleFrom(
+                foregroundColor: theme.colorScheme.error,
+                minimumSize: const Size(0, 44),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
+            icon: const Icon(Icons.delete_outline, size: 18),
+            label: const Text('Delete'),
+          )),
+          const SizedBox(width: 12),
+          Expanded(
+              child: FilledButton.icon(
+            onPressed: onEdit,
+            style: FilledButton.styleFrom(
+                minimumSize: const Size(0, 44),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
+            icon: const Icon(Icons.edit_outlined, size: 18),
+            label: const Text('Edit'),
+          )),
+        ]),
+      ]),
     );
   }
 }
@@ -537,23 +565,18 @@ class _PriceValue extends StatelessWidget {
   final String value;
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: .06),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: AppTypography.labelSmall),
-            const SizedBox(height: 4),
-            Text(value,
-                style: AppTypography.titleSmall
-                    .copyWith(fontWeight: AppTypography.headingWeight)),
-          ],
-        ),
-      );
+  Widget build(BuildContext context) =>
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        const SizedBox(height: 8),
+        Text('GHS', style: Theme.of(context).textTheme.labelSmall),
+        const SizedBox(height: 2),
+        Text(value,
+            style: AppTypography.titleMedium
+                .copyWith(color: Theme.of(context).colorScheme.onSurface)),
+      ]);
 }
 
 class _SalesPricingEditor extends StatefulWidget {
@@ -670,8 +693,12 @@ class _SalesPricingEditorState extends State<_SalesPricingEditor> {
   InputDecoration _decoration(String label, IconData icon) {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return InputDecoration(
-      labelText: label,
-      prefixIcon: Icon(icon, size: 19),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+      prefixIcon: Icon(icon,
+          size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
       filled: true,
       fillColor:
           dark ? Colors.white.withValues(alpha: .04) : AppColors.neutral50,
@@ -691,6 +718,7 @@ class _SalesPricingEditorState extends State<_SalesPricingEditor> {
   }
 
   Future<void> _submit() async {
+    if (_saving) return;
     FocusScope.of(context).unfocus();
     setState(() => _error = null);
     if (!(_formKey.currentState?.validate() ?? false)) return;
@@ -747,223 +775,290 @@ class _SalesPricingEditorState extends State<_SalesPricingEditor> {
   Widget build(BuildContext context) {
     final mobile = MediaQuery.sizeOf(context).width < 600;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final content = Material(
-      color: dark ? AppColors.surfaceDark : Colors.white,
-      borderRadius: BorderRadius.vertical(
-        top: const Radius.circular(20),
-        bottom: Radius.circular(mobile ? 0 : 20),
+    final baseTheme = Theme.of(context);
+    final fieldStyle = AppTypography.font(
+        fontSize: 12, color: baseTheme.colorScheme.onSurface);
+    final actionStyle = ButtonStyle(
+      textStyle: WidgetStatePropertyAll(
+          AppTypography.font(fontSize: 13, fontWeight: FontWeight.w500)),
+      padding: const WidgetStatePropertyAll(
+          EdgeInsets.symmetric(vertical: 12, horizontal: 8)),
+      shape: WidgetStatePropertyAll(
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+    );
+    final content = Theme(
+      data: baseTheme.copyWith(
+        textTheme: baseTheme.textTheme.copyWith(
+            titleMedium: fieldStyle,
+            bodyLarge: fieldStyle,
+            bodyMedium: fieldStyle),
+        filledButtonTheme: FilledButtonThemeData(style: actionStyle),
+        outlinedButtonTheme: OutlinedButtonThemeData(style: actionStyle),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 680,
-          maxHeight: MediaQuery.sizeOf(context).height * (mobile ? .95 : .9),
+      child: Material(
+        color: dark ? AppColors.surfaceDark : Colors.white,
+        borderRadius: BorderRadius.vertical(
+          top: const Radius.circular(16),
+          bottom: Radius.circular(mobile ? 0 : 16),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (mobile) ...[
-              const SizedBox(height: 10),
-              Container(
-                width: 42,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: dark ? Colors.white24 : AppColors.neutral300,
-                  borderRadius: BorderRadius.circular(3),
+        clipBehavior: Clip.antiAlias,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: 500,
+            maxHeight: (MediaQuery.sizeOf(context).height -
+                    MediaQuery.viewInsetsOf(context).bottom -
+                    MediaQuery.paddingOf(context).top -
+                    MediaQuery.paddingOf(context).bottom) *
+                .9,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (mobile) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: dark ? Colors.white24 : AppColors.neutral300,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
                 ),
+              ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                child: Row(children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [
+                        AppColors.primary,
+                        AppColors.primary.withValues(alpha: .75)
+                      ]),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.price_change_outlined,
+                        color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            _editing ? 'Update Sales Price' : 'Add Sales Price',
+                            style: AppTypography.font(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: baseTheme.colorScheme.onSurface)),
+                        Text('Set the amount charged for each packaged unit',
+                            style: AppTypography.font(
+                                fontSize: 12,
+                                color: baseTheme.colorScheme.onSurfaceVariant)),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close',
+                    onPressed: _saving ? null : () => Navigator.pop(context),
+                    icon: Icon(Icons.close_rounded,
+                        size: 16,
+                        color: baseTheme.colorScheme.onSurfaceVariant),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ]),
+              ),
+              Divider(
+                  height: 1,
+                  color: dark ? Colors.white10 : AppColors.neutral200),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 14),
+                  physics: const BouncingScrollPhysics(),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  child: Form(
+                    key: _formKey,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    child: LayoutBuilder(builder: (context, constraints) {
+                      final fieldWidth = mobile
+                          ? constraints.maxWidth
+                          : (constraints.maxWidth - 10) / 2;
+                      Widget field(String label, Widget child,
+                              {bool full = false}) =>
+                          SizedBox(
+                            width: full ? constraints.maxWidth : fieldWidth,
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(label,
+                                      style: AppTypography.font(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: baseTheme
+                                              .colorScheme.onSurfaceVariant)),
+                                  const SizedBox(height: 6),
+                                  child,
+                                ]),
+                          );
+                      return Wrap(
+                        spacing: 10,
+                        runSpacing: 14,
+                        children: [
+                          field(
+                            'Crop variety',
+                            DropdownButtonFormField<String>(
+                              initialValue: _varietyId,
+                              isExpanded: true,
+                              decoration: _decoration(
+                                  'Crop variety', Icons.grass_outlined),
+                              items: widget.varieties
+                                  .map((item) => DropdownMenuItem(
+                                        value: _id(item),
+                                        child: Text(
+                                          '${_text(item, [
+                                                'crop_name'
+                                              ])} - ${_text(item, [
+                                                'variety_name'
+                                              ])}',
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ))
+                                  .toList(),
+                              onChanged: _saving
+                                  ? null
+                                  : (value) => setState(() {
+                                        _varietyId = value;
+                                        _packageId = _availablePackages.isEmpty
+                                            ? null
+                                            : _id(_availablePackages.first);
+                                      }),
+                              validator: (value) => value == null
+                                  ? 'Select a crop variety.'
+                                  : null,
+                            ),
+                          ),
+                          field(
+                            'Package',
+                            DropdownButtonFormField<String>(
+                              key: ValueKey('package-$_varietyId-$_packageId'),
+                              initialValue: _packageId,
+                              isExpanded: true,
+                              decoration: _decoration(
+                                  'Package', Icons.inventory_2_outlined),
+                              items: _availablePackages
+                                  .map((item) => DropdownMenuItem(
+                                        value: _id(item),
+                                        child: Text(
+                                          '${_text(item, [
+                                                'package_name'
+                                              ])} - ${_text(item, [
+                                                'weight_capacity'
+                                              ])}${_text(item, ['unit'])}',
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ))
+                                  .toList(),
+                              onChanged: _saving
+                                  ? null
+                                  : (value) =>
+                                      setState(() => _packageId = value),
+                              validator: (value) => value == null
+                                  ? 'Configure and select a package.'
+                                  : null,
+                            ),
+                          ),
+                          field(
+                            'Regular price per pack (GHS)',
+                            TextFormField(
+                              controller: _regularController,
+                              enabled: !_saving,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              decoration: _decoration(
+                                  'Regular price per pack (GHS)',
+                                  Icons.sell_outlined),
+                              validator: _priceValidator,
+                            ),
+                          ),
+                          field(
+                            'Bulk price per pack (GHS)',
+                            TextFormField(
+                              controller: _bulkController,
+                              enabled: !_saving,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              decoration: _decoration(
+                                  'Bulk price per pack (GHS)',
+                                  Icons.local_offer_outlined),
+                              validator: _priceValidator,
+                            ),
+                          ),
+                          field(
+                            'Status',
+                            full: true,
+                            DropdownButtonFormField<String>(
+                              isExpanded: true,
+                              initialValue: _status,
+                              decoration: _decoration(
+                                  'Status', Icons.verified_outlined),
+                              items: const ['Active', 'Review', 'Inactive']
+                                  .map((status) => DropdownMenuItem(
+                                      value: status, child: Text(status)))
+                                  .toList(),
+                              onChanged: _saving
+                                  ? null
+                                  : (value) => setState(() => _status = value!),
+                            ),
+                          ),
+                          if (_error != null)
+                            SizedBox(
+                                width: constraints.maxWidth,
+                                child: _PricingMessage(
+                                    message: _error!, error: true)),
+                        ],
+                      );
+                    }),
+                  ),
+                ),
+              ),
+              Divider(
+                  height: 1,
+                  color: dark ? Colors.white10 : AppColors.neutral200),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+                child: Row(children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _saving ? null : () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: _saving ? null : _submit,
+                      icon: _saving
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.save_outlined, size: 16),
+                      label: Text(_saving
+                          ? 'Saving...'
+                          : _editing
+                              ? 'Save Changes'
+                              : 'Add Price'),
+                    ),
+                  ),
+                ]),
               ),
             ],
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 16, 16),
-              child: Row(children: [
-                Container(
-                  padding: const EdgeInsets.all(11),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: .12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.price_change_outlined,
-                      color: AppColors.primary, size: 21),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_editing ? 'Update Sales Price' : 'Add Sales Price',
-                          style: AppTypography.titleLarge
-                              .copyWith(fontWeight: AppTypography.headingWeight)),
-                      Text('Set the amount charged for each packaged unit',
-                          style: AppTypography.bodySmall),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Close',
-                  onPressed: _saving ? null : () => Navigator.pop(context),
-                  icon: const Icon(Icons.close_rounded),
-                ),
-              ]),
-            ),
-            Divider(
-                height: 1, color: dark ? Colors.white10 : AppColors.neutral200),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Form(
-                  key: _formKey,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  child: LayoutBuilder(builder: (context, constraints) {
-                    final fieldWidth = constraints.maxWidth < 560
-                        ? constraints.maxWidth
-                        : (constraints.maxWidth - 14) / 2;
-                    return Wrap(
-                      spacing: 14,
-                      runSpacing: 16,
-                      children: [
-                        if (_error != null)
-                          SizedBox(
-                              width: constraints.maxWidth,
-                              child: _PricingMessage(
-                                  message: _error!, error: true)),
-                        SizedBox(
-                          width: fieldWidth,
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _varietyId,
-                            isExpanded: true,
-                            decoration: _decoration(
-                                'Crop variety', Icons.grass_outlined),
-                            items: widget.varieties
-                                .map((item) => DropdownMenuItem(
-                                      value: _id(item),
-                                      child: Text(
-                                        '${_text(item, [
-                                              'crop_name'
-                                            ])} - ${_text(item, [
-                                              'variety_name'
-                                            ])}',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ))
-                                .toList(),
-                            onChanged: _saving
-                                ? null
-                                : (value) => setState(() {
-                                      _varietyId = value;
-                                      _packageId = _availablePackages.isEmpty
-                                          ? null
-                                          : _id(_availablePackages.first);
-                                    }),
-                            validator: (value) =>
-                                value == null ? 'Select a crop variety.' : null,
-                          ),
-                        ),
-                        SizedBox(
-                          width: fieldWidth,
-                          child: DropdownButtonFormField<String>(
-                            key: ValueKey('package-$_varietyId-$_packageId'),
-                            initialValue: _packageId,
-                            isExpanded: true,
-                            decoration: _decoration(
-                                'Package', Icons.inventory_2_outlined),
-                            items: _availablePackages
-                                .map((item) => DropdownMenuItem(
-                                      value: _id(item),
-                                      child: Text(
-                                        '${_text(item, [
-                                              'package_name'
-                                            ])} - ${_text(item, [
-                                              'weight_capacity'
-                                            ])}${_text(item, ['unit'])}',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ))
-                                .toList(),
-                            onChanged: _saving
-                                ? null
-                                : (value) => setState(() => _packageId = value),
-                            validator: (value) => value == null
-                                ? 'Configure and select a package.'
-                                : null,
-                          ),
-                        ),
-                        SizedBox(
-                          width: fieldWidth,
-                          child: TextFormField(
-                            controller: _regularController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            decoration: _decoration(
-                                'Regular price per pack (GHS)',
-                                Icons.sell_outlined),
-                            validator: _priceValidator,
-                          ),
-                        ),
-                        SizedBox(
-                          width: fieldWidth,
-                          child: TextFormField(
-                            controller: _bulkController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            decoration: _decoration('Bulk price per pack (GHS)',
-                                Icons.local_offer_outlined),
-                            validator: _priceValidator,
-                          ),
-                        ),
-                        SizedBox(
-                          width: constraints.maxWidth,
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _status,
-                            decoration:
-                                _decoration('Status', Icons.verified_outlined),
-                            items: const ['Active', 'Review', 'Inactive']
-                                .map((status) => DropdownMenuItem(
-                                    value: status, child: Text(status)))
-                                .toList(),
-                            onChanged: _saving
-                                ? null
-                                : (value) => setState(() => _status = value!),
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
-                ),
-              ),
-            ),
-            Divider(
-                height: 1, color: dark ? Colors.white10 : AppColors.neutral200),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _saving ? null : () => Navigator.pop(context),
-                    child: const Text('Cancel'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _saving ? null : _submit,
-                    icon: _saving
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Icon(Icons.save_outlined),
-                    label: Text(_saving
-                        ? 'Saving...'
-                        : _editing
-                            ? 'Save Changes'
-                            : 'Add Price'),
-                  ),
-                ),
-              ]),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -973,7 +1068,11 @@ class _SalesPricingEditorState extends State<_SalesPricingEditor> {
                 bottom: MediaQuery.viewInsetsOf(context).bottom),
             child: content,
           )
-        : AppDialog(backgroundColor: Colors.transparent, child: content);
+        : AppDialog(
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            backgroundColor: Colors.transparent,
+            child: content);
   }
 }
 
