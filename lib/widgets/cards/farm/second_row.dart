@@ -1,9 +1,15 @@
+import 'dart:math' as math;
+import 'package:intl/intl.dart';
+import '../../../core/utils/registered_sensor_readings.dart';
 import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart'; // Add to pubspec.yaml
 
 class SecondRow extends StatefulWidget {
   final bool isDark;
+  final List<Map<String, dynamic>> sensors;
+  final List<Map<String, dynamic>> readings;
+  final Map<String, List<String>> sensorSerials;
   final double? liveTemperature;
   final List<double>? liveTemperatureHistory;
   final Map<String, int> sensorCounts;
@@ -12,6 +18,9 @@ class SecondRow extends StatefulWidget {
   const SecondRow({
     super.key,
     required this.isDark,
+    this.sensors = const [],
+    this.readings = const [],
+    this.sensorSerials = const {},
     this.liveTemperature,
     this.liveTemperatureHistory,
     this.sensorCounts = const {},
@@ -25,79 +34,91 @@ class SecondRow extends StatefulWidget {
 class _SecondRowState extends State<SecondRow> {
   @override
   Widget build(BuildContext context) {
-    final humidityData = [
-      FlSpot(0, 40),
-      FlSpot(1, 45),
-      FlSpot(2, 50),
-      FlSpot(3, 48),
-      FlSpot(4, 52),
-      FlSpot(5, 55),
-      FlSpot(6, 53),
-    ];
-    final temperature = widget.liveTemperature ?? 24.5;
-    final temperatureData =
-        _sensorChartData(widget.liveTemperatureHistory, temperature);
-
-    return Column(
-      children: [
-        _buildTempHumTitleContainer(context),
-        SizedBox(height: 16),
-        _IndicatorsCard(isDark: widget.isDark),
-        SizedBox(height: 16),
-        _humidityCard(
-            humidity: 53.5, isDark: widget.isDark, chartData: humidityData),
-        SizedBox(height: 16),
-        _temperatureCard(
-            temperature: temperature,
-            isDark: widget.isDark,
-            chartData: temperatureData),
-        SizedBox(height: 16),
-        _waterTemperatureCard(
-            waterTemp: 24.5, isDark: widget.isDark, chartData: humidityData),
-      ],
-    );
+    final sensors = widget.sensors.where((s) => ['humidity', 'temperature', 'water_temperature'].contains(registeredSensorType(s))).toList()
+      ..sort((a,b) => sensorText(a, ['serial_number', r'$id', 'id']).compareTo(sensorText(b, ['serial_number', r'$id', 'id'])));
+    return Column(children: [
+      _buildTempHumTitleContainer(context),
+      const SizedBox(height: 16),
+      _IndicatorsCard(isDark: widget.isDark),
+      if (sensors.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('No registered sensors assigned.')),
+      for (final type in ['humidity', 'temperature', 'water_temperature'])
+        for (final sensor in sensors.where((s) => registeredSensorType(s) == type)) ...[
+          const SizedBox(height: 16),
+          _registeredCard(sensor, type),
+        ],
+    ]);
   }
 
-  List<FlSpot> _sensorChartData(List<double>? values, double fallback) {
-    final source = (values == null || values.isEmpty) ? [fallback] : values;
-    final limited =
-        source.length > 12 ? source.sublist(source.length - 12) : source;
-    if (limited.length == 1) {
-      return [
-        FlSpot(0, limited.first),
-        FlSpot(1, limited.first),
-      ];
-    }
-    return List.generate(
-      limited.length,
-      (index) => FlSpot(index.toDouble(), limited[index]),
-    );
+  Widget _registeredCard(Map<String, dynamic> sensor, String type) {
+    final rows = readingsForRegisteredSensor(sensor, widget.readings);
+    final value = rows.isEmpty ? null : registeredReadingValue(rows.last);
+    final activity = latestSensorActivity(rows);
+    final chart = List.generate(activity.length, (i) => FlSpot(registeredReadingTime(activity[i])!.millisecondsSinceEpoch / 1000, registeredReadingValue(activity[i])!));
+    final serial = sensorText(sensor, ['serial_number', r'$id', 'sensor_id', 'id']);
+    final unit = sensorText(sensor, ['unit', 'measurement_unit']);
+    final card = type == 'humidity'
+      ? _humidityCard(humidity: value, isDark: widget.isDark, chartData: chart, serial: serial, unit: unit)
+      : type == 'temperature'
+        ? _temperatureCard(temperature: value, isDark: widget.isDark, chartData: chart, serial: serial, unit: unit)
+        : _waterTemperatureCard(waterTemp: value, isDark: widget.isDark, chartData: chart, serial: serial, unit: unit);
+    return KeyedSubtree(key: ValueKey(sensorText(sensor, [r'$id', 'sensor_id', 'id', 'serial_number'])), child: card);
   }
 
-  LineTouchData _boundedTouchData(bool isDark) {
-    return LineTouchData(
-      touchTooltipData: LineTouchTooltipData(
-        fitInsideHorizontally: true,
-        fitInsideVertically: true,
-        tooltipMargin: 8,
-        tooltipPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        maxContentWidth: 72,
-        getTooltipColor: (_) => isDark ? Colors.grey[900]! : Colors.white,
-        getTooltipItems: (spots) => spots
-            .map(
-              (spot) => LineTooltipItem(
-                spot.y.toStringAsFixed(1),
-                AppTypography.font(
-                  fontSize: AppTypography.fieldLabelSize,
-                  fontWeight: AppTypography.headingWeight,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-            )
-            .toList(),
-      ),
-    );
+  Widget _areaChart(List<FlSpot> source, Color color, bool isDark) {
+    if (source.isEmpty) return const SizedBox(height: 150, child: Center(child: Text('No reading history')));
+    // A timestamp identifies one observation. Avoid vertical curves at duplicate times.
+    final byTime = <double, FlSpot>{for (final point in source) point.x: point};
+    final ordered = byTime.values.toList()..sort((a,b) => a.x.compareTo(b.x));
+    final origin = ordered.first.x;
+    final points = ordered.map((point) => FlSpot(point.x - origin, point.y)).toList();
+    // Leave room for the latest point and its rounded stroke inside the plot.
+    final timeSpan = points.last.x - points.first.x;
+    final edgeRoom = timeSpan > 0 ? timeSpan * .035 : 1.0;
+    final low = points.map((p) => p.y).reduce(math.min);
+    final high = points.map((p) => p.y).reduce(math.max);
+    final padding = math.max((high - low) * .2, math.max(high.abs() * .01, .1));
+    String time(double x) => DateFormat('h:mm:ss a').format(DateTime.fromMillisecondsSinceEpoch(((origin + x) * 1000).round()).toLocal());
+    return Tooltip(message: 'Latest continuous readings, up to 15 minutes. Gaps over one minute start a new segment.', child: SizedBox(height: 150, child: LineChart(LineChartData(
+        minX: points.first.x - edgeRoom,
+        maxX: points.last.x + edgeRoom,
+        minY: low - padding, maxY: high + padding,
+        clipData: const FlClipData.all(),
+        gridData: const FlGridData(show: false),
+        titlesData: const FlTitlesData(show: false),
+        borderData: FlBorderData(show: false),
+        lineTouchData: LineTouchData(touchTooltipData: LineTouchTooltipData(
+          fitInsideHorizontally: true, fitInsideVertically: true,
+          maxContentWidth: 130,
+          getTooltipColor: (_) => isDark ? Colors.grey.shade900 : Colors.white,
+          getTooltipItems: (spots) => spots.map((spot) => LineTooltipItem(
+            '${spot.y.toStringAsFixed(2)}\n${time(spot.x)}\nLatest activity (up to 15 min)',
+            AppTypography.bodySmall.copyWith(color: isDark ? Colors.white : Colors.black87),
+          )).toList(),
+        )),
+        lineBarsData: [LineChartBarData(
+          spots: points, isCurved: true, curveSmoothness: .4,
+          preventCurveOverShooting: true,
+          preventCurveOvershootingThreshold: 1,
+          color: color, barWidth: 2.5, isStrokeCapRound: true,
+          dotData: FlDotData(
+            show: true,
+            checkToShowDot: (spot, _) => spot.x == points.last.x,
+            getDotPainter: (spot, percent, bar, index) => FlDotCirclePainter(
+              radius: 3, color: color, strokeWidth: 1.5,
+              strokeColor: isDark ? Colors.grey[850]! : Colors.white,
+            ),
+          ),
+          belowBarData: BarAreaData(show: true, gradient: LinearGradient(
+            begin: Alignment.topCenter, end: Alignment.bottomCenter,
+            colors: [
+              color.withValues(alpha: isDark ? .30 : .24),
+              color.withValues(alpha: isDark ? .04 : .02),
+            ],
+          )),
+        )],
+      ), duration: Duration.zero)));
   }
+
 
   Widget _buildTempHumTitleContainer(BuildContext context) {
     return Container(
@@ -329,8 +350,15 @@ class _SecondRowState extends State<SecondRow> {
     );
   }
 
+  Widget _serialLabel(String serial) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+    child: Text('Serial: ${serial.isEmpty ? 'Not provided' : serial}', style: AppTypography.bodySmall.copyWith(color: widget.isDark ? Colors.white60 : Colors.black54)),
+  );
+
   Widget _humidityCard({
-    required double humidity,
+    required double? humidity,
+    required String serial,
+    required String unit,
     required bool isDark,
     required List<FlSpot> chartData,
   }) {
@@ -372,11 +400,12 @@ class _SecondRowState extends State<SecondRow> {
             ),
           ),
 
+          _serialLabel(serial),
           // Humidity Value
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Text(
-              "${humidity.toStringAsFixed(1)}%",
+              humidity == null ? 'No reading' : '${humidity.toStringAsFixed(1)} $unit',
               style: AppTypography.font(
                 fontSize: AppTypography.metricSize,
                 fontWeight: AppTypography.headingWeight,
@@ -389,44 +418,7 @@ class _SecondRowState extends State<SecondRow> {
           Padding(
             padding:
                 const EdgeInsets.fromLTRB(10, 0, 12, 0), // paddings, child: ),
-            child: SizedBox(
-              height: 80,
-              width: double.infinity,
-              child: LineChart(
-                LineChartData(
-                  lineTouchData: _boundedTouchData(isDark),
-                  gridData: FlGridData(show: false),
-                  titlesData: FlTitlesData(show: false),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: chartData,
-                      isCurved: true,
-                      color: isDark ? Colors.blue[200] : Colors.blue[700],
-                      barWidth: 2.5,
-                      isStrokeCapRound: true,
-                      dotData: FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: isDark
-                              ? [
-                                  Colors.blue.withOpacity(0.3),
-                                  Colors.blue.withOpacity(0.05),
-                                ]
-                              : [
-                                  Colors.blueAccent.withOpacity(0.3),
-                                  Colors.blueAccent.withOpacity(0.05),
-                                ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            child: _areaChart(chartData, Colors.blue, isDark),
           ),
         ],
       ),
@@ -434,7 +426,9 @@ class _SecondRowState extends State<SecondRow> {
   }
 
   Widget _temperatureCard({
-    required double temperature,
+    required double? temperature,
+    required String serial,
+    required String unit,
     required bool isDark,
     required List<FlSpot> chartData,
   }) {
@@ -476,11 +470,12 @@ class _SecondRowState extends State<SecondRow> {
             ),
           ),
 
+          _serialLabel(serial),
           // Temperature Value
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Text(
-              "${temperature.toStringAsFixed(1)}°C",
+              temperature == null ? 'No reading' : '${temperature.toStringAsFixed(1)} $unit',
               style: AppTypography.font(
                 fontSize: AppTypography.metricSize,
                 fontWeight: AppTypography.headingWeight,
@@ -492,44 +487,7 @@ class _SecondRowState extends State<SecondRow> {
           // Line Chart
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 12, 0),
-            child: SizedBox(
-              height: 80,
-              width: double.infinity,
-              child: LineChart(
-                LineChartData(
-                  lineTouchData: _boundedTouchData(isDark),
-                  gridData: FlGridData(show: false),
-                  titlesData: FlTitlesData(show: false),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: chartData,
-                      isCurved: true,
-                      color: isDark ? Colors.orange[200] : Colors.orange[700],
-                      barWidth: 2.5,
-                      isStrokeCapRound: true,
-                      dotData: FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: isDark
-                              ? [
-                                  Colors.orange.withOpacity(0.3),
-                                  Colors.orange.withOpacity(0.05),
-                                ]
-                              : [
-                                  Colors.deepOrange.withOpacity(0.3),
-                                  Colors.deepOrange.withOpacity(0.05),
-                                ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            child: _areaChart(chartData, Colors.orange, isDark),
           ),
         ],
       ),
@@ -537,7 +495,9 @@ class _SecondRowState extends State<SecondRow> {
   }
 
   Widget _waterTemperatureCard({
-    required double waterTemp,
+    required double? waterTemp,
+    required String serial,
+    required String unit,
     required bool isDark,
     required List<FlSpot> chartData,
   }) {
@@ -583,7 +543,7 @@ class _SecondRowState extends State<SecondRow> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             child: Text(
-              "${waterTemp.toStringAsFixed(1)}°C",
+              waterTemp == null ? 'No reading' : '${waterTemp.toStringAsFixed(1)} $unit',
               style: AppTypography.font(
                 fontSize: AppTypography.metricSize,
                 fontWeight: AppTypography.headingWeight,
@@ -595,44 +555,7 @@ class _SecondRowState extends State<SecondRow> {
           // Line Chart
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 0, 12, 0),
-            child: SizedBox(
-              height: 80,
-              width: double.infinity,
-              child: LineChart(
-                LineChartData(
-                  lineTouchData: _boundedTouchData(isDark),
-                  gridData: FlGridData(show: false),
-                  titlesData: FlTitlesData(show: false),
-                  borderData: FlBorderData(show: false),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: chartData,
-                      isCurved: true,
-                      color: isDark ? Colors.teal[200] : Colors.teal[700],
-                      barWidth: 2.5,
-                      isStrokeCapRound: true,
-                      dotData: FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: isDark
-                              ? [
-                                  Colors.teal.withOpacity(0.3),
-                                  Colors.teal.withOpacity(0.05),
-                                ]
-                              : [
-                                  Colors.tealAccent.withOpacity(0.3),
-                                  Colors.tealAccent.withOpacity(0.05),
-                                ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            child: _areaChart(chartData, Colors.cyan, isDark),
           ),
         ],
       ),

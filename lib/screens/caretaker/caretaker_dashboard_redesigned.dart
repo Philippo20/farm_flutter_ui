@@ -1813,7 +1813,7 @@ class _CaretakerDashboardRedesignedState
     children: [
       _nestedViewHeader(isDark, narrow),
       const SizedBox(height: 16),
-      FarmIotDashboard(isDark: isDark, userName: ref.watch(authProvider).user?.name ?? '',
+      FarmIotDashboard(isDark: isDark, sensors: _assignedSensors, readings: _sensorReadings, userName: ref.watch(authProvider).user?.name ?? '',
         liveTemperature: _latestSensorValue('temperature'),
         liveTemperatureHistory: _sensorHistoryValues('temperature'),
         sensorCounts: _sensorTypeCounts(),

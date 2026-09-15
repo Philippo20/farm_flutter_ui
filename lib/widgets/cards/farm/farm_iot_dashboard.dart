@@ -12,21 +12,41 @@ class FarmIotDashboard extends StatelessWidget {
     this.liveTemperature,
     this.liveTemperatureHistory,
     this.userName = '',
+    this.sensors = const [],
+    this.readings = const [],
     this.sensorCounts = const {},
     this.activeSensorCounts = const {},
   });
   final bool isDark;
+  final List<Map<String, dynamic>> readings;
+  final List<Map<String, dynamic>> sensors;
   final String userName;
   final double? liveTemperature;
   final List<double>? liveTemperatureHistory;
   final Map<String, int> sensorCounts;
   final Map<String, int> activeSensorCounts;
 
+  Map<String, List<String>> get _serials {
+    final result = <String, List<String>>{};
+    for (final sensor in sensors) {
+      final raw = '${sensor['sensortype'] ?? sensor['sensor_type'] ?? sensor['type'] ?? ''}'.trim().toLowerCase();
+      final type = const {'temp': 'temperature', 'humid': 'humidity'}[raw] ?? raw;
+      final serial = '${sensor['serial_number'] ?? ''}'.trim();
+      if (serial.isEmpty || !['temperature', 'humidity'].contains(type)) continue;
+      final entries = result.putIfAbsent(type, () => []);
+      if (!entries.contains(serial)) entries.add(serial);
+    }
+    for (final entries in result.values) { entries.sort(); }
+    return result;
+  }
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(builder: (context, box) {
         final panels = <Widget>[
           FirstRow(isDark: isDark, userName: userName),
           SecondRow(
+              sensors: sensors, readings: readings,
+              sensorSerials: _serials,
               isDark: isDark,
               liveTemperature: liveTemperature,
               liveTemperatureHistory: liveTemperatureHistory,

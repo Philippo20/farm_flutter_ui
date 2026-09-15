@@ -38,6 +38,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
   final List<Map<String, dynamic>> _batches = [];
   final List<Map<String, dynamic>> _sensors = [];
   final List<Map<String, dynamic>> _sales = [];
+  final List<Map<String, dynamic>> _sensorReadings = [];
   bool _isLoading = true;
   String? _errorMessage;
   Timer? _refreshTimer;
@@ -72,6 +73,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
         _api.getBatches(),
         _api.getSensors(),
         _api.getSales(),
+        _api.getSensorReadingsAll(),
       ]);
       if (!mounted) return;
       setState(() {
@@ -90,6 +92,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
         _sales
           ..clear()
           ..addAll(results[4]);
+        _sensorReadings..clear()..addAll(results[5]);
         _isLoading = false;
         _errorMessage = null;
       });
@@ -775,7 +778,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
       _buildIotLiveHeader(isDark, _ownerSensorDashboardItems, MediaQuery.sizeOf(context).width < 600),
       const SizedBox(height: 16),
       if (sensors.isEmpty) _buildNoSensorState(isDark)
-      else FarmIotDashboard(isDark: isDark, userName: ref.watch(authProvider).user?.name ?? '', liveTemperature: temperature,
+      else FarmIotDashboard(isDark: isDark, sensors: _ownerSensors, readings: _sensorReadings, userName: ref.watch(authProvider).user?.name ?? '', liveTemperature: temperature,
         liveTemperatureHistory: const [], sensorCounts: counts, activeSensorCounts: activeCounts),
     ]);
   }
