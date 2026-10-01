@@ -1,3 +1,4 @@
+import 'batch_records_screen.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1848,18 +1849,32 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             // Actions
             Expanded(
               flex: 1,
-              child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                _actionIcon(Icons.visibility_outlined, 'View',
-                    () => _viewBatchDetails(batch), isDark),
-                const SizedBox(width: 4),
-                _actionIcon(Icons.edit_outlined, 'Edit',
-                    () => _editBatch(batch), isDark),
-              ]),
+              child: Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: [
+                    _actionIcon(Icons.fact_check_outlined, 'Caretaker records',
+                        () => _viewCaretakerRecords(batch), isDark),
+                    _actionIcon(Icons.visibility_outlined, 'View',
+                        () => _viewBatchDetails(batch), isDark),
+                    const SizedBox(width: 4),
+                    _actionIcon(Icons.edit_outlined, 'Edit',
+                        () => _editBatch(batch), isDark),
+                  ]),
             ),
           ]),
         ),
       ),
     );
+  }
+
+  void _viewCaretakerRecords(BatchModel batch) {
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => BatchRecordsScreen(
+            batchId: batch.id,
+            batchNumber: batch.batchNumber,
+            farmName: batch.farmName)));
   }
 
   Widget _actionIcon(
@@ -2094,7 +2109,12 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 Icons.person_outline),
             detail('Survival rate', '${batch.survivalRate.toStringAsFixed(0)}%',
                 Icons.trending_up_rounded)),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+        TextButton.icon(
+            onPressed: () => _viewCaretakerRecords(batch),
+            icon: const Icon(Icons.fact_check_outlined, size: 18),
+            label: const Text('Caretaker records')),
+        const SizedBox(height: 8),
         Row(children: [
           Expanded(
               child: OutlinedButton.icon(

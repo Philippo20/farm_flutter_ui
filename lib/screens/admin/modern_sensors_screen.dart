@@ -1,3 +1,4 @@
+import '../../core/widgets/light_switch_device_card.dart';
 import '../../core/utils/stable_sensor_order.dart';
 import '../../core/utils/sensor_maintenance_policy.dart';
 import '../../core/widgets/sensor_form_dialog.dart';
@@ -1257,15 +1258,28 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                 return SizedBox(
                   key: ValueKey(sensor.raw[r'$id'] ?? sensor.id),
                   width: cardWidth,
-                  child: _SensorDeviceCard(
-                    sensor: sensor,
-                    isDark: isDark,
-                    onDetails: () => _showSensorDetails(sensor, isDark),
-                    onSettings: () => _showSensorSettings(sensor, isDark),
-                    onDelete: widget.isSuperAdmin
-                        ? () => _showDeleteSensorDialog(sensor, isDark)
-                        : null,
-                  ),
+                  child: sensor.type == 'Light Switch' && !widget.isFarmManager
+                      ? LightSwitchDeviceCard(
+                          key: ValueKey(sensor.id),
+                          serial: sensor.id,
+                          name: sensor.name,
+                          farm: sensor.farm,
+                          zone: sensor.zone,
+                          isDark: isDark,
+                          onSettings: () => _showSensorSettings(sensor, isDark),
+                          onDelete: widget.isSuperAdmin
+                              ? () => _showDeleteSensorDialog(sensor, isDark)
+                              : null,
+                        )
+                      : _SensorDeviceCard(
+                          sensor: sensor,
+                          isDark: isDark,
+                          onDetails: () => _showSensorDetails(sensor, isDark),
+                          onSettings: () => _showSensorSettings(sensor, isDark),
+                          onDelete: widget.isSuperAdmin
+                              ? () => _showDeleteSensorDialog(sensor, isDark)
+                              : null,
+                        ),
                 );
               }).toList(),
             );
