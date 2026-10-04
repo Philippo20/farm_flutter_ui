@@ -21,7 +21,7 @@ void main() {
                       'record_id': 'FR-001',
                       'record_date': '2026-10-01T10:00:00Z',
                       'created_by_name': 'Caretaker A',
-                      'record_type': 'daily',
+                      'record_type': 'daily_monitoring',
                       'growth_stage': 'Vegetative',
                       'temperature': 0,
                       'observations': 'Healthy plants',
@@ -39,15 +39,21 @@ void main() {
                   ])));
       await tester.pumpAndSettle();
       expect(find.text('BATCH-001'), findsOneWidget);
+      expect(find.text('Daily Monitoring'), findsOneWidget);
+      expect(find.textContaining('daily_monitoring'), findsNothing);
+      expect(find.textContaining('\u00c2'), findsNothing);
       expect(
           find.byType(DataTable), width > 900 ? findsOneWidget : findsNothing);
+      await tester.ensureVisible(find.text('View record').first);
       await tester.tap(find.text('View record').first);
       await tester.pumpAndSettle();
       expect(find.text('Record details'), findsOneWidget);
       expect(find.text('Healthy plants'), findsOneWidget);
       expect(find.text('0'), findsOneWidget);
+      await tester.ensureVisible(find.byTooltip('Close details'));
       await tester.tap(find.byTooltip('Close details'));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Issues only'));
       await tester.tap(find.text('Issues only'));
       await tester.pumpAndSettle();
       expect(find.text('View record'), findsOneWidget);

@@ -58,7 +58,7 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
       }
       if (response.statusCode != 200) {
         throw Exception(response.statusCode == 403
-            ? 'You do not have access to this farmâ€™s records.'
+            ? 'You do not have access to records for this farm.'
             : 'Unable to load records. Please retry.');
       }
       final body = jsonDecode(response.body) as Map;
@@ -94,12 +94,25 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
 
   void _select(Map<String, dynamic> record) {
     setState(() => _selected = record);
-    _scroll.animateTo(0,
-        duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _detailsKey.currentContext != null) {
+        Scrollable.ensureVisible(_detailsKey.currentContext!,
+            duration: const Duration(milliseconds: 250), alignment: 0);
+      }
+    });
   }
 
-  String _value(Map<String, dynamic> r, String key) =>
-      '${r[key] ?? ''}'.trim().isEmpty ? 'â€”' : '${r[key]}';
+  String _value(Map<String, dynamic> r, String key) {
+    final value = '${r[key] ?? ''}'.trim();
+    return value.isEmpty ? '\u2014' : value;
+  }
+
+  String _label(String value) => value
+      .replaceAll('_', ' ')
+      .split(' ')
+      .map((word) =>
+          word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1)}')
+      .join(' ');
   String _date(Map<String, dynamic> r) {
     final date = DateTime.tryParse('${r['record_date']}');
     return date == null
@@ -109,9 +122,32 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
 
   bool _hasIssues(Map<String, dynamic> r) =>
       r['has_issues'] == true || r['has_issues'] == 'true';
+  ColorScheme get _colors => Theme.of(context).colorScheme;
+  Widget _panel(Widget child,
+          {EdgeInsets padding = const EdgeInsets.all(20)}) =>
+      Container(
+        padding: padding,
+        decoration: BoxDecoration(
+            color: _colors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _colors.outlineVariant)),
+        child: child,
+      );
+  Widget _pill(String text, {bool issue = false}) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+            color: issue
+                ? _colors.errorContainer
+                : _colors.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(8)),
+        child: Text(text,
+            style: AppTypography.caption.copyWith(
+                color: issue
+                    ? _colors.onErrorContainer
+                    : _colors.onSurfaceVariant)),
+      );
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final rows = _records
         .where((r) =>
             (!_issuesOnly || _hasIssues(r)) &&
@@ -122,16 +158,20 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
               'observations',
               'notes',
               'record_id'
-            ].any((k) =>
-                '${r[k] ?? ''}'.toLowerCase().contains(_search.toLowerCase())))
+            ].any((k) => _label('${r[k] ?? ''}')
+                .toLowerCase()
+                .contains(_search.toLowerCase())))
         .toList();
     return Scaffold(
-      appBar: AppBar(title: const Text('Caretaker records'), actions: [
-        IconButton(
-            onPressed: _loading ? null : _load,
-            tooltip: 'Refresh records',
-            icon: const Icon(Icons.refresh))
-      ]),
+      appBar: AppBar(
+          title: Text('Caretaker records', style: AppTypography.titleMedium),
+          actions: [
+            IconButton(
+                onPressed: _loading ? null : _load,
+                tooltip: 'Refresh records',
+                icon: const Icon(Icons.refresh_rounded)),
+            const SizedBox(width: 12)
+          ]),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -144,116 +184,275 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
                         FilledButton(
                             onPressed: _load, child: const Text('Retry'))
                       ])))
-              : LayoutBuilder(
-                  builder: (context, size) => ListView(
-                          controller: _scroll,
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                            Text(widget.batchNumber,
-                                style: AppTypography.titleMedium
-                                    .copyWith(color: scheme.onSurface)),
-                            const SizedBox(height: 4),
-                            Text(
-                                '${widget.farmName} Â· ${_records.length} records',
-                                style: AppTypography.bodySmall
-                                    .copyWith(color: scheme.onSurfaceVariant)),
-                            const SizedBox(height: 16),
-                            TextField(
-                                onChanged: (v) => setState(() => _search = v),
-                                decoration: const InputDecoration(
-                                    prefixIcon: Icon(Icons.search),
-                                    hintText:
-                                        'Search caretaker, stage or observations',
-                                    border: OutlineInputBorder())),
-                            const SizedBox(height: 8),
-                            Align(
-                                alignment: Alignment.centerLeft,
-                                child: FilterChip(
-                                    label: const Text('Issues only'),
-                                    selected: _issuesOnly,
-                                    showCheckmark: false,
-                                    onSelected: (v) =>
-                                        setState(() => _issuesOnly = v))),
-                            if (_selected != null) _details(_selected!),
-                            if (rows.isEmpty)
-                              Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 40),
-                                  child: Text(
-                                      _records.isEmpty
-                                          ? 'No caretaker records have been submitted for this batch.'
-                                          : 'No records match your filters.',
-                                      textAlign: TextAlign.center)),
-                            if (rows.isNotEmpty && size.maxWidth >= 900)
-                              SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: DataTable(
-                                      columnSpacing: 24,
-                                      horizontalMargin: 12,
-                                      dataTextStyle: AppTypography.bodySmall
-                                          .copyWith(color: scheme.onSurface),
-                                      headingTextStyle: AppTypography.labelSmall
-                                          .copyWith(color: scheme.onSurface),
-                                      showCheckboxColumn: false,
-                                      columns: const [
-                                        DataColumn(label: Text('Recorded')),
-                                        DataColumn(label: Text('Caretaker')),
-                                        DataColumn(label: Text('Record type')),
-                                        DataColumn(label: Text('Growth stage')),
-                                        DataColumn(label: Text('Issues')),
-                                        DataColumn(label: Text('Details'))
-                                      ],
-                                      rows: rows
-                                          .map((r) => DataRow(
-                                                  onSelectChanged: (_) =>
-                                                      _select(r),
-                                                  cells: [
-                                                    DataCell(Text(_date(r))),
-                                                    DataCell(Text(_value(
-                                                        r, 'created_by_name'))),
-                                                    DataCell(Text(_value(
-                                                        r, 'record_type'))),
-                                                    DataCell(Text(_value(
-                                                        r, 'growth_stage'))),
-                                                    DataCell(Text(_hasIssues(r)
-                                                        ? _value(
-                                                            r, 'issue_severity')
-                                                        : 'None')),
-                                                    DataCell(TextButton(
-                                                        onPressed: () =>
-                                                            _select(r),
-                                                        child: const Text(
-                                                            'View record')))
-                                                  ]))
-                                          .toList())),
-                            if (size.maxWidth < 900)
-                              ...rows.map((r) => Card(
-                                  child: Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(_date(r),
-                                                style:
-                                                    AppTypography.titleSmall),
-                                            const SizedBox(height: 6),
+              : LayoutBuilder(builder: (context, viewport) {
+                  final compact = viewport.maxWidth < 700;
+                  return SingleChildScrollView(
+                      controller: _scroll,
+                      padding: EdgeInsets.fromLTRB(
+                          compact ? 16 : 32, 20, compact ? 16 : 32, 16),
+                      child: Center(
+                          child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 1440),
+                              child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    _summary(compact),
+                                    const SizedBox(height: 20),
+                                    _panel(Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          Row(children: [
+                                            Expanded(
+                                                child: Text('Record history',
+                                                    style: AppTypography
+                                                        .titleSmall
+                                                        .copyWith(
+                                                            color: _colors
+                                                                .onSurface))),
                                             Text(
-                                                '${_value(r, 'created_by_name')} Â· ${_value(r, 'record_type')}',
-                                                style: AppTypography.bodySmall),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                                'Stage: ${_value(r, 'growth_stage')}  Â·  Issues: ${_hasIssues(r) ? _value(r, 'issue_severity') : 'None'}',
-                                                style: AppTypography.bodySmall),
-                                            TextButton(
-                                                onPressed: () => _select(r),
-                                                child:
-                                                    const Text('View record'))
-                                          ])))),
-                          ])),
+                                                '${rows.length} of ${_records.length}',
+                                                style: AppTypography.caption
+                                                    .copyWith(
+                                                        color: _colors
+                                                            .onSurfaceVariant))
+                                          ]),
+                                          const SizedBox(height: 16),
+                                          LayoutBuilder(
+                                              builder: (context, constraints) {
+                                            final search = TextField(
+                                                style: AppTypography.bodySmall,
+                                                onChanged: (v) =>
+                                                    setState(() => _search = v),
+                                                decoration: InputDecoration(
+                                                    isDense: true,
+                                                    filled: true,
+                                                    fillColor: _colors
+                                                        .surfaceContainerLow,
+                                                    prefixIcon: const Icon(
+                                                        Icons.search_rounded,
+                                                        size: 20),
+                                                    hintText:
+                                                        'Search caretaker, stage or observations',
+                                                    hintStyle:
+                                                        AppTypography.bodySmall,
+                                                    contentPadding:
+                                                        const EdgeInsets.symmetric(
+                                                            horizontal: 14,
+                                                            vertical: 14),
+                                                    border: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                10),
+                                                        borderSide: BorderSide(
+                                                            color: _colors.outlineVariant)),
+                                                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _colors.outlineVariant))));
+                                            final filter = FilterChip(
+                                                avatar: Icon(
+                                                    Icons.flag_outlined,
+                                                    size: 16,
+                                                    color: _issuesOnly
+                                                        ? _colors
+                                                            .onSecondaryContainer
+                                                        : _colors
+                                                            .onSurfaceVariant),
+                                                label:
+                                                    const Text('Issues only'),
+                                                labelStyle:
+                                                    AppTypography.caption,
+                                                selected: _issuesOnly,
+                                                showCheckmark: false,
+                                                onSelected: (v) => setState(
+                                                    () => _issuesOnly = v));
+                                            return constraints.maxWidth < 600
+                                                ? Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                        search,
+                                                        const SizedBox(
+                                                            height: 8),
+                                                        filter
+                                                      ])
+                                                : Row(children: [
+                                                    Expanded(child: search),
+                                                    const SizedBox(width: 12),
+                                                    filter
+                                                  ]);
+                                          }),
+                                          const SizedBox(height: 16),
+                                          if (rows.isEmpty)
+                                            Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 36),
+                                                child: Column(children: [
+                                                  Icon(
+                                                      Icons.fact_check_outlined,
+                                                      size: 32,
+                                                      color: _colors
+                                                          .onSurfaceVariant),
+                                                  const SizedBox(height: 12),
+                                                  Text(
+                                                      _records.isEmpty
+                                                          ? 'No caretaker records have been submitted for this batch.'
+                                                          : 'No records match your filters.',
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: AppTypography
+                                                          .bodySmall)
+                                                ]))
+                                          else if (viewport.maxWidth >= 1000)
+                                            _table(rows)
+                                          else
+                                            ...rows.map(_mobileRecord),
+                                        ])),
+                                    if (_selected != null) ...[
+                                      const SizedBox(height: 20),
+                                      _details(_selected!)
+                                    ],
+                                  ]))));
+                }),
     );
   }
 
+  final _detailsKey = GlobalKey();
+  Widget _summary(bool compact) {
+    final caretakers = _records
+        .map((r) => '${r['created_by'] ?? r['created_by_name'] ?? ''}')
+        .where((v) => v.isNotEmpty)
+        .toSet()
+        .length;
+    return _panel(
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+                color: _colors.primaryContainer,
+                borderRadius: BorderRadius.circular(12)),
+            child: Icon(Icons.inventory_2_outlined,
+                color: _colors.onPrimaryContainer, size: 24)),
+        const SizedBox(width: 14),
+        Expanded(
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('BATCH RECORDS',
+              style: AppTypography.caption
+                  .copyWith(color: _colors.onSurfaceVariant, letterSpacing: 1)),
+          const SizedBox(height: 5),
+          Text(widget.batchNumber,
+              style:
+                  AppTypography.titleMedium.copyWith(color: _colors.onSurface)),
+          const SizedBox(height: 6),
+          Text(widget.farmName,
+              style: AppTypography.bodySmall
+                  .copyWith(color: _colors.onSurfaceVariant))
+        ])),
+      ]),
+      const SizedBox(height: 20),
+      Wrap(spacing: compact ? 20 : 48, runSpacing: 16, children: [
+        _metric(
+            'Total records', '${_records.length}', Icons.description_outlined),
+        _metric('Caretakers', '$caretakers', Icons.people_outline),
+        _metric('Records with issues', '${_records.where(_hasIssues).length}',
+            Icons.flag_outlined),
+      ]),
+    ]));
+  }
+
+  Widget _metric(String label, String value, IconData icon) =>
+      Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 18, color: _colors.onSurfaceVariant),
+        const SizedBox(width: 10),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(value,
+              style:
+                  AppTypography.titleMedium.copyWith(color: _colors.onSurface)),
+          Text(label,
+              style: AppTypography.caption
+                  .copyWith(color: _colors.onSurfaceVariant))
+        ])
+      ]);
+  Widget _table(List<Map<String, dynamic>> rows) => LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: DataTable(
+                columnSpacing: 24,
+                horizontalMargin: 16,
+                headingRowHeight: 44,
+                dataRowMinHeight: 64,
+                dataRowMaxHeight: 80,
+                headingRowColor:
+                    WidgetStatePropertyAll(_colors.surfaceContainerLow),
+                dividerThickness: .6,
+                showCheckboxColumn: false,
+                dataTextStyle:
+                    AppTypography.bodySmall.copyWith(color: _colors.onSurface),
+                headingTextStyle: AppTypography.labelSmall
+                    .copyWith(color: _colors.onSurfaceVariant),
+                columns: const [
+                  DataColumn(label: Text('Recorded')),
+                  DataColumn(label: Text('Caretaker')),
+                  DataColumn(label: Text('Record type')),
+                  DataColumn(label: Text('Growth stage')),
+                  DataColumn(label: Text('Issues')),
+                  DataColumn(label: Text(''))
+                ],
+                rows: rows
+                    .map((r) =>
+                        DataRow(onSelectChanged: (_) => _select(r), cells: [
+                          DataCell(Text(_date(r))),
+                          DataCell(SizedBox(
+                              width: 150,
+                              child: Text(_value(r, 'created_by_name'),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis))),
+                          DataCell(_pill(_label(_value(r, 'record_type')))),
+                          DataCell(Text(_label(_value(r, 'growth_stage')))),
+                          DataCell(_pill(
+                              _hasIssues(r)
+                                  ? _label(_value(r, 'issue_severity'))
+                                  : 'None',
+                              issue: _hasIssues(r))),
+                          DataCell(TextButton(
+                              onPressed: () => _select(r),
+                              child: const Text('View record'))),
+                        ]))
+                    .toList(),
+              ))));
+  Widget _mobileRecord(Map<String, dynamic> r) => Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: _panel(
+          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Wrap(spacing: 8, runSpacing: 8, children: [
+              _pill(_label(_value(r, 'record_type'))),
+              if (_hasIssues(r))
+                _pill(_label(_value(r, 'issue_severity')), issue: true)
+            ]),
+            const SizedBox(height: 12),
+            Text(_date(r),
+                style: AppTypography.labelSmall
+                    .copyWith(color: _colors.onSurface)),
+            const SizedBox(height: 8),
+            Text(_value(r, 'created_by_name'),
+                style: AppTypography.bodySmall
+                    .copyWith(color: _colors.onSurfaceVariant)),
+            const SizedBox(height: 6),
+            Text('Growth stage: ${_label(_value(r, 'growth_stage'))}',
+                style: AppTypography.bodySmall
+                    .copyWith(color: _colors.onSurfaceVariant)),
+            Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                    onPressed: () => _select(r),
+                    child: const Text('View record'))),
+          ]),
+          padding: const EdgeInsets.all(16)));
   Widget _details(Map<String, dynamic> r) {
     const fields = {
       'record_id': 'Record number',
@@ -262,7 +461,7 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
       'growth_stage': 'Growth stage',
       'plant_health': 'Plant health',
       'plant_count': 'Plant count',
-      'temperature': 'Temperature (Â°C)',
+      'temperature': 'Temperature (\u00b0C)',
       'humidity': 'Humidity (%)',
       'ph': 'pH',
       'ec': 'EC',
@@ -273,34 +472,61 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
       'issue_description': 'Issue description',
       'notes': 'Notes'
     };
-    return Card(
-        child: Padding(
-            padding: const EdgeInsets.all(16),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Expanded(
-                    child: Text('Record details',
-                        style: AppTypography.titleSmall)),
-                IconButton(
-                    onPressed: () => setState(() => _selected = null),
-                    tooltip: 'Close details',
-                    icon: const Icon(Icons.close))
-              ]),
-              Text(_date(r), style: AppTypography.caption),
-              const SizedBox(height: 12),
-              for (final field in fields.entries)
-                if (_value(r, field.key) != 'â€”')
-                  Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(field.value, style: AppTypography.labelSmall),
-                            const SizedBox(height: 4),
-                            SelectableText(_value(r, field.key),
-                                style: AppTypography.bodySmall)
-                          ])),
-            ])));
+    return Container(
+        key: _detailsKey,
+        child: _panel(
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Icon(Icons.assignment_outlined, size: 20, color: _colors.primary),
+            const SizedBox(width: 10),
+            Expanded(
+                child: Text('Record details',
+                    style: AppTypography.titleSmall
+                        .copyWith(color: _colors.onSurface))),
+            IconButton(
+                onPressed: () => setState(() => _selected = null),
+                tooltip: 'Close details',
+                icon: const Icon(Icons.close, size: 20))
+          ]),
+          Text(_date(r),
+              style: AppTypography.caption
+                  .copyWith(color: _colors.onSurfaceVariant)),
+          const SizedBox(height: 20),
+          LayoutBuilder(
+              builder: (context, constraints) =>
+                  Wrap(spacing: 24, runSpacing: 20, children: [
+                    for (final field in fields.entries)
+                      if (_value(r, field.key) != '\u2014')
+                        SizedBox(
+                            width: constraints.maxWidth >= 700 &&
+                                    ![
+                                      'observations',
+                                      'activities_performed',
+                                      'issue_description',
+                                      'notes'
+                                    ].contains(field.key)
+                                ? (constraints.maxWidth - 48) / 3
+                                : constraints.maxWidth,
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(field.value,
+                                      style: AppTypography.caption.copyWith(
+                                          color: _colors.onSurfaceVariant)),
+                                  const SizedBox(height: 6),
+                                  SelectableText(
+                                      [
+                                        'record_type',
+                                        'growth_stage',
+                                        'plant_health',
+                                        'issue_severity'
+                                      ].contains(field.key)
+                                          ? _label(_value(r, field.key))
+                                          : _value(r, field.key),
+                                      style: AppTypography.bodySmall
+                                          .copyWith(color: _colors.onSurface))
+                                ])),
+                  ])),
+        ])));
   }
 }

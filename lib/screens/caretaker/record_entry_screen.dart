@@ -1,3 +1,4 @@
+import '../../core/utils/caretaker_record_fields.dart';
 import '../../core/utils/caretaker_batch_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -553,6 +554,26 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     );
   }
 
+  bool _collects(String key) =>
+      caretakerRecordFields(_selectedRecordType).contains(key);
+  bool get _hasProgressFields => [
+        'planted_count',
+        'transplanted_count',
+        'harvested_count',
+        'harvest_weight_kg'
+      ].any(_collects);
+  bool get _hasEnvironmentFields =>
+      ['temperature', 'humidity', 'ph', 'ec', 'light_intensity'].any(_collects);
+  bool get _progressIsValid =>
+      (!_collects('planted_count') ||
+          _nonNegativeWholeNumber(_plantedController.text) == null) &&
+      (!_collects('transplanted_count') ||
+          _nonNegativeWholeNumber(_transplantedController.text) == null) &&
+      (!_collects('harvested_count') ||
+          _nonNegativeWholeNumber(_harvestedController.text) == null) &&
+      (!_collects('harvest_weight_kg') ||
+          _nonNegativeNumber(_harvestWeightController.text) == null);
+
   List<Widget> _recordSectionChildren(int index, bool isDark, bool isMobile) {
     switch (index) {
       case 0:
@@ -569,15 +590,17 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         return [
           _buildSelectedBatchSummary(isDark),
           const SizedBox(height: AppSpacing.lg),
-          _buildSubsectionTitle(
-            'Batch Progress',
-            'Update the current cumulative production totals.',
-            Icons.trending_up_rounded,
-            isDark,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildBatchProgressFields(isDark, isMobile),
-          const SizedBox(height: AppSpacing.lg),
+          if (_hasProgressFields) ...[
+            _buildSubsectionTitle(
+              'Batch Progress',
+              'Update the current cumulative production totals.',
+              Icons.trending_up_rounded,
+              isDark,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildBatchProgressFields(isDark, isMobile),
+            const SizedBox(height: AppSpacing.lg),
+          ],
           _buildSubsectionTitle(
             'Plant Observations',
             'Record crop health and the current growth stage.',
@@ -585,25 +608,31 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             isDark,
           ),
           const SizedBox(height: AppSpacing.md),
-          _buildTextField('Plant Health', _plantHealthController,
-              'e.g., Healthy, Yellowing, etc.', isDark),
-          const SizedBox(height: AppSpacing.md),
-          _buildTextField('Growth Stage', _growthStageController,
-              'e.g., Vegetative, Flowering', isDark),
-          const SizedBox(height: AppSpacing.md),
+          if (_collects('plant_health')) ...[
+            _buildTextField('Plant Health', _plantHealthController,
+                'e.g., Healthy, Yellowing, etc.', isDark),
+            const SizedBox(height: AppSpacing.md),
+          ],
+          if (_collects('growth_stage')) ...[
+            _buildTextField('Growth Stage', _growthStageController,
+                'e.g., Vegetative, Flowering', isDark),
+            const SizedBox(height: AppSpacing.md),
+          ],
           _buildTextField('Observations', _observationsController,
               'Any notable observations...', isDark,
               maxLines: 3),
           const SizedBox(height: AppSpacing.lg),
-          _buildSubsectionTitle(
-            'Environment',
-            'Add available climate and nutrient readings.',
-            Icons.sensors_outlined,
-            isDark,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildEnvironmentFields(isDark, isMobile),
-          const SizedBox(height: AppSpacing.lg),
+          if (_hasEnvironmentFields) ...[
+            _buildSubsectionTitle(
+              'Environment',
+              'Add available climate and nutrient readings.',
+              Icons.sensors_outlined,
+              isDark,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildEnvironmentFields(isDark, isMobile),
+            const SizedBox(height: AppSpacing.lg),
+          ],
           _buildSubsectionTitle(
             'Completed Activities',
             'Select work completed during this record period.',
@@ -713,14 +742,18 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           );
     final items = [
       ('Batch', batchNumber, Icons.inventory_2_outlined),
-      ('Planted / Nursed', _plantedController.text, Icons.spa_outlined),
-      ('Transplanted', _transplantedController.text, Icons.grass_rounded),
-      ('Harvested', _harvestedController.text, Icons.agriculture_outlined),
-      (
-        'Harvest Weight',
-        '${_harvestWeightController.text} kg',
-        Icons.scale_outlined
-      ),
+      if (_collects('planted_count'))
+        ('Planted / Nursed', _plantedController.text, Icons.spa_outlined),
+      if (_collects('transplanted_count'))
+        ('Transplanted', _transplantedController.text, Icons.grass_rounded),
+      if (_collects('harvested_count'))
+        ('Harvested', _harvestedController.text, Icons.agriculture_outlined),
+      if (_collects('harvest_weight_kg'))
+        (
+          'Harvest Weight',
+          '${_harvestWeightController.text} kg',
+          Icons.scale_outlined
+        ),
       (
         'Activities',
         '${_selectedActivities.length} selected',
@@ -901,71 +934,44 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   }
 
   Widget _buildBatchProgressFields(bool isDark, bool isMobile) {
-    final fields = [
-      _buildNumberField(
-        'Planted / Nursed',
-        _plantedController,
-        Icons.spa_outlined,
-        isDark,
-        allowDecimal: false,
-        validator: _nonNegativeWholeNumber,
-      ),
-      _buildNumberField(
-        'Transplanted',
-        _transplantedController,
-        Icons.grass_rounded,
-        isDark,
-        allowDecimal: false,
-        validator: _nonNegativeWholeNumber,
-      ),
-      _buildNumberField(
-        'Harvested',
-        _harvestedController,
-        Icons.agriculture_rounded,
-        isDark,
-        allowDecimal: false,
-        validator: _nonNegativeWholeNumber,
-      ),
-      _buildNumberField(
-        'Harvest Weight (kg)',
-        _harvestWeightController,
-        Icons.scale_outlined,
-        isDark,
-        allowDecimal: true,
-        validator: _nonNegativeNumber,
-      ),
+    final fields = <Widget>[
+      if (_collects('planted_count'))
+        _buildNumberField(
+            'Planted / Nursed', _plantedController, Icons.spa_outlined, isDark,
+            allowDecimal: false, validator: _nonNegativeWholeNumber),
+      if (_collects('transplanted_count'))
+        _buildNumberField('Transplanted', _transplantedController,
+            Icons.grass_rounded, isDark,
+            allowDecimal: false, validator: _nonNegativeWholeNumber),
+      if (_collects('harvested_count'))
+        _buildNumberField('Harvested', _harvestedController,
+            Icons.agriculture_rounded, isDark,
+            allowDecimal: false, validator: _nonNegativeWholeNumber),
+      if (_collects('harvest_weight_kg'))
+        _buildNumberField('Harvest Weight (kg)', _harvestWeightController,
+            Icons.scale_outlined, isDark,
+            validator: _nonNegativeNumber),
     ];
-    if (isMobile) {
-      return Column(
-        children: [
-          for (var index = 0; index < fields.length; index++) ...[
-            fields[index],
-            if (index < fields.length - 1)
-              const SizedBox(height: AppSpacing.md),
-          ],
-        ],
-      );
-    }
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(child: fields[0]),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(child: fields[1]),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            Expanded(child: fields[2]),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(child: fields[3]),
-          ],
-        ),
-      ],
-    );
+    return _recordFieldRows(fields, isMobile);
   }
+
+  Widget _recordFieldRows(List<Widget> fields, bool mobile) =>
+      Column(children: [
+        for (var i = 0; i < fields.length; i += mobile ? 1 : 2) ...[
+          if (mobile)
+            fields[i]
+          else
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Expanded(child: fields[i]),
+              if (i + 1 < fields.length) ...[
+                const SizedBox(width: AppSpacing.md),
+                Expanded(child: fields[i + 1])
+              ]
+            ]),
+          if (i + (mobile ? 1 : 2) < fields.length)
+            const SizedBox(height: AppSpacing.md),
+        ],
+      ]);
 
   String? _nonNegativeWholeNumber(String? value) {
     if (_selectedBatchDoc == null && (value == null || value.trim().isEmpty)) {
@@ -983,63 +989,24 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     return parsed == null || parsed < 0 ? 'Enter zero or a valid weight' : null;
   }
 
-  Widget _buildEnvironmentFields(bool isDark, bool isMobile) {
-    if (isMobile) {
-      return Column(
-        children: [
+  Widget _buildEnvironmentFields(bool isDark, bool isMobile) =>
+      _recordFieldRows([
+        if (_collects('temperature'))
           _buildNumberField('Temperature (C)', _temperatureController,
               Icons.thermostat_rounded, isDark),
-          const SizedBox(height: AppSpacing.md),
+        if (_collects('humidity'))
           _buildNumberField('Humidity (%)', _humidityController,
               Icons.water_drop_rounded, isDark),
-          const SizedBox(height: AppSpacing.md),
+        if (_collects('ph'))
           _buildNumberField(
               'pH Level', _phController, Icons.science_rounded, isDark),
-          const SizedBox(height: AppSpacing.md),
+        if (_collects('ec'))
           _buildNumberField(
               'EC (mS/cm)', _ecController, Icons.bolt_rounded, isDark),
-          const SizedBox(height: AppSpacing.md),
+        if (_collects('light_intensity'))
           _buildNumberField('Light Intensity (lux)', _lightController,
               Icons.light_mode_rounded, isDark),
-        ],
-      );
-    }
-
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildNumberField('Temperature (C)',
-                  _temperatureController, Icons.thermostat_rounded, isDark),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _buildNumberField('Humidity (%)', _humidityController,
-                  Icons.water_drop_rounded, isDark),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            Expanded(
-              child: _buildNumberField(
-                  'pH Level', _phController, Icons.science_rounded, isDark),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: _buildNumberField(
-                  'EC (mS/cm)', _ecController, Icons.bolt_rounded, isDark),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _buildNumberField('Light Intensity (lux)', _lightController,
-            Icons.light_mode_rounded, isDark),
-      ],
-    );
-  }
+      ], isMobile);
 
   // ignore: unused_element
   Widget _buildBottomNavigation(bool isDark) {
@@ -1285,7 +1252,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                       child: Text(
                         'Farm Record Entry',
                         style: AppTypography.titleSmall.copyWith(
-                          fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                          fontSize: isMobile
+                              ? AppTypography.cardTitleSize
+                              : AppTypography.sectionTitleSize,
                           fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),
@@ -1567,7 +1536,12 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                 child: Text(entry.value),
               ))
           .toList(),
-      onChanged: (value) => setState(() => _selectedRecordType = value!),
+      onChanged: (value) => setState(() {
+        _selectedRecordType = value!;
+        _selectedActivities.clear();
+        _maxUnlockedStep = 0;
+        _submitError = null;
+      }),
     );
   }
 
@@ -1642,19 +1616,25 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         .where((title) => title.trim().isNotEmpty)
         .toSet()
         .toList();
-    final activities = [
-      ...taskActivities,
-      'Checked water levels',
-      'Adjusted pH',
-      'Added nutrients',
-      'Pruned dead leaves',
-      'Checked for pests',
-      'Cleaned grow beds',
-      'Monitored temperature',
-      'Checked humidity',
-      'Inspected roots',
-      'Recorded observations',
-    ];
+    final suggestions = switch (_selectedRecordType) {
+      'watering' => ['Checked water levels', 'Adjusted pH', 'Inspected roots'],
+      'feeding' => ['Added nutrients', 'Adjusted pH', 'Inspected roots'],
+      'pruning' => ['Pruned dead leaves'],
+      'transplanting' => ['Transplanted plants', 'Inspected roots'],
+      'harvesting' => ['Harvested crop', 'Weighed harvest'],
+      'cleaning' => ['Cleaned grow beds'],
+      'pest_control' => ['Checked for pests', 'Applied pest control'],
+      'daily_monitoring' => [
+          'Checked water levels',
+          'Monitored temperature',
+          'Checked humidity',
+          'Inspected roots',
+          'Checked for pests'
+        ],
+      _ => <String>[],
+    };
+    final activities =
+        {...taskActivities, ...suggestions, 'Recorded observations'}.toList();
 
     return Wrap(
       spacing: AppSpacing.sm,
@@ -1665,7 +1645,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           label: Text(
             activity,
             style: AppTypography.caption.copyWith(
-              fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
+              fontWeight: isSelected
+                  ? AppTypography.headingWeight
+                  : AppTypography.labelWeight,
               color: isSelected
                   ? AppColors.success
                   : (isDark ? Colors.white70 : AppColors.textPrimary),
@@ -1852,11 +1834,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       }
     }
     if (_selectedRecordTab == 1) {
-      final progressIsValid =
-          _nonNegativeWholeNumber(_plantedController.text) == null &&
-              _nonNegativeWholeNumber(_transplantedController.text) == null &&
-              _nonNegativeWholeNumber(_harvestedController.text) == null &&
-              _nonNegativeNumber(_harvestWeightController.text) == null;
+      final progressIsValid = _progressIsValid;
       if (!progressIsValid || !_formKey.currentState!.validate()) {
         _rejectSubmission(
           'Check the highlighted record values before continuing.',
@@ -1962,11 +1940,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       return;
     }
     if (batch != null) {
-      final progressIsValid =
-          _nonNegativeWholeNumber(_plantedController.text) == null &&
-              _nonNegativeWholeNumber(_transplantedController.text) == null &&
-              _nonNegativeWholeNumber(_harvestedController.text) == null &&
-              _nonNegativeNumber(_harvestWeightController.text) == null;
+      final progressIsValid = _progressIsValid;
       if (!progressIsValid) {
         _rejectSubmission(
           'Check the batch progress values. Use zero or positive numbers only.',
@@ -1996,28 +1970,32 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       recordDate: _recordDate,
       createdBy: user.id,
       createdByName: user.name,
-      temperature: _temperatureController.text.isNotEmpty
-          ? double.tryParse(_temperatureController.text)
-          : null,
-      humidity: _humidityController.text.isNotEmpty
+      temperature:
+          _collects('temperature') && _temperatureController.text.isNotEmpty
+              ? double.tryParse(_temperatureController.text)
+              : null,
+      humidity: _collects('humidity') && _humidityController.text.isNotEmpty
           ? double.tryParse(_humidityController.text)
           : null,
-      ph: _phController.text.isNotEmpty
+      ph: _collects('ph') && _phController.text.isNotEmpty
           ? double.tryParse(_phController.text)
           : null,
-      ec: _ecController.text.isNotEmpty
+      ec: _collects('ec') && _ecController.text.isNotEmpty
           ? double.tryParse(_ecController.text)
           : null,
-      lightIntensity: _lightController.text.isNotEmpty
-          ? double.tryParse(_lightController.text)
-          : null,
-      plantHealth: _plantHealthController.text.isNotEmpty
-          ? _plantHealthController.text
-          : null,
-      growthStage: _growthStageController.text.isNotEmpty
-          ? _growthStageController.text
-          : null,
-      plantCount: _plantedController.text.isNotEmpty
+      lightIntensity:
+          _collects('light_intensity') && _lightController.text.isNotEmpty
+              ? double.tryParse(_lightController.text)
+              : null,
+      plantHealth:
+          _collects('plant_health') && _plantHealthController.text.isNotEmpty
+              ? _plantHealthController.text
+              : null,
+      growthStage:
+          _collects('growth_stage') && _growthStageController.text.isNotEmpty
+              ? _growthStageController.text
+              : null,
+      plantCount: _collects('plant_count') && _plantedController.text.isNotEmpty
           ? int.tryParse(_plantedController.text)
           : null,
       observations: _observationsController.text.isNotEmpty
@@ -2051,7 +2029,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         return;
       }
       await _api.createFarmRecord(
-        data: {
+        data: filterCaretakerRecordFields(_selectedRecordType, {
           'farm_id': record.farmId,
           'farm_name': record.farmName,
           'batch_id': record.batchId,
@@ -2079,7 +2057,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
               _hasIssues ? _issueDescriptionController.text.trim() : '',
           'issue_severity': _hasIssues ? _issueSeverity : 'none',
           'notes': _notesController.text.trim(),
-        },
+        }),
       );
     } catch (error) {
       if (!mounted) return;
