@@ -10,38 +10,42 @@ class FarmRecordModel {
   final DateTime recordDate;
   final String createdBy;
   final String createdByName;
-  
+
   // Environmental readings
+  final double? waterTemperature;
+  final double? waterBoughtLitres;
+  final double? waterBoughtAmount;
+  final double? acWaterLitres;
   final double? temperature;
   final double? humidity;
   final double? ph;
   final double? ec; // Electrical Conductivity
   final double? lightIntensity;
-  
+
   // Plant observations
   final String? plantHealth;
   final String? growthStage;
   final int? plantCount;
   final String? observations;
-  
+
   // Activities performed
   final List<String> activitiesPerformed;
-  
+
   // Issues and concerns
   final bool hasIssues;
   final String? issueDescription;
   final IssueSeverity? issueSeverity;
-  
+
   // Inputs used
   final List<InputUsed> inputsUsed;
-  
+
   // Media attachments
   final List<String> photoUrls;
-  
+
   // Timestamps
   final DateTime createdAt;
   final DateTime? updatedAt;
-  
+
   // Notes
   final String? notes;
 
@@ -55,6 +59,10 @@ class FarmRecordModel {
     required this.recordDate,
     required this.createdBy,
     required this.createdByName,
+    this.waterTemperature,
+    this.waterBoughtLitres,
+    this.waterBoughtAmount,
+    this.acWaterLitres,
     this.temperature,
     this.humidity,
     this.ph,
@@ -77,7 +85,8 @@ class FarmRecordModel {
 
   /// Check if environmental readings are within normal range
   bool get hasAbnormalReadings {
-    if (temperature != null && (temperature! < 18 || temperature! > 28)) return true;
+    if (temperature != null && (temperature! < 18 || temperature! > 28))
+      return true;
     if (humidity != null && (humidity! < 50 || humidity! > 80)) return true;
     if (ph != null && (ph! < 5.5 || ph! > 6.5)) return true;
     if (ec != null && (ec! < 1.2 || ec! > 2.0)) return true;
@@ -110,6 +119,10 @@ class FarmRecordModel {
       recordDate: DateTime.parse(json['recordDate'] as String),
       createdBy: json['createdBy'] as String,
       createdByName: json['createdByName'] as String,
+      waterTemperature: (json['waterTemperature'] as num?)?.toDouble(),
+      waterBoughtLitres: (json['waterBoughtLitres'] as num?)?.toDouble(),
+      waterBoughtAmount: (json['waterBoughtAmount'] as num?)?.toDouble(),
+      acWaterLitres: (json['acWaterLitres'] as num?)?.toDouble(),
       temperature: (json['temperature'] as num?)?.toDouble(),
       humidity: (json['humidity'] as num?)?.toDouble(),
       ph: (json['ph'] as num?)?.toDouble(),
@@ -156,6 +169,10 @@ class FarmRecordModel {
       'recordDate': recordDate.toIso8601String(),
       'createdBy': createdBy,
       'createdByName': createdByName,
+      'waterTemperature': waterTemperature,
+      'waterBoughtLitres': waterBoughtLitres,
+      'waterBoughtAmount': waterBoughtAmount,
+      'acWaterLitres': acWaterLitres,
       'temperature': temperature,
       'humidity': humidity,
       'ph': ph,
@@ -188,6 +205,10 @@ class FarmRecordModel {
     DateTime? recordDate,
     String? createdBy,
     String? createdByName,
+    double? waterTemperature,
+    double? waterBoughtLitres,
+    double? waterBoughtAmount,
+    double? acWaterLitres,
     double? temperature,
     double? humidity,
     double? ph,
@@ -217,6 +238,10 @@ class FarmRecordModel {
       recordDate: recordDate ?? this.recordDate,
       createdBy: createdBy ?? this.createdBy,
       createdByName: createdByName ?? this.createdByName,
+      waterTemperature: waterTemperature ?? this.waterTemperature,
+      waterBoughtLitres: waterBoughtLitres ?? this.waterBoughtLitres,
+      waterBoughtAmount: waterBoughtAmount ?? this.waterBoughtAmount,
+      acWaterLitres: acWaterLitres ?? this.acWaterLitres,
       temperature: temperature ?? this.temperature,
       humidity: humidity ?? this.humidity,
       ph: ph ?? this.ph,
@@ -255,7 +280,8 @@ class FarmRecordModel {
 
 /// Record Type
 enum RecordType {
-  dailyMonitoring('daily_monitoring', 'Daily Monitoring', 'Regular daily check'),
+  dailyMonitoring(
+      'daily_monitoring', 'Daily Monitoring', 'Regular daily check'),
   watering('watering', 'Watering', 'Watering activity'),
   feeding('feeding', 'Feeding/Nutrients', 'Nutrient application'),
   pruning('pruning', 'Pruning', 'Plant pruning'),

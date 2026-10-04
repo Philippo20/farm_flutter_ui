@@ -1,8 +1,7 @@
 /// Fields collected for each caretaker workflow. Common notes/issues remain available.
 Set<String> caretakerRecordFields(String type) => switch (type) {
       'daily_monitoring' => {
-          'planted_count',
-          'plant_count',
+          'water_temperature',
           'plant_health',
           'growth_stage',
           'temperature',
@@ -13,7 +12,16 @@ Set<String> caretakerRecordFields(String type) => switch (type) {
         },
       'transplanting' => {'transplanted_count', 'plant_health', 'growth_stage'},
       'harvesting' => {'harvested_count', 'harvest_weight_kg', 'plant_health'},
-      'watering' || 'feeding' => {'ph', 'ec', 'plant_health'},
+      'watering' => {
+          'ph',
+          'ec',
+          'plant_health',
+          'water_temperature',
+          'water_bought_litres',
+          'water_bought_amount',
+          'ac_water_litres'
+        },
+      'feeding' => {'ph', 'ec', 'plant_health'},
       'pruning' || 'pest_control' => {'plant_health'},
       _ => <String>{},
     };
@@ -21,6 +29,10 @@ Set<String> caretakerRecordFields(String type) => switch (type) {
 Map<String, dynamic> filterCaretakerRecordFields(
     String type, Map<String, dynamic> data) {
   const controlled = {
+    'water_temperature',
+    'water_bought_litres',
+    'water_bought_amount',
+    'ac_water_litres',
     'planted_count',
     'plant_count',
     'transplanted_count',

@@ -2,6 +2,41 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:farmestates_ai_dashbaord/core/utils/caretaker_record_fields.dart';
 
 void main() {
+  test('Watering preserves both sources and other types exclude them', () {
+    final water = {
+      'water_temperature': 24.5,
+      'water_bought_litres': 120.5,
+      'water_bought_amount': 60,
+      'ac_water_litres': 8
+    };
+    expect(filterCaretakerRecordFields('watering', water), water);
+    expect(filterCaretakerRecordFields('daily_monitoring', water),
+        {'water_temperature': 24.5});
+    expect(filterCaretakerRecordFields('feeding', water), isEmpty);
+  });
+  test('Daily monitoring excludes all batch progress totals', () {
+    const progress = {
+      'planted_count',
+      'plant_count',
+      'transplanted_count',
+      'harvested_count',
+      'harvest_weight_kg'
+    };
+    expect(caretakerRecordFields('daily_monitoring').intersection(progress),
+        isEmpty);
+    expect(
+        filterCaretakerRecordFields('daily_monitoring', {
+          for (final field in progress) field: 100,
+          'temperature': 27,
+          'growth_stage': 'Vegetative',
+          'observations': 'Healthy crop',
+        }),
+        {
+          'temperature': 27,
+          'growth_stage': 'Vegetative',
+          'observations': 'Healthy crop',
+        });
+  });
   test('Harvest and transplant collect only their own production totals', () {
     expect(caretakerRecordFields('harvesting'),
         containsAll(['harvested_count', 'harvest_weight_kg']));

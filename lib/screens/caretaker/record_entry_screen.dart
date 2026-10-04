@@ -61,6 +61,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   final _issueDescriptionController = TextEditingController();
 
   // Notes
+  final _waterTemperature = TextEditingController();
+  final _waterBoughtLitres = TextEditingController();
+  final _waterBoughtAmount = TextEditingController();
+  final _acWaterLitres = TextEditingController();
   final _notesController = TextEditingController();
 
   bool _isSubmitting = false;
@@ -97,6 +101,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     _harvestWeightController.dispose();
     _observationsController.dispose();
     _issueDescriptionController.dispose();
+    _waterTemperature.dispose();
+    _waterBoughtLitres.dispose();
+    _waterBoughtAmount.dispose();
+    _acWaterLitres.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -554,6 +562,36 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     );
   }
 
+  String? _waterTemperatureError(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final number = double.tryParse(value.trim());
+    return number == null || !number.isFinite
+        ? 'Enter a valid temperature'
+        : null;
+  }
+
+  String? _waterNumber(String? value, {bool required = false}) {
+    if (value == null || value.trim().isEmpty)
+      return required ? 'Enter a value' : null;
+    final parsed = double.tryParse(value.trim());
+    return parsed == null || !parsed.isFinite || parsed < 0
+        ? 'Enter zero or a positive number'
+        : null;
+  }
+
+  bool get _waterValid =>
+      (!_collects('water_temperature') ||
+          _waterTemperatureError(_waterTemperature.text) == null) &&
+      (_selectedRecordType != 'watering' ||
+          (_waterNumber(_waterBoughtLitres.text,
+                      required: _waterBoughtAmount.text.trim().isNotEmpty) ==
+                  null &&
+              _waterNumber(_waterBoughtAmount.text,
+                      required: _waterBoughtLitres.text.trim().isNotEmpty) ==
+                  null &&
+              _waterNumber(_acWaterLitres.text) == null &&
+              _waterTemperatureError(_waterTemperature.text) == null));
+
   bool _collects(String key) =>
       caretakerRecordFields(_selectedRecordType).contains(key);
   bool get _hasProgressFields => [
@@ -563,7 +601,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         'harvest_weight_kg'
       ].any(_collects);
   bool get _hasEnvironmentFields =>
-      ['temperature', 'humidity', 'ph', 'ec', 'light_intensity'].any(_collects);
+      ['temperature', 'humidity', 'light_intensity'].any(_collects);
+  bool get _hasWaterParameters =>
+      ['water_temperature', 'ph', 'ec'].any(_collects);
   bool get _progressIsValid =>
       (!_collects('planted_count') ||
           _nonNegativeWholeNumber(_plantedController.text) == null) &&
@@ -608,29 +648,68 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             isDark,
           ),
           const SizedBox(height: AppSpacing.md),
-          if (_collects('plant_health')) ...[
-            _buildTextField('Plant Health', _plantHealthController,
-                'e.g., Healthy, Yellowing, etc.', isDark),
-            const SizedBox(height: AppSpacing.md),
-          ],
-          if (_collects('growth_stage')) ...[
-            _buildTextField('Growth Stage', _growthStageController,
-                'e.g., Vegetative, Flowering', isDark),
+          if (_collects('plant_health') || _collects('growth_stage')) ...[
+            _recordFieldRows([
+              if (_collects('plant_health'))
+                _buildTextField('Plant Health', _plantHealthController,
+                    'e.g., Healthy, Yellowing, etc.', isDark),
+              if (_collects('growth_stage'))
+                _buildTextField('Growth Stage', _growthStageController,
+                    'e.g., Vegetative, Flowering', isDark),
+            ], isMobile),
             const SizedBox(height: AppSpacing.md),
           ],
           _buildTextField('Observations', _observationsController,
               'Any notable observations...', isDark,
               maxLines: 3),
           const SizedBox(height: AppSpacing.lg),
+          if (_selectedRecordType == 'watering') ...[
+            _buildSubsectionTitle(
+                'Water bought',
+                'Record purchased water and the total amount paid.',
+                Icons.shopping_bag_outlined,
+                isDark),
+            const SizedBox(height: AppSpacing.md),
+            _recordFieldRows([
+              _buildNumberField('Litres bought', _waterBoughtLitres,
+                  Icons.water_drop_outlined, isDark,
+                  validator: (v) => _waterNumber(v,
+                      required: _waterBoughtAmount.text.trim().isNotEmpty)),
+              _buildNumberField('Amount paid', _waterBoughtAmount,
+                  Icons.payments_outlined, isDark,
+                  validator: (v) => _waterNumber(v,
+                      required: _waterBoughtLitres.text.trim().isNotEmpty)),
+            ], isMobile),
+            const SizedBox(height: AppSpacing.lg),
+            _buildSubsectionTitle(
+                'AC water added',
+                'Record only the litres of AC water added.',
+                Icons.water_drop_outlined,
+                isDark),
+            const SizedBox(height: AppSpacing.md),
+            _buildNumberField('AC water added (litres)', _acWaterLitres,
+                Icons.water_drop_outlined, isDark,
+                validator: _waterNumber),
+            const SizedBox(height: AppSpacing.lg),
+          ],
           if (_hasEnvironmentFields) ...[
             _buildSubsectionTitle(
-              'Environment',
-              'Add available climate and nutrient readings.',
-              Icons.sensors_outlined,
-              isDark,
-            ),
+                'Environment',
+                'Record air temperature, humidity and light intensity.',
+                Icons.sensors_outlined,
+                isDark),
             const SizedBox(height: AppSpacing.md),
             _buildEnvironmentFields(isDark, isMobile),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+          if (_hasWaterParameters) ...[
+            _buildSubsectionTitle(
+                'Water parameters',
+                'Record water temperature, pH and electrical conductivity.',
+                Icons.water_drop_outlined,
+                isDark),
+            const SizedBox(height: AppSpacing.md),
+            _buildWaterParameters(isDark, isMobile),
             const SizedBox(height: AppSpacing.lg),
           ],
           _buildSubsectionTitle(
@@ -644,8 +723,6 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         ];
       case 2:
         return [
-          _buildReviewSummary(isDark),
-          const SizedBox(height: AppSpacing.lg),
           _buildSubsectionTitle(
             'Issues and Concerns',
             'Flag anything that requires attention from the Farm Manager.',
@@ -680,6 +757,18 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             'Any additional notes...',
             isDark,
             maxLines: 4,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _buildSubsectionTitle(
+              'Review your record',
+              'Check these values before submitting. Use Back to edit the readings.',
+              Icons.fact_check_outlined,
+              isDark),
+          const SizedBox(height: AppSpacing.md),
+          AnimatedBuilder(
+            animation: Listenable.merge(
+                [_issueDescriptionController, _notesController]),
+            builder: (context, _) => _buildReviewSummary(isDark),
           ),
         ];
       default:
@@ -733,96 +822,185 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
 
   Widget _buildReviewSummary(bool isDark) {
     final batch = _selectedBatchDoc;
-    final batchNumber = batch == null
-        ? 'No batch selected'
-        : _value(
-            batch,
-            const ['batch_no', 'batch_number', 'batch_id'],
-            fallback: 'Batch',
-          );
-    final items = [
-      ('Batch', batchNumber, Icons.inventory_2_outlined),
-      if (_collects('planted_count'))
-        ('Planted / Nursed', _plantedController.text, Icons.spa_outlined),
-      if (_collects('transplanted_count'))
-        ('Transplanted', _transplantedController.text, Icons.grass_rounded),
-      if (_collects('harvested_count'))
-        ('Harvested', _harvestedController.text, Icons.agriculture_outlined),
-      if (_collects('harvest_weight_kg'))
+    final farm = _selectedFarmDoc;
+    String entered(String value) =>
+        value.trim().isEmpty ? 'Not entered' : value.trim();
+    String label(String value) => value
+        .split('_')
+        .map((word) =>
+            word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1)}')
+        .join(' ');
+    final sections = <(String, List<(String, String)>)>[
+      (
+        'Record information',
+        [
+          (
+            'Farm',
+            farm == null
+                ? 'Not selected'
+                : _value(farm, const ['name', 'farm_name'], fallback: 'Farm')
+          ),
+          (
+            'Batch',
+            batch == null
+                ? 'Not selected'
+                : _value(batch, const ['batch_no', 'batch_number', 'batch_id'],
+                    fallback: 'Batch')
+          ),
+          (
+            'Record type',
+            _selectedRecordType == 'feeding'
+                ? 'Feeding / Nutrients'
+                : label(_selectedRecordType)
+          ),
+          ('Record date', DateFormat('dd MMM yyyy').format(_recordDate)),
+          ('Recorded by', ref.read(authProvider).user?.name ?? 'Not available'),
+        ]
+      ),
+      if (_hasProgressFields)
         (
-          'Harvest Weight',
-          '${_harvestWeightController.text} kg',
-          Icons.scale_outlined
+          'Batch progress',
+          [
+            if (_collects('planted_count'))
+              ('Planted / Nursed', entered(_plantedController.text)),
+            if (_collects('transplanted_count'))
+              ('Transplanted', entered(_transplantedController.text)),
+            if (_collects('harvested_count'))
+              ('Harvested', entered(_harvestedController.text)),
+            if (_collects('harvest_weight_kg'))
+              ('Harvest weight (kg)', entered(_harvestWeightController.text)),
+          ]
         ),
       (
-        'Activities',
-        '${_selectedActivities.length} selected',
-        Icons.checklist_rounded
+        'Plant observations',
+        [
+          if (_collects('plant_health'))
+            ('Plant health', entered(_plantHealthController.text)),
+          if (_collects('growth_stage'))
+            ('Growth stage', entered(_growthStageController.text)),
+          ('Observations', entered(_observationsController.text)),
+        ]
+      ),
+      if (_hasEnvironmentFields)
+        (
+          'Environment',
+          [
+            if (_collects('temperature'))
+              (
+                'Air temperature (\u00b0C)',
+                entered(_temperatureController.text)
+              ),
+            if (_collects('humidity'))
+              ('Humidity (%)', entered(_humidityController.text)),
+            if (_collects('light_intensity'))
+              ('Light intensity (lux)', entered(_lightController.text)),
+          ]
+        ),
+      if (_hasWaterParameters)
+        (
+          'Water parameters',
+          [
+            if (_collects('water_temperature'))
+              ('Water temperature (\u00b0C)', entered(_waterTemperature.text)),
+            if (_collects('ph')) ('pH', entered(_phController.text)),
+            if (_collects('ec')) ('EC (mS/cm)', entered(_ecController.text)),
+          ]
+        ),
+      if (_selectedRecordType == 'watering')
+        (
+          'Water added',
+          [
+            ('Water bought (litres)', entered(_waterBoughtLitres.text)),
+            ('Amount paid', entered(_waterBoughtAmount.text)),
+            ('AC water added (litres)', entered(_acWaterLitres.text)),
+          ]
+        ),
+      (
+        'Completed activities',
+        [
+          (
+            'Activities',
+            _selectedActivities.isEmpty
+                ? 'None selected'
+                : _selectedActivities.join('\n')
+          ),
+        ]
+      ),
+      (
+        'Issues and handover',
+        [
+          ('Issues reported', _hasIssues ? 'Yes' : 'No'),
+          if (_hasIssues) ('Severity', label(_issueSeverity)),
+          if (_hasIssues)
+            ('Issue description', entered(_issueDescriptionController.text)),
+          ('Notes', entered(_notesController.text)),
+        ]
       ),
     ];
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 700 ? 3 : 2;
-        final spacing = AppSpacing.sm;
-        final width =
-            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
-        return Wrap(
-          spacing: spacing,
-          runSpacing: spacing,
-          children: items.map((item) {
-            return Container(
-              width: width,
-              constraints: const BoxConstraints(minHeight: 76),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.white.withValues(alpha: 0.04)
-                    : AppColors.neutral50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isDark ? Colors.white10 : AppColors.neutral200,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(item.$3, size: 18, color: AppColors.primary),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.$1,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.caption.copyWith(
-                            color: isDark
-                                ? Colors.white60
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          item.$2.isEmpty ? '0' : item.$2,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodySmall.copyWith(
-                            color:
-                                isDark ? Colors.white : AppColors.textPrimary,
-                            fontWeight: AppTypography.headingWeight,
-                          ),
-                        ),
-                      ],
+    const fullWidthLabels = {
+      'Batch',
+      'Observations',
+      'Activities',
+      'Issue description',
+      'Notes'
+    };
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      for (final section in sections)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.white.withValues(alpha: .04)
+                  : AppColors.neutral50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: isDark ? Colors.white10 : AppColors.neutral200),
+            ),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(section.$1,
+                  style: AppTypography.bodySmall.copyWith(
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                      fontWeight: AppTypography.headingWeight)),
+              const SizedBox(height: 14),
+              LayoutBuilder(builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 720
+                    ? 3
+                    : constraints.maxWidth >= 420
+                        ? 2
+                        : 1;
+                final width =
+                    (constraints.maxWidth - 16 * (columns - 1)) / columns;
+                return Wrap(spacing: 16, runSpacing: 14, children: [
+                  for (final item in section.$2)
+                    SizedBox(
+                      width: fullWidthLabels.contains(item.$1)
+                          ? constraints.maxWidth
+                          : width,
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(item.$1,
+                                style: AppTypography.caption.copyWith(
+                                    color: isDark
+                                        ? Colors.white60
+                                        : AppColors.textSecondary)),
+                            const SizedBox(height: 5),
+                            Text(item.$2,
+                                style: AppTypography.bodySmall.copyWith(
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.textPrimary)),
+                          ]),
                     ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        );
-      },
-    );
+                ]);
+              }),
+            ]),
+          ),
+        ),
+    ]);
   }
 
   Widget _buildSelectedBatchSummary(bool isDark) {
@@ -955,23 +1133,27 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     return _recordFieldRows(fields, isMobile);
   }
 
-  Widget _recordFieldRows(List<Widget> fields, bool mobile) =>
-      Column(children: [
-        for (var i = 0; i < fields.length; i += mobile ? 1 : 2) ...[
-          if (mobile)
-            fields[i]
-          else
+  Widget _recordFieldRows(List<Widget> fields, bool mobile,
+          {int desktopColumns = 2}) =>
+      LayoutBuilder(builder: (context, constraints) {
+        final columns = mobile
+            ? 1
+            : desktopColumns == 3 && constraints.maxWidth >= 720
+                ? 3
+                : 2;
+        return Column(children: [
+          for (var i = 0; i < fields.length; i += columns) ...[
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(child: fields[i]),
-              if (i + 1 < fields.length) ...[
-                const SizedBox(width: AppSpacing.md),
-                Expanded(child: fields[i + 1])
-              ]
+              for (var j = i; j < fields.length && j < i + columns; j++) ...[
+                if (j > i) const SizedBox(width: AppSpacing.md),
+                Expanded(child: fields[j]),
+              ],
             ]),
-          if (i + (mobile ? 1 : 2) < fields.length)
-            const SizedBox(height: AppSpacing.md),
-        ],
-      ]);
+            if (i + columns < fields.length)
+              const SizedBox(height: AppSpacing.md),
+          ],
+        ]);
+      });
 
   String? _nonNegativeWholeNumber(String? value) {
     if (_selectedBatchDoc == null && (value == null || value.trim().isEmpty)) {
@@ -992,21 +1174,28 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   Widget _buildEnvironmentFields(bool isDark, bool isMobile) =>
       _recordFieldRows([
         if (_collects('temperature'))
-          _buildNumberField('Temperature (C)', _temperatureController,
+          _buildNumberField('Air temperature (\u00b0C)', _temperatureController,
               Icons.thermostat_rounded, isDark),
         if (_collects('humidity'))
           _buildNumberField('Humidity (%)', _humidityController,
               Icons.water_drop_rounded, isDark),
+        if (_collects('light_intensity'))
+          _buildNumberField('Light intensity (lux)', _lightController,
+              Icons.light_mode_rounded, isDark),
+      ], isMobile, desktopColumns: 3);
+
+  Widget _buildWaterParameters(bool isDark, bool isMobile) => _recordFieldRows([
+        if (_collects('water_temperature'))
+          _buildNumberField('Water temperature (\u00b0C)', _waterTemperature,
+              Icons.thermostat_outlined, isDark,
+              validator: _waterTemperatureError),
         if (_collects('ph'))
           _buildNumberField(
               'pH Level', _phController, Icons.science_rounded, isDark),
         if (_collects('ec'))
           _buildNumberField(
               'EC (mS/cm)', _ecController, Icons.bolt_rounded, isDark),
-        if (_collects('light_intensity'))
-          _buildNumberField('Light Intensity (lux)', _lightController,
-              Icons.light_mode_rounded, isDark),
-      ], isMobile);
+      ], isMobile, desktopColumns: 3);
 
   // ignore: unused_element
   Widget _buildBottomNavigation(bool isDark) {
@@ -1835,7 +2024,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     }
     if (_selectedRecordTab == 1) {
       final progressIsValid = _progressIsValid;
-      if (!progressIsValid || !_formKey.currentState!.validate()) {
+      if (!progressIsValid ||
+          !_waterValid ||
+          !_formKey.currentState!.validate()) {
         _rejectSubmission(
           'Check the highlighted record values before continuing.',
         );
@@ -1949,6 +2140,11 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         return;
       }
     }
+    if (!_waterValid) {
+      _rejectSubmission('Check the water quantities and purchase amount.',
+          tab: 1);
+      return;
+    }
     if (_hasIssues && _issueDescriptionController.text.trim().isEmpty) {
       _rejectSubmission('Describe the issue before submitting.', tab: 2);
       return;
@@ -1966,6 +2162,18 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       batchNumber: batch == null
           ? null
           : _value(batch, const ['batch_no', 'batch_number', 'batch_id']),
+      waterTemperature: _collects('water_temperature')
+          ? double.tryParse(_waterTemperature.text.trim())
+          : null,
+      waterBoughtLitres: _selectedRecordType == 'watering'
+          ? double.tryParse(_waterBoughtLitres.text.trim())
+          : null,
+      waterBoughtAmount: _selectedRecordType == 'watering'
+          ? double.tryParse(_waterBoughtAmount.text.trim())
+          : null,
+      acWaterLitres: _selectedRecordType == 'watering'
+          ? double.tryParse(_acWaterLitres.text.trim())
+          : null,
       type: RecordType.fromString(_selectedRecordType),
       recordDate: _recordDate,
       createdBy: user.id,
@@ -2056,6 +2264,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           'issue_description':
               _hasIssues ? _issueDescriptionController.text.trim() : '',
           'issue_severity': _hasIssues ? _issueSeverity : 'none',
+          'water_temperature': _waterTemperature.text.trim(),
+          'water_bought_litres': _waterBoughtLitres.text.trim(),
+          'water_bought_amount': _waterBoughtAmount.text.trim(),
+          'ac_water_litres': _acWaterLitres.text.trim(),
           'notes': _notesController.text.trim(),
         }),
       );
