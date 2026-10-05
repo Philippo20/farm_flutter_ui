@@ -1,3 +1,5 @@
+import '../../services/auth_service.dart';
+import 'first_password_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -39,6 +41,21 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
 
     if (!mounted) return;
 
+    final challenge = AuthService().passwordChangeToken;
+    if (challenge != null) {
+      final changed = await Navigator.of(context).push<bool>(MaterialPageRoute(
+          builder: (_) => FirstPasswordScreen(
+              token: challenge, temporaryPassword: password)));
+      AuthService().passwordChangeToken = null;
+      if (!mounted) return;
+      _passwordController.clear();
+      if (changed == true) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content:
+                Text('Password changed. Sign in with your new password.')));
+      }
+      return;
+    }
     if (success) {
       // Get the appropriate dashboard route
       final route = ref.read(authProvider.notifier).getDashboardRoute();
@@ -125,7 +142,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
           style: AppTypography.h3.copyWith(
             fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+            fontSize: isMobile
+                ? AppTypography.pageTitleSize
+                : AppTypography.metricSize,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -133,7 +152,8 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
           'Management Platform',
           style: AppTypography.bodyMedium.copyWith(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
-            fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
+            fontSize:
+                isMobile ? AppTypography.actionSize : AppTypography.bodySize,
           ),
           textAlign: TextAlign.center,
         ),
@@ -286,7 +306,8 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                               child: Text(
                                 authState.error!,
                                 style: TextStyle(
-                                    color: AppColors.error, fontSize: AppTypography.actionSize),
+                                    color: AppColors.error,
+                                    fontSize: AppTypography.actionSize),
                               ),
                             ),
                           ],
@@ -346,7 +367,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
             // Forgot Password
             Center(
               child: TextButton(
-                onPressed: () => Navigator.pushNamed(context, '/forgot-password', arguments: _emailController.text.trim()),
+                onPressed: () => Navigator.pushNamed(
+                    context, '/forgot-password',
+                    arguments: _emailController.text.trim()),
                 child: Text(
                   'Forgot Password?',
                   style: TextStyle(
@@ -383,7 +406,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                   style: AppTypography.bodyLarge.copyWith(
                     fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: isMobile ? AppTypography.bodySize : AppTypography.cardTitleSize,
+                    fontSize: isMobile
+                        ? AppTypography.bodySize
+                        : AppTypography.cardTitleSize,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -457,7 +482,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                     style: AppTypography.bodyMedium.copyWith(
                       fontWeight: AppTypography.headingWeight,
                       color: AppColors.primary,
-                      fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
+                      fontSize: isMobile
+                          ? AppTypography.actionSize
+                          : AppTypography.bodySize,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -467,7 +494,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                     account.description,
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white60 : AppColors.textSecondary,
-                      fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                      fontSize: isMobile
+                          ? AppTypography.microSize
+                          : AppTypography.fieldLabelSize,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -477,7 +506,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                     account.email,
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white70 : AppColors.textSecondary,
-                      fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                      fontSize: isMobile
+                          ? AppTypography.microSize
+                          : AppTypography.fieldLabelSize,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -486,7 +517,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                     'Password: ${account.password}',
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white70 : AppColors.textSecondary,
-                      fontSize: isMobile ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                      fontSize: isMobile
+                          ? AppTypography.microSize
+                          : AppTypography.fieldLabelSize,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

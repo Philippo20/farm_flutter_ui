@@ -1,3 +1,4 @@
+import 'auth_service.dart';
 import 'api_connection.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -466,12 +467,18 @@ class SuperAdminApiService {
         '/sensors/' + Uri.encodeComponent(serialNumber) + '/readings?' + query);
   }
 
-  Future<(List<Map<String, dynamic>>, DateTime?)> getLiveSensorTelemetry() async {
+  Future<(List<Map<String, dynamic>>, DateTime?)>
+      getLiveSensorTelemetry() async {
     final response = await _client.get(Uri.parse('$baseUrl/sensor-readings'),
-      headers: {'Cache-Control': 'no-cache'}).withApiTimeout();
-    if (response.statusCode != 200) throw SuperAdminApiException('Sensor refresh failed (${response.statusCode})');
+        headers: {'Cache-Control': 'no-cache'}).withApiTimeout();
+    if (response.statusCode != 200)
+      throw SuperAdminApiException(
+          'Sensor refresh failed (${response.statusCode})');
     final body = jsonDecode(response.body) as Map<String, dynamic>;
-    final rows = (body['users'] as List).whereType<Map>().map((row) => Map<String, dynamic>.from(row)).toList();
+    final rows = (body['users'] as List)
+        .whereType<Map>()
+        .map((row) => Map<String, dynamic>.from(row))
+        .toList();
     return (rows, DateTime.tryParse('${body['server_time'] ?? ''}')?.toUtc());
   }
 
@@ -1550,26 +1557,37 @@ class SuperAdminApiService {
     String vehicleType = '',
     double vehicleCapacityKg = 0,
   }) async {
-    final response = await _client.post(
-      Uri.parse('$baseUrl/users/signup'),
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: {
-        'name': name,
-        'email': email,
-        'password': password,
-        'address': address,
-        'role': role,
-        'phone': phone,
-        'department': department,
-        'status': status,
-        'actor_id': actorId,
-        'actor_role': actorRole,
-        'driver_license_number': driverLicenseNumber,
-        'vehicle': vehicle,
-        'vehicle_type': vehicleType,
-        'vehicle_capacity_kg': vehicleCapacityKg.toString(),
-      },
-    ).withApiTimeout();
+    // Account creation also waits for SMTP delivery before reporting success.
+    final creationClient = _client is ConnectedApiClient
+        ? ConnectedApiClient(timeout: const Duration(seconds: 60))
+        : _client;
+    late final http.Response response;
+    try {
+      response = await creationClient.post(
+        Uri.parse('$baseUrl/users/signup'),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Bearer ${AuthService().jwt ?? ''}'
+        },
+        body: {
+          'name': name,
+          'email': email,
+          'address': address,
+          'role': role,
+          'phone': phone,
+          'department': department,
+          'status': status,
+          'actor_id': actorId,
+          'actor_role': actorRole,
+          'driver_license_number': driverLicenseNumber,
+          'vehicle': vehicle,
+          'vehicle_type': vehicleType,
+          'vehicle_capacity_kg': vehicleCapacityKg.toString(),
+        },
+      ).withApiTimeout();
+    } finally {
+      if (!identical(creationClient, _client)) creationClient.close();
+    }
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw SuperAdminApiException(

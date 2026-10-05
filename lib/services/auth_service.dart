@@ -34,6 +34,7 @@ class AuthService {
   String? _dashboardRoute;
   String? _jwt;
   String? _sessionId;
+  String? passwordChangeToken;
   DateTime? lastActivity;
   int sessionTimeoutMinutes = 30;
   int sessionWarningMinutes = 5;
@@ -153,12 +154,9 @@ class AuthService {
 
   /// Login with email and password
   Future<AuthResult> login(String email, String password) async {
+    passwordChangeToken = null;
     final result = await _loginWithApi(email.toLowerCase().trim(), password);
-    return result ??
-        AuthResult(
-            success: false,
-            message:
-                connectionMessage);
+    return result ?? AuthResult(success: false, message: connectionMessage);
   }
 
   Future<AuthResult?> _loginWithApi(String email, String password) async {
@@ -192,6 +190,13 @@ class AuthService {
       }
 
       final payload = jsonDecode(response.body) as Map<String, dynamic>;
+      if (payload['must_change_password'] == true &&
+          payload['password_change_token'] is String) {
+        passwordChangeToken = payload['password_change_token'] as String;
+        return AuthResult(
+            success: false,
+            message: 'Change your temporary password to continue.');
+      }
       final userJson = payload['user'] as Map<String, dynamic>?;
       if (userJson == null) {
         return AuthResult(
@@ -263,6 +268,7 @@ class AuthService {
   /// Map role string to UserRole enum
   /// Logout current user
   Future<void> logout() async {
+    passwordChangeToken = null;
     try {
       // Log logout activity
       if (_currentUser != null) {

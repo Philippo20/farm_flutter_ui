@@ -198,7 +198,8 @@ class _CreateUserModalState extends State<_CreateUserModal> {
                         _editing
                             ? 'Update account details and access'
                             : 'Create an account for your team',
-                        style: AppTypography.font(fontSize: AppTypography.captionSize, color: muted)),
+                        style: AppTypography.font(
+                            fontSize: AppTypography.captionSize, color: muted)),
                   ])),
               IconButton(
                   onPressed:
@@ -241,7 +242,8 @@ class _CreateUserModalState extends State<_CreateUserModal> {
                                                   widget.departmentForRole!(
                                                       _role),
                                                   style: AppTypography.font(
-                                                      fontSize: AppTypography.captionSize))))
+                                                      fontSize: AppTypography
+                                                          .captionSize))))
                                       : _select(
                                           'Department',
                                           _department,
@@ -249,13 +251,21 @@ class _CreateUserModalState extends State<_CreateUserModal> {
                                           Icons.business_outlined,
                                           (value) => setState(
                                               () => _department = value))),
-                              if (widget.includeAccountFields || _editing)
+                              if (_editing)
                                 _input(
                                     'password',
                                     _editing
                                         ? 'New password (leave blank to keep current)'
                                         : 'Password',
                                     Icons.lock_outline),
+                              if (!_editing)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 14),
+                                  child: Text(
+                                      'An 8-character temporary password will be generated and emailed to this user. They must change it at first sign-in.',
+                                      style: AppTypography.bodySmall
+                                          .copyWith(color: muted)),
+                                ),
                               if (widget.includeAccountFields) ...[
                                 _input('phone', 'Phone number',
                                     Icons.phone_outlined,
@@ -305,7 +315,8 @@ class _CreateUserModalState extends State<_CreateUserModal> {
                                         liveRegion: true,
                                         child: Text(_error!,
                                             style: AppTypography.font(
-                                                fontSize: AppTypography.captionSize,
+                                                fontSize:
+                                                    AppTypography.captionSize,
                                                 color: AppColors.error)))),
                             ]))))),
         Padding(
@@ -355,8 +366,9 @@ class _CreateUserModalState extends State<_CreateUserModal> {
 
   ButtonStyle _buttonStyle() => ButtonStyle(
       padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 12)),
-      textStyle: WidgetStatePropertyAll(
-          AppTypography.font(fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
+      textStyle: WidgetStatePropertyAll(AppTypography.font(
+          fontSize: AppTypography.actionSize,
+          fontWeight: AppTypography.headingWeight)),
       shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))));
 
@@ -372,8 +384,9 @@ class _CreateUserModalState extends State<_CreateUserModal> {
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label,
-            style:
-                AppTypography.font(fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight)),
+            style: AppTypography.font(
+                fontSize: AppTypography.fieldLabelSize,
+                fontWeight: AppTypography.headingWeight)),
         const SizedBox(height: 6),
         field,
       ]));
@@ -441,7 +454,8 @@ class _CreateUserModalState extends State<_CreateUserModal> {
               value: value,
               isExpanded: true,
               style: AppTypography.font(
-                  fontSize: AppTypography.captionSize, color: Theme.of(context).colorScheme.onSurface),
+                  fontSize: AppTypography.captionSize,
+                  color: Theme.of(context).colorScheme.onSurface),
               decoration: _decoration(icon),
               // Retain an existing value that this admin cannot assign, without
               // adding it to their editable choices. Each value occurs once.
