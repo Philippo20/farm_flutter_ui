@@ -1,3 +1,4 @@
+import 'android_download_button.dart';
 import '../theme/app_typography.dart';
 import 'dart:async';
 
@@ -152,6 +153,7 @@ class _ModernHeaderState extends ConsumerState<ModernHeader> {
                       icon: const Icon(Icons.help_outline),
                       onPressed: widget.onSupportTap,
                     ),
+                  const AndroidDownloadButton(),
                   IconButton(
                     tooltip: themeMode == ThemeMode.dark
                         ? 'Switch to light mode'

@@ -1,3 +1,4 @@
+import 'android_download_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_colors.dart';
@@ -348,6 +349,7 @@ class _ModernDashboardScaffoldState
             ),
           ),
 
+          const AndroidDownloadButton(),
           // Dark Mode Toggle
           IconButton(
             icon: Icon(

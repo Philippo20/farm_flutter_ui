@@ -1,3 +1,4 @@
+import 'android_download_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_colors.dart';
@@ -150,6 +151,7 @@ class TechnicianHeader extends ConsumerWidget {
             ],
 
             // Theme Toggle
+            const AndroidDownloadButton(),
             _buildActionButton(
               icon:
                   isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
@@ -265,6 +267,7 @@ class TechnicianHeader extends ConsumerWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const AndroidDownloadButton(),
                 _buildMobileActionButton(
                   icon: isDark
                       ? Icons.light_mode_outlined

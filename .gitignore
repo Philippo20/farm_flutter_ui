@@ -114,3 +114,6 @@ db_schema/update.js
 *secret*
 *key*.json
 !pubspec.lock
+
+# Generated Android download, staged by scripts/prepare_android_download.ps1
+/web/downloads/*.apk

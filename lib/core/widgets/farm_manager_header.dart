@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'android_download_button.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -166,6 +167,7 @@ class FarmManagerHeader extends ConsumerWidget {
             ],
 
             // Theme Toggle
+            const AndroidDownloadButton(),
             _buildActionButton(
               icon:
                   isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
@@ -279,6 +281,7 @@ class FarmManagerHeader extends ConsumerWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const AndroidDownloadButton(),
                 _buildMobileActionButton(
                   icon: isDark
                       ? Icons.light_mode_outlined

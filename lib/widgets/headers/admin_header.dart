@@ -1,3 +1,4 @@
+import '../../core/widgets/android_download_button.dart';
 import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
@@ -68,6 +69,7 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
                     ),
                     const Spacer(),
                     // Dropdown menu on the right
+                    const AndroidDownloadButton(),
                     _HeaderDropdown(
                       isDark: isDark,
                       onToggleDarkMode: onToggleDarkMode,
@@ -190,6 +192,7 @@ class AdminHeader extends StatelessWidget implements PreferredSizeWidget {
                 ),
 
                 // Right side actions
+                const AndroidDownloadButton(),
                 _buildActionButton(
                   icon: isDark
                       ? Icons.wb_sunny_outlined
