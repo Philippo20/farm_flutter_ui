@@ -1,5 +1,12 @@
+import 'dart:convert';
+
 /// Routine maintenance policy for the platform's sensor registration workflow.
 bool sensorRequiresMaintenance(Map<String, dynamic> sensor) {
+  final raw = sensor['maintenance_plan'];
+  if (raw != null) {
+    final plans = raw is String ? jsonDecode(raw) : raw;
+    if (plans is List) return plans.isNotEmpty;
+  }
   final type =
       '${sensor['sensortype'] ?? sensor['sensor_type'] ?? sensor['type'] ?? ''}'
           .toLowerCase()

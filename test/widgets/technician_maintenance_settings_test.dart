@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:farmestates_ai_dashbaord/services/device_maintenance_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +31,14 @@ void main() {
                 home: settings
                     ? const TechnicianSettingsScreen()
                     : MaintenanceScheduleScreen(
+                        deviceApi: DeviceMaintenanceApi(
+                            client: MockClient((_) async => http.Response(
+                                jsonEncode({
+                                  'tasks': [],
+                                  'history': [],
+                                  'devices': []
+                                }),
+                                200))),
                         loadData: () async => [
                               [
                                 {
@@ -63,6 +75,9 @@ void main() {
           await tester.pumpAndSettle();
           expect(find.text('Biometric unlock'), findsOneWidget);
         } else {
+          expect(find.text('Device maintenance'), findsOneWidget);
+          await tester.tap(find.text('Farm tasks'));
+          await tester.pumpAndSettle();
           expect(find.text('Maintenance overview'), findsOneWidget);
           await tester
               .tap(find.text(width < 768 ? 'Issues' : 'Technical Issues'));

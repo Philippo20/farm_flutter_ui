@@ -1,7 +1,9 @@
+import '../../core/widgets/sensor_form_dialog.dart';
+import '../../core/widgets/equipment_maintenance_card.dart';
+import '../../core/widgets/device_registration_form.dart';
 import '../../core/widgets/light_switch_device_card.dart';
 import '../../core/utils/stable_sensor_order.dart';
 import '../../core/utils/sensor_maintenance_policy.dart';
-import '../../core/widgets/sensor_form_dialog.dart';
 import '../../core/widgets/device_telemetry_details_modal.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
@@ -248,6 +250,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
   String _typeLabel(dynamic value) {
     final raw = value?.toString().trim() ?? '';
     switch (raw.toLowerCase()) {
+      case 'air_conditioner':
+        return 'Air conditioner';
       case 'vpd':
         return 'VPD';
       case 'temperature':
@@ -314,18 +318,45 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     }
   }
 
+  String _backendStatus(String status) {
+    if (status == 'Critical') return 'Faulty';
+    if (status == 'Warning') return 'Maintenance';
+    return status;
+  }
+
+  (double, double, double, double) _defaultLimitsForType(String type) {
+    switch (type) {
+      case 'Temperature':
+        return (18, 28, 15, 32);
+      case 'Humidity':
+        return (55, 75, 45, 85);
+      case 'CO2':
+        return (650, 950, 450, 1200);
+      case 'Light':
+        return (20000, 65000, 10000, 80000);
+      case 'pH Level':
+        return (5.8, 6.4, 5.5, 6.8);
+      case 'EC Level':
+        return (1.2, 2.4, 0.8, 3.0);
+      case 'Water Level':
+        return (60, 100, 35, 120);
+      case 'Current':
+        return (0.2, 8, 0, 10);
+      case 'Voltage':
+        return (210, 240, 190, 255);
+      case 'Wattage':
+        return (50, 1800, 0, 2200);
+      default:
+        return (0, 100, 0, 100);
+    }
+  }
+
   String _statusLabel(dynamic value) {
     final raw = value?.toString().trim() ?? '';
     if (raw.toLowerCase() == 'faulty') return 'Critical';
     if (raw.toLowerCase() == 'maintenance') return 'Warning';
     if (raw.toLowerCase() == 'inactive') return 'Inactive';
     return raw.isEmpty ? 'Active' : raw;
-  }
-
-  String _backendStatus(String status) {
-    if (status == 'Critical') return 'Faulty';
-    if (status == 'Warning') return 'Maintenance';
-    return status;
   }
 
   String _sensorName(String type, Map<String, dynamic> doc) {
@@ -437,33 +468,6 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
   String _numberLabel(dynamic value) {
     final number = _toDouble(value);
     return number.toStringAsFixed(number.truncateToDouble() == number ? 0 : 1);
-  }
-
-  (double, double, double, double) _defaultLimitsForType(String type) {
-    switch (type) {
-      case 'Temperature':
-        return (18, 28, 15, 32);
-      case 'Humidity':
-        return (55, 75, 45, 85);
-      case 'CO2':
-        return (650, 950, 450, 1200);
-      case 'Light':
-        return (20000, 65000, 10000, 80000);
-      case 'pH Level':
-        return (5.8, 6.4, 5.5, 6.8);
-      case 'EC Level':
-        return (1.2, 2.4, 0.8, 3.0);
-      case 'Water Level':
-        return (60, 100, 35, 120);
-      case 'Current':
-        return (0.2, 8, 0, 10);
-      case 'Voltage':
-        return (210, 240, 190, 255);
-      case 'Wattage':
-        return (50, 1800, 0, 2200);
-      default:
-        return (0, 100, 0, 100);
-    }
   }
 
   IconData _iconForType(String type) {
@@ -1258,28 +1262,39 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                 return SizedBox(
                   key: ValueKey(sensor.raw[r'$id'] ?? sensor.id),
                   width: cardWidth,
-                  child: sensor.type == 'Light Switch' && !widget.isFarmManager
-                      ? LightSwitchDeviceCard(
-                          key: ValueKey(sensor.id),
-                          serial: sensor.id,
-                          name: sensor.name,
-                          farm: sensor.farm,
-                          zone: sensor.zone,
-                          isDark: isDark,
-                          onSettings: () => _showSensorSettings(sensor, isDark),
-                          onDelete: widget.isSuperAdmin
-                              ? () => _showDeleteSensorDialog(sensor, isDark)
-                              : null,
-                        )
-                      : _SensorDeviceCard(
-                          sensor: sensor,
-                          isDark: isDark,
-                          onDetails: () => _showSensorDetails(sensor, isDark),
-                          onSettings: () => _showSensorSettings(sensor, isDark),
-                          onDelete: widget.isSuperAdmin
-                              ? () => _showDeleteSensorDialog(sensor, isDark)
-                              : null,
-                        ),
+                  child: sensor.raw['sensortype'] == 'air_conditioner'
+                      ? EquipmentMaintenanceCard(
+                          device: sensor.raw,
+                          onConfigure: widget.isFarmManager
+                              ? null
+                              : () => _showSensorSettings(sensor, isDark))
+                      : sensor.type == 'Light Switch' && !widget.isFarmManager
+                          ? LightSwitchDeviceCard(
+                              key: ValueKey(sensor.id),
+                              serial: sensor.id,
+                              name: sensor.name,
+                              farm: sensor.farm,
+                              zone: sensor.zone,
+                              isDark: isDark,
+                              onSettings: () =>
+                                  _showSensorSettings(sensor, isDark),
+                              onDelete: widget.isSuperAdmin
+                                  ? () =>
+                                      _showDeleteSensorDialog(sensor, isDark)
+                                  : null,
+                            )
+                          : _SensorDeviceCard(
+                              sensor: sensor,
+                              isDark: isDark,
+                              onDetails: () =>
+                                  _showSensorDetails(sensor, isDark),
+                              onSettings: () =>
+                                  _showSensorSettings(sensor, isDark),
+                              onDelete: widget.isSuperAdmin
+                                  ? () =>
+                                      _showDeleteSensorDialog(sensor, isDark)
+                                  : null,
+                            ),
                 );
               }).toList(),
             );
@@ -1694,6 +1709,17 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
   }
 
   Future<void> _showSensorForm(bool isDark, {_IotSensor? sensor}) async {
+    if (widget.isFarmManager) {
+      await _showLegacySensorForm(isDark, sensor: sensor);
+      return;
+    }
+    if (await showDeviceRegistration(context, device: sensor?.raw) == true &&
+        mounted) {
+      await _loadSensors(showLoading: false);
+    }
+  }
+
+  Future<void> _showLegacySensorForm(bool isDark, {_IotSensor? sensor}) async {
     final formKey = GlobalKey<FormState>();
     final errorKey = GlobalKey();
     final isEditing = sensor != null;
@@ -2434,69 +2460,6 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
   }
 }
 
-class _SensorFormSectionHeader extends StatelessWidget {
-  const _SensorFormSectionHeader({
-    required this.title,
-    required this.subtitle,
-    required this.isDark,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.info.withValues(alpha: isDark ? 0.12 : 0.08),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: AppColors.info.withValues(alpha: 0.20)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.info.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            ),
-            child: const Icon(
-              Icons.tune_rounded,
-              color: AppColors.info,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontWeight: AppTypography.bodyWeight,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: isDark ? Colors.white60 : AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _SensorDeviceCard extends StatelessWidget {
   const _SensorDeviceCard({
     required this.sensor,
@@ -3027,4 +2990,67 @@ class _MobileNavItem {
   final IconData activeIcon;
   final String label;
   final String route;
+}
+
+class _SensorFormSectionHeader extends StatelessWidget {
+  const _SensorFormSectionHeader({
+    required this.title,
+    required this.subtitle,
+    required this.isDark,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.info.withValues(alpha: isDark ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.info.withValues(alpha: 0.20)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.info.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+            ),
+            child: const Icon(
+              Icons.tune_rounded,
+              color: AppColors.info,
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                    fontWeight: AppTypography.bodyWeight,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark ? Colors.white60 : AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

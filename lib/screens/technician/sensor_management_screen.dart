@@ -1,3 +1,8 @@
+import '../../core/widgets/device_maintenance_panel.dart';
+import '../../core/widgets/maintenance_form_shell.dart';
+import '../../core/widgets/equipment_maintenance_card.dart';
+import '../../core/widgets/device_registration_form.dart';
+import '../../services/device_maintenance_api.dart';
 import '../../core/utils/sensor_connection.dart';
 import '../../core/utils/sensor_calibration_policy.dart';
 import '../../core/widgets/sensor_inspect_modal.dart';
@@ -42,7 +47,6 @@ class _SensorManagementScreenState
   bool _fetching = false;
   DateTime? _contextUpdated;
   List<Map<String, dynamic>> _cachedFarms = [];
-  List<Map<String, dynamic>> _cachedUsers = [];
   bool _isLoading = true;
   String? _errorMessage;
   List<Map<String, dynamic>> _backendSensors = [];
@@ -79,39 +83,18 @@ class _SensorManagementScreenState
           DateTime.now().difference(_contextUpdated!).inSeconds >= 30;
       final results = await Future.wait([
         _api.getSensors(),
-        refreshContext ? _api.getFarms() : Future.value(_cachedFarms),
-        refreshContext ? _api.getUsers() : Future.value(_cachedUsers),
+        refreshContext ? _deviceOptions() : Future.value(_cachedFarms),
       ]);
       if (!mounted) return;
       if (refreshContext) {
         _cachedFarms = results[1];
-        _cachedUsers = results[2];
         _contextUpdated = DateTime.now();
       }
-      final user = ref.read(currentUserProvider);
-      Map<String, dynamic>? userRecord;
-      for (final item in results[2]) {
-        if (_value(item, ['id', r'$id']) == user?.id ||
-            _value(item, ['email']) == user?.email) {
-          userRecord = item;
-          break;
-        }
-      }
-      final assignedFarmIds = <String>{};
-      final assignedValues = userRecord?['assignedFarmIds'] ??
-          userRecord?['assigned_farm_ids'] ??
-          userRecord?['assigned_farms'];
-      if (assignedValues is List) {
-        assignedFarmIds.addAll(assignedValues.map((value) => value.toString()));
-      }
-      if (assignedFarmIds.isEmpty && user?.farmId != null) {
-        assignedFarmIds.add(user!.farmId!);
-      }
+      final assignedFarmIds =
+          results[1].map((farm) => '${farm[r'$id']}').toSet();
       bool assigned(Map<String, dynamic> item) {
         final farmId = _value(item, ['farm_id', 'farmId', 'farmID']);
-        return assignedFarmIds.isEmpty ||
-            farmId.isEmpty ||
-            assignedFarmIds.contains(farmId);
+        return assignedFarmIds.contains(farmId);
       }
 
       setState(() {
@@ -132,6 +115,16 @@ class _SensorManagementScreenState
       });
     } finally {
       _fetching = false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _deviceOptions() async {
+    final api = DeviceMaintenanceApi();
+    try {
+      final options = await api.options();
+      return List<Map<String, dynamic>>.from(options['farms']);
+    } finally {
+      api.dispose();
     }
   }
 
@@ -185,6 +178,7 @@ class _SensorManagementScreenState
       return {
         'id': _value(
             sensor, ['serial_number', 'serialNumber', 'id', r'$id'], 'Sensor'),
+        'raw': sensor,
         'serialNumber': _value(sensor, ['serial_number', 'serialNumber']),
         'calibration_required': sensorRequiresCalibration(sensor),
         'name':
@@ -444,10 +438,16 @@ class _SensorManagementScreenState
                   style: AppTypography.h5.copyWith(
                     fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: isMobile ? AppTypography.sectionTitleSize : AppTypography.headingSize,
+                    fontSize: isMobile
+                        ? AppTypography.sectionTitleSize
+                        : AppTypography.headingSize,
                   ),
                 ),
               ),
+              IconButton(
+                  tooltip: 'Register device',
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: () => _showAddSensorDialog(context, isDark)),
               IconButton(
                 icon: const Icon(Icons.refresh),
                 onPressed: _loadSensorData,
@@ -488,7 +488,9 @@ class _SensorManagementScreenState
                             fontWeight: AppTypography.headingWeight,
                             color:
                                 isDark ? Colors.white : AppColors.textPrimary,
-                            fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.cardTitleSize,
+                            fontSize: isMobile
+                                ? AppTypography.cardTitleSize
+                                : AppTypography.cardTitleSize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -500,7 +502,9 @@ class _SensorManagementScreenState
                           style: AppTypography.bodyMedium.copyWith(
                             color: AppColors.success,
                             fontWeight: AppTypography.headingWeight,
-                            fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
+                            fontSize: isMobile
+                                ? AppTypography.actionSize
+                                : AppTypography.bodySize,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -688,11 +692,25 @@ class _SensorManagementScreenState
         ]));
   }
 
-  Widget _buildSensorCard(Map<String, dynamic> sensor, bool isDark) =>
+  Widget _buildSensorCard(Map<String, dynamic> sensor, bool isDark) {
+    final raw = Map<String, dynamic>.from(sensor['raw'] as Map);
+    if (raw['sensortype'] == 'air_conditioner') {
+      return EquipmentMaintenanceCard(
+          device: raw, onConfigure: () => _editDevice(sensor));
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       SensorOverviewCard(
           sensor: sensor,
           onInspect: () => _showSensorDetails(sensor, isDark),
-          onCalibrate: () => _calibrateSensor(sensor));
+          onCalibrate: () => _calibrateSensor(sensor)),
+      Align(
+          alignment: Alignment.centerRight,
+          child: TextButton.icon(
+              onPressed: () => _editDevice(sensor),
+              icon: const Icon(Icons.tune, size: 16),
+              label: const Text('Device & maintenance'))),
+    ]);
+  }
 
   Widget _buildFilterDropdown(
     String label,
@@ -741,7 +759,9 @@ class _SensorManagementScreenState
                           : item,
                       style: TextStyle(
                         color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
+                        fontSize: isMobile
+                            ? AppTypography.captionSize
+                            : AppTypography.actionSize,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -759,7 +779,9 @@ class _SensorManagementScreenState
             ),
             style: TextStyle(
               color: isDark ? Colors.white : AppColors.textPrimary,
-              fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
+              fontSize: isMobile
+                  ? AppTypography.captionSize
+                  : AppTypography.actionSize,
             ),
             dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
           ),
@@ -783,60 +805,43 @@ class _SensorManagementScreenState
     if (calibrate == true && mounted) _calibrateSensor(sensor);
   }
 
-  void _calibrateSensor(Map<String, dynamic> sensor) {
-    if (sensorRequiresCalibration(sensor) != true) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Calibrating ${sensor['name']}...'),
-        action: SnackBarAction(
-          label: 'View',
-          onPressed: () {},
-        ),
-      ),
-    );
+  Future<void> _editDevice(Map<String, dynamic> sensor) async {
+    if (await showDeviceRegistration(context,
+                device: Map<String, dynamic>.from(sensor['raw'] as Map)) ==
+            true &&
+        mounted) {
+      await _loadSensorData();
+    }
   }
 
-  void _showAddSensorDialog(BuildContext context, bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+  Future<void> _calibrateSensor(Map<String, dynamic> sensor) async {
+    final api = DeviceMaintenanceApi();
+    try {
+      final overview = await api.overview();
+      if (!mounted) return;
+      final raw = sensor['raw'] as Map;
+      final tasks = List<Map<String, dynamic>>.from(overview['tasks']).where(
+          (task) =>
+              task['device_id'] == raw[r'$id'] &&
+              task['type'] == 'calibration');
+      if (tasks.isEmpty) {
+        await _editDevice(sensor);
+      } else {
+        await showMaintenanceRoute(
+            context, MaintenanceCompletionForm(task: tasks.first, api: api));
+      }
+    } catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(error.toString())));
+    } finally {
+      api.dispose();
+    }
+  }
 
-    showAppDialog(
-      context: context,
-      builder: (context) => AppAlertDialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        title: Text(
-          'Add New Sensor',
-          style: TextStyle(
-            color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: isMobile ? AppTypography.sectionTitleSize : AppTypography.headingSize,
-          ),
-        ),
-        content: Text(
-          'Sensor addition feature coming soon!',
-          style: TextStyle(
-            color: isDark ? Colors.white70 : AppColors.textSecondary,
-            fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: isDark ? Colors.white70 : AppColors.textPrimary,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Add',
-              style: TextStyle(fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize),
-            ),
-          ),
-        ],
-      ),
-    );
+  Future<void> _showAddSensorDialog(BuildContext context, bool isDark) async {
+    if (await showDeviceRegistration(context) == true && mounted) {
+      await _loadSensorData();
+    }
   }
 }

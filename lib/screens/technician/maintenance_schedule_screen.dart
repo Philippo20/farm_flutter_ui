@@ -1,3 +1,5 @@
+import '../../services/device_maintenance_api.dart';
+import '../../core/widgets/device_maintenance_panel.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'dart:async';
 
@@ -7,8 +9,6 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/widgets/permission_gate.dart';
-import '../../core/models/user/user_permissions.dart';
 import '../../core/widgets/technician_mobile_bottom_nav.dart';
 import '../../core/widgets/technician_sidebar.dart';
 import '../../core/widgets/technician_header.dart';
@@ -20,7 +20,8 @@ import '../../services/superadmin_api_service.dart';
 /// Maintenance Schedule Screen
 /// View and manage maintenance schedules and technical issues
 class MaintenanceScheduleScreen extends ConsumerStatefulWidget {
-  const MaintenanceScheduleScreen({super.key, this.loadData});
+  const MaintenanceScheduleScreen({super.key, this.loadData, this.deviceApi});
+  final DeviceMaintenanceApi? deviceApi;
   final Future<List<List<Map<String, dynamic>>>> Function()? loadData;
 
   @override
@@ -32,6 +33,7 @@ class _MaintenanceScheduleScreenState
     extends ConsumerState<MaintenanceScheduleScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final _devicePanelKey = GlobalKey<DeviceMaintenancePanelState>();
   String _selectedFilter = 'All';
   int _selectedNavIndex = 2;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -45,7 +47,7 @@ class _MaintenanceScheduleScreenState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _loadMaintenanceData();
     _refreshTimer = Timer.periodic(
       const Duration(seconds: 30),
@@ -61,6 +63,7 @@ class _MaintenanceScheduleScreenState
   }
 
   Future<void> _loadMaintenanceData({bool silent = false}) async {
+    if (silent) _devicePanelKey.currentState?.refresh();
     if (!silent && mounted) setState(() => _isLoading = true);
     try {
       final results = await (widget.loadData?.call() ??
@@ -144,16 +147,6 @@ class _MaintenanceScheduleScreenState
                   setState(() => _selectedNavIndex = index),
             )
           : null,
-      floatingActionButton: PermissionGate(
-        permission: Permission.scheduleMaintenace,
-        child: FloatingActionButton.extended(
-          onPressed: () => _showCreateDialog(),
-          icon: const Icon(Icons.add),
-          label: Text(_tabController.index == 0 ? 'Schedule' : 'Report Issue'),
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-        ),
-      ),
     );
   }
 
@@ -185,7 +178,8 @@ class _MaintenanceScheduleScreenState
                       child: Text(
                         userName.isNotEmpty ? userName[0].toUpperCase() : 'T',
                         style: AppTypography.h5.copyWith(
-                            color: Colors.white, fontWeight: AppTypography.headingWeight),
+                            color: Colors.white,
+                            fontWeight: AppTypography.headingWeight),
                       ),
                     ),
                   ),
@@ -197,7 +191,8 @@ class _MaintenanceScheduleScreenState
                         Text(
                           userName,
                           style: AppTypography.bodyLarge.copyWith(
-                              color: Colors.white, fontWeight: AppTypography.headingWeight),
+                              color: Colors.white,
+                              fontWeight: AppTypography.headingWeight),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -249,7 +244,9 @@ class _MaintenanceScheduleScreenState
       title: Text(
         label,
         style: AppTypography.bodyMedium.copyWith(
-          fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
+          fontWeight: isSelected
+              ? AppTypography.headingWeight
+              : AppTypography.bodyWeight,
           color: isSelected
               ? AppColors.primary
               : (isDark ? Colors.white : AppColors.textPrimary),
@@ -303,6 +300,8 @@ class _MaintenanceScheduleScreenState
                 child: TabBarView(
                   controller: _tabController,
                   children: [
+                    DeviceMaintenancePanel(
+                        key: _devicePanelKey, api: widget.deviceApi),
                     _buildMaintenanceTab(isDark),
                     _buildIssuesTab(isDark),
                   ],
@@ -336,6 +335,8 @@ class _MaintenanceScheduleScreenState
           child: TabBarView(
             controller: _tabController,
             children: [
+              DeviceMaintenancePanel(
+                  key: _devicePanelKey, api: widget.deviceApi),
               _buildMaintenanceTab(isDark),
               _buildIssuesTab(isDark),
             ],
@@ -375,14 +376,17 @@ class _MaintenanceScheduleScreenState
         dividerColor: Colors.transparent,
         labelStyle: AppTypography.bodySmall.copyWith(
           fontWeight: AppTypography.headingWeight,
-          fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
+          fontSize:
+              isMobile ? AppTypography.captionSize : AppTypography.actionSize,
         ),
         unselectedLabelStyle: AppTypography.bodySmall.copyWith(
           fontWeight: AppTypography.headingWeight,
-          fontSize: isMobile ? AppTypography.captionSize : AppTypography.actionSize,
+          fontSize:
+              isMobile ? AppTypography.captionSize : AppTypography.actionSize,
         ),
         tabs: [
-          Tab(text: isMobile ? 'Maintenance' : 'Maintenance Schedule'),
+          const Tab(text: 'Devices'),
+          const Tab(text: 'Farm tasks'),
           Tab(text: isMobile ? 'Issues' : 'Technical Issues'),
         ],
       ),
@@ -738,7 +742,9 @@ class _MaintenanceScheduleScreenState
             style: AppTypography.h5.copyWith(
               color: isDark ? Colors.white : AppColors.textPrimary,
               fontWeight: AppTypography.headingWeight,
-              fontSize: isMobile ? AppTypography.sectionTitleSize : AppTypography.pageTitleSize,
+              fontSize: isMobile
+                  ? AppTypography.sectionTitleSize
+                  : AppTypography.pageTitleSize,
             ),
           ),
           const SizedBox(height: 2),
@@ -785,7 +791,9 @@ class _MaintenanceScheduleScreenState
                 color: isSelected
                     ? AppColors.primary
                     : (isDark ? Colors.white : AppColors.textPrimary),
-                fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
+                fontWeight: isSelected
+                    ? AppTypography.headingWeight
+                    : AppTypography.labelWeight,
               ),
               side: BorderSide(
                 color: isSelected
@@ -884,7 +892,8 @@ class _MaintenanceScheduleScreenState
                     issues
                         ? 'No issues match this filter.'
                         : 'No maintenance tasks match this filter.',
-                    style: TextStyle(fontSize: AppTypography.captionSize, color: secondary)))
+                    style: TextStyle(
+                        fontSize: AppTypography.captionSize, color: secondary)))
             : _responsiveCards(
                 records.map((item) {
                   final title =
@@ -937,8 +946,10 @@ class _MaintenanceScheduleScreenState
                                         Expanded(
                                             child: Text(title,
                                                 style: TextStyle(
-                                                    fontSize: AppTypography.bodySize,
-                                                    fontWeight: AppTypography.headingWeight,
+                                                    fontSize:
+                                                        AppTypography.bodySize,
+                                                    fontWeight: AppTypography
+                                                        .headingWeight,
                                                     color: foreground))),
                                         const Icon(Icons.chevron_right,
                                             size: 18)
@@ -954,17 +965,22 @@ class _MaintenanceScheduleScreenState
                                                 BorderRadius.circular(6)),
                                         child: Text(status,
                                             style: TextStyle(
-                                                fontSize: AppTypography.fieldLabelSize,
-                                                fontWeight: AppTypography.headingWeight,
+                                                fontSize: AppTypography
+                                                    .fieldLabelSize,
+                                                fontWeight:
+                                                    AppTypography.headingWeight,
                                                 color: color))),
                                     Text(priority + ' priority',
                                         style: TextStyle(
-                                            fontSize: AppTypography.fieldLabelSize, color: secondary))
+                                            fontSize:
+                                                AppTypography.fieldLabelSize,
+                                            color: secondary))
                                   ]),
                                   const SizedBox(height: 12),
                                   Text(item['farm'].toString(),
                                       style: TextStyle(
-                                          fontSize: AppTypography.captionSize, color: foreground)),
+                                          fontSize: AppTypography.captionSize,
+                                          color: foreground)),
                                   const SizedBox(height: 8),
                                   Text(
                                       date is DateTime
@@ -972,7 +988,9 @@ class _MaintenanceScheduleScreenState
                                               .format(date.toLocal())
                                           : 'Date not recorded',
                                       style: TextStyle(
-                                          fontSize: AppTypography.fieldLabelSize, color: secondary)),
+                                          fontSize:
+                                              AppTypography.fieldLabelSize,
+                                          color: secondary)),
                                   const SizedBox(height: 8),
                                   Text(
                                       (issues
@@ -990,7 +1008,9 @@ class _MaintenanceScheduleScreenState
                                         'Assigned to: ' +
                                             item['assignedTo'].toString(),
                                         style: TextStyle(
-                                            fontSize: AppTypography.fieldLabelSize, color: secondary))
+                                            fontSize:
+                                                AppTypography.fieldLabelSize,
+                                            color: secondary))
                                   ],
                                 ])),
                       ));
@@ -1086,36 +1106,6 @@ class _MaintenanceScheduleScreenState
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showCreateDialog() {
-    showAppDialog(
-      context: context,
-      builder: (context) => AppAlertDialog(
-        title: Text(_tabController.index == 0
-            ? 'Schedule Maintenance'
-            : 'Report Issue'),
-        content: const Text('Form will be implemented here.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content: Text(_tabController.index == 0
-                        ? 'Maintenance scheduled'
-                        : 'Issue reported')),
-              );
-            },
-            child: const Text('Submit'),
           ),
         ],
       ),
