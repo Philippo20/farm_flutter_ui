@@ -4,7 +4,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import 'sidebar_collapse_state.dart';
-import 'adaptive_logout_confirmation.dart';
+import 'logout_flow.dart';
 
 /// Super Admin Sidebar - Styled like Modern Admin Sidebar
 /// Expanded width: 220px, Collapsed width: 70px
@@ -715,10 +715,7 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
   }
 
   Future<void> _showLogoutDialog() async {
-    final confirmed = await showAdaptiveLogoutConfirmation(context);
-    if (!confirmed) return;
-
-    // Existing sidebar logout flow only dismissed the confirmation.
+    await confirmAndLogout(context);
   }
 }
 
@@ -1138,10 +1135,7 @@ class SuperAdminDrawer extends StatelessWidget {
   }
 
   Future<void> _showLogoutDialog(BuildContext context, bool isDark) async {
-    final confirmed = await showAdaptiveLogoutConfirmation(context);
-    if (!confirmed) return;
-
-    // Existing sidebar logout flow only dismissed the confirmation.
+    await confirmAndLogout(context);
   }
 }
 

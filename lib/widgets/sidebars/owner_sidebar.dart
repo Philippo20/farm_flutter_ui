@@ -1,3 +1,4 @@
+import '../../core/widgets/logout_flow.dart';
 import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
@@ -33,11 +34,11 @@ class OwnerSidebar extends StatelessWidget {
     if (isMobile) {
       return _buildMobileBottomBar(navItems, context);
     } else {
-      return _buildDesktopSidebar(navItems);
+      return _buildDesktopSidebar(navItems, context);
     }
   }
 
-  Widget _buildDesktopSidebar(List<_NavItem> navItems) {
+  Widget _buildDesktopSidebar(List<_NavItem> navItems, BuildContext context) {
     final textColor = isDark ? Colors.white : const Color(0xFF232535);
     final selectedColor = isDark ? AppColors.primary : AppColors.primary;
 
@@ -117,7 +118,7 @@ class OwnerSidebar extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () {
-                  // Handle logout
+                  confirmAndLogout(context);
                 },
                 borderRadius: BorderRadius.circular(4),
                 child: const Padding(

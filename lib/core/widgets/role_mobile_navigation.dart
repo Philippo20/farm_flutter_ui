@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
-import 'adaptive_logout_confirmation.dart';
+import 'logout_flow.dart';
 
 class RoleNavigationItem {
   final IconData icon;
@@ -129,11 +129,7 @@ class RoleMobileDrawer extends StatelessWidget {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   onTap: () async {
-                    final confirmed =
-                        await showAdaptiveLogoutConfirmation(context);
-                    if (confirmed && context.mounted) {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    }
+                    await confirmAndLogout(context);
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(

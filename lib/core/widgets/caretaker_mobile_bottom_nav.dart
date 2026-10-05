@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
-import 'adaptive_logout_confirmation.dart';
+import 'logout_flow.dart';
 
 class CaretakerMobileBottomNav extends StatelessWidget {
   final int selectedIndex;
@@ -321,11 +321,7 @@ class CaretakerMobileDrawer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 child: InkWell(
                   onTap: () async {
-                    final confirmed =
-                        await showAdaptiveLogoutConfirmation(context);
-                    if (confirmed && context.mounted) {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    }
+                    await confirmAndLogout(context);
                   },
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   child: Container(

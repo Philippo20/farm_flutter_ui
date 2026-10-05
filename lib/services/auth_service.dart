@@ -268,31 +268,25 @@ class AuthService {
   /// Map role string to UserRole enum
   /// Logout current user
   Future<void> logout() async {
+    final user = _currentUser;
+    final token = _jwt;
+    // Clear in-memory access immediately, even if storage or networking fails.
     passwordChangeToken = null;
-    try {
-      // Log logout activity
-      if (_currentUser != null) {
-        await _logActivity('User logged out', _currentUser!);
-      }
-
-      final token = _jwt;
-      if (token != null) {
-        unawaited(http
-            .post(Uri.parse('$_apiBaseUrl/logout'), headers: {
-              'Authorization': 'Bearer $token',
-            })
-            .timeout(const Duration(seconds: 5))
-            .then<void>((_) {}, onError: (_) {}));
-      }
-      // Clear session
-      await _clearSession();
-
-      // Clear current user
-      _currentUser = null;
-      _jwt = null;
-      _sessionId = null;
-    } catch (e) {
-      print('Error during logout: $e');
+    _currentUser = null;
+    _jwt = null;
+    _sessionId = null;
+    _dashboardRoute = null;
+    lastActivity = null;
+    await _clearSession();
+    if (user != null) await _logActivity('User logged out', user);
+    if (token != null) {
+      // Local logout must still work when the device has no connection.
+      unawaited(http
+          .post(Uri.parse('$_apiBaseUrl/logout'), headers: {
+            'Authorization': 'Bearer $token',
+          })
+          .timeout(const Duration(seconds: 5))
+          .then<void>((_) {}, onError: (_) {}));
     }
   }
 

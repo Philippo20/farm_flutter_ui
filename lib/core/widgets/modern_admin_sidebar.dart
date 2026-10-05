@@ -4,7 +4,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import 'sidebar_collapse_state.dart';
-import 'adaptive_logout_confirmation.dart';
+import 'logout_flow.dart';
 
 /// Modern collapsible sidebar for admin dashboard
 /// Expanded width: 260px, Collapsed width: 80px
@@ -327,11 +327,7 @@ class AdminDrawer extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 child: InkWell(
                   onTap: () async {
-                    final confirmed =
-                        await showAdaptiveLogoutConfirmation(context);
-                    if (confirmed && context.mounted) {
-                      Navigator.pushReplacementNamed(context, '/login');
-                    }
+                    await confirmAndLogout(context);
                   },
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   child: Container(
@@ -1174,10 +1170,7 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
   }
 
   Future<void> _showLogoutDialog() async {
-    final confirmed = await showAdaptiveLogoutConfirmation(context);
-    if (!confirmed) return;
-
-    // Existing sidebar logout flow only dismissed the confirmation.
+    await confirmAndLogout(context);
   }
 }
 

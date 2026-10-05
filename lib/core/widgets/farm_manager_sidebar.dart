@@ -3,7 +3,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../theme/app_spacing.dart';
 import 'sidebar_collapse_state.dart';
-import 'adaptive_logout_confirmation.dart';
+import 'logout_flow.dart';
 
 /// Modern collapsible sidebar for farm manager dashboard
 class FarmManagerSidebar extends StatefulWidget {
@@ -661,10 +661,7 @@ class _FarmManagerSidebarState extends State<FarmManagerSidebar>
   }
 
   Future<void> _showLogoutDialog() async {
-    final confirmed = await showAdaptiveLogoutConfirmation(context);
-    if (!confirmed) return;
-
-    // Existing sidebar logout flow only dismissed the confirmation.
+    await confirmAndLogout(context);
   }
 }
 

@@ -1,3 +1,4 @@
+import '../../core/widgets/logout_flow.dart';
 import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import '../../constants/colors.dart';
@@ -254,7 +255,7 @@ class _AdminSidebarState extends State<AdminSidebar>
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                      // Handle logout
+                      confirmAndLogout(context);
                     },
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
