@@ -1,3 +1,5 @@
+import '../../../core/widgets/production_schedule_card.dart';
+import '../../../core/utils/production_plan.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/registered_sensor_readings.dart';
@@ -127,6 +129,11 @@ class _BatchGrowthTrackerState extends State<BatchGrowthTracker> {
                     ? 0
                     : elapsed + 1,
             isDark: isDark),
+        if (productionStages(batch['production_plan']).isNotEmpty &&
+            start != null) ...[
+          const SizedBox(height: 12),
+          ProductionScheduleCard(plan: batch['production_plan'], start: start),
+        ],
         const SizedBox(height: 16),
         _buildTrackerProgressbarCard(
             isDark: isDark, progress: progress, icon: Icons.eco),

@@ -1,3 +1,5 @@
+import '../../core/utils/production_plan.dart';
+import '../../core/widgets/production_schedule_card.dart';
 import 'batch_records_screen.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
@@ -264,7 +266,27 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     }
   }
 
+  Map<String, dynamic> get _selectedProductionPlan {
+    final id = _plantTypeIdForName(_selectedPlantType ?? '');
+    for (final plant in _plantTypes) {
+      if (_docId(plant) == id) return productionPlan(plant['production_plan']);
+    }
+    return {};
+  }
+
+  Map<String, dynamic>? get _precedingBatch {
+    final batches = ref
+        .read(batchProvider)
+        .where((b) =>
+            b.farmId == _selectedFarm && b.plantType == _selectedPlantType)
+        .toList()
+      ..sort((a, b) => b.startDate.compareTo(a.startDate));
+    return batches.isEmpty ? null : batches.first.metadata;
+  }
+
   ({int value, String unit})? _selectedVarietyDuration() {
+    final days = productionDays(_selectedProductionPlan);
+    if (days > 0) return (value: days, unit: 'days');
     final variety = _selectedPlantVariety;
     if (variety != null && variety.isNotEmpty) {
       for (final crop in _cropVarieties) {
@@ -392,7 +414,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
           caretakerId.isEmpty || caretakerId.toLowerCase() == 'unassigned'
               ? null
               : caretakerId;
-      _endDate = null;
+      _endDate = _startDate == null ? null : _calculatedEndDate(_startDate!);
     });
   }
 
@@ -422,7 +444,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     setState(() {
       _selectedPlantType = plantType;
       _selectedPlantVariety = null;
-      _endDate = null;
+      _endDate = _startDate == null ? null : _calculatedEndDate(_startDate!);
     });
   }
 
@@ -1064,7 +1086,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'End Date (Auto)',
+                              'Expected harvest',
                               style: AppTypography.label.copyWith(
                                 color: isDark
                                     ? Colors.white
@@ -1161,6 +1183,14 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
+                if (_selectedProductionPlan.isNotEmpty &&
+                    _startDate != null) ...[
+                  ProductionScheduleCard(
+                      plan: _selectedProductionPlan,
+                      start: _startDate!,
+                      previousBatch: _precedingBatch),
+                  const SizedBox(height: 16),
+                ],
                 // Nursed Seeds and Caretaker Row
                 if (!isMobile)
                   Row(
@@ -2306,6 +2336,13 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                   ),
                   const SizedBox(height: 16),
 
+                  if (productionStages(batch.metadata?['production_plan'])
+                      .isNotEmpty) ...[
+                    ProductionScheduleCard(
+                        plan: batch.metadata?['production_plan'],
+                        start: batch.startDate),
+                    const SizedBox(height: 16),
+                  ],
                   // Detail rows
                   _buildDetailRow('Plant Type', batch.plantType,
                       Icons.eco_outlined, isDark),

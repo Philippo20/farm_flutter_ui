@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../theme/app_typography.dart';
 import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -77,17 +78,48 @@ class NotificationCenter extends ConsumerStatefulWidget {
   ConsumerState<NotificationCenter> createState() => _NotificationCenterState();
 }
 
-class _NotificationCenterState extends ConsumerState<NotificationCenter> {
+class _NotificationCenterState extends ConsumerState<NotificationCenter>
+    with WidgetsBindingObserver {
+  Timer? _timer;
+  bool _loading = false;
+
+  Future<void> _refreshNotifications() async {
+    if (!mounted || _loading) return;
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    if (lifecycle != null && lifecycle != AppLifecycleState.resumed) return;
+    final recipientId = ref.read(authProvider).user?.id;
+    if (recipientId == null) return;
+    _loading = true;
+    try {
+      await ref
+          .read(notificationProvider.notifier)
+          .refreshFromBackend(recipientId: recipientId);
+    } catch (_) {
+      // A background refresh failure preserves the last successful notification list.
+    } finally {
+      _loading = false;
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_refreshNotifications());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      final recipientId = ref.read(authProvider).user?.id;
-      ref
-          .read(notificationProvider.notifier)
-          .refreshFromBackend(recipientId: recipientId)
-          .ignore();
-    });
+    WidgetsBinding.instance.addObserver(this);
+    Future.microtask(_refreshNotifications);
+    _timer = Timer.periodic(
+        const Duration(seconds: 60), (_) => _refreshNotifications());
   }
 
   @override
@@ -99,7 +131,8 @@ class _NotificationCenterState extends ConsumerState<NotificationCenter> {
       showBadge: unreadCount > 0,
       badgeContent: Text(
         unreadCount.toString(),
-        style: const TextStyle(color: Colors.white, fontSize: AppTypography.microSize),
+        style: const TextStyle(
+            color: Colors.white, fontSize: AppTypography.microSize),
       ),
       child: IconButton(
         icon: const Icon(Icons.notifications_outlined),
@@ -127,6 +160,7 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
   }
 
   Future<void> _refresh() async {
+    if (!mounted) return;
     try {
       final recipientId = ref.read(authProvider).user?.id;
       await ref
@@ -424,7 +458,9 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
           const SizedBox(width: 4),
           Text(label,
               style: TextStyle(
-                  fontSize: AppTypography.microSize, fontWeight: AppTypography.headingWeight, color: color)),
+                  fontSize: AppTypography.microSize,
+                  fontWeight: AppTypography.headingWeight,
+                  color: color)),
         ],
       ),
     );

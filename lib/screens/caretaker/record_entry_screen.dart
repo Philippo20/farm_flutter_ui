@@ -1,3 +1,5 @@
+import '../../core/widgets/production_schedule_card.dart';
+import '../../core/utils/production_plan.dart';
 import '../../core/utils/caretaker_record_fields.dart';
 import '../../core/utils/caretaker_batch_status.dart';
 import 'package:flutter/material.dart';
@@ -248,7 +250,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         final batches = _farmBatches;
         if (batches.isEmpty) {
           _selectedBatch = null;
+          _growthStageController.clear();
         } else if (!batches.any((batch) => _batchId(batch) == _selectedBatch)) {
+          _growthStageController.clear();
           _selectedBatch = _batchId(batches.firstWhere(
               (batch) => !isCaretakerBatchComplete(batch, _fulfillments),
               orElse: () => batches.first));
@@ -653,9 +657,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
               if (_collects('plant_health'))
                 _buildTextField('Plant Health', _plantHealthController,
                     'e.g., Healthy, Yellowing, etc.', isDark),
-              if (_collects('growth_stage'))
-                _buildTextField('Growth Stage', _growthStageController,
-                    'e.g., Vegetative, Flowering', isDark),
+              if (_collects('growth_stage')) _buildGrowthStageField(isDark),
             ], isMobile),
             const SizedBox(height: AppSpacing.md),
           ],
@@ -1592,6 +1594,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       onChanged: (value) => setState(() {
         _selectedFarm = value;
         _selectedBatch = null;
+        _growthStageController.clear();
         _maxUnlockedStep = 0;
         _submitError = null;
         final batches = _farmBatches;
@@ -1650,49 +1653,86 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     );
   }
 
+  Widget _buildGrowthStageField(bool isDark) {
+    final stages = productionStages(_selectedBatchDoc?['production_plan']);
+    if (stages.isEmpty) {
+      return _buildTextField('Growth Stage', _growthStageController,
+          'e.g., Vegetative, Flowering', isDark);
+    }
+    final names = stages.map((s) => '${s['name']}').toSet();
+    return DropdownButtonFormField<String>(
+      key: ValueKey('growth-$_selectedBatch'),
+      isExpanded: true,
+      initialValue: names.contains(_growthStageController.text)
+          ? _growthStageController.text
+          : null,
+      decoration: _inputDecoration(
+          label: 'Observed growth stage',
+          icon: Icons.eco_outlined,
+          isDark: isDark),
+      items: names
+          .map((name) => DropdownMenuItem(
+              value: name, child: Text(name, overflow: TextOverflow.ellipsis)))
+          .toList(),
+      onChanged: (value) =>
+          setState(() => _growthStageController.text = value ?? ''),
+    );
+  }
+
   Widget _buildBatchSelector(bool isDark) {
     final batches = _farmBatches;
 
-    return DropdownButtonFormField<String>(
-      isExpanded: true,
-      value: batches.any((batch) => _batchId(batch) == _selectedBatch)
-          ? _selectedBatch
-          : null,
-      style: AppTypography.bodySmall.copyWith(
-        color: isDark ? Colors.white : AppColors.textPrimary,
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      DropdownButtonFormField<String>(
+        isExpanded: true,
+        value: batches.any((batch) => _batchId(batch) == _selectedBatch)
+            ? _selectedBatch
+            : null,
+        style: AppTypography.bodySmall.copyWith(
+          color: isDark ? Colors.white : AppColors.textPrimary,
+        ),
+        dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
+        decoration: _inputDecoration(
+          label: 'Select Batch',
+          icon: Icons.inventory_2_rounded,
+          isDark: isDark,
+        ),
+        items: batches
+            .map((batch) => DropdownMenuItem(
+                  value: _batchId(batch),
+                  child: Text(
+                      (_value(
+                            batch,
+                            const ['batch_no', 'batch_number', 'batch_id'],
+                            fallback: 'Batch',
+                          )) +
+                          (isCaretakerBatchComplete(batch, _fulfillments)
+                              ? ' · Complete'
+                              : ''),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                ))
+            .toList(),
+        onChanged: (value) => setState(() {
+          _selectedBatch = value;
+          _growthStageController.clear();
+          _selectedRecordTab = 0;
+          _maxUnlockedStep = 0;
+          _submitError = null;
+          _populateBatchProgress();
+        }),
+        validator: (value) => batches.isNotEmpty && value == null
+            ? 'Please select a batch'
+            : null,
       ),
-      dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
-      decoration: _inputDecoration(
-        label: 'Select Batch',
-        icon: Icons.inventory_2_rounded,
-        isDark: isDark,
-      ),
-      items: batches
-          .map((batch) => DropdownMenuItem(
-                value: _batchId(batch),
-                child: Text(
-                    (_value(
-                          batch,
-                          const ['batch_no', 'batch_number', 'batch_id'],
-                          fallback: 'Batch',
-                        )) +
-                        (isCaretakerBatchComplete(batch, _fulfillments)
-                            ? ' · Complete'
-                            : ''),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-              ))
-          .toList(),
-      onChanged: (value) => setState(() {
-        _selectedBatch = value;
-        _selectedRecordTab = 0;
-        _maxUnlockedStep = 0;
-        _submitError = null;
-        _populateBatchProgress();
-      }),
-      validator: (value) =>
-          batches.isNotEmpty && value == null ? 'Please select a batch' : null,
-    );
+      if (productionStages(_selectedBatchDoc?['production_plan']).isNotEmpty &&
+          DateTime.tryParse('${_selectedBatchDoc?['start_date']}') != null) ...[
+        const SizedBox(height: 12),
+        ProductionScheduleCard(
+            plan: _selectedBatchDoc?['production_plan'],
+            start: DateTime.parse('${_selectedBatchDoc?['start_date']}')),
+      ],
+    ]);
   }
 
   Widget _buildRecordTypeSelector(bool isDark) {

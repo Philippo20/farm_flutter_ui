@@ -1769,11 +1769,13 @@ class SuperAdminApiService {
     required String maturityUnit,
     required String imageFileName,
     required String status,
+    Map<String, dynamic>? productionPlan,
   }) async {
     final response = await _client.post(
       Uri.parse('$baseUrl/plant_type/info'),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {
+        if (productionPlan != null) 'production_plan': jsonEncode(productionPlan),
         'name': name,
         'category': category,
         'maturity_min_value': maturityMinValue.toString(),
@@ -1817,11 +1819,13 @@ class SuperAdminApiService {
     required String maturityUnit,
     required String imageFileName,
     required String status,
+    Map<String, dynamic>? productionPlan,
   }) async {
     final response = await _client.put(
       Uri.parse('$baseUrl/plant_type/${Uri.encodeComponent(id)}'),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {
+        if (productionPlan != null) 'production_plan': jsonEncode(productionPlan),
         'name': name,
         'category': category,
         'maturity_min_value': maturityMinValue.toString(),

@@ -1,3 +1,5 @@
+import '../utils/production_plan.dart';
+import 'production_schedule_card.dart';
 import '../theme/app_typography.dart';
 import 'app_dialog.dart';
 import 'package:flutter/material.dart';
@@ -100,6 +102,8 @@ Future<bool?> showBatchCreationDialog({
   var plantTypeId = _relationshipId(
     farm['plantTypeId'] ?? farm['plant_type_ID'] ?? farm['plant_type_id'],
   );
+  Map<String, dynamic> plantPlan = {};
+  Map<String, dynamic>? precedingBatch;
   var caretakerId = _relationshipId(
     farm['caretakerID'] ?? farm['caretakerId'] ?? farm['caretaker_id'],
   );
@@ -130,15 +134,29 @@ Future<bool?> showBatchCreationDialog({
       if (plantType['is_category'] == true) continue;
       final name =
           '${plantType['name'] ?? plantType['plant_name'] ?? ''}'.trim();
-      if (plantTypeId.isEmpty &&
-          name.isNotEmpty &&
-          _samePlantCatalogEntry(name, plantName)) {
+      if ((plantTypeId.isNotEmpty && _documentId(plantType) == plantTypeId) ||
+          (plantTypeId.isEmpty &&
+              name.isNotEmpty &&
+              _samePlantCatalogEntry(name, plantName))) {
+        plantPlan = productionPlan(plantType['production_plan']);
         plantTypeId = _documentId(plantType);
         break;
       }
     }
   } catch (_) {
     // Relationship validation below reports a precise catalog error.
+  }
+  if (plantPlan.isNotEmpty) {
+    try {
+      final batches = await api.getBatches();
+      final matching = batches
+          .where((b) =>
+              '${b['farmID']}' == farmId &&
+              '${b['plant_type_ID']}' == plantTypeId)
+          .toList()
+        ..sort((a, b) => '${b['start_date']}'.compareTo('${a['start_date']}'));
+      if (matching.isNotEmpty) precedingBatch = matching.first;
+    } catch (_) {/* A saved plan still allows the current batch preview. */}
   }
   if (caretakerId.isNotEmpty &&
       (caretakerName.isEmpty || caretakerName == caretakerId)) {
@@ -172,8 +190,10 @@ Future<bool?> showBatchCreationDialog({
   final notesController = TextEditingController();
   final formKey = GlobalKey<FormState>();
   var startDate = DateTime.now();
-  var selectedDuration =
-      _cropDuration(varietyRecords[_catalogKey(selectedVariety)]);
+  ({int value, String unit}) durationForVariety() => plantPlan.isNotEmpty
+      ? (value: productionDays(plantPlan), unit: 'days')
+      : _cropDuration(varietyRecords[_catalogKey(selectedVariety)]);
+  var selectedDuration = durationForVariety();
   var endDate = _calculateBatchEndDate(
     startDate,
     selectedDuration.value,
@@ -193,7 +213,8 @@ Future<bool?> showBatchCreationDialog({
         fontSize: AppTypography.actionSize,
         color: isDark ? Colors.white54 : AppColors.textSecondary,
       ),
-      errorStyle: AppTypography.font(fontSize: AppTypography.fieldLabelSize, height: 1.25),
+      errorStyle: AppTypography.font(
+          fontSize: AppTypography.fieldLabelSize, height: 1.25),
       prefixIcon: icon == null ? null : Icon(icon, size: 18),
       filled: true,
       fillColor:
@@ -439,7 +460,8 @@ Future<bool?> showBatchCreationDialog({
                                               variety,
                                               overflow: TextOverflow.ellipsis,
                                               style: AppTypography.font(
-                                                fontSize: AppTypography.actionSize,
+                                                fontSize:
+                                                    AppTypography.actionSize,
                                                 color: isDark
                                                     ? Colors.white
                                                     : AppColors.textPrimary,
@@ -451,10 +473,8 @@ Future<bool?> showBatchCreationDialog({
                                       ? null
                                       : (value) => setModalState(() {
                                             selectedVariety = value ?? '';
-                                            selectedDuration = _cropDuration(
-                                              varietyRecords[
-                                                  _catalogKey(selectedVariety)],
-                                            );
+                                            selectedDuration =
+                                                durationForVariety();
                                             endDate = _calculateBatchEndDate(
                                               startDate,
                                               selectedDuration.value,
@@ -488,7 +508,7 @@ Future<bool?> showBatchCreationDialog({
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: _BatchDateField(
-                                    label: 'End Date (Auto)',
+                                    label: 'Expected harvest',
                                     value: endDate == null
                                         ? 'Duration unavailable'
                                         : dateText(endDate!),
@@ -498,6 +518,13 @@ Future<bool?> showBatchCreationDialog({
                                 ),
                               ],
                             ),
+                            if (plantPlan.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              ProductionScheduleCard(
+                                  plan: plantPlan,
+                                  start: startDate,
+                                  previousBatch: precedingBatch),
+                            ],
                             const SizedBox(height: 7),
                             Row(
                               children: [
@@ -514,7 +541,7 @@ Future<bool?> showBatchCreationDialog({
                                 Expanded(
                                   child: Text(
                                     selectedDuration.value > 0
-                                        ? 'Calculated from ${selectedDuration.value} ${selectedDuration.unit}'
+                                        ? 'Calculated from ${selectedDuration.value} ${selectedDuration.unit}${plantPlan.isNotEmpty ? ' of growth stages' : ''}'
                                         : 'Add a duration to this crop variety before creating a batch.',
                                     style: AppTypography.font(
                                       fontSize: AppTypography.fieldLabelSize,

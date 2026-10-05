@@ -1,3 +1,4 @@
+import '../utils/production_plan.dart';
 import 'batch_date_picker.dart';
 import '../theme/app_typography.dart';
 import 'app_dialog.dart';
@@ -189,6 +190,8 @@ class _BatchEditFormState extends State<_BatchEditForm> {
   }
 
   ({int value, String unit})? _durationFor(String variety) {
+    final days = productionDays(widget.batch.metadata?['production_plan']);
+    if (days > 0) return (value: days, unit: 'days');
     for (final crop in widget.cropVarieties) {
       final cropVariety = _value(crop, ['variety_name', 'variety', 'name']);
       if (_key(cropVariety) != _key(variety)) continue;

@@ -1,3 +1,5 @@
+import '../../core/widgets/plant_type_form.dart';
+import '../../core/widgets/maintenance_form_shell.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -95,6 +97,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
   Map<String, dynamic> _mapPlantDocument(Map<String, dynamic> doc) {
     return {
       'id': (doc[r'$id'] ?? doc['plant_type_id'] ?? doc['id'] ?? '').toString(),
+      'production_plan': doc['production_plan'],
       'name': (doc['name'] ?? 'Unnamed Plant').toString(),
       'category':
           (doc['category'] ?? doc['plant_type'] ?? 'Plant Types').toString(),
@@ -195,56 +198,6 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     final max = plant['maturityMax'] ?? plant['maturity'] ?? min;
     final unit = (plant['maturityUnit'] ?? 'months').toString();
     return '$min${min == max ? '' : '-$max'} $unit';
-  }
-
-  Future<bool> _savePlantType({
-    required String name,
-    required String category,
-    required String maturityMin,
-    required String maturityMax,
-    required String maturityUnit,
-    required String imageFileName,
-    required String status,
-  }) async {
-    final min = int.tryParse(maturityMin.trim());
-    final max = int.tryParse(maturityMax.trim());
-    if (name.trim().isEmpty ||
-        min == null ||
-        max == null ||
-        min <= 0 ||
-        max < min ||
-        imageFileName.trim().isEmpty) {
-      return false;
-    }
-
-    setState(() {
-      _isLoadingPlants = true;
-      _plantsError = null;
-    });
-
-    try {
-      await _api.createPlantType(
-        name: name.trim(),
-        category: category.trim(),
-        maturityMinValue: min,
-        maturityMaxValue: max,
-        maturityUnit: maturityUnit,
-        imageFileName: imageFileName.trim(),
-        status: status,
-      );
-      await _loadPlantTypes();
-      if (!mounted) return false;
-      _showSuccessSnack('${name.trim()} added.');
-      return true;
-    } catch (error) {
-      if (!mounted) return false;
-      setState(() {
-        _plantsError = error.toString();
-        _isLoadingPlants = false;
-      });
-      _showErrorSnack(error.toString());
-      return false;
-    }
   }
 
   @override
@@ -581,7 +534,9 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
             color: isSelected
                 ? AppColors.success
                 : (isDark ? Colors.white70 : AppColors.textSecondary),
-            fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.headingWeight,
+            fontWeight: isSelected
+                ? AppTypography.headingWeight
+                : AppTypography.headingWeight,
           ),
         );
       }).toList()
@@ -676,11 +631,15 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
         .where((category) => category.isNotEmpty)
         .toSet()
         .length;
-    final maturityValues = _plantTypes
-        .map((plant) => plant['maturity'])
-        .whereType<num>()
-        .map((value) => value.toDouble())
-        .toList();
+    final maturityValues = _plantTypes.map((plant) {
+      final value = num.tryParse('${plant['maturity'] ?? 0}')?.toDouble() ?? 0;
+      return value *
+          switch (plant['maturityUnit']) {
+            'days' => 1,
+            'weeks' => 7,
+            _ => 30.415
+          };
+    }).toList();
     final avgMaturity = maturityValues.isEmpty
         ? 0
         : maturityValues.reduce((a, b) => a + b) / maturityValues.length;
@@ -706,7 +665,7 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
       },
       {
         'title': 'Avg Maturity',
-        'value': '${avgMaturity.toStringAsFixed(1)} mo',
+        'value': '${avgMaturity.toStringAsFixed(0)} days',
         'icon': Icons.schedule,
         'color': AppColors.warning
       },
@@ -793,8 +752,9 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               const SizedBox(width: 6),
               Expanded(
                   child: Text(label,
-                      style: AppTypography.bodySmall
-                          .copyWith(fontSize: AppTypography.fieldLabelSize, color: secondary))),
+                      style: AppTypography.bodySmall.copyWith(
+                          fontSize: AppTypography.fieldLabelSize,
+                          color: secondary))),
             ]),
             const SizedBox(height: 6),
             Text(value,
@@ -840,8 +800,8 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                         color: foreground)),
                 const SizedBox(height: 4),
                 Text('${plant['category'] ?? 'Uncategorized'}',
-                    style: AppTypography.bodySmall
-                        .copyWith(fontSize: AppTypography.captionSize, color: secondary)),
+                    style: AppTypography.bodySmall.copyWith(
+                        fontSize: AppTypography.captionSize, color: secondary)),
               ])),
         ]),
         const SizedBox(height: 12),
@@ -868,8 +828,9 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                 minimumSize: const Size(0, 44),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
+                textStyle: AppTypography.bodySmall.copyWith(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight),
                 side: BorderSide(
                     color: isDark ? Colors.white12 : AppColors.neutral200),
                 shape: RoundedRectangleBorder(
@@ -887,8 +848,9 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
                 minimumSize: const Size(0, 44),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
+                textStyle: AppTypography.bodySmall.copyWith(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10))),
           )),
@@ -1313,568 +1275,17 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
     );
   }
 
-  void _showAddPlantDialog(BuildContext context, bool isDark) {
-    final formKey = GlobalKey<FormState>();
-    final nameController = TextEditingController();
-    final maturityMinController = TextEditingController();
-    final maturityMaxController = TextEditingController();
-    final imageController = TextEditingController();
-    String selectedCategory =
-        _plantCategories.isNotEmpty ? _plantCategories.first : 'Plant Types';
-    String selectedStatus = 'Active';
-    String selectedMaturityUnit = 'months';
-    var saving = false;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    showAppDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AppDialog(
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-          insetPadding: EdgeInsets.symmetric(
-              horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
-              vertical: AppSpacing.xl),
-          child: Container(
-            width: isMobile ? double.infinity : 480,
-            constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.85),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [
-                      AppColors.success,
-                      AppColors.success.withValues(alpha: 0.8)
-                    ], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(AppSpacing.radiusXl)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusMd)),
-                        child: const Icon(Icons.eco,
-                            color: Colors.white, size: 24),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Add Plant Type',
-                                style: AppTypography.h6.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: AppTypography.headingWeight)),
-                            Text('Register plant catalog details',
-                                style: AppTypography.bodySmall
-                                    .copyWith(color: Colors.white70)),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close, color: Colors.white70)),
-                    ],
-                  ),
-                ),
-                // Form
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Form(
-                      key: formKey,
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildFormLabel('Plant Name', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildTextField(
-                              controller: nameController,
-                              hint: 'e.g., Lettuce',
-                              icon: Icons.eco,
-                              isDark: isDark,
-                              validator: (value) {
-                                if ((value ?? '').trim().isEmpty) {
-                                  return 'Add a plant name when ready.';
-                                }
-                                return null;
-                              }),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Maturity Duration Range', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildMaturityControls(
-                            minController: maturityMinController,
-                            maxController: maturityMaxController,
-                            hint: 'Min',
-                            value: selectedMaturityUnit,
-                            isDark: isDark,
-                            isMobile: isMobile,
-                            onChanged: (v) => setDialogState(
-                                () => selectedMaturityUnit = v ?? 'months'),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Image File Name', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildTextField(
-                              controller: imageController,
-                              hint: 'e.g., lettuce.jpg',
-                              icon: Icons.image_outlined,
-                              isDark: isDark,
-                              validator: (value) {
-                                if ((value ?? '').trim().isEmpty) {
-                                  return 'Add an image file name if available.';
-                                }
-                                return null;
-                              }),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Category', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildDropdownField(
-                              value: selectedCategory,
-                              items: _plantCategories.isEmpty
-                                  ? ['Plant Types']
-                                  : _plantCategories,
-                              icon: Icons.category_outlined,
-                              isDark: isDark,
-                              onChanged: saving
-                                  ? null
-                                  : (v) => setDialogState(
-                                      () => selectedCategory = v!)),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildFormLabel('Status', isDark),
-                          const SizedBox(height: AppSpacing.sm),
-                          _buildDropdownField(
-                              value: selectedStatus,
-                              items: ['Active', 'Inactive'],
-                              icon: Icons.toggle_on_outlined,
-                              isDark: isDark,
-                              onChanged: saving
-                                  ? null
-                                  : (v) => setDialogState(
-                                      () => selectedStatus = v!)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // Actions
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.03)
-                          : AppColors.neutral50,
-                      borderRadius: const BorderRadius.vertical(
-                          bottom: Radius.circular(AppSpacing.radiusXl))),
-                  child: Row(
-                    children: [
-                      Expanded(
-                          child: OutlinedButton(
-                              onPressed:
-                                  saving ? null : () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: AppSpacing.md),
-                                  side: BorderSide(
-                                      color: isDark
-                                          ? Colors.white24
-                                          : AppColors.neutral300),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusMd))),
-                              child: Text('Cancel',
-                                  style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white70
-                                          : AppColors.textSecondary)))),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                          flex: 2,
-                          child: ElevatedButton.icon(
-                              onPressed: saving
-                                  ? null
-                                  : () async {
-                                      if (!(formKey.currentState?.validate() ??
-                                          false)) {
-                                        return;
-                                      }
-                                      setDialogState(() => saving = true);
-                                      final saved = await _savePlantType(
-                                        name: nameController.text,
-                                        category: selectedCategory,
-                                        maturityMin: maturityMinController.text,
-                                        maturityMax: maturityMaxController.text,
-                                        maturityUnit: selectedMaturityUnit,
-                                        imageFileName: imageController.text,
-                                        status: selectedStatus,
-                                      );
-                                      if (!context.mounted) return;
-                                      if (saved) {
-                                        Navigator.pop(context);
-                                      } else {
-                                        setDialogState(() => saving = false);
-                                      }
-                                    },
-                              icon: saving
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.add, size: 18),
-                              label: Text(saving ? 'Saving' : 'Add Plant'),
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.success,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: AppSpacing.md),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusMd))))),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+  Future<void> _showAddPlantDialog(BuildContext context, bool isDark) async {
+    final saved = await showMaintenanceRoute(
+        context, PlantTypeForm(api: _api, categories: _plantCategories));
+    if (saved == true && mounted) await _loadPlantTypes();
   }
 
-  void _showEditPlantDialog(
-      BuildContext context, Map<String, dynamic> plant, bool isDark) {
-    final nameController = TextEditingController(text: plant['name']);
-    final maturityMinController = TextEditingController(
-        text: (plant['maturityMin'] ?? plant['maturity'] ?? 0).toString());
-    final maturityMaxController = TextEditingController(
-        text: (plant['maturityMax'] ?? plant['maturity'] ?? 0).toString());
-    final imageFileName = (plant['imageUrl'] ?? '').toString();
-    String selectedCategory = plant['category'];
-    String selectedMaturityUnit =
-        (plant['maturityUnit'] ?? 'months').toString();
-    String selectedStatus = plant['status'];
-    var saving = false;
-    String? formError;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
-
-    showAppDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AppDialog(
-          backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl)),
-          insetPadding: EdgeInsets.symmetric(
-              horizontal: isMobile ? AppSpacing.md : AppSpacing.xxl,
-              vertical: AppSpacing.xl),
-          child: Container(
-            width: isMobile ? double.infinity : 480,
-            constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.9),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [
-                      AppColors.success,
-                      AppColors.success.withValues(alpha: 0.8)
-                    ], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                    borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(AppSpacing.radiusXl)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd)),
-                          child: const Icon(Icons.edit,
-                              color: Colors.white, size: 24)),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                            Text('Edit Plant Type',
-                                style: AppTypography.h6.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: AppTypography.headingWeight)),
-                            Text('Update plant information',
-                                style: AppTypography.bodySmall
-                                    .copyWith(color: Colors.white70))
-                          ])),
-                      IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close, color: Colors.white70)),
-                    ],
-                  ),
-                ),
-                // Preview
-                Container(
-                  margin: const EdgeInsets.all(AppSpacing.lg),
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : AppColors.neutral50,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                      border: Border.all(
-                          color: isDark
-                              ? Colors.white10
-                              : Colors.black.withValues(alpha: 0.08))),
-                  child: Row(
-                    children: [
-                      Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.1),
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd)),
-                          child: const Icon(Icons.eco,
-                              color: AppColors.success, size: 24)),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                            Text(plant['name'],
-                                style: AppTypography.bodyLarge.copyWith(
-                                    fontWeight: AppTypography.labelWeight,
-                                    color: isDark
-                                        ? Colors.white
-                                        : AppColors.textPrimary)),
-                            Text(
-                                '${plant['category']} | ${_maturityLabel(plant)}',
-                                style: AppTypography.bodySmall.copyWith(
-                                    color: isDark
-                                        ? Colors.white60
-                                        : AppColors.textSecondary))
-                          ])),
-                    ],
-                  ),
-                ),
-                // Form
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (formError != null) ...[
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withValues(alpha: 0.08),
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusMd),
-                              border: Border.all(
-                                  color:
-                                      AppColors.error.withValues(alpha: 0.22)),
-                            ),
-                            child: Text(
-                              formError!,
-                              style: TextStyle(
-                                color: AppColors.error,
-                                fontSize: AppTypography.captionSize,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                        ],
-                        _buildFormLabel('Plant Name', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildTextField(
-                            controller: nameController,
-                            hint: 'Plant name',
-                            icon: Icons.eco,
-                            isDark: isDark),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Category', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(
-                            value: selectedCategory,
-                            items: _plantCategories,
-                            icon: Icons.category,
-                            isDark: isDark,
-                            onChanged: (v) =>
-                                setDialogState(() => selectedCategory = v!)),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Maturity Duration Range', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildMaturityControls(
-                          minController: maturityMinController,
-                          maxController: maturityMaxController,
-                          hint: 'Duration',
-                          value: selectedMaturityUnit,
-                          isDark: isDark,
-                          isMobile: isMobile,
-                          onChanged: (v) =>
-                              setDialogState(() => selectedMaturityUnit = v!),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        _buildFormLabel('Status', isDark),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDropdownField(
-                            value: selectedStatus,
-                            items: ['Active', 'Inactive'],
-                            icon: Icons.toggle_on_outlined,
-                            isDark: isDark,
-                            onChanged: (v) =>
-                                setDialogState(() => selectedStatus = v!)),
-                        const SizedBox(height: AppSpacing.lg),
-                      ],
-                    ),
-                  ),
-                ),
-                // Actions
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.03)
-                          : AppColors.neutral50,
-                      borderRadius: const BorderRadius.vertical(
-                          bottom: Radius.circular(AppSpacing.radiusXl))),
-                  child: Row(
-                    children: [
-                      OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _showDeleteDialog(context, plant, isDark);
-                          },
-                          icon: const Icon(Icons.delete_outline, size: 18),
-                          label: const Text('Delete'),
-                          style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.error,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: AppSpacing.md,
-                                  horizontal: AppSpacing.md),
-                              side: BorderSide(
-                                  color:
-                                      AppColors.error.withValues(alpha: 0.5)),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusMd)))),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                          child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: AppSpacing.md),
-                                  side: BorderSide(
-                                      color: isDark
-                                          ? Colors.white24
-                                          : AppColors.neutral300),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusMd))),
-                              child: Text('Cancel',
-                                  style: TextStyle(
-                                      color: isDark
-                                          ? Colors.white70
-                                          : AppColors.textSecondary)))),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                          child: ElevatedButton.icon(
-                              onPressed: () async {
-                                final plantName =
-                                    nameController.text.trim().isEmpty
-                                        ? plant['name']
-                                        : nameController.text.trim();
-                                final maturityMin = int.tryParse(
-                                    maturityMinController.text.trim());
-                                final maturityMax = int.tryParse(
-                                    maturityMaxController.text.trim());
-                                if (maturityMin == null ||
-                                    maturityMax == null ||
-                                    maturityMin <= 0 ||
-                                    maturityMax < maturityMin) {
-                                  setDialogState(() => formError =
-                                      'Enter a valid maturity range.');
-                                  return;
-                                }
-                                setDialogState(() {
-                                  saving = true;
-                                  formError = null;
-                                });
-                                try {
-                                  await _api.updatePlantType(
-                                    id: plant['id'].toString(),
-                                    name: plantName,
-                                    category: selectedCategory,
-                                    maturityMinValue: maturityMin,
-                                    maturityMaxValue: maturityMax,
-                                    maturityUnit: selectedMaturityUnit,
-                                    imageFileName: imageFileName,
-                                    status: selectedStatus,
-                                  );
-                                  await _loadPlantTypes();
-                                  if (!context.mounted) return;
-                                  setState(() {
-                                    _selectedCategoryFilter = selectedCategory;
-                                  });
-                                  Navigator.pop(context);
-                                  _showSuccessSnack('$plantName updated.');
-                                } catch (error) {
-                                  if (!context.mounted) return;
-                                  setDialogState(() {
-                                    saving = false;
-                                    formError = error.toString();
-                                  });
-                                }
-                              },
-                              icon: saving
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  : const Icon(Icons.save, size: 18),
-                              label: Text(saving ? 'Saving...' : 'Save'),
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.success,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: AppSpacing.md),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(
-                                          AppSpacing.radiusMd))))),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+  Future<void> _showEditPlantDialog(
+      BuildContext context, Map<String, dynamic> plant, bool isDark) async {
+    final saved = await showMaintenanceRoute(context,
+        PlantTypeForm(api: _api, categories: _plantCategories, plant: plant));
+    if (saved == true && mounted) await _loadPlantTypes();
   }
 
   void _showDeleteDialog(
@@ -2103,218 +1514,11 @@ class _PlantManagementScreenState extends ConsumerState<PlantManagementScreen> {
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               borderSide: const BorderSide(color: AppColors.success, width: 2)),
           errorStyle: TextStyle(
-              color: AppColors.error.withValues(alpha: 0.9), fontSize: AppTypography.captionSize),
+              color: AppColors.error.withValues(alpha: 0.9),
+              fontSize: AppTypography.captionSize),
           contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md, vertical: AppSpacing.md)),
       validator: validator,
-    );
-  }
-
-  Widget _buildMaturityControls({
-    required TextEditingController minController,
-    required TextEditingController maxController,
-    required String hint,
-    required String value,
-    required bool isDark,
-    required bool isMobile,
-    required ValueChanged<String?> onChanged,
-  }) {
-    if (isMobile) {
-      return Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  controller: minController,
-                  hint: 'Minimum',
-                  icon: Icons.schedule,
-                  isDark: isDark,
-                  keyboardType: TextInputType.number,
-                  validator: (value) => _rangeValueError(value),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  '-',
-                  style: TextStyle(
-                    fontSize: AppTypography.sectionTitleSize,
-                    fontWeight: AppTypography.headingWeight,
-                    color: isDark ? Colors.white54 : AppColors.textSecondary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _buildTextField(
-                  controller: maxController,
-                  hint: 'Maximum',
-                  icon: Icons.event_available_outlined,
-                  isDark: isDark,
-                  keyboardType: TextInputType.number,
-                  validator: (value) => _rangeValueError(value),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          _buildCompactDropdownField(
-            value: value,
-            items: const ['weeks', 'months'],
-            isDark: isDark,
-            onChanged: onChanged,
-          ),
-        ],
-      );
-    }
-
-    return Row(
-      children: [
-        Expanded(
-          child: _buildTextField(
-            controller: minController,
-            hint: 'Minimum',
-            icon: Icons.schedule,
-            isDark: isDark,
-            keyboardType: TextInputType.number,
-            validator: (value) => _rangeValueError(value),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Text(
-            '-',
-            style: TextStyle(
-              fontSize: AppTypography.sectionTitleSize,
-              fontWeight: AppTypography.headingWeight,
-              color: isDark ? Colors.white54 : AppColors.textSecondary,
-            ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _buildTextField(
-            controller: maxController,
-            hint: 'Maximum',
-            icon: Icons.event_available_outlined,
-            isDark: isDark,
-            keyboardType: TextInputType.number,
-            validator: (value) {
-              final error = _rangeValueError(value);
-              if (error != null) return error;
-              final min = int.tryParse(minController.text.trim());
-              final max = int.tryParse(value?.trim() ?? '');
-              return min != null && max != null && max < min
-                  ? 'Must be >= min'
-                  : null;
-            },
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        SizedBox(
-          width: 132,
-          child: _buildCompactDropdownField(
-            value: value,
-            items: const ['weeks', 'months'],
-            isDark: isDark,
-            onChanged: onChanged,
-          ),
-        ),
-      ],
-    );
-  }
-
-  String? _rangeValueError(String? value) {
-    final number = int.tryParse(value?.trim() ?? '');
-    return number == null || number <= 0 ? 'Enter a positive number' : null;
-  }
-
-  Widget _buildCompactDropdownField({
-    required String value,
-    required List<String> items,
-    required bool isDark,
-    required Function(String?) onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-      decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : AppColors.neutral50,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(
-              color: isDark ? Colors.white12 : AppColors.neutral200)),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          isExpanded: true,
-          icon: Icon(Icons.keyboard_arrow_down,
-              color: isDark ? Colors.white54 : AppColors.textSecondary),
-          dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
-          style: TextStyle(
-              color: isDark ? Colors.white : AppColors.textPrimary,
-              fontSize: AppTypography.bodySize),
-          items: items
-              .map((item) => DropdownMenuItem(
-                    value: item,
-                    child: Text(
-                      item,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ))
-              .toList(),
-          onChanged: onChanged,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdownField(
-      {required String value,
-      required List<String> items,
-      required IconData icon,
-      required bool isDark,
-      required ValueChanged<String?>? onChanged,
-      Map<String, String>? labels}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-      decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : AppColors.neutral50,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(
-              color: isDark ? Colors.white12 : AppColors.neutral200)),
-      child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-              value: value,
-              isExpanded: true,
-              icon: Icon(Icons.keyboard_arrow_down,
-                  color: isDark ? Colors.white54 : AppColors.textSecondary),
-              dropdownColor: isDark ? AppColors.surfaceDark : Colors.white,
-              style: TextStyle(
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: AppTypography.bodySize),
-              items: items
-                  .map((item) => DropdownMenuItem(
-                      value: item,
-                      child: Row(children: [
-                        Icon(icon,
-                            color: isDark
-                                ? Colors.white54
-                                : AppColors.textSecondary,
-                            size: 20),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Text(
-                            labels?[item] ?? item,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        )
-                      ])))
-                  .toList(),
-              onChanged: onChanged)),
     );
   }
 

@@ -41,7 +41,9 @@ class MaintenanceFormShell extends StatelessWidget {
       required this.onSave,
       required this.child,
       this.action = 'Save',
+      this.icon = Icons.build_outlined,
       this.error});
+  final IconData icon;
   final String title, subtitle, action;
   final bool saving;
   final VoidCallback? onSave;
@@ -86,8 +88,7 @@ class MaintenanceFormShell extends StatelessWidget {
                                 Color(0xff15803d)
                               ]),
                               borderRadius: BorderRadius.circular(10)),
-                          child: const Icon(Icons.build_outlined,
-                              size: 20, color: Colors.white)),
+                          child: Icon(icon, size: 20, color: Colors.white)),
                       const SizedBox(width: 12),
                       Expanded(
                           child: Column(
