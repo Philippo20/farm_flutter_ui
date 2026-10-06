@@ -134,6 +134,11 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
       'name': (doc['name'] ?? 'Unnamed User').toString(),
       'email': (doc['email'] ?? '').toString(),
       'role': role,
+      'roles': ((doc['roles'] as List?)?.isNotEmpty == true
+              ? doc['roles'] as List
+              : [doc['role']])
+          .map(_roleLabel)
+          .toList(),
       'status': _statusLabel(doc['status']),
     };
   }
@@ -179,7 +184,9 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
 
   List<Map<String, dynamic>> _usersForRole(String role) {
     return _users
-        .where((user) => user['role'] == role && user['status'] == 'Active')
+        .where((user) =>
+            (user['roles'] as List).contains(role) &&
+            user['status'] == 'Active')
         .toList();
   }
 
@@ -1048,7 +1055,9 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                     Text(
                       stat['value'] as String,
                       style: TextStyle(
-                          fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.cardTitleSize,
+                          fontSize: isMobile
+                              ? AppTypography.pageTitleSize
+                              : AppTypography.cardTitleSize,
                           fontWeight: AppTypography.labelWeight,
                           color: statColor),
                       maxLines: 1,
@@ -1057,7 +1066,9 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                     Text(
                       stat['title'] as String,
                       style: TextStyle(
-                          fontSize: isMobile ? AppTypography.captionSize : AppTypography.microSize,
+                          fontSize: isMobile
+                              ? AppTypography.captionSize
+                              : AppTypography.microSize,
                           color: statColor.withValues(alpha: 0.8)),
                       maxLines: isMobile ? 2 : 1,
                       overflow: TextOverflow.ellipsis,
@@ -1094,7 +1105,9 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
             color: isSelected
                 ? AppColors.primary
                 : (isDark ? Colors.white70 : AppColors.textSecondary),
-            fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
+            fontWeight: isSelected
+                ? AppTypography.headingWeight
+                : AppTypography.bodyWeight,
           ),
         );
       }).toList(),
@@ -1225,8 +1238,9 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
             const SizedBox(width: 8),
             Expanded(
                 child: Text(text,
-                    style: AppTypography.bodySmall
-                        .copyWith(color: secondary, fontSize: AppTypography.captionSize))),
+                    style: AppTypography.bodySmall.copyWith(
+                        color: secondary,
+                        fontSize: AppTypography.captionSize))),
           ],
         );
     Widget metric(String label, String amount, IconData icon, Color color) =>
@@ -1240,8 +1254,9 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                 const SizedBox(width: 6),
                 Expanded(
                     child: Text(label,
-                        style: AppTypography.bodySmall
-                            .copyWith(color: secondary, fontSize: AppTypography.captionSize))),
+                        style: AppTypography.bodySmall.copyWith(
+                            color: secondary,
+                            fontSize: AppTypography.captionSize))),
               ]),
               const SizedBox(height: 6),
               Text(amount,
@@ -1413,7 +1428,6 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
       ),
     );
   }
-
 
   Color _statusColor(String status) {
     switch (status) {

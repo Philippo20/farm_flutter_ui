@@ -1,3 +1,4 @@
+import 'api_session_context.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -151,6 +152,18 @@ class ConnectedApiClient extends http.BaseClient {
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    if (request.url.origin == ApiSessionContext.origin &&
+        ApiSessionContext.jwt != null) {
+      request.headers.putIfAbsent(
+          'Authorization', () => 'Bearer ${ApiSessionContext.jwt}');
+      if (ApiSessionContext.role != null &&
+          request.headers['Authorization'] ==
+              'Bearer ${ApiSessionContext.jwt}' &&
+          !request.url.path.startsWith('/account/')) {
+        request.headers
+            .putIfAbsent('X-Active-Role', () => ApiSessionContext.role!);
+      }
+    }
     final read = request.method == 'GET' || request.method == 'HEAD';
     final method = request.method;
     final url = request.url;

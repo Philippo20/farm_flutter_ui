@@ -84,6 +84,7 @@ class _CreateUserModalState extends State<_CreateUserModal> {
       key: TextEditingController()
   };
   String _role = 'Caretaker';
+  final Set<String> _selectedRoles = {'Caretaker'};
   String _department = 'Field Work';
   String _status = 'Pending';
   bool get _editing => widget.initialValues != null;
@@ -97,6 +98,10 @@ class _CreateUserModalState extends State<_CreateUserModal> {
       entry.value.text = (values[entry.key] ?? '').toString();
     }
     _role = values['role'] as String;
+    _selectedRoles
+      ..clear()
+      ..addAll(((values['roles'] as List?) ?? [_role]).cast<String>())
+      ..add(_role);
     _department = values['department'] as String;
     _status = values['status'] as String;
   }
@@ -127,6 +132,7 @@ class _CreateUserModalState extends State<_CreateUserModal> {
               ? entry.value.text
               : entry.value.text.trim(),
         'role': _role,
+        'roles': _selectedRoles.toList(),
         'department': widget.departmentForRole?.call(_role) ?? _department,
         'status': _status,
         'capacity': double.tryParse(_fields['capacity']!.text.trim()) ?? 0.0,
@@ -227,11 +233,16 @@ class _CreateUserModalState extends State<_CreateUserModal> {
                                   keyboard: TextInputType.emailAddress),
                               _pair(
                                   _select(
-                                      'Role',
+                                      'Primary role',
                                       _role,
                                       widget.roles,
                                       Icons.badge_outlined,
-                                      (value) => setState(() => _role = value)),
+                                      (value) => setState(() {
+                                            if (_selectedRoles.length == 1)
+                                              _selectedRoles.clear();
+                                            _role = value;
+                                            _selectedRoles.add(value);
+                                          })),
                                   widget.departmentForRole != null
                                       ? _label(
                                           'Department',
@@ -251,6 +262,45 @@ class _CreateUserModalState extends State<_CreateUserModal> {
                                           Icons.business_outlined,
                                           (value) => setState(
                                               () => _department = value))),
+                              _label(
+                                  'Assigned roles',
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Wrap(
+                                          spacing: 6,
+                                          runSpacing: 4,
+                                          children: [
+                                            for (final role
+                                                in widget.roles.toSet())
+                                              FilterChip(
+                                                  label: Text(role,
+                                                      style: AppTypography
+                                                          .bodySmall),
+                                                  selected: _selectedRoles
+                                                      .contains(role),
+                                                  showCheckmark: false,
+                                                  onSelected: role == _role
+                                                      ? null
+                                                      : (selected) =>
+                                                          setState(() {
+                                                            if (selected) {
+                                                              _selectedRoles
+                                                                  .add(role);
+                                                            } else {
+                                                              _selectedRoles
+                                                                  .remove(role);
+                                                            }
+                                                          })),
+                                          ]),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                          'The primary role is always included. Users with several roles choose a workspace after sign-in.',
+                                          style: AppTypography.bodySmall
+                                              .copyWith(color: muted)),
+                                    ],
+                                  )),
                               if (_editing)
                                 _input(
                                     'password',
@@ -280,7 +330,7 @@ class _CreateUserModalState extends State<_CreateUserModal> {
                                     const ['Active', 'Pending', 'Suspended'],
                                     Icons.toggle_on_outlined,
                                     (value) => setState(() => _status = value)),
-                              if (_role == 'Driver') ...[
+                              if (_selectedRoles.contains('Driver')) ...[
                                 _input('license', 'Driver license number',
                                     Icons.badge_outlined),
                                 _input('vehicle', 'Vehicle registration',

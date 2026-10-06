@@ -256,7 +256,8 @@ class _OverallDeliveryControlModuleState
     final role = (user['role'] ?? '').toString().toLowerCase();
     final department = (user['department'] ?? '').toString().toLowerCase();
     final status = (user['status'] ?? 'Active').toString().toLowerCase();
-    final driverTagged = role == 'driver' ||
+    final driverTagged = ((user['roles'] as List?) ?? []).contains('driver') ||
+        role == 'driver' ||
         role.contains('driver') ||
         department.contains('driver') ||
         department.contains('logistics') ||

@@ -103,6 +103,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       'name': (doc['name'] ?? 'Unnamed User').toString(),
       'email': (doc['email'] ?? '').toString(),
       'role': role,
+      'roles': (doc['roles'] is List && (doc['roles'] as List).isNotEmpty)
+          ? (doc['roles'] as List).map(_roleLabel).toList()
+          : [role],
       'status': _statusLabel(doc['status']),
       'department': (doc['department'] ?? _departmentForRole(role)).toString(),
       'joined': _dateLabel(doc[r'$createdAt'] ?? doc['created_at']),
@@ -233,7 +236,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     final filteredUsers = _users.where((user) {
       if (_selectedFilter != 'All' && user['status'] != _selectedFilter)
         return false;
-      final searchable = ['name', 'email', 'role', 'department', 'phone']
+      final searchable = ['name', 'email', 'roles', 'department', 'phone']
           .map((key) => (user[key] ?? '').toString())
           .join(' ')
           .toLowerCase();
@@ -692,8 +695,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       singleColumn: isMobile,
       children: [
         for (var index = 0; index < filteredUsers.length; index++)
-            _withUserProgress(filteredUsers[index],
-                _buildMobileUserCard(filteredUsers[index], isDark)),
+          _withUserProgress(filteredUsers[index],
+              _buildMobileUserCard(filteredUsers[index], isDark)),
       ],
     );
   }
@@ -746,60 +749,61 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         spacing: AppSpacing.md,
         runSpacing: AppSpacing.md,
         children: List.generate(stats.length, (index) {
-        final stat = stats[index];
-        return Container(
-          width: cardWidth,
-          // Keep the preferred proportions, but allow text to determine the
-          // minimum height at narrow widths and larger accessibility scales.
-          constraints: BoxConstraints(minHeight: cardWidth / childAspectRatio),
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: (stat['color'] as Color).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border:
-                Border.all(color: (stat['color'] as Color).withOpacity(0.3)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: (stat['color'] as Color).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          final stat = stats[index];
+          return Container(
+            width: cardWidth,
+            // Keep the preferred proportions, but allow text to determine the
+            // minimum height at narrow widths and larger accessibility scales.
+            constraints:
+                BoxConstraints(minHeight: cardWidth / childAspectRatio),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: (stat['color'] as Color).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border:
+                  Border.all(color: (stat['color'] as Color).withOpacity(0.3)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: (stat['color'] as Color).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  ),
+                  child: Icon(stat['icon'] as IconData,
+                      color: stat['color'] as Color, size: 22),
                 ),
-                child: Icon(stat['icon'] as IconData,
-                    color: stat['color'] as Color, size: 22),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      stat['value'] as String,
-                      style: TextStyle(
-                          fontSize: AppTypography.headingSize,
-                          fontWeight: AppTypography.labelWeight,
-                          color: stat['color'] as Color),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      stat['title'] as String,
-                      style: TextStyle(
-                          fontSize: AppTypography.fieldLabelSize,
-                          color: (stat['color'] as Color).withOpacity(0.8)),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        stat['value'] as String,
+                        style: TextStyle(
+                            fontSize: AppTypography.headingSize,
+                            fontWeight: AppTypography.labelWeight,
+                            color: stat['color'] as Color),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        stat['title'] as String,
+                        style: TextStyle(
+                            fontSize: AppTypography.fieldLabelSize,
+                            color: (stat['color'] as Color).withOpacity(0.8)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        );
+              ],
+            ),
+          );
         }),
       );
     });
@@ -826,7 +830,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             color: isSelected
                 ? AppColors.primary
                 : (isDark ? Colors.white70 : AppColors.textSecondary),
-            fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
+            fontWeight: isSelected
+                ? AppTypography.headingWeight
+                : AppTypography.bodyWeight,
           ),
         );
       }).toList(),
@@ -992,7 +998,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 ),
                 child: Text(initials,
                     style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.primary, fontWeight: AppTypography.headingWeight)),
+                        color: AppColors.primary,
+                        fontWeight: AppTypography.headingWeight)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1006,8 +1013,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                           fontWeight: AppTypography.headingWeight)),
                   const SizedBox(height: 4),
                   Text((user['email'] ?? '').toString(),
-                      style: AppTypography.bodySmall
-                          .copyWith(fontSize: AppTypography.captionSize, color: secondary)),
+                      style: AppTypography.bodySmall.copyWith(
+                          fontSize: AppTypography.captionSize,
+                          color: secondary)),
                 ],
               )),
             ],
@@ -1017,8 +1025,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildMobileUserBadge((user['role'] ?? '').toString(),
-                  _roleColor((user['role'] ?? '').toString())),
+              for (final role in (user['roles'] as List?) ?? [user['role']])
+                _buildMobileUserBadge(
+                    role.toString(), _roleColor(role.toString())),
               _buildMobileUserBadge(status, _statusColor(status)),
             ],
           ),
@@ -1040,7 +1049,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       Icons.calendar_today_outlined, 'Joined', user['joined'])),
             ],
           ),
-          if (user['role'] == 'Driver') ...[
+          if (((user['roles'] as List?) ?? [user['role']])
+              .contains('Driver')) ...[
             const SizedBox(height: 14),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1077,8 +1087,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 minimumSize: const Size(0, 44),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
+                textStyle: AppTypography.bodySmall.copyWith(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight),
                 side: BorderSide(
                     color: isDark ? Colors.white12 : AppColors.neutral200),
                 shape: RoundedRectangleBorder(
@@ -1100,8 +1111,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 minimumSize: const Size(0, 44),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
+                textStyle: AppTypography.bodySmall.copyWith(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
@@ -1121,7 +1133,9 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       ),
       child: Text(label,
           style: AppTypography.bodySmall.copyWith(
-              fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight, color: color)),
+              fontSize: AppTypography.fieldLabelSize,
+              fontWeight: AppTypography.headingWeight,
+              color: color)),
     );
   }
 
@@ -1148,7 +1162,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 child: Text(
                   user['name'].toString().substring(0, 1),
                   style: const TextStyle(
-                      color: AppColors.primary, fontWeight: AppTypography.labelWeight),
+                      color: AppColors.primary,
+                      fontWeight: AppTypography.labelWeight),
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
@@ -1204,7 +1219,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
               _buildInfoPill('Role', user['role'], isDark),
               _buildInfoPill('Dept', user['department'], isDark),
               _buildInfoPill('Joined', user['joined'], isDark),
-              if (user['role'] == 'Driver')
+              if (((user['roles'] as List?) ?? [user['role']])
+                  .contains('Driver'))
                 _buildInfoPill(
                   'Vehicle',
                   user['vehicle'].toString().isEmpty
@@ -1212,7 +1228,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                       : user['vehicle'],
                   isDark,
                 ),
-              if (user['role'] == 'Driver')
+              if (((user['roles'] as List?) ?? [user['role']])
+                  .contains('Driver'))
                 _buildInfoPill(
                   'Capacity',
                   '${user['vehicleCapacityKg']} kg',
@@ -1339,7 +1356,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                 const SizedBox(width: 10),
                 Text(label,
                     style: const TextStyle(
-                        fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
+                        fontSize: AppTypography.actionSize,
+                        fontWeight: AppTypography.headingWeight)),
               ])),
         )),
     ]);
@@ -1447,6 +1465,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     required String address,
     required String status,
     required String role,
+    List<String>? roles,
     required String department,
     required String driverLicenseNumber,
     required String vehicle,
@@ -1460,6 +1479,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       password: password,
       address: address,
       role: _roleValue(role),
+      roles: roles?.map(_roleValue).toList(),
       phone: phone,
       department: department,
       status: status,
@@ -1520,6 +1540,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   _safeRequired(values['address'] as String, 'Farm Estates'),
               status: values['status'] as String,
               role: values['role'] as String,
+              roles: (values['roles'] as List).cast<String>(),
               department: values['department'] as String,
               driverLicenseNumber: values['license'] as String,
               vehicle: values['vehicle'] as String,
@@ -1543,6 +1564,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           'name': user['name'],
           'email': user['email'],
           'role': role,
+          'roles': user['roles'],
           'department': _departmentOptions.contains(user['department'])
               ? user['department']
               : _departmentForRole(role),
@@ -1563,6 +1585,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         address: _safeRequired(user['address']?.toString(), 'Farm Estates'),
         phone: _safeRequired(user['phone']?.toString(), '+233000000000'),
         role: _roleValue(values['role'] as String),
+        roles:
+            (values['roles'] as List).cast<String>().map(_roleValue).toList(),
         department: values['department'] as String,
         status: values['status'] as String,
         actorId: actor?.id ?? '',

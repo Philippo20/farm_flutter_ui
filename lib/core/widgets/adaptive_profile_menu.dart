@@ -57,6 +57,10 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
       items.add(
           const PopupMenuItem(value: 'team_messages', child: Text('Messages')));
     }
+    if ((user?.roles.length ?? 0) > 1) {
+      items.add(const PopupMenuItem(
+          value: 'switch_role', child: Text('Switch workspace')));
+    }
     final selected = await showAppDialog<String>(
         context: context,
         builder: (_) => DesktopAccountDialog(
@@ -239,6 +243,16 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
                         'Stay in touch with your team',
                         'team_messages',
                         isDark),
+                    if ((user?.roles.length ?? 0) > 1) ...[
+                      const SizedBox(height: 6),
+                      _sheetAction(
+                          sheetContext,
+                          Icons.swap_horiz_rounded,
+                          'Switch workspace',
+                          'Choose another assigned role',
+                          'switch_role',
+                          isDark),
+                    ],
                     const SizedBox(height: 16),
                   ]),
                 ),
@@ -280,7 +294,10 @@ class AdaptiveProfilePopupMenuButton extends ConsumerWidget {
   }
 
   void _handleSelection(BuildContext context, String value) {
-    if (value == 'team_messages') {
+    if (value == 'switch_role') {
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil('/select-role', (_) => false);
+    } else if (value == 'team_messages') {
       Navigator.of(context)
           .push(MaterialPageRoute(builder: (_) => const ChatScreen()));
     } else {

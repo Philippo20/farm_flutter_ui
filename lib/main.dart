@@ -1,3 +1,4 @@
+import 'screens/auth/role_selection_screen.dart';
 import 'screens/auth/password_recovery_screen.dart';
 import 'core/utils/initial_auth_route.dart';
 import 'core/widgets/api_connection_host.dart';
@@ -171,8 +172,16 @@ class _MyAppState extends ConsumerState<MyApp> {
       onGenerateRoute: (settings) {
         final uri = Uri.tryParse(settings.name ?? '');
         if (uri?.path == '/reset-password') {
-          final parameters = {...recoveryLinkParameters(_launchUri), ...?uri?.queryParameters};
-          return MaterialPageRoute<void>(settings: settings, builder: (_) => PasswordRecoveryScreen(reset: true, userId: parameters['userId'] ?? parameters['user_id'] ?? '', secret: parameters['secret'] ?? ''));
+          final parameters = {
+            ...recoveryLinkParameters(_launchUri),
+            ...?uri?.queryParameters
+          };
+          return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => PasswordRecoveryScreen(
+                  reset: true,
+                  userId: parameters['userId'] ?? parameters['user_id'] ?? '',
+                  secret: parameters['secret'] ?? ''));
         }
         if (uri?.path == '/sales-invoice') {
           return MaterialPageRoute<void>(
@@ -186,8 +195,11 @@ class _MyAppState extends ConsumerState<MyApp> {
       },
       routes: {
         // Auth
+        '/select-role': (context) => const RoleSelectionScreen(),
         '/login': (context) => const ModernLoginScreen(),
-        '/forgot-password': (context) => PasswordRecoveryScreen(initialEmail: ModalRoute.of(context)?.settings.arguments as String? ?? ''),
+        '/forgot-password': (context) => PasswordRecoveryScreen(
+            initialEmail:
+                ModalRoute.of(context)?.settings.arguments as String? ?? ''),
         '/signup': (context) => const SignupScreen(),
         '/profile': (context) => const ProfileScreen(),
 
@@ -458,6 +470,7 @@ class _AuthRouteObserver extends NavigatorObserver {
   @override
   void didChangeTop(Route<dynamic> topRoute, Route<dynamic>? previousTopRoute) {
     final path = Uri.tryParse(topRoute.settings.name ?? '')?.path;
-    isPasswordRecovery = path == '/reset-password' || path == '/forgot-password';
+    isPasswordRecovery =
+        path == '/reset-password' || path == '/forgot-password';
   }
 }

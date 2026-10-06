@@ -21,20 +21,34 @@ class SuperAdminApiService {
 
   final http.Client _client;
 
-  Future<List<Map<String, dynamic>>> getCaretakerCalendar() => _getDocuments(
-      '/caretaker/calendar', headers: {'Authorization': 'Bearer ${AuthService().jwt ?? ""}'});
+  Future<List<Map<String, dynamic>>> getCaretakerCalendar() =>
+      _getDocuments('/caretaker/calendar',
+          headers: {'Authorization': 'Bearer ${AuthService().jwt ?? ""}'});
 
-  Future<List<Map<String, dynamic>>> getApprovalQueue() => _getDocuments(
-      '/accountant/approvals', headers: {'Authorization': 'Bearer ${AuthService().jwt ?? ""}'});
+  Future<List<Map<String, dynamic>>> getApprovalQueue() =>
+      _getDocuments('/accountant/approvals',
+          headers: {'Authorization': 'Bearer ${AuthService().jwt ?? ""}'});
 
-  Future<void> reviewApproval(Map<String, dynamic> item, String decision, String notes) async {
-    final response = await _client.patch(
-      Uri.parse('$baseUrl/accountant/approvals/${Uri.encodeComponent(item['kind'].toString())}/${Uri.encodeComponent(item['id'].toString())}'),
-      headers: {'Authorization': 'Bearer ${AuthService().jwt ?? ""}', 'Content-Type': 'application/json'},
-      body: jsonEncode({'decision': decision, 'notes': notes, 'revision': item['revision']}),
-    ).withApiTimeout();
+  Future<void> reviewApproval(
+      Map<String, dynamic> item, String decision, String notes) async {
+    final response = await _client
+        .patch(
+          Uri.parse(
+              '$baseUrl/accountant/approvals/${Uri.encodeComponent(item['kind'].toString())}/${Uri.encodeComponent(item['id'].toString())}'),
+          headers: {
+            'Authorization': 'Bearer ${AuthService().jwt ?? ""}',
+            'Content-Type': 'application/json'
+          },
+          body: jsonEncode({
+            'decision': decision,
+            'notes': notes,
+            'revision': item['revision']
+          }),
+        )
+        .withApiTimeout();
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw SuperAdminApiException(_extractErrorMessage(response.body, fallback: 'Could not save the decision.'));
+      throw SuperAdminApiException(_extractErrorMessage(response.body,
+          fallback: 'Could not save the decision.'));
     }
   }
 
@@ -1469,6 +1483,7 @@ class SuperAdminApiService {
     required String password,
     required String address,
     required String role,
+    List<String>? roles,
     required String phone,
     required String department,
     required String status,
@@ -1488,6 +1503,7 @@ class SuperAdminApiService {
         'password': password,
         'address': address,
         'role': role,
+        if (roles != null) 'roles': jsonEncode(roles),
         'phone': phone,
         'department': department,
         'status': status,
@@ -1563,6 +1579,7 @@ class SuperAdminApiService {
     required String password,
     required String address,
     required String role,
+    List<String>? roles,
     required String phone,
     required String department,
     required String status,
@@ -1590,6 +1607,7 @@ class SuperAdminApiService {
           'email': email,
           'address': address,
           'role': role,
+          if (roles != null) 'roles': jsonEncode(roles),
           'phone': phone,
           'department': department,
           'status': status,

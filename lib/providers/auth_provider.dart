@@ -1,3 +1,4 @@
+import '../models/enums.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
@@ -78,6 +79,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       return false;
     }
+  }
+
+  Future<void> selectRole(UserRole role) async {
+    final user = await _authService.selectRole(role);
+    state = AuthState(user: user, isAuthenticated: true);
   }
 
   void clearError() {

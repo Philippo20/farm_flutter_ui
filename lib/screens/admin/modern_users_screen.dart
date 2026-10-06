@@ -89,6 +89,9 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       'name': name,
       'email': email,
       'role': role,
+      'roles': (doc['roles'] is List && (doc['roles'] as List).isNotEmpty)
+          ? (doc['roles'] as List).map(_roleLabel).toList()
+          : [role],
       'roleValue': _roleValue(role),
       'status': _statusLabel(doc['status']),
       'department': _text(
@@ -241,12 +244,14 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       final haystack = [
         user['name'],
         user['email'],
-        user['role'],
+        user['roles'],
         user['department'],
         user['phone'],
       ].join(' ').toLowerCase();
       if (query.isNotEmpty && !haystack.contains(query)) return false;
-      if (_selectedRole != 'All' && user['role'] != _selectedRole) {
+      if (_selectedRole != 'All' &&
+          !((user['roles'] as List?) ?? [user['role']])
+              .contains(_selectedRole)) {
         return false;
       }
       if (_selectedStatus != 'All' && user['status'] != _selectedStatus) {
@@ -257,7 +262,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
   }
 
   List<String> get _roleFilterItems {
-    final roles = _users.map((u) => u['role'].toString()).toSet().toList()
+    final roles = _users.expand((u) => ((u['roles'] as List?) ?? [u['role']]).map((r) => r.toString())).toSet().toList()
       ..sort();
     return ['All', ...roles];
   }
@@ -363,7 +368,8 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 SizedBox(height: isMobile ? 16 : AppSpacing.xl),
                 _buildControls(isDark, isMobile),
                 SizedBox(height: isMobile ? 12 : AppSpacing.lg),
-                _buildMobileUsersList(filteredUsers, isDark, isMobile: isMobile),
+                _buildMobileUsersList(filteredUsers, isDark,
+                    isMobile: isMobile),
               ],
             ),
           ],
@@ -668,10 +674,8 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       );
 
   Widget _buildMobileUsersList(
-    List<Map<String, dynamic>> filteredUsers,
-    bool isDark,
-    {required bool isMobile}
-  ) {
+      List<Map<String, dynamic>> filteredUsers, bool isDark,
+      {required bool isMobile}) {
     if (filteredUsers.isEmpty) return _buildEmptyState(isDark);
     return UserCardLayout(
       singleColumn: isMobile,
@@ -755,7 +759,8 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 ),
                 child: Text(initials,
                     style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.primary, fontWeight: AppTypography.headingWeight)),
+                        color: AppColors.primary,
+                        fontWeight: AppTypography.headingWeight)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -769,8 +774,9 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                           fontWeight: AppTypography.headingWeight)),
                   const SizedBox(height: 4),
                   Text((user['email'] ?? '').toString(),
-                      style: AppTypography.bodySmall
-                          .copyWith(fontSize: AppTypography.captionSize, color: secondary)),
+                      style: AppTypography.bodySmall.copyWith(
+                          fontSize: AppTypography.captionSize,
+                          color: secondary)),
                 ],
               )),
             ],
@@ -780,8 +786,9 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildMobileUserBadge((user['role'] ?? '').toString(),
-                  _getRoleColor((user['role'] ?? '').toString())),
+              for (final role in (user['roles'] as List?) ?? [user['role']])
+                _buildMobileUserBadge(
+                    role.toString(), _getRoleColor(role.toString())),
               _buildMobileUserBadge(status, _getStatusColor(status)),
             ],
           ),
@@ -803,7 +810,8 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                       Icons.calendar_today_outlined, 'Joined', user['joined'])),
             ],
           ),
-          if (user['role'] == 'Driver') ...[
+          if (((user['roles'] as List?) ?? [user['role']])
+              .contains('Driver')) ...[
             const SizedBox(height: 14),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -833,8 +841,9 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 minimumSize: const Size(0, 44),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
+                textStyle: AppTypography.bodySmall.copyWith(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight),
                 side: BorderSide(
                     color: isDark ? Colors.white12 : AppColors.neutral200),
                 shape: RoundedRectangleBorder(
@@ -853,8 +862,9 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 minimumSize: const Size(0, 44),
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
+                textStyle: AppTypography.bodySmall.copyWith(
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
@@ -874,7 +884,9 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       ),
       child: Text(label,
           style: AppTypography.bodySmall.copyWith(
-              fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight, color: color)),
+              fontSize: AppTypography.fieldLabelSize,
+              fontWeight: AppTypography.headingWeight,
+              color: color)),
     );
   }
 
@@ -1093,7 +1105,8 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
         ),
         child: Text(
           text,
-          style: TextStyle(color: color, fontSize: AppTypography.fieldLabelSize),
+          style:
+              TextStyle(color: color, fontSize: AppTypography.fieldLabelSize),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -1313,8 +1326,9 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                               : (isDark
                                   ? Colors.white.withOpacity(0.5)
                                   : AppColors.textSecondary),
-                          fontWeight:
-                              isSelected ? AppTypography.labelWeight : AppTypography.bodyWeight,
+                          fontWeight: isSelected
+                              ? AppTypography.labelWeight
+                              : AppTypography.bodyWeight,
                           fontSize: AppTypography.fieldLabelSize,
                         ),
                         maxLines: 1,
@@ -1338,6 +1352,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     required String phone,
     required String address,
     required String role,
+    List<String>? roles,
     required String department,
     required String status,
     required String driverLicenseNumber,
@@ -1352,6 +1367,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       password: password,
       address: address,
       role: _roleValue(role),
+      roles: roles?.map(_roleValue).toList(),
       phone: phone,
       department: department,
       status: status,
@@ -1373,6 +1389,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
     required String phone,
     required String address,
     required String role,
+    List<String>? roles,
     required String department,
     required String status,
     required String driverLicenseNumber,
@@ -1388,6 +1405,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
       password: password,
       address: address,
       role: _roleValue(role),
+      roles: roles?.map(_roleValue).toList(),
       phone: phone,
       department: department,
       status: status,
@@ -1432,6 +1450,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
                 'phone': user['phone'],
                 'address': user['address'],
                 'role': user['role'],
+                'roles': user['roles'],
                 'department': _departmentForRole(user['role']),
                 'status': user['status'],
                 'license': user['driverLicenseNumber'],
@@ -1453,6 +1472,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
             phone: phone,
             address: address,
             role: values['role'] as String,
+            roles: (values['roles'] as List).cast<String>(),
             department: values['department'] as String,
             status: values['status'] as String,
             driverLicenseNumber: values['license'] as String,
@@ -1468,6 +1488,7 @@ class _ModernUsersScreenState extends ConsumerState<ModernUsersScreen> {
             phone: phone,
             address: address,
             role: values['role'] as String,
+            roles: (values['roles'] as List).cast<String>(),
             department: values['department'] as String,
             status: values['status'] as String,
             driverLicenseNumber: values['license'] as String,

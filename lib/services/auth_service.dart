@@ -1,3 +1,4 @@
+import 'api_session_context.dart';
 import 'api_connection.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -32,6 +33,14 @@ class AuthService {
 
   // Current user's dashboard route (set during login)
   String? _dashboardRoute;
+  bool _roleSelectionPending = false;
+
+  void _syncApiContext() {
+    ApiSessionContext.jwt = _jwt;
+    ApiSessionContext.role =
+        _roleSelectionPending ? null : _currentUser?.role.apiValue;
+  }
+
   String? _jwt;
   String? _sessionId;
   String? passwordChangeToken;
@@ -64,6 +73,7 @@ class AuthService {
       throw Exception('Unable to verify your session. Try again.');
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     _jwt = data['jwt'] as String;
+    _syncApiContext();
     sessionTimeoutMinutes = (data['session_timeout'] as num).toInt();
     sessionWarningMinutes =
         (data['session_idle_warning_minutes'] as num).toInt();
@@ -142,9 +152,16 @@ class AuthService {
             name: userName,
             email: userEmail,
             role: UserRole.fromString(userRole),
+            roles: prefs
+                .getStringList('user_roles')
+                ?.map(UserRole.fromString)
+                .toList(),
             address: '',
             createdAt: DateTime.now(),
           );
+          _roleSelectionPending =
+              prefs.getBool('role_selection_pending') ?? false;
+          _syncApiContext();
         }
       }
     } catch (e) {
@@ -223,11 +240,16 @@ class AuthService {
         name: userJson['name'] as String? ?? email.split('@').first,
         email: userJson['email'] as String? ?? email,
         role: role,
+        roles: (userJson['roles'] as List?)
+            ?.map((r) => UserRole.fromString(r.toString()))
+            .toList(),
         address: userJson['address'] as String? ?? '',
         farmId: userJson['farmID'] as String?,
         createdAt: DateTime.now(),
       );
 
+      _roleSelectionPending = _currentUser!.roles.length > 1;
+      _syncApiContext();
       await _saveSession();
       await _logActivity('User logged in', _currentUser!);
 
@@ -276,6 +298,8 @@ class AuthService {
     _jwt = null;
     _sessionId = null;
     _dashboardRoute = null;
+    _roleSelectionPending = false;
+    _syncApiContext();
     lastActivity = null;
     await _clearSession();
     if (user != null) await _logActivity('User logged out', user);
@@ -301,6 +325,9 @@ class AuthService {
       await prefs.setString(_keyUserName, _currentUser!.name);
       await prefs.setString(_keyUserEmail, _currentUser!.email);
       await prefs.setString(_keyUserRole, _currentUser!.role.name);
+      await prefs.setStringList(
+          'user_roles', _currentUser!.roles.map((r) => r.apiValue).toList());
+      await prefs.setBool('role_selection_pending', _roleSelectionPending);
       if (newLogin) {
         await recordSessionActivity(DateTime.now());
         await prefs.setString(_keyLoginTime, lastActivity!.toIso8601String());
@@ -325,6 +352,8 @@ class AuthService {
       await prefs.remove(_keyUserName);
       await prefs.remove(_keyUserEmail);
       await prefs.remove(_keyUserRole);
+      await prefs.remove('user_roles');
+      await prefs.remove('role_selection_pending');
       await prefs.remove(_keyLoginTime);
       await prefs.remove(_keyJwt);
       await prefs.remove(_keySessionId);
@@ -425,6 +454,7 @@ class AuthService {
 
   /// Get user's dashboard route based on role
   String getDashboardRoute() {
+    if (_currentUser != null && _roleSelectionPending) return '/select-role';
     // Return stored dashboard route from login
     if (_dashboardRoute != null) {
       return _dashboardRoute!;
@@ -461,6 +491,35 @@ class AuthService {
       case UserRole.accountant:
         return '/accountant_dashboard';
     }
+  }
+
+  Future<UserModel> selectRole(UserRole role) async {
+    final token = _jwt;
+    final user = _currentUser;
+    if (user == null || token == null) throw const SessionExpiredException();
+    final response = await _client.post(
+      Uri.parse('$_apiBaseUrl/account/roles/${role.apiValue}'),
+      headers: {'Authorization': 'Bearer $token'},
+    ).timeout(const Duration(seconds: 15));
+    if (token != _jwt || user.id != _currentUser?.id)
+      throw const SessionExpiredException();
+    if (response.statusCode != 200) {
+      throw Exception(response.statusCode == 403
+          ? 'This role is no longer available. Please sign in again.'
+          : 'Unable to open this workspace. Please try again.');
+    }
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final verifiedRole = UserRole.fromString(data['role'] as String);
+    _currentUser = user.copyWith(
+        role: verifiedRole,
+        roles: (data['roles'] as List)
+            .map((r) => UserRole.fromString(r.toString()))
+            .toList());
+    _roleSelectionPending = false;
+    _dashboardRoute = _routeForRole(verifiedRole);
+    _syncApiContext();
+    await _saveSession(newLogin: false);
+    return _currentUser!;
   }
 
   String _routeForRole(UserRole role) {

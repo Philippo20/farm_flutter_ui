@@ -1331,19 +1331,23 @@ class _SalesDeliveriesScreenState extends ConsumerState<SalesDeliveriesScreen> {
       .toList();
 
   List<Map<String, dynamic>> get _salesPersonnel => _users.where((user) {
-        final role = _text(user, ['role']).toLowerCase().replaceAll('-', '_');
+        final roles = ((user['roles'] as List?)?.isNotEmpty == true
+            ? user['roles'] as List : [user['role']])
+            .map((r) => r.toString().toLowerCase().replaceAll('-', '_')).toSet();
         final userStatus =
             _text(user, ['status'], fallback: 'Active').toLowerCase();
         return userStatus == 'active' &&
-            (role == 'sales_person' || role == 'sales_personnel');
+            roles.intersection({'sales_person', 'sales_personnel'}).isNotEmpty;
       }).toList();
 
   List<Map<String, dynamic>> get _deliveryAgents => _users.where((user) {
-        final role = _text(user, ['role']).toLowerCase().replaceAll('-', '_');
+        final roles = ((user['roles'] as List?)?.isNotEmpty == true
+            ? user['roles'] as List : [user['role']])
+            .map((r) => r.toString().toLowerCase().replaceAll('-', '_')).toSet();
         final userStatus =
             _text(user, ['status'], fallback: 'Active').toLowerCase();
         return userStatus == 'active' &&
-            (role == 'driver' || role == 'delivery_agent');
+            roles.intersection({'driver', 'delivery_agent'}).isNotEmpty;
       }).toList();
 
   List<Map<String, dynamic>> get _filteredSales {

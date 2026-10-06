@@ -19,6 +19,22 @@ enum UserRole {
   driver,
   accountant;
 
+  String get apiValue => const {
+        UserRole.superAdmin: 'superadmin',
+        UserRole.admin: 'admin',
+        UserRole.farmManager: 'farm_manager',
+        UserRole.owner: 'farm_owner',
+        UserRole.caretaker: 'caretaker',
+        UserRole.technician: 'technician',
+        UserRole.fulfillmentManager: 'fulfillment_manager',
+        UserRole.packagingSupervisor: 'packaging_supervisor',
+        UserRole.qualityAssurance: 'quality_officer',
+        UserRole.salesManager: 'sales_manager',
+        UserRole.salesPersonnel: 'sales_person',
+        UserRole.driver: 'driver',
+        UserRole.accountant: 'accountant',
+      }[this]!;
+
   String get displayName {
     switch (this) {
       case UserRole.superAdmin:
@@ -68,6 +84,7 @@ enum UserRole {
         return UserRole.owner;
       case 'caretaker':
         return UserRole.caretaker;
+      case 'technicians':
       case 'technician':
         return UserRole.technician;
       case 'fulfillmentmanager':
@@ -78,6 +95,7 @@ enum UserRole {
       case 'packaging_supervisor':
       case 'packaging supervisor':
         return UserRole.packagingSupervisor;
+      case 'quality_officer':
       case 'qualityassurance':
       case 'quality_assurance':
       case 'quality_assurance_officer':

@@ -112,6 +112,11 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
       'name': (doc['name'] ?? 'Unnamed User').toString(),
       'email': (doc['email'] ?? '').toString(),
       'role': _roleLabel(doc['role']),
+      'roles': ((doc['roles'] as List?)?.isNotEmpty == true
+              ? doc['roles'] as List
+              : [doc['role']])
+          .map(_roleLabel)
+          .toList(),
       'status': _label(doc['status'], fallback: 'Active'),
     };
   }
@@ -214,7 +219,9 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
 
   List<Map<String, dynamic>> _usersForRole(String role) {
     return _users
-        .where((user) => user['role'] == role && user['status'] == 'Active')
+        .where((user) =>
+            (user['roles'] as List).contains(role) &&
+            user['status'] == 'Active')
         .toList();
   }
 
@@ -233,6 +240,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
         'name': name.isEmpty ? id : name,
         'email': 'Existing farm assignment',
         'role': role,
+        'roles': [role],
         'status': 'Active',
       },
     ];
@@ -977,8 +985,9 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
             const SizedBox(width: 8),
             Expanded(
                 child: Text(text,
-                    style: AppTypography.bodySmall
-                        .copyWith(color: secondary, fontSize: AppTypography.captionSize))),
+                    style: AppTypography.bodySmall.copyWith(
+                        color: secondary,
+                        fontSize: AppTypography.captionSize))),
           ],
         );
     Widget metric(String label, String amount, IconData icon, Color color) =>
@@ -992,8 +1001,9 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                 const SizedBox(width: 6),
                 Expanded(
                     child: Text(label,
-                        style: AppTypography.bodySmall
-                            .copyWith(color: secondary, fontSize: AppTypography.captionSize))),
+                        style: AppTypography.bodySmall.copyWith(
+                            color: secondary,
+                            fontSize: AppTypography.captionSize))),
               ]),
               const SizedBox(height: 6),
               Text(amount,
@@ -3210,8 +3220,9 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                               : (isDark
                                   ? Colors.white.withValues(alpha: 0.5)
                                   : AppColors.textSecondary),
-                          fontWeight:
-                              selected ? AppTypography.labelWeight : AppTypography.bodyWeight,
+                          fontWeight: selected
+                              ? AppTypography.labelWeight
+                              : AppTypography.bodyWeight,
                           fontSize: AppTypography.fieldLabelSize,
                         ),
                       ),

@@ -45,6 +45,11 @@ class DesktopAccountDialog extends StatelessWidget {
             'Settings',
             'Manage your account preferences'
           ),
+        'switch_role' => (
+            Icons.swap_horiz_rounded,
+            'Switch workspace',
+            'Choose another assigned role'
+          ),
         'team_messages' => (
             Icons.chat_bubble_outline_rounded,
             'Messages',
