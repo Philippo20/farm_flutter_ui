@@ -24,6 +24,16 @@ class MainActivity: FlutterActivity() {
                 channelId, "Team messages", NotificationManager.IMPORTANCE_HIGH
             ).apply { description = "New messages from your farm team" })
         }
+        if (Build.VERSION.SDK_INT >= 26) {
+            notifications.createNotificationChannel(NotificationChannel(
+                "farm_updates", "Farm updates", NotificationManager.IMPORTANCE_DEFAULT
+            ).apply { description = "Tasks, deliveries, production and farm alerts" })
+        }
+        if (Build.VERSION.SDK_INT >= 26) {
+            notifications.createNotificationChannel(NotificationChannel(
+                "farm_updates_silent", "Silent farm updates", NotificationManager.IMPORTANCE_LOW
+            ).apply { setSound(null, null); enableVibration(false) })
+        }
         channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger,
             "farmestates/message_notifications")
         channel!!.setMethodCallHandler { call, result ->
@@ -59,17 +69,17 @@ class MainActivity: FlutterActivity() {
                         }
                         val pending = PendingIntent.getActivity(this, peer.hashCode(), tap,
                             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-                        val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, channelId)
+                        val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, if (call.argument<Boolean>("silent") == true) "farm_updates_silent" else if (peer.startsWith("__inbox__:")) "farm_updates" else channelId)
                                       else Notification.Builder(this)
                         notifications.notify(peer, 0, builder
                             .setSmallIcon(R.drawable.ic_message_notification)
                             .setContentTitle(call.argument<String>("title"))
                             .setContentText(call.argument<String>("body"))
-                            .setCategory(Notification.CATEGORY_MESSAGE)
+                            .setCategory(if (peer.startsWith("__inbox__:")) Notification.CATEGORY_EVENT else Notification.CATEGORY_MESSAGE)
                             .setVisibility(Notification.VISIBILITY_PRIVATE)
                             .setAutoCancel(true).setContentIntent(pending).build())
-                    }
-                    result.success(null)
+                        result.success(true)
+                    } else { result.success(false) }
                 }
                 "dismiss" -> {
                     notifications.cancel(call.argument<String>("peerId"), 0)

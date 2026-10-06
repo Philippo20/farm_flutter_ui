@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_webview_window
   geolocator_windows
+  local_notifier
   url_launcher_windows
   window_to_front
 )

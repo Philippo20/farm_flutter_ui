@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:async';
+import 'package:farmestates_ai_dashbaord/core/models/notification/notification_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +36,7 @@ void main() {
         child: MaterialApp(
             home: MessageNotificationHost(
                 service: service,
+                refreshInbox: (_) async {},
                 child: const Scaffold(body: Text('Dashboard'))))));
     await tester.pump();
     expect(calls.where((call) => call.method == 'requestPermission'),
@@ -71,6 +74,74 @@ void main() {
     expect(container.read(notificationProvider), isEmpty);
     expect(calls.last.method, 'clear');
     await tester.pumpWidget(const SizedBox.shrink());
+    container.dispose();
+    tester.binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
+  });
+  testWidgets(
+      'Workflow alerts baseline, deduplicate, sync read state and ignore a disposed response',
+      (tester) async {
+    final calls = <MethodCall>[];
+    const channel = MethodChannel('farmestates/message_notifications');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
+        (call) async {
+      calls.add(call);
+      return call.method == 'show' ? false : null; // Permission denied.
+    });
+    final container = ProviderContainer(overrides: [
+      messageNotificationUserProvider.overrideWith((ref) => 'owner'),
+    ]);
+    final service = MessagingService(
+        token: () => 'test',
+        client: MockClient(
+            (_) async => http.Response('{"notifications":[]}', 200)));
+    final notifier = container.read(notificationProvider.notifier);
+    NotificationModel item(String id) => NotificationModel(
+        id: id,
+        title: 'Maintenance due',
+        message: 'Check device',
+        type: NotificationType.maintenance,
+        createdAt: DateTime(2026));
+    Completer<void>? pending;
+    var first = true;
+    await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          scaffoldMessengerKey: messageScaffoldKey,
+          home: MessageNotificationHost(
+              service: service,
+              refreshInbox: (_) async {
+                if (first) {
+                  first = false;
+                  notifier.addNotification(item('historical'));
+                }
+                await pending?.future;
+              },
+              child: const Scaffold(body: Text('Dashboard'))),
+        )));
+    await tester.pump();
+    expect(calls.where((c) => c.method == 'show'), isEmpty);
+    notifier.addNotification(item('new'));
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump();
+    expect(calls.where((c) => c.method == 'show'), hasLength(1));
+    expect(find.text('Maintenance due'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump();
+    expect(calls.where((c) => c.method == 'show'), hasLength(1));
+    notifier.markAsRead('new');
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump();
+    expect(
+        calls.where((c) =>
+            c.method == 'dismiss' && c.arguments['peerId'] == '__inbox__:new'),
+        hasLength(1));
+    pending = Completer<void>();
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpWidget(const SizedBox.shrink());
+    pending.complete();
+    await tester.pump();
+    expect(tester.takeException(), isNull);
     container.dispose();
     tester.binding.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);

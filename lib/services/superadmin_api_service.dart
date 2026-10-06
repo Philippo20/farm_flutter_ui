@@ -230,15 +230,15 @@ class SuperAdminApiService {
       List<
           Map<String,
               dynamic>>> getNotifications(String recipientId) => _getDocuments(
-      '/notifications?recipient_id=${Uri.encodeQueryComponent(recipientId)}');
+      '/notifications?recipient_id=${Uri.encodeQueryComponent(recipientId)}',
+      headers: {'Authorization': 'Bearer ${AuthService().jwt ?? ''}'});
 
   Future<void> markNotificationAsRead(String notificationId) async {
-    final response = await _client
-        .patch(
-          Uri.parse(
-              '$baseUrl/notifications/${Uri.encodeComponent(notificationId)}/read'),
-        )
-        .withApiTimeout();
+    final response = await _client.patch(
+      Uri.parse(
+          '$baseUrl/notifications/${Uri.encodeComponent(notificationId)}/read'),
+      headers: {'Authorization': 'Bearer ${AuthService().jwt ?? ''}'},
+    ).withApiTimeout();
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw SuperAdminApiException(
         _extractErrorMessage(
@@ -251,12 +251,11 @@ class SuperAdminApiService {
   }
 
   Future<void> markAllNotificationsAsRead(String recipientId) async {
-    final response = await _client
-        .patch(
-          Uri.parse(
-              '$baseUrl/notifications/read-all?recipient_id=${Uri.encodeQueryComponent(recipientId)}'),
-        )
-        .withApiTimeout();
+    final response = await _client.patch(
+      Uri.parse(
+          '$baseUrl/notifications/read-all?recipient_id=${Uri.encodeQueryComponent(recipientId)}'),
+      headers: {'Authorization': 'Bearer ${AuthService().jwt ?? ''}'},
+    ).withApiTimeout();
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw SuperAdminApiException(
         _extractErrorMessage(
@@ -1775,7 +1774,8 @@ class SuperAdminApiService {
       Uri.parse('$baseUrl/plant_type/info'),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {
-        if (productionPlan != null) 'production_plan': jsonEncode(productionPlan),
+        if (productionPlan != null)
+          'production_plan': jsonEncode(productionPlan),
         'name': name,
         'category': category,
         'maturity_min_value': maturityMinValue.toString(),
@@ -1825,7 +1825,8 @@ class SuperAdminApiService {
       Uri.parse('$baseUrl/plant_type/${Uri.encodeComponent(id)}'),
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
       body: {
-        if (productionPlan != null) 'production_plan': jsonEncode(productionPlan),
+        if (productionPlan != null)
+          'production_plan': jsonEncode(productionPlan),
         'name': name,
         'category': category,
         'maturity_min_value': maturityMinValue.toString(),
@@ -2425,9 +2426,11 @@ class SuperAdminApiService {
     return Map<String, dynamic>.from(jsonDecode(response.body) as Map);
   }
 
-  Future<List<Map<String, dynamic>>> _getDocuments(String path) async {
-    final response =
-        await _client.get(Uri.parse('$baseUrl$path')).withApiTimeout();
+  Future<List<Map<String, dynamic>>> _getDocuments(String path,
+      {Map<String, String>? headers}) async {
+    final response = await _client
+        .get(Uri.parse('$baseUrl$path'), headers: headers)
+        .withApiTimeout();
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw SuperAdminApiException(

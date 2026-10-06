@@ -1,6 +1,7 @@
 #include "flutter_window.h"
 
 #include <optional>
+#include <flutter/standard_method_codec.h>
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -26,6 +27,20 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
+  notification_window_channel_ = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+      flutter_controller_->engine()->messenger(), "farmestates/notification_window",
+      &flutter::StandardMethodCodec::GetInstance());
+  notification_window_channel_->SetMethodCallHandler(
+      [this](const auto& call, auto result) {
+        if (call.method_name() != "show") {
+          result->NotImplemented();
+          return;
+        }
+        const HWND window = GetHandle();
+        ShowWindow(window, IsIconic(window) ? SW_RESTORE : SW_SHOW);
+        SetForegroundWindow(window);
+        result->Success();
+      });
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
@@ -40,6 +55,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  notification_window_channel_.reset();
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }

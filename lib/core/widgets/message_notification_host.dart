@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../screens/caretaker/chat_screen.dart';
 import '../../services/messaging_service.dart';
+import '../../services/local_alerts.dart';
+import 'notification_center.dart';
 import '../models/notification/notification_model.dart';
 import '../providers/notification_provider.dart';
 
@@ -17,9 +19,11 @@ final messageNotificationUserProvider = Provider<String?>(
 
 /// One session-scoped poller for every role, independent of the visible header.
 class MessageNotificationHost extends ConsumerStatefulWidget {
-  const MessageNotificationHost({super.key, required this.child, this.service});
+  const MessageNotificationHost(
+      {super.key, required this.child, this.service, this.refreshInbox});
   final Widget child;
   final MessagingService? service;
+  final Future<void> Function(String)? refreshInbox;
   @override
   ConsumerState<MessageNotificationHost> createState() =>
       _MessageNotificationHostState();
@@ -35,6 +39,10 @@ class _MessageNotificationHostState
   bool _busy = false;
   bool _baseline = false;
   final _seen = <String>{};
+  final _shown = <String>{};
+  final _local = LocalAlerts.instance;
+  bool _inboxBaseline = false;
+  final _seenInbox = <String>{};
   bool get _isAndroid =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
@@ -54,6 +62,11 @@ class _MessageNotificationHostState
 
   void _open(String peer) {
     if (_user == null) return;
+    if (peer.startsWith('__inbox__:')) {
+      final context = messageNavigatorKey.currentState?.overlay?.context;
+      if (context != null) showNotificationDialog(context);
+      return;
+    }
     messageNavigatorKey.currentState?.push(MaterialPageRoute<void>(
       builder: (_) => ChatScreen(initialPeerId: peer),
     ));
@@ -66,11 +79,14 @@ class _MessageNotificationHostState
     _timer?.cancel();
     _seen.clear();
     _baseline = false;
+    _inboxBaseline = false;
+    _seenInbox.clear();
+    _shown.clear();
     ref.read(notificationProvider.notifier).clearAll();
-    if (_isAndroid) _android.invokeMethod<void>('clear').ignore();
+    unawaited(_local.clear());
     if (user == null) return;
     if (_isAndroid) {
-      _android.invokeMethod<void>('requestPermission').ignore();
+      unawaited(_local.requestPermission());
       unawaited(_initialMessage(user));
     }
     unawaited(_refresh());
@@ -92,7 +108,15 @@ class _MessageNotificationHostState
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _timer?.cancel();
-    if (state == AppLifecycleState.resumed && _user != null) {
+    if (_user != null &&
+        (state == AppLifecycleState.resumed ||
+            (kIsWeb ||
+                    const [
+                      TargetPlatform.windows,
+                      TargetPlatform.linux,
+                      TargetPlatform.macOS
+                    ].contains(defaultTargetPlatform)) &&
+                state != AppLifecycleState.detached)) {
       unawaited(_refresh());
       _timer = Timer.periodic(const Duration(seconds: 5), (_) => _refresh());
     }
@@ -115,7 +139,9 @@ class _MessageNotificationHostState
                 isRead: row['is_read'] == true,
                 metadata: {
                   'peerId': row['peer_id'],
-                  'messageId': row['message_id']
+                  'messageId': row['message_id'],
+                  'deliveryEnabled': row['delivery_enabled'] != false,
+                  'silent': row['silent'] == true
                 },
               ))
           .toList();
@@ -127,45 +153,23 @@ class _MessageNotificationHostState
               !_seen.contains(item.id) &&
               item.metadata!['peerId'] != active)
           .toList();
-      if (_baseline && fresh.isNotEmpty) {
-        final latest = fresh.first;
-        final peer = latest.metadata!['peerId'] as String;
-        if (_isAndroid) {
-          // A single notification per conversation; new arrivals replace it.
-          final peers = <String>{};
-          for (final item in fresh) {
-            if (!mounted || session != _session) return;
-            final id = item.metadata!['peerId'] as String;
-            if (!peers.add(id)) continue;
-            await _android.invokeMethod<void>('show', {
-              'peerId': id,
-              'recipientId': _user,
-              'title': item.title,
-              'body': 'You have a new message',
-            });
-          }
-        } else {
-          messageScaffoldKey.currentState?.showSnackBar(SnackBar(
-            content: Text('New message from ${latest.title}'),
-            action: SnackBarAction(
-                label: 'Open',
-                onPressed: () {
-                  if (session == _session) _open(peer);
-                }),
-          ));
+      if (_baseline) {
+        final peers = <String>{};
+        for (final item in fresh) {
+          final peer = item.metadata!['peerId'] as String;
+          if (peers.add(peer)) await _deliver(peer, item, session);
         }
       }
-      if (_isAndroid) {
-        final unreadPeers = items
-            .where((item) => !item.isRead)
-            .map((item) => item.metadata!['peerId'])
-            .toSet();
-        for (final peer
-            in items.map((item) => item.metadata!['peerId']).toSet()) {
-          if (!mounted || session != _session) return;
-          if (!unreadPeers.contains(peer) || peer == active) {
-            await _android.invokeMethod<void>('dismiss', {'peerId': peer});
-          }
+      final unreadPeers = items
+          .where((item) => !item.isRead)
+          .map((item) => item.metadata!['peerId'] as String)
+          .toSet();
+      for (final peer
+          in items.map((item) => item.metadata!['peerId'] as String).toSet()) {
+        if (!mounted || session != _session) return;
+        if (!unreadPeers.contains(peer) || peer == active) {
+          await _local.dismiss(peer);
+          _shown.remove(peer);
         }
       }
       if (!mounted || session != _session) return;
@@ -174,7 +178,70 @@ class _MessageNotificationHostState
     } catch (_) {
       // Keep the last successful inbox; reconnect automatically on the next tick.
     } finally {
+      if (mounted && session == _session) await _refreshInbox(session);
       _busy = false;
+    }
+  }
+
+  Future<void> _deliver(String id, NotificationModel item, int session) async {
+    if (!mounted || session != _session || _user == null) return;
+    if (item.metadata?['deliveryEnabled'] == false) return;
+    void open() {
+      if (mounted && session == _session) _open(id);
+    }
+
+    // Keep private farm, financial and message content out of lock-screen previews.
+    final delivered = await _local.show(
+        id: id,
+        user: _user!,
+        title: item.type == NotificationType.message
+            ? 'New team message'
+            : item.title,
+        body: 'Open Farm Estates to view the notification.',
+        silent: item.metadata?['silent'] == true,
+        onTap: open);
+    if (!mounted || session != _session) {
+      await _local.dismiss(id);
+      return;
+    }
+    _shown.add(id);
+    if (!delivered) {
+      messageScaffoldKey.currentState?.showSnackBar(SnackBar(
+        content: Text(item.title),
+        action: SnackBarAction(label: 'Open', onPressed: open),
+      ));
+    }
+  }
+
+  Future<void> _refreshInbox(int session) async {
+    try {
+      final user = _user;
+      if (user == null) return;
+      if (widget.refreshInbox != null) {
+        await widget.refreshInbox!(user);
+      } else {
+        await ref
+            .read(notificationProvider.notifier)
+            .refreshFromBackend(recipientId: user);
+      }
+      if (!mounted || session != _session) return;
+      final items = ref
+          .read(notificationProvider)
+          .where((item) => item.type != NotificationType.message)
+          .toList();
+      for (final item in items) {
+        if (!mounted || session != _session) return;
+        final id = '__inbox__:${item.id}';
+        if (_inboxBaseline && !item.isRead && !_seenInbox.contains(item.id)) {
+          await _deliver(id, item, session);
+        } else if (item.isRead && _shown.remove(id)) {
+          await _local.dismiss(id);
+        }
+      }
+      _seenInbox.addAll(items.map((item) => item.id));
+      _inboxBaseline = true;
+    } catch (_) {
+      // Independent of chat failures; retry after reconnect without replaying alerts.
     }
   }
 

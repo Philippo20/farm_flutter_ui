@@ -27,35 +27,18 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
 
   Future<void> refreshFromBackend({String? recipientId}) async {
     final generation = _generation;
-    final results = await Future.wait([
-      _api.getAlerts(),
-      if (recipientId != null && recipientId.trim().isNotEmpty)
-        _api.getNotifications(recipientId),
-    ]);
+    if (recipientId == null || recipientId.trim().isEmpty) return;
+    final notifications = await _api.getNotifications(recipientId);
     if (!mounted || generation != _generation) return;
-    final alerts = results.first;
-    final notifications =
-        results.length > 1 ? results[1] : <Map<String, dynamic>>[];
-    final readIds = {
-      for (final notification in state)
-        if (notification.isRead) notification.id,
-    };
-    final mappedAlerts = alerts
-        .map((alert) => _fromAlert(alert, readIds.contains(_alertId(alert))))
-        .whereType<NotificationModel>();
-    final mappedNotifications = notifications
-        .map((notification) => _fromNotification(
-            notification, readIds.contains(_notificationId(notification))))
-        .whereType<NotificationModel>();
+    final mappedNotifications =
+        notifications.map(_fromNotification).whereType<NotificationModel>();
     state = [
-      ...mappedAlerts,
       ...mappedNotifications,
       ...state.where((item) => item.type == NotificationType.message)
     ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   }
 
-  NotificationModel? _fromNotification(
-      Map<String, dynamic> notification, bool isRead) {
+  NotificationModel? _fromNotification(Map<String, dynamic> notification) {
     final id = _notificationId(notification);
     final title = (notification['title'] ?? '').toString().trim();
     final message = (notification['message'] ?? '').toString().trim();
@@ -74,53 +57,14 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
       priority: NotificationPriority.fromString(
           (notification['priority'] ?? 'normal').toString()),
       createdAt: createdAt,
-      isRead: isRead || notification['is_read'] == true,
+      isRead: notification['is_read'] == true,
       metadata: {
         'relatedTaskId': notification['related_task_id'] ?? '',
+        'deliveryEnabled': notification['delivery_enabled'] != false,
+        'silent': notification['silent'] == true,
       },
     );
   }
-
-  NotificationModel? _fromAlert(Map<String, dynamic> alert, bool isRead) {
-    final id = _alertId(alert);
-    final message = (alert['message'] ?? '').toString().trim();
-    if (id.isEmpty || message.isEmpty) return null;
-
-    final severity = (alert['severity'] ?? 'medium').toString().toLowerCase();
-    final sensor = (alert['sensorType'] ?? 'system').toString();
-    final timestamp = DateTime.tryParse(
-          (alert['timestamp'] ?? alert[r'$createdAt'] ?? '').toString(),
-        ) ??
-        DateTime.now();
-    final type = sensor.toLowerCase() == 'system'
-        ? NotificationType.system
-        : NotificationType.issue;
-    final priority = severity == 'high'
-        ? NotificationPriority.high
-        : severity == 'low'
-            ? NotificationPriority.low
-            : NotificationPriority.normal;
-
-    return NotificationModel(
-      id: id,
-      title: sensor.toLowerCase() == 'system'
-          ? 'System alert'
-          : '${_titleCase(sensor)} sensor alert',
-      message: message,
-      type: type,
-      priority: priority,
-      createdAt: timestamp,
-      isRead: isRead,
-      metadata: {
-        'severity': severity,
-        'resolved': alert['resolved'] == true,
-        'farmId': alert['farmID'] ?? '',
-      },
-    );
-  }
-
-  String _alertId(Map<String, dynamic> alert) =>
-      (alert[r'$id'] ?? alert['id'] ?? alert['alert_id'] ?? '').toString();
 
   String _notificationId(Map<String, dynamic> notification) =>
       (notification[r'$id'] ??
@@ -128,14 +72,6 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
               notification['notification_id'] ??
               '')
           .toString();
-
-  String _titleCase(String value) => value
-      .replaceAll('_', ' ')
-      .split(' ')
-      .where((part) => part.isNotEmpty)
-      .map((part) =>
-          '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
-      .join(' ');
 
   void addNotification(NotificationModel notification) {
     state = [notification, ...state];
@@ -161,10 +97,11 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
   }
 
   Future<void> _persistMessageRead(NotificationModel item) async {
+    final generation = _generation;
     try {
       await _messages.markRead(item.metadata!['peerId'] as String,
           [item.metadata!['messageId'] as String]);
-      if (!mounted) return;
+      if (!mounted || generation != _generation) return;
       state = [
         for (final entry in state)
           if (entry.id == item.id) entry.copyWith(isRead: true) else entry
@@ -178,7 +115,7 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
     try {
       await _api.markNotificationAsRead(id);
     } catch (_) {
-      // Keep the optimistic state; the next refresh will retry from the UI.
+      // The next refresh restores the authoritative server read state.
     }
   }
 
@@ -204,7 +141,7 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
     try {
       await _api.markAllNotificationsAsRead(recipientId);
     } catch (_) {
-      // Keep the optimistic state; the next refresh will retry from the UI.
+      // The next refresh restores the authoritative server read state.
     }
   }
 

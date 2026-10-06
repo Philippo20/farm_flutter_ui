@@ -1,4 +1,4 @@
-import 'dart:async';
+import '../../services/local_alerts.dart';
 import '../theme/app_typography.dart';
 import 'app_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -78,50 +78,7 @@ class NotificationCenter extends ConsumerStatefulWidget {
   ConsumerState<NotificationCenter> createState() => _NotificationCenterState();
 }
 
-class _NotificationCenterState extends ConsumerState<NotificationCenter>
-    with WidgetsBindingObserver {
-  Timer? _timer;
-  bool _loading = false;
-
-  Future<void> _refreshNotifications() async {
-    if (!mounted || _loading) return;
-    final lifecycle = WidgetsBinding.instance.lifecycleState;
-    if (lifecycle != null && lifecycle != AppLifecycleState.resumed) return;
-    final recipientId = ref.read(authProvider).user?.id;
-    if (recipientId == null) return;
-    _loading = true;
-    try {
-      await ref
-          .read(notificationProvider.notifier)
-          .refreshFromBackend(recipientId: recipientId);
-    } catch (_) {
-      // A background refresh failure preserves the last successful notification list.
-    } finally {
-      _loading = false;
-    }
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) unawaited(_refreshNotifications());
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    Future.microtask(_refreshNotifications);
-    _timer = Timer.periodic(
-        const Duration(seconds: 60), (_) => _refreshNotifications());
-  }
-
+class _NotificationCenterState extends ConsumerState<NotificationCenter> {
   @override
   Widget build(BuildContext context) {
     final notifications = ref.watch(notificationProvider);
@@ -202,6 +159,20 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  IconButton(
+                    tooltip: 'Enable device notifications',
+                    icon: const Icon(Icons.notifications_active_outlined),
+                    onPressed: () async {
+                      final enabled =
+                          await LocalAlerts.instance.requestPermission();
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(enabled
+                            ? 'Notification permission requested. Check your device notification settings.'
+                            : 'Allow notifications in your browser or device settings. Your inbox remains available.'),
+                      ));
+                    },
+                  ),
                   IconButton(
                     tooltip: 'Refresh notifications',
                     onPressed: _isRefreshing ? null : _refresh,

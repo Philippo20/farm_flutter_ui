@@ -25,8 +25,8 @@ class MessagingService {
         'Content-Type': 'application/json'
       });
     if (data != null) request.body = jsonEncode(data);
-    final response =
-        await http.Response.fromStream(await _client.send(request));
+    final response = await http.Response.fromStream(
+        await _client.send(request).timeout(const Duration(seconds: 20)));
     dynamic body;
     try {
       body = jsonDecode(response.body);
