@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "322439153265",
+    "project_id": "farmestatesltd-f8616",
+    "storage_bucket": "farmestatesltd-f8616.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:322439153265:android:f58156e63f7fe35678bdd0",
+        "android_client_info": {
+          "package_name": "com.example.farmestates_ai_dashbaord"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCDFNiSNhQ4Vp9exXZIzj3U6s8IveENF1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

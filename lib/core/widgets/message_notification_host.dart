@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../screens/caretaker/chat_screen.dart';
 import '../../services/messaging_service.dart';
 import '../../services/local_alerts.dart';
+import '../../services/android_push_registration.dart';
 import 'notification_center.dart';
 import '../models/notification/notification_model.dart';
 import '../providers/notification_provider.dart';
@@ -33,6 +34,7 @@ class _MessageNotificationHostState
     extends ConsumerState<MessageNotificationHost> with WidgetsBindingObserver {
   static const _android = MethodChannel('farmestates/message_notifications');
   late final _api = widget.service ?? MessagingService();
+  final _push = AndroidPushRegistration();
   Timer? _timer;
   String? _user;
   int _session = 0;
@@ -50,6 +52,7 @@ class _MessageNotificationHostState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _push.bind(null);
     if (_isAndroid) {
       _android.setMethodCallHandler((call) async {
         if (call.method == 'openMessage' && mounted) {
@@ -75,6 +78,7 @@ class _MessageNotificationHostState
   void _bind(String? user) {
     if (_user == user) return;
     _user = user;
+    _push.bind(user);
     _session++;
     _timer?.cancel();
     _seen.clear();
@@ -126,7 +130,14 @@ class _MessageNotificationHostState
     if (_busy || _user == null) return;
     _busy = true;
     final session = _session;
+    unawaited(_push.sync());
     try {
+      final delivered = await _push.delivered();
+      if (!mounted || session != _session) return;
+      _seen.addAll(delivered.where((id) => id.startsWith('message:')));
+      final workflowIds = delivered.where((id) => !id.startsWith('message:'));
+      _seenInbox.addAll(workflowIds);
+      _shown.addAll(workflowIds.map((id) => '__inbox__:$id'));
       final rows = await _api.notifications();
       if (!mounted || session != _session) return;
       final items = rows
@@ -260,6 +271,7 @@ class _MessageNotificationHostState
   void dispose() {
     _timer?.cancel();
     _api.dispose();
+    _push.dispose();
     WidgetsBinding.instance.removeObserver(this);
     if (_isAndroid) _android.setMethodCallHandler(null);
     super.dispose();

@@ -11,6 +11,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity: FlutterActivity() {
     private val channelId = "team_messages"
@@ -38,6 +39,19 @@ class MainActivity: FlutterActivity() {
             "farmestates/message_notifications")
         channel!!.setMethodCallHandler { call, result ->
             when (call.method) {
+                "pushToken" -> FirebaseMessaging.getInstance().token
+                    .addOnSuccessListener { result.success(it) }
+                    .addOnFailureListener { result.error("push_unavailable", "Push registration unavailable", null) }
+                "pushRecipient" -> {
+                    val recipient = call.argument<String>("recipientId") ?: ""
+                    val prefs = getSharedPreferences("farm_push", MODE_PRIVATE)
+                    if (prefs.getString("recipient", "") != recipient) {
+                        notifications.cancelAll()
+                        prefs.edit().putString("recipient", recipient).remove("delivered").apply()
+                    }
+                    result.success(null)
+                }
+                "pushDelivered" -> result.success(FarmPushService.delivered(this).toList())
                 "initialMessage" -> {
                     val peer = intent.getStringExtra("peerId")
                     result.success(if (peer == null) null else mapOf(
@@ -89,6 +103,16 @@ class MainActivity: FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        FarmPushService.foreground = true
+    }
+
+    override fun onStop() {
+        FarmPushService.foreground = false
+        super.onStop()
     }
 
     override fun onNewIntent(intent: Intent) {

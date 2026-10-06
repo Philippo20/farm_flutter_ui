@@ -24,18 +24,20 @@ sound preferences affect presentation; muted items remain in the center.
 Signing out clears local alerts, the inbox and deduplication state. Late results
 and taps from a previous session cannot open its content.
 
-## Explicit local-only limit
+## Android background push
 
-No Firebase, background polling service, push registration or Web Push is used.
-New remote events are fetched while the client is running. Android suspension,
-closing the Windows app, or closing the web page stops new delivery. Existing
-unread events are available in the inbox on the next launch. This is not
-closed-app push, and Android local notifications alone cannot wake the app when
-another device creates a backend event.
+Android also uses Firebase Cloud Messaging when the API is configured. New
+background events are handled by the native receiver; foreground presentation
+continues through the existing poller. Delivered event IDs suppress duplicate
+alerts on resume. The receiver checks the stored recipient before displaying.
+Token registration uses the signed-in user's JWT; logout clears the native
+recipient and attempts to unregister the token. Analytics is not installed.
 
-The backend coverage matrix is `farm_appwrite_api/docs/notification-coverage.md`.
-Deploy backend and frontend together; workflow inbox reads now require the
-current user's Bearer token. There is no new database schema migration.
+See `farm_appwrite_api/docs/android-push.md` for the push_devices migration,
+server secret setup and device acceptance tests. Deploy the API configuration
+and install the new APK before expecting background alerts. FCM does not bypass
+Android force-stop, notification denial, or network/manufacturer restrictions.
+Desktop and web remain local-only: closing them stops new notification delivery.
 
 Release checklist: test permission granted/denied, tap while minimized,
 read/dismiss synchronization, muted categories, app resume, logout/account
