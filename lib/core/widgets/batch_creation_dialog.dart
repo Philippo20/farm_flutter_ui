@@ -191,7 +191,7 @@ Future<bool?> showBatchCreationDialog({
   final formKey = GlobalKey<FormState>();
   var startDate = DateTime.now();
   ({int value, String unit}) durationForVariety() => plantPlan.isNotEmpty
-      ? (value: productionDays(plantPlan), unit: 'days')
+      ? productionDuration(plantPlan)
       : _cropDuration(varietyRecords[_catalogKey(selectedVariety)]);
   var selectedDuration = durationForVariety();
   var endDate = _calculateBatchEndDate(
@@ -541,7 +541,7 @@ Future<bool?> showBatchCreationDialog({
                                 Expanded(
                                   child: Text(
                                     selectedDuration.value > 0
-                                        ? 'Calculated from ${selectedDuration.value} ${selectedDuration.unit}${plantPlan.isNotEmpty ? ' of growth stages' : ''}'
+                                        ? 'Calculated from ${selectedDuration.value} ${selectedDuration.unit}${productionStages(plantPlan).isNotEmpty ? ' of growth stages' : ''}'
                                         : 'Add a duration to this crop variety before creating a batch.',
                                     style: AppTypography.font(
                                       fontSize: AppTypography.fieldLabelSize,

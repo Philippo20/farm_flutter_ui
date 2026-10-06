@@ -12,7 +12,7 @@ class ProductionScheduleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stages = productionSchedule(plan, start);
-    if (stages.isEmpty) return const SizedBox.shrink();
+    if (productionPlan(plan).isEmpty) return const SizedBox.shrink();
     final colors = Theme.of(context).colorScheme;
     final interval =
         (productionPlan(plan)['interval_days'] as num? ?? 0).toInt();
@@ -39,7 +39,11 @@ class ProductionScheduleCard extends StatelessWidget {
           border: Border.all(color: colors.outlineVariant),
           borderRadius: BorderRadius.circular(10)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Text('Planned growth schedule', style: AppTypography.labelSmall),
+        Text(
+            stages.isEmpty
+                ? 'Staggered production schedule'
+                : 'Planned growth schedule',
+            style: AppTypography.labelSmall),
         if (active != null) ...[
           const SizedBox(height: 6),
           Text('Expected stage now: ${active['name']}',
@@ -53,7 +57,7 @@ class ProductionScheduleCard extends StatelessWidget {
                   '${stage['name']} · ${format.format(stage['start'] as DateTime)} – ${format.format(stage['end'] as DateTime)}',
                   style: AppTypography.bodySmall)),
         Text(
-            'Expected harvest: ${format.format(stages.last['end'] as DateTime)}',
+            'Expected harvest: ${format.format(productionHarvest(plan, start))}',
             style: AppTypography.bodySmall),
         if (interval > 0) ...[
           const SizedBox(height: 10),

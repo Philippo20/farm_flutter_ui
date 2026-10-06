@@ -1725,7 +1725,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             ? 'Please select a batch'
             : null,
       ),
-      if (productionStages(_selectedBatchDoc?['production_plan']).isNotEmpty &&
+      if (productionPlan(_selectedBatchDoc?['production_plan']).isNotEmpty &&
           DateTime.tryParse('${_selectedBatchDoc?['start_date']}') != null) ...[
         const SizedBox(height: 12),
         ProductionScheduleCard(

@@ -18,6 +18,27 @@ List<Map<String, dynamic>> productionStages(Object? value) =>
 int productionDays(Object? value) => productionStages(value)
     .fold(0, (sum, stage) => sum + ((stage['days'] as num?)?.toInt() ?? 0));
 
+({int value, String unit}) productionDuration(Object? value) {
+  final days = productionDays(value);
+  if (days > 0) return (value: days, unit: 'days');
+  final plan = productionPlan(value);
+  return (
+    value: (plan['maturity_value'] as num? ?? 0).toInt(),
+    unit: '${plan['maturity_unit'] ?? 'days'}'
+  );
+}
+
+DateTime productionHarvest(Object? value, DateTime start) {
+  final duration = productionDuration(value);
+  if (duration.unit == 'months') {
+    final month = DateTime(start.year, start.month + duration.value, 1);
+    final lastDay = DateTime(month.year, month.month + 1, 0).day;
+    return DateTime(month.year, month.month, start.day.clamp(1, lastDay));
+  }
+  return calendarAdd(
+      start, duration.value * (duration.unit == 'weeks' ? 7 : 1));
+}
+
 DateTime calendarAdd(DateTime date, int days) =>
     DateTime(date.year, date.month, date.day + days);
 

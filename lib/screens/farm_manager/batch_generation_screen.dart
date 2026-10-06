@@ -285,8 +285,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   }
 
   ({int value, String unit})? _selectedVarietyDuration() {
-    final days = productionDays(_selectedProductionPlan);
-    if (days > 0) return (value: days, unit: 'days');
+    final duration = productionDuration(_selectedProductionPlan);
+    if (duration.value > 0) return duration;
     final variety = _selectedPlantVariety;
     if (variety != null && variety.isNotEmpty) {
       for (final crop in _cropVarieties) {
@@ -2336,7 +2336,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  if (productionStages(batch.metadata?['production_plan'])
+                  if (productionPlan(batch.metadata?['production_plan'])
                       .isNotEmpty) ...[
                     ProductionScheduleCard(
                         plan: batch.metadata?['production_plan'],

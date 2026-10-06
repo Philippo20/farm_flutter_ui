@@ -34,6 +34,58 @@ void main() {
   };
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
+  testWidgets('Staggered production saves independently of custom stages',
+      (tester) async {
+    Map<String, String>? payload;
+    final client = MockClient((request) async {
+      payload = request.bodyFields;
+      return http.Response('{"detail":"Test save error"}', 422);
+    });
+    addTearDown(client.close);
+    final standalone = {
+      'stages': [],
+      'interval_days': 14,
+      'reminder_days': 2,
+      'maturity_value': 6,
+      'maturity_unit': 'weeks'
+    };
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: PlantTypeForm(
+                api: SuperAdminApiService(client: client),
+                categories: const [
+          'Greens'
+        ],
+                plant: {
+          ...plant,
+          'maturityMin': 4,
+          'maturityMax': 6,
+          'maturityUnit': 'weeks',
+          'production_plan': jsonEncode(standalone)
+        }))));
+    final toggles =
+        tester.widgetList<SwitchListTile>(find.byType(SwitchListTile)).toList();
+    expect(toggles.first.value, isFalse);
+    expect(toggles.last.value, isTrue);
+    expect(find.text('Stage name'), findsNothing);
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    final sent = jsonDecode(payload!['production_plan']!);
+    expect(sent['stages'], isEmpty);
+    expect(sent['interval_days'], 14);
+    expect(sent['maturity_value'], 6);
+    expect(payload!['maturity_min_value'], '4');
+    expect(payload!['maturity_unit'], 'weeks');
+    expect(
+        productionHarvest(sent, DateTime(2026, 10, 5)), DateTime(2026, 11, 16));
+    expect(
+        productionHarvest(
+            {...sent, 'maturity_value': 1, 'maturity_unit': 'months'},
+            DateTime(2028, 1, 31)),
+        DateTime(2028, 2, 29));
+    expect(tester.takeException(), isNull);
+  });
+
   test('Calendar schedule preserves stage order and crosses year boundaries',
       () {
     final dates = productionSchedule(plan, DateTime(2026, 12, 25));

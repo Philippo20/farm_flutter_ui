@@ -46,7 +46,7 @@ class _PlantTypeFormState extends State<PlantTypeForm> {
         '${p['category'] ?? (widget.categories.isEmpty ? 'Plant Types' : widget.categories.first)}';
     _status = '${p['status'] ?? 'Active'}'.toLowerCase();
     _unit = '${p['maturityUnit'] ?? 'weeks'}';
-    _custom = plan.isNotEmpty;
+    _custom = productionStages(plan).isNotEmpty;
     _staggered = (plan['interval_days'] as num? ?? 0) > 0;
     _interval = TextEditingController(
         text: '${_staggered ? plan['interval_days'] : 14}');
@@ -132,9 +132,11 @@ class _PlantTypeFormState extends State<PlantTypeForm> {
           () => _error = 'Maximum maturity must not be less than minimum.');
       return;
     }
-    final plan = _custom
+    final plan = (_custom || _staggered)
         ? <String, dynamic>{
-            'stages': stages,
+            'stages': _custom ? stages : [],
+            if (!_custom) 'maturity_value': max,
+            if (!_custom) 'maturity_unit': _unit,
             'interval_days': _staggered ? int.parse(_interval.text) : 0,
             'reminder_days': int.parse(_lead.text),
           }
@@ -270,25 +272,34 @@ class _PlantTypeFormState extends State<PlantTypeForm> {
                         child: Text(
                             'Expected maturity: ${_stages.fold<int>(0, (n, s) => n + (int.tryParse(s.days.text) ?? 0))} days',
                             style: AppTypography.bodySmall)),
-                    SwitchListTile.adaptive(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Staggered production'),
-                        subtitle: const Text(
-                            'Start separate batches at a regular interval.'),
-                        value: _staggered,
-                        onChanged: _saving
-                            ? null
-                            : (v) => setState(() => _staggered = v)),
-                    if (_staggered)
-                      field('Start a new batch every (days)', _interval,
-                          number: true),
+                  ],
+                  const Divider(height: 24),
+                  SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Staggered production'),
+                      subtitle: const Text(
+                          'Start separate batches at a regular interval, with or without custom stages.'),
+                      value: _staggered,
+                      onChanged: _saving
+                          ? null
+                          : (v) => setState(() => _staggered = v)),
+                  if (_staggered)
+                    field('Start a new batch every (days)', _interval,
+                        number: true),
+                  if (_staggered && !_custom)
+                    const Padding(
+                        padding: EdgeInsets.only(bottom: 14),
+                        child: Text(
+                            'Expected harvest uses the maximum maturity duration above.',
+                            style: TextStyle(fontSize: 12))),
+                  if (_custom || _staggered)
                     field('Remind before the planned date (days)', _lead,
                         number: true),
+                  if (_staggered)
                     const Text(
                         'For a two-week cycle enter 14 days. Admins, the assigned farm manager and caretaker receive in-app reminders. Existing batches keep their saved plan.',
                         style: TextStyle(fontSize: 12)),
-                    const SizedBox(height: 14),
-                  ],
+                  const SizedBox(height: 14),
                 ])),
       );
 }

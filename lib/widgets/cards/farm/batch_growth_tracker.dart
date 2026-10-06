@@ -129,7 +129,7 @@ class _BatchGrowthTrackerState extends State<BatchGrowthTracker> {
                     ? 0
                     : elapsed + 1,
             isDark: isDark),
-        if (productionStages(batch['production_plan']).isNotEmpty &&
+        if (productionPlan(batch['production_plan']).isNotEmpty &&
             start != null) ...[
           const SizedBox(height: 12),
           ProductionScheduleCard(plan: batch['production_plan'], start: start),
