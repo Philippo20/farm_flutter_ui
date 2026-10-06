@@ -1,3 +1,4 @@
+import '../../core/utils/farm_team_assignment.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -362,7 +363,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
       'team': [
         _teamMember(farm, ['farm_manager_id', 'farmManagerId'], 'Farm Manager'),
         _teamMember(farm, ['technician_id', 'technicianId'], 'Technician'),
-        _teamMember(farm, ['caretakerID', 'caretaker_id'], 'Caretaker'),
+        for (final id in farmCaretakerIds(farm))
+          _teamMember({...farm, 'caretakerID': id}, ['caretakerID'], 'Caretaker'),
         _teamMember(farm, ['ownerID', 'owner_id'], 'Owner'),
       ].where((member) => member['name'] != 'Unassigned').toList(),
     };

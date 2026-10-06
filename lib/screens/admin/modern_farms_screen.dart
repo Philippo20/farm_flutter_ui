@@ -1,3 +1,5 @@
+import '../../core/utils/farm_team_assignment.dart';
+import '../../core/widgets/farm_form_modal.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -137,8 +139,9 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
       'farmManagerId': managerId,
       'technician': _userName(technicianId),
       'technicianId': technicianId,
-      'caretaker': _userName(caretakerId),
+      'caretaker': farmCaretakerIds(doc).map(_userName).join(', '),
       'caretakerID': caretakerId,
+      'caretaker_ids': farmCaretakerIds(doc),
       'plantType': (doc['plant_type'] ?? '-').toString(),
       'plantVariety': (doc['plant_variety'] ?? '-').toString(),
       'tier': _tierLabel(doc['tier_type']),
@@ -2127,426 +2130,45 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
     );
   }
 
-  void _showEditFarmDialog(
-    BuildContext context,
-    Map<String, dynamic> farm,
-    bool isDark,
-  ) {
-    final ownerUsers = _ensureSelectedUser(
-      _usersForRole('Owner'),
-      farm['ownerID'].toString(),
-      farm['owner'].toString(),
-      'Owner',
-    );
-    final farmManagerUsers = _ensureSelectedUser(
-      _usersForRole('Farm Manager'),
-      farm['farmManagerId'].toString(),
-      farm['farmManager'].toString(),
-      'Farm Manager',
-    );
-    final technicianUsers = _ensureSelectedUser(
-      _usersForRole('Technician'),
-      farm['technicianId'].toString(),
-      farm['technician'].toString(),
-      'Technician',
-    );
-    final caretakerUsers = _ensureSelectedUser(
-      _usersForRole('Caretaker'),
-      farm['caretakerID'].toString(),
-      farm['caretaker'].toString(),
-      'Caretaker',
-    );
+  void _showEditFarmDialog(BuildContext context, Map<String, dynamic> farm, bool isDark) { _openFarmEditor(context, farm: farm); }
 
-    if (ownerUsers.isEmpty ||
-        farmManagerUsers.isEmpty ||
-        technicianUsers.isEmpty ||
-        caretakerUsers.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Create active Owner, Farm Manager, Technician, and Caretaker users before editing farm assignment.',
-          ),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
+  Map<String, List<Map<String, dynamic>>> _farmTeamOptions(Map<String, dynamic>? farm) {
+    final result = <String, List<Map<String, dynamic>>>{};
+    for (final entry in {'ownerID': 'Owner', 'farmManagerId': 'Farm Manager', 'technicianId': 'Technician', 'caretaker_ids': 'Caretaker'}.entries) {
+      final options = [..._usersForRole(entry.value)];
+      final ids = entry.key == 'caretaker_ids' ? farmCaretakerIds(farm ?? {}) : [farm?[entry.key]?.toString() ?? ''];
+      for (final id in ids.where((id) => id.isNotEmpty && id != 'Unassigned')) {
+        if (!options.any((u) => u['id'] == id)) {
+          options.add(_users.firstWhere((u) => u['id'] == id, orElse: () => {'id': id, 'name': id}));
+        }
+      }
+      result[entry.key] = options;
     }
-
-    final nameController = TextEditingController(text: farm['name']);
-    final locationController = TextEditingController(text: farm['location']);
-    String selectedOwnerId =
-        ownerUsers.any((user) => user['id'] == farm['ownerID'])
-            ? farm['ownerID'].toString()
-            : ownerUsers.first['id'].toString();
-    String selectedFarmManagerId =
-        farmManagerUsers.any((user) => user['id'] == farm['farmManagerId'])
-            ? farm['farmManagerId'].toString()
-            : farmManagerUsers.first['id'].toString();
-    String selectedTechnicianId =
-        technicianUsers.any((user) => user['id'] == farm['technicianId'])
-            ? farm['technicianId'].toString()
-            : technicianUsers.first['id'].toString();
-    String selectedCaretakerId =
-        caretakerUsers.any((user) => user['id'] == farm['caretakerID'])
-            ? farm['caretakerID'].toString()
-            : caretakerUsers.first['id'].toString();
-    String selectedPlantType = farm['plantType'].toString().trim().isEmpty
-        ? _plantTypeOptions.first
-        : farm['plantType'].toString();
-    var plantTypeOptions =
-        _ensureTextOption(_plantTypeOptions, selectedPlantType);
-    if (!_hasVarietiesForPlant(selectedPlantType)) {
-      selectedPlantType = _plantTypeOptions.firstWhere(
-        _hasVarietiesForPlant,
-        orElse: () => selectedPlantType,
-      );
-      plantTypeOptions =
-          _ensureTextOption(_plantTypeOptions, selectedPlantType);
-    }
-    String selectedPlantVariety = farm['plantVariety'].toString().trim().isEmpty
-        ? _varietyOptionsForPlant(selectedPlantType).first
-        : farm['plantVariety'].toString();
-    if (!_varietyOptionsForPlant(selectedPlantType)
-        .contains(selectedPlantVariety)) {
-      selectedPlantVariety = _varietyOptionsForPlant(selectedPlantType).first;
-    }
-    String selectedTier =
-        ['Basic', 'Standard', 'Premium'].contains(farm['tier'])
-            ? farm['tier'].toString()
-            : 'Standard';
-    String selectedStatus =
-        ['Active', 'Pending', 'Suspended'].contains(farm['status'])
-            ? farm['status'].toString()
-            : 'Pending';
-    bool isSaving = false;
-    String? formError;
-
-    showAppDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) {
-          return AppDialog(
-            backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            ),
-            insetPadding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.xl,
-            ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: 620,
-                maxHeight: MediaQuery.of(context).size.height * 0.9,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.10),
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(AppSpacing.radiusLg),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.14),
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusMd),
-                          ),
-                          child: const Icon(
-                            Icons.edit_outlined,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Edit Farm',
-                                style: AppTypography.h6.copyWith(
-                                  color: isDark
-                                      ? Colors.white
-                                      : AppColors.textPrimary,
-                                  fontWeight: AppTypography.headingWeight,
-                                ),
-                              ),
-                              Text(
-                                'Update assignments, crop, location, tier, and status',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: isDark
-                                      ? Colors.white60
-                                      : AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: isSaving
-                              ? null
-                              : () => Navigator.pop(dialogContext),
-                          icon: const Icon(Icons.close_rounded),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Flexible(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (formError != null) ...[
-                            _formError(formError!, isDark),
-                            const SizedBox(height: AppSpacing.md),
-                          ],
-                          _formTextField(
-                            controller: nameController,
-                            label: 'Farm Name',
-                            icon: Icons.agriculture_outlined,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          _formTextField(
-                            controller: locationController,
-                            label: 'Location',
-                            icon: Icons.location_on_outlined,
-                            isDark: isDark,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          _formDropdown(
-                            value: selectedOwnerId,
-                            items: ownerUsers
-                                .map((user) => user['id'].toString())
-                                .toList(),
-                            labels: _userLabels(ownerUsers),
-                            label: 'Owner',
-                            icon: Icons.person_outline,
-                            isDark: isDark,
-                            onChanged: (value) =>
-                                setDialogState(() => selectedOwnerId = value!),
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          _formDropdown(
-                            value: selectedFarmManagerId,
-                            items: farmManagerUsers
-                                .map((user) => user['id'].toString())
-                                .toList(),
-                            labels: _userLabels(farmManagerUsers),
-                            label: 'Farm Manager',
-                            icon: Icons.manage_accounts_outlined,
-                            isDark: isDark,
-                            onChanged: (value) => setDialogState(
-                                () => selectedFarmManagerId = value!),
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          _formDropdown(
-                            value: selectedTechnicianId,
-                            items: technicianUsers
-                                .map((user) => user['id'].toString())
-                                .toList(),
-                            labels: _userLabels(technicianUsers),
-                            label: 'Technician',
-                            icon: Icons.precision_manufacturing_outlined,
-                            isDark: isDark,
-                            onChanged: (value) => setDialogState(
-                                () => selectedTechnicianId = value!),
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          _formDropdown(
-                            value: selectedCaretakerId,
-                            items: caretakerUsers
-                                .map((user) => user['id'].toString())
-                                .toList(),
-                            labels: _userLabels(caretakerUsers),
-                            label: 'Caretaker',
-                            icon: Icons.engineering_outlined,
-                            isDark: isDark,
-                            onChanged: (value) => setDialogState(
-                                () => selectedCaretakerId = value!),
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          _formDropdown(
-                            value: selectedPlantType,
-                            items: plantTypeOptions,
-                            label: 'Plant Type',
-                            icon: Icons.eco_outlined,
-                            isDark: isDark,
-                            onChanged: (value) => setDialogState(() {
-                              selectedPlantType = value!;
-                              final varieties =
-                                  _varietyOptionsForPlant(selectedPlantType);
-                              selectedPlantVariety = varieties.first;
-                            }),
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          _formDropdown(
-                            value: selectedPlantVariety,
-                            items: _ensureTextOption(
-                              _varietyOptionsForPlant(selectedPlantType),
-                              selectedPlantVariety,
-                            ),
-                            label: 'Crop Variety',
-                            icon: Icons.grass_outlined,
-                            isDark: isDark,
-                            onChanged: _hasVarietiesForPlant(selectedPlantType)
-                                ? (value) => setDialogState(
-                                    () => selectedPlantVariety = value!)
-                                : null,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              final stacked = constraints.maxWidth < 460;
-                              final tier = _formDropdown(
-                                value: selectedTier,
-                                items: const ['Basic', 'Standard', 'Premium'],
-                                label: 'Tier',
-                                icon: Icons.workspace_premium_outlined,
-                                isDark: isDark,
-                                onChanged: (value) =>
-                                    setDialogState(() => selectedTier = value!),
-                              );
-                              final status = _formDropdown(
-                                value: selectedStatus,
-                                items: const ['Active', 'Pending', 'Suspended'],
-                                label: 'Status',
-                                icon: Icons.verified_outlined,
-                                isDark: isDark,
-                                onChanged: (value) => setDialogState(
-                                    () => selectedStatus = value!),
-                              );
-                              if (stacked) {
-                                return Column(
-                                  children: [
-                                    tier,
-                                    const SizedBox(height: AppSpacing.md),
-                                    status,
-                                  ],
-                                );
-                              }
-                              return Row(
-                                children: [
-                                  Expanded(child: tier),
-                                  const SizedBox(width: AppSpacing.md),
-                                  Expanded(child: status),
-                                ],
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.03)
-                          : AppColors.neutral50,
-                      borderRadius: const BorderRadius.vertical(
-                        bottom: Radius.circular(AppSpacing.radiusLg),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: isSaving
-                                ? null
-                                : () => Navigator.pop(dialogContext),
-                            child: const Text('Cancel'),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: isSaving
-                                ? null
-                                : () async {
-                                    final name = nameController.text.trim();
-                                    final location =
-                                        locationController.text.trim();
-                                    if (name.isEmpty || location.isEmpty) {
-                                      setDialogState(() => formError =
-                                          'Farm name and location are required.');
-                                      return;
-                                    }
-                                    if (!_isValidPlantSelection(
-                                      selectedPlantType,
-                                      selectedPlantVariety,
-                                    )) {
-                                      setDialogState(() => formError =
-                                          'Select a valid plant type and matching crop variety.');
-                                      return;
-                                    }
-                                    setDialogState(() {
-                                      isSaving = true;
-                                      formError = null;
-                                    });
-                                    final navigator =
-                                        Navigator.of(dialogContext);
-                                    try {
-                                      await _updateFarmFromAdmin(
-                                        id: farm['id'].toString(),
-                                        name: name,
-                                        ownerID: selectedOwnerId,
-                                        caretakerID: selectedCaretakerId,
-                                        farmManagerId: selectedFarmManagerId,
-                                        technicianId: selectedTechnicianId,
-                                        location: location,
-                                        plantType: selectedPlantType,
-                                        plantVariety: selectedPlantVariety,
-                                        tier: selectedTier,
-                                        status: selectedStatus,
-                                      );
-                                      if (!mounted) return;
-                                      navigator.pop();
-                                    } catch (error) {
-                                      if (!mounted) return;
-                                      setDialogState(() {
-                                        isSaving = false;
-                                        formError = error.toString();
-                                      });
-                                    }
-                                  },
-                            icon: isSaving
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.save_outlined, size: 18),
-                            label: Text(isSaving ? 'Saving...' : 'Save Farm'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    ).whenComplete(() {
-      nameController.dispose();
-      locationController.dispose();
-    });
+    return result;
   }
+
+  Future<void> _openFarmEditor(BuildContext context, {Map<String, dynamic>? farm}) async {
+    final saved = await showFarmFormModal(context,
+      farm: farm, teamOptions: _farmTeamOptions(farm),
+      plantTypes: _plantTypeOptions, varietiesForPlant: _varietyOptionsForPlant,
+
+      onSubmit: (values) async {
+        if (!_isValidPlantSelection(values['plantType'], values['plantVariety'])) {
+          throw Exception('Select a valid plant type and matching crop variety.');
+        }
+        await _api.updateFarm(id: farm!['id'].toString(), name: values['name'], location: values['location'], ownerID: values['ownerID'],
+          caretakerID: values['caretakerID'], caretakerIds: (values['caretaker_ids'] as List).cast<String>(),
+          farmManagerId: values['farmManagerId'], technicianId: values['technicianId'],
+          plantType: values['plantType'], plantVariety: values['plantVariety'],
+          tierType: _tierApiValue(values['tier']), status: values['status']);
+      });
+    if (saved != true || !mounted) return;
+    await _loadData();
+    if (!mounted) return;
+    if (farm != null) { setState(() { _selectedFarm = _farms.firstWhere((f) => f['id'] == farm['id'], orElse: () => farm); }); }
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Farm saved successfully.')));
+  }
+
 
   void _showAdminFarmSensorKeyDialog(
     BuildContext context,

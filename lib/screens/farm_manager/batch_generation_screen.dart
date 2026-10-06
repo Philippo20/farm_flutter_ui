@@ -126,8 +126,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         _caretakers
           ..clear()
           ..addAll(results[1].where((user) {
-            final role = _value(user, ['role']).toLowerCase();
-            return role.contains('caretaker');
+            final roles = (user['roles'] as List?)?.isNotEmpty == true ? user['roles'] as List : [user['role']];
+            return roles.any((role) => role.toString().toLowerCase().contains('caretaker'));
           }).map((user) => {
                 'id': _docId(user),
                 'name': _value(user, ['name'], fallback: 'Caretaker'),
@@ -1256,7 +1256,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Assigned Caretaker',
+                              'Primary caretaker',
                               style: AppTypography.label.copyWith(
                                 color: isDark
                                     ? Colors.white
@@ -1353,7 +1353,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Assigned Caretaker',
+                        'Primary caretaker',
                         style: AppTypography.label.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         ),

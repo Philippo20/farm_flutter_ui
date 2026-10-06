@@ -584,14 +584,14 @@ Future<bool?> showBatchCreationDialog({
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                fieldLabel('Assigned Caretaker', isDark),
+                                fieldLabel('Primary caretaker', isDark),
                                 TextFormField(
                                   controller: caretakerController,
                                   readOnly: true,
                                   style: inputTextStyle(isDark),
                                   decoration: inputDecoration(
                                     isDark,
-                                    'Assigned Caretaker',
+                                    'Primary caretaker',
                                     hint: 'No caretaker assigned',
                                     icon: Icons.person_outline,
                                   ),

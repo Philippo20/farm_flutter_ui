@@ -1,3 +1,4 @@
+import '../../core/utils/farm_team_assignment.dart';
 import '../../core/utils/registered_sensor_readings.dart';
 import '../../widgets/cards/farm/farm_iot_dashboard.dart';
 import '../../core/theme/app_typography.dart';
@@ -94,26 +95,11 @@ class _CaretakerDashboardRedesignedState
   bool _matchesCurrentCaretaker(Map<String, dynamic> farm) {
     final user = ref.read(authProvider).user;
     if (user == null) return false;
-    final caretaker = _value(farm, const ['caretakerID', 'caretaker_id']);
-    final caretakerName = _value(farm, const ['caretaker_name']);
-    return caretaker == user.id ||
-        caretaker == user.email ||
-        caretaker == user.name ||
-        caretakerName.toLowerCase() == user.name.toLowerCase();
+    return isAssignedFarmCaretaker(farm, id: user.id, email: user.email);
   }
 
-  List<Map<String, dynamic>> get _assignedFarms {
-    final farms = _farms.where(_matchesCurrentCaretaker).toList();
-    if (farms.isNotEmpty) return farms;
-    final user = ref.read(authProvider).user;
-    if (user == null) return [];
-    return _farms.where((farm) {
-      final text = farm.values.join(' ').toLowerCase();
-      return text.contains(user.id.toLowerCase()) ||
-          text.contains(user.email.toLowerCase()) ||
-          text.contains(user.name.toLowerCase());
-    }).toList();
-  }
+  List<Map<String, dynamic>> get _assignedFarms =>
+      _farms.where(_matchesCurrentCaretaker).toList();
 
   Set<String> get _assignedFarmIds =>
       _assignedFarms.map(_farmId).where((id) => id.isNotEmpty).toSet();

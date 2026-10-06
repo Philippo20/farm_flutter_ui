@@ -18,7 +18,7 @@ const farmTeamAssignmentKeys = <String, List<String>>{
     'managerIds',
     'managerIDs',
   ],
-  'Caretaker': ['caretakerID', 'caretaker_id', 'caretakerId'],
+  'Caretaker': ['caretaker_ids', 'caretakerID', 'caretaker_id', 'caretakerId'],
   'Technician': ['technician_id', 'technicianID', 'technicianId'],
 };
 
@@ -64,4 +64,31 @@ bool isManagerTeamFarm(
   return farmIds
       .intersection(assignmentReferences(manager['farmID']))
       .isNotEmpty;
+}
+
+/// New lists use IDs; older farms retain their single assignment.
+List<String> farmCaretakerIds(Map<String, dynamic> farm) {
+  final raw = farm['caretaker_ids'];
+  final values = raw is List && raw.isNotEmpty
+      ? raw
+      : [
+          farm['caretakerID'] ??
+              farm['caretaker_id'] ??
+              farm['caretakerId'] ??
+              farm['careTakerID']
+        ];
+  return values
+      .where((v) => v != null)
+      .map((v) => v.toString().trim())
+      .where((v) => v.isNotEmpty && v.toLowerCase() != 'unassigned')
+      .toSet()
+      .toList();
+}
+
+bool isAssignedFarmCaretaker(Map<String, dynamic> farm,
+    {required String id, required String email}) {
+  final identities = {id.trim().toLowerCase(), email.trim().toLowerCase()}
+    ..remove('');
+  return farmCaretakerIds(farm)
+      .any((value) => identities.contains(value.toLowerCase()));
 }

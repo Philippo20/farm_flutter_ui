@@ -1,3 +1,4 @@
+import '../../core/utils/farm_team_assignment.dart';
 import '../../core/utils/registered_sensor_readings.dart';
 import '../../widgets/cards/farm/farm_iot_dashboard.dart';
 import '../../core/widgets/app_dialog.dart';
@@ -2272,7 +2273,9 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
 
   Widget _buildAssignments(bool isDark, bool isTabletOrMobile) {
     final manager = _assignedUser(['farm_manager_id', 'farmManagerId']);
-    final caretaker = _assignedUser(['caretakerID', 'caretaker_id']);
+    final caretakerRefs = _ownerFarms.expand(farmCaretakerIds).toSet();
+    final caretakers = caretakerRefs.map((id) => _users.firstWhere((user) => _docId(user) == id,
+      orElse: () => {'name': id, 'email': 'Assigned caretaker'})).toList();
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -2329,24 +2332,13 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                       recipient: manager,
                     ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          _buildAssigneeCard(
-            isDark,
-            'Caretaker',
-            caretaker == null
-                ? 'Unassigned'
-                : _value(caretaker, ['name'], fallback: 'Caretaker'),
-            caretaker == null
-                ? 'Assign from farm management'
-                : _value(caretaker, ['email'], fallback: 'Assigned user'),
-            Icons.handyman_rounded,
-            onMessage: caretaker == null
-                ? null
-                : () => _openMessageCenter(
-                      role: 'Caretaker',
-                      recipient: caretaker,
-                    ),
-          ),
+          if (caretakers.isEmpty) _buildAssigneeCard(isDark, 'Caretakers', 'Unassigned', 'Assign from farm management', Icons.handyman_rounded),
+          for (final caretaker in caretakers) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _buildAssigneeCard(isDark, 'Caretaker', _value(caretaker, ['name'], fallback: 'Caretaker'),
+              _value(caretaker, ['email'], fallback: 'Assigned user'), Icons.handyman_rounded,
+              onMessage: _docId(caretaker).isEmpty ? null : () => _openMessageCenter(role: 'Caretaker', recipient: caretaker)),
+          ],
         ],
       ),
     );

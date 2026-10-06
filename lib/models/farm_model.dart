@@ -1,3 +1,4 @@
+import '../core/utils/farm_team_assignment.dart';
 import 'enums.dart';
 
 /// Farm Model
@@ -10,6 +11,7 @@ class FarmModel {
   final String? longitude;
   final String ownerId;
   final String? caretakerId;
+  final List<String> caretakerIds;
   final TierType tierType;
   final FarmStatus status;
   final PlantType plantType;
@@ -25,13 +27,14 @@ class FarmModel {
     this.longitude,
     required this.ownerId,
     this.caretakerId,
+    List<String>? caretakerIds,
     required this.tierType,
     required this.status,
     required this.plantType,
     required this.plantVariety,
     required this.createdAt,
     this.updatedAt,
-  });
+  }) : caretakerIds = List.unmodifiable(caretakerIds ?? (caretakerId == null ? <String>[] : [caretakerId]));
 
   /// Create FarmModel from JSON
   factory FarmModel.fromJson(Map<String, dynamic> json) {
@@ -42,7 +45,8 @@ class FarmModel {
       latitude: json['latitude'] as String?,
       longitude: json['longitude'] as String?,
       ownerId: json['ownerID'] as String,
-      caretakerId: json['careTakerID'] as String?,
+      caretakerId: (json['caretakerID'] ?? json['careTakerID']) as String?,
+      caretakerIds: farmCaretakerIds(json),
       tierType: TierType.fromString(json['tierType'] as String),
       status: FarmStatus.fromString(json['status'] as String),
       plantType: PlantType.fromString(json['plant_type'] as String),
@@ -65,7 +69,8 @@ class FarmModel {
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
       'ownerID': ownerId,
-      if (caretakerId != null) 'careTakerID': caretakerId,
+      if (caretakerId != null) 'caretakerID': caretakerId,
+      'caretaker_ids': caretakerIds,
       'tierType': tierType.name,
       'status': status.name,
       'plant_type': plantType.name,
@@ -84,6 +89,7 @@ class FarmModel {
     String? longitude,
     String? ownerId,
     String? caretakerId,
+    List<String>? caretakerIds,
     TierType? tierType,
     FarmStatus? status,
     PlantType? plantType,
@@ -99,6 +105,7 @@ class FarmModel {
       longitude: longitude ?? this.longitude,
       ownerId: ownerId ?? this.ownerId,
       caretakerId: caretakerId ?? this.caretakerId,
+      caretakerIds: caretakerIds ?? this.caretakerIds,
       tierType: tierType ?? this.tierType,
       status: status ?? this.status,
       plantType: plantType ?? this.plantType,
@@ -112,7 +119,7 @@ class FarmModel {
   bool get isActive => status == FarmStatus.active;
 
   /// Check if farm has caretaker assigned
-  bool get hasCaretaker => caretakerId != null && caretakerId!.isNotEmpty;
+  bool get hasCaretaker => caretakerIds.isNotEmpty;
 
   /// Get location coordinates if available
   Map<String, double>? get coordinates {

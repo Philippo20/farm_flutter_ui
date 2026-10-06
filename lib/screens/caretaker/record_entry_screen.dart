@@ -1,3 +1,4 @@
+import '../../core/utils/farm_team_assignment.dart';
 import '../../core/widgets/production_schedule_card.dart';
 import '../../core/utils/production_plan.dart';
 import '../../core/utils/caretaker_record_fields.dart';
@@ -20,14 +21,15 @@ import '../../services/superadmin_api_service.dart';
 /// Record Entry Screen
 /// Create and submit farm records for daily monitoring and activities
 class RecordEntryScreen extends ConsumerStatefulWidget {
-  const RecordEntryScreen({super.key});
+  const RecordEntryScreen({super.key, this.api});
+  final SuperAdminApiService? api;
 
   @override
   ConsumerState<RecordEntryScreen> createState() => _RecordEntryScreenState();
 }
 
 class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
-  final SuperAdminApiService _api = SuperAdminApiService();
+  late final SuperAdminApiService _api = widget.api ?? SuperAdminApiService();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
   int _selectedNavIndex = 1;
@@ -49,7 +51,6 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
 
   // Plant observations
   final _plantHealthController = TextEditingController();
-  final _growthStageController = TextEditingController();
   final _plantedController = TextEditingController();
   final _transplantedController = TextEditingController();
   final _harvestedController = TextEditingController();
@@ -77,6 +78,22 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   List<Map<String, dynamic>> _batches = [];
   List<Map<String, dynamic>> _tasks = [];
   List<Map<String, dynamic>> _fulfillments = [];
+  List<Map<String, dynamic>> _plantTypes = [];
+
+  Object? get _recordGrowthPlan {
+    final batch = _selectedBatchDoc;
+    if (batch == null) return null;
+    final saved = productionPlan(batch['production_plan']);
+    if (saved.isNotEmpty) return saved;
+    final plantId = batch['plant_type_ID']?.toString();
+    for (final plant in _plantTypes) {
+      if ((plant[r'$id'] ?? plant['id'])?.toString() == plantId) return plant['production_plan'];
+    }
+    return null;
+  }
+
+  RecordGrowthStage get _growthStage => recordGrowthStage(
+      _recordGrowthPlan, _selectedBatchDoc?['start_date'], _recordDate);
 
   bool get _batchComplete =>
       _selectedBatchDoc != null &&
@@ -96,7 +113,6 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     _ecController.dispose();
     _lightController.dispose();
     _plantHealthController.dispose();
-    _growthStageController.dispose();
     _plantedController.dispose();
     _transplantedController.dispose();
     _harvestedController.dispose();
@@ -131,26 +147,11 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   bool _matchesCurrentCaretaker(Map<String, dynamic> farm) {
     final user = ref.read(authProvider).user;
     if (user == null) return false;
-    final caretaker = _value(farm, const ['caretakerID', 'caretaker_id']);
-    final caretakerName = _value(farm, const ['caretaker_name']);
-    return caretaker == user.id ||
-        caretaker == user.email ||
-        caretaker == user.name ||
-        caretakerName.toLowerCase() == user.name.toLowerCase();
+    return isAssignedFarmCaretaker(farm, id: user.id, email: user.email);
   }
 
-  List<Map<String, dynamic>> get _assignedFarms {
-    final farms = _farms.where(_matchesCurrentCaretaker).toList();
-    if (farms.isNotEmpty) return farms;
-    final user = ref.read(authProvider).user;
-    if (user == null) return [];
-    return _farms.where((farm) {
-      final text = farm.values.join(' ').toLowerCase();
-      return text.contains(user.id.toLowerCase()) ||
-          text.contains(user.email.toLowerCase()) ||
-          text.contains(user.name.toLowerCase());
-    }).toList();
-  }
+  List<Map<String, dynamic>> get _assignedFarms =>
+      _farms.where(_matchesCurrentCaretaker).toList();
 
   Map<String, dynamic>? get _selectedFarmDoc {
     if (_selectedFarm == null) return null;
@@ -236,6 +237,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         _api.getBatches(),
         _api.getFarmTasks(),
         _api.getFulfillments(),
+        _api.getPlantTypes(),
       ]);
       if (!mounted) return;
       setState(() {
@@ -243,6 +245,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         _batches = results[1];
         _tasks = results[2];
         _fulfillments = results[3];
+        _plantTypes = results[4];
         final assigned = _assignedFarms;
         if (assigned.isNotEmpty && _selectedFarm == null) {
           _selectedFarm = _farmId(assigned.first);
@@ -250,9 +253,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         final batches = _farmBatches;
         if (batches.isEmpty) {
           _selectedBatch = null;
-          _growthStageController.clear();
         } else if (!batches.any((batch) => _batchId(batch) == _selectedBatch)) {
-          _growthStageController.clear();
           _selectedBatch = _batchId(batches.firstWhere(
               (batch) => !isCaretakerBatchComplete(batch, _fulfillments),
               orElse: () => batches.first));
@@ -583,7 +584,15 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         : null;
   }
 
+  String? _phError(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final number = double.tryParse(value.trim());
+    return number == null || !number.isFinite || number < 0 || number > 14 ? 'Enter pH between 0 and 14' : null;
+  }
+
   bool get _waterValid =>
+      (!_collects('ph') || _phError(_phController.text) == null) &&
+      (!_collects('ec') || _waterNumber(_ecController.text) == null) &&
       (!_collects('water_temperature') ||
           _waterTemperatureError(_waterTemperature.text) == null) &&
       (_selectedRecordType != 'watering' ||
@@ -652,12 +661,12 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             isDark,
           ),
           const SizedBox(height: AppSpacing.md),
-          if (_collects('plant_health') || _collects('growth_stage')) ...[
+          if (_collects('plant_health') || _selectedBatchDoc != null) ...[
             _recordFieldRows([
               if (_collects('plant_health'))
                 _buildTextField('Plant Health', _plantHealthController,
                     'e.g., Healthy, Yellowing, etc.', isDark),
-              if (_collects('growth_stage')) _buildGrowthStageField(isDark),
+              if (_selectedBatchDoc != null) _buildGrowthStageField(isDark),
             ], isMobile),
             const SizedBox(height: AppSpacing.md),
           ],
@@ -878,8 +887,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         [
           if (_collects('plant_health'))
             ('Plant health', entered(_plantHealthController.text)),
-          if (_collects('growth_stage'))
-            ('Growth stage', entered(_growthStageController.text)),
+          ('Growth stage', _growthStage.name ?? _growthStage.message),
           ('Observations', entered(_observationsController.text)),
         ]
       ),
@@ -1193,10 +1201,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
               validator: _waterTemperatureError),
         if (_collects('ph'))
           _buildNumberField(
-              'pH Level', _phController, Icons.science_rounded, isDark),
+              'pH (0–14)', _phController, Icons.science_rounded, isDark, validator: _phError),
         if (_collects('ec'))
           _buildNumberField(
-              'EC (mS/cm)', _ecController, Icons.bolt_rounded, isDark),
+              'EC (mS/cm)', _ecController, Icons.bolt_rounded, isDark, validator: _waterNumber),
       ], isMobile, desktopColumns: 3);
 
   // ignore: unused_element
@@ -1594,7 +1602,6 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       onChanged: (value) => setState(() {
         _selectedFarm = value;
         _selectedBatch = null;
-        _growthStageController.clear();
         _maxUnlockedStep = 0;
         _submitError = null;
         final batches = _farmBatches;
@@ -1654,28 +1661,12 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   }
 
   Widget _buildGrowthStageField(bool isDark) {
-    final stages = productionStages(_selectedBatchDoc?['production_plan']);
-    if (stages.isEmpty) {
-      return _buildTextField('Growth Stage', _growthStageController,
-          'e.g., Vegetative, Flowering', isDark);
-    }
-    final names = stages.map((s) => '${s['name']}').toSet();
-    return DropdownButtonFormField<String>(
-      key: ValueKey('growth-$_selectedBatch'),
-      isExpanded: true,
-      initialValue: names.contains(_growthStageController.text)
-          ? _growthStageController.text
-          : null,
-      decoration: _inputDecoration(
-          label: 'Observed growth stage',
-          icon: Icons.eco_outlined,
-          isDark: isDark),
-      items: names
-          .map((name) => DropdownMenuItem(
-              value: name, child: Text(name, overflow: TextOverflow.ellipsis)))
-          .toList(),
-      onChanged: (value) =>
-          setState(() => _growthStageController.text = value ?? ''),
+    final stage = _growthStage;
+    return InputDecorator(
+      decoration: _inputDecoration(label: 'Calculated growth stage', icon: Icons.eco_outlined, isDark: isDark)
+        .copyWith(helperText: stage.message, helperMaxLines: 5),
+      child: Text(stage.name ?? 'Not available', style: AppTypography.bodySmall.copyWith(
+        color: isDark ? Colors.white : AppColors.textPrimary)),
     );
   }
 
@@ -1715,7 +1706,6 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             .toList(),
         onChanged: (value) => setState(() {
           _selectedBatch = value;
-          _growthStageController.clear();
           _selectedRecordTab = 0;
           _maxUnlockedStep = 0;
           _submitError = null;
@@ -1808,6 +1798,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       IconData icon, bool isDark,
       {bool allowDecimal = true, String? Function(String?)? validator}) {
     return TextFormField(
+      key: ObjectKey(controller),
       controller: controller,
       keyboardType: TextInputType.numberWithOptions(decimal: allowDecimal),
       style: AppTypography.bodySmall.copyWith(
@@ -1826,6 +1817,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       String label, TextEditingController controller, String hint, bool isDark,
       {int maxLines = 1}) {
     return TextFormField(
+      key: ObjectKey(controller),
       controller: controller,
       maxLines: maxLines,
       style: AppTypography.bodySmall.copyWith(
@@ -2042,6 +2034,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   }
 
   void _continueToNextStep() {
+    if (_selectedBatchDoc != null && _growthStage.invalidDate) {
+      _rejectSubmission(_growthStage.message, tab: 0);
+      return;
+    }
     if (_batchComplete) {
       _rejectSubmission(
           'This batch is complete. No further records can be taken.',
@@ -2152,6 +2148,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
 
   Future<void> _submitRecord() async {
     if (_isSubmitting) return;
+    if (_selectedBatchDoc != null && _growthStage.invalidDate) {
+      _rejectSubmission(_growthStage.message, tab: 0);
+      return;
+    }
     if (_selectedBatchDoc == null || _batchComplete) {
       _rejectSubmission(
           'Select an active batch. Completed batches cannot accept records.',
@@ -2239,10 +2239,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           _collects('plant_health') && _plantHealthController.text.isNotEmpty
               ? _plantHealthController.text
               : null,
-      growthStage:
-          _collects('growth_stage') && _growthStageController.text.isNotEmpty
-              ? _growthStageController.text
-              : null,
+      growthStage: _growthStage.name,
       plantCount: _collects('plant_count') && _plantedController.text.isNotEmpty
           ? int.tryParse(_plantedController.text)
           : null,
@@ -2262,11 +2259,13 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       final latest = await Future.wait([
         _api.getBatches(),
         _api.getFulfillments(),
+        _api.getPlantTypes(),
       ]);
       if (!mounted) return;
       setState(() {
         _batches = latest[0];
         _fulfillments = latest[1];
+        _plantTypes = latest[2];
       });
       final submittedBatches =
           _batches.where((item) => _batchId(item) == record.batchId);
@@ -2274,6 +2273,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           isCaretakerBatchComplete(submittedBatches.first, _fulfillments)) {
         _rejectSubmission('This batch is no longer open for caretaker records.',
             tab: 0);
+        return;
+      }
+      if (_growthStage.invalidDate) {
+        _rejectSubmission(_growthStage.message, tab: 0);
         return;
       }
       await _api.createFarmRecord(
@@ -2292,7 +2295,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           'ec': _ecController.text.trim(),
           'light_intensity': _lightController.text.trim(),
           'plant_health': _plantHealthController.text.trim(),
-          'growth_stage': _growthStageController.text.trim(),
+          'growth_stage': (_growthStage.name ?? '').trim(),
           'plant_count': _plantedController.text.trim(),
           'planted_count': _plantedController.text.trim(),
           'transplanted_count': _transplantedController.text.trim(),
@@ -2317,7 +2320,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       return;
     }
     if (!mounted) return;
-    ref.read(recordsProvider.notifier).addRecord(record);
+    ref.read(recordsProvider.notifier).addRecord(record.copyWith(growthStage: _growthStage.name));
     setState(() {
       _isSubmitting = false;
       _submitError = null;
