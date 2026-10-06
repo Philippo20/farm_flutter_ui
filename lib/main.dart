@@ -271,6 +271,8 @@ class _MyAppState extends ConsumerState<MyApp> {
         // Caretaker (NEW - REDESIGNED)
         '/caretaker_dashboard': (context) =>
             const CaretakerDashboardRedesigned(),
+        '/caretaker/tasks': (context) =>
+            const CaretakerDashboardRedesigned(showTasksOnOpen: true),
         '/record-entry': (context) => const RecordEntryScreen(),
         '/input-confirmation': (context) => const InputConfirmationScreen(),
         '/chat': (context) => const ChatScreen(),

@@ -21,6 +21,23 @@ class SuperAdminApiService {
 
   final http.Client _client;
 
+  Future<List<Map<String, dynamic>>> getCaretakerCalendar() => _getDocuments(
+      '/caretaker/calendar', headers: {'Authorization': 'Bearer ${AuthService().jwt ?? ""}'});
+
+  Future<List<Map<String, dynamic>>> getApprovalQueue() => _getDocuments(
+      '/accountant/approvals', headers: {'Authorization': 'Bearer ${AuthService().jwt ?? ""}'});
+
+  Future<void> reviewApproval(Map<String, dynamic> item, String decision, String notes) async {
+    final response = await _client.patch(
+      Uri.parse('$baseUrl/accountant/approvals/${Uri.encodeComponent(item['kind'].toString())}/${Uri.encodeComponent(item['id'].toString())}'),
+      headers: {'Authorization': 'Bearer ${AuthService().jwt ?? ""}', 'Content-Type': 'application/json'},
+      body: jsonEncode({'decision': decision, 'notes': notes, 'revision': item['revision']}),
+    ).withApiTimeout();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SuperAdminApiException(_extractErrorMessage(response.body, fallback: 'Could not save the decision.'));
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getUsers() => _getDocuments('/users');
   Future<List<Map<String, dynamic>>> getFarms() => _getDocuments('/farms');
   Future<List<Map<String, dynamic>>> getBatches() => _getDocuments('/batches');

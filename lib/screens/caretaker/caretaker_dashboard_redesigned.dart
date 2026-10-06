@@ -20,7 +20,8 @@ import '../../services/superadmin_api_service.dart';
 
 /// Caretaker Dashboard – Professional Redesign
 class CaretakerDashboardRedesigned extends ConsumerStatefulWidget {
-  const CaretakerDashboardRedesigned({super.key});
+  const CaretakerDashboardRedesigned({super.key, this.showTasksOnOpen = false});
+  final bool showTasksOnOpen;
 
   @override
   ConsumerState<CaretakerDashboardRedesigned> createState() =>
@@ -50,6 +51,7 @@ class _CaretakerDashboardRedesignedState
   @override
   void initState() {
     super.initState();
+    _showAllTasks = widget.showTasksOnOpen;
     _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
     _loadDashboardData();
     _refreshTimer = Timer.periodic(

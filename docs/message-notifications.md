@@ -41,3 +41,21 @@ Release checklist: test permission granted/denied, tap while minimized,
 read/dismiss synchronization, muted categories, app resume, logout/account
 switch, and browser support on real target devices. Compilation and mocked
 transport tests do not substitute for an OS notification-permission check.
+
+## Reading and opening notifications
+
+The bell opens a 500px maximum desktop dialog and an Android/mobile bottom
+sheet using the shared Sales modal style. Header and footer remain fixed while
+the list or full message scrolls. Every card offers Read message; the detail
+view shows selectable, untruncated stored text and its full local timestamp.
+Known destinations also offer a role-specific Open/View action. Informational,
+unknown, unsupported-role and legacy ambiguous financial notifications stay in
+the detail view. Backend-supplied URLs and free-form message text never select
+a route. An account change closes the dialog and invalidates pending navigation.
+
+New fund-request, withdrawal, account-review, sensor-alert and inventory-alert categories distinguish
+those destinations without a schema migration. Caretaker task actions open the
+live calendar with assigned tasks and batch schedules. Accountant fund and withdrawal
+notifications open the database-backed approval queue. Both endpoints require an
+authenticated session; reviews persist the decision and audit the reviewer without
+initiating a payment. Deploy the matching API update before using these screens.

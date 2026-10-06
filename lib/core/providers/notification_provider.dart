@@ -60,6 +60,7 @@ class NotificationNotifier extends StateNotifier<List<NotificationModel>> {
       isRead: notification['is_read'] == true,
       metadata: {
         'relatedTaskId': notification['related_task_id'] ?? '',
+        'sourceType': (notification['type'] ?? 'system').toString(),
         'deliveryEnabled': notification['delivery_enabled'] != false,
         'silent': notification['silent'] == true,
       },

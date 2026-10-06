@@ -8,6 +8,7 @@ import '../../core/widgets/caretaker_sidebar.dart';
 import '../../core/widgets/caretaker_header.dart';
 import '../../core/widgets/caretaker_mobile_bottom_nav.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/providers/live_workspace_provider.dart';
 
 /// Calendar Screen for Caretaker
 /// View tasks, schedules, and events
@@ -24,40 +25,28 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _focusedDate = DateTime.now();
 
-  final List<Map<String, dynamic>> _events = [
-    {
-      'id': 'EVT001',
-      'title': 'Watering Schedule',
-      'date': DateTime.now(),
-      'time': '08:00 AM',
-      'type': 'task',
-      'color': AppColors.info,
-    },
-    {
-      'id': 'EVT002',
-      'title': 'Nutrient Check',
-      'date': DateTime.now().add(const Duration(days: 1)),
-      'time': '10:00 AM',
-      'type': 'task',
-      'color': AppColors.warning,
-    },
-    {
-      'id': 'EVT003',
-      'title': 'Harvest Day',
-      'date': DateTime.now().add(const Duration(days: 3)),
-      'time': '09:00 AM',
-      'type': 'event',
-      'color': AppColors.success,
-    },
-    {
-      'id': 'EVT004',
-      'title': 'Farm Inspection',
-      'date': DateTime.now().add(const Duration(days: 5)),
-      'time': '02:00 PM',
-      'type': 'meeting',
-      'color': AppColors.primary,
-    },
-  ];
+  List<Map<String, dynamic>> get _events {
+    final records = ref.watch(caretakerCalendarProvider).valueOrNull ?? [];
+    return records.expand((record) {
+      final raw = record['date']?.toString() ?? '';
+      final date = DateTime.tryParse(raw);
+      if (date == null) return <Map<String, dynamic>>[];
+      final local = date.isUtc ? date.toLocal() : date;
+      return [
+        {
+          ...record,
+          'date': local,
+          'time':
+              raw.length <= 10 ? 'All day' : DateFormat('h:mm a').format(local),
+          'color': record['status'] == 'Completed'
+              ? AppColors.success
+              : record['type'] == 'task'
+                  ? AppColors.info
+                  : AppColors.primary
+        }
+      ];
+    }).toList();
+  }
 
   Color _primaryTextColor(bool isDark) {
     return isDark ? Colors.white : AppColors.textPrimary;
@@ -179,6 +168,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     style: AppTypography.bodySmall
                         .copyWith(color: _secondaryTextColor(dark))),
               ])),
+          IconButton(
+              tooltip: 'Refresh schedule',
+              onPressed: () => ref.invalidate(caretakerCalendarProvider),
+              icon: const Icon(Icons.refresh)),
           OutlinedButton.icon(
               onPressed: () => setState(() {
                     _selectedDate = DateTime.now();
@@ -188,6 +181,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               label: const Text('Today')),
         ]),
         const SizedBox(height: 16),
+        if (ref.watch(caretakerCalendarProvider).isLoading)
+          const LinearProgressIndicator(),
+        if (ref.watch(caretakerCalendarProvider).hasError)
+          Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                  'Could not load your schedule. Please refresh to try again.',
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.error))),
         LayoutBuilder(builder: (context, constraints) {
           if (constraints.maxWidth < 760)
             return Column(children: [
@@ -254,8 +256,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 border: Border.all(color: color))),
         const SizedBox(width: 6),
         Text(label,
-            style: AppTypography.caption
-                .copyWith(fontSize: AppTypography.fieldLabelSize, color: _secondaryTextColor(dark))),
+            style: AppTypography.caption.copyWith(
+                fontSize: AppTypography.fieldLabelSize,
+                color: _secondaryTextColor(dark))),
       ]);
 
   Widget _buildCalendarGrid(bool dark) {
@@ -324,11 +327,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                                   const TextScaler.linear(1),
                                               style: AppTypography.bodySmall
                                                   .copyWith(
-                                                      fontSize: AppTypography.actionSize,
+                                                      fontSize: AppTypography
+                                                          .actionSize,
                                                       fontWeight:
                                                           selected || today
-                                                              ? AppTypography.headingWeight
-                                                              : AppTypography.bodyWeight,
+                                                              ? AppTypography
+                                                                  .headingWeight
+                                                              : AppTypography
+                                                                  .bodyWeight,
                                                       color: selected
                                                           ? Colors.white
                                                           : _primaryTextColor(
@@ -362,11 +368,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   fontWeight: AppTypography.headingWeight,
                   color: _primaryTextColor(dark))),
           const SizedBox(height: 5),
-          Text('${events.length} scheduled · Preview events',
+          Text('${events.length} scheduled',
               style: AppTypography.caption
                   .copyWith(color: _secondaryTextColor(dark))),
           const SizedBox(height: 16),
-          if (events.isEmpty)
+          if (events.isEmpty &&
+              !ref.watch(caretakerCalendarProvider).isLoading &&
+              !ref.watch(caretakerCalendarProvider).hasError)
             Container(
                 width: double.infinity,
                 padding:
@@ -422,12 +430,24 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                     fontSize: AppTypography.actionSize,
                                     fontWeight: AppTypography.headingWeight,
                                     color: _primaryTextColor(dark))),
+                            for (final key in [
+                              'farm_name',
+                              'description',
+                              'comment'
+                            ])
+                              if ((event[key]?.toString() ?? '').isNotEmpty)
+                                Padding(
+                                    padding: const EdgeInsets.only(top: 6),
+                                    child: Text(event[key].toString(),
+                                        style: AppTypography.bodySmall.copyWith(
+                                            color: _secondaryTextColor(dark)))),
                             const SizedBox(height: 7),
                             Wrap(spacing: 8, runSpacing: 5, children: [
                               Text(event['time'] as String,
                                   style: AppTypography.caption.copyWith(
                                       color: _secondaryTextColor(dark))),
-                              Text(type[0].toUpperCase() + type.substring(1),
+                              Text(
+                                  '${type[0].toUpperCase()}${type.substring(1)} · ${event['status']}',
                                   style: AppTypography.caption.copyWith(
                                       color: color,
                                       fontWeight: AppTypography.headingWeight)),

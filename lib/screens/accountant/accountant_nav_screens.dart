@@ -1,3 +1,4 @@
+export 'accountant_approvals_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -97,48 +98,6 @@ class AccountantReconciliationScreen extends StatelessWidget {
         _FilterOption(
             'Source', 'Bank + mobile money', Icons.account_balance_outlined),
         _FilterOption('Period', 'Last 7 days', Icons.date_range_outlined),
-      ],
-      items: _items,
-    );
-  }
-}
-
-class AccountantApprovalsScreen extends StatelessWidget {
-  const AccountantApprovalsScreen({super.key});
-
-  static const _items = [
-    _FinanceItem('REQ-221', 'Packaging materials', 'Fulfillment request',
-        'GHS 6.8K', 'Approve', AppColors.primary),
-    _FinanceItem('REQ-219', 'Nutrient purchase', 'Farm operations', 'GHS 4.5K',
-        'Review', AppColors.warning),
-    _FinanceItem('EXP-778', 'Delivery fuel', 'Sales personnel claim', 'GHS 420',
-        'Approve', AppColors.success),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return _AccountantPage(
-      selectedIndex: 3,
-      title: 'Fund Approvals',
-      subtitle:
-          'Validate budget requests, expense claims, and release decisions.',
-      icon: Icons.approval_outlined,
-      colors: const [Color(0xFF7C2D12), Color(0xFFEA580C)],
-      kpis: const [
-        _KpiData('Pending', '5', 'Awaiting decision',
-            Icons.pending_actions_outlined, AppColors.warning),
-        _KpiData('Requested', 'GHS 18K', 'Open approval value',
-            Icons.payments_outlined, AppColors.primary),
-        _KpiData('Approved', 'GHS 9.2K', 'This week', Icons.verified_outlined,
-            AppColors.success),
-      ],
-      sectionTitle: 'Approval Queue',
-      filters: const [
-        _FilterOption(
-            'Priority', 'Pending first', Icons.priority_high_outlined),
-        _FilterOption(
-            'Request type', 'Funds + expenses', Icons.request_quote_outlined),
-        _FilterOption('Amount', 'All values', Icons.payments_outlined),
       ],
       items: _items,
     );

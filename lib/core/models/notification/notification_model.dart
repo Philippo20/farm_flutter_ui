@@ -118,6 +118,12 @@ enum NotificationType {
   const NotificationType(this.value, this.displayName);
 
   static NotificationType fromString(String value) {
+    if (value == 'fund_request' || value == 'withdrawal') {
+      return NotificationType.financial;
+    }
+    if (value == 'sensor_alert') return NotificationType.issue;
+    if (value == 'inventory_alert') return NotificationType.inventory;
+    if (value == 'account_review') return NotificationType.system;
     return NotificationType.values.firstWhere(
       (type) => type.value == value,
       orElse: () => NotificationType.general,
