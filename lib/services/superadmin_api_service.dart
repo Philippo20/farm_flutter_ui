@@ -1947,6 +1947,7 @@ class SuperAdminApiService {
   }
 
   Future<Map<String, dynamic>> createCropVariety({
+    required String plantTypeId,
     required String cropName,
     required String varietyName,
     required String imageFileName,
@@ -1971,6 +1972,7 @@ class SuperAdminApiService {
       Uri.parse('$baseUrl/crops/info'),
     )
       ..fields.addAll({
+        'plant_type_ID': plantTypeId,
         'crop_name': cropName,
         'variety_name': varietyName,
         'plant_duration_value': plantDurationValue.toString(),
@@ -2017,6 +2019,7 @@ class SuperAdminApiService {
   }
 
   Future<Map<String, dynamic>> updateCropVariety({
+    required String plantTypeId,
     required String id,
     required String cropName,
     required String varietyName,
@@ -2041,6 +2044,7 @@ class SuperAdminApiService {
       'PUT',
       Uri.parse('$baseUrl/crops/info/${Uri.encodeComponent(id)}'),
     )..fields.addAll({
+        'plant_type_ID': plantTypeId,
         'crop_name': cropName,
         'variety_name': varietyName,
         'plant_duration_value': plantDurationValue.toString(),

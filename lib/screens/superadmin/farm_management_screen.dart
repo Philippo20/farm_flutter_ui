@@ -1,4 +1,5 @@
 import '../../core/utils/farm_team_assignment.dart';
+import '../../core/utils/crop_relationships.dart';
 import '../../core/widgets/farm_form_modal.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
@@ -112,7 +113,9 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
       'name': (doc['name'] ?? 'Unnamed Farm').toString(),
       'owner': _userNameById(ownerID, fallback: ownerID),
       'ownerID': ownerID,
-      'caretaker': farmCaretakerIds(doc).map((id) => _userNameById(id, fallback: id)).join(', '),
+      'caretaker': farmCaretakerIds(doc)
+          .map((id) => _userNameById(id, fallback: id))
+          .join(', '),
       'caretakerID': caretakerID,
       'caretaker_ids': farmCaretakerIds(doc),
       'farmManager': _userNameById(farmManagerId, fallback: farmManagerId),
@@ -159,6 +162,7 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
     return {
       'id': (doc[r'$id'] ?? doc['crop_id'] ?? doc['id'] ?? '').toString(),
       'plantType': (doc['crop_name'] ?? '').toString(),
+      'plantTypeId': '${doc['plant_type_ID'] ?? ''}',
       'variety': (doc['variety_name'] ?? '').toString(),
       'status': _statusLabel(doc['status']),
     };
@@ -209,10 +213,11 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
             crop['variety'].toString().trim().isNotEmpty)
         .toList();
     final matched = activeVarieties
-        .where((crop) =>
-            _catalogNamesMatch(crop['plantType'].toString(), plantType))
+        .where((crop) => cropMatchesPlant(crop,
+            plantId: plantIdForName(_plantTypes, plantType),
+            plantName: plantType))
         .toList();
-    return matched.isEmpty ? activeVarieties : matched;
+    return matched;
   }
 
   List<String> _varietyOptionsForPlant(String plantType) {
@@ -234,19 +239,6 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
         _hasVarietiesForPlant(plantType) &&
         plantVariety != 'No varieties available' &&
         _varietyOptionsForPlant(plantType).contains(plantVariety);
-  }
-
-  bool _catalogNamesMatch(String cropName, String plantType) {
-    final cropKey = _catalogKey(cropName);
-    final plantKey = _catalogKey(plantType);
-    if (cropKey.isEmpty || plantKey.isEmpty) return false;
-    return cropKey == plantKey ||
-        cropKey.contains(plantKey) ||
-        plantKey.contains(cropKey);
-  }
-
-  String _catalogKey(String value) {
-    return value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '').trim();
   }
 
   Map<String, String> _userLabels(List<Map<String, dynamic>> users) {
@@ -2387,18 +2379,32 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
     );
   }
 
-  void _showAddFarmDialog(BuildContext context, bool isDark) { _openFarmEditor(context); }
+  void _showAddFarmDialog(BuildContext context, bool isDark) {
+    _openFarmEditor(context);
+  }
 
-  void _showEditFarmDialog(BuildContext context, Map<String, dynamic> farm, bool isDark) { _openFarmEditor(context, farm: farm); }
+  void _showEditFarmDialog(
+      BuildContext context, Map<String, dynamic> farm, bool isDark) {
+    _openFarmEditor(context, farm: farm);
+  }
 
-  Map<String, List<Map<String, dynamic>>> _farmTeamOptions(Map<String, dynamic>? farm) {
+  Map<String, List<Map<String, dynamic>>> _farmTeamOptions(
+      Map<String, dynamic>? farm) {
     final result = <String, List<Map<String, dynamic>>>{};
-    for (final entry in {'ownerID': 'Owner', 'farmManagerId': 'Farm Manager', 'technicianId': 'Technician', 'caretaker_ids': 'Caretaker'}.entries) {
+    for (final entry in {
+      'ownerID': 'Owner',
+      'farmManagerId': 'Farm Manager',
+      'technicianId': 'Technician',
+      'caretaker_ids': 'Caretaker'
+    }.entries) {
       final options = [..._usersForRole(entry.value)];
-      final ids = entry.key == 'caretaker_ids' ? farmCaretakerIds(farm ?? {}) : [farm?[entry.key]?.toString() ?? ''];
+      final ids = entry.key == 'caretaker_ids'
+          ? farmCaretakerIds(farm ?? {})
+          : [farm?[entry.key]?.toString() ?? ''];
       for (final id in ids.where((id) => id.isNotEmpty && id != 'Unassigned')) {
         if (!options.any((u) => u['id'] == id)) {
-          options.add(_users.firstWhere((u) => u['id'] == id, orElse: () => {'id': id, 'name': id}));
+          options.add(_users.firstWhere((u) => u['id'] == id,
+              orElse: () => {'id': id, 'name': id}));
         }
       }
       result[entry.key] = options;
@@ -2406,32 +2412,58 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
     return result;
   }
 
-  Future<void> _openFarmEditor(BuildContext context, {Map<String, dynamic>? farm}) async {
+  Future<void> _openFarmEditor(BuildContext context,
+      {Map<String, dynamic>? farm}) async {
     final saved = await showFarmFormModal(context,
-      farm: farm, teamOptions: _farmTeamOptions(farm),
-      plantTypes: _plantTypeOptions, varietiesForPlant: _varietyOptionsForPlant,
-      onDelete: farm == null ? null : () => _showDeleteFarmDialog(context, farm, Theme.of(context).brightness == Brightness.dark),
-      onSubmit: (values) async {
-        if (!_isValidPlantSelection(values['plantType'], values['plantVariety'])) {
-          throw Exception('Select a valid plant type and matching crop variety.');
-        }
-        if (farm == null) { await _api.createFarm(name: values['name'], location: values['location'], ownerID: values['ownerID'],
-          caretakerID: values['caretakerID'], caretakerIds: (values['caretaker_ids'] as List).cast<String>(),
-          farmManagerId: values['farmManagerId'], technicianId: values['technicianId'],
-          plantType: values['plantType'], plantVariety: values['plantVariety'],
-          tierType: _tierApiValue(values['tier']), status: values['status']); } else { await _api.updateFarm(id: farm['id'].toString(), name: values['name'], location: values['location'], ownerID: values['ownerID'],
-          caretakerID: values['caretakerID'], caretakerIds: (values['caretaker_ids'] as List).cast<String>(),
-          farmManagerId: values['farmManagerId'], technicianId: values['technicianId'],
-          plantType: values['plantType'], plantVariety: values['plantVariety'],
-          tierType: _tierApiValue(values['tier']), status: values['status']); }
-      });
+        farm: farm,
+        teamOptions: _farmTeamOptions(farm),
+        plantTypes: _plantTypeOptions,
+        varietiesForPlant: _varietyOptionsForPlant,
+        onDelete: farm == null
+            ? null
+            : () => _showDeleteFarmDialog(
+                context, farm, Theme.of(context).brightness == Brightness.dark),
+        onSubmit: (values) async {
+      if (!_isValidPlantSelection(
+          values['plantType'], values['plantVariety'])) {
+        throw Exception('Select a valid plant type and matching crop variety.');
+      }
+      if (farm == null) {
+        await _api.createFarm(
+            name: values['name'],
+            location: values['location'],
+            ownerID: values['ownerID'],
+            caretakerID: values['caretakerID'],
+            caretakerIds: (values['caretaker_ids'] as List).cast<String>(),
+            farmManagerId: values['farmManagerId'],
+            technicianId: values['technicianId'],
+            plantType: values['plantType'],
+            plantVariety: values['plantVariety'],
+            tierType: _tierApiValue(values['tier']),
+            status: values['status']);
+      } else {
+        await _api.updateFarm(
+            id: farm['id'].toString(),
+            name: values['name'],
+            location: values['location'],
+            ownerID: values['ownerID'],
+            caretakerID: values['caretakerID'],
+            caretakerIds: (values['caretaker_ids'] as List).cast<String>(),
+            farmManagerId: values['farmManagerId'],
+            technicianId: values['technicianId'],
+            plantType: values['plantType'],
+            plantVariety: values['plantVariety'],
+            tierType: _tierApiValue(values['tier']),
+            status: values['status']);
+      }
+    });
     if (saved != true || !mounted) return;
     await _loadFarms();
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Farm saved successfully.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Farm saved successfully.')));
   }
-
 
   String _maskedFarmSensorKey(String key) {
     if (key.isEmpty) return 'No API key generated';

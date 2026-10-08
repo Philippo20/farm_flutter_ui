@@ -1,4 +1,6 @@
 import '../utils/production_plan.dart';
+import '../utils/crop_relationships.dart';
+import 'growing_group_field.dart';
 import 'batch_date_picker.dart';
 import '../theme/app_typography.dart';
 import 'app_dialog.dart';
@@ -43,10 +45,11 @@ Future<bool?> showBatchEditDialog({
   return showAppDialog<bool>(
     context: context,
     builder: (_) => AppDialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       backgroundColor: Colors.transparent,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 660, maxHeight: 780),
+        constraints: BoxConstraints(
+            maxWidth: 500, maxHeight: MediaQuery.sizeOf(context).height * .9),
         child: editor,
       ),
     ),
@@ -95,6 +98,9 @@ class _BatchEditFormState extends State<_BatchEditForm> {
   late String _variety;
   bool _saving = false;
   String? _formError;
+  late String _groupId = '${widget.batch.metadata?['growing_group_id'] ?? ''}';
+  late String _groupName =
+      '${widget.batch.metadata?['growing_group_name'] ?? ''}';
 
   @override
   void initState() {
@@ -156,16 +162,6 @@ class _BatchEditFormState extends State<_BatchEditForm> {
       .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
       .trim();
 
-  bool _samePlant(String first, String second) {
-    final firstKey = _key(first);
-    final secondKey = _key(second);
-    return firstKey.isNotEmpty &&
-        secondKey.isNotEmpty &&
-        (firstKey == secondKey ||
-            firstKey.contains(secondKey) ||
-            secondKey.contains(firstKey));
-  }
-
   String _value(Map<String, dynamic> record, List<String> keys) {
     for (final key in keys) {
       final value = record[key]?.toString().trim() ?? '';
@@ -177,12 +173,11 @@ class _BatchEditFormState extends State<_BatchEditForm> {
   List<String> get _varietyOptions {
     final options = <String>{if (_variety.isNotEmpty) _variety};
     for (final crop in widget.cropVarieties) {
-      final plant = _value(
-        crop,
-        ['crop_name', 'plant_type', 'plant_name', 'plantType'],
-      );
       final variety = _value(crop, ['variety_name', 'variety', 'name']);
-      if (variety.isNotEmpty && _samePlant(plant, widget.batch.plantType)) {
+      if (variety.isNotEmpty &&
+          cropMatchesPlant(crop,
+              plantId: '${widget.batch.metadata?['plant_type_ID'] ?? ''}',
+              plantName: widget.batch.plantType)) {
         options.add(variety);
       }
     }
@@ -196,6 +191,9 @@ class _BatchEditFormState extends State<_BatchEditForm> {
     for (final crop in widget.cropVarieties) {
       final cropVariety = _value(crop, ['variety_name', 'variety', 'name']);
       if (_key(cropVariety) != _key(variety)) continue;
+      if (!cropMatchesPlant(crop,
+          plantId: '${widget.batch.metadata?['plant_type_ID'] ?? ''}',
+          plantName: widget.batch.plantType)) continue;
       final raw = crop['plant_duration_value'];
       final value =
           raw is num ? raw.toInt() : int.tryParse(raw?.toString() ?? '') ?? 0;
@@ -263,6 +261,8 @@ class _BatchEditFormState extends State<_BatchEditForm> {
           'total_weight_kg': double.parse(_weightController.text.trim()),
           'production_status': _status,
           'technical_issues': _notesController.text.trim(),
+          'growing_group_id': _groupId.isEmpty ? 'individual' : _groupId,
+          'growing_group_name': _groupName,
           'updated_by': widget.updatedBy,
           'updated_by_role': widget.updatedByRole,
         },
@@ -630,6 +630,16 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                           : (value) => setState(() => _status = value!),
                     ),
                     const SizedBox(height: 16),
+                    GrowingGroupField(
+                        api: widget.api,
+                        farmId: widget.batch.farmId,
+                        initialId: _groupId,
+                        initialName: _groupName,
+                        enabled: !_saving,
+                        onChanged: (id, name) {
+                          _groupId = id;
+                          _groupName = name;
+                        }),
                     _textField(
                       label: 'Notes / Technical Issues',
                       controller: _notesController,

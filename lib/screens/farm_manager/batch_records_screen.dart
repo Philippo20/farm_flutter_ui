@@ -456,6 +456,8 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
   Widget _details(Map<String, dynamic> r) {
     const fields = {
       'record_id': 'Record number',
+      'growing_group_name': 'Growing group',
+      'shared_observations': 'Shared observations',
       'created_by_name': 'Recorded by',
       'record_type': 'Record type',
       'growth_stage': 'Growth stage',
@@ -496,6 +498,15 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
               style: AppTypography.caption
                   .copyWith(color: _colors.onSurfaceVariant)),
           const SizedBox(height: 20),
+          if (r['record_scope'] == 'shared') ...[
+            Text('Shared readings · recorded once for the growing group', style: AppTypography.bodySmall.copyWith(color: _colors.primary)),
+            const SizedBox(height: 10),
+            ...((r['linked_batches'] as List?) ?? []).whereType<Map>().map((entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 8), child: Text(
+                '${entry['batch_number']} · ${entry['growth_stage']} · ${entry['has_issues'] == true ? 'Issue: ${entry['issue_description']}' : 'No issues reported'}',
+                style: AppTypography.bodySmall))),
+            const SizedBox(height: 12),
+          ],
           LayoutBuilder(
               builder: (context, constraints) =>
                   Wrap(spacing: 24, runSpacing: 20, children: [

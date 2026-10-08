@@ -1,4 +1,6 @@
 import '../../core/utils/farm_team_assignment.dart';
+import 'dart:convert';
+import '../../core/widgets/linked_batch_observations.dart';
 import '../../core/widgets/production_schedule_card.dart';
 import '../../core/utils/production_plan.dart';
 import '../../core/utils/caretaker_record_fields.dart';
@@ -40,6 +42,53 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   String? _selectedFarm;
   String? _selectedBatch;
   String _selectedRecordType = 'daily_monitoring';
+  bool _linkedMode = false;
+  final Set<String> _linkedIds = {};
+  final Map<String, Map<String, dynamic>> _linkedDetails = {};
+  static const _sharedTypes = {'daily_monitoring', 'watering', 'feeding', 'pruning', 'pest_control'};
+  List<Map<String, dynamic>> get _groupBatches {
+    final group = _selectedBatchDoc?['growing_group_id'];
+    if (group == null || '$group'.isEmpty) return [];
+    return _farmBatches.where((b) => b['growing_group_id'] == group && !isCaretakerBatchComplete(b, _fulfillments)).toList();
+  }
+  List<Map<String, dynamic>> get _recordBatches => _groupBatches.where((b) => _linkedIds.contains(_batchId(b))).toList();
+  List<Map<String, dynamic>> get _linkedEntries => _recordBatches.map((b) => {
+    'batch_id': _batchId(b), 'batch_number': '${b['batch_no'] ?? _batchId(b)}',
+    'growth_stage': _stageFor(b).name ?? '',
+    'has_issues': false, 'issue_severity': 'none',
+    ...?_linkedDetails[_batchId(b)],
+  }).toList();
+  bool get _recordHasIssues => _linkedMode ? _linkedEntries.any((e) => e['has_issues'] == true) : _hasIssues;
+  String get _recordIssueDescription => _linkedMode
+    ? _linkedEntries.where((e) => e['has_issues'] == true).map((e) => '${e['batch_number']}: ${e['issue_description']}').join('\n')
+    : _issueDescriptionController.text;
+  String get _recordSeverity {
+    if (!_linkedMode) return _issueSeverity;
+    const levels = ['none', 'low', 'medium', 'high', 'critical'];
+    var highest = 0;
+    for (final entry in _linkedEntries) {
+      if (entry['has_issues'] == true) {
+        final level = levels.indexOf('${entry['issue_severity']}');
+        if (level > highest) highest = level;
+      }
+    }
+    return levels[highest];
+  }
+  RecordGrowthStage _stageFor(Map<String, dynamic> batch) => recordGrowthStage(_planFor(batch), batch['start_date'], _recordDate);
+  String? get _linkedError {
+    if (!_linkedMode) return null;
+    if (!_sharedTypes.contains(_selectedRecordType)) return 'Choose an individual batch for planting or harvest records.';
+    if (_recordBatches.length != _linkedIds.length || !_linkedIds.contains(_selectedBatch) || _linkedIds.length < 2 || _linkedIds.length > 20) {
+      return 'Select 2–20 active batches from this growing group. Refresh if membership has changed.';
+    }
+    for (final batch in _recordBatches) {
+      if (_stageFor(batch).invalidDate) return '${batch['batch_no']}: ${_stageFor(batch).message}';
+    }
+    for (final entry in _linkedEntries) {
+      if (entry['has_issues'] == true && '${entry['issue_description'] ?? ''}'.trim().isEmpty) return 'Describe the issue for ${entry['batch_number']}.';
+    }
+    return null;
+  }
   DateTime _recordDate = DateTime.now();
 
   // Environmental readings
@@ -83,6 +132,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   Object? get _recordGrowthPlan {
     final batch = _selectedBatchDoc;
     if (batch == null) return null;
+    return _planFor(batch);
+  }
+  Object? _planFor(Map<String, dynamic> batch) {
     final saved = productionPlan(batch['production_plan']);
     if (saved.isNotEmpty) return saved;
     final plantId = batch['plant_type_ID']?.toString();
@@ -634,6 +686,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           _buildFarmSelector(isDark),
           const SizedBox(height: AppSpacing.md),
           _buildBatchSelector(isDark),
+          if (_groupBatches.length > 1 && _sharedTypes.contains(_selectedRecordType)) _buildLinkedSelection(),
           const SizedBox(height: AppSpacing.md),
           _buildRecordTypeSelector(isDark),
           const SizedBox(height: AppSpacing.md),
@@ -661,7 +714,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             isDark,
           ),
           const SizedBox(height: AppSpacing.md),
-          if (_collects('plant_health') || _selectedBatchDoc != null) ...[
+          if (!_linkedMode && (_collects('plant_health') || _selectedBatchDoc != null)) ...[
             _recordFieldRows([
               if (_collects('plant_health'))
                 _buildTextField('Plant Health', _plantHealthController,
@@ -670,7 +723,12 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             ], isMobile),
             const SizedBox(height: AppSpacing.md),
           ],
-          _buildTextField('Observations', _observationsController,
+          if (_linkedMode) ..._recordBatches.map((batch) => LinkedBatchObservations(
+            key: ValueKey(_batchId(batch)), number: '${batch['batch_no'] ?? _batchId(batch)}',
+            crop: '${batch['plant_name'] ?? ''} ${batch['plant_variety'] ?? ''}',
+            stage: _stageFor(batch).name ?? 'Stage not configured', initial: _linkedDetails[_batchId(batch)] ?? {},
+            onChanged: (details) => setState(() => _linkedDetails[_batchId(batch)] = details))),
+          _buildTextField(_linkedMode ? 'Shared observations' : 'Observations', _observationsController,
               'Any notable observations...', isDark,
               maxLines: 3),
           const SizedBox(height: AppSpacing.lg),
@@ -741,8 +799,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             isDark,
           ),
           const SizedBox(height: AppSpacing.md),
-          _buildIssuesToggle(isDark),
-          if (_hasIssues) ...[
+          if (_linkedMode) Text('Batch-specific issues are shown below with each linked batch.', style: AppTypography.bodySmall)
+          else _buildIssuesToggle(isDark),
+          if (_hasIssues && !_linkedMode) ...[
             const SizedBox(height: AppSpacing.md),
             _buildSeveritySelector(isDark),
             const SizedBox(height: AppSpacing.md),
@@ -865,6 +924,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
                 : label(_selectedRecordType)
           ),
           ('Record date', DateFormat('dd MMM yyyy').format(_recordDate)),
+          if (_linkedMode) ('Growing group', '${batch?['growing_group_name'] ?? ''}'),
           ('Recorded by', ref.read(authProvider).user?.name ?? 'Not available'),
         ]
       ),
@@ -885,12 +945,21 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       (
         'Plant observations',
         [
-          if (_collects('plant_health'))
+          if (!_linkedMode && _collects('plant_health'))
             ('Plant health', entered(_plantHealthController.text)),
-          ('Growth stage', _growthStage.name ?? _growthStage.message),
-          ('Observations', entered(_observationsController.text)),
+          if (!_linkedMode) ('Growth stage', _growthStage.name ?? _growthStage.message),
+          (_linkedMode ? 'Shared observations' : 'Observations', entered(_observationsController.text)),
         ]
       ),
+      if (_linkedMode) ..._linkedEntries.map((entry) => (
+        '${entry['batch_number']}', <(String, String)>[
+          ('Growth stage', '${entry['growth_stage']}'),
+          ('Plant health', entered('${entry['plant_health'] ?? ''}')),
+          ('Observations', entered('${entry['observations'] ?? ''}')),
+          ('Issues reported', entry['has_issues'] == true ? 'Yes' : 'No'),
+          if (entry['has_issues'] == true) ('Severity', '${entry['issue_severity']}'),
+          if (entry['has_issues'] == true) ('Issue description', '${entry['issue_description']}'),
+        ])),
       if (_hasEnvironmentFields)
         (
           'Environment',
@@ -939,9 +1008,9 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
       (
         'Issues and handover',
         [
-          ('Issues reported', _hasIssues ? 'Yes' : 'No'),
-          if (_hasIssues) ('Severity', label(_issueSeverity)),
-          if (_hasIssues)
+          ('Issues reported', _recordHasIssues ? 'Yes' : 'No'),
+          if (_hasIssues && !_linkedMode) ('Severity', label(_issueSeverity)),
+          if (_hasIssues && !_linkedMode)
             ('Issue description', entered(_issueDescriptionController.text)),
           ('Notes', entered(_notesController.text)),
         ]
@@ -1601,6 +1670,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           .toList(),
       onChanged: (value) => setState(() {
         _selectedFarm = value;
+        _linkedMode = false; _linkedIds.clear();
         _selectedBatch = null;
         _maxUnlockedStep = 0;
         _submitError = null;
@@ -1670,6 +1740,31 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
     );
   }
 
+  Widget _buildLinkedSelection() {
+    return Material(color: Colors.transparent, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      SwitchListTile.adaptive(contentPadding: EdgeInsets.zero,
+        title: Text('Record linked batches together', style: AppTypography.bodySmall),
+        subtitle: Text('${_selectedBatchDoc?['growing_group_name'] ?? 'Growing group'} · shared water and environment', style: AppTypography.caption),
+        value: _linkedMode, onChanged: (enabled) => setState(() {
+          _linkedMode = enabled;
+          if (enabled) {
+            _linkedIds..clear()..add(_selectedBatch!)
+              ..addAll(_groupBatches.where((b) => _batchId(b) != _selectedBatch).take(19).map(_batchId));
+          }
+          _maxUnlockedStep = 0;
+        })),
+      if (_linkedMode) ..._groupBatches.map((batch) => CheckboxListTile(
+        contentPadding: EdgeInsets.zero, dense: true, controlAffinity: ListTileControlAffinity.leading,
+        title: Text('${batch['batch_no']}', style: AppTypography.bodySmall),
+        subtitle: Text('${batch['plant_variety'] ?? batch['plant_name'] ?? ''} · ${_stageFor(batch).name ?? 'Stage not configured'}', style: AppTypography.caption),
+        value: _linkedIds.contains(_batchId(batch)),
+        onChanged: _batchId(batch) == _selectedBatch ? null : (selected) => setState(() {
+          if (selected == true) { _linkedIds.add(_batchId(batch)); } else { _linkedIds.remove(_batchId(batch)); }
+          _maxUnlockedStep = 0;
+        }))),
+    ]));
+  }
+
   Widget _buildBatchSelector(bool isDark) {
     final batches = _farmBatches;
 
@@ -1706,6 +1801,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
             .toList(),
         onChanged: (value) => setState(() {
           _selectedBatch = value;
+          _linkedMode = false; _linkedIds.clear();
           _selectedRecordTab = 0;
           _maxUnlockedStep = 0;
           _submitError = null;
@@ -1757,6 +1853,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           .toList(),
       onChanged: (value) => setState(() {
         _selectedRecordType = value!;
+        if (!_sharedTypes.contains(value)) _linkedMode = false;
         _selectedActivities.clear();
         _maxUnlockedStep = 0;
         _submitError = null;
@@ -2034,6 +2131,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
   }
 
   void _continueToNextStep() {
+    if (_linkedError != null) { _rejectSubmission(_linkedError!); return; }
     if (_selectedBatchDoc != null && _growthStage.invalidDate) {
       _rejectSubmission(_growthStage.message, tab: 0);
       return;
@@ -2185,7 +2283,8 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           tab: 1);
       return;
     }
-    if (_hasIssues && _issueDescriptionController.text.trim().isEmpty) {
+    if (_linkedError != null) { _rejectSubmission(_linkedError!, tab: 1); return; }
+    if (!_linkedMode && _hasIssues && _issueDescriptionController.text.trim().isEmpty) {
       _rejectSubmission('Describe the issue before submitting.', tab: 2);
       return;
     }
@@ -2247,10 +2346,10 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           ? _observationsController.text
           : null,
       activitiesPerformed: _selectedActivities,
-      hasIssues: _hasIssues,
-      issueDescription: _hasIssues ? _issueDescriptionController.text : null,
+      hasIssues: _recordHasIssues,
+      issueDescription: _recordHasIssues ? _recordIssueDescription : null,
       issueSeverity:
-          _hasIssues ? IssueSeverity.fromString(_issueSeverity) : null,
+          _recordHasIssues ? IssueSeverity.fromString(_recordSeverity) : null,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       createdAt: DateTime.now(),
     );
@@ -2279,6 +2378,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
         _rejectSubmission(_growthStage.message, tab: 0);
         return;
       }
+      if (_linkedError != null) { _rejectSubmission(_linkedError!, tab: 1); return; }
       await _api.createFarmRecord(
         data: filterCaretakerRecordFields(_selectedRecordType, {
           'farm_id': record.farmId,
@@ -2312,6 +2412,7 @@ class _RecordEntryScreenState extends ConsumerState<RecordEntryScreen> {
           'water_bought_amount': _waterBoughtAmount.text.trim(),
           'ac_water_litres': _acWaterLitres.text.trim(),
           'notes': _notesController.text.trim(),
+          if (_linkedMode) 'batch_entries': jsonEncode(_linkedEntries),
         }),
       );
     } catch (error) {

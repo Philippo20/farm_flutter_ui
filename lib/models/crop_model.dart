@@ -3,6 +3,7 @@
 class CropModel {
   final String id;
   final String cropName;
+  final String plantTypeId;
   final String? cropImage;
   final String varietyName;
   final int plantDuration;
@@ -29,6 +30,7 @@ class CropModel {
   CropModel({
     required this.id,
     required this.cropName,
+    this.plantTypeId = '',
     this.cropImage,
     required this.varietyName,
     required this.plantDuration,
@@ -59,6 +61,7 @@ class CropModel {
     return CropModel(
       id: json['id'] as String? ?? json['\$id'] as String,
       cropName: json['crop_name'] as String,
+      plantTypeId: '${json['plant_type_ID'] ?? ''}',
       cropImage: json['crop_image'] as String?,
       varietyName: json['variety_name'] as String,
       plantDuration: duration.value,
@@ -101,6 +104,7 @@ class CropModel {
     return {
       'id': id,
       'crop_name': cropName,
+      'plant_type_ID': plantTypeId,
       if (cropImage != null) 'crop_image': cropImage,
       'variety_name': varietyName,
       'plant_duration_value': plantDuration,
@@ -130,6 +134,7 @@ class CropModel {
   CropModel copyWith({
     String? id,
     String? cropName,
+    String? plantTypeId,
     String? cropImage,
     String? varietyName,
     int? plantDuration,
@@ -156,6 +161,7 @@ class CropModel {
     return CropModel(
       id: id ?? this.id,
       cropName: cropName ?? this.cropName,
+      plantTypeId: plantTypeId ?? this.plantTypeId,
       cropImage: cropImage ?? this.cropImage,
       varietyName: varietyName ?? this.varietyName,
       plantDuration: plantDuration ?? this.plantDuration,

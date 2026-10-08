@@ -1,4 +1,5 @@
 import '../../core/utils/farm_team_assignment.dart';
+import '../../core/utils/crop_relationships.dart';
 import '../../core/widgets/farm_form_modal.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/services.dart';
@@ -164,6 +165,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
     return {
       'id': (doc[r'$id'] ?? doc['crop_id'] ?? doc['id'] ?? '').toString(),
       'plantType': (doc['crop_name'] ?? '').toString(),
+      'plantTypeId': '${doc['plant_type_ID'] ?? ''}',
       'variety': (doc['variety_name'] ?? '').toString(),
       'status': _label(doc['status'], fallback: 'Active'),
     };
@@ -268,18 +270,6 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
         fallback: 'Plant Type',
       );
 
-  String _catalogKey(String value) =>
-      value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '').trim();
-
-  bool _catalogNamesMatch(String cropName, String plantType) {
-    final cropKey = _catalogKey(cropName);
-    final plantKey = _catalogKey(plantType);
-    if (cropKey.isEmpty || plantKey.isEmpty) return false;
-    return cropKey == plantKey ||
-        cropKey.contains(plantKey) ||
-        plantKey.contains(cropKey);
-  }
-
   List<Map<String, dynamic>> _matchingCropVarietiesForPlant(String plantType) {
     final activeVarieties = _cropVarieties
         .where((crop) =>
@@ -287,10 +277,11 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
             crop['variety'].toString().trim().isNotEmpty)
         .toList();
     final matched = activeVarieties
-        .where((crop) =>
-            _catalogNamesMatch(crop['plantType'].toString(), plantType))
+        .where((crop) => cropMatchesPlant(crop,
+            plantId: plantIdForName(_plantTypes, plantType),
+            plantName: plantType))
         .toList();
-    return matched.isEmpty ? activeVarieties : matched;
+    return matched;
   }
 
   List<String> _varietyOptionsForPlant(String plantType) {
@@ -2130,16 +2121,28 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
     );
   }
 
-  void _showEditFarmDialog(BuildContext context, Map<String, dynamic> farm, bool isDark) { _openFarmEditor(context, farm: farm); }
+  void _showEditFarmDialog(
+      BuildContext context, Map<String, dynamic> farm, bool isDark) {
+    _openFarmEditor(context, farm: farm);
+  }
 
-  Map<String, List<Map<String, dynamic>>> _farmTeamOptions(Map<String, dynamic>? farm) {
+  Map<String, List<Map<String, dynamic>>> _farmTeamOptions(
+      Map<String, dynamic>? farm) {
     final result = <String, List<Map<String, dynamic>>>{};
-    for (final entry in {'ownerID': 'Owner', 'farmManagerId': 'Farm Manager', 'technicianId': 'Technician', 'caretaker_ids': 'Caretaker'}.entries) {
+    for (final entry in {
+      'ownerID': 'Owner',
+      'farmManagerId': 'Farm Manager',
+      'technicianId': 'Technician',
+      'caretaker_ids': 'Caretaker'
+    }.entries) {
       final options = [..._usersForRole(entry.value)];
-      final ids = entry.key == 'caretaker_ids' ? farmCaretakerIds(farm ?? {}) : [farm?[entry.key]?.toString() ?? ''];
+      final ids = entry.key == 'caretaker_ids'
+          ? farmCaretakerIds(farm ?? {})
+          : [farm?[entry.key]?.toString() ?? ''];
       for (final id in ids.where((id) => id.isNotEmpty && id != 'Unassigned')) {
         if (!options.any((u) => u['id'] == id)) {
-          options.add(_users.firstWhere((u) => u['id'] == id, orElse: () => {'id': id, 'name': id}));
+          options.add(_users.firstWhere((u) => u['id'] == id,
+              orElse: () => {'id': id, 'name': id}));
         }
       }
       result[entry.key] = options;
@@ -2147,28 +2150,43 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
     return result;
   }
 
-  Future<void> _openFarmEditor(BuildContext context, {Map<String, dynamic>? farm}) async {
+  Future<void> _openFarmEditor(BuildContext context,
+      {Map<String, dynamic>? farm}) async {
     final saved = await showFarmFormModal(context,
-      farm: farm, teamOptions: _farmTeamOptions(farm),
-      plantTypes: _plantTypeOptions, varietiesForPlant: _varietyOptionsForPlant,
-
-      onSubmit: (values) async {
-        if (!_isValidPlantSelection(values['plantType'], values['plantVariety'])) {
-          throw Exception('Select a valid plant type and matching crop variety.');
-        }
-        await _api.updateFarm(id: farm!['id'].toString(), name: values['name'], location: values['location'], ownerID: values['ownerID'],
-          caretakerID: values['caretakerID'], caretakerIds: (values['caretaker_ids'] as List).cast<String>(),
-          farmManagerId: values['farmManagerId'], technicianId: values['technicianId'],
-          plantType: values['plantType'], plantVariety: values['plantVariety'],
-          tierType: _tierApiValue(values['tier']), status: values['status']);
-      });
+        farm: farm,
+        teamOptions: _farmTeamOptions(farm),
+        plantTypes: _plantTypeOptions,
+        varietiesForPlant: _varietyOptionsForPlant, onSubmit: (values) async {
+      if (!_isValidPlantSelection(
+          values['plantType'], values['plantVariety'])) {
+        throw Exception('Select a valid plant type and matching crop variety.');
+      }
+      await _api.updateFarm(
+          id: farm!['id'].toString(),
+          name: values['name'],
+          location: values['location'],
+          ownerID: values['ownerID'],
+          caretakerID: values['caretakerID'],
+          caretakerIds: (values['caretaker_ids'] as List).cast<String>(),
+          farmManagerId: values['farmManagerId'],
+          technicianId: values['technicianId'],
+          plantType: values['plantType'],
+          plantVariety: values['plantVariety'],
+          tierType: _tierApiValue(values['tier']),
+          status: values['status']);
+    });
     if (saved != true || !mounted) return;
     await _loadData();
     if (!mounted) return;
-    if (farm != null) { setState(() { _selectedFarm = _farms.firstWhere((f) => f['id'] == farm['id'], orElse: () => farm); }); }
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Farm saved successfully.')));
+    if (farm != null) {
+      setState(() {
+        _selectedFarm =
+            _farms.firstWhere((f) => f['id'] == farm['id'], orElse: () => farm);
+      });
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Farm saved successfully.')));
   }
-
 
   void _showAdminFarmSensorKeyDialog(
     BuildContext context,

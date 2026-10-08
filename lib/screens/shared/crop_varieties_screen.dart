@@ -1,4 +1,5 @@
 import '../../core/widgets/app_dialog.dart';
+import '../../core/widgets/plant_type_selection_field.dart';
 import '../../core/widgets/crop_variety_modal_frame.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'dart:typed_data';
@@ -18,7 +19,8 @@ import '../../providers/auth_provider.dart';
 import '../../services/superadmin_api_service.dart';
 
 class CropVarietiesScreen extends ConsumerStatefulWidget {
-  const CropVarietiesScreen({required this.isSuperAdmin, super.key});
+  const CropVarietiesScreen({required this.isSuperAdmin, super.key, this.api});
+  final SuperAdminApiService? api;
 
   final bool isSuperAdmin;
 
@@ -29,7 +31,8 @@ class CropVarietiesScreen extends ConsumerStatefulWidget {
 
 class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  final _api = SuperAdminApiService();
+  late final _api = widget.api ?? SuperAdminApiService();
+  final List<Map<String, dynamic>> _plantTypes = [];
   final List<Map<String, dynamic>> _crops = [];
   bool _isLoading = false;
   bool _isSaving = false;
@@ -50,9 +53,14 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       if (_crops.isEmpty) _crops.clear();
     });
     try {
-      final documents = await _api.getCrops();
+      final results =
+          await Future.wait([_api.getCrops(), _api.getPlantTypes()]);
+      final documents = results[0];
       if (!mounted) return;
       setState(() {
+        _plantTypes
+          ..clear()
+          ..addAll(results[1]);
         _crops
           ..clear()
           ..addAll(documents.map(_mapCrop));
@@ -69,7 +77,13 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     final duration = _durationParts(doc);
     return {
       'id': (doc[r'$id'] ?? doc['id'] ?? '').toString(),
-      'crop': (doc['crop_name'] ?? 'Unnamed Crop').toString(),
+      'crop': _plantTypes
+              .where(
+                  (p) => '${p[r'$id'] ?? p['id']}' == '${doc['plant_type_ID']}')
+              .firstOrNull?['name']
+              ?.toString() ??
+          (doc['crop_name'] ?? 'Unnamed Crop').toString(),
+      'plantTypeId': '${doc['plant_type_ID'] ?? ''}',
       'imageName': (doc['crop_image'] ?? '').toString(),
       'imageFileId': (doc['crop_image_file_id'] ?? '').toString(),
       'image': (doc['crop_image_url'] ??
@@ -727,8 +741,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
             const SizedBox(width: 6),
             Expanded(
                 child: Text(label,
-                    style: AppTypography.caption
-                        .copyWith(fontSize: AppTypography.fieldLabelSize, color: secondary))),
+                    style: AppTypography.caption.copyWith(
+                        fontSize: AppTypography.fieldLabelSize,
+                        color: secondary))),
           ]),
           const SizedBox(height: 7),
           Text(text,
@@ -788,8 +803,13 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                         color: AppColors.primary)),
                 const SizedBox(height: 8),
                 Text('Company · ${value('company')}',
-                    style: AppTypography.bodySmall
-                        .copyWith(fontSize: AppTypography.fieldLabelSize, color: secondary)),
+                    style: AppTypography.bodySmall.copyWith(
+                        fontSize: AppTypography.fieldLabelSize,
+                        color: secondary)),
+                if ('${crop['plantTypeId'] ?? ''}'.isEmpty)
+                  Text('Plant type not linked · Edit variety',
+                      style: AppTypography.caption.copyWith(
+                          color: Theme.of(context).colorScheme.error)),
               ])),
         ]),
         const SizedBox(height: 14),
@@ -813,7 +833,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         const SizedBox(height: 16),
         Text('Growing conditions',
             style: AppTypography.bodySmall.copyWith(
-                fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight, color: foreground)),
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.headingWeight,
+                color: foreground)),
         const SizedBox(height: 10),
         pair(metric(Icons.science_outlined, 'pH range', value('ph')),
             metric(Icons.bolt_outlined, 'EC range', value('ec'))),
@@ -846,8 +868,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 side: BorderSide(
                     color: AppColors.primary.withValues(alpha: 0.25)),
-                textStyle: AppTypography.bodySmall
-                    .copyWith(fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight),
+                textStyle: AppTypography.bodySmall.copyWith(
+                    fontSize: AppTypography.actionSize,
+                    fontWeight: AppTypography.headingWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
@@ -882,8 +905,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
               const SizedBox(width: 6),
               Expanded(
                   child: Text(label,
-                      style:
-                          AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary))),
+                      style: AppTypography.font(
+                          fontSize: AppTypography.fieldLabelSize,
+                          color: secondary))),
             ]),
             const SizedBox(height: 7),
             Text(text,
@@ -943,7 +967,13 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                 const SizedBox(height: 5),
                 Text(value('company'),
                     style: AppTypography.font(
-                        fontSize: AppTypography.fieldLabelSize, height: 1.4, color: secondary)),
+                        fontSize: AppTypography.fieldLabelSize,
+                        height: 1.4,
+                        color: secondary)),
+                if ('${crop['plantTypeId'] ?? ''}'.isEmpty)
+                  Text('Plant type not linked · Edit variety',
+                      style: AppTypography.caption.copyWith(
+                          color: Theme.of(context).colorScheme.error)),
               ])),
         ]),
         const SizedBox(height: 16),
@@ -959,7 +989,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
             const SizedBox(width: 8),
             Expanded(
                 child: Text('Growing duration',
-                    style: AppTypography.font(fontSize: AppTypography.fieldLabelSize, color: secondary))),
+                    style: AppTypography.font(
+                        fontSize: AppTypography.fieldLabelSize,
+                        color: secondary))),
             const SizedBox(width: 8),
             Flexible(
                 child: Text(value('duration'),
@@ -973,7 +1005,9 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         const SizedBox(height: 16),
         Text('Growing conditions',
             style: AppTypography.font(
-                fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight, color: foreground)),
+                fontSize: AppTypography.captionSize,
+                fontWeight: AppTypography.headingWeight,
+                color: foreground)),
         const SizedBox(height: 10),
         pair(metric('pH range', value('ph'), Icons.science_outlined),
             metric('EC range', value('ec'), Icons.bolt_outlined)),
@@ -1006,7 +1040,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                 side: BorderSide(
                     color: AppColors.primary.withValues(alpha: 0.25)),
                 textStyle: AppTypography.font(
-                    fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight),
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
@@ -1121,6 +1156,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     final isEditing = crop != null;
     final formKey = GlobalKey<FormState>();
     final cropController = TextEditingController(text: _editText(crop, 'crop'));
+    var selectedPlantTypeId = _editText(crop, 'plantTypeId');
     final varietyController =
         TextEditingController(text: _editText(crop, 'variety'));
     final imageController =
@@ -1271,17 +1307,22 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                           autovalidateMode: AutovalidateMode.onUserInteraction,
                           child: Column(
                             children: [
-                              _formFieldPair(
-                                firstController: cropController,
-                                firstLabel: 'Crop Name',
-                                firstHint: 'Enter crop name',
-                                firstIcon: Icons.eco_outlined,
-                                secondController: varietyController,
-                                secondLabel: 'Variety Name',
-                                secondHint: 'Enter variety name',
-                                secondIcon: Icons.grass_outlined,
-                                isDark: isDark,
-                              ),
+                              _widgetPair(
+                                  first: PlantTypeSelectionField(
+                                      plants: _plantTypes,
+                                      value: selectedPlantTypeId,
+                                      enabled: !saving,
+                                      onChanged: (id) => setDialogState(() {
+                                            selectedPlantTypeId = id;
+                                            cropController.text =
+                                                '${_plantTypes.firstWhere((p) => '${p[r'$id'] ?? p['id']}' == id)['name']}';
+                                          })),
+                                  second: _formField(
+                                      varietyController,
+                                      'Variety Name',
+                                      'Enter variety name',
+                                      Icons.grass_outlined,
+                                      isDark)),
                               const SizedBox(height: 14),
                               _imagePickerField(
                                   imageController,
@@ -1368,7 +1409,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                     child: Text(_varietySaveError!,
                                         style: TextStyle(
                                             color: AppColors.error,
-                                            fontSize: AppTypography.captionSize))),
+                                            fontSize:
+                                                AppTypography.captionSize))),
                               if (isEditing)
                                 Align(
                                     alignment: Alignment.centerLeft,
@@ -1437,6 +1479,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                       });
                                       final success = isEditing
                                           ? await _updateCropVariety(
+                                              plantTypeId: selectedPlantTypeId,
                                               id: crop['id'].toString(),
                                               cropName: cropController.text,
                                               varietyName:
@@ -1465,6 +1508,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                                   humidityMaxController.text,
                                             )
                                           : await _createCropVariety(
+                                              plantTypeId: selectedPlantTypeId,
                                               cropName: cropController.text,
                                               varietyName:
                                                   varietyController.text,
@@ -1852,7 +1896,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
               fontSize: AppTypography.captionSize,
               color: isDark ? Colors.white54 : AppColors.textSecondary,
             ),
-            errorStyle: AppTypography.font(fontSize: AppTypography.fieldLabelSize, height: 1.25),
+            errorStyle: AppTypography.font(
+                fontSize: AppTypography.fieldLabelSize, height: 1.25),
             prefixIcon: Icon(icon, size: 16),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
@@ -1957,7 +2002,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                     fontSize: AppTypography.captionSize,
                     color: isDark ? Colors.white54 : AppColors.textSecondary,
                   ),
-                  errorStyle: AppTypography.font(fontSize: AppTypography.fieldLabelSize, height: 1.25),
+                  errorStyle: AppTypography.font(
+                      fontSize: AppTypography.fieldLabelSize, height: 1.25),
                   prefixIcon: Icon(icon, size: 16),
                   suffixIcon: IconButton(
                     tooltip: 'Choose image',
@@ -2115,7 +2161,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
           fontSize: AppTypography.captionSize,
           color: isDark ? Colors.white54 : AppColors.textSecondary,
         ),
-        errorStyle: AppTypography.font(fontSize: AppTypography.fieldLabelSize, height: 1.25),
+        errorStyle: AppTypography.font(
+            fontSize: AppTypography.fieldLabelSize, height: 1.25),
         prefixIcon: icon == null ? null : Icon(icon, size: 16),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
@@ -2247,6 +2294,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   }
 
   Future<bool> _createCropVariety({
+    required String plantTypeId,
     required String cropName,
     required String varietyName,
     required String imageFileName,
@@ -2282,6 +2330,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     try {
       final user = ref.read(currentUserProvider);
       await _api.createCropVariety(
+        plantTypeId: plantTypeId,
         cropName: cropName.trim(),
         varietyName: varietyName.trim(),
         imageFileName: imageFileName.trim(),
@@ -2315,6 +2364,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
   }
 
   Future<bool> _updateCropVariety({
+    required String plantTypeId,
     required String id,
     required String cropName,
     required String varietyName,
@@ -2351,6 +2401,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     try {
       final user = ref.read(currentUserProvider);
       await _api.updateCropVariety(
+        plantTypeId: plantTypeId,
         id: id,
         cropName: cropName.trim(),
         varietyName: varietyName.trim(),

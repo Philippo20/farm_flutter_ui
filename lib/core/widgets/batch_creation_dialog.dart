@@ -1,4 +1,6 @@
 import '../utils/production_plan.dart';
+import '../utils/crop_relationships.dart';
+import 'growing_group_field.dart';
 import 'production_schedule_card.dart';
 import '../theme/app_typography.dart';
 import 'app_dialog.dart';
@@ -28,26 +30,6 @@ String _catalogKey(Object? value) => value
     .toLowerCase()
     .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
     .trim();
-
-bool _compatiblePlantNames(String first, String second) {
-  final firstKey = _catalogKey(first);
-  final secondKey = _catalogKey(second);
-  return firstKey.isEmpty ||
-      secondKey.isEmpty ||
-      firstKey == secondKey ||
-      firstKey.contains(secondKey) ||
-      secondKey.contains(firstKey);
-}
-
-bool _samePlantCatalogEntry(String first, String second) {
-  final firstKey = _catalogKey(first);
-  final secondKey = _catalogKey(second);
-  return firstKey.isNotEmpty &&
-      secondKey.isNotEmpty &&
-      (firstKey == secondKey ||
-          firstKey.contains(secondKey) ||
-          secondKey.contains(firstKey));
-}
 
 String _documentId(Map<String, dynamic> document) =>
     '${document[r'$id'] ?? document['id'] ?? document['plant_type_ID'] ?? document['user_id'] ?? ''}'
@@ -99,6 +81,7 @@ Future<bool?> showBatchCreationDialog({
     if (selectedVariety.isNotEmpty) selectedVariety,
   };
   final varietyRecords = <String, Map<String, dynamic>>{};
+  final catalogCrops = <Map<String, dynamic>>[];
   var plantTypeId = _relationshipId(
     farm['plantTypeId'] ?? farm['plant_type_ID'] ?? farm['plant_type_id'],
   );
@@ -111,33 +94,17 @@ Future<bool?> showBatchCreationDialog({
       '${farm['caretaker'] ?? farm['caretaker_name'] ?? ''}'.trim();
   try {
     final crops = await api.getCrops();
-    for (final crop in crops) {
-      final cropPlant =
-          '${crop['plant_type'] ?? crop['plant_name'] ?? crop['plantType'] ?? crop['crop_name'] ?? ''}'
-              .trim();
-      final variety =
-          '${crop['variety_name'] ?? crop['variety'] ?? crop['name'] ?? ''}'
-              .trim();
-      if (variety.isNotEmpty) {
-        varietyRecords[_catalogKey(variety)] = crop;
-      }
-      if (variety.isNotEmpty && _compatiblePlantNames(cropPlant, plantName)) {
-        varietyOptions.add(variety);
-      }
-    }
+    catalogCrops.addAll(crops);
   } catch (_) {
     // The farm's saved variety remains available if the catalog is offline.
   }
   try {
     final plantTypes = await api.getPlantTypes();
+    if (plantTypeId.isEmpty)
+      plantTypeId = plantIdForName(plantTypes, plantName);
     for (final plantType in plantTypes) {
       if (plantType['is_category'] == true) continue;
-      final name =
-          '${plantType['name'] ?? plantType['plant_name'] ?? ''}'.trim();
-      if ((plantTypeId.isNotEmpty && _documentId(plantType) == plantTypeId) ||
-          (plantTypeId.isEmpty &&
-              name.isNotEmpty &&
-              _samePlantCatalogEntry(name, plantName))) {
+      if (plantTypeId.isNotEmpty && _documentId(plantType) == plantTypeId) {
         plantPlan = productionPlan(plantType['production_plan']);
         plantTypeId = _documentId(plantType);
         break;
@@ -157,6 +124,15 @@ Future<bool?> showBatchCreationDialog({
         ..sort((a, b) => '${b['start_date']}'.compareTo('${a['start_date']}'));
       if (matching.isNotEmpty) precedingBatch = matching.first;
     } catch (_) {/* A saved plan still allows the current batch preview. */}
+  }
+  for (final crop in catalogCrops) {
+    if (!cropMatchesPlant(crop, plantId: plantTypeId, plantName: plantName))
+      continue;
+    final variety = '${crop['variety_name'] ?? ''}'.trim();
+    if (variety.isNotEmpty) {
+      varietyOptions.add(variety);
+      varietyRecords[_catalogKey(variety)] = crop;
+    }
   }
   if (caretakerId.isNotEmpty &&
       (caretakerName.isEmpty || caretakerName == caretakerId)) {
@@ -200,6 +176,7 @@ Future<bool?> showBatchCreationDialog({
     selectedDuration.unit,
   );
   var saving = false;
+  String groupId = '', groupName = '';
   String? formError;
 
   String dateText(DateTime date) => DateFormat('MMM dd, yyyy').format(date);
@@ -287,15 +264,15 @@ Future<bool?> showBatchCreationDialog({
           return AppDialog(
             backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
             insetPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 20,
+              horizontal: 20,
+              vertical: 24,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             ),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: 600,
+                maxWidth: 500,
                 maxHeight: MediaQuery.sizeOf(context).height * 0.9,
               ),
               child: Column(
@@ -605,6 +582,14 @@ Future<bool?> showBatchCreationDialog({
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                GrowingGroupField(
+                                    api: api,
+                                    farmId: farmId,
+                                    enabled: !saving,
+                                    onChanged: (id, name) {
+                                      groupId = id;
+                                      groupName = name;
+                                    }),
                                 fieldLabel('Notes (Optional)', isDark),
                                 TextFormField(
                                   controller: notesController,
@@ -710,6 +695,8 @@ Future<bool?> showBatchCreationDialog({
                                           'technical_issues':
                                               notesController.text.trim(),
                                           'created_by': createdBy,
+                                          'growing_group_id': groupId,
+                                          'growing_group_name': groupName,
                                         });
                                         await onCreated();
                                         if (dialogContext.mounted) {

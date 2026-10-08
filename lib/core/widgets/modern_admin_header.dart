@@ -94,30 +94,33 @@ class ModernAdminHeader extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  Text(
-                    _getGreeting(),
-                    style: AppTypography.h4.copyWith(
-                      fontWeight: AppTypography.headingWeight,
-                      fontSize: AppTypography.metricSize,
-                      color: isDark ? Colors.white : AppColors.textPrimary,
-                      letterSpacing: -0.5,
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: _getGreeting(),
+                      style: AppTypography.h4.copyWith(
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: AppTypography.metricSize,
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    ', $userName',
-                    style: AppTypography.h4.copyWith(
-                      fontWeight: AppTypography.headingWeight,
-                      fontSize: AppTypography.metricSize,
-                      color: isDark
-                          ? Colors.white.withOpacity(0.9)
-                          : AppColors.textPrimary.withOpacity(0.8),
-                      letterSpacing: -0.5,
+                    TextSpan(
+                      text: ', $userName',
+                      style: AppTypography.h4.copyWith(
+                        fontWeight: AppTypography.headingWeight,
+                        fontSize: AppTypography.metricSize,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.9)
+                            : AppColors.textPrimary.withOpacity(0.8),
+                        letterSpacing: -0.5,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: AppSpacing.xs),
               Row(
@@ -130,15 +133,19 @@ class ModernAdminHeader extends ConsumerWidget {
                         : AppColors.textSecondary,
                   ),
                   const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    _getFormattedDate(),
-                    style: AppTypography.bodyLarge.copyWith(
-                      fontSize: AppTypography.bodySize,
-                      color: isDark
-                          ? Colors.white.withOpacity(0.7)
-                          : AppColors.textSecondary,
-                      fontWeight: AppTypography.labelWeight,
-                      letterSpacing: 0.2,
+                  Flexible(
+                    child: Text(
+                      _getFormattedDate(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyLarge.copyWith(
+                        fontSize: AppTypography.bodySize,
+                        color: isDark
+                            ? Colors.white.withOpacity(0.7)
+                            : AppColors.textSecondary,
+                        fontWeight: AppTypography.labelWeight,
+                        letterSpacing: 0.2,
+                      ),
                     ),
                   ),
                 ],

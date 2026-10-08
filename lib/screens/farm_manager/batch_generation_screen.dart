@@ -1,4 +1,6 @@
 import '../../core/utils/production_plan.dart';
+import '../../core/utils/crop_relationships.dart';
+import '../../core/widgets/growing_group_field.dart';
 import '../../core/widgets/production_schedule_card.dart';
 import 'batch_records_screen.dart';
 import '../../core/widgets/app_dialog.dart';
@@ -56,6 +58,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   int _nursedSeeds = 0;
   String? _caretakerId;
   final _notesController = TextEditingController();
+  String _groupId = '', _groupName = '';
 
   bool _isGenerating = false;
   bool _showForm = false; // Default to tracking view (table/cards)
@@ -126,8 +129,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         _caretakers
           ..clear()
           ..addAll(results[1].where((user) {
-            final roles = (user['roles'] as List?)?.isNotEmpty == true ? user['roles'] as List : [user['role']];
-            return roles.any((role) => role.toString().toLowerCase().contains('caretaker'));
+            final roles = (user['roles'] as List?)?.isNotEmpty == true
+                ? user['roles'] as List
+                : [user['role']];
+            return roles.any(
+                (role) => role.toString().toLowerCase().contains('caretaker'));
           }).map((user) => {
                 'id': _docId(user),
                 'name': _value(user, ['name'], fallback: 'Caretaker'),
@@ -291,7 +297,10 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     if (variety != null && variety.isNotEmpty) {
       for (final crop in _cropVarieties) {
         if (_catalogKey(_value(crop, ['variety_name', 'variety', 'name'])) ==
-            _catalogKey(variety)) {
+                _catalogKey(variety) &&
+            cropMatchesPlant(crop,
+                plantId: _plantTypeIdForName(_selectedPlantType ?? ''),
+                plantName: _selectedPlantType ?? '')) {
           final rawValue = crop['plant_duration_value'];
           final value = rawValue is num
               ? rawValue.toInt()
@@ -314,16 +323,6 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       .toLowerCase()
       .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
       .trim();
-
-  bool _compatiblePlantNames(String first, String second) {
-    final firstKey = _catalogKey(first);
-    final secondKey = _catalogKey(second);
-    return firstKey.isEmpty ||
-        secondKey.isEmpty ||
-        firstKey == secondKey ||
-        firstKey.contains(secondKey) ||
-        secondKey.contains(firstKey);
-  }
 
   DateTime? _calculatedEndDate(DateTime startDate) {
     final duration = _selectedVarietyDuration();
@@ -359,10 +358,10 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   List<String> _varietyOptionsForPlant(String plantType) {
     final options = <String>{};
     for (final crop in _cropVarieties) {
-      final cropPlant =
-          _value(crop, ['plant_type', 'plant_name', 'plantType', 'crop_name']);
       final variety = _value(crop, ['variety_name', 'variety', 'name']);
-      if (variety.isNotEmpty && _compatiblePlantNames(cropPlant, plantType)) {
+      if (variety.isNotEmpty &&
+          cropMatchesPlant(crop,
+              plantId: _plantTypeIdForName(plantType), plantName: plantType)) {
         options.add(variety);
       }
     }
@@ -370,20 +369,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   }
 
   String _plantTypeIdForName(String plantType) {
-    final plantTypeKey = _catalogKey(plantType);
-    if (plantTypeKey.isEmpty) return '';
-    for (final record in _plantTypes) {
-      if (record['is_category'] == true) continue;
-      final name = _value(record, ['name', 'plant_name']);
-      final nameKey = _catalogKey(name);
-      if (nameKey.isNotEmpty &&
-          (nameKey == plantTypeKey ||
-              nameKey.contains(plantTypeKey) ||
-              plantTypeKey.contains(nameKey))) {
-        return _docId(record);
-      }
-    }
-    return '';
+    return plantIdForName(_plantTypes, plantType);
   }
 
   String _assignedCaretakerName(String? caretakerId) {
@@ -407,6 +393,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     final caretakerId = farm?['caretakerId']?.toString().trim() ?? '';
     setState(() {
       _selectedFarm = farmId;
+      _groupId = '';
+      _groupName = '';
       _selectedPlantType =
           plantType.isEmpty || plantType == '-' ? null : plantType;
       _selectedPlantVariety = null;
@@ -523,6 +511,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         'end_date': DateFormat('yyyy-MM-dd').format(_endDate!),
         'total_seeds_nursed': _nursedSeeds,
         'technical_issues': _notesController.text.trim(),
+        'growing_group_id': _groupId,
+        'growing_group_name': _groupName,
         'created_by': user?.name ?? 'Farm Manager',
       });
 
@@ -572,6 +562,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       _nursedSeeds = 0;
       _caretakerId = null;
       _notesController.clear();
+      _groupId = '';
+      _groupName = '';
     });
     _formKey.currentState?.reset();
   }
@@ -1389,6 +1381,18 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 const SizedBox(height: AppSpacing.lg),
 
                 // Notes
+                if (_selectedFarm != null)
+                  GrowingGroupField(
+                      key: ValueKey('$_selectedFarm:$_showForm'),
+                      api: _api,
+                      farmId: _selectedFarm!,
+                      initialId: _groupId,
+                      initialName: _groupName,
+                      enabled: !_isGenerating,
+                      onChanged: (id, name) {
+                        _groupId = id;
+                        _groupName = name;
+                      }),
                 Text(
                   'Notes (Optional)',
                   style: AppTypography.label.copyWith(
