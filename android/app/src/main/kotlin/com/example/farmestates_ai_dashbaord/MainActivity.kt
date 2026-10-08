@@ -20,6 +20,7 @@ class MainActivity: FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        AndroidAppUpdates(this).attach(flutterEngine)
         if (Build.VERSION.SDK_INT >= 26) {
             notifications.createNotificationChannel(NotificationChannel(
                 channelId, "Team messages", NotificationManager.IMPORTANCE_HIGH

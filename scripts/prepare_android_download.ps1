@@ -10,6 +10,7 @@ try {
     $downloads = Join-Path $projectRoot 'web/downloads'
     New-Item -ItemType Directory -Force -Path $downloads | Out-Null
     Copy-Item -LiteralPath $apk -Destination (Join-Path $downloads 'farm-estates.apk') -Force
+    & (Join-Path $PSScriptRoot 'write_android_release.ps1')
     if ($BuildWeb) {
         & flutter build web --release
         if ($LASTEXITCODE -ne 0) { throw 'Web build failed.' }

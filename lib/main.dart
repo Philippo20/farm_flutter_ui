@@ -3,6 +3,7 @@ import 'screens/auth/password_recovery_screen.dart';
 import 'core/utils/initial_auth_route.dart';
 import 'core/widgets/api_connection_host.dart';
 import 'core/widgets/session_security_host.dart';
+import 'core/widgets/android_update_host.dart';
 import 'package:farmestates_ai_dashbaord/screens/farm_manager/batch_generation_screen.dart';
 import 'package:farmestates_ai_dashbaord/screens/farm_manager/delivery_management_screen.dart';
 import 'package:farmestates_ai_dashbaord/screens/farm_manager/farms_screen.dart';
@@ -162,11 +163,13 @@ class _MyAppState extends ConsumerState<MyApp> {
             systemStatusBarContrastEnforced: false,
             systemNavigationBarContrastEnforced: false,
           ),
-          child: SessionSecurityHost(
+          child: AndroidUpdateHost(
+            navigatorKey: messageNavigatorKey,
+            child: SessionSecurityHost(
               isPasswordRecovery: () => _routeObserver.isPasswordRecovery,
               child: MessageNotificationHost(
                   child: ApiConnectionHost(
-                      child: child ?? const SizedBox.shrink()))),
+                      child: child ?? const SizedBox.shrink())))),
         );
       },
       onGenerateRoute: (settings) {

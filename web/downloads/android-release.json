@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "buildNumber": 12,
+  "packageName": "com.example.farmestates_ai_dashbaord",
+  "apkUrl": "farm-estates.apk",
+  "sha256": "a83f9308ad3e6687c90c384496d63f4b733137645b36f7cf87208af31b4fc749",
+  "sizeBytes": 82735357,
+  "publishedAt": "2026-10-08T09:24:13.6832806Z",
+  "releaseNotes": "In-app update checks, background APK downloads and guided Android installation."
+}
