@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 export 'accountant_approvals_screen.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
@@ -162,6 +163,8 @@ class AccountantSettingsScreen extends StatelessWidget {
             colors: [Color(0xFF334155), Color(0xFF475569)],
           ),
           SizedBox(height: AppSpacing.lg),
+          PersonalTypographyCard(),
+          SizedBox(height: 16),
           _SettingsPanel(),
         ],
       ),

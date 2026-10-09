@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 import '../../core/widgets/buyer_account_card.dart';
 import '../../core/widgets/user_card_layout.dart';
 import '../../core/widgets/app_dialog.dart';
@@ -3786,6 +3787,8 @@ class SalesManagerSettingsScreen extends StatelessWidget {
             colors: [Color(0xFF334155), Color(0xFF475569)],
           ),
           SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 16 : AppSpacing.lg),
+          const PersonalTypographyCard(),
+          const SizedBox(height: 16),
           _SettingsPanel(),
         ],
       ),

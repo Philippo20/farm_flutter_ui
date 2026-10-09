@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import 'dart:async';
@@ -844,6 +845,8 @@ class SalesPersonnelSettingsScreen extends StatelessWidget {
             colors: [Color(0xFF334155), Color(0xFF475569)],
           ),
           SizedBox(height: AppSpacing.lg),
+          PersonalTypographyCard(),
+          SizedBox(height: 16),
           _SettingsPanel(),
         ],
       ),

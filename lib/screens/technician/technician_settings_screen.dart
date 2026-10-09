@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -266,6 +267,8 @@ class _TechnicianSettingsScreenState
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       ...children.take(4),
+      const PersonalTypographyCard(),
+      const SizedBox(height: 16),
       LayoutBuilder(builder: (context, constraints) {
         final cards = [children[4], children[6], children[8]];
         if (constraints.maxWidth < 850) {

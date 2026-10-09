@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/theme_provider.dart';
@@ -86,6 +87,8 @@ class _FulfillmentSettingsScreenState
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
+          const PersonalTypographyCard(),
+          const SizedBox(height: 16),
           _buildCard(
             isDark,
             child: Column(

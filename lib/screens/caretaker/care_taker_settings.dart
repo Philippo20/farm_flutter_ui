@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -522,6 +523,8 @@ class _CareTakerSettingsScreenState
   ) {
     final leftColumn = Column(
       children: [
+        const PersonalTypographyCard(),
+        const SizedBox(height: 16),
         _buildAppearanceSection(isDark, themeMode),
         const SizedBox(height: AppSpacing.md),
         _buildNotificationSection(isDark),

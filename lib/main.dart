@@ -1,3 +1,5 @@
+import 'core/widgets/maintenance_reminder_host.dart';
+import 'core/widgets/personal_typography_host.dart';
 import 'screens/auth/role_selection_screen.dart';
 import 'screens/auth/password_recovery_screen.dart';
 import 'core/utils/initial_auth_route.dart';
@@ -152,7 +154,7 @@ class _MyAppState extends ConsumerState<MyApp> {
             isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
         final iconBrightness = isDark ? Brightness.light : Brightness.dark;
 
-        return AnnotatedRegion<SystemUiOverlayStyle>(
+        return PersonalTypographyHost(child: AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle(
             statusBarColor: background,
             statusBarIconBrightness: iconBrightness,
@@ -169,8 +171,9 @@ class _MyAppState extends ConsumerState<MyApp> {
               isPasswordRecovery: () => _routeObserver.isPasswordRecovery,
               child: MessageNotificationHost(
                   child: ApiConnectionHost(
-                      child: child ?? const SizedBox.shrink())))),
-        );
+                      child: MaintenanceReminderHost(navigatorKey: messageNavigatorKey,
+                          child: child ?? const SizedBox.shrink()))))),
+        ));
       },
       onGenerateRoute: (settings) {
         final uri = Uri.tryParse(settings.name ?? '');

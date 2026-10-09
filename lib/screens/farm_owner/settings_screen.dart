@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -410,6 +411,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         if (isMobile) ...[
           _buildProfileSection(isDark),
           const SizedBox(height: AppSpacing.md),
+          const PersonalTypographyCard(),
+          const SizedBox(height: 16),
           _buildAppearanceSection(isDark, themeMode),
           const SizedBox(height: AppSpacing.md),
           _buildPreferencesSection(isDark),
@@ -438,6 +441,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Expanded(
                 child: Column(
                   children: [
+                    const PersonalTypographyCard(),
+                    const SizedBox(height: 16),
                     _buildAppearanceSection(isDark, themeMode),
                     const SizedBox(height: AppSpacing.lg),
                     _buildPreferencesSection(isDark),

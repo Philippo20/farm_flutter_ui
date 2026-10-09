@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -166,6 +167,8 @@ class _QualitySettingsScreenState extends State<QualitySettingsScreen> {
             colors: [Color(0xFF334155), Color(0xFF475569)],
           ),
           SizedBox(height: AppSpacing.lg),
+          const PersonalTypographyCard(),
+          const SizedBox(height: 16),
           if (_loading)
             const Padding(
               padding: EdgeInsets.all(AppSpacing.xxl),

@@ -1,5 +1,6 @@
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
+import '../../core/widgets/personal_typography_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -1397,6 +1398,8 @@ class PackagingSupervisorSettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           _SettingsPanel(isDark: isDark),
+          const SizedBox(height: 16),
+          const PersonalTypographyCard(),
         ],
       ),
     );

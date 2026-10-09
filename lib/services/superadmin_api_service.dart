@@ -1,3 +1,4 @@
+import 'maintenance_changes.dart';
 import 'auth_service.dart';
 import 'api_connection.dart';
 import 'dart:async';
@@ -717,6 +718,7 @@ class SuperAdminApiService {
     if (decoded is! Map<String, dynamic>) {
       throw const SuperAdminApiException('Invalid farm task update response');
     }
+    notifyMaintenanceChanged();
     return decoded;
   }
 

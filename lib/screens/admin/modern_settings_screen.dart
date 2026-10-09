@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -247,6 +248,8 @@ class _ModernSettingsScreenState extends ConsumerState<ModernSettingsScreen> {
       children: [
         _buildHeader(isDark),
         const SizedBox(height: AppSpacing.lg),
+        const PersonalTypographyCard(),
+        const SizedBox(height: 16),
         _buildStatusBanner(isDark),
         const SizedBox(height: AppSpacing.lg),
         LayoutBuilder(

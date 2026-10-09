@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -307,6 +308,8 @@ class _FarmManagerSettingsScreenState
         if (isMobile) ...[
           _buildProfileSection(isDark, isMobile),
           const SizedBox(height: 16),
+          const PersonalTypographyCard(),
+          const SizedBox(height: 16),
           _buildAppearanceSection(isDark, isMobile, themeMode),
           const SizedBox(height: 16),
           _buildFarmDefaultsSection(isDark, isMobile),
@@ -327,6 +330,8 @@ class _FarmManagerSettingsScreenState
                   children: [
                     _buildProfileSection(isDark, isMobile),
                     const SizedBox(height: 20),
+                    const PersonalTypographyCard(),
+                    const SizedBox(height: 16),
                     _buildAppearanceSection(isDark, isMobile, themeMode),
                     const SizedBox(height: 20),
                     _buildNotificationsSection(isDark, isMobile),

@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -167,6 +168,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _identity(user, dark),
+                          const SizedBox(height: 16),
+                          const PersonalTypographyCard(),
                           const SizedBox(height: 16),
                           LayoutBuilder(builder: (context, constraints) {
                             if (constraints.maxWidth < 760) {

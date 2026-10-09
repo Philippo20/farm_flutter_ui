@@ -1,3 +1,4 @@
+import 'maintenance_changes.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'api_connection.dart';
@@ -44,5 +45,6 @@ class DeviceMaintenanceApi {
         'POST',
         '/devices/${Uri.encodeComponent(task['device_id'])}/plans/${Uri.encodeComponent(task['plan_id'])}/complete',
         data);
+    notifyMaintenanceChanged();
   }
 }

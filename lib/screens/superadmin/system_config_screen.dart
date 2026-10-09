@@ -1,3 +1,4 @@
+import '../../core/widgets/personal_typography_card.dart';
 import '../../core/widgets/email_settings_card.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
@@ -523,6 +524,8 @@ class _SystemConfigScreenState extends ConsumerState<SystemConfigScreen> {
         SizedBox(height: isMobile ? 12 : AppSpacing.lg),
         _buildConfigurationStats(isDark, isMobile),
         SizedBox(height: isMobile ? 16 : AppSpacing.xl),
+        const PersonalTypographyCard(),
+        const SizedBox(height: 16),
         _buildProfessionalConfigGrid(isDark, isMobile),
         SizedBox(height: isMobile ? 16 : AppSpacing.xl),
         _buildProfessionalActionBar(isDark, isMobile),
