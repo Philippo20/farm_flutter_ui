@@ -1,5 +1,6 @@
 import '../../core/utils/farm_team_assignment.dart';
 import '../../core/utils/crop_relationships.dart';
+import '../../core/utils/farm_varieties.dart';
 import '../../core/widgets/farm_form_modal.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/services.dart';
@@ -71,6 +72,12 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
         ..clear()
         ..addAll(results[1].map(_mapUser));
       setState(() {
+        _plantTypes
+          ..clear()
+          ..addAll(results[6].map(_mapPlantType));
+        _cropVarieties
+          ..clear()
+          ..addAll(results[7].map(_mapCropVariety));
         _farms
           ..clear()
           ..addAll(results[0].map(_mapFarm));
@@ -86,12 +93,6 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
         _sales
           ..clear()
           ..addAll(results[5]);
-        _plantTypes
-          ..clear()
-          ..addAll(results[6].map(_mapPlantType));
-        _cropVarieties
-          ..clear()
-          ..addAll(results[7].map(_mapCropVariety));
         if (_selectedFarm != null) {
           final id = _selectedFarm!['id'].toString();
           _selectedFarm = _farms.cast<Map<String, dynamic>?>().firstWhere(
@@ -143,8 +144,15 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
       'caretaker': farmCaretakerIds(doc).map(_userName).join(', '),
       'caretakerID': caretakerId,
       'caretaker_ids': farmCaretakerIds(doc),
-      'plantType': (doc['plant_type'] ?? '-').toString(),
+      'plantType': _plantTypes
+              .where((p) => p['id'] == doc['plant_type_ID'])
+              .firstOrNull?['name'] ??
+          (doc['plant_type'] ?? '-').toString(),
       'plantVariety': (doc['plant_variety'] ?? '-').toString(),
+      'plantTypeId': '${doc['plant_type_ID'] ?? ''}',
+      'crop_variety_ids': farmVarietyIds(doc),
+      'plant_varieties': doc['plant_varieties'] ?? [],
+      'plantVarietySummary': farmVarietySummary(doc, _cropVarieties),
       'tier': _tierLabel(doc['tier_type']),
       'status': _label(doc['status'], fallback: 'Pending'),
       'sensorApiKey': (doc['sensor_ingest_api_key'] ?? '').toString(),
@@ -442,7 +450,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
         farm['name'],
         farm['location'],
         farm['plantType'],
-        farm['plantVariety'],
+        farm['plantVarietySummary'],
         farm['farmManager'],
         farm['technician'],
         farm['caretaker'],
@@ -1061,12 +1069,12 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                 const SizedBox(height: 8),
                 detail(
                     Icons.grass_outlined,
-                    [value('plantType'), value('plantVariety')]
+                    [value('plantType'), value('plantVarietySummary')]
                             .where((text) => text != 'Not available')
                             .join(' / ')
                             .isEmpty
                         ? 'Crop not available'
-                        : [value('plantType'), value('plantVariety')]
+                        : [value('plantType'), value('plantVarietySummary')]
                             .where((text) => text != 'Not available')
                             .join(' / ')),
                 const Divider(height: 28),
@@ -1293,8 +1301,8 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                             Expanded(
                               flex: 3,
                               child: _compactMetric(
-                                'Variety',
-                                farm['plantVariety'],
+                                'Varieties',
+                                farm['plantVarietySummary'],
                                 Icons.grass_outlined,
                                 isDark,
                               ),
@@ -1744,7 +1752,7 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
         children: [
           _detailTile(
               'Plant Type', farm['plantType'], Icons.eco_outlined, isDark),
-          _detailTile('Crop Variety', farm['plantVariety'],
+          _detailTile('Crop Varieties', farm['plantVarietySummary'],
               Icons.grass_outlined, isDark),
           _detailTile('Subscription Tier', farm['tier'],
               Icons.workspace_premium_outlined, isDark),
@@ -2156,9 +2164,11 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
         farm: farm,
         teamOptions: _farmTeamOptions(farm),
         plantTypes: _plantTypeOptions,
-        varietiesForPlant: _varietyOptionsForPlant, onSubmit: (values) async {
-      if (!_isValidPlantSelection(
-          values['plantType'], values['plantVariety'])) {
+        varietiesForPlant: _matchingCropVarietiesForPlant,
+        onSubmit: (values) async {
+      if ((values['crop_variety_ids'] as List).isEmpty ||
+          !(values['plant_varieties'] as List).every((name) =>
+              _isValidPlantSelection(values['plantType'], name.toString()))) {
         throw Exception('Select a valid plant type and matching crop variety.');
       }
       await _api.updateFarm(
@@ -2171,6 +2181,8 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
           farmManagerId: values['farmManagerId'],
           technicianId: values['technicianId'],
           plantType: values['plantType'],
+          plantTypeId: plantIdForName(_plantTypes, values['plantType']),
+          cropVarietyIds: (values['crop_variety_ids'] as List).cast<String>(),
           plantVariety: values['plantVariety'],
           tierType: _tierApiValue(values['tier']),
           status: values['status']);

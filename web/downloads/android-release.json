@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 12,
+  "buildNumber": 13,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "a83f9308ad3e6687c90c384496d63f4b733137645b36f7cf87208af31b4fc749",
-  "sizeBytes": 82735357,
-  "publishedAt": "2026-10-08T09:24:13.6832806Z",
-  "releaseNotes": "In-app update checks, background APK downloads and guided Android installation."
+  "sha256": "ba3d0a035bf3381fb9e5e56f110057f015193153f98d672839fe8148b9b3070c",
+  "sizeBytes": 82751741,
+  "publishedAt": "2026-10-09T12:35:18.5026846Z",
+  "releaseNotes": "Assign multiple crop varieties to a farm and choose assigned varieties when creating batches."
 }

@@ -1,3 +1,4 @@
+import '../../core/utils/farm_varieties.dart';
 import '../../core/utils/production_plan.dart';
 import '../../core/utils/crop_relationships.dart';
 import '../../core/widgets/growing_group_field.dart';
@@ -122,7 +123,15 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                 'id': _docId(farm),
                 'name': _value(farm, ['name', 'farm_name'],
                     fallback: 'Unnamed Farm'),
-                'plantType': _value(farm, ['plant_type', 'plantType']),
+                'plantType': results[2]
+                        .where(
+                            (p) => '${p[r'$id']}' == '${farm['plant_type_ID']}')
+                        .firstOrNull?['name']
+                        ?.toString() ??
+                    _value(farm, ['plant_type', 'plantType']),
+                'plantTypeId': '${farm['plant_type_ID'] ?? ''}',
+                'crop_variety_ids': farmVarietyIds(farm),
+                'plant_varieties': farm['plant_varieties'] ?? [],
                 'plantVariety': _value(farm, ['plant_variety', 'plantVariety']),
                 'caretakerId': _value(farm, ['caretakerID', 'caretaker_id']),
               }));
@@ -295,7 +304,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     if (duration.value > 0) return duration;
     final variety = _selectedPlantVariety;
     if (variety != null && variety.isNotEmpty) {
-      for (final crop in _cropVarieties) {
+      for (final crop in _assignedVarietyRecords(_selectedPlantType ?? '')) {
         if (_catalogKey(_value(crop, ['variety_name', 'variety', 'name'])) ==
                 _catalogKey(variety) &&
             cropMatchesPlant(crop,
@@ -343,7 +352,23 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     return DateTime(targetMonth.year, targetMonth.month, targetDay);
   }
 
+  Map<String, dynamic> get _selectedFarmDoc =>
+      _farms.firstWhere((f) => f['id'] == _selectedFarm,
+          orElse: () => <String, dynamic>{});
+  List<Map<String, dynamic>> _assignedVarietyRecords(String plant) =>
+      assignedFarmVarieties(_selectedFarmDoc, _cropVarieties,
+          plantId: _plantTypeIdForName(plant), plantName: plant);
+  String _selectedVarietyId(String? variety) =>
+      _assignedVarietyRecords(_selectedPlantType ?? '')
+          .where(
+              (c) => plantNameKey(c['variety_name']) == plantNameKey(variety))
+          .firstOrNull?[r'$id']
+          ?.toString() ??
+      '';
+
   List<String> get _plantTypeOptions {
+    if (farmVarietyIds(_selectedFarmDoc).isNotEmpty)
+      return ['${_selectedFarmDoc['plantType']}'];
     final fromFarms = _farms
         .map((farm) => farm['plantType']?.toString() ?? '')
         .where((name) => name.isNotEmpty);
@@ -357,7 +382,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
 
   List<String> _varietyOptionsForPlant(String plantType) {
     final options = <String>{};
-    for (final crop in _cropVarieties) {
+    for (final crop in _assignedVarietyRecords(plantType)) {
       final variety = _value(crop, ['variety_name', 'variety', 'name']);
       if (variety.isNotEmpty &&
           cropMatchesPlant(crop,
@@ -369,6 +394,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
   }
 
   String _plantTypeIdForName(String plantType) {
+    if (plantType == _selectedFarmDoc['plantType'] &&
+        '${_selectedFarmDoc['plantTypeId'] ?? ''}'.isNotEmpty)
+      return '${_selectedFarmDoc['plantTypeId']}';
     return plantIdForName(_plantTypes, plantType);
   }
 
@@ -503,6 +531,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         'plant_type_ID': plantTypeId,
         'plant_name': _selectedPlantType!,
         'plant_variety': _selectedPlantVariety!,
+        'crop_variety_id': _selectedVarietyId(_selectedPlantVariety),
         'farm_manager_id': user?.id ?? '',
         'farm_manager_name': user?.name ?? 'Farm Manager',
         'caretaker_id': caretaker['id']?.toString() ?? '',
@@ -2513,7 +2542,12 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       context: context,
       api: _api,
       batch: batch,
-      cropVarieties: _cropVarieties,
+      cropVarieties: assignedFarmVarieties(
+          _farms.firstWhere((f) => f['id'] == batch.farmId,
+              orElse: () => <String, dynamic>{}),
+          _cropVarieties,
+          plantId: '${batch.metadata?['plant_type_ID'] ?? ''}',
+          plantName: batch.plantType),
       updatedBy: user?.name ?? _fallbackName,
       updatedByRole: _roleApiValue,
       onUpdated: _loadBatchData,

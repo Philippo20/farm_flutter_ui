@@ -1,3 +1,4 @@
+import '../utils/farm_varieties.dart';
 import '../utils/production_plan.dart';
 import '../utils/crop_relationships.dart';
 import 'growing_group_field.dart';
@@ -125,7 +126,8 @@ Future<bool?> showBatchCreationDialog({
       if (matching.isNotEmpty) precedingBatch = matching.first;
     } catch (_) {/* A saved plan still allows the current batch preview. */}
   }
-  for (final crop in catalogCrops) {
+  for (final crop in assignedFarmVarieties(farm, catalogCrops,
+      plantId: plantTypeId, plantName: plantName)) {
     if (!cropMatchesPlant(crop, plantId: plantTypeId, plantName: plantName))
       continue;
     final variety = '${crop['variety_name'] ?? ''}'.trim();
@@ -133,6 +135,11 @@ Future<bool?> showBatchCreationDialog({
       varietyOptions.add(variety);
       varietyRecords[_catalogKey(variety)] = crop;
     }
+  }
+  if (farmVarietyIds(farm).isNotEmpty && catalogCrops.isNotEmpty) {
+    varietyOptions
+        .removeWhere((name) => !varietyRecords.containsKey(_catalogKey(name)));
+    if (!varietyOptions.contains(selectedVariety)) selectedVariety = '';
   }
   if (caretakerId.isNotEmpty &&
       (caretakerName.isEmpty || caretakerName == caretakerId)) {
@@ -683,6 +690,8 @@ Future<bool?> showBatchCreationDialog({
                                               ? 'Plant'
                                               : plantName,
                                           'plant_variety': selectedVariety,
+                                          'crop_variety_id':
+                                              '${varietyRecords[_catalogKey(selectedVariety)]?[r'$id'] ?? varietyRecords[_catalogKey(selectedVariety)]?['id'] ?? ''}',
                                           'farm_manager_id': managerId,
                                           'farm_manager_name': managerName,
                                           'caretaker_id': caretakerId,

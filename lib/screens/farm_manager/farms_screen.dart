@@ -1,3 +1,4 @@
+import '../../core/utils/farm_varieties.dart';
 import '../../core/utils/farm_team_assignment.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
@@ -339,7 +340,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
         _sensors.where((sensor) => _matchesFarm(sensor, farm)).length;
     final crops = <String>{
       _value(farm, ['plant_type', 'plantType']),
-      _value(farm, ['plant_variety', 'plantVariety']),
+      farmVarietySummary(farm),
     }.where((crop) => crop.isNotEmpty).toList();
     final progress = activeBatches == 0
         ? 0.0

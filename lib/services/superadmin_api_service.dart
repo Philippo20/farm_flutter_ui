@@ -1666,6 +1666,8 @@ class SuperAdminApiService {
     String technicianId = 'Unassigned',
     required String plantType,
     required String plantVariety,
+    String? plantTypeId,
+    List<String>? cropVarietyIds,
     required String tierType,
     required String status,
   }) async {
@@ -1682,6 +1684,9 @@ class SuperAdminApiService {
         'technician_id': technicianId,
         'plant_type': plantType,
         'plant_variety': plantVariety,
+        if (plantTypeId != null) 'plant_type_ID': plantTypeId,
+        if (cropVarietyIds != null)
+          'crop_variety_ids': jsonEncode(cropVarietyIds),
         'tier_type': tierType,
         'status': status,
       },
@@ -1714,6 +1719,8 @@ class SuperAdminApiService {
     String technicianId = 'Unassigned',
     required String plantType,
     required String plantVariety,
+    String? plantTypeId,
+    List<String>? cropVarietyIds,
     required String tierType,
     required String status,
   }) async {
@@ -1730,6 +1737,9 @@ class SuperAdminApiService {
         'technician_id': technicianId,
         'plant_type': plantType,
         'plant_variety': plantVariety,
+        if (plantTypeId != null) 'plant_type_ID': plantTypeId,
+        if (cropVarietyIds != null)
+          'crop_variety_ids': jsonEncode(cropVarietyIds),
         'tier_type': tierType,
         'status': status,
       },

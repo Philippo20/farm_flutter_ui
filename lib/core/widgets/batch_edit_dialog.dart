@@ -253,6 +253,9 @@ class _BatchEditFormState extends State<_BatchEditForm> {
         id: widget.batch.id,
         data: {
           'plant_variety': _variety,
+          if (_variety != widget.batch.plantVariety)
+            'crop_variety_id':
+                '${widget.cropVarieties.where((c) => _key(c['variety_name'] ?? c['variety']) == _key(_variety)).firstOrNull?[r'$id'] ?? ''}',
           'start_date': DateFormat('yyyy-MM-dd').format(_startDate),
           'end_date': DateFormat('yyyy-MM-dd').format(_endDate),
           'total_seeds_nursed': int.parse(_nursedController.text.trim()),

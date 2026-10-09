@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../utils/farm_team_assignment.dart';
+import '../utils/farm_varieties.dart';
+import '../utils/crop_relationships.dart';
 import 'app_dialog.dart';
 import 'app_bottom_sheet.dart';
 
@@ -10,11 +12,12 @@ Future<bool?> showFarmFormModal(
   Map<String, dynamic>? farm,
   required Map<String, List<Map<String, dynamic>>> teamOptions,
   required List<String> plantTypes,
-  required List<String> Function(String) varietiesForPlant,
+  required List<Map<String, dynamic>> Function(String) varietiesForPlant,
   required Future<void> Function(Map<String, dynamic>) onSubmit,
   VoidCallback? onDelete,
 }) {
-  final mobile = MediaQuery.sizeOf(context).width < 600;
+  final mobile = MediaQuery.sizeOf(context).width < 600 ||
+      Theme.of(context).platform == TargetPlatform.android;
   final modal = _FarmFormModal(
       farm: farm,
       teamOptions: teamOptions,
@@ -55,7 +58,7 @@ class _FarmFormModal extends StatefulWidget {
   final Map<String, dynamic>? farm;
   final Map<String, List<Map<String, dynamic>>> teamOptions;
   final List<String> plantTypes;
-  final List<String> Function(String) varietiesForPlant;
+  final List<Map<String, dynamic>> Function(String) varietiesForPlant;
   final Future<void> Function(Map<String, dynamic>) onSubmit;
   final VoidCallback? onDelete;
   final bool mobile;
@@ -69,7 +72,8 @@ class _FarmFormModalState extends State<_FarmFormModal> {
   late final TextEditingController _name, _location;
   final _selected = <String, String>{};
   late final Set<String> _caretakers;
-  late String _plant, _variety, _tier, _status;
+  late final Set<String> _varieties;
+  late String _plant, _tier, _status;
   bool _saving = false;
   String? _error;
   bool get editing => widget.farm != null;
@@ -84,7 +88,15 @@ class _FarmFormModalState extends State<_FarmFormModal> {
     }
     _caretakers = farmCaretakerIds(farm).toSet();
     _plant = farm['plantType']?.toString() ?? '';
-    _variety = farm['plantVariety']?.toString() ?? '';
+    _varieties = farmVarietyIds(farm).toSet();
+    if (_varieties.isEmpty) {
+      final legacy = '${farm['plantVariety'] ?? farm['plant_variety'] ?? ''}';
+      final matches = widget
+          .varietiesForPlant(_plant)
+          .where((c) => plantNameKey(c['variety']) == plantNameKey(legacy))
+          .toList();
+      if (matches.length == 1) _varieties.add('${matches.single['id']}');
+    }
     _tier = farm['tier']?.toString() ?? 'Standard';
     _status = farm['status']?.toString() ?? 'Pending';
   }
@@ -190,7 +202,17 @@ class _FarmFormModalState extends State<_FarmFormModal> {
         'caretaker_ids': _caretakers.toList(),
         'caretakerID': _caretakers.isEmpty ? 'Unassigned' : _caretakers.first,
         'plantType': _plant,
-        'plantVariety': _variety,
+        'crop_variety_ids': _varieties.toList(),
+        'plant_varieties': _varieties
+            .map((id) => widget
+                .varietiesForPlant(_plant)
+                .firstWhere((c) => '${c['id']}' == id)['variety']
+                .toString())
+            .toList(),
+        'plantVariety': widget
+            .varietiesForPlant(_plant)
+            .firstWhere((c) => '${c['id']}' == _varieties.first)['variety']
+            .toString(),
         'tier': _tier,
         'status': _status
       });
@@ -218,8 +240,10 @@ class _FarmFormModalState extends State<_FarmFormModal> {
     for (final id in _caretakers) {
       options.putIfAbsent(id, () => 'Assigned caretaker ($id)');
     }
-    final varieties =
-        widget.varietiesForPlant(_plant).where((v) => v.isNotEmpty).toSet();
+    final varieties = {
+      for (final c in widget.varietiesForPlant(_plant))
+        '${c['id']}': '${c['variety']}'
+    };
     final body = Container(
         constraints: BoxConstraints(
             maxWidth: widget.mobile ? double.infinity : 500,
@@ -353,26 +377,100 @@ class _FarmFormModalState extends State<_FarmFormModal> {
                                                                 color: colors
                                                                     .error)),
                                                 ]))),
-                                pair(
-                                    select(
-                                        'Plant type',
-                                        _plant,
-                                        {
-                                          for (final p in widget.plantTypes)
-                                            p: p
-                                        },
-                                        Icons.eco_outlined, (v) {
-                                      _plant = v;
-                                      _variety = '';
-                                    }),
-                                    KeyedSubtree(
-                                        key: ValueKey(_plant),
-                                        child: select(
-                                            'Crop variety',
-                                            _variety,
-                                            {for (final v in varieties) v: v},
-                                            Icons.grass_outlined,
-                                            (v) => _variety = v))),
+                                select(
+                                    'Plant type',
+                                    _plant,
+                                    {for (final p in widget.plantTypes) p: p},
+                                    Icons.eco_outlined, (v) {
+                                  _plant = v;
+                                  _varieties.clear();
+                                }),
+                                label(
+                                    'Crop varieties',
+                                    FormField<List<String>>(
+                                      key: ValueKey('varieties:$_plant'),
+                                      initialValue: _varieties.toList(),
+                                      validator: (_) => _varieties.isEmpty
+                                          ? 'Select at least one crop variety.'
+                                          : _varieties.any((id) =>
+                                                  !varieties.containsKey(id))
+                                              ? 'Remove unavailable varieties and select valid varieties.'
+                                              : null,
+                                      builder: (field) => Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                              color: colors
+                                                  .surfaceContainerHighest
+                                                  .withValues(alpha: .3),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              border: Border.all(
+                                                  color: field.hasError
+                                                      ? colors.error
+                                                      : colors.outlineVariant)),
+                                          child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                    'Select all varieties grown on this farm · ${_varieties.length} selected',
+                                                    style: font(12).copyWith(
+                                                        color: colors
+                                                            .onSurfaceVariant)),
+                                                const SizedBox(height: 6),
+                                                for (final entry in {
+                                                  ...varieties,
+                                                  for (final id in _varieties)
+                                                    if (!varieties
+                                                        .containsKey(id))
+                                                      id: 'Unavailable variety — remove or select another'
+                                                }.entries)
+                                                  Material(
+                                                      color: Colors.transparent,
+                                                      child: CheckboxListTile(
+                                                          dense: true,
+                                                          contentPadding:
+                                                              EdgeInsets.zero,
+                                                          controlAffinity:
+                                                              ListTileControlAffinity
+                                                                  .leading,
+                                                          title: Text(
+                                                              entry.value,
+                                                              style: font(12)),
+                                                          value: _varieties
+                                                              .contains(
+                                                                  entry.key),
+                                                          onChanged: _saving
+                                                              ? null
+                                                              : (checked) {
+                                                                  setState(() {
+                                                                    if (checked ==
+                                                                        true) {
+                                                                      _varieties
+                                                                          .add(entry
+                                                                              .key);
+                                                                    } else {
+                                                                      _varieties
+                                                                          .remove(
+                                                                              entry.key);
+                                                                    }
+                                                                  });
+                                                                  field.didChange(
+                                                                      _varieties
+                                                                          .toList());
+                                                                })),
+                                                if (varieties.isEmpty)
+                                                  Text(
+                                                      _plant.isEmpty
+                                                          ? 'Select a plant type first.'
+                                                          : 'Link crop varieties to this plant type in Crop Varieties first.',
+                                                      style: font(12)),
+                                                if (field.hasError)
+                                                  Text(field.errorText!,
+                                                      style: font(11).copyWith(
+                                                          color: colors.error)),
+                                              ])),
+                                    )),
                                 pair(
                                     select(
                                         'Tier',

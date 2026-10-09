@@ -1,5 +1,6 @@
 import '../../core/utils/farm_team_assignment.dart';
 import '../../core/utils/crop_relationships.dart';
+import '../../core/utils/farm_varieties.dart';
 import '../../core/widgets/farm_form_modal.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'package:flutter/material.dart';
@@ -123,8 +124,15 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
       'technician': _userNameById(technicianId, fallback: technicianId),
       'technicianId': technicianId,
       'location': (doc['location'] ?? '-').toString(),
-      'plantType': (doc['plant_type'] ?? '').toString(),
+      'plantType': _plantTypes
+              .where((p) => p['id'] == doc['plant_type_ID'])
+              .firstOrNull?['name'] ??
+          (doc['plant_type'] ?? '').toString(),
       'plantVariety': (doc['plant_variety'] ?? '').toString(),
+      'plantTypeId': '${doc['plant_type_ID'] ?? ''}',
+      'crop_variety_ids': farmVarietyIds(doc),
+      'plant_varieties': doc['plant_varieties'] ?? [],
+      'plantVarietySummary': farmVarietySummary(doc, _cropVarieties),
       'tier': _tierLabel(doc['tier_type'] ?? doc['tierType'] ?? doc['tier']),
       'status': _statusLabel(doc['status']),
       'sensorApiKey': (doc['sensor_ingest_api_key'] ?? '').toString(),
@@ -1315,12 +1323,12 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                 const SizedBox(height: 8),
                 detail(
                     Icons.grass_outlined,
-                    [value('plantType'), value('plantVariety')]
+                    [value('plantType'), value('plantVarietySummary')]
                             .where((text) => text != 'Not available')
                             .join(' / ')
                             .isEmpty
                         ? 'Crop not available'
-                        : [value('plantType'), value('plantVariety')]
+                        : [value('plantType'), value('plantVarietySummary')]
                             .where((text) => text != 'Not available')
                             .join(' / ')),
                 const Divider(height: 28),
@@ -1477,6 +1485,9 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
       location: farm['location'].toString(),
       plantType: farm['plantType'].toString(),
       plantVariety: farm['plantVariety'].toString(),
+      plantTypeId: farm['plantTypeId']?.toString(),
+      cropVarietyIds:
+          farmVarietyIds(farm).isEmpty ? null : farmVarietyIds(farm),
       tier: farm['tier'].toString(),
       status: status,
       successMessage: '${farm['name']} ${status.toLowerCase()}',
@@ -1485,6 +1496,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
 
   Future<void> _saveFarm({
     String? id,
+    String? plantTypeId,
+    List<String>? cropVarietyIds,
     required String name,
     required String ownerID,
     required String caretakerID,
@@ -1501,7 +1514,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
         location.trim().isEmpty ||
         plantType.trim().isEmpty ||
         plantVariety.trim().isEmpty ||
-        !_isValidPlantSelection(plantType.trim(), plantVariety.trim())) {
+        ((cropVarietyIds == null || cropVarietyIds.isEmpty) &&
+            !_isValidPlantSelection(plantType.trim(), plantVariety.trim()))) {
       _showErrorSnack('Select a valid plant type and matching crop variety.');
       return;
     }
@@ -1532,6 +1546,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
       } else {
         await _api.updateFarm(
           id: id,
+          plantTypeId: plantTypeId,
+          cropVarietyIds: cropVarietyIds,
           name: name.trim(),
           location: location.trim(),
           ownerID: ownerID.trim().isEmpty ? 'Unassigned' : ownerID.trim(),
@@ -1605,8 +1621,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                               _buildDetailTile('Plant Type', farm['plantType'],
                                   Icons.eco_outlined, isDark),
                               _buildDetailTile(
-                                  'Crop Variety',
-                                  farm['plantVariety'],
+                                  'Crop Varieties',
+                                  farm['plantVarietySummary'],
                                   Icons.grass_outlined,
                                   isDark),
                               _buildDetailTile(
@@ -1648,8 +1664,11 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
                   children: [
                     _buildDetailTile('Plant Type', farm['plantType'],
                         Icons.eco_outlined, isDark),
-                    _buildDetailTile('Crop Variety', farm['plantVariety'],
-                        Icons.grass_outlined, isDark),
+                    _buildDetailTile(
+                        'Crop Varieties',
+                        farm['plantVarietySummary'],
+                        Icons.grass_outlined,
+                        isDark),
                     _buildDetailTile('Subscription Tier', farm['tier'],
                         Icons.workspace_premium_outlined, isDark),
                     _buildDetailTile('Created', farm['created'],
@@ -2418,14 +2437,15 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
         farm: farm,
         teamOptions: _farmTeamOptions(farm),
         plantTypes: _plantTypeOptions,
-        varietiesForPlant: _varietyOptionsForPlant,
+        varietiesForPlant: _matchingCropVarietiesForPlant,
         onDelete: farm == null
             ? null
             : () => _showDeleteFarmDialog(
                 context, farm, Theme.of(context).brightness == Brightness.dark),
         onSubmit: (values) async {
-      if (!_isValidPlantSelection(
-          values['plantType'], values['plantVariety'])) {
+      if ((values['crop_variety_ids'] as List).isEmpty ||
+          !(values['plant_varieties'] as List).every((name) =>
+              _isValidPlantSelection(values['plantType'], name.toString()))) {
         throw Exception('Select a valid plant type and matching crop variety.');
       }
       if (farm == null) {
@@ -2438,6 +2458,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
             farmManagerId: values['farmManagerId'],
             technicianId: values['technicianId'],
             plantType: values['plantType'],
+            plantTypeId: plantIdForName(_plantTypes, values['plantType']),
+            cropVarietyIds: (values['crop_variety_ids'] as List).cast<String>(),
             plantVariety: values['plantVariety'],
             tierType: _tierApiValue(values['tier']),
             status: values['status']);
@@ -2452,6 +2474,8 @@ class _FarmManagementScreenState extends ConsumerState<FarmManagementScreen> {
             farmManagerId: values['farmManagerId'],
             technicianId: values['technicianId'],
             plantType: values['plantType'],
+            plantTypeId: plantIdForName(_plantTypes, values['plantType']),
+            cropVarietyIds: (values['crop_variety_ids'] as List).cast<String>(),
             plantVariety: values['plantVariety'],
             tierType: _tierApiValue(values['tier']),
             status: values['status']);

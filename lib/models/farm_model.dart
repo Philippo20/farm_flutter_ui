@@ -1,3 +1,4 @@
+import '../core/utils/farm_varieties.dart';
 import '../core/utils/farm_team_assignment.dart';
 import 'enums.dart';
 
@@ -16,6 +17,10 @@ class FarmModel {
   final FarmStatus status;
   final PlantType plantType;
   final String plantVariety;
+  final String plantTypeId;
+  final List<String> cropVarietyIds, plantVarieties;
+  String get varietySummary =>
+      plantVarieties.isNotEmpty ? plantVarieties.join(', ') : plantVariety;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -32,9 +37,13 @@ class FarmModel {
     required this.status,
     required this.plantType,
     required this.plantVariety,
+    this.plantTypeId = '',
+    this.cropVarietyIds = const [],
+    this.plantVarieties = const [],
     required this.createdAt,
     this.updatedAt,
-  }) : caretakerIds = List.unmodifiable(caretakerIds ?? (caretakerId == null ? <String>[] : [caretakerId]));
+  }) : caretakerIds = List.unmodifiable(
+            caretakerIds ?? (caretakerId == null ? <String>[] : [caretakerId]));
 
   /// Create FarmModel from JSON
   factory FarmModel.fromJson(Map<String, dynamic> json) {
@@ -51,6 +60,10 @@ class FarmModel {
       status: FarmStatus.fromString(json['status'] as String),
       plantType: PlantType.fromString(json['plant_type'] as String),
       plantVariety: json['plant_variety'] as String,
+      plantTypeId: '${json['plant_type_ID'] ?? ''}',
+      cropVarietyIds: farmVarietyIds(json),
+      plantVarieties:
+          (json['plant_varieties'] as List? ?? []).whereType<String>().toList(),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
@@ -75,6 +88,9 @@ class FarmModel {
       'status': status.name,
       'plant_type': plantType.name,
       'plant_variety': plantVariety,
+      if (plantTypeId.isNotEmpty) 'plant_type_ID': plantTypeId,
+      if (cropVarietyIds.isNotEmpty) 'crop_variety_ids': cropVarietyIds,
+      if (plantVarieties.isNotEmpty) 'plant_varieties': plantVarieties,
       'created_at': createdAt.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
@@ -94,6 +110,9 @@ class FarmModel {
     FarmStatus? status,
     PlantType? plantType,
     String? plantVariety,
+    String? plantTypeId,
+    List<String>? cropVarietyIds,
+    List<String>? plantVarieties,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -110,6 +129,9 @@ class FarmModel {
       status: status ?? this.status,
       plantType: plantType ?? this.plantType,
       plantVariety: plantVariety ?? this.plantVariety,
+      plantTypeId: plantTypeId ?? this.plantTypeId,
+      cropVarietyIds: cropVarietyIds ?? this.cropVarietyIds,
+      plantVarieties: plantVarieties ?? this.plantVarieties,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

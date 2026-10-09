@@ -30,9 +30,10 @@ void main() {
         }),
         ['b']);
   });
-  for (final width in [320.0, 1200.0]) {
+  for (final width in [320.0, 800.0, 1200.0]) {
     for (final dark in [false, true]) {
-      testWidgets('Farm multi-select saves two caretakers at $width dark=$dark',
+      testWidgets(
+          'Farm saves two caretakers and varieties at $width dark=$dark',
           (tester) async {
         tester.view.physicalSize = Size(width, 850);
         tester.view.devicePixelRatio = 1;
@@ -42,12 +43,15 @@ void main() {
         Map<String, dynamic>? values;
         var count = 0;
         await tester.pumpWidget(MaterialApp(
-            theme: dark ? ThemeData.dark() : ThemeData.light(),
+            theme: (dark ? ThemeData.dark() : ThemeData.light()).copyWith(
+                platform: width == 1200
+                    ? TargetPlatform.windows
+                    : TargetPlatform.android),
             home: Scaffold(
                 body: Builder(
                     builder: (context) => TextButton(
                         onPressed: () => showFarmFormModal(context,
-                            farm: const {
+                            farm: {
                               'name': 'Farm 1',
                               'location': 'Accra',
                               'ownerID': 'o',
@@ -56,6 +60,7 @@ void main() {
                               'caretakerID': 'a',
                               'plantType': 'Lettuce',
                               'plantVariety': 'Green',
+                              if (dark) 'crop_variety_ids': ['green', 'red'],
                               'tier': 'Basic',
                               'status': 'Active'
                             },
@@ -75,7 +80,10 @@ void main() {
                               ]
                             },
                             plantTypes: const ['Lettuce'],
-                            varietiesForPlant: (_) => ['Green'],
+                            varietiesForPlant: (_) => [
+                                  {'id': 'green', 'variety': 'Green'},
+                                  {'id': 'red', 'variety': 'Red'}
+                                ],
                             onSubmit: (data) async {
                               count++;
                               values = data;
@@ -88,15 +96,24 @@ void main() {
         await tester.ensureVisible(second);
         await tester.tap(second);
         await tester.pumpAndSettle();
+        final red = find.widgetWithText(CheckboxListTile, 'Red');
+        expect(tester.widget<CheckboxListTile>(red).value, dark);
+        await tester.ensureVisible(red);
+        if (!dark) await tester.tap(red);
+        await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         await tester.tap(find.text('Save changes'));
         await tester.pump();
         expect(find.text('Saving...'), findsOneWidget);
         expect(values?['caretaker_ids'], ['a', 'b']);
+        expect(values?['crop_variety_ids'], ['green', 'red']);
+        expect(values?['plant_varieties'], ['Green', 'Red']);
+        expect(values?['plantVariety'], 'Green');
         expect(count, 1);
         submit.completeError(Exception('Unable to save assignment'));
         await tester.pumpAndSettle();
         expect(find.text('Unable to save assignment'), findsOneWidget);
+        expect(tester.widget<CheckboxListTile>(red).value, isTrue);
         expect(
             tester
                 .widget<CheckboxListTile>(
