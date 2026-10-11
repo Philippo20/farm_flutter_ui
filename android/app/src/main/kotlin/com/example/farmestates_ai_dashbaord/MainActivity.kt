@@ -4,10 +4,8 @@ import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.Manifest
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -49,9 +47,12 @@ class MainActivity: FlutterFragmentActivity() {
                     val recipient = call.argument<String>("recipientId") ?: ""
                     val prefs = getSharedPreferences("farm_push", MODE_PRIVATE)
                     if (prefs.getString("recipient", "") != recipient) {
-                        notifications.cancelAll()
-                        prefs.edit().putString("recipient", recipient).remove("delivered").apply()
+                        FarmNotifications.clear(this)
+                        NotificationReplyWorker.clear(this)
+                        prefs.edit().putString("recipient", recipient).remove("delivered")
+                            .putLong("generation", prefs.getLong("generation", 0) + 1).commit()
                     }
+                    prefs.edit().putString("apiBaseUrl", call.argument<String>("apiBaseUrl")).apply()
                     result.success(null)
                 }
                 "pushDelivered" -> result.success(FarmPushService.delivered(this).toList())
@@ -76,33 +77,16 @@ class MainActivity: FlutterFragmentActivity() {
                 "show" -> {
                     val peer = call.argument<String>("peerId") ?: ""
                     val recipient = call.argument<String>("recipientId") ?: ""
-                    if (Build.VERSION.SDK_INT < 33 ||
-                        checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
-                        val tap = Intent(this, MainActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                            action = "message:$recipient:$peer"
-                            putExtra("peerId", peer)
-                            putExtra("recipientId", recipient)
-                        }
-                        val pending = PendingIntent.getActivity(this, peer.hashCode(), tap,
-                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-                        val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, if (call.argument<Boolean>("silent") == true) "farm_updates_silent" else if (peer.startsWith("__inbox__:")) "farm_updates" else channelId)
-                                      else Notification.Builder(this)
-                        notifications.notify(peer, 0, builder
-                            .setSmallIcon(R.drawable.ic_message_notification)
-                            .setContentTitle(call.argument<String>("title"))
-                            .setContentText(call.argument<String>("body"))
-                            .setCategory(if (peer.startsWith("__inbox__:")) Notification.CATEGORY_EVENT else Notification.CATEGORY_MESSAGE)
-                            .setVisibility(Notification.VISIBILITY_PRIVATE)
-                            .setAutoCancel(true).setContentIntent(pending).build())
-                        result.success(true)
-                    } else { result.success(false) }
+                    result.success(FarmNotifications.show(this, recipient, peer,
+                        call.argument<String>("title") ?: "Farm Estates", call.argument<String>("body") ?: "",
+                        call.argument<String>("messageId") ?: "", call.argument<Number>("timestamp")?.toLong() ?: System.currentTimeMillis(),
+                        call.argument<Boolean>("silent") == true))
                 }
                 "dismiss" -> {
-                    notifications.cancel(call.argument<String>("peerId"), 0)
+                    call.argument<String>("peerId")?.let { FarmNotifications.clear(this, it) }
                     result.success(null)
                 }
-                "clear" -> { notifications.cancelAll(); result.success(null) }
+                "clear" -> { FarmNotifications.clear(this); result.success(null) }
                 else -> result.notImplemented()
             }
         }

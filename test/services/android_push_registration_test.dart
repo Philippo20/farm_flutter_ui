@@ -45,7 +45,9 @@ void main() {
     expect(await push.delivered(), {'message:m1', 'n1'});
     push.bind(null);
     await Future<void>.delayed(Duration.zero);
-    expect(native.last.arguments, {'recipientId': ''});
+    expect(native.last.arguments['recipientId'], '');
+    expect(native.last.arguments['apiBaseUrl'], startsWith('https://'));
+    expect(native.last.arguments.containsKey('jwt'), isFalse);
     expect(calls.last.method, 'DELETE');
     push.dispose();
   });

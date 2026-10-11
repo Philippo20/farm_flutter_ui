@@ -38,6 +38,7 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+    testOptions { unitTests.includeAndroidResources = true }
 }
 
 flutter {
@@ -46,6 +47,10 @@ flutter {
 
 dependencies {
     implementation "androidx.biometric:biometric:1.1.0"
+    implementation "androidx.work:work-runtime:2.10.1"
     implementation platform("com.google.firebase:firebase-bom:34.19.0")
     implementation "com.google.firebase:firebase-messaging"
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "org.robolectric:robolectric:4.14.1"
+    testImplementation "androidx.work:work-testing:2.10.1"
 }

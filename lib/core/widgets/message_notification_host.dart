@@ -10,6 +10,7 @@ import '../../services/local_alerts.dart';
 import '../../services/android_push_registration.dart';
 import 'notification_center.dart';
 import '../models/notification/notification_model.dart';
+import '../models/notification/notification_destination.dart';
 import '../providers/notification_provider.dart';
 
 final messageNavigatorKey = GlobalKey<NavigatorState>();
@@ -52,22 +53,54 @@ class _MessageNotificationHostState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _push.bind(null);
     if (_isAndroid) {
       _android.setMethodCallHandler((call) async {
         if (call.method == 'openMessage' && mounted) {
           final data = Map<String, dynamic>.from(call.arguments as Map);
-          if (data['recipientId'] == _user) _open(data['peerId'] as String);
+          if (data['recipientId'] == _user && data['peerId'] is String) {
+            _open(data['peerId'] as String);
+          }
         }
       });
     }
   }
 
-  void _open(String peer) {
+  Future<void> _open(String peer) async {
     if (_user == null) return;
+    final session = _session;
+    final user = _user!;
+    await _local.dismiss(peer);
+    if (!mounted || session != _session) return;
     if (peer.startsWith('__inbox__:')) {
+      final id = peer.substring('__inbox__:'.length);
+      try {
+        if (widget.refreshInbox != null) {
+          await widget.refreshInbox!(user);
+        } else {
+          await ref
+              .read(notificationProvider.notifier)
+              .refreshFromBackend(recipientId: user);
+        }
+      } catch (_) {/* Retain the cached full notification when offline. */}
+      if (!mounted || session != _session) return;
+      final item = ref
+          .read(notificationProvider)
+          .where((item) => item.id == id)
+          .firstOrNull;
+      final viewer = ref.read(notificationViewerProvider);
+      final destination =
+          item == null ? null : notificationDestination(item, viewer?.role);
+      if (item != null && destination != null) {
+        ref
+            .read(notificationProvider.notifier)
+            .markAsRead(id, recipientId: user);
+        messageNavigatorKey.currentState?.pushNamed(destination.route);
+        return;
+      }
       final context = messageNavigatorKey.currentState?.overlay?.context;
-      if (context != null) showNotificationDialog(context);
+      if (context != null && context.mounted) {
+        showNotificationDialog(context, initialNotificationId: id);
+      }
       return;
     }
     messageNavigatorKey.currentState?.push(MaterialPageRoute<void>(
@@ -201,14 +234,18 @@ class _MessageNotificationHostState
       if (mounted && session == _session) _open(id);
     }
 
-    // Keep private farm, financial and message content out of lock-screen previews.
+    // Android uses rich message previews; the OS controls lock-screen visibility.
     final delivered = await _local.show(
         id: id,
         user: _user!,
-        title: item.type == NotificationType.message
+        title: !_isAndroid && item.type == NotificationType.message
             ? 'New team message'
             : item.title,
-        body: 'Open Farm Estates to view the notification.',
+        body: _isAndroid
+            ? item.message
+            : 'Open Farm Estates to view the notification.',
+        messageId: item.metadata?['messageId'] as String?,
+        createdAt: item.createdAt,
         silent: item.metadata?['silent'] == true,
         onTap: open);
     if (!mounted || session != _session) {

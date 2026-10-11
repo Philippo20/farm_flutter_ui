@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <exclude domain="sharedpref" path="biometric_signin.xml" />
+    <exclude domain="sharedpref" path="farm_push.xml" />
+    <exclude domain="sharedpref" path="farm_notifications.xml" />
+    <exclude domain="sharedpref" path="notification_replies.xml" />
 </full-backup-content>

@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
-    <cloud-backup><exclude domain="sharedpref" path="biometric_signin.xml" /></cloud-backup>
-    <device-transfer><exclude domain="sharedpref" path="biometric_signin.xml" /></device-transfer>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="biometric_signin.xml" />
+        <exclude domain="sharedpref" path="farm_push.xml" />
+        <exclude domain="sharedpref" path="farm_notifications.xml" />
+        <exclude domain="sharedpref" path="notification_replies.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="biometric_signin.xml" />
+        <exclude domain="sharedpref" path="farm_push.xml" />
+        <exclude domain="sharedpref" path="farm_notifications.xml" />
+        <exclude domain="sharedpref" path="notification_replies.xml" />
+    </device-transfer>
 </data-extraction-rules>

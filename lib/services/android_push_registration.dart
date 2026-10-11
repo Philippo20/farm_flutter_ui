@@ -29,8 +29,10 @@ class AndroidPushRegistration {
     _generation++;
     _lastRegistration = null;
     // Suppress deliveries for the previous user immediately, even while offline.
-    unawaited(channel.invokeMethod(
-        'pushRecipient', {'recipientId': user ?? ''}).catchError((_) {}));
+    unawaited(channel.invokeMethod('pushRecipient', {
+      'recipientId': user ?? '',
+      'apiBaseUrl': SuperAdminApiService.baseUrl,
+    }).catchError((_) {}));
     if (user == null && _token != null && _registeredJwt != null) {
       final token = _token!;
       final jwt = _registeredJwt!;

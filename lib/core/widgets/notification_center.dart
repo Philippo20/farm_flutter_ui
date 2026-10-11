@@ -17,17 +17,18 @@ import 'app_dialog.dart';
 final notificationViewerProvider =
     Provider<UserModel?>((ref) => ref.watch(authProvider).user);
 
-Future<void> showNotificationDialog(BuildContext context) async {
+Future<void> showNotificationDialog(BuildContext context,
+    {String? initialNotificationId}) async {
   final navigator = Navigator.of(context, rootNavigator: true);
   final container = ProviderScope.containerOf(context, listen: false);
   final viewer = container.read(notificationViewerProvider);
   final destination = await showAppDialog<NotificationDestination>(
     context: context,
-    builder: (_) => const AppDialog(
+    builder: (_) => AppDialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
-      insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      child: NotificationDialog(),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: NotificationDialog(initialNotificationId: initialNotificationId),
     ),
   );
   if (!navigator.mounted || destination == null || viewer == null) return;
@@ -61,8 +62,10 @@ class NotificationCenter extends ConsumerWidget {
 }
 
 class NotificationDialog extends ConsumerStatefulWidget {
-  const NotificationDialog({super.key, this.loadOnOpen = true});
+  const NotificationDialog(
+      {super.key, this.loadOnOpen = true, this.initialNotificationId});
   final bool loadOnOpen;
+  final String? initialNotificationId;
   @override
   ConsumerState<NotificationDialog> createState() => _NotificationDialogState();
 }
@@ -76,7 +79,15 @@ class _NotificationDialogState extends ConsumerState<NotificationDialog> {
   @override
   void initState() {
     super.initState();
-    if (widget.loadOnOpen) Future.microtask(_refresh);
+    Future.microtask(() async {
+      if (widget.loadOnOpen) await _refresh();
+      if (!mounted || widget.initialNotificationId == null) return;
+      final item = ref
+          .read(notificationProvider)
+          .where((item) => item.id == widget.initialNotificationId)
+          .firstOrNull;
+      if (item != null) _preview(item);
+    });
   }
 
   @override

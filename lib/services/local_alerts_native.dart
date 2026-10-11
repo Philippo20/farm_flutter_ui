@@ -38,6 +38,8 @@ class LocalAlerts {
       required String title,
       required String body,
       required VoidCallback onTap,
+      String? messageId,
+      DateTime? createdAt,
       bool silent = false}) async {
     try {
       if (_android) {
@@ -47,6 +49,8 @@ class LocalAlerts {
               'title': title,
               'body': body,
               'silent': silent,
+              'messageId': messageId,
+              'timestamp': createdAt?.millisecondsSinceEpoch,
             }) ??
             false;
       }

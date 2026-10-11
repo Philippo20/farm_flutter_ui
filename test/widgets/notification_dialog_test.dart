@@ -181,4 +181,37 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('An Android notification tap opens the exact full message',
+      (tester) async {
+    final container = ProviderContainer(overrides: [
+      notificationViewerProvider.overrideWith((ref) => null),
+      notificationProvider.overrideWith((ref) => OfflineInbox([
+            notice('system',
+                message: 'Complete notification text from the backend.'),
+            notice('other', message: 'A different alert.'),
+          ])),
+    ]);
+    addTearDown(container.dispose);
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
+      child: const MaterialApp(
+          home: Scaffold(
+              body: NotificationDialog(
+        loadOnOpen: false,
+        initialNotificationId: 'system',
+      ))),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Notification details'), findsOneWidget);
+    expect(
+        tester
+            .widget<SelectableText>(
+                find.byKey(const ValueKey('full-notification-message')))
+            .data,
+        'Complete notification text from the backend.');
+    expect(container.read(notificationProvider).first.isRead, isTrue);
+    expect(container.read(notificationProvider).last.isRead, isFalse);
+    expect(tester.takeException(), isNull);
+  });
 }

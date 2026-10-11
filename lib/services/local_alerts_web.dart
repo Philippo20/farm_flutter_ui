@@ -31,6 +31,8 @@ class LocalAlerts {
       required String title,
       required String body,
       required VoidCallback onTap,
+      String? messageId,
+      DateTime? createdAt,
       bool silent = false}) async {
     try {
       if (_BrowserNotification.permission.toDart != 'granted') return false;

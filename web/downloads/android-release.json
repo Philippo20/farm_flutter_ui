@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 19,
+  "buildNumber": 20,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "0ccbdcec21112973c8c1820e403872786062a4f5159c83331317551a7521f0d0",
-  "sizeBytes": 83474948,
-  "publishedAt": "2026-10-11T15:21:35.8638294Z",
-  "releaseNotes": "Fingerprint sign-in opens automatically for enrolled users. Login hides biometric setup and saved account details, with password fallback and manual retry available."
+  "sha256": "f2f9270bdbb87e1b9c90bc37e9a0bf676e1ae9896165a86d0fd214c5af73f5ea",
+  "sizeBytes": 83628237,
+  "publishedAt": "2026-10-11T16:15:52.7562492Z",
+  "releaseNotes": "Android notifications show sender names and actual messages, with expandable history and direct Reply without opening the app. Replies show sending and retry states; notification taps open the relevant conversation, screen or full alert."
 }
