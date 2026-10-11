@@ -22,7 +22,9 @@ Future<bool?> showBatchEditDialog({
   required String updatedByRole,
   required Future<void> Function() onUpdated,
 }) {
-  final isMobile = MediaQuery.sizeOf(context).width < 600;
+  final isMobile = MediaQuery.sizeOf(context).width < 600 ||
+      Theme.of(context).platform == TargetPlatform.android ||
+      Theme.of(context).platform == TargetPlatform.iOS;
   final editor = _BatchEditForm(
     api: api,
     batch: batch,
@@ -35,10 +37,20 @@ Future<bool?> showBatchEditDialog({
     return showAppBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => FractionallySizedBox(
-        heightFactor: 0.94,
-        child: editor,
+      builder: (sheetContext) => AnimatedPadding(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        // Resize the entire editor, including its fixed footer, above the
+        // keyboard so focused fields scroll within the remaining space.
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
+        child: FractionallySizedBox(
+          heightFactor: 0.94,
+          child: editor,
+        ),
       ),
     );
   }
@@ -351,7 +363,9 @@ class _BatchEditFormState extends State<_BatchEditForm> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    final isMobile = MediaQuery.sizeOf(context).width < 600 ||
+        Theme.of(context).platform == TargetPlatform.android ||
+        Theme.of(context).platform == TargetPlatform.iOS;
     final surface = isDark ? AppColors.surfaceDark : Colors.white;
     return Material(
       color: surface,
@@ -421,6 +435,8 @@ class _BatchEditFormState extends State<_BatchEditForm> {
           ),
           Expanded(
             child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               padding: const EdgeInsets.all(20),
               child: Form(
                 key: _formKey,

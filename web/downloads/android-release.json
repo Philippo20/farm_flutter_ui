@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 14,
+  "buildNumber": 15,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "321145dbb235e412fc618db21d098e3948794b7a75c860f46347f23d74b4bdde",
+  "sha256": "f18df0a60d3bf52332d225c20418b1e7a5dfe2918cb30143155fb1c7645c1b5a",
   "sizeBytes": 83079493,
-  "publishedAt": "2026-10-09T13:06:20.8834740Z",
-  "releaseNotes": "Personal font sizes with live previews and account sync; persistent technician maintenance warnings with quick access to due work."
+  "publishedAt": "2026-10-11T09:01:55.9017650Z",
+  "releaseNotes": "Batch editing: notes and technical issues stay visible above the Android keyboard, with accessible Save and Cancel buttons."
 }
