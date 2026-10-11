@@ -121,6 +121,18 @@ class AdminDrawer extends StatelessWidget {
         label: 'Packaging',
         route: '/admin/packaging',
       ),
+      _NavItem(
+        icon: Icons.build_outlined,
+        activeIcon: Icons.build_rounded,
+        label: 'Maintenance',
+        route: '/admin/maintenance',
+      ),
+      _NavItem(
+        icon: Icons.history_outlined,
+        activeIcon: Icons.history_rounded,
+        label: 'Repair History',
+        route: '/admin/repair-history',
+      ),
     ];
     int indexFor(_NavItem item) => const [
           '/dashboard',
@@ -135,10 +147,13 @@ class AdminDrawer extends StatelessWidget {
           '/batches-admin',
           '/traceability-admin',
           '/admin/packaging',
+          '/admin/maintenance',
+          '/admin/repair-history',
         ].indexOf(item.route);
 
     return Drawer(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       child: SafeArea(
         child: Column(
           children: [
@@ -228,8 +243,9 @@ class AdminDrawer extends StatelessWidget {
                         color: selected
                             ? AppColors.primary
                             : (isDark ? Colors.white : AppColors.textPrimary),
-                        fontWeight:
-                            selected ? AppTypography.headingWeight : AppTypography.labelWeight,
+                        fontWeight: selected
+                            ? AppTypography.headingWeight
+                            : AppTypography.labelWeight,
                       ),
                     ),
                     selected: selected,
@@ -460,6 +476,18 @@ class AdminMobileBottomNav extends StatelessWidget {
       label: 'Packaging',
       route: '/admin/packaging',
     ),
+    _NavItem(
+      icon: Icons.build_outlined,
+      activeIcon: Icons.build_rounded,
+      label: 'Maintenance',
+      route: '/admin/maintenance',
+    ),
+    _NavItem(
+      icon: Icons.history_outlined,
+      activeIcon: Icons.history_rounded,
+      label: 'Repair History',
+      route: '/admin/repair-history',
+    ),
   ];
 
   static const _defaultDynamicItem = _NavItem(
@@ -591,6 +619,18 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
       label: 'Packaging',
       route: '/admin/packaging',
     ),
+    _NavItem(
+      icon: Icons.build_outlined,
+      activeIcon: Icons.build_rounded,
+      label: 'Maintenance',
+      route: '/admin/maintenance',
+    ),
+    _NavItem(
+      icon: Icons.history_outlined,
+      activeIcon: Icons.history_rounded,
+      label: 'Repair History',
+      route: '/admin/repair-history',
+    ),
   ];
 
   @override
@@ -642,7 +682,8 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
         return Container(
           width: _widthAnimation.value,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+            color:
+                isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

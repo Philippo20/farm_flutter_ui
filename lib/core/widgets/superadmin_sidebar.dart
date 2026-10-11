@@ -135,6 +135,18 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
       label: 'Traceability',
       route: '/superadmin/traceability',
     ),
+    _NavItem(
+      icon: Icons.build_outlined,
+      activeIcon: Icons.build_rounded,
+      label: 'Maintenance',
+      route: '/superadmin/maintenance',
+    ),
+    _NavItem(
+      icon: Icons.history_outlined,
+      activeIcon: Icons.history_rounded,
+      label: 'Repair History',
+      route: '/superadmin/repair-history',
+    ),
   ];
 
   @override
@@ -187,7 +199,8 @@ class _SuperAdminSidebarState extends State<SuperAdminSidebar>
         return Container(
           width: _widthAnimation.value,
           decoration: BoxDecoration(
-            color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+            color:
+                isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -832,6 +845,18 @@ class SuperAdminDrawer extends StatelessWidget {
           label: 'Traceability',
           route: '/superadmin/traceability',
         ),
+        _NavItem(
+          icon: Icons.build_outlined,
+          activeIcon: Icons.build_rounded,
+          label: 'Maintenance',
+          route: '/superadmin/maintenance',
+        ),
+        _NavItem(
+          icon: Icons.history_outlined,
+          activeIcon: Icons.history_rounded,
+          label: 'Repair History',
+          route: '/superadmin/repair-history',
+        ),
       ];
 
   @override
@@ -839,7 +864,8 @@ class SuperAdminDrawer extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Drawer(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       child: SafeArea(
         child: Column(
           children: [
@@ -974,7 +1000,9 @@ class SuperAdminDrawer extends StatelessWidget {
         item.label,
         style: AppTypography.bodyMedium.copyWith(
           fontSize: AppTypography.cardTitleSize,
-          fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.labelWeight,
+          fontWeight: isSelected
+              ? AppTypography.headingWeight
+              : AppTypography.labelWeight,
           color: isSelected
               ? AppColors.primary
               : (isDark ? Colors.white : AppColors.textPrimary),
@@ -1250,6 +1278,18 @@ class SuperAdminMobileBottomNav extends StatelessWidget {
       label: 'Traceability',
       route: '/superadmin/traceability',
     ),
+    _NavItem(
+      icon: Icons.build_outlined,
+      activeIcon: Icons.build_rounded,
+      label: 'Maintenance',
+      route: '/superadmin/maintenance',
+    ),
+    _NavItem(
+      icon: Icons.history_outlined,
+      activeIcon: Icons.history_rounded,
+      label: 'Repair History',
+      route: '/superadmin/repair-history',
+    ),
   ];
 
   static const _defaultDynamicItem = _NavItem(
@@ -1283,6 +1323,8 @@ class SuperAdminMobileBottomNav extends StatelessWidget {
       '/superadmin/analytics',
       '/superadmin/batches',
       '/superadmin/traceability',
+      '/superadmin/maintenance',
+      '/superadmin/repair-history',
     ];
     return routes.indexOf(route);
   }

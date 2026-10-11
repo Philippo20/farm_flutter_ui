@@ -1,4 +1,5 @@
 import '../../services/device_maintenance_api.dart';
+import '../../core/widgets/admin_maintenance_shell.dart';
 import 'dart:async';
 import 'package:intl/intl.dart';
 import '../../services/superadmin_api_service.dart';
@@ -14,7 +15,15 @@ import '../../core/widgets/role_mobile_navigation.dart';
 import '../../providers/auth_provider.dart';
 
 class RepairHistoryScreen extends ConsumerStatefulWidget {
-  const RepairHistoryScreen({super.key, this.loadRecords});
+  const RepairHistoryScreen(
+      {super.key,
+      this.loadRecords,
+      this.access = MaintenanceAccess.technician,
+      this.api,
+      this.deviceApi});
+  final MaintenanceAccess access;
+  final SuperAdminApiService? api;
+  final DeviceMaintenanceApi? deviceApi;
   final Future<List<Map<String, dynamic>>> Function()? loadRecords;
 
   @override
@@ -27,7 +36,7 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String _selectedFilter = 'All';
 
-  final _api = SuperAdminApiService();
+  late final _api = widget.api ?? SuperAdminApiService();
   List<Map<String, dynamic>> _repairs = [];
   bool _loading = true, _fetching = false;
   String? _error;
@@ -78,9 +87,11 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _loadCombinedHistory(String userId) async {
-    final api = DeviceMaintenanceApi();
+    final api = widget.deviceApi ?? DeviceMaintenanceApi();
     try {
-      final tasks = await _api.getTechnicianRepairHistory(userId);
+      final tasks = widget.access == MaintenanceAccess.technician
+          ? await _api.getTechnicianRepairHistory(userId)
+          : await _api.getRepairHistory();
       final devices = await api.overview();
       return [
         ...tasks,
@@ -104,7 +115,7 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                 })
       ];
     } finally {
-      api.dispose();
+      if (widget.deviceApi == null) api.dispose();
     }
   }
 
@@ -131,6 +142,18 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isMobile = MediaQuery.of(context).size.width < 600;
+    if (widget.access != MaintenanceAccess.technician) {
+      final mobile = MediaQuery.sizeOf(context).width < 768;
+      return AdminMaintenanceShell(
+        access: widget.access,
+        history: true,
+        child: SingleChildScrollView(
+          padding:
+              EdgeInsets.fromLTRB(mobile ? 16 : 24, 16, mobile ? 16 : 24, 16),
+          child: _buildContent(isDark, mobile),
+        ),
+      );
+    }
     final authState = ref.watch(authProvider);
     final userName = authState.user?.name ?? 'Technician';
     final userEmail = authState.user?.email ?? 'technician@farmestates.com';
@@ -240,7 +263,10 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                   fontWeight: AppTypography.headingWeight,
                   color: foreground)),
           const SizedBox(height: 4),
-          Text('Maintenance tasks assigned to you',
+          Text(
+              widget.access == MaintenanceAccess.technician
+                  ? 'Maintenance tasks assigned to you'
+                  : 'Maintenance and repair records across all farms',
               style: TextStyle(
                   fontSize: AppTypography.captionSize, color: secondary)),
         ])),
@@ -361,7 +387,9 @@ class _RepairHistoryScreenState extends ConsumerState<RepairHistoryScreen> {
                 const SizedBox(height: 6),
                 Text(
                     _repairs.isEmpty
-                        ? 'Assigned maintenance tasks will appear here when recorded.'
+                        ? widget.access == MaintenanceAccess.technician
+                            ? 'Assigned maintenance tasks will appear here when recorded.'
+                            : 'Farm repairs and completed device maintenance will appear here when recorded.'
                         : 'Try another search or status.',
                     textAlign: TextAlign.center,
                     style: TextStyle(

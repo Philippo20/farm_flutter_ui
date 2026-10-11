@@ -22,14 +22,16 @@ NotificationDestination? notificationDestination(
   final source = item.metadata?['sourceType']?.toString() ?? item.type.value;
   final routes = switch (source) {
     'task' => {
+        UserRole.superAdmin: ('View maintenance', '/superadmin/maintenance'),
+        UserRole.admin: ('View maintenance', '/admin/maintenance'),
         UserRole.caretaker: ('View calendar', '/calendar'),
         UserRole.farmManager: ('View farm tasks', '/farm-manager/farms'),
         UserRole.technician: ('View maintenance', '/maintenance-schedule'),
       },
     'maintenance' => {
         UserRole.technician: ('View maintenance', '/maintenance-schedule'),
-        UserRole.superAdmin: ('View devices', '/superadmin/sensors'),
-        UserRole.admin: ('View devices', '/sensors'),
+        UserRole.superAdmin: ('View maintenance', '/superadmin/maintenance'),
+        UserRole.admin: ('View maintenance', '/admin/maintenance'),
       },
     'batch' || 'harvest' => {
         UserRole.superAdmin: ('View batches', '/superadmin/batches'),

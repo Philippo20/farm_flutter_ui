@@ -1,4 +1,5 @@
 import '../../services/device_maintenance_api.dart';
+import '../../core/widgets/admin_maintenance_shell.dart';
 import '../../core/widgets/device_maintenance_panel.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'dart:async';
@@ -20,7 +21,12 @@ import '../../services/superadmin_api_service.dart';
 /// Maintenance Schedule Screen
 /// View and manage maintenance schedules and technical issues
 class MaintenanceScheduleScreen extends ConsumerStatefulWidget {
-  const MaintenanceScheduleScreen({super.key, this.loadData, this.deviceApi});
+  const MaintenanceScheduleScreen(
+      {super.key,
+      this.loadData,
+      this.deviceApi,
+      this.access = MaintenanceAccess.technician});
+  final MaintenanceAccess access;
   final DeviceMaintenanceApi? deviceApi;
   final Future<List<List<Map<String, dynamic>>>> Function()? loadData;
 
@@ -68,7 +74,9 @@ class _MaintenanceScheduleScreenState
     try {
       final results = await (widget.loadData?.call() ??
           Future.wait([
-            _api.getFarmTasks(),
+            widget.access == MaintenanceAccess.technician
+                ? _api.getFarmTasks()
+                : _api.getRepairHistory(),
             _api.getAlerts(),
           ]));
       if (!mounted) return;
@@ -77,6 +85,7 @@ class _MaintenanceScheduleScreenState
           user?.farmId == null ? <String>{} : {user!.farmId!};
       setState(() {
         _tasks = results[0].where((task) {
+          if (widget.access != MaintenanceAccess.technician) return true;
           final assignedTo = _value(task, ['assigned_to_id', 'technician_id']);
           final farmId = _value(task, ['farm_id', 'farmId', 'farmID']);
           final assignedToUser = assignedTo.isEmpty || assignedTo == user?.id;
@@ -86,6 +95,7 @@ class _MaintenanceScheduleScreenState
           return assignedToUser && assignedFarm;
         }).toList();
         _alerts = results[1].where((alert) {
+          if (widget.access != MaintenanceAccess.technician) return true;
           final farmId = _value(alert, ['farm_id', 'farmId', 'farmID']);
           return assignedFarmIds.isEmpty ||
               farmId.isEmpty ||
@@ -118,6 +128,25 @@ class _MaintenanceScheduleScreenState
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
+    if (widget.access != MaintenanceAccess.technician) {
+      return AdminMaintenanceShell(
+        access: widget.access,
+        history: false,
+        child: Column(children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(
+                isMobile ? 16 : 24, 8, isMobile ? 16 : 24, 0),
+            child: _buildTabShell(isDark, isMobile),
+          ),
+          Expanded(
+              child: TabBarView(controller: _tabController, children: [
+            DeviceMaintenancePanel(key: _devicePanelKey, api: widget.deviceApi),
+            _buildMaintenanceTab(isDark),
+            _buildIssuesTab(isDark),
+          ])),
+        ]),
+      );
+    }
     final authState = ref.watch(authProvider);
     final userName = authState.user?.name ?? 'Technician';
     final userEmail = authState.user?.email ?? 'technician@farmestates.com';

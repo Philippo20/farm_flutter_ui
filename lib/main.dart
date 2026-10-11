@@ -1,3 +1,4 @@
+import 'core/widgets/admin_maintenance_shell.dart';
 import 'core/widgets/maintenance_reminder_host.dart';
 import 'core/widgets/personal_typography_host.dart';
 import 'screens/auth/role_selection_screen.dart';
@@ -154,7 +155,8 @@ class _MyAppState extends ConsumerState<MyApp> {
             isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
         final iconBrightness = isDark ? Brightness.light : Brightness.dark;
 
-        return PersonalTypographyHost(child: AnnotatedRegion<SystemUiOverlayStyle>(
+        return PersonalTypographyHost(
+            child: AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle(
             statusBarColor: background,
             statusBarIconBrightness: iconBrightness,
@@ -166,13 +168,14 @@ class _MyAppState extends ConsumerState<MyApp> {
             systemNavigationBarContrastEnforced: false,
           ),
           child: AndroidUpdateHost(
-            navigatorKey: messageNavigatorKey,
-            child: SessionSecurityHost(
-              isPasswordRecovery: () => _routeObserver.isPasswordRecovery,
-              child: MessageNotificationHost(
-                  child: ApiConnectionHost(
-                      child: MaintenanceReminderHost(navigatorKey: messageNavigatorKey,
-                          child: child ?? const SizedBox.shrink()))))),
+              navigatorKey: messageNavigatorKey,
+              child: SessionSecurityHost(
+                  isPasswordRecovery: () => _routeObserver.isPasswordRecovery,
+                  child: MessageNotificationHost(
+                      child: ApiConnectionHost(
+                          child: MaintenanceReminderHost(
+                              navigatorKey: messageNavigatorKey,
+                              child: child ?? const SizedBox.shrink()))))),
         ));
       },
       onGenerateRoute: (settings) {
@@ -238,6 +241,11 @@ class _MyAppState extends ConsumerState<MyApp> {
         '/superadmin/traceability': (context) =>
             const TraceabilityConsoleScreen(isSuperAdmin: true),
 
+        '/superadmin/maintenance': (context) => const MaintenanceScheduleScreen(
+            access: MaintenanceAccess.superAdmin),
+        '/superadmin/repair-history': (context) =>
+            const RepairHistoryScreen(access: MaintenanceAccess.superAdmin),
+
         // Admin
         '/dashboard': (context) => const RedesignedAdminDashboard(),
         '/users': (context) => const ModernUsersScreen(),
@@ -257,6 +265,11 @@ class _MyAppState extends ConsumerState<MyApp> {
             ),
         '/traceability-admin': (context) =>
             const TraceabilityConsoleScreen(isSuperAdmin: false),
+
+        '/admin/maintenance': (context) =>
+            const MaintenanceScheduleScreen(access: MaintenanceAccess.admin),
+        '/admin/repair-history': (context) =>
+            const RepairHistoryScreen(access: MaintenanceAccess.admin),
 
         // Farm Manager (NEW - REDESIGNED)
         '/farm-manager': (context) => const FarmManagerDashboardRedesigned(),

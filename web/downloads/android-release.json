@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 15,
+  "buildNumber": 16,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "f18df0a60d3bf52332d225c20418b1e7a5dfe2918cb30143155fb1c7645c1b5a",
-  "sizeBytes": 83079493,
-  "publishedAt": "2026-10-11T09:01:55.9017650Z",
-  "releaseNotes": "Batch editing: notes and technical issues stay visible above the Android keyboard, with accessible Save and Cancel buttons."
+  "sha256": "9f9611c6ffc730e4bfcc45012a648b8f4318dd42ff4db9eaee10e92c53abb040",
+  "sizeBytes": 83095877,
+  "publishedAt": "2026-10-11T09:21:46.5573002Z",
+  "releaseNotes": "Admin and Super Admin now have Maintenance and Repair History on mobile and desktop, with all-farm tasks, device schedules and completed work records."
 }

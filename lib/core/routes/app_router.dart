@@ -1,3 +1,5 @@
+import '../../screens/technician/repair_history_screen.dart';
+import '../widgets/admin_maintenance_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -120,6 +122,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'admin-dashboard',
         builder: (context, state) => const ModernAdminDashboardScreen(),
       ),
+
+      GoRoute(
+          path: '/admin/maintenance',
+          builder: (context, state) =>
+              const MaintenanceScheduleScreen(access: MaintenanceAccess.admin)),
+      GoRoute(
+          path: '/admin/repair-history',
+          builder: (context, state) =>
+              const RepairHistoryScreen(access: MaintenanceAccess.admin)),
+      GoRoute(
+          path: '/superadmin/maintenance',
+          builder: (context, state) => const MaintenanceScheduleScreen(
+              access: MaintenanceAccess.superAdmin)),
+      GoRoute(
+          path: '/superadmin/repair-history',
+          builder: (context, state) =>
+              const RepairHistoryScreen(access: MaintenanceAccess.superAdmin)),
 
       GoRoute(
         path: '/batches-admin',
