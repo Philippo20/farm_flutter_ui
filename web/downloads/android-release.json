@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 18,
+  "buildNumber": 19,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "25478a2be21a4b4504cadd1d1785916e4ae66d369df816cf3ace3461611546d3",
+  "sha256": "0ccbdcec21112973c8c1820e403872786062a4f5159c83331317551a7521f0d0",
   "sizeBytes": 83474948,
-  "publishedAt": "2026-10-11T10:52:48.7439828Z",
-  "releaseNotes": "APK update prompts recover after session expiry or navigation interruptions. Background downloads retain their progress, and only deliberate dismissal postpones an update."
+  "publishedAt": "2026-10-11T15:21:35.8638294Z",
+  "releaseNotes": "Fingerprint sign-in opens automatically for enrolled users. Login hides biometric setup and saved account details, with password fallback and manual retry available."
 }

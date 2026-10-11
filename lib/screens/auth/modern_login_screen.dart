@@ -16,7 +16,8 @@ class ModernLoginScreen extends ConsumerStatefulWidget {
   ConsumerState<ModernLoginScreen> createState() => _ModernLoginScreenState();
 }
 
-class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
+class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen>
+    with WidgetsBindingObserver {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -25,20 +26,72 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
   bool _saveBiometric = false;
   BiometricSignInStatus _biometric = const BiometricSignInStatus();
   String? _biometricError;
+  bool _automaticBiometricAttempted = false;
+  Animation<double>? _routeAnimation;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadBiometric();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final animation = ModalRoute.of(context)?.animation;
+    if (animation != _routeAnimation) {
+      _routeAnimation?.removeStatusListener(_routeStatusChanged);
+      _routeAnimation = animation;
+      animation?.addStatusListener(_routeStatusChanged);
+    }
+    _scheduleAutomaticBiometric();
+  }
+
+  void _routeStatusChanged(AnimationStatus status) {
+    if (status == AnimationStatus.completed) _scheduleAutomaticBiometric();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _scheduleAutomaticBiometric();
+  }
+
+  void _scheduleAutomaticBiometric() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted ||
+          _automaticBiometricAttempted ||
+          !_biometric.enabled ||
+          !_biometric.available ||
+          _working ||
+          ref.read(authProvider).isLoading) {
+        return;
+      }
+      final lifecycle = WidgetsBinding.instance.lifecycleState;
+      final route = ModalRoute.of(context);
+      // Wait until login is visible and Android can safely present its prompt.
+      // Never re-prompt after cancellation, an error, or a password attempt.
+      if ((lifecycle != null && lifecycle != AppLifecycleState.resumed) ||
+          route?.isCurrent != true ||
+          (route?.animation != null &&
+              route!.animation!.status != AnimationStatus.completed)) {
+        return;
+      }
+      _fingerprint();
+    });
   }
 
   Future<void> _loadBiometric() async {
     final status = await ref.read(biometricSignInProvider).status();
-    if (mounted) setState(() => _biometric = status);
+    if (!mounted) return;
+    setState(() => _biometric = status);
+    _scheduleAutomaticBiometric();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _routeAnimation?.removeStatusListener(_routeStatusChanged);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -53,6 +106,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
     FocusScope.of(context).unfocus();
 
     setState(() {
+      _automaticBiometricAttempted = true;
       _working = true;
       _biometricError = null;
     });
@@ -67,6 +121,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
     if (_working || ref.read(authProvider).isLoading) return;
     FocusScope.of(context).unfocus();
     setState(() {
+      _automaticBiometricAttempted = true;
       _working = true;
       _biometricError = null;
     });
@@ -81,25 +136,6 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
             _biometricError = error.message ?? 'Use your password to sign in.');
       }
       if (mounted) await _loadBiometric();
-    } finally {
-      if (mounted) setState(() => _working = false);
-    }
-  }
-
-  Future<void> _removeFingerprint() async {
-    if (_working) return;
-    setState(() {
-      _working = true;
-      _biometricError = null;
-    });
-    try {
-      await ref.read(biometricSignInProvider).disable();
-      if (mounted) await _loadBiometric();
-    } on PlatformException {
-      if (mounted) {
-        setState(() => _biometricError =
-            'Unable to remove fingerprint sign-in. Try again.');
-      }
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -360,7 +396,8 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                                         )),
                                     const SizedBox(height: 16),
                                   ],
-                                  if (_biometric.available) ...[
+                                  if (_biometric.available &&
+                                      !_biometric.enabled) ...[
                                     Material(
                                       color: Colors.transparent,
                                       child: CheckboxListTile(
@@ -428,34 +465,20 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                                                   : 'Sign in')),
                                         ]),
                                   ),
-                                  if (_biometric.enabled) ...[
+                                  if (_biometric.enabled &&
+                                      _biometric.available) ...[
                                     const SizedBox(height: 12),
-                                    if (_biometric.available)
-                                      OutlinedButton.icon(
-                                        key:
-                                            const ValueKey('biometric-sign-in'),
-                                        onPressed: busy ? null : _fingerprint,
-                                        icon: const Icon(
-                                            Icons.fingerprint_rounded),
-                                        label: const Text(
-                                            'Sign in with fingerprint'),
-                                        style: OutlinedButton.styleFrom(
-                                            textStyle: AppTypography.labelLarge,
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 14)),
-                                      ),
-                                    const SizedBox(height: 6),
-                                    Text(_biometric.email ?? '',
-                                        textAlign: TextAlign.center,
-                                        style: AppTypography.bodySmall
-                                            .copyWith(color: muted)),
-                                    TextButton(
-                                      onPressed:
-                                          busy ? null : _removeFingerprint,
-                                      style: TextButton.styleFrom(
-                                          textStyle: AppTypography.labelSmall),
-                                      child: const Text(
-                                          'Remove saved fingerprint sign-in'),
+                                    OutlinedButton.icon(
+                                      key: const ValueKey('biometric-sign-in'),
+                                      onPressed: busy ? null : _fingerprint,
+                                      icon:
+                                          const Icon(Icons.fingerprint_rounded),
+                                      label: const Text(
+                                          'Sign in with fingerprint'),
+                                      style: OutlinedButton.styleFrom(
+                                          textStyle: AppTypography.labelLarge,
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 14)),
                                     ),
                                   ],
                                   const SizedBox(height: 16),

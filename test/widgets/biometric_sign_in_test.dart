@@ -19,11 +19,14 @@ class _Biometrics extends BiometricSignInService {
   int enables = 0, disables = 0, unlocks = 0;
   Future<BiometricCredentials?> Function()? onUnlock;
   Future<bool> Function()? onEnable;
+  Future<BiometricSignInStatus> Function()? onStatus;
   @override
-  Future<BiometricSignInStatus> status() async => BiometricSignInStatus(
-      available: available,
-      enabled: enabled,
-      email: enabled ? 'test@example.com' : null);
+  Future<BiometricSignInStatus> status() async => onStatus != null
+      ? await onStatus!()
+      : BiometricSignInStatus(
+          available: available,
+          enabled: enabled,
+          email: enabled ? 'test@example.com' : null);
   @override
   Future<BiometricCredentials?> unlock() {
     unlocks++;
@@ -53,7 +56,7 @@ void main() {
 
   Future<void> mount(WidgetTester tester, _Biometrics biometric,
       Future<http.Response> Function(http.Request) backend,
-      {bool dark = false}) async {
+      {bool dark = false, bool settle = true}) async {
     tester.view.physicalSize = const Size(320, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -74,7 +77,12 @@ void main() {
                 const Scaffold(body: Text('Choose your role')),
           },
         )));
-    await tester.pumpAndSettle();
+    if (settle) {
+      await tester.pumpAndSettle();
+    } else {
+      await tester.pump();
+      await tester.pump();
+    }
   }
 
   http.Response success({bool multiple = false}) => http.Response(
@@ -137,7 +145,6 @@ void main() {
             {'email': 'test@example.com', 'password': 'real-password'});
         return success(multiple: true);
       }, dark: dark);
-      await tapFingerprint(tester);
       expect(biometrics.unlocks, 1);
       expect(requests, 1);
       expect(find.text('Choose your role'), findsOneWidget);
@@ -157,7 +164,16 @@ void main() {
       requests++;
       return success();
     });
-    await tapFingerprint(tester);
+    expect(biometrics.unlocks, 1);
+    expect(
+        find.byKey(const ValueKey('enable-biometric-sign-in')), findsNothing);
+    expect(find.text('test@example.com'), findsNothing);
+    expect(find.text('Remove saved fingerprint sign-in'), findsNothing);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(biometrics.unlocks, 1);
     expect(requests, 0);
     expect(find.text('Welcome back'), findsOneWidget);
     await password(tester);
@@ -174,7 +190,6 @@ void main() {
         biometrics,
         (_) async =>
             http.Response('{"detail":"Invalid email or password"}', 401));
-    await tapFingerprint(tester);
     expect(biometrics.disables, 1);
     expect(find.byKey(const ValueKey('biometric-sign-in')), findsNothing);
     expect(find.text('Invalid email or password'), findsOneWidget);
@@ -186,7 +201,6 @@ void main() {
       (tester) async {
     final biometrics = _Biometrics();
     await mount(tester, biometrics, (_) async => http.Response('{}', 503));
-    await tapFingerprint(tester);
     expect(biometrics.disables, 0);
     expect(find.byKey(const ValueKey('biometric-sign-in')), findsOneWidget);
     expect(find.text('Dashboard'), findsNothing);
@@ -203,7 +217,6 @@ void main() {
         (_) async => http.Response(
             '{"must_change_password":true,"password_change_token":"change-me"}',
             200));
-    await tapFingerprint(tester);
     expect(biometrics.disables, 1);
     expect(biometrics.enables, 0);
     expect(find.text('Secure your account'), findsOneWidget);
@@ -241,7 +254,7 @@ void main() {
       (tester) async {
     final pending = Completer<BiometricCredentials?>();
     final biometrics = _Biometrics()..onUnlock = () => pending.future;
-    await mount(tester, biometrics, (_) async => success());
+    await mount(tester, biometrics, (_) async => success(), settle: false);
     final button = find.byKey(const ValueKey('biometric-sign-in'));
     await tester.ensureVisible(button);
     await tester.tap(button);
@@ -256,21 +269,99 @@ void main() {
   });
 
   testWidgets(
-      'invalidated keys return to password sign-in; saved enrollment can be removed',
+      'invalidated keys return to password sign-in and permit new setup',
       (tester) async {
-    final biometrics = _Biometrics()
-      ..onUnlock = () async => throw PlatformException(
+    final biometrics = _Biometrics();
+    biometrics.onUnlock = () async {
+      biometrics.enabled = false;
+      throw PlatformException(
           code: 'invalidated',
           message: 'Sign in with your password to set up fingerprint again.');
+    };
     await mount(tester, biometrics, (_) async => success());
-    await tapFingerprint(tester);
     expect(find.text('Sign in with your password to set up fingerprint again.'),
         findsOneWidget);
-    final remove = find.text('Remove saved fingerprint sign-in');
-    await tester.ensureVisible(remove);
-    await tester.tap(remove);
-    await tester.pumpAndSettle();
-    expect(biometrics.disables, 1);
+    expect(
+        find.byKey(const ValueKey('enable-biometric-sign-in')), findsOneWidget);
     expect(find.byKey(const ValueKey('biometric-sign-in')), findsNothing);
+  });
+
+  testWidgets(
+      'enrolled users can retry manually after cancelling automatic prompt',
+      (tester) async {
+    final biometrics = _Biometrics()..onUnlock = () async => null;
+    var requests = 0;
+    await mount(tester, biometrics, (_) async {
+      requests++;
+      return success();
+    });
+    expect(biometrics.unlocks, 1);
+    biometrics.onUnlock = null;
+    await tapFingerprint(tester);
+    expect(biometrics.unlocks, 2);
+    expect(requests, 1);
+    expect(find.text('Dashboard'), findsOneWidget);
+  });
+
+  testWidgets('enrolled but unavailable biometrics leave password login ready',
+      (tester) async {
+    final biometrics = _Biometrics(available: false);
+    await mount(tester, biometrics, (_) async => success());
+    expect(biometrics.unlocks, 0);
+    expect(
+        find.byKey(const ValueKey('enable-biometric-sign-in')), findsNothing);
+    expect(find.byKey(const ValueKey('biometric-sign-in')), findsNothing);
+    expect(find.text('test@example.com'), findsNothing);
+    await password(tester);
+    expect(find.text('Dashboard'), findsOneWidget);
+  });
+
+  testWidgets(
+      'leaving login before biometric status returns never opens a prompt',
+      (tester) async {
+    final pending = Completer<BiometricSignInStatus>();
+    final biometrics = _Biometrics()..onStatus = () => pending.future;
+    await mount(tester, biometrics, (_) async => success());
+    await tester.pumpWidget(const SizedBox.shrink());
+    pending
+        .complete(const BiometricSignInStatus(available: true, enabled: true));
+    await tester.pumpAndSettle();
+    expect(biometrics.unlocks, 0);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('automatic prompt waits until the app is in the foreground',
+      (tester) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    final biometrics = _Biometrics()..onUnlock = () async => null;
+    await mount(tester, biometrics, (_) async => success());
+    expect(biometrics.unlocks, 0);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(biometrics.unlocks, 1);
+  });
+
+  testWidgets('automatic prompt waits for a covering route to close',
+      (tester) async {
+    final pending = Completer<BiometricSignInStatus>();
+    final biometrics = _Biometrics();
+    biometrics.onStatus = () => pending.future;
+    biometrics.onUnlock = () async => null;
+    await mount(tester, biometrics, (_) async => success());
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    navigator.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('App update'))));
+    await tester.pumpAndSettle();
+    pending
+        .complete(const BiometricSignInStatus(available: true, enabled: true));
+    await tester.pumpAndSettle();
+    expect(biometrics.unlocks, 0);
+    navigator.pop();
+    await tester.pumpAndSettle();
+    expect(biometrics.unlocks, 1);
   });
 }

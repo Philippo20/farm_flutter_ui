@@ -6,15 +6,20 @@ password. Setup uses Android's system biometric prompt after the backend accepts
 the password. Temporary passwords must be changed before setup can complete.
 The option is unavailable on web, Windows and unsupported or unenrolled phones.
 
-Future sign-ins can use **Sign in with fingerprint**. Cancellation and lockout
-leave password sign-in available. This is a faster account sign-in method, not
+Once enabled, the system fingerprint prompt opens automatically when the login
+screen becomes visible in the foreground. It waits for navigation transitions
+and any covering update or other dialog to finish. Setup is hidden for enrolled
+accounts, and the login page does not display the saved email or removal controls.
+Cancellation and lockout leave password sign-in available without repeated
+automatic prompts; **Sign in with fingerprint** allows a deliberate retry.
+This is a faster account sign-in method, not
 an application lock: an existing valid session continues to use the configured
 session expiry and inactivity rules.
 
 The AndroidX Biometric prompt authorizes a per-operation Android Keystore
 AES/GCM key. Only encrypted account credentials and their IV are persisted;
-the email address is also retained for identifying the saved account on the
-sign-in screen. No plaintext password or biometric image is stored. The key is
+the email address is also retained for identifying the saved account in profile
+settings. No plaintext password or biometric image is stored. The key is
 invalidated when biometric enrollment changes or the secure lock is removed.
 Biometric storage is excluded from cloud backup and device transfer.
 Anyone whose eligible biometric is enrolled on that phone can authorize access;
@@ -27,7 +32,7 @@ failures retain it for retry. Password changes elsewhere require password
 sign-in and new setup. No API schema or Firebase configuration changes are needed.
 
 Only one account is remembered per phone. Opting in for a different account
-replaces the previous saved credential. Remove it from the sign-in screen or
+replaces the previous saved credential. Manage or remove it in
 **My profile → Fingerprint sign-in → Remove from this phone**. Ordinary logout
 ends the API session while preserving this explicitly opted-in sign-in method.
 The former technician-only “Biometric unlock” preference was a local display
