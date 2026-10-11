@@ -5,11 +5,13 @@
         <exclude domain="sharedpref" path="farm_push.xml" />
         <exclude domain="sharedpref" path="farm_notifications.xml" />
         <exclude domain="sharedpref" path="notification_replies.xml" />
+        <exclude domain="sharedpref" path="message_notifications.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="sharedpref" path="biometric_signin.xml" />
         <exclude domain="sharedpref" path="farm_push.xml" />
         <exclude domain="sharedpref" path="farm_notifications.xml" />
         <exclude domain="sharedpref" path="notification_replies.xml" />
+        <exclude domain="sharedpref" path="message_notifications.xml" />
     </device-transfer>
 </data-extraction-rules>

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/android_app_updates.dart';
+import '../../services/local_alerts.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'app_dialog.dart';
@@ -14,10 +15,15 @@ class AndroidUpdateHost extends StatefulWidget {
       {super.key,
       required this.child,
       required this.navigatorKey,
-      this.service});
+      this.service,
+      this.requestNotificationPermission});
   final Widget child;
   final GlobalKey<NavigatorState> navigatorKey;
   final AndroidAppUpdates? service;
+
+  /// Injectable for startup coordination tests. The native request is once per
+  /// installation and does not require an authenticated account.
+  final Future<bool> Function()? requestNotificationPermission;
   @override
   State<AndroidUpdateHost> createState() => _AndroidUpdateHostState();
 }
@@ -64,6 +70,7 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
     }
     if (!mounted || !_foreground) return;
     if (_pendingPresentation ||
+        !_initialCheckFinished ||
         _hasActiveUpdate ||
         _lastCheck == null ||
         DateTime.now().difference(_lastCheck!) >= const Duration(minutes: 15)) {
@@ -149,9 +156,21 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
     } catch (_) {
       // Optional update checks stay quiet when the release website is offline.
     } finally {
+      if (mounted &&
+          _foreground &&
+          !_pendingPresentation &&
+          !_initialCheckFinished) {
+        try {
+          // Keep fingerprint paused until the OS permission dialog has finished.
+          await (widget.requestNotificationPermission ??
+              LocalAlerts.instance.requestPermission)();
+        } catch (_) {
+          // Denial or an unavailable platform must never prevent sign-in.
+        }
+        _initialCheckFinished = true;
+      }
       _open = false;
       _checking = false;
-      _initialCheckFinished = true;
       if (mounted) setState(() {});
       if (mounted && _foreground && _pendingPresentation) {
         _presentationRetry?.cancel();

@@ -80,7 +80,10 @@ void main() {
 
   Future<void> mount(WidgetTester tester, _Biometrics biometric,
       Future<http.Response> Function(http.Request) backend,
-      {bool dark = false, bool settle = true, _Updates? updates}) async {
+      {bool dark = false,
+      bool settle = true,
+      _Updates? updates,
+      Future<bool> Function()? notificationPermission}) async {
     tester.view.physicalSize = const Size(320, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -97,7 +100,11 @@ void main() {
           builder: updates == null
               ? null
               : (_, child) => AndroidUpdateHost(
-                  navigatorKey: navigator, service: updates, child: child!),
+                  navigatorKey: navigator,
+                  service: updates,
+                  requestNotificationPermission:
+                      notificationPermission ?? () async => false,
+                  child: child!),
           theme:
               ThemeData(brightness: dark ? Brightness.dark : Brightness.light),
           home: const ModernLoginScreen(),
@@ -129,6 +136,72 @@ void main() {
       }),
       200);
 
+  Future<void> tapFingerprint(WidgetTester tester) async {
+    final button = find.byKey(const ValueKey('biometric-sign-in'));
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> password(WidgetTester tester, {bool optIn = false}) async {
+    await tester.enterText(
+        find.byKey(const ValueKey('login-email')), 'test@example.com');
+    await tester.enterText(
+        find.byKey(const ValueKey('login-password')), 'real-password');
+    if (optIn) {
+      final checkbox = find.byKey(const ValueKey('enable-biometric-sign-in'));
+      await tester.ensureVisible(checkbox);
+      await tester.tap(checkbox);
+      await tester.pump();
+    }
+    await tester.ensureVisible(find.text('Sign in'));
+    await tester.tap(find.text('Sign in'));
+    await tester.pumpAndSettle();
+  }
+
+  for (final allowed in [false, true]) {
+    testWidgets('notification choice precedes fingerprint allowed=$allowed',
+        (tester) async {
+      final updates = _Updates()..result.complete(false);
+      final biometric = _Biometrics();
+      final choice = Completer<bool>();
+      var requests = 0;
+      await mount(tester, biometric, (_) async => success(), updates: updates,
+          notificationPermission: () {
+        requests++;
+        return choice.future;
+      });
+      expect(requests, 1);
+      expect(biometric.unlocks, 0);
+      choice.complete(allowed);
+      await tester.pumpAndSettle();
+      expect(biometric.unlocks, 1);
+      expect(find.text('Dashboard'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+      updates.dispose();
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
+
+  testWidgets('first-launch notification request works before password login',
+      (tester) async {
+    final updates = _Updates()..result.complete(false);
+    final biometric = _Biometrics(available: false, enabled: false);
+    var requests = 0;
+    await mount(tester, biometric, (_) async => success(), updates: updates,
+        notificationPermission: () async {
+      requests++;
+      return false;
+    });
+    expect(requests, 1);
+    expect(find.byKey(const ValueKey('login-email')), findsOneWidget);
+    expect(find.text('Dashboard'), findsNothing);
+    await password(tester);
+    expect(find.text('Dashboard'), findsOneWidget);
+    expect(requests, 1);
+    await tester.pumpWidget(const SizedBox());
+    updates.dispose();
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
   testWidgets('startup update check waits before automatic fingerprint',
       (tester) async {
     final updates = _Updates();
@@ -150,11 +223,17 @@ void main() {
       (tester) async {
     final updates = _Updates();
     final biometric = _Biometrics();
-    await mount(tester, biometric, (_) async => success(), updates: updates);
+    var permissionRequests = 0;
+    await mount(tester, biometric, (_) async => success(), updates: updates,
+        notificationPermission: () async {
+      permissionRequests++;
+      return true;
+    });
     updates.available();
     await tester.pumpAndSettle();
     expect(find.text('App update available'), findsOneWidget);
     expect(biometric.unlocks, 0);
+    expect(permissionRequests, 0);
     // Even a deliberate native prompt cannot jump ahead of the update offer.
     final login = tester.widget<OutlinedButton>(
         find.byKey(const ValueKey('biometric-sign-in'), skipOffstage: false));
@@ -166,6 +245,7 @@ void main() {
     expect(biometric.unlocks, 0);
     await tester.pumpAndSettle();
     expect(biometric.unlocks, 1);
+    expect(permissionRequests, 1);
     expect(find.text('Dashboard'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
@@ -259,29 +339,6 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     updates.dispose();
   }, variant: TargetPlatformVariant.only(TargetPlatform.android));
-
-  Future<void> tapFingerprint(WidgetTester tester) async {
-    final button = find.byKey(const ValueKey('biometric-sign-in'));
-    await tester.ensureVisible(button);
-    await tester.tap(button);
-    await tester.pumpAndSettle();
-  }
-
-  Future<void> password(WidgetTester tester, {bool optIn = false}) async {
-    await tester.enterText(
-        find.byKey(const ValueKey('login-email')), 'test@example.com');
-    await tester.enterText(
-        find.byKey(const ValueKey('login-password')), 'real-password');
-    if (optIn) {
-      final checkbox = find.byKey(const ValueKey('enable-biometric-sign-in'));
-      await tester.ensureVisible(checkbox);
-      await tester.tap(checkbox);
-      await tester.pump();
-    }
-    await tester.ensureVisible(find.text('Sign in'));
-    await tester.tap(find.text('Sign in'));
-    await tester.pumpAndSettle();
-  }
 
   testWidgets('unsupported phones show only password sign-in', (tester) async {
     await mount(tester, _Biometrics(available: false, enabled: false),

@@ -101,6 +101,7 @@ void main() {
         builder: (_, child) => AndroidUpdateHost(
             navigatorKey: key,
             service: updates,
+            requestNotificationPermission: () async => false,
             child: expired
                 ? SessionSecurityHost(
                     now: () => DateTime(2026, 10, 11, 0, 6), child: child!)

@@ -18,8 +18,7 @@ class LocalAlerts {
   Future<bool> requestPermission() async {
     try {
       if (_android) {
-        await channel.invokeMethod<void>('requestPermission');
-        return true;
+        return await channel.invokeMethod<bool>('requestPermission') ?? false;
       }
       if (!_supportedDesktop) return false;
       await (_setup ??= localNotifier.setup(

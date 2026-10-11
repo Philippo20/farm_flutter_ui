@@ -4,4 +4,5 @@
     <exclude domain="sharedpref" path="farm_push.xml" />
     <exclude domain="sharedpref" path="farm_notifications.xml" />
     <exclude domain="sharedpref" path="notification_replies.xml" />
+    <exclude domain="sharedpref" path="message_notifications.xml" />
 </full-backup-content>

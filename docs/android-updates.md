@@ -8,8 +8,9 @@ Users of older builds must install the first APK containing this feature once.
 
 The startup check takes priority over automatic fingerprint sign-in. If an update
 is offered, fingerprint waits until the sheet finishes closing; interrupted
-offers retain priority while they are restored. A failed or stalled check releases
-fingerprint within 15 seconds, and password sign-in stays available throughout.
+offers retain priority while they are restored. A failed or stalled check stops
+waiting within 15 seconds. First-launch notification permission follows any update
+offer and completes before automatic fingerprint. Password sign-in stays available.
 An offer discovered while Android is backgrounded is retained until resume.
 
 A newer build shows an optional update sheet. **Download update** uses Android

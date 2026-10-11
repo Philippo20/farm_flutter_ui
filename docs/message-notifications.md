@@ -7,7 +7,14 @@ last successful inbox or block the other feed. First-load historical items stay
 in the center without replaying device alerts.
 
 - Android uses native `team_messages`, `farm_updates` and silent update channels.
-  Android 13+ requires notification permission. Chat previews show the sender and
+  Android 13+ requests notification permission on first foreground launch, even
+  before login. Any update offer finishes first, then the OS permission choice,
+  then automatic fingerprint sign-in. Allow/deny completes the real permission
+  result; denial never blocks sign-in and is not repeatedly requested. A dismissed
+  prompt can be offered on a future launch. Earlier Android versions do not have
+  this runtime prompt. Already-granted permission is preserved during APK updates.
+  The per-install request marker is excluded from backup/device transfer.
+  Chat previews show the sender and
   actual message, with expandable conversation history. Farm alerts use expandable
   text. Tap opens the conversation, the role's relevant screen, or that alert's
   full message; read items are dismissed on refresh.

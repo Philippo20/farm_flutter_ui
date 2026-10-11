@@ -55,7 +55,7 @@ void main() {
                 child: const Scaffold(body: Text('Dashboard'))))));
     await tester.pump();
     expect(calls.where((call) => call.method == 'requestPermission'),
-        hasLength(1));
+        isEmpty); // Startup owns the OS prompt, independent of account binding.
     rows = [
       {
         'id': 'message:one',

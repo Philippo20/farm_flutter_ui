@@ -3,16 +3,15 @@ package com.example.farmestates_ai_dashbaord
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Build
 import com.google.firebase.messaging.FirebaseMessaging
 
 class MainActivity: FlutterFragmentActivity() {
     private var biometricSignIn: AndroidBiometricSignIn? = null
+    private var notificationPermission: AndroidNotificationPermission? = null
     private val channelId = "team_messages"
     private var channel: MethodChannel? = null
     private val notifications get() = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -20,6 +19,7 @@ class MainActivity: FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         biometricSignIn = AndroidBiometricSignIn(this).also { it.attach(flutterEngine) }
+        notificationPermission = AndroidNotificationPermission(this)
         AndroidAppUpdates(this).attach(flutterEngine)
         if (Build.VERSION.SDK_INT >= 26) {
             notifications.createNotificationChannel(NotificationChannel(
@@ -64,15 +64,7 @@ class MainActivity: FlutterFragmentActivity() {
                     intent.removeExtra("recipientId")
                 }
                 "requestPermission" -> {
-                    if (Build.VERSION.SDK_INT >= 33 &&
-                        checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                        val prefs = getSharedPreferences("message_notifications", MODE_PRIVATE)
-                        if (!prefs.getBoolean("asked", false)) {
-                            prefs.edit().putBoolean("asked", true).apply()
-                            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 901)
-                        }
-                    }
-                    result.success(null)
+                    notificationPermission!!.request { result.success(it) }
                 }
                 "show" -> {
                     val peer = call.argument<String>("peerId") ?: ""
@@ -99,7 +91,13 @@ class MainActivity: FlutterFragmentActivity() {
 
     override fun onDestroy() {
         biometricSignIn?.dispose()
+        notificationPermission?.dispose()
         super.onDestroy()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        notificationPermission?.onResult(requestCode, grantResults)
     }
 
     override fun onStop() {

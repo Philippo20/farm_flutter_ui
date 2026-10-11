@@ -123,7 +123,6 @@ class _MessageNotificationHostState
     unawaited(_local.clear());
     if (user == null) return;
     if (_isAndroid) {
-      unawaited(_local.requestPermission());
       unawaited(_initialMessage(user));
     }
     unawaited(_refresh());

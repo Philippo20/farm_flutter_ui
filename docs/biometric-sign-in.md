@@ -10,7 +10,9 @@ Once enabled, the system fingerprint prompt opens automatically when the login
 screen becomes visible in the foreground. It waits for navigation transitions
 and the startup APK check to finish. An available update takes priority: fingerprint
 sign-in waits until the update sheet, including its closing animation, finishes.
-An offline or stalled check releases fingerprint sign-in within 15 seconds;
+An offline or stalled update check stops waiting within 15 seconds;
+the first-launch Android notification permission choice also finishes before
+the fingerprint prompt. Allowing or declining notifications both permit sign-in;
 password sign-in remains available during the check. Other covering dialogs
 also postpone the prompt. Setup is hidden for enrolled
 accounts, and the login page does not display the saved email or removal controls.
