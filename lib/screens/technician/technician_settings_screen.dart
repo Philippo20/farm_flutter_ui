@@ -1,4 +1,5 @@
 import '../../core/widgets/personal_typography_card.dart';
+import '../../core/widgets/biometric_sign_in_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +30,6 @@ class _TechnicianSettingsScreenState
   bool _smsAlerts = false;
   bool _criticalOnlyMode = false;
   bool _offlineDrafts = true;
-  bool _biometricUnlock = false;
 
   static const _prefix = 'technician_settings';
 
@@ -48,7 +48,6 @@ class _TechnicianSettingsScreenState
       _smsAlerts = prefs.getBool('$_prefix.smsAlerts') ?? false;
       _criticalOnlyMode = prefs.getBool('$_prefix.criticalOnlyMode') ?? false;
       _offlineDrafts = prefs.getBool('$_prefix.offlineDrafts') ?? true;
-      _biometricUnlock = prefs.getBool('$_prefix.biometricUnlock') ?? false;
     });
   }
 
@@ -249,18 +248,7 @@ class _TechnicianSettingsScreenState
               (value) => _setBool(
                   'offlineDrafts', value, () => _offlineDrafts = value),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            _buildSwitchTile(
-              isDark,
-              'Biometric unlock',
-              'Require device authentication before opening the app',
-              _biometricUnlock,
-              (value) => _setBool(
-                'biometricUnlock',
-                value,
-                () => _biometricUnlock = value,
-              ),
-            ),
+            const BiometricSignInCard(),
           ],
         ),
       ),

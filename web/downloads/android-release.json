@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 16,
+  "buildNumber": 17,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "9f9611c6ffc730e4bfcc45012a648b8f4318dd42ff4db9eaee10e92c53abb040",
-  "sizeBytes": 83095877,
-  "publishedAt": "2026-10-11T09:21:46.5573002Z",
-  "releaseNotes": "Admin and Super Admin now have Maintenance and Repair History on mobile and desktop, with all-farm tasks, device schedules and completed work records."
+  "sha256": "b631e1e735683a6c482cb7b9a63c96feb26d0227e95a947603d5fbd60c3875f3",
+  "sizeBytes": 83474948,
+  "publishedAt": "2026-10-11T10:32:34.1466450Z",
+  "releaseNotes": "User font sizes now apply throughout the app, including calendars and gauges. Optional fingerprint sign-in is available on supported Android phones, with password fallback."
 }

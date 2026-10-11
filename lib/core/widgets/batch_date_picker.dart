@@ -1,3 +1,4 @@
+import 'personal_date_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
@@ -121,7 +122,8 @@ class _BatchDatePickerState extends State<BatchDatePicker> {
                   const SizedBox(height: 12),
                   SizedBox(
                       height: 300,
-                      child: SfDateRangePicker(
+                      child: PersonalDatePicker(
+                          picker: SfDateRangePicker(
                         initialSelectedDate: _selected,
                         initialDisplayDate: _selected,
                         minDate: DateUtils.dateOnly(widget.firstDate),
@@ -158,7 +160,7 @@ class _BatchDatePickerState extends State<BatchDatePicker> {
                             setState(() => _selected = args.value as DateTime);
                           }
                         },
-                      )),
+                      ))),
                   Text('The harvest date is calculated from the crop variety.',
                       style:
                           AppTypography.bodySmall.copyWith(color: secondary)),

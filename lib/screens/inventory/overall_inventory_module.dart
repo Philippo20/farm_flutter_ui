@@ -1970,8 +1970,8 @@ class _OverallInventoryModuleState extends State<OverallInventoryModule> {
   Widget _detailRow(bool isDark, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-      child: RichText(
-        text: TextSpan(
+      child: Text.rich(
+        TextSpan(
           style: AppTypography.bodySmall.copyWith(
             color: isDark ? Colors.white70 : AppColors.textSecondary,
           ),

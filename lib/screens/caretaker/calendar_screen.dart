@@ -262,6 +262,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ]);
 
   Widget _buildCalendarGrid(bool dark) {
+    final dateScale = MediaQuery.textScalerOf(context).scale(13) / 13;
+    final dayHeight = 42.0 + (dateScale - 1).clamp(0.0, double.infinity) * 24;
     final first = DateTime(_focusedDate.year, _focusedDate.month);
     final days = DateTime(_focusedDate.year, _focusedDate.month + 1, 0).day;
     final offset = first.weekday - 1;
@@ -284,7 +286,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   children: List.generate(7, (column) {
                 final day = week * 7 + column - offset + 1;
                 if (day < 1 || day > days)
-                  return const Expanded(child: SizedBox(height: 48));
+                  return Expanded(child: SizedBox(height: dayHeight + 6));
                 final date = DateTime(first.year, first.month, day);
                 final selected = _sameDay(date, _selectedDate);
                 final today = _sameDay(date, DateTime.now());
@@ -305,7 +307,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                     setState(() => _selectedDate = date),
                                 borderRadius: BorderRadius.circular(10),
                                 child: Ink(
-                                    height: 42,
+                                    height: dayHeight,
                                     decoration: BoxDecoration(
                                         color: selected
                                             ? AppColors.primary
@@ -323,8 +325,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                             MainAxisAlignment.center,
                                         children: [
                                           Text('$day',
-                                              textScaler:
-                                                  const TextScaler.linear(1),
                                               style: AppTypography.bodySmall
                                                   .copyWith(
                                                       fontSize: AppTypography

@@ -1,0 +1,276 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:farmestates_ai_dashbaord/providers/auth_provider.dart';
+import 'package:farmestates_ai_dashbaord/screens/auth/modern_login_screen.dart';
+import 'package:farmestates_ai_dashbaord/services/auth_service.dart';
+import 'package:farmestates_ai_dashbaord/services/biometric_sign_in_service.dart';
+
+class _Biometrics extends BiometricSignInService {
+  _Biometrics({this.available = true, this.enabled = true});
+  bool available, enabled;
+  int enables = 0, disables = 0, unlocks = 0;
+  Future<BiometricCredentials?> Function()? onUnlock;
+  Future<bool> Function()? onEnable;
+  @override
+  Future<BiometricSignInStatus> status() async => BiometricSignInStatus(
+      available: available,
+      enabled: enabled,
+      email: enabled ? 'test@example.com' : null);
+  @override
+  Future<BiometricCredentials?> unlock() {
+    unlocks++;
+    return onUnlock?.call() ??
+        Future.value(
+            const BiometricCredentials('test@example.com', 'real-password'));
+  }
+
+  @override
+  Future<bool> enable(String email, String password) async {
+    enables++;
+    expect(email, 'test@example.com');
+    expect(password, 'real-password');
+    return onEnable?.call() ?? true;
+  }
+
+  @override
+  Future<void> disable() async {
+    disables++;
+    enabled = false;
+  }
+}
+
+void main() {
+  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  Future<void> mount(WidgetTester tester, _Biometrics biometric,
+      Future<http.Response> Function(http.Request) backend,
+      {bool dark = false}) async {
+    tester.view.physicalSize = const Size(320, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(ProviderScope(
+        overrides: [
+          biometricSignInProvider.overrideWithValue(biometric),
+          authServiceProvider
+              .overrideWithValue(AuthService.forTesting(MockClient(backend))),
+        ],
+        child: MaterialApp(
+          theme:
+              ThemeData(brightness: dark ? Brightness.dark : Brightness.light),
+          home: const ModernLoginScreen(),
+          routes: {
+            '/dashboard': (_) => const Scaffold(body: Text('Dashboard')),
+            '/select-role': (_) =>
+                const Scaffold(body: Text('Choose your role')),
+          },
+        )));
+    await tester.pumpAndSettle();
+  }
+
+  http.Response success({bool multiple = false}) => http.Response(
+      jsonEncode({
+        'jwt': 'server-token',
+        'session_id': 'new-server-session',
+        'user': {
+          'id': 'user-1',
+          'name': 'Test',
+          'email': 'test@example.com',
+          'role': 'Admin',
+          'roles': multiple ? ['Admin', 'Caretaker'] : ['Admin']
+        },
+      }),
+      200);
+
+  Future<void> tapFingerprint(WidgetTester tester) async {
+    final button = find.byKey(const ValueKey('biometric-sign-in'));
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> password(WidgetTester tester, {bool optIn = false}) async {
+    await tester.enterText(
+        find.byKey(const ValueKey('login-email')), 'test@example.com');
+    await tester.enterText(
+        find.byKey(const ValueKey('login-password')), 'real-password');
+    if (optIn) {
+      final checkbox = find.byKey(const ValueKey('enable-biometric-sign-in'));
+      await tester.ensureVisible(checkbox);
+      await tester.tap(checkbox);
+      await tester.pump();
+    }
+    await tester.ensureVisible(find.text('Sign in'));
+    await tester.tap(find.text('Sign in'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('unsupported phones show only password sign-in', (tester) async {
+    await mount(tester, _Biometrics(available: false, enabled: false),
+        (_) async => success());
+    expect(
+        find.byKey(const ValueKey('enable-biometric-sign-in')), findsNothing);
+    expect(find.byKey(const ValueKey('biometric-sign-in')), findsNothing);
+    await password(tester);
+    expect(find.text('Dashboard'), findsOneWidget);
+  });
+
+  for (final dark in [false, true]) {
+    testWidgets(
+        'biometric unlock uses a fresh server login and role selection dark=$dark',
+        (tester) async {
+      var requests = 0;
+      final biometrics = _Biometrics();
+      await mount(tester, biometrics, (request) async {
+        requests++;
+        expect(request.url.path, '/account/login');
+        expect(request.bodyFields,
+            {'email': 'test@example.com', 'password': 'real-password'});
+        return success(multiple: true);
+      }, dark: dark);
+      await tapFingerprint(tester);
+      expect(biometrics.unlocks, 1);
+      expect(requests, 1);
+      expect(find.text('Choose your role'), findsOneWidget);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('auth_jwt'), 'server-token');
+      expect(prefs.getKeys().any((key) => key.contains('password')), isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets(
+      'cancelled prompt makes no API request and permits password fallback',
+      (tester) async {
+    final biometrics = _Biometrics()..onUnlock = () async => null;
+    var requests = 0;
+    await mount(tester, biometrics, (_) async {
+      requests++;
+      return success();
+    });
+    await tapFingerprint(tester);
+    expect(requests, 0);
+    expect(find.text('Welcome back'), findsOneWidget);
+    await password(tester);
+    expect(requests, 1);
+    expect(find.text('Dashboard'), findsOneWidget);
+  });
+
+  testWidgets(
+      'rejected saved password removes enrollment and preserves backend error',
+      (tester) async {
+    final biometrics = _Biometrics();
+    await mount(
+        tester,
+        biometrics,
+        (_) async =>
+            http.Response('{"detail":"Invalid email or password"}', 401));
+    await tapFingerprint(tester);
+    expect(biometrics.disables, 1);
+    expect(find.byKey(const ValueKey('biometric-sign-in')), findsNothing);
+    expect(find.text('Invalid email or password'), findsOneWidget);
+    expect((await SharedPreferences.getInstance()).getBool('is_logged_in'),
+        isNot(true));
+  });
+
+  testWidgets('API outages retain enrollment without creating a local session',
+      (tester) async {
+    final biometrics = _Biometrics();
+    await mount(tester, biometrics, (_) async => http.Response('{}', 503));
+    await tapFingerprint(tester);
+    expect(biometrics.disables, 0);
+    expect(find.byKey(const ValueKey('biometric-sign-in')), findsOneWidget);
+    expect(find.text('Dashboard'), findsNothing);
+    expect((await SharedPreferences.getInstance()).getBool('is_logged_in'),
+        isNot(true));
+  });
+
+  testWidgets('required password changes still run after a biometric unlock',
+      (tester) async {
+    final biometrics = _Biometrics();
+    await mount(
+        tester,
+        biometrics,
+        (_) async => http.Response(
+            '{"must_change_password":true,"password_change_token":"change-me"}',
+            200));
+    await tapFingerprint(tester);
+    expect(biometrics.disables, 1);
+    expect(biometrics.enables, 0);
+    expect(find.text('Secure your account'), findsOneWidget);
+    expect(find.text('Dashboard'), findsNothing);
+  });
+
+  testWidgets('setup requires opt-in and successful backend login',
+      (tester) async {
+    final biometrics = _Biometrics(enabled: false);
+    var accepted = false;
+    await mount(
+        tester,
+        biometrics,
+        (_) async => accepted
+            ? success()
+            : http.Response('{"detail":"Not approved"}', 403));
+    await password(tester, optIn: true);
+    expect(biometrics.enables, 0);
+    accepted = true;
+    await password(tester);
+    expect(biometrics.enables, 1);
+    expect(find.text('Dashboard'), findsOneWidget);
+  });
+
+  testWidgets('declining setup does not prevent a successful password login',
+      (tester) async {
+    final biometrics = _Biometrics(enabled: false)
+      ..onEnable = () async => false;
+    await mount(tester, biometrics, (_) async => success());
+    await password(tester, optIn: true);
+    expect(find.text('Dashboard'), findsOneWidget);
+  });
+
+  testWidgets('pending biometric prompts disable duplicate sign-in',
+      (tester) async {
+    final pending = Completer<BiometricCredentials?>();
+    final biometrics = _Biometrics()..onUnlock = () => pending.future;
+    await mount(tester, biometrics, (_) async => success());
+    final button = find.byKey(const ValueKey('biometric-sign-in'));
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.pump();
+    expect(tester.widget<OutlinedButton>(button).onPressed, isNull);
+    expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNull);
+    expect(biometrics.unlocks, 1);
+    pending.complete(null);
+    await tester.pumpAndSettle();
+    expect(tester.widget<OutlinedButton>(button).onPressed, isNotNull);
+  });
+
+  testWidgets(
+      'invalidated keys return to password sign-in; saved enrollment can be removed',
+      (tester) async {
+    final biometrics = _Biometrics()
+      ..onUnlock = () async => throw PlatformException(
+          code: 'invalidated',
+          message: 'Sign in with your password to set up fingerprint again.');
+    await mount(tester, biometrics, (_) async => success());
+    await tapFingerprint(tester);
+    expect(find.text('Sign in with your password to set up fingerprint again.'),
+        findsOneWidget);
+    final remove = find.text('Remove saved fingerprint sign-in');
+    await tester.ensureVisible(remove);
+    await tester.tap(remove);
+    await tester.pumpAndSettle();
+    expect(biometrics.disables, 1);
+    expect(find.byKey(const ValueKey('biometric-sign-in')), findsNothing);
+  });
+}

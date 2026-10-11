@@ -59,7 +59,7 @@ class SensorOverviewPanel extends StatelessWidget {
             // ── primary gauges ──
             Padding(
               padding: EdgeInsets.symmetric(horizontal: pad),
-              child: _gauges(mobile, tablet, gap),
+              child: _gauges(context, mobile, tablet, gap),
             ),
 
             SizedBox(height: gap + 4),
@@ -117,11 +117,12 @@ class SensorOverviewPanel extends StatelessWidget {
         ]),
         const SizedBox(height: 6),
         Row(children: [
-          Text('Real-time monitoring data',
-              style: AppTypography.font(
-                  fontSize: AppTypography.fieldLabelSize,
-                  color: isDark ? Colors.white38 : AppColors.textSecondary)),
-          const Spacer(),
+          Expanded(
+            child: Text('Real-time monitoring data',
+                style: AppTypography.font(
+                    fontSize: AppTypography.fieldLabelSize,
+                    color: isDark ? Colors.white38 : AppColors.textSecondary)),
+          ),
           if (onViewAllTap != null)
             GestureDetector(
               onTap: onViewAllTap,
@@ -169,7 +170,8 @@ class SensorOverviewPanel extends StatelessWidget {
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Text('View all',
                 style: AppTypography.font(
-                    fontSize: AppTypography.captionSize, fontWeight: AppTypography.headingWeight)),
+                    fontSize: AppTypography.captionSize,
+                    fontWeight: AppTypography.headingWeight)),
             const SizedBox(width: 4),
             const Icon(Icons.arrow_forward_ios_rounded, size: 11),
           ]),
@@ -208,7 +210,9 @@ class SensorOverviewPanel extends StatelessWidget {
         SizedBox(width: compact ? 4 : 6),
         Text(compact ? 'Normal' : 'All Systems Normal',
             style: AppTypography.font(
-              fontSize: compact ? AppTypography.microSize : AppTypography.fieldLabelSize,
+              fontSize: compact
+                  ? AppTypography.microSize
+                  : AppTypography.fieldLabelSize,
               fontWeight: AppTypography.headingWeight,
               color: AppColors.success,
             )),
@@ -218,9 +222,13 @@ class SensorOverviewPanel extends StatelessWidget {
 
   // ─── gauges grid ──────────────────────────────────────────────────────────
 
-  Widget _gauges(bool mobile, bool tablet, double gap) {
+  Widget _gauges(BuildContext context, bool mobile, bool tablet, double gap) {
     final cols = mobile ? 2 : (tablet ? 2 : 4);
     final ratio = mobile ? 0.88 : (tablet ? 0.95 : 0.98);
+    final scaler = MediaQuery.textScalerOf(context);
+    final textGrowth = [10.0, 18.0, 24.0]
+        .map((size) => scaler.scale(size) / size)
+        .fold(1.0, (largest, value) => value > largest ? value : largest);
 
     return GridView.count(
       crossAxisCount: cols,
@@ -228,7 +236,7 @@ class SensorOverviewPanel extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: gap,
       mainAxisSpacing: gap,
-      childAspectRatio: ratio,
+      childAspectRatio: ratio / textGrowth,
       children: [
         if (_has('temperature'))
           SensorGaugeCard(
@@ -299,7 +307,8 @@ class SensorOverviewPanel extends StatelessWidget {
       children: [
         Text('Additional Readings',
             style: AppTypography.font(
-              fontSize: mobile ? AppTypography.captionSize : AppTypography.actionSize,
+              fontSize:
+                  mobile ? AppTypography.captionSize : AppTypography.actionSize,
               fontWeight: AppTypography.headingWeight,
               letterSpacing: 0.3,
               color: isDark

@@ -31,7 +31,8 @@ class GaugeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gaugeColor = color ?? AppColors.primary;
-    final percentage = ((value - minValue) / (maxValue - minValue)).clamp(0.0, 1.0);
+    final percentage =
+        ((value - minValue) / (maxValue - minValue)).clamp(0.0, 1.0);
 
     return SizedBox(
       width: size,
@@ -40,6 +41,8 @@ class GaugeWidget extends StatelessWidget {
         painter: _GaugePainter(
           percentage: percentage,
           color: gaugeColor,
+          textScaler: MediaQuery.textScalerOf(context),
+          textDirection: Directionality.of(context),
         ),
         child: Center(
           child: Column(
@@ -79,10 +82,14 @@ class GaugeWidget extends StatelessWidget {
 class _GaugePainter extends CustomPainter {
   final double percentage;
   final Color color;
+  final TextScaler textScaler;
+  final TextDirection textDirection;
 
   _GaugePainter({
     required this.percentage,
     required this.color,
+    required this.textScaler,
+    required this.textDirection,
   });
 
   @override
@@ -128,7 +135,8 @@ class _GaugePainter extends CustomPainter {
 
     // Draw min/max labels
     final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
+      textDirection: textDirection,
+      textScaler: textScaler,
     );
 
     // Min label (bottom left)
@@ -143,15 +151,19 @@ class _GaugePainter extends CustomPainter {
     textPainter.paint(
       canvas,
       Offset(
-        center.dx - radius - textPainter.width / 2,
+        (center.dx - radius - textPainter.width / 2).clamp(0, size.width),
         center.dy + radius * 0.7,
       ),
     );
+    textPainter.dispose();
   }
 
   @override
   bool shouldRepaint(_GaugePainter oldDelegate) {
-    return oldDelegate.percentage != percentage || oldDelegate.color != color;
+    return oldDelegate.percentage != percentage ||
+        oldDelegate.color != color ||
+        oldDelegate.textScaler != textScaler ||
+        oldDelegate.textDirection != textDirection;
   }
 }
 
@@ -179,7 +191,8 @@ class LinearGaugeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gaugeColor = color ?? AppColors.primary;
-    final percentage = ((value - minValue) / (maxValue - minValue)).clamp(0.0, 1.0);
+    final percentage =
+        ((value - minValue) / (maxValue - minValue)).clamp(0.0, 1.0);
 
     return Container(
       height: height,

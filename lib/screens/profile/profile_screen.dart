@@ -1,4 +1,5 @@
 import '../../core/widgets/personal_typography_card.dart';
+import '../../core/widgets/biometric_sign_in_card.dart';
 import '../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -140,7 +141,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       appBar: AppBar(
         title: Text('My profile',
             style: AppTypography.font(
-                fontSize: AppTypography.sectionTitleSize, fontWeight: AppTypography.headingWeight, color: _text)),
+                fontSize: AppTypography.sectionTitleSize,
+                fontWeight: AppTypography.headingWeight,
+                color: _text)),
         backgroundColor: background,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
@@ -170,6 +173,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           _identity(user, dark),
                           const SizedBox(height: 16),
                           const PersonalTypographyCard(),
+                          const BiometricSignInCard(),
                           const SizedBox(height: 16),
                           LayoutBuilder(builder: (context, constraints) {
                             if (constraints.maxWidth < 760) {
@@ -243,7 +247,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 5),
                 Text(user.email,
                     style: AppTypography.font(
-                        fontSize: AppTypography.captionSize, height: 1.5, color: _muted)),
+                        fontSize: AppTypography.captionSize,
+                        height: 1.5,
+                        color: _muted)),
               ])),
         ]),
         const SizedBox(height: 16),
@@ -334,7 +340,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             padding: const EdgeInsets.only(bottom: 16),
             child: Text('Use at least 8 characters for your new password.',
                 style: AppTypography.font(
-                    fontSize: AppTypography.fieldLabelSize, height: 1.5, color: _muted)),
+                    fontSize: AppTypography.fieldLabelSize,
+                    height: 1.5,
+                    color: _muted)),
           ),
           _action('Update password', 'Updating password…',
               Icons.lock_reset_rounded, _savingPassword, _changePassword,
@@ -380,7 +388,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   const SizedBox(height: 4),
                   Text(subtitle,
                       style: AppTypography.font(
-                          fontSize: AppTypography.captionSize, height: 1.5, color: _muted)),
+                          fontSize: AppTypography.captionSize,
+                          height: 1.5,
+                          color: _muted)),
                 ])),
           ]),
           const SizedBox(height: 20),
@@ -401,7 +411,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label,
             style: AppTypography.font(
-                fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight, color: _text)),
+                fontSize: AppTypography.fieldLabelSize,
+                fontWeight: AppTypography.headingWeight,
+                color: _text)),
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
@@ -412,7 +424,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           keyboardType: keyboard,
           autocorrect: suffix == null,
           enableSuggestions: suffix == null,
-          style: AppTypography.font(fontSize: AppTypography.captionSize, height: 1.5, color: _text),
+          style: AppTypography.font(
+              fontSize: AppTypography.captionSize, height: 1.5, color: _text),
           decoration: InputDecoration(
             filled: true,
             fillColor: dark
@@ -456,8 +469,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final style = ButtonStyle(
       padding: const WidgetStatePropertyAll(
           EdgeInsets.symmetric(horizontal: 16, vertical: 13)),
-      textStyle: WidgetStatePropertyAll(
-          AppTypography.font(fontSize: AppTypography.actionSize, fontWeight: AppTypography.headingWeight)),
+      textStyle: WidgetStatePropertyAll(AppTypography.font(
+          fontSize: AppTypography.actionSize,
+          fontWeight: AppTypography.headingWeight)),
       shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
     );

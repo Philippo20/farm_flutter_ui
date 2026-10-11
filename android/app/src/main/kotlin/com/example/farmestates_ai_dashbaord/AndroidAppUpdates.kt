@@ -9,7 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.FileProvider
-import io.flutter.embedding.android.FlutterActivity
+import android.app.Activity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -17,7 +17,7 @@ import java.io.File
 import java.security.MessageDigest
 
 /** User-approved sideload updates. Downloads survive app/phone suspension. */
-class AndroidAppUpdates(private val activity: FlutterActivity) {
+class AndroidAppUpdates(private val activity: Activity) {
     private val prefs = activity.getSharedPreferences("app_updates", Context.MODE_PRIVATE)
     private val downloads get() = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     private val apk get() = File(requireNotNull(activity.getExternalFilesDir(null)), "updates/farmestates-update.apk")

@@ -1,3 +1,4 @@
+import 'personal_date_picker.dart';
 import '../theme/app_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -53,7 +54,8 @@ class _SensorDateRangeModalState extends State<SensorDateRangeModal> {
     TextStyle text(double size, {bool bold = false, Color? color}) =>
         AppTypography.font(
             fontSize: AppTypography.resolveSize(size),
-            fontWeight: bold ? AppTypography.headingWeight : AppTypography.bodyWeight,
+            fontWeight:
+                bold ? AppTypography.headingWeight : AppTypography.bodyWeight,
             color: color ?? foreground);
     Widget dateBox(String title, DateTime? date) => Expanded(
         child: Container(
@@ -154,7 +156,8 @@ class _SensorDateRangeModalState extends State<SensorDateRangeModal> {
                             const SizedBox(height: 14),
                             SizedBox(
                                 height: 290,
-                                child: SfDateRangePicker(
+                                child: PersonalDatePicker(
+                                    picker: SfDateRangePicker(
                                   controller: _controller,
                                   selectionMode:
                                       DateRangePickerSelectionMode.range,
@@ -199,7 +202,7 @@ class _SensorDateRangeModalState extends State<SensorDateRangeModal> {
                                       });
                                     }
                                   },
-                                )),
+                                ))),
                             Text(
                                 'The selected end date includes the whole day.',
                                 style: text(11, color: secondary)),

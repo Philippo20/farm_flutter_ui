@@ -44,6 +44,7 @@ class AuthService {
   String? _jwt;
   String? _sessionId;
   String? passwordChangeToken;
+  bool lastLoginRejected = false;
   DateTime? lastActivity;
   int sessionTimeoutMinutes = 30;
   int sessionWarningMinutes = 5;
@@ -172,6 +173,7 @@ class AuthService {
   /// Login with email and password
   Future<AuthResult> login(String email, String password) async {
     passwordChangeToken = null;
+    lastLoginRejected = false;
     final result = await _loginWithApi(email.toLowerCase().trim(), password);
     return result ?? AuthResult(success: false, message: connectionMessage);
   }
@@ -188,6 +190,7 @@ class AuthService {
       ).timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 401 || response.statusCode == 403) {
+        lastLoginRejected = true;
         return AuthResult(
           success: false,
           message: _extractApiErrorMessage(

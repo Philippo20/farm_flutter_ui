@@ -44,15 +44,15 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
   late AnimationController _anim;
   late Animation<double> _progress;
 
-  double get _percent =>
-      ((widget.currentValue - widget.minValue) /
-              (widget.maxValue - widget.minValue) *
-              100)
-          .clamp(0, 100);
+  double get _percent => ((widget.currentValue - widget.minValue) /
+          (widget.maxValue - widget.minValue) *
+          100)
+      .clamp(0, 100);
 
   String get _status {
     final v = widget.currentValue;
-    if (v < widget.optimalMin * 0.7 || v > widget.optimalMax * 1.3) return 'Critical';
+    if (v < widget.optimalMin * 0.7 || v > widget.optimalMax * 1.3)
+      return 'Critical';
     if (v < widget.optimalMin || v > widget.optimalMax) return 'Warning';
     return 'Optimal';
   }
@@ -137,7 +137,9 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.font(
-                        fontSize: compact ? AppTypography.fieldLabelSize : AppTypography.captionSize,
+                        fontSize: compact
+                            ? AppTypography.fieldLabelSize
+                            : AppTypography.captionSize,
                         fontWeight: AppTypography.headingWeight,
                         color: isDark
                             ? Colors.white.withOpacity(0.7)
@@ -147,8 +149,7 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
                 Container(
                   width: 7,
                   height: 7,
-                  decoration: BoxDecoration(
-                      color: sc, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: sc, shape: BoxShape.circle),
                 ),
               ]),
 
@@ -156,8 +157,7 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
               Expanded(
                 child: Padding(
                   padding: EdgeInsets.symmetric(
-                      vertical: compact ? 2 : 4,
-                      horizontal: compact ? 4 : 8),
+                      vertical: compact ? 2 : 4, horizontal: compact ? 4 : 8),
                   child: AnimatedBuilder(
                     animation: _progress,
                     builder: (context, _) => CustomPaint(
@@ -168,39 +168,40 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
                         isDark: isDark,
                       ),
                       child: Center(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  widget.currentValue.toStringAsFixed(
-                                      widget.currentValue.truncateToDouble() ==
-                                              widget.currentValue
-                                          ? 0
-                                          : 1),
-                                  style: AppTypography.font(
-                                    fontSize: compact ? AppTypography.sectionTitleSize : AppTypography.pageTitleSize,
-                                    fontWeight: AppTypography.headingWeight,
-                                    color: sc,
-                                    height: 1,
-                                  ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(6),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                widget.currentValue.toStringAsFixed(
+                                    widget.currentValue.truncateToDouble() ==
+                                            widget.currentValue
+                                        ? 0
+                                        : 1),
+                                style: AppTypography.font(
+                                  fontSize: compact
+                                      ? AppTypography.sectionTitleSize
+                                      : AppTypography.pageTitleSize,
+                                  fontWeight: AppTypography.headingWeight,
+                                  color: sc,
+                                  height: 1,
                                 ),
-                                const SizedBox(height: 1),
-                                Text(
-                                  widget.unit,
-                                  style: AppTypography.font(
-                                    fontSize: compact ? AppTypography.microSize : AppTypography.microSize,
-                                    fontWeight: AppTypography.labelWeight,
-                                    color: isDark
-                                        ? Colors.white38
-                                        : AppColors.textSecondary,
-                                  ),
+                              ),
+                              const SizedBox(height: 1),
+                              Text(
+                                widget.unit,
+                                style: AppTypography.font(
+                                  fontSize: compact
+                                      ? AppTypography.microSize
+                                      : AppTypography.microSize,
+                                  fontWeight: AppTypography.labelWeight,
+                                  color: isDark
+                                      ? Colors.white38
+                                      : AppColors.textSecondary,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -215,7 +216,9 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
                   child: Text(
                     '${widget.optimalMin.toStringAsFixed(0)}–${widget.optimalMax.toStringAsFixed(0)} ${widget.unit}',
                     style: AppTypography.font(
-                      fontSize: compact ? AppTypography.microSize : AppTypography.microSize,
+                      fontSize: compact
+                          ? AppTypography.microSize
+                          : AppTypography.microSize,
                       color: isDark
                           ? Colors.white24
                           : AppColors.textSecondary.withOpacity(0.6),
@@ -231,15 +234,16 @@ class _SensorGaugeCardState extends State<SensorGaugeCard>
                           ? Icons.north_east_rounded
                           : Icons.south_east_rounded,
                       size: compact ? 10 : 11,
-                      color: widget.trendUp
-                          ? AppColors.success
-                          : AppColors.error,
+                      color:
+                          widget.trendUp ? AppColors.success : AppColors.error,
                     ),
                     const SizedBox(width: 2),
                     Text(
                       widget.trendText!,
                       style: AppTypography.font(
-                        fontSize: compact ? AppTypography.microSize : AppTypography.microSize,
+                        fontSize: compact
+                            ? AppTypography.microSize
+                            : AppTypography.microSize,
                         fontWeight: AppTypography.headingWeight,
                         color: widget.trendUp
                             ? AppColors.success
@@ -286,7 +290,8 @@ class _ArcGaugePainter extends CustomPainter {
       sweep,
       false,
       Paint()
-        ..color = isDark ? Colors.white.withOpacity(0.06) : const Color(0xFFEEEEEE)
+        ..color =
+            isDark ? Colors.white.withOpacity(0.06) : const Color(0xFFEEEEEE)
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeW
         ..strokeCap = StrokeCap.round,

@@ -73,7 +73,8 @@ void main() {
           await tester.drag(
               find.byType(SingleChildScrollView).first, const Offset(0, -1500));
           await tester.pumpAndSettle();
-          expect(find.text('Biometric unlock'), findsOneWidget);
+          expect(find.text('Offline drafts'), findsOneWidget);
+          expect(find.text('Biometric unlock'), findsNothing);
         } else {
           expect(find.text('Device maintenance'), findsOneWidget);
           await tester.tap(find.text('Farm tasks'));

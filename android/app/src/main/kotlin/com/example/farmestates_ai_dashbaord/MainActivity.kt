@@ -1,6 +1,6 @@
 package com.example.farmestates_ai_dashbaord
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.Manifest
@@ -13,13 +13,15 @@ import android.content.pm.PackageManager
 import android.os.Build
 import com.google.firebase.messaging.FirebaseMessaging
 
-class MainActivity: FlutterActivity() {
+class MainActivity: FlutterFragmentActivity() {
+    private var biometricSignIn: AndroidBiometricSignIn? = null
     private val channelId = "team_messages"
     private var channel: MethodChannel? = null
     private val notifications get() = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        biometricSignIn = AndroidBiometricSignIn(this).also { it.attach(flutterEngine) }
         AndroidAppUpdates(this).attach(flutterEngine)
         if (Build.VERSION.SDK_INT >= 26) {
             notifications.createNotificationChannel(NotificationChannel(
@@ -109,6 +111,11 @@ class MainActivity: FlutterActivity() {
     override fun onStart() {
         super.onStart()
         FarmPushService.foreground = true
+    }
+
+    override fun onDestroy() {
+        biometricSignIn?.dispose()
+        super.onDestroy()
     }
 
     override fun onStop() {

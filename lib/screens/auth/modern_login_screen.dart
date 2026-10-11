@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../../core/theme/app_typography.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/config/demo_accounts.dart';
+import '../../services/biometric_sign_in_service.dart';
 
 /// Modern login screen with role-based authentication
 class ModernLoginScreen extends ConsumerStatefulWidget {
@@ -20,6 +21,21 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
+  bool _working = false;
+  bool _saveBiometric = false;
+  BiometricSignInStatus _biometric = const BiometricSignInStatus();
+  String? _biometricError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBiometric();
+  }
+
+  Future<void> _loadBiometric() async {
+    final status = await ref.read(biometricSignInProvider).status();
+    if (mounted) setState(() => _biometric = status);
+  }
 
   @override
   void dispose() {
@@ -29,15 +45,68 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
   }
 
   Future<void> _login() async {
-    if (ref.read(authProvider).isLoading ||
+    if (_working ||
+        ref.read(authProvider).isLoading ||
         !_formKey.currentState!.validate()) {
       return;
     }
     FocusScope.of(context).unfocus();
 
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
+    setState(() {
+      _working = true;
+      _biometricError = null;
+    });
+    try {
+      await _signIn(_emailController.text.trim(), _passwordController.text);
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
 
+  Future<void> _fingerprint() async {
+    if (_working || ref.read(authProvider).isLoading) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _working = true;
+      _biometricError = null;
+    });
+    ref.read(authProvider.notifier).clearError();
+    try {
+      final credentials = await ref.read(biometricSignInProvider).unlock();
+      if (!mounted || credentials == null) return;
+      await _signIn(credentials.email, credentials.password, biometric: true);
+    } on PlatformException catch (error) {
+      if (mounted) {
+        setState(() =>
+            _biometricError = error.message ?? 'Use your password to sign in.');
+      }
+      if (mounted) await _loadBiometric();
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  Future<void> _removeFingerprint() async {
+    if (_working) return;
+    setState(() {
+      _working = true;
+      _biometricError = null;
+    });
+    try {
+      await ref.read(biometricSignInProvider).disable();
+      if (mounted) await _loadBiometric();
+    } on PlatformException {
+      if (mounted) {
+        setState(() => _biometricError =
+            'Unable to remove fingerprint sign-in. Try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _working = false);
+    }
+  }
+
+  Future<void> _signIn(String email, String password,
+      {bool biometric = false}) async {
     // Use auth provider to login
     final success =
         await ref.read(authProvider.notifier).login(email, password);
@@ -46,6 +115,12 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
 
     final authService = ref.read(authServiceProvider);
     final challenge = authService.passwordChangeToken;
+    if (biometric && (authService.lastLoginRejected || challenge != null)) {
+      await ref.read(biometricSignInProvider).disable();
+      if (!mounted) return;
+      await _loadBiometric();
+      if (!mounted) return;
+    }
     if (challenge != null) {
       final changed = await Navigator.of(context).push<bool>(MaterialPageRoute(
           builder: (_) => FirstPasswordScreen(
@@ -62,7 +137,19 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
       return;
     }
     if (success) {
-      TextInput.finishAutofillContext();
+      if (!biometric) TextInput.finishAutofillContext();
+      if (!biometric && _saveBiometric && _biometric.available) {
+        try {
+          await ref.read(biometricSignInProvider).enable(email, password);
+        } on PlatformException {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text(
+                    'Signed in. Fingerprint setup was unavailable; you can try again next time.')));
+          }
+        }
+        if (!mounted) return;
+      }
       // Get the appropriate dashboard route
       final route = ref.read(authProvider.notifier).getDashboardRoute();
 
@@ -77,6 +164,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final colors = Theme.of(context).colorScheme;
     final auth = ref.watch(authProvider);
+    final busy = auth.isLoading || _working;
     final foreground = dark ? Colors.white : AppColors.textPrimary;
     final muted = dark ? Colors.white70 : AppColors.textSecondary;
     final border = dark ? Colors.white12 : AppColors.neutral200;
@@ -157,7 +245,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                                   TextFormField(
                                     key: const ValueKey('login-email'),
                                     controller: _emailController,
-                                    enabled: !auth.isLoading,
+                                    enabled: !busy,
                                     keyboardType: TextInputType.emailAddress,
                                     textInputAction: TextInputAction.next,
                                     autofillHints: const [
@@ -187,7 +275,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                                   TextFormField(
                                     key: const ValueKey('login-password'),
                                     controller: _passwordController,
-                                    enabled: !auth.isLoading,
+                                    enabled: !busy,
                                     obscureText: _obscurePassword,
                                     autocorrect: false,
                                     enableSuggestions: false,
@@ -207,7 +295,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                                         tooltip: _obscurePassword
                                             ? 'Show password'
                                             : 'Hide password',
-                                        onPressed: auth.isLoading
+                                        onPressed: busy
                                             ? null
                                             : () => setState(() =>
                                                 _obscurePassword =
@@ -227,7 +315,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                                   Align(
                                       alignment: Alignment.centerRight,
                                       child: TextButton(
-                                        onPressed: auth.isLoading
+                                        onPressed: busy
                                             ? null
                                             : () => Navigator.pushNamed(
                                                 context, '/forgot-password',
@@ -272,8 +360,44 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                                         )),
                                     const SizedBox(height: 16),
                                   ],
+                                  if (_biometric.available) ...[
+                                    Material(
+                                      color: Colors.transparent,
+                                      child: CheckboxListTile(
+                                        key: const ValueKey(
+                                            'enable-biometric-sign-in'),
+                                        value: _saveBiometric,
+                                        onChanged: busy
+                                            ? null
+                                            : (value) => setState(() =>
+                                                _saveBiometric =
+                                                    value ?? false),
+                                        contentPadding: EdgeInsets.zero,
+                                        controlAffinity:
+                                            ListTileControlAffinity.leading,
+                                        title: Text(
+                                            'Enable fingerprint sign-in on this phone',
+                                            style: AppTypography.bodySmall
+                                                .copyWith(color: foreground)),
+                                        subtitle: Text(
+                                            'Anyone with a registered biometric on this phone can sign in to this account.',
+                                            style: AppTypography.caption
+                                                .copyWith(color: muted)),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                  if (_biometricError != null) ...[
+                                    Semantics(
+                                        liveRegion: true,
+                                        child: Text(_biometricError!,
+                                            style: AppTypography.bodySmall
+                                                .copyWith(
+                                                    color: colors.error))),
+                                    const SizedBox(height: 12),
+                                  ],
                                   FilledButton(
-                                    onPressed: auth.isLoading ? null : _login,
+                                    onPressed: busy ? null : _login,
                                     style: FilledButton.styleFrom(
                                       backgroundColor: AppColors.primary,
                                       foregroundColor: Colors.white,
@@ -289,7 +413,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
                                         children: [
-                                          if (auth.isLoading) ...[
+                                          if (busy) ...[
                                             const SizedBox(
                                                 width: 16,
                                                 height: 16,
@@ -299,11 +423,41 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                                             const SizedBox(width: 10),
                                           ],
                                           Flexible(
-                                              child: Text(auth.isLoading
+                                              child: Text(busy
                                                   ? 'Signing in...'
                                                   : 'Sign in')),
                                         ]),
                                   ),
+                                  if (_biometric.enabled) ...[
+                                    const SizedBox(height: 12),
+                                    if (_biometric.available)
+                                      OutlinedButton.icon(
+                                        key:
+                                            const ValueKey('biometric-sign-in'),
+                                        onPressed: busy ? null : _fingerprint,
+                                        icon: const Icon(
+                                            Icons.fingerprint_rounded),
+                                        label: const Text(
+                                            'Sign in with fingerprint'),
+                                        style: OutlinedButton.styleFrom(
+                                            textStyle: AppTypography.labelLarge,
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 14)),
+                                      ),
+                                    const SizedBox(height: 6),
+                                    Text(_biometric.email ?? '',
+                                        textAlign: TextAlign.center,
+                                        style: AppTypography.bodySmall
+                                            .copyWith(color: muted)),
+                                    TextButton(
+                                      onPressed:
+                                          busy ? null : _removeFingerprint,
+                                      style: TextButton.styleFrom(
+                                          textStyle: AppTypography.labelSmall),
+                                      child: const Text(
+                                          'Remove saved fingerprint sign-in'),
+                                    ),
+                                  ],
                                   const SizedBox(height: 16),
                                   Text(
                                       'New account? Use the temporary password sent to your email.',
@@ -339,7 +493,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen> {
                                         trailing: const Icon(
                                             Icons.arrow_forward_rounded,
                                             size: 18),
-                                        onTap: auth.isLoading
+                                        onTap: busy
                                             ? null
                                             : () {
                                                 _emailController.text =

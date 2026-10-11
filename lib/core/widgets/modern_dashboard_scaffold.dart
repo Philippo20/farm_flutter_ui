@@ -279,8 +279,9 @@ class _ModernDashboardScaffoldState
                     color: isSelected
                         ? AppColors.primary
                         : (isDark ? Colors.white70 : AppColors.textPrimary),
-                    fontWeight:
-                        isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
+                    fontWeight: isSelected
+                        ? AppTypography.headingWeight
+                        : AppTypography.bodyWeight,
                   ),
                 ),
               ),
@@ -575,18 +576,16 @@ class CompactStatCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 1),
                     Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          value,
-                          style: AppTypography.h6.copyWith(
-                            fontWeight: AppTypography.headingWeight,
-                            color: color,
-                            letterSpacing: -0.5,
-                            fontSize: AppTypography.sectionTitleSize,
-                          ),
+                      child: Text(
+                        value,
+                        style: AppTypography.h6.copyWith(
+                          fontWeight: AppTypography.headingWeight,
+                          color: color,
+                          letterSpacing: -0.5,
+                          fontSize: AppTypography.sectionTitleSize,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
