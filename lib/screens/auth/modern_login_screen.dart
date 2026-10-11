@@ -7,6 +7,7 @@ import '../../core/theme/app_typography.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/config/demo_accounts.dart';
 import '../../services/biometric_sign_in_service.dart';
+import '../../core/widgets/android_update_prompt_scope.dart';
 
 /// Modern login screen with role-based authentication
 class ModernLoginScreen extends ConsumerStatefulWidget {
@@ -72,6 +73,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen>
       // Wait until login is visible and Android can safely present its prompt.
       // Never re-prompt after cancellation, an error, or a password attempt.
       if ((lifecycle != null && lifecycle != AppLifecycleState.resumed) ||
+          AndroidUpdatePromptScope.isBlocking(context) ||
           route?.isCurrent != true ||
           (route?.animation != null &&
               route!.animation!.status != AnimationStatus.completed)) {
@@ -118,7 +120,11 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen>
   }
 
   Future<void> _fingerprint() async {
-    if (_working || ref.read(authProvider).isLoading) return;
+    if (_working ||
+        ref.read(authProvider).isLoading ||
+        AndroidUpdatePromptScope.isBlocking(context)) {
+      return;
+    }
     FocusScope.of(context).unfocus();
     setState(() {
       _automaticBiometricAttempted = true;
@@ -200,6 +206,7 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen>
     final dark = Theme.of(context).brightness == Brightness.dark;
     final colors = Theme.of(context).colorScheme;
     final auth = ref.watch(authProvider);
+    final waitingForUpdate = AndroidUpdatePromptScope.isBlocking(context);
     final busy = auth.isLoading || _working;
     final foreground = dark ? Colors.white : AppColors.textPrimary;
     final muted = dark ? Colors.white70 : AppColors.textSecondary;
@@ -470,7 +477,9 @@ class _ModernLoginScreenState extends ConsumerState<ModernLoginScreen>
                                     const SizedBox(height: 12),
                                     OutlinedButton.icon(
                                       key: const ValueKey('biometric-sign-in'),
-                                      onPressed: busy ? null : _fingerprint,
+                                      onPressed: busy || waitingForUpdate
+                                          ? null
+                                          : _fingerprint,
                                       icon:
                                           const Icon(Icons.fingerprint_rounded),
                                       label: const Text(

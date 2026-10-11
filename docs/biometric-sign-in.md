@@ -8,7 +8,11 @@ The option is unavailable on web, Windows and unsupported or unenrolled phones.
 
 Once enabled, the system fingerprint prompt opens automatically when the login
 screen becomes visible in the foreground. It waits for navigation transitions
-and any covering update or other dialog to finish. Setup is hidden for enrolled
+and the startup APK check to finish. An available update takes priority: fingerprint
+sign-in waits until the update sheet, including its closing animation, finishes.
+An offline or stalled check releases fingerprint sign-in within 15 seconds;
+password sign-in remains available during the check. Other covering dialogs
+also postpone the prompt. Setup is hidden for enrolled
 accounts, and the login page does not display the saved email or removal controls.
 Cancellation and lockout leave password sign-in available without repeated
 automatic prompts; **Sign in with fingerprint** allows a deliberate retry.

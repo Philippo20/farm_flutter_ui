@@ -6,6 +6,12 @@ return after at least 15 minutes, and every six hours while in the foreground:
 Web, Windows and other platforms do not run this Android installer workflow.
 Users of older builds must install the first APK containing this feature once.
 
+The startup check takes priority over automatic fingerprint sign-in. If an update
+is offered, fingerprint waits until the sheet finishes closing; interrupted
+offers retain priority while they are restored. A failed or stalled check releases
+fingerprint within 15 seconds, and password sign-in stays available throughout.
+An offer discovered while Android is backgrounded is retained until resume.
+
 A newer build shows an optional update sheet. **Download update** uses Android
 DownloadManager, which continues while the app is suspended and shows a system
 download notification. The sheet shows progress. **Install update** verifies

@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 20,
+  "buildNumber": 21,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "f2f9270bdbb87e1b9c90bc37e9a0bf676e1ae9896165a86d0fd214c5af73f5ea",
-  "sizeBytes": 83628237,
-  "publishedAt": "2026-10-11T16:15:52.7562492Z",
-  "releaseNotes": "Android notifications show sender names and actual messages, with expandable history and direct Reply without opening the app. Replies show sending and retry states; notification taps open the relevant conversation, screen or full alert."
+  "sha256": "052e57f7f46466bcf9373109e5b28cadc89b9aed73944e777f8676d4588941e7",
+  "sizeBytes": 83693773,
+  "publishedAt": "2026-10-11T16:38:42.6024337Z",
+  "releaseNotes": "Update prompts now take priority over automatic fingerprint sign-in. Fingerprint resumes after the update sheet fully closes, and failed update checks do not block login. Updates discovered in the background or interrupted by session expiry are restored."
 }

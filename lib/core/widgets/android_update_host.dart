@@ -6,6 +6,7 @@ import '../../services/android_app_updates.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'app_dialog.dart';
+import 'android_update_prompt_scope.dart';
 import 'crop_variety_modal_frame.dart';
 
 class AndroidUpdateHost extends StatefulWidget {
@@ -29,6 +30,7 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
   DateTime? _lastCheck;
   bool _foreground = true, _open = false, _checking = false;
   bool _pendingPresentation = false;
+  bool _initialCheckFinished = false;
   bool get _hasActiveUpdate =>
       _updates.release != null &&
       !{AppUpdatePhase.available, AppUpdatePhase.failed}
@@ -39,6 +41,8 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
   void initState() {
     super.initState();
     if (!_supported) return;
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    _foreground = lifecycle == null || lifecycle == AppLifecycleState.resumed;
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _check();
@@ -69,17 +73,28 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
 
   Future<void> _check() async {
     if (!mounted || !_foreground || _open || _checking) return;
-    _checking = true;
+    setState(() => _checking = true);
     try {
       _lastCheck = DateTime.now();
       // Reuse an interrupted offer or an active download. The service deliberately
       // skips feed checks while downloading, so checking it again would hide it.
       final restore = (_pendingPresentation && _updates.release != null) ||
           _hasActiveUpdate;
-      if (!restore && !await _updates.check()) return;
-      if (!mounted || !_foreground || _updates.release == null) return;
+      if (!restore &&
+          !await _updates.check().timeout(const Duration(seconds: 15))) {
+        return;
+      }
+      if (!mounted || _updates.release == null) return;
+      if (!_foreground) {
+        _pendingPresentation = true;
+        return;
+      }
       final prefs = await SharedPreferences.getInstance();
-      if (!mounted || !_foreground) return;
+      if (!mounted) return;
+      if (!_foreground) {
+        _pendingPresentation = true;
+        return;
+      }
       final build = _updates.release!.build;
       // Older builds also snoozed sheets removed by logout. Ignore those legacy
       // values; only a recorded explicit dismissal can postpone an update.
@@ -94,18 +109,28 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
         return;
       }
       final context = widget.navigatorKey.currentState?.overlay?.context;
-      if (context == null || !context.mounted) return;
+      if (context == null || !context.mounted) {
+        _pendingPresentation = true;
+        return;
+      }
       _open = true;
       _pendingPresentation = false;
+      ModalRoute<dynamic>? updateRoute;
       final dismissed = await showAppDialog<bool>(
           context: context,
           barrierDismissible: false,
-          builder: (context) => PopScope<bool>(
-              canPop: false,
-              onPopInvokedWithResult: (didPop, result) {
-                if (!didPop) Navigator.of(context).pop(true);
-              },
-              child: AndroidUpdateModal(updates: _updates)));
+          builder: (context) {
+            updateRoute = ModalRoute.of(context);
+            return PopScope<bool>(
+                canPop: false,
+                onPopInvokedWithResult: (didPop, result) {
+                  if (!didPop) Navigator.of(context).pop(true);
+                },
+                child: AndroidUpdateModal(updates: _updates));
+          });
+      // The pop future completes before the closing animation. Do not put a
+      // native fingerprint prompt on top of the sheet while it is still closing.
+      await updateRoute?.completed;
       if (!mounted) return;
       if (dismissed == true &&
           {AppUpdatePhase.available, AppUpdatePhase.failed}
@@ -126,6 +151,8 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
     } finally {
       _open = false;
       _checking = false;
+      _initialCheckFinished = true;
+      if (mounted) setState(() {});
       if (mounted && _foreground && _pendingPresentation) {
         _presentationRetry?.cancel();
         _presentationRetry = Timer(const Duration(milliseconds: 300), _check);
@@ -143,7 +170,13 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) => AndroidUpdatePromptScope(
+      blocksBiometrics: _supported &&
+          (!_initialCheckFinished ||
+              _checking ||
+              _open ||
+              _pendingPresentation),
+      child: widget.child);
 }
 
 class AndroidUpdateModal extends StatelessWidget {

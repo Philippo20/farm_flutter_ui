@@ -12,6 +12,30 @@ import 'package:farmestates_ai_dashbaord/providers/auth_provider.dart';
 import 'package:farmestates_ai_dashbaord/screens/auth/modern_login_screen.dart';
 import 'package:farmestates_ai_dashbaord/services/auth_service.dart';
 import 'package:farmestates_ai_dashbaord/services/biometric_sign_in_service.dart';
+import 'package:farmestates_ai_dashbaord/services/android_app_updates.dart';
+import 'package:farmestates_ai_dashbaord/core/widgets/android_update_host.dart';
+
+class _Updates extends AndroidAppUpdates {
+  final result = Completer<bool>();
+
+  void available() {
+    release = AndroidRelease(
+        build: 99,
+        version: '1.0.0',
+        packageName: 'farm.test',
+        url: Uri.parse(
+            'https://apps.farmestates.farm/downloads/farm-estates.apk'),
+        sha256: List.filled(64, 'a').join(),
+        bytes: 80000000,
+        notes: 'App improvements.');
+    result.complete(true);
+  }
+
+  @override
+  Future<bool> check() => result.future;
+  @override
+  Future<void> resumed() async {}
+}
 
 class _Biometrics extends BiometricSignInService {
   _Biometrics({this.available = true, this.enabled = true});
@@ -56,11 +80,12 @@ void main() {
 
   Future<void> mount(WidgetTester tester, _Biometrics biometric,
       Future<http.Response> Function(http.Request) backend,
-      {bool dark = false, bool settle = true}) async {
+      {bool dark = false, bool settle = true, _Updates? updates}) async {
     tester.view.physicalSize = const Size(320, 1000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    final navigator = GlobalKey<NavigatorState>();
     await tester.pumpWidget(ProviderScope(
         overrides: [
           biometricSignInProvider.overrideWithValue(biometric),
@@ -68,6 +93,11 @@ void main() {
               .overrideWithValue(AuthService.forTesting(MockClient(backend))),
         ],
         child: MaterialApp(
+          navigatorKey: navigator,
+          builder: updates == null
+              ? null
+              : (_, child) => AndroidUpdateHost(
+                  navigatorKey: navigator, service: updates, child: child!),
           theme:
               ThemeData(brightness: dark ? Brightness.dark : Brightness.light),
           home: const ModernLoginScreen(),
@@ -98,6 +128,137 @@ void main() {
         },
       }),
       200);
+
+  testWidgets('startup update check waits before automatic fingerprint',
+      (tester) async {
+    final updates = _Updates();
+    final biometric = _Biometrics();
+    await mount(tester, biometric, (_) async => success(), updates: updates);
+    await tester.pump(const Duration(seconds: 2));
+    expect(biometric.unlocks, 0);
+    expect(find.text('Dashboard'), findsNothing);
+    updates.result.complete(false);
+    await tester.pumpAndSettle();
+    expect(biometric.unlocks, 1);
+    expect(find.text('Dashboard'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    updates.dispose();
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets(
+      'update offer and closing animation take priority over fingerprint',
+      (tester) async {
+    final updates = _Updates();
+    final biometric = _Biometrics();
+    await mount(tester, biometric, (_) async => success(), updates: updates);
+    updates.available();
+    await tester.pumpAndSettle();
+    expect(find.text('App update available'), findsOneWidget);
+    expect(biometric.unlocks, 0);
+    // Even a deliberate native prompt cannot jump ahead of the update offer.
+    final login = tester.widget<OutlinedButton>(
+        find.byKey(const ValueKey('biometric-sign-in'), skipOffstage: false));
+    expect(login.onPressed, isNull);
+    await tester.pump();
+    expect(biometric.unlocks, 0);
+    await tester.tap(find.text('Cancel'));
+    await tester.pump();
+    expect(biometric.unlocks, 0);
+    await tester.pumpAndSettle();
+    expect(biometric.unlocks, 1);
+    expect(find.text('Dashboard'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    updates.dispose();
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets(
+      'background update result is offered before fingerprint on resume',
+      (tester) async {
+    final updates = _Updates();
+    final biometric = _Biometrics();
+    await mount(tester, biometric, (_) async => success(), updates: updates);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    updates.available();
+    await tester.pumpAndSettle();
+    expect(biometric.unlocks, 0);
+    expect(find.text('App update available'), findsNothing);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(find.text('App update available'), findsOneWidget);
+    expect(biometric.unlocks, 0);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(biometric.unlocks, 1);
+    await tester.pumpWidget(const SizedBox());
+    updates.dispose();
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  testWidgets('navigation interruption preserves update priority on new login',
+      (tester) async {
+    final updates = _Updates()..available();
+    final biometric = _Biometrics();
+    await mount(tester, biometric, (_) async => success(), updates: updates);
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    navigator.pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const ModernLoginScreen()),
+        (_) => false);
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pumpAndSettle();
+    expect(find.text('App update available'), findsOneWidget);
+    expect(biometric.unlocks, 0);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(biometric.unlocks, 1);
+    expect(find.text('Dashboard'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    updates.dispose();
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+
+  for (final timeout in [false, true]) {
+    testWidgets('failed update check releases fingerprint timeout=$timeout',
+        (tester) async {
+      final updates = _Updates();
+      final biometric = _Biometrics();
+      await mount(tester, biometric, (_) async => success(), updates: updates);
+      expect(biometric.unlocks, 0);
+      if (timeout) {
+        await tester.pump(const Duration(seconds: 16));
+      } else {
+        updates.result.completeError(StateError('Release website offline'));
+      }
+      await tester.pumpAndSettle();
+      expect(biometric.unlocks, 1);
+      expect(find.text('Dashboard'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      updates.dispose();
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
+  }
+
+  testWidgets('explicitly snoozed update allows automatic fingerprint',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'app_update_snooze_explicit': true,
+      'app_update_snooze_build': 99,
+      'app_update_snooze_until':
+          DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch,
+    });
+    final updates = _Updates()..available();
+    final biometric = _Biometrics();
+    await mount(tester, biometric, (_) async => success(), updates: updates);
+    expect(biometric.unlocks, 1);
+    expect(find.text('App update available'), findsNothing);
+    expect(find.text('Dashboard'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+    updates.dispose();
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
   Future<void> tapFingerprint(WidgetTester tester) async {
     final button = find.byKey(const ValueKey('biometric-sign-in'));
