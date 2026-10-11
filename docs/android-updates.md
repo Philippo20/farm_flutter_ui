@@ -15,8 +15,12 @@ the app does not silently install or force an update. When needed, it guides
 the user to allow installation from Farm Estates in Android settings.
 
 Closing the sheet does not stop a running download. Reopening the app restores
-the download from Android's persisted state. Dismissing an update that has not
-started snoozes that build for 24 hours. Feed failures never affect API
+the download from Android's persisted state. Explicitly choosing Cancel, Close
+or Android Back before a download starts snoozes that build for 24 hours.
+Session expiry or another route replacement does not snooze it: the offer
+reopens after the navigation finishes, preserving download/installation progress.
+Legacy snoozes without an explicit-dismissal marker are ignored, since older
+builds also wrote them when session expiry removed the sheet. Feed failures never affect API
 connectivity, sign-in or normal work. Install cancellation permits retry.
 
 For every release:

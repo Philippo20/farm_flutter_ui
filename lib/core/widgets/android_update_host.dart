@@ -25,8 +25,14 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
     with WidgetsBindingObserver {
   late final _updates = widget.service ?? AndroidAppUpdates();
   Timer? _timer;
+  Timer? _presentationRetry;
   DateTime? _lastCheck;
   bool _foreground = true, _open = false, _checking = false;
+  bool _pendingPresentation = false;
+  bool get _hasActiveUpdate =>
+      _updates.release != null &&
+      !{AppUpdatePhase.available, AppUpdatePhase.failed}
+          .contains(_updates.phase);
   bool get _supported =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
   @override
@@ -43,13 +49,21 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _foreground = state == AppLifecycleState.resumed;
-    if (_foreground) {
-      _updates.resumed().catchError((_) {});
-      if (_lastCheck == null ||
-          DateTime.now().difference(_lastCheck!) >=
-              const Duration(minutes: 15)) {
-        _check();
-      }
+    if (_foreground) unawaited(_resume());
+  }
+
+  Future<void> _resume() async {
+    try {
+      await _updates.resumed();
+    } catch (_) {
+      // A failed installer/permission resume must not affect normal navigation.
+    }
+    if (!mounted || !_foreground) return;
+    if (_pendingPresentation ||
+        _hasActiveUpdate ||
+        _lastCheck == null ||
+        DateTime.now().difference(_lastCheck!) >= const Duration(minutes: 15)) {
+      await _check();
     }
   }
 
@@ -58,31 +72,64 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
     _checking = true;
     try {
       _lastCheck = DateTime.now();
-      if (!await _updates.check() || !mounted || !_foreground) return;
+      // Reuse an interrupted offer or an active download. The service deliberately
+      // skips feed checks while downloading, so checking it again would hide it.
+      final restore = (_pendingPresentation && _updates.release != null) ||
+          _hasActiveUpdate;
+      if (!restore && !await _updates.check()) return;
+      if (!mounted || !_foreground || _updates.release == null) return;
       final prefs = await SharedPreferences.getInstance();
       if (!mounted || !_foreground) return;
       final build = _updates.release!.build;
-      final snoozed = prefs.getInt('app_update_snooze_build') == build &&
+      // Older builds also snoozed sheets removed by logout. Ignore those legacy
+      // values; only a recorded explicit dismissal can postpone an update.
+      final snoozed = prefs.getBool('app_update_snooze_explicit') == true &&
+          prefs.getInt('app_update_snooze_build') == build &&
           DateTime.now().millisecondsSinceEpoch <
               (prefs.getInt('app_update_snooze_until') ?? 0);
       if (snoozed &&
+          !_pendingPresentation &&
           {AppUpdatePhase.available, AppUpdatePhase.failed}
-              .contains(_updates.phase)) return;
+              .contains(_updates.phase)) {
+        return;
+      }
       final context = widget.navigatorKey.currentState?.overlay?.context;
       if (context == null || !context.mounted) return;
       _open = true;
-      await showAppDialog<void>(
+      _pendingPresentation = false;
+      final dismissed = await showAppDialog<bool>(
           context: context,
           barrierDismissible: false,
-          builder: (_) => AndroidUpdateModal(updates: _updates));
-      await prefs.setInt('app_update_snooze_build', build);
-      await prefs.setInt('app_update_snooze_until',
-          DateTime.now().add(const Duration(hours: 24)).millisecondsSinceEpoch);
+          builder: (context) => PopScope<bool>(
+              canPop: false,
+              onPopInvokedWithResult: (didPop, result) {
+                if (!didPop) Navigator.of(context).pop(true);
+              },
+              child: AndroidUpdateModal(updates: _updates)));
+      if (!mounted) return;
+      if (dismissed == true &&
+          {AppUpdatePhase.available, AppUpdatePhase.failed}
+              .contains(_updates.phase)) {
+        await prefs.setInt('app_update_snooze_build', build);
+        await prefs.setInt(
+            'app_update_snooze_until',
+            DateTime.now()
+                .add(const Duration(hours: 24))
+                .millisecondsSinceEpoch);
+        await prefs.setBool('app_update_snooze_explicit', true);
+      } else if (dismissed != true) {
+        // Session expiry and route replacement are interruptions, not "Later".
+        _pendingPresentation = true;
+      }
     } catch (_) {
       // Optional update checks stay quiet when the release website is offline.
     } finally {
       _open = false;
       _checking = false;
+      if (mounted && _foreground && _pendingPresentation) {
+        _presentationRetry?.cancel();
+        _presentationRetry = Timer(const Duration(milliseconds: 300), _check);
+      }
     }
   }
 
@@ -90,6 +137,7 @@ class _AndroidUpdateHostState extends State<AndroidUpdateHost>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
+    _presentationRetry?.cancel();
     if (widget.service == null) _updates.dispose();
     super.dispose();
   }
@@ -159,7 +207,7 @@ class AndroidUpdateModal extends StatelessWidget {
                                   color: colors.onSurfaceVariant)),
                         ])),
                     IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () => Navigator.of(context).pop(true),
                         icon: const Icon(Icons.close, size: 16),
                         tooltip: 'Close'),
                   ])),
@@ -246,7 +294,7 @@ class AndroidUpdateModal extends StatelessWidget {
                   child: Row(children: [
                     Expanded(
                         child: OutlinedButton(
-                            onPressed: () => Navigator.of(context).pop(),
+                            onPressed: () => Navigator.of(context).pop(true),
                             style: OutlinedButton.styleFrom(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 12),

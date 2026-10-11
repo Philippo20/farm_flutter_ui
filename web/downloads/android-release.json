@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 17,
+  "buildNumber": 18,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "b631e1e735683a6c482cb7b9a63c96feb26d0227e95a947603d5fbd60c3875f3",
+  "sha256": "25478a2be21a4b4504cadd1d1785916e4ae66d369df816cf3ace3461611546d3",
   "sizeBytes": 83474948,
-  "publishedAt": "2026-10-11T10:32:34.1466450Z",
-  "releaseNotes": "User font sizes now apply throughout the app, including calendars and gauges. Optional fingerprint sign-in is available on supported Android phones, with password fallback."
+  "publishedAt": "2026-10-11T10:52:48.7439828Z",
+  "releaseNotes": "APK update prompts recover after session expiry or navigation interruptions. Background downloads retain their progress, and only deliberate dismissal postpones an update."
 }
