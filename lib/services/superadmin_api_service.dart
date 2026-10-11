@@ -1,4 +1,5 @@
 import 'maintenance_changes.dart';
+import '../models/farm_purchase_receipt.dart';
 import 'auth_service.dart';
 import 'api_connection.dart';
 import 'dart:async';
@@ -21,6 +22,9 @@ class SuperAdminApiService {
   );
 
   final http.Client _client;
+
+  Future<List<Map<String, dynamic>>> getFarmPurchases() async =>
+      farmPurchaseReceipts(await getFulfillments());
 
   Future<List<Map<String, dynamic>>> getCaretakerCalendar() =>
       _getDocuments('/caretaker/calendar',
@@ -419,8 +423,15 @@ class SuperAdminApiService {
     return records;
   }
 
-  Future<List<Map<String, dynamic>>> getFarmTasks() =>
-      _getDocuments('/farm-tasks');
+  Future<List<Map<String, dynamic>>> getFarmTasks() async {
+    final tasks = <Map<String, dynamic>>[];
+    for (var offset = 0;; offset += 100) {
+      final page = await _getDocuments('/farm-tasks?limit=100&offset=$offset');
+      tasks.addAll(page);
+      if (page.length < 100) return tasks;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getFarmRecords() =>
       _getDocuments('/farm-records');
   Future<List<Map<String, dynamic>>> getInputConfirmations({
@@ -728,10 +739,12 @@ class SuperAdminApiService {
     return decoded;
   }
 
-  Future<void> deleteFarmTask(String id) async {
-    final response = await _client
-        .delete(Uri.parse('$baseUrl/farm-tasks/${Uri.encodeComponent(id)}'))
-        .withApiTimeout();
+  Future<String> deleteFarmTask(String id) async {
+    final response = await _client.delete(
+        Uri.parse('$baseUrl/farm-tasks/${Uri.encodeComponent(id)}'),
+        headers: {
+          'Authorization': 'Bearer ${AuthService().jwt ?? ""}'
+        }).withApiTimeout();
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw SuperAdminApiException(
@@ -741,6 +754,9 @@ class SuperAdminApiService {
         ),
       );
     }
+    notifyMaintenanceChanged();
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return data['message']?.toString() ?? 'Task deleted.';
   }
 
   Future<Map<String, dynamic>> updateFundRequest({
@@ -2249,6 +2265,8 @@ class SuperAdminApiService {
     required double regularPrice,
     required double bulkPrice,
     required String status,
+    String ownerPriceTier = 'Regular',
+    bool applyToUnpriced = false,
   }) async {
     final response = await _client.post(
       Uri.parse('$baseUrl/pricing/info'),
@@ -2262,6 +2280,8 @@ class SuperAdminApiService {
         'packaging': packaging,
         'unit': unit,
         'regular_price': regularPrice.toString(),
+        'owner_price_tier': ownerPriceTier,
+        'apply_to_unpriced': applyToUnpriced.toString(),
         'bulk_price': bulkPrice.toString(),
         'status': status,
       },
@@ -2294,6 +2314,8 @@ class SuperAdminApiService {
     required double regularPrice,
     required double bulkPrice,
     required String status,
+    String ownerPriceTier = 'Regular',
+    bool applyToUnpriced = false,
   }) async {
     final response = await _client.put(
       Uri.parse('$baseUrl/pricing/${Uri.encodeComponent(id)}'),
@@ -2307,6 +2329,8 @@ class SuperAdminApiService {
         'packaging': packaging,
         'unit': unit,
         'regular_price': regularPrice.toString(),
+        'owner_price_tier': ownerPriceTier,
+        'apply_to_unpriced': applyToUnpriced.toString(),
         'bulk_price': bulkPrice.toString(),
         'status': status,
       },

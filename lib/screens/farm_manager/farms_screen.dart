@@ -44,7 +44,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
   final List<Map<String, dynamic>> _sales = [];
   final List<Map<String, dynamic>> _tasks = [];
   final Set<String> _updatingTaskIds = {};
-  final Set<String> _deletingTaskIds = {};
+
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -365,7 +365,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
         _teamMember(farm, ['farm_manager_id', 'farmManagerId'], 'Farm Manager'),
         _teamMember(farm, ['technician_id', 'technicianId'], 'Technician'),
         for (final id in farmCaretakerIds(farm))
-          _teamMember({...farm, 'caretakerID': id}, ['caretakerID'], 'Caretaker'),
+          _teamMember(
+              {...farm, 'caretakerID': id}, ['caretakerID'], 'Caretaker'),
         _teamMember(farm, ['ownerID', 'owner_id'], 'Owner'),
       ].where((member) => member['name'] != 'Unassigned').toList(),
     };
@@ -597,7 +598,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               Text(
                 'My Farms',
                 style: AppTypography.font(
-                  fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+                  fontSize: isMobile
+                      ? AppTypography.pageTitleSize
+                      : AppTypography.metricSize,
                   fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
                   letterSpacing: -0.5,
@@ -607,7 +610,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               Text(
                 'Manage your farms, teams and track performance',
                 style: AppTypography.font(
-                  fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
+                  fontSize: isMobile
+                      ? AppTypography.actionSize
+                      : AppTypography.bodySize,
                   color: isDark ? Colors.white54 : AppColors.textSecondary,
                 ),
               ),
@@ -702,7 +707,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.font(
-                      fontSize: isMobile ? AppTypography.headingSize : AppTypography.pageTitleSize,
+                      fontSize: isMobile
+                          ? AppTypography.headingSize
+                          : AppTypography.pageTitleSize,
                       fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary),
                 ),
@@ -781,7 +788,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                           Text(
                             'Farms Overview',
                             style: AppTypography.font(
-                              fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                              fontSize: isMobile
+                                  ? AppTypography.cardTitleSize
+                                  : AppTypography.sectionTitleSize,
                               fontWeight: AppTypography.headingWeight,
                               color:
                                   isDark ? Colors.white : AppColors.textPrimary,
@@ -1038,7 +1047,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                   Text(
                                     farm['name']?.toString() ?? '',
                                     style: AppTypography.font(
-                                      fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                                      fontSize: isMobile
+                                          ? AppTypography.cardTitleSize
+                                          : AppTypography.sectionTitleSize,
                                       fontWeight: AppTypography.headingWeight,
                                       color: isDark
                                           ? Colors.white
@@ -1593,7 +1604,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                               child: Text(
                                 farm['name'] ?? '',
                                 style: AppTypography.font(
-                                    fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                                    fontSize: isMobile
+                                        ? AppTypography.cardTitleSize
+                                        : AppTypography.sectionTitleSize,
                                     fontWeight: AppTypography.headingWeight,
                                     color: isDark
                                         ? Colors.white
@@ -1621,8 +1634,10 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                   const SizedBox(width: 5),
                                   Text(farm['status'] ?? '',
                                       style: AppTypography.font(
-                                          fontSize: AppTypography.fieldLabelSize,
-                                          fontWeight: AppTypography.headingWeight,
+                                          fontSize:
+                                              AppTypography.fieldLabelSize,
+                                          fontWeight:
+                                              AppTypography.headingWeight,
                                           color: statusColor)),
                                 ],
                               ),
@@ -1952,7 +1967,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
           Flexible(
             child: Text(label,
                 style: AppTypography.font(
-                    fontSize: AppTypography.fieldLabelSize, fontWeight: AppTypography.headingWeight, color: color),
+                    fontSize: AppTypography.fieldLabelSize,
+                    fontWeight: AppTypography.headingWeight,
+                    color: color),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
           ),
@@ -2067,7 +2084,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                     Text(
                       _taskProgressLabel(member),
                       style: AppTypography.font(
-                          fontSize: hasTaskData ? AppTypography.captionSize : AppTypography.microSize,
+                          fontSize: hasTaskData
+                              ? AppTypography.captionSize
+                              : AppTypography.microSize,
                           fontWeight: AppTypography.headingWeight,
                           color: hasTaskData
                               ? _progressColor(progress)
@@ -2548,8 +2567,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               children: [
                 Text(
                   value,
-                  style: AppTypography.h6
-                      .copyWith(color: color, fontWeight: AppTypography.headingWeight),
+                  style: AppTypography.h6.copyWith(
+                      color: color, fontWeight: AppTypography.headingWeight),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2746,8 +2765,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             backgroundColor: color.withOpacity(0.12),
             child: Text(
               member['avatar']?.toString() ?? '',
-              style: AppTypography.caption
-                  .copyWith(color: color, fontWeight: AppTypography.headingWeight),
+              style: AppTypography.caption.copyWith(
+                  color: color, fontWeight: AppTypography.headingWeight),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -2847,7 +2866,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               Text(
                 '${(progress * 100).round()}%',
                 style: AppTypography.h6.copyWith(
-                    color: AppColors.warning, fontWeight: AppTypography.headingWeight),
+                    color: AppColors.warning,
+                    fontWeight: AppTypography.headingWeight),
               ),
             ],
           ),
@@ -3011,7 +3031,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
             : AppColors.warning;
     final isMobile = MediaQuery.sizeOf(context).width < 600;
     final isUpdating = _updatingTaskIds.contains(taskId);
-    final isDeleting = _deletingTaskIds.contains(taskId);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -3095,7 +3115,7 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               _buildFarmBadge(priority, priorityColor),
               const SizedBox(width: AppSpacing.xs),
               PopupMenuButton<String>(
-                enabled: taskId.isNotEmpty && !isUpdating && !isDeleting,
+                enabled: taskId.isNotEmpty && !isUpdating,
                 tooltip: 'Change task status',
                 onSelected: (value) => _updateFarmTaskStatus(task, value),
                 itemBuilder: (context) => taskStatuses
@@ -3127,21 +3147,6 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                     : _buildTaskStatusDropdownBadge(status, statusColor),
               ),
               const SizedBox(width: AppSpacing.xs),
-              IconButton(
-                tooltip: 'Delete task',
-                onPressed: taskId.isEmpty || isUpdating || isDeleting
-                    ? null
-                    : () => _confirmDeleteFarmTask(task, isDark),
-                icon: isDeleting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.delete_outline_rounded),
-                color: AppColors.error,
-                visualDensity: VisualDensity.compact,
-              ),
             ],
           ),
         ),
@@ -3749,67 +3754,6 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
     );
   }
 
-  Future<void> _confirmDeleteFarmTask(
-      Map<String, dynamic> task, bool isDark) async {
-    final taskId = _taskDocId(task);
-    if (taskId.isEmpty) return;
-    final shouldDelete = await showAppDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AppAlertDialog(
-        backgroundColor: isDark ? AppColors.surfaceDark : Colors.white,
-        title: Text(
-          'Delete Task',
-          style: AppTypography.h4.copyWith(
-            color: isDark ? Colors.white : AppColors.textPrimary,
-          ),
-        ),
-        content: Text(
-          'Delete "${_value(task, [
-                'title'
-              ], fallback: 'this task')}"? This cannot be undone.',
-          style: AppTypography.bodyMedium.copyWith(
-            color: isDark ? Colors.white70 : AppColors.textSecondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            icon: const Icon(Icons.delete_outline_rounded, size: 18),
-            label: const Text('Delete'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-    if (shouldDelete != true) return;
-
-    setState(() => _deletingTaskIds.add(taskId));
-    try {
-      await _api.deleteFarmTask(taskId);
-      await _loadFarms();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Task deleted successfully')),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete task: $error')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _deletingTaskIds.remove(taskId));
-      }
-    }
-  }
-
   void _showAssignTaskDialog(Map<String, dynamic> farm, bool isDark) {
     final team = (farm['team'] as List<Map<String, dynamic>>? ?? [])
         .where((member) => member['name'] != 'Unassigned')
@@ -4097,7 +4041,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                         modalError!,
                                         style: AppTypography.bodySmall.copyWith(
                                           color: AppColors.error,
-                                          fontWeight: AppTypography.headingWeight,
+                                          fontWeight:
+                                              AppTypography.headingWeight,
                                         ),
                                       ),
                                     ),
@@ -4277,7 +4222,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
               Text(
                 '${(stats.paidRatio * 100).round()}%',
                 style: AppTypography.h6.copyWith(
-                    color: AppColors.success, fontWeight: AppTypography.headingWeight),
+                    color: AppColors.success,
+                    fontWeight: AppTypography.headingWeight),
               ),
             ],
           ),
@@ -4413,7 +4359,8 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                           const SizedBox(height: 2),
                           Text(member['role'] ?? '',
                               style: AppTypography.font(
-                                  fontSize: AppTypography.captionSize, color: Colors.white70)),
+                                  fontSize: AppTypography.captionSize,
+                                  color: Colors.white70)),
                         ],
                       ),
                     ),
@@ -4514,7 +4461,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                       ? '$completed/$tasks'
                                       : 'Not configured',
                                   style: AppTypography.font(
-                                      fontSize: hasTaskData ? AppTypography.actionSize : AppTypography.fieldLabelSize,
+                                      fontSize: hasTaskData
+                                          ? AppTypography.actionSize
+                                          : AppTypography.fieldLabelSize,
                                       fontWeight: AppTypography.headingWeight,
                                       color: hasTaskData
                                           ? _progressColor(progress)
@@ -4553,7 +4502,9 @@ class _FarmsScreenState extends ConsumerState<FarmsScreen>
                                           : AppColors.textSecondary)),
                               Text(_taskProgressLabel(member),
                                   style: AppTypography.font(
-                                      fontSize: hasTaskData ? AppTypography.captionSize : AppTypography.microSize,
+                                      fontSize: hasTaskData
+                                          ? AppTypography.captionSize
+                                          : AppTypography.microSize,
                                       fontWeight: AppTypography.headingWeight,
                                       color: hasTaskData
                                           ? _progressColor(progress)

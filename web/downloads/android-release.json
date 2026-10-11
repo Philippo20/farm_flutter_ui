@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 22,
+  "buildNumber": 23,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "8f7100d6dd3c1290175228d0a665f03ea3db9ac3374c9ee93c3865077c990967",
-  "sizeBytes": 83693825,
-  "publishedAt": "2026-10-11T17:32:58.6148654Z",
-  "releaseNotes": "Android requests notification permission on first launch before sign-in, after any update offer. Permission choices finish before automatic fingerprint login. Existing granted permission is retained and declining notifications never blocks login."
+  "sha256": "160a24d9cc8efdf5629c0742813c24aff00df6fb0b26b2bc90dbcd47da9588fd",
+  "sizeBytes": 83742957,
+  "publishedAt": "2026-10-11T20:36:10.7654191Z",
+  "releaseNotes": "Choose Regular or Bulk prices for farm revenue, with saved rates preserved on receipts. Admin pricing is available on mobile and desktop. Farm task deletion is restricted to Admin and Super Admin and recorded in audit logs."
 }

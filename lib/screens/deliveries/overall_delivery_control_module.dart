@@ -1,3 +1,4 @@
+import '../../models/farm_purchase_receipt.dart';
 import '../../core/widgets/delivery_filters.dart';
 import '../../core/widgets/delivery_kpi_grid.dart';
 import '../../core/widgets/delivery_details_modal.dart';
@@ -499,22 +500,23 @@ class _OverallDeliveryControlModuleState
         ],
       ),
       child: LayoutBuilder(
-        builder: (context, constraints) => widget.isMobile || constraints.maxWidth < 900
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeaderCopy(isDark),
-                const SizedBox(height: AppSpacing.lg),
-                _buildHeroMetrics(isDark, activeDeliveries, farmsCovered),
-              ],
-            )
-          : Row(
-              children: [
-                Expanded(child: _buildHeaderCopy(isDark)),
-                const SizedBox(width: AppSpacing.xl),
-                _buildHeroMetrics(isDark, activeDeliveries, farmsCovered),
-              ],
-            ),
+        builder: (context, constraints) =>
+            widget.isMobile || constraints.maxWidth < 900
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeaderCopy(isDark),
+                      const SizedBox(height: AppSpacing.lg),
+                      _buildHeroMetrics(isDark, activeDeliveries, farmsCovered),
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(child: _buildHeaderCopy(isDark)),
+                      const SizedBox(width: AppSpacing.xl),
+                      _buildHeroMetrics(isDark, activeDeliveries, farmsCovered),
+                    ],
+                  ),
       ),
     );
   }
@@ -746,12 +748,16 @@ class _OverallDeliveryControlModuleState
         delivered: delivered);
   }
 
-  Widget _responsiveCardCollection({required double minWidth, required List<Widget> children}) {
+  Widget _responsiveCardCollection(
+      {required double minWidth, required List<Widget> children}) {
     return LayoutBuilder(builder: (context, constraints) {
-      final columns = widget.isMobile ? 1
+      final columns = widget.isMobile
+          ? 1
           : ((constraints.maxWidth + 12) / (minWidth + 12)).floor().clamp(1, 3);
-      final availableWidth = (constraints.maxWidth - 12 * (columns - 1)) / columns;
-      final width = widget.isMobile ? availableWidth : availableWidth.clamp(0.0, 400.0);
+      final availableWidth =
+          (constraints.maxWidth - 12 * (columns - 1)) / columns;
+      final width =
+          widget.isMobile ? availableWidth : availableWidth.clamp(0.0, 400.0);
       return Wrap(spacing: 12, runSpacing: 12, children: [
         for (final child in children) SizedBox(width: width, child: child),
       ]);
@@ -776,7 +782,10 @@ class _OverallDeliveryControlModuleState
                     'Farm activity will appear when deliveries are created.'),
           _responsiveCardCollection(
             minWidth: 300,
-            children: [for (final summary in summaries) _buildMobileFarmCard(summary, isDark)],
+            children: [
+              for (final summary in summaries)
+                _buildMobileFarmCard(summary, isDark)
+            ],
           ),
         ],
       );
@@ -843,7 +852,8 @@ class _OverallDeliveryControlModuleState
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              final columns = widget.isMobile ? 1 : (width / 300).floor().clamp(1, 4);
+              final columns =
+                  widget.isMobile ? 1 : (width / 300).floor().clamp(1, 4);
               final gap = AppSpacing.md;
               final cardWidth = columns == 1
                   ? width
@@ -895,20 +905,20 @@ class _OverallDeliveryControlModuleState
   }
 
   Widget _buildFilters(bool isDark) => DeliveryFilters(
-    searchController: _searchController,
-    farms: _farms,
-    farm: _selectedFarm,
-    status: _selectedStatus,
-    resultCount: _filteredDeliveries().length,
-    onSearchChanged: (_) => setState(() {}),
-    onFarmChanged: (value) => setState(() => _selectedFarm = value),
-    onStatusChanged: (value) => setState(() => _selectedStatus = value),
-    onReset: () => setState(() {
-      _searchController.clear();
-      _selectedFarm = 'All Farms';
-      _selectedStatus = 'All';
-    }),
-  );
+        searchController: _searchController,
+        farms: _farms,
+        farm: _selectedFarm,
+        status: _selectedStatus,
+        resultCount: _filteredDeliveries().length,
+        onSearchChanged: (_) => setState(() {}),
+        onFarmChanged: (value) => setState(() => _selectedFarm = value),
+        onStatusChanged: (value) => setState(() => _selectedStatus = value),
+        onReset: () => setState(() {
+          _searchController.clear();
+          _selectedFarm = 'All Farms';
+          _selectedStatus = 'All';
+        }),
+      );
 
   Widget _buildTabs(bool isDark) {
     return Align(
@@ -981,7 +991,9 @@ class _OverallDeliveryControlModuleState
                 label,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodySmall.copyWith(
-                  fontWeight: selected ? AppTypography.headingWeight : AppTypography.labelWeight,
+                  fontWeight: selected
+                      ? AppTypography.headingWeight
+                      : AppTypography.labelWeight,
                   color: selected
                       ? AppColors.primary
                       : (isDark ? Colors.white70 : AppColors.textSecondary),
@@ -1010,7 +1022,10 @@ class _OverallDeliveryControlModuleState
                 subtitle: 'Try changing farm, status, or search filters.'),
           _responsiveCardCollection(
             minWidth: 300,
-            children: [for (final record in records) _buildMobileDeliveryCard(isDark, record)],
+            children: [
+              for (final record in records)
+                _buildMobileDeliveryCard(isDark, record)
+            ],
           ),
         ],
       );
@@ -1103,8 +1118,8 @@ class _OverallDeliveryControlModuleState
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label,
-            style:
-                AppTypography.caption.copyWith(fontSize: AppTypography.microSize, color: secondary)),
+            style: AppTypography.caption
+                .copyWith(fontSize: AppTypography.microSize, color: secondary)),
         const SizedBox(height: 3),
         Text(value.trim().isEmpty ? 'Not provided' : value,
             style: AppTypography.bodySmall.copyWith(
@@ -1287,9 +1302,9 @@ class _OverallDeliveryControlModuleState
   }
 
   Widget _buildDeliveryCard(bool isDark, _DeliveryRecord record) => Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: _buildMobileDeliveryCard(isDark, record),
-  );
+        padding: const EdgeInsets.only(bottom: 12),
+        child: _buildMobileDeliveryCard(isDark, record),
+      );
 
   List<Widget> _buildActionsFor(_DeliveryRecord record, bool isDark) {
     final actions = <Widget>[];
@@ -2488,6 +2503,7 @@ class _OverallDeliveryControlModuleState
   }
 
   void _showDeliveryDetailsModal(_DeliveryRecord record) {
+    final purchase = farmPurchaseReceipt(record.raw);
     showAppDialog<void>(
         context: context,
         builder: (_) => DeliveryDetailsModal(
@@ -2496,6 +2512,25 @@ class _OverallDeliveryControlModuleState
                 statusColor: _statusColor(record.status),
                 priority: record.priority.label,
                 sections: [
+                  if (purchase != null)
+                    DeliveryDetailSection('Farm-owner revenue',
+                        Icons.account_balance_wallet_outlined, [
+                      ('Price type', '${purchase['price_tier']}'),
+                      (
+                        'Accepted quantity',
+                        '${purchase['quantity_delivered']} ${purchase['unit']}'
+                      ),
+                      (
+                        'Rate',
+                        '₵${purchase['unit_price']}/${purchase['unit']}'
+                      ),
+                      (
+                        'Revenue',
+                        purchase['is_valued'] == true
+                            ? '₵${(purchase['total_amount'] as num).toStringAsFixed(2)}'
+                            : 'Awaiting pricing'
+                      ),
+                    ]),
                   DeliveryDetailSection('Route', Icons.route_outlined, [
                     ('Farm', record.farm),
                     ('Destination', record.destination)

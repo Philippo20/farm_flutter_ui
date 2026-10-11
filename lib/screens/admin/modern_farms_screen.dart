@@ -1,3 +1,4 @@
+import '../../core/widgets/farm_tasks_panel.dart';
 import '../../core/utils/farm_team_assignment.dart';
 import '../../core/utils/crop_relationships.dart';
 import '../../core/utils/farm_varieties.dart';
@@ -1439,6 +1440,8 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                     flex: 5,
                     child: Column(
                       children: [
+                        FarmTasksPanel(farmId: farm['id'].toString()),
+                        const SizedBox(height: AppSpacing.lg),
                         _buildOverviewPanel(farm, isDark),
                         const SizedBox(height: AppSpacing.lg),
                         _buildTeamPanel(farm, isDark),
@@ -1462,6 +1465,8 @@ class _ModernFarmsScreenState extends ConsumerState<ModernFarmsScreen> {
                 ],
               )
             else ...[
+              FarmTasksPanel(farmId: farm['id'].toString()),
+              const SizedBox(height: AppSpacing.lg),
               _buildOverviewPanel(farm, isDark),
               const SizedBox(height: AppSpacing.lg),
               _buildTeamPanel(farm, isDark),

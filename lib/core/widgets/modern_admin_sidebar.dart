@@ -133,6 +133,11 @@ class AdminDrawer extends StatelessWidget {
         label: 'Repair History',
         route: '/admin/repair-history',
       ),
+      _NavItem(
+          icon: Icons.sell_outlined,
+          activeIcon: Icons.sell_rounded,
+          label: 'Pricing',
+          route: '/admin/pricing'),
     ];
     int indexFor(_NavItem item) => const [
           '/dashboard',
@@ -149,6 +154,7 @@ class AdminDrawer extends StatelessWidget {
           '/admin/packaging',
           '/admin/maintenance',
           '/admin/repair-history',
+          '/admin/pricing',
         ].indexOf(item.route);
 
     return Drawer(
@@ -488,6 +494,11 @@ class AdminMobileBottomNav extends StatelessWidget {
       label: 'Repair History',
       route: '/admin/repair-history',
     ),
+    _NavItem(
+        icon: Icons.sell_outlined,
+        activeIcon: Icons.sell_rounded,
+        label: 'Pricing',
+        route: '/admin/pricing'),
   ];
 
   static const _defaultDynamicItem = _NavItem(
@@ -631,6 +642,11 @@ class _ModernAdminSidebarState extends State<ModernAdminSidebar>
       label: 'Repair History',
       route: '/admin/repair-history',
     ),
+    _NavItem(
+        icon: Icons.sell_outlined,
+        activeIcon: Icons.sell_rounded,
+        label: 'Pricing',
+        route: '/admin/pricing'),
   ];
 
   @override

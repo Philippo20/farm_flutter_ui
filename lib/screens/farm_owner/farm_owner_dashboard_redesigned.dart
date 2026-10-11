@@ -53,7 +53,7 @@ class _FarmOwnerDashboardRedesignedState
       final results = await Future.wait([
         _api.getFarms(),
         _api.getBatches(),
-        _api.getSales(),
+        _api.getFarmPurchases(),
         _api.getSensors(),
         _api.getFundRequests(),
       ]);
@@ -188,7 +188,7 @@ class _FarmOwnerDashboardRedesignedState
       RegExp(r'\B(?=(\d{3})+(?!\d))'),
       (_) => ',',
     );
-    return 'GHS $whole.${parts.last}';
+    return '₵$whole.${parts.last}';
   }
 
   String _relativeTime(DateTime? date) {
@@ -536,8 +536,10 @@ class _FarmOwnerDashboardRedesignedState
                                       children: [
                                     Text(detail['label'] as String,
                                         style: AppTypography.caption.copyWith(
-                                            fontSize: AppTypography.fieldLabelSize,
-                                            fontWeight: AppTypography.labelWeight,
+                                            fontSize:
+                                                AppTypography.fieldLabelSize,
+                                            fontWeight:
+                                                AppTypography.labelWeight,
                                             color: isDark
                                                 ? Colors.white60
                                                 : AppColors.textSecondary)),
@@ -545,8 +547,10 @@ class _FarmOwnerDashboardRedesignedState
                                     Text(detail['value'] as String,
                                         style: AppTypography.bodyMedium
                                             .copyWith(
-                                                fontSize: AppTypography.actionSize,
-                                                fontWeight: AppTypography.headingWeight,
+                                                fontSize:
+                                                    AppTypography.actionSize,
+                                                fontWeight:
+                                                    AppTypography.headingWeight,
                                                 color: isDark
                                                     ? Colors.white
                                                     : AppColors.textPrimary)),
@@ -599,7 +603,7 @@ class _FarmOwnerDashboardRedesignedState
         'unit': 'earned',
         'icon': Icons.account_balance_wallet_rounded,
         'color': const Color(0xFF6366F1),
-        'change': 'Last 30 days · ${revenueSales.length} sales',
+        'change': 'Last 30 days · ${revenueSales.length} receipts',
       },
       {
         'label': 'Monthly Revenue',
@@ -607,7 +611,7 @@ class _FarmOwnerDashboardRedesignedState
         'unit': 'this month',
         'icon': Icons.trending_up_rounded,
         'color': const Color(0xFF10B981),
-        'change': _ownerSales.isEmpty ? 'No sales' : 'Live',
+        'change': _ownerSales.isEmpty ? 'No receipts' : 'Live',
       },
       {
         'label': 'Pending Requests',
@@ -691,7 +695,9 @@ class _FarmOwnerDashboardRedesignedState
           const SizedBox(height: 6),
           Text(stat['value'] as String,
               style: AppTypography.h5.copyWith(
-                  fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+                  fontSize: isMobile
+                      ? AppTypography.pageTitleSize
+                      : AppTypography.metricSize,
                   fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary)),
           const SizedBox(height: 10),
@@ -733,7 +739,9 @@ class _FarmOwnerDashboardRedesignedState
               Text(
                 'Quick Actions',
                 style: TextStyle(
-                  fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                  fontSize: isMobile
+                      ? AppTypography.cardTitleSize
+                      : AppTypography.sectionTitleSize,
                   fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
@@ -778,7 +786,9 @@ class _FarmOwnerDashboardRedesignedState
               Text(
                 'Recent Activity',
                 style: TextStyle(
-                  fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                  fontSize: isMobile
+                      ? AppTypography.cardTitleSize
+                      : AppTypography.sectionTitleSize,
                   fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : const Color(0xFF0F172A),
                 ),
@@ -810,10 +820,13 @@ class _FarmOwnerDashboardRedesignedState
     for (final sale in _ownerSales) {
       final amount = _numValue(sale['total_amount'] ?? sale['amount']);
       activities.add({
-        'title': 'Farm Revenue Recorded',
-        'desc': '${_formatMoney(amount)} from ${_value(sale, [
-              'farm_name'
-            ], fallback: 'owned farm')}',
+        'title': sale['is_valued'] == true
+            ? 'Farm Revenue Recorded'
+            : 'Receipt Awaiting Pricing',
+        'desc':
+            '${sale['price_tier']} · ${_formatMoney(amount)} from ${_value(sale, [
+                  'farm_name'
+                ], fallback: 'owned farm')}',
         'time': _relativeTime(
             _dateValue(sale['created_at'] ?? sale[r'$createdAt'])),
         'sortDate': _dateValue(sale['created_at'] ?? sale[r'$createdAt']) ??
@@ -1264,7 +1277,11 @@ class _FarmOwnerDashboardRedesignedState
                 style: AppTypography.bodyMedium.copyWith(
                   fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: isMobile ? AppTypography.captionSize : (isTablet ? AppTypography.actionSize : AppTypography.bodySize),
+                  fontSize: isMobile
+                      ? AppTypography.captionSize
+                      : (isTablet
+                          ? AppTypography.actionSize
+                          : AppTypography.bodySize),
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -1277,7 +1294,11 @@ class _FarmOwnerDashboardRedesignedState
                 textAlign: TextAlign.center,
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark ? Colors.white60 : AppColors.textSecondary,
-                  fontSize: isMobile ? AppTypography.microSize : (isTablet ? AppTypography.fieldLabelSize : AppTypography.fieldLabelSize),
+                  fontSize: isMobile
+                      ? AppTypography.microSize
+                      : (isTablet
+                          ? AppTypography.fieldLabelSize
+                          : AppTypography.fieldLabelSize),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

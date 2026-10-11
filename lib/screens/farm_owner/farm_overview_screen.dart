@@ -78,7 +78,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
         _api.getUsers(),
         _api.getBatches(),
         _api.getSensors(),
-        _api.getSales(),
+        _api.getFarmPurchases(),
         _api.getSensorReadingsAll(),
         _api.getFarmRecords(),
       ]);
@@ -99,7 +99,9 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
         _sales
           ..clear()
           ..addAll(results[4]);
-        _sensorReadings..clear()..addAll(results[5]);
+        _sensorReadings
+          ..clear()
+          ..addAll(results[5]);
         _growthRecords = results[6];
         _isLoading = false;
         _errorMessage = null;
@@ -463,7 +465,8 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
             SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
             if (_selectedTab == 0) ...[
               _buildMonitoringCards(isDark),
-              SizedBox(height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
+              SizedBox(
+                  height: isTabletOrMobile ? AppSpacing.md : AppSpacing.lg),
               _buildOverviewTab(isDark, isTabletOrMobile),
             ] else ...[
               _buildIotDashboard(isDark, isTabletOrMobile),
@@ -597,8 +600,8 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
       },
       {
         'title': 'Revenue',
-        'value': 'GHS ${_formatCompact(revenue)}',
-        'change': '${_ownerSales.length} sales',
+        'value': '₵${_formatCompact(revenue)}',
+        'change': '${_ownerSales.length} receipts',
         'icon': Icons.trending_up_rounded,
         'color': AppColors.primary
       },
@@ -737,8 +740,9 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                       color: isSelected
                           ? AppColors.primary
                           : (isDark ? Colors.white70 : AppColors.textSecondary),
-                      fontWeight:
-                          isSelected ? AppTypography.headingWeight : AppTypography.headingWeight,
+                      fontWeight: isSelected
+                          ? AppTypography.headingWeight
+                          : AppTypography.headingWeight,
                       fontSize: AppTypography.actionSize,
                     ),
                   ),
@@ -767,29 +771,57 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
     double? temperature;
     DateTime? latestTemperatureAt;
     for (final sensor in sensors) {
-      final rawType = _value(sensor, ['sensortype', 'sensor_type', 'type']).toLowerCase().trim().replaceAll(' ', '_').replaceAll('-', '_');
-      final type = const {'temp': 'temperature', 'humid': 'humidity',
-        'water_temp': 'water_temperature', 'ph_level': 'ph', 'ec_level': 'ec',
-        'co₂': 'co2', 'carbon_dioxide': 'co2'}[rawType] ?? rawType;
+      final rawType = _value(sensor, ['sensortype', 'sensor_type', 'type'])
+          .toLowerCase()
+          .trim()
+          .replaceAll(' ', '_')
+          .replaceAll('-', '_');
+      final type = const {
+            'temp': 'temperature',
+            'humid': 'humidity',
+            'water_temp': 'water_temperature',
+            'ph_level': 'ph',
+            'ec_level': 'ec',
+            'co₂': 'co2',
+            'carbon_dioxide': 'co2'
+          }[rawType] ??
+          rawType;
       counts[type] = (counts[type] ?? 0) + 1;
       final timestamp = _dateValue(sensor['timestamp'] ?? sensor['last_seen']);
       if (registeredSensorOnline(sensor, _sensorReadings)) {
         activeCounts[type] = (activeCounts[type] ?? 0) + 1;
       }
       if (type == 'temperature') {
-        final value = double.tryParse('${sensor['last_value'] ?? sensor['current_value'] ?? sensor['value'] ?? ''}');
-        if (value != null && (temperature == null || (timestamp != null && (latestTemperatureAt == null || timestamp.isAfter(latestTemperatureAt))))) {
+        final value = double.tryParse(
+            '${sensor['last_value'] ?? sensor['current_value'] ?? sensor['value'] ?? ''}');
+        if (value != null &&
+            (temperature == null ||
+                (timestamp != null &&
+                    (latestTemperatureAt == null ||
+                        timestamp.isAfter(latestTemperatureAt))))) {
           temperature = value;
           latestTemperatureAt = timestamp;
         }
       }
     }
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _buildIotLiveHeader(isDark, _ownerSensorDashboardItems, MediaQuery.sizeOf(context).width < 600),
+      _buildIotLiveHeader(isDark, _ownerSensorDashboardItems,
+          MediaQuery.sizeOf(context).width < 600),
       const SizedBox(height: 16),
-      if (sensors.isEmpty) _buildNoSensorState(isDark)
-      else FarmIotDashboard(isDark: isDark, batches: _ownerBatches, records: _growthRecords, sensors: _ownerSensors, readings: _sensorReadings, userName: ref.watch(authProvider).user?.name ?? '', liveTemperature: temperature,
-        liveTemperatureHistory: const [], sensorCounts: counts, activeSensorCounts: activeCounts),
+      if (sensors.isEmpty)
+        _buildNoSensorState(isDark)
+      else
+        FarmIotDashboard(
+            isDark: isDark,
+            batches: _ownerBatches,
+            records: _growthRecords,
+            sensors: _ownerSensors,
+            readings: _sensorReadings,
+            userName: ref.watch(authProvider).user?.name ?? '',
+            liveTemperature: temperature,
+            liveTemperatureHistory: const [],
+            sensorCounts: counts,
+            activeSensorCounts: activeCounts),
     ]);
   }
 
@@ -2274,8 +2306,10 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
   Widget _buildAssignments(bool isDark, bool isTabletOrMobile) {
     final manager = _assignedUser(['farm_manager_id', 'farmManagerId']);
     final caretakerRefs = _ownerFarms.expand(farmCaretakerIds).toSet();
-    final caretakers = caretakerRefs.map((id) => _users.firstWhere((user) => _docId(user) == id,
-      orElse: () => {'name': id, 'email': 'Assigned caretaker'})).toList();
+    final caretakers = caretakerRefs
+        .map((id) => _users.firstWhere((user) => _docId(user) == id,
+            orElse: () => {'name': id, 'email': 'Assigned caretaker'}))
+        .toList();
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -2332,12 +2366,21 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
                       recipient: manager,
                     ),
           ),
-          if (caretakers.isEmpty) _buildAssigneeCard(isDark, 'Caretakers', 'Unassigned', 'Assign from farm management', Icons.handyman_rounded),
+          if (caretakers.isEmpty)
+            _buildAssigneeCard(isDark, 'Caretakers', 'Unassigned',
+                'Assign from farm management', Icons.handyman_rounded),
           for (final caretaker in caretakers) ...[
             const SizedBox(height: AppSpacing.sm),
-            _buildAssigneeCard(isDark, 'Caretaker', _value(caretaker, ['name'], fallback: 'Caretaker'),
-              _value(caretaker, ['email'], fallback: 'Assigned user'), Icons.handyman_rounded,
-              onMessage: _docId(caretaker).isEmpty ? null : () => _openMessageCenter(role: 'Caretaker', recipient: caretaker)),
+            _buildAssigneeCard(
+                isDark,
+                'Caretaker',
+                _value(caretaker, ['name'], fallback: 'Caretaker'),
+                _value(caretaker, ['email'], fallback: 'Assigned user'),
+                Icons.handyman_rounded,
+                onMessage: _docId(caretaker).isEmpty
+                    ? null
+                    : () => _openMessageCenter(
+                        role: 'Caretaker', recipient: caretaker)),
           ],
         ],
       ),

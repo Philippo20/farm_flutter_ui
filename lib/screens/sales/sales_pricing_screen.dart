@@ -272,7 +272,7 @@ class _SalesPricingScreenState extends ConsumerState<SalesPricingScreen> {
               _PricingMetric(
                   icon: Icons.payments_outlined,
                   label: 'Average per pack',
-                  value: 'GHS ${average.toStringAsFixed(2)}'),
+                  value: '₵ ${average.toStringAsFixed(2)}'),
             ],
           ),
           SizedBox(height: MediaQuery.sizeOf(context).width < 600 ? 16 : 20),
@@ -369,8 +369,8 @@ class _PricingHero extends StatelessWidget {
         decoration: BoxDecoration(
             color: AppColors.primary.withValues(alpha: .12),
             borderRadius: BorderRadius.circular(12)),
-        child: const Icon(Icons.price_change_outlined,
-            color: AppColors.primary, size: 24),
+        child:
+            const Icon(Icons.sell_outlined, color: AppColors.primary, size: 24),
       ),
       const SizedBox(width: 12),
       Expanded(
@@ -571,7 +571,7 @@ class _PriceValue extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant)),
         const SizedBox(height: 8),
-        Text('GHS', style: Theme.of(context).textTheme.labelSmall),
+        Text('₵', style: Theme.of(context).textTheme.labelSmall),
         const SizedBox(height: 2),
         Text(value,
             style: AppTypography.titleMedium
@@ -713,7 +713,7 @@ class _SalesPricingEditorState extends State<_SalesPricingEditor> {
 
   String? _priceValidator(String? value) {
     final number = double.tryParse(value?.trim() ?? '');
-    if (number == null || number <= 0) return 'Enter a price above GHS 0.';
+    if (number == null || number <= 0) return 'Enter a price above ₵ 0.';
     return null;
   }
 
@@ -837,7 +837,7 @@ class _SalesPricingEditorState extends State<_SalesPricingEditor> {
                       ]),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.price_change_outlined,
+                    child: const Icon(Icons.sell_outlined,
                         color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 12),
@@ -969,7 +969,7 @@ class _SalesPricingEditorState extends State<_SalesPricingEditor> {
                             ),
                           ),
                           field(
-                            'Regular price per pack (GHS)',
+                            'Regular price per pack (₵)',
                             TextFormField(
                               controller: _regularController,
                               enabled: !_saving,
@@ -977,21 +977,20 @@ class _SalesPricingEditorState extends State<_SalesPricingEditor> {
                                   const TextInputType.numberWithOptions(
                                       decimal: true),
                               decoration: _decoration(
-                                  'Regular price per pack (GHS)',
+                                  'Regular price per pack (₵)',
                                   Icons.sell_outlined),
                               validator: _priceValidator,
                             ),
                           ),
                           field(
-                            'Bulk price per pack (GHS)',
+                            'Bulk price per pack (₵)',
                             TextFormField(
                               controller: _bulkController,
                               enabled: !_saving,
                               keyboardType:
                                   const TextInputType.numberWithOptions(
                                       decimal: true),
-                              decoration: _decoration(
-                                  'Bulk price per pack (GHS)',
+                              decoration: _decoration('Bulk price per pack (₵)',
                                   Icons.local_offer_outlined),
                               validator: _priceValidator,
                             ),
@@ -1119,8 +1118,7 @@ class _PricingEmpty extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(children: [
-          const Icon(Icons.price_change_outlined,
-              size: 40, color: AppColors.primary),
+          const Icon(Icons.sell_outlined, size: 40, color: AppColors.primary),
           const SizedBox(height: 12),
           Text('No sales prices configured',
               style: AppTypography.titleMedium

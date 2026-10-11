@@ -248,6 +248,8 @@ class _MyAppState extends ConsumerState<MyApp> {
 
         // Admin
         '/dashboard': (context) => const RedesignedAdminDashboard(),
+        '/admin/pricing': (context) =>
+            const PricingManagementScreen(isSuperAdmin: false),
         '/users': (context) => const ModernUsersScreen(),
         '/farms': (context) => const ModernFarmsScreen(),
         '/sensors': (context) => const ModernSensorsScreen(),

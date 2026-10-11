@@ -28,6 +28,7 @@ class RouteGuard {
     '/deliveries-admin': ['admin'],
     '/crop-varieties': ['admin'],
     '/admin/packaging': ['admin'],
+    '/admin/pricing': ['admin', 'super_admin', 'superadmin'],
 
     // Farm Manager routes
     '/farm-manager': ['farm_manager'],

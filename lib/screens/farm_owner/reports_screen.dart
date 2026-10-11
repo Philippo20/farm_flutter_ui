@@ -53,7 +53,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     try {
       final results = await Future.wait([
         _api.getFarms(),
-        _api.getSales(),
+        _api.getFarmPurchases(),
         _api.getBatches(),
         _api.getFulfillments(),
         _api.getFundRequests(),
@@ -391,7 +391,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       RegExp(r'\B(?=(\d{3})+(?!\d))'),
       (_) => ',',
     );
-    return 'GHS $whole.${parts.last}';
+    return '₵$whole.${parts.last}';
   }
 
   String _formatDate(DateTime value) {
@@ -470,7 +470,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         'type': 'Revenue',
         'period': period,
         'date': generatedAt,
-        'size': '${_ownerSales.length} sales',
+        'size': '${_ownerSales.length} receipts',
         'icon': Icons.trending_up,
         'color': AppColors.info,
         'rows': _revenueRows(),
@@ -493,9 +493,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     return [
       ['Metric', 'Value'],
       ['Total revenue', _formatMoney(_totalRevenue)],
+      [
+        'Receipts awaiting pricing',
+        _ownerSales.where((item) => item['is_valued'] != true).length.toString()
+      ],
       ['Approved withdrawals', _formatMoney(_walletWithdrawals)],
       ['Fund requests', _formatMoney(_totalInputCost)],
-      ['Sales records', _ownerSales.length.toString()],
+      ['Purchase receipts', _ownerSales.length.toString()],
       ['Fund request records', _ownerFundRequests.length.toString()],
     ];
   }
@@ -513,7 +517,16 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   List<List<String>> _revenueRows() {
     final rows = <List<String>>[
-      ['Date', 'Farm', 'Batch', 'Buyer', 'Quantity', 'Amount', 'Paid'],
+      [
+        'Date',
+        'Farm',
+        'Batch',
+        'Price type',
+        'Accepted quantity',
+        'Rate',
+        'Revenue',
+        'Valuation'
+      ],
     ];
     for (final sale in _ownerSales) {
       rows.add([
@@ -523,14 +536,28 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             DateTime.now()),
         _value(sale, ['farm_name'], fallback: 'Linked by batch'),
         _value(sale, ['batch_number', 'batch_id']),
-        _value(sale, ['buyer_name']),
-        _numValue(sale['quantity_delivered']).toStringAsFixed(2),
+        _value(sale, ['price_tier']),
+        '${_numValue(sale['quantity_delivered']).toStringAsFixed(2)} ${_value(sale, [
+              'unit'
+            ])}',
+        '${_formatMoney(_numValue(sale['unit_price']))}/${_value(sale, [
+              'unit'
+            ])}',
         _formatMoney(_numValue(sale['total_amount'] ?? sale['amount'])),
-        (sale['paid'] == true).toString(),
+        _value(sale, ['status']),
       ]);
     }
     if (rows.length == 1) {
-      rows.add(['No sales found', '', '', '', '', _formatMoney(0), 'false']);
+      rows.add([
+        'No accepted receipts found',
+        '',
+        '',
+        '',
+        '',
+        '',
+        _formatMoney(0),
+        ''
+      ]);
     }
     return rows;
   }
@@ -1146,7 +1173,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               label: Text(
                 type,
                 style: TextStyle(
-                  fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
+                  fontSize: isMobile
+                      ? AppTypography.fieldLabelSize
+                      : AppTypography.captionSize,
                 ),
               ),
               selected: isSelected,
@@ -1159,8 +1188,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 color: isSelected
                     ? AppColors.primary
                     : (isDark ? Colors.white : AppColors.textPrimary),
-                fontWeight: isSelected ? AppTypography.headingWeight : AppTypography.bodyWeight,
-                fontSize: isMobile ? AppTypography.fieldLabelSize : AppTypography.captionSize,
+                fontWeight: isSelected
+                    ? AppTypography.headingWeight
+                    : AppTypography.bodyWeight,
+                fontSize: isMobile
+                    ? AppTypography.fieldLabelSize
+                    : AppTypography.captionSize,
               ),
               padding: EdgeInsets.symmetric(
                 horizontal: isMobile ? AppSpacing.xs : AppSpacing.sm,
@@ -1190,7 +1223,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           'Available Reports',
           style: AppTypography.h5.copyWith(
             fontWeight: AppTypography.headingWeight,
-            fontSize: isMobile ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+            fontSize: isMobile
+                ? AppTypography.cardTitleSize
+                : AppTypography.sectionTitleSize,
             color: isDark ? Colors.white : AppColors.textPrimary,
           ),
         ),
@@ -1277,7 +1312,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   style: AppTypography.bodyMedium.copyWith(
                     fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
-                    fontSize: isMobile ? AppTypography.actionSize : AppTypography.bodySize,
+                    fontSize: isMobile
+                        ? AppTypography.actionSize
+                        : AppTypography.bodySize,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -1301,7 +1338,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         report['type'] as String,
                         style: AppTypography.caption.copyWith(
                           color: report['color'] as Color,
-                          fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
+                          fontSize: isMobile
+                              ? AppTypography.microSize
+                              : AppTypography.microSize,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1313,7 +1352,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         color: isDark
                             ? Colors.white.withOpacity(0.6)
                             : AppColors.textSecondary,
-                        fontSize: isMobile ? AppTypography.microSize : AppTypography.microSize,
+                        fontSize: isMobile
+                            ? AppTypography.microSize
+                            : AppTypography.microSize,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

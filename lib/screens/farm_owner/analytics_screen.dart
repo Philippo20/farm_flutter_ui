@@ -55,7 +55,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     try {
       final results = await Future.wait([
         _api.getFarms(),
-        _api.getSales(),
+        _api.getFarmPurchases(),
         _api.getBatches(),
         _api.getFulfillments(),
         _api.getFundRequests(),
@@ -263,15 +263,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       RegExp(r'\B(?=(\d{3})+(?!\d))'),
       (_) => ',',
     );
-    return 'GHS $whole.${parts.last}';
+    return '₵$whole.${parts.last}';
   }
 
   String _formatCompactMoney(num value) {
     if (value.abs() >= 1000000) {
-      return 'GHS ${(value / 1000000).toStringAsFixed(1)}m';
+      return '₵${(value / 1000000).toStringAsFixed(1)}m';
     }
     if (value.abs() >= 1000) {
-      return 'GHS ${(value / 1000).toStringAsFixed(1)}k';
+      return '₵${(value / 1000).toStringAsFixed(1)}k';
     }
     return _formatMoney(value);
   }
@@ -770,7 +770,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 style: AppTypography.h4.copyWith(
                   fontWeight: AppTypography.headingWeight,
                   color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontSize: isTablet ? AppTypography.pageTitleSize : AppTypography.pageTitleSize,
+                  fontSize: isTablet
+                      ? AppTypography.pageTitleSize
+                      : AppTypography.pageTitleSize,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -787,7 +789,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 'Last Year'
               ],
               onChanged: (value) => setState(() => _selectedPeriod = value),
-              fontSize: isTablet ? AppTypography.captionSize : AppTypography.actionSize,
+              fontSize: isTablet
+                  ? AppTypography.captionSize
+                  : AppTypography.actionSize,
             ),
             const SizedBox(width: AppSpacing.sm),
             _buildHeaderDropdown(
@@ -795,7 +799,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               value: _selectedCrop,
               items: _cropFilterItems,
               onChanged: (value) => setState(() => _selectedCrop = value),
-              fontSize: isTablet ? AppTypography.captionSize : AppTypography.actionSize,
+              fontSize: isTablet
+                  ? AppTypography.captionSize
+                  : AppTypography.actionSize,
             ),
             const SizedBox(width: AppSpacing.sm),
             _buildHeaderDropdown(
@@ -809,7 +815,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 'Packaging'
               ],
               onChanged: (value) => setState(() => _selectedInputType = value),
-              fontSize: isTablet ? AppTypography.captionSize : AppTypography.actionSize,
+              fontSize: isTablet
+                  ? AppTypography.captionSize
+                  : AppTypography.actionSize,
             ),
           ],
         );
@@ -873,7 +881,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
       {
         'title': 'Total Revenue',
         'value': _formatCompactMoney(_totalRevenue),
-        'change': '${_ownerSales.length} sales',
+        'change': '${_ownerSales.length} receipts',
         'isPositive': _totalRevenue >= 0,
         'icon': Icons.trending_up,
         'color': AppColors.success,
@@ -948,7 +956,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   const SizedBox(height: 6),
                   Text(metric['value'] as String,
                       style: AppTypography.h5.copyWith(
-                          fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+                          fontSize: isMobile
+                              ? AppTypography.pageTitleSize
+                              : AppTypography.metricSize,
                           fontWeight: AppTypography.headingWeight,
                           color:
                               isDark ? Colors.white : AppColors.textPrimary)),
@@ -1099,8 +1109,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                       children: [
                                     Text(detail['label'] as String,
                                         style: AppTypography.caption.copyWith(
-                                            fontSize: AppTypography.fieldLabelSize,
-                                            fontWeight: AppTypography.labelWeight,
+                                            fontSize:
+                                                AppTypography.fieldLabelSize,
+                                            fontWeight:
+                                                AppTypography.labelWeight,
                                             color: isDark
                                                 ? Colors.white60
                                                 : AppColors.textSecondary)),
@@ -1108,8 +1120,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     Text(detail['value'] as String,
                                         style: AppTypography.bodyMedium
                                             .copyWith(
-                                                fontSize: AppTypography.actionSize,
-                                                fontWeight: AppTypography.headingWeight,
+                                                fontSize:
+                                                    AppTypography.actionSize,
+                                                fontWeight:
+                                                    AppTypography.headingWeight,
                                                 color: isDark
                                                     ? Colors.white
                                                     : AppColors.textPrimary)),
@@ -1148,7 +1162,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           style: AppTypography.h5.copyWith(
             fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: isMobile ? AppTypography.sectionTitleSize : (isTablet ? AppTypography.headingSize : AppTypography.pageTitleSize),
+            fontSize: isMobile
+                ? AppTypography.sectionTitleSize
+                : (isTablet
+                    ? AppTypography.headingSize
+                    : AppTypography.pageTitleSize),
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -1193,7 +1211,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     interval: 4,
                     getTitlesWidget: (value, meta) {
                       return Text(
-                        'GHS ${value.toStringAsFixed(0)}k',
+                        '₵${value.toStringAsFixed(0)}k',
                         style: AppTypography.caption.copyWith(
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
@@ -1244,7 +1262,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   getTooltipItems: (touchedSpots) {
                     return touchedSpots.map((spot) {
                       return LineTooltipItem(
-                        'GHS ${spot.y.toStringAsFixed(1)}k',
+                        '₵${spot.y.toStringAsFixed(1)}k',
                         AppTypography.caption.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
                           fontWeight: AppTypography.headingWeight,
@@ -1287,7 +1305,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           style: AppTypography.h5.copyWith(
             fontWeight: AppTypography.headingWeight,
             color: isDark ? Colors.white : AppColors.textPrimary,
-            fontSize: isMobile ? AppTypography.sectionTitleSize : (isTablet ? AppTypography.headingSize : AppTypography.pageTitleSize),
+            fontSize: isMobile
+                ? AppTypography.sectionTitleSize
+                : (isTablet
+                    ? AppTypography.headingSize
+                    : AppTypography.pageTitleSize),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -1714,7 +1736,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       reservedSize: 36,
                       interval: maxValue == 0 ? 1 : maxValue / 4,
                       getTitlesWidget: (value, meta) => Text(
-                        'GHS ${value.toStringAsFixed(0)}',
+                        '₵${value.toStringAsFixed(0)}',
                         style: AppTypography.caption.copyWith(
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
@@ -1755,7 +1777,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         isDark ? const Color(0xFF111827) : Colors.white,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       return BarTooltipItem(
-                        'GHS ${rod.toY.toStringAsFixed(0)}',
+                        '₵${rod.toY.toStringAsFixed(0)}',
                         AppTypography.caption.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
                           fontWeight: AppTypography.headingWeight,
@@ -1984,7 +2006,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       reservedSize: 32,
                       interval: maxValue == 0 ? 1 : maxValue / 4,
                       getTitlesWidget: (value, meta) => Text(
-                        'GHS ${value.toStringAsFixed(0)}',
+                        '₵${value.toStringAsFixed(0)}',
                         style: AppTypography.caption.copyWith(
                           color:
                               isDark ? Colors.white54 : AppColors.textSecondary,
@@ -2025,7 +2047,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         isDark ? const Color(0xFF111827) : Colors.white,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       return BarTooltipItem(
-                        'GHS ${rod.toY.toStringAsFixed(0)}',
+                        '₵${rod.toY.toStringAsFixed(0)}',
                         AppTypography.caption.copyWith(
                           color: isDark ? Colors.white : AppColors.textPrimary,
                           fontWeight: AppTypography.headingWeight,
