@@ -2,6 +2,7 @@ import '../../core/widgets/device_maintenance_panel.dart';
 import '../../core/widgets/maintenance_form_shell.dart';
 import '../../core/widgets/equipment_maintenance_card.dart';
 import '../../core/widgets/device_registration_form.dart';
+import '../../core/widgets/command_device_card.dart';
 import '../../services/device_maintenance_api.dart';
 import '../../core/utils/sensor_connection.dart';
 import '../../core/utils/sensor_calibration_policy.dart';
@@ -621,7 +622,8 @@ class _SensorManagementScreenState
           'ec',
           'tds',
           'co2',
-          'distance'
+          'distance',
+          'command_device'
         ],
         (value) => setState(() => _selectedType = value ?? 'All'),
         isDark,
@@ -694,6 +696,9 @@ class _SensorManagementScreenState
 
   Widget _buildSensorCard(Map<String, dynamic> sensor, bool isDark) {
     final raw = Map<String, dynamic>.from(sensor['raw'] as Map);
+    if (raw['sensortype'] == 'command_device') {
+      return CommandDeviceCard(device: raw, allowSend: false);
+    }
     if (raw['sensortype'] == 'air_conditioner') {
       return EquipmentMaintenanceCard(
           device: raw, onConfigure: () => _editDevice(sensor));
@@ -756,7 +761,9 @@ class _SensorManagementScreenState
                                   _value(farm, ['id', r'$id']) == item),
                               ['name', 'farm_name'],
                               item)
-                          : item,
+                          : item == 'command_device'
+                              ? 'Command Device'
+                              : item,
                       style: TextStyle(
                         color: isDark ? Colors.white : AppColors.textPrimary,
                         fontSize: isMobile

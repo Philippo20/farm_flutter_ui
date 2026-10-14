@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'named_command_fields.dart';
+import '../../services/command_device_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/device_maintenance_api.dart';
@@ -18,6 +20,7 @@ const registeredDeviceTypes = {
   'Carbon Dioxide': 'CO2',
   'light': 'Light',
   'light_switch': 'Light switch',
+  'command_device': 'Command Device',
   'pH Level': 'pH sensor',
   'EC Level': 'EC sensor',
   'Water level': 'Water level',
@@ -79,12 +82,16 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
   bool _alerts = true, _saving = false, _loading = true;
   String? _error;
   bool _maintenanceReviewed = true;
-  bool get _equipment => _type == 'air_conditioner' || _type == 'light_switch';
+  bool get _equipment =>
+      ['air_conditioner', 'light_switch', 'command_device'].contains(_type);
+  bool _canConfigureCommands = false;
+  List<Map<String, String>> _commands = [];
   @override
   void initState() {
     super.initState();
     _api = widget.api ?? DeviceMaintenanceApi();
     final device = widget.device ?? <String, dynamic>{};
+    _commands = deviceNamedCommands(device['command_config']);
     for (final key in [
       'model_number',
       'serial_number',
@@ -131,6 +138,7 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
       if (!mounted) return;
       setState(() {
         _farms = List<Map<String, dynamic>>.from(result['farms']);
+        _canConfigureCommands = result['can_configure_commands'] == true;
         _loading = false;
       });
     } catch (error) {
@@ -163,6 +171,7 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
         'light' => 'lux',
         'VPD' => 'psi',
         'light_switch' => 'state',
+        'command_device' => 'command',
         'air_conditioner' => 'equipment',
         _ => '',
       };
@@ -183,6 +192,7 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
   }
 
   Future<void> _save() async {
+    if (_type == 'command_device' && !_canConfigureCommands) return;
     if (_saving || !_form.currentState!.validate()) return;
     if (!_maintenanceReviewed) {
       setState(() => _error =
@@ -204,6 +214,7 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
         'unit': _equipment ? _unit(_type) : _fields['unit']!.text.trim(),
         'value': _equipment ? 0 : double.tryParse(_fields['value']!.text) ?? 0,
         'alerts_enabled': _equipment ? false : _alerts,
+        if (_type == 'command_device') 'command_config': jsonEncode(_commands),
         'plans': _plans
             .where((plan) => plan.enabled)
             .map((plan) => plan.toJson())
@@ -252,10 +263,22 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
   @override
   Widget build(BuildContext context) {
     return MaintenanceFormShell(
-      title: widget.device == null ? 'Register device' : 'Update device',
-      subtitle: 'Device details and maintenance schedules',
+      title: _type == 'command_device'
+          ? (widget.device == null
+              ? 'Register command device'
+              : 'Update command device')
+          : widget.device == null
+              ? 'Register device'
+              : 'Update device',
+      subtitle: _type == 'command_device'
+          ? 'Named commands for your connected board'
+          : 'Device details and maintenance schedules',
       saving: _saving,
-      onSave: _loading || _farms.isEmpty ? null : _save,
+      onSave: _loading ||
+              _farms.isEmpty ||
+              (_type == 'command_device' && !_canConfigureCommands)
+          ? null
+          : _save,
       error: _error,
       child: _loading
           ? const Padding(
@@ -306,7 +329,11 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
                           decoration: maintenanceInput(context,
                               icon: Icons.devices_other),
                           items: {
-                            ...registeredDeviceTypes,
+                            for (final item in registeredDeviceTypes.entries)
+                              if (item.key != 'command_device' ||
+                                  _canConfigureCommands ||
+                                  item.key == _type)
+                                item.key: item.value,
                             if (!registeredDeviceTypes.containsKey(_type))
                               _type: _type
                           }
@@ -320,6 +347,12 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
                               ? null
                               : (value) => setState(() {
                                     _type = value!;
+                                    if (_type == 'command_device') {
+                                      _maintenanceReviewed = true;
+                                      for (final plan in _plans) {
+                                        plan.enabled = false;
+                                      }
+                                    }
                                     _fields['unit']!.text = _unit(_type);
                                   }),
                         )),
@@ -348,6 +381,11 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
                               ? null
                               : (value) => setState(() => _status = value!),
                         )),
+                    if (_type == 'command_device')
+                      NamedCommandFields(
+                          initial: _commands,
+                          enabled: !_saving && _canConfigureCommands,
+                          onChanged: (commands) => _commands = commands),
                     if (!_equipment) ...[
                       if (widget.device == null)
                         _input('value', 'Initial reading (optional)',
@@ -373,111 +411,117 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
                               ? null
                               : (value) => setState(() => _alerts = value)),
                     ],
-                    const Divider(height: 24),
-                    Text('Maintenance tasks', style: AppTypography.titleSmall),
-                    const SizedBox(height: 6),
-                    Text(
-                        'Select the work this device needs. Each task has its own schedule. Use the manufacturer\'s recommended intervals.',
-                        style: AppTypography.bodySmall),
-                    if (widget.device != null &&
-                        widget.device!['maintenance_plan'] == null)
-                      Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                              'Previous schedule: ${widget.device!['maintenance_frequency'] ?? 'Not recorded'}. Select tasks below to replace it with individual schedules.',
-                              style: AppTypography.bodySmall)),
-                    Align(
-                        alignment: Alignment.centerLeft,
-                        child: TextButton(
-                            onPressed: _saving ? null : _suggestTasks,
-                            child: const Text('Suggest task types'))),
-                    CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        title: Text('No scheduled maintenance',
-                            style: AppTypography.bodySmall),
-                        value: !_plans.any((plan) => plan.enabled),
-                        onChanged: _saving
-                            ? null
-                            : (value) {
-                                setState(() {
-                                  for (final plan in _plans) {
-                                    plan.enabled = false;
-                                    _maintenanceReviewed = true;
-                                  }
-                                });
-                              }),
-                    for (final plan in _plans) ...[
+                    if (_type != 'command_device') ...[
+                      const Divider(height: 24),
+                      Text('Maintenance tasks',
+                          style: AppTypography.titleSmall),
+                      const SizedBox(height: 6),
+                      Text(
+                          'Select the work this device needs. Each task has its own schedule. Use the manufacturer\'s recommended intervals.',
+                          style: AppTypography.bodySmall),
+                      if (widget.device != null &&
+                          widget.device!['maintenance_plan'] == null)
+                        Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                                'Previous schedule: ${widget.device!['maintenance_frequency'] ?? 'Not recorded'}. Select tasks below to replace it with individual schedules.',
+                                style: AppTypography.bodySmall)),
+                      Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton(
+                              onPressed: _saving ? null : _suggestTasks,
+                              child: const Text('Suggest task types'))),
                       CheckboxListTile(
                           contentPadding: EdgeInsets.zero,
                           controlAffinity: ListTileControlAffinity.leading,
-                          title: Text(maintenanceTypes[plan.type]!,
+                          title: Text('No scheduled maintenance',
                               style: AppTypography.bodySmall),
-                          value: plan.enabled,
+                          value: !_plans.any((plan) => plan.enabled),
                           onChanged: _saving
                               ? null
-                              : (value) => setState(() {
-                                    _maintenanceReviewed = true;
-                                    plan.enabled = value!;
-                                  })),
-                      if (plan.enabled) ...[
-                        maintenancePair(
-                          context,
+                              : (value) {
+                                  setState(() {
+                                    for (final plan in _plans) {
+                                      plan.enabled = false;
+                                      _maintenanceReviewed = true;
+                                    }
+                                  });
+                                }),
+                      for (final plan in _plans) ...[
+                        CheckboxListTile(
+                            contentPadding: EdgeInsets.zero,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            title: Text(maintenanceTypes[plan.type]!,
+                                style: AppTypography.bodySmall),
+                            value: plan.enabled,
+                            onChanged: _saving
+                                ? null
+                                : (value) => setState(() {
+                                      _maintenanceReviewed = true;
+                                      plan.enabled = value!;
+                                    })),
+                        if (plan.enabled) ...[
+                          maintenancePair(
+                            context,
+                            maintenanceField(
+                                'Repeat every (days)',
+                                TextFormField(
+                                    controller: plan.days,
+                                    enabled: !_saving,
+                                    style: AppTypography.font(fontSize: 12),
+                                    keyboardType: TextInputType.number,
+                                    decoration: maintenanceInput(context,
+                                        icon: Icons.repeat),
+                                    validator: (value) =>
+                                        (int.tryParse(value ?? '') ?? 0) < 1 ||
+                                                (int.tryParse(value ?? '') ??
+                                                        0) >
+                                                    3650
+                                            ? 'Use 1 to 3650 days'
+                                            : null)),
+                            maintenanceField(
+                                'First due date',
+                                OutlinedButton.icon(
+                                    icon: const Icon(
+                                        Icons.calendar_today_outlined,
+                                        size: 16),
+                                    onPressed: _saving
+                                        ? null
+                                        : () async {
+                                            final selected =
+                                                await showDatePicker(
+                                                    context: context,
+                                                    initialDate: plan.due,
+                                                    firstDate: DateTime(2000),
+                                                    lastDate: DateTime(2100));
+                                            if (selected != null && mounted)
+                                              setState(
+                                                  () => plan.due = selected);
+                                          },
+                                    label: Text(
+                                        DateFormat('dd MMM yyyy')
+                                            .format(plan.due),
+                                        style:
+                                            AppTypography.font(fontSize: 12)))),
+                          ),
                           maintenanceField(
-                              'Repeat every (days)',
+                              'Instructions (optional)',
                               TextFormField(
-                                  controller: plan.days,
+                                  controller: plan.instructions,
                                   enabled: !_saving,
+                                  maxLines: 2,
+                                  maxLength: 1000,
                                   style: AppTypography.font(fontSize: 12),
-                                  keyboardType: TextInputType.number,
                                   decoration: maintenanceInput(context,
-                                      icon: Icons.repeat),
-                                  validator: (value) =>
-                                      (int.tryParse(value ?? '') ?? 0) < 1 ||
-                                              (int.tryParse(value ?? '') ?? 0) >
-                                                  3650
-                                          ? 'Use 1 to 3650 days'
-                                          : null)),
-                          maintenanceField(
-                              'First due date',
-                              OutlinedButton.icon(
-                                  icon: const Icon(
-                                      Icons.calendar_today_outlined,
-                                      size: 16),
-                                  onPressed: _saving
-                                      ? null
-                                      : () async {
-                                          final selected = await showDatePicker(
-                                              context: context,
-                                              initialDate: plan.due,
-                                              firstDate: DateTime(2000),
-                                              lastDate: DateTime(2100));
-                                          if (selected != null && mounted)
-                                            setState(() => plan.due = selected);
-                                        },
-                                  label: Text(
-                                      DateFormat('dd MMM yyyy')
-                                          .format(plan.due),
-                                      style:
-                                          AppTypography.font(fontSize: 12)))),
-                        ),
-                        maintenanceField(
-                            'Instructions (optional)',
-                            TextFormField(
-                                controller: plan.instructions,
-                                enabled: !_saving,
-                                maxLines: 2,
-                                maxLength: 1000,
-                                style: AppTypography.font(fontSize: 12),
-                                decoration: maintenanceInput(context,
-                                    icon: Icons.notes))),
+                                      icon: Icons.notes))),
+                        ],
                       ],
+                      Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: Text(
+                              'Tasks use the technician assigned to this farm. Completing cleaning will not complete calibration or servicing.',
+                              style: AppTypography.bodySmall)),
                     ],
-                    Padding(
-                        padding: const EdgeInsets.only(bottom: 14),
-                        child: Text(
-                            'Tasks use the technician assigned to this farm. Completing cleaning will not complete calibration or servicing.',
-                            style: AppTypography.bodySmall)),
                   ])),
     );
   }

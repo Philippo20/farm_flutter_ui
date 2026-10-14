@@ -7,7 +7,7 @@ bool? sensorRequiresCalibration(Map<String, dynamic> sensor) {
       '${sensor['type'] ?? sensor['sensortype'] ?? sensor['sensor_type'] ?? ''}'
           .toLowerCase()
           .replaceAll(RegExp(r'[^a-z0-9]'), '');
-  if (['temperature', 'temp'].contains(type)) return false;
+  if (['temperature', 'temp', 'commanddevice'].contains(type)) return false;
   if ([
     'ph',
     'phlevel',

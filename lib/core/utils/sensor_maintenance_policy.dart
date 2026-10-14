@@ -14,6 +14,7 @@ bool sensorRequiresMaintenance(Map<String, dynamic> sensor) {
           .replaceAll(RegExp(r'[^a-z0-9]'), '');
   return !const {
     'lightswitch',
+    'commanddevice',
     'temperature',
     'temp',
     'humidity',

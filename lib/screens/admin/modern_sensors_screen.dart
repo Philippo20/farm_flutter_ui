@@ -2,6 +2,7 @@ import '../../core/widgets/sensor_form_dialog.dart';
 import '../../core/widgets/equipment_maintenance_card.dart';
 import '../../core/widgets/device_registration_form.dart';
 import '../../core/widgets/light_switch_device_card.dart';
+import '../../core/widgets/command_device_card.dart';
 import '../../core/utils/stable_sensor_order.dart';
 import '../../core/utils/sensor_maintenance_policy.dart';
 import '../../core/widgets/device_telemetry_details_modal.dart';
@@ -270,6 +271,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
       case 'light_switch':
       case 'light switch':
         return 'Light Switch';
+      case 'command_device':
+        return 'Command Device';
       case 'ph level':
         return 'pH Level';
       case 'ec level':
@@ -301,6 +304,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         return 'light';
       case 'Light Switch':
         return 'light_switch';
+      case 'Command Device':
+        return 'command_device';
       case 'pH Level':
         return 'pH Level';
       case 'EC Level':
@@ -405,6 +410,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         return 'lux';
       case 'Light Switch':
         return 'state';
+      case 'Command Device':
+        return 'command';
       case 'pH Level':
         return 'pH';
       case 'EC Level':
@@ -481,6 +488,8 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
         return Icons.air_rounded;
       case 'Light Switch':
         return Icons.toggle_on_outlined;
+      case 'Command Device':
+        return Icons.terminal_rounded;
       case 'Light':
         return Icons.wb_sunny_rounded;
       case 'pH Level':
@@ -1262,39 +1271,50 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                 return SizedBox(
                   key: ValueKey(sensor.raw[r'$id'] ?? sensor.id),
                   width: cardWidth,
-                  child: sensor.raw['sensortype'] == 'air_conditioner'
-                      ? EquipmentMaintenanceCard(
+                  child: sensor.type == 'Command Device'
+                      ? CommandDeviceCard(
                           device: sensor.raw,
-                          onConfigure: widget.isFarmManager
+                          allowSend: !widget.isFarmManager,
+                          onSettings: widget.isFarmManager
                               ? null
-                              : () => _showSensorSettings(sensor, isDark))
-                      : sensor.type == 'Light Switch' && !widget.isFarmManager
-                          ? LightSwitchDeviceCard(
-                              key: ValueKey(sensor.id),
-                              serial: sensor.id,
-                              name: sensor.name,
-                              farm: sensor.farm,
-                              zone: sensor.zone,
-                              isDark: isDark,
-                              onSettings: () =>
-                                  _showSensorSettings(sensor, isDark),
-                              onDelete: widget.isSuperAdmin
-                                  ? () =>
-                                      _showDeleteSensorDialog(sensor, isDark)
-                                  : null,
-                            )
-                          : _SensorDeviceCard(
-                              sensor: sensor,
-                              isDark: isDark,
-                              onDetails: () =>
-                                  _showSensorDetails(sensor, isDark),
-                              onSettings: () =>
-                                  _showSensorSettings(sensor, isDark),
-                              onDelete: widget.isSuperAdmin
-                                  ? () =>
-                                      _showDeleteSensorDialog(sensor, isDark)
-                                  : null,
-                            ),
+                              : () => _showSensorSettings(sensor, isDark),
+                          onDelete: widget.isSuperAdmin
+                              ? () => _showDeleteSensorDialog(sensor, isDark)
+                              : null)
+                      : sensor.raw['sensortype'] == 'air_conditioner'
+                          ? EquipmentMaintenanceCard(
+                              device: sensor.raw,
+                              onConfigure: widget.isFarmManager
+                                  ? null
+                                  : () => _showSensorSettings(sensor, isDark))
+                          : sensor.type == 'Light Switch' &&
+                                  !widget.isFarmManager
+                              ? LightSwitchDeviceCard(
+                                  key: ValueKey(sensor.id),
+                                  serial: sensor.id,
+                                  name: sensor.name,
+                                  farm: sensor.farm,
+                                  zone: sensor.zone,
+                                  isDark: isDark,
+                                  onSettings: () =>
+                                      _showSensorSettings(sensor, isDark),
+                                  onDelete: widget.isSuperAdmin
+                                      ? () => _showDeleteSensorDialog(
+                                          sensor, isDark)
+                                      : null,
+                                )
+                              : _SensorDeviceCard(
+                                  sensor: sensor,
+                                  isDark: isDark,
+                                  onDetails: () =>
+                                      _showSensorDetails(sensor, isDark),
+                                  onSettings: () =>
+                                      _showSensorSettings(sensor, isDark),
+                                  onDelete: widget.isSuperAdmin
+                                      ? () => _showDeleteSensorDialog(
+                                          sensor, isDark)
+                                      : null,
+                                ),
                 );
               }).toList(),
             );

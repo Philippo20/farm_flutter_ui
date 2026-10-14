@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 23,
+  "buildNumber": 24,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "160a24d9cc8efdf5629c0742813c24aff00df6fb0b26b2bc90dbcd47da9588fd",
-  "sizeBytes": 83742957,
-  "publishedAt": "2026-10-11T20:36:10.7654191Z",
-  "releaseNotes": "Choose Regular or Bulk prices for farm revenue, with saved rates preserved on receipts. Admin pricing is available on mobile and desktop. Farm task deletion is restricted to Admin and Super Admin and recorded in audit logs."
+  "sha256": "370bc87471d7cb715e5da25654b42338725eafebdf5fc1d55da45e34b6a02739",
+  "sizeBytes": 83857813,
+  "publishedAt": "2026-10-14T16:33:52.2722260Z",
+  "releaseNotes": "Command Devices: configure named commands and send them from a dedicated control card. Includes live board status, confirmed results, a setup guide and protection against duplicate or outdated commands."
 }
