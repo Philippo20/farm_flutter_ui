@@ -168,4 +168,37 @@ void main() {
     expect(find.textContaining('Device has a pending command'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
+  testWidgets(
+      'five-second polling timeout goes offline and recovers in background',
+      (tester) async {
+    final api = FakeCommands();
+    addTearDown(api.dispose);
+    final now = DateTime.now().toUtc();
+    api.data = {
+      ...api.data,
+      'offline_after_ms': 5000,
+      'server_time': now.toIso8601String(),
+      'seen_at': now.subtract(const Duration(seconds: 4)).toIso8601String()
+    };
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: SingleChildScrollView(
+                child: CommandDeviceCard(device: device, service: api)))));
+    await tester.pumpAndSettle();
+    expect(find.text('Online'), findsOneWidget);
+    api.data = {
+      ...api.data,
+      'seen_at':
+          now.subtract(const Duration(milliseconds: 5001)).toIso8601String()
+    };
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
+    expect(find.text('Offline'), findsOneWidget);
+    api.data = {...api.data, 'seen_at': now.toIso8601String()};
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump();
+    expect(find.text('Online'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
 }

@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 24,
+  "buildNumber": 25,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "370bc87471d7cb715e5da25654b42338725eafebdf5fc1d55da45e34b6a02739",
-  "sizeBytes": 83857813,
-  "publishedAt": "2026-10-14T16:33:52.2722260Z",
-  "releaseNotes": "Command Devices: configure named commands and send them from a dedicated control card. Includes live board status, confirmed results, a setup guide and protection against duplicate or outdated commands."
+  "sha256": "ad9ef22521d9f0d57bc41282d6fb24e8d037cbabb358b50d07ba22c9c46571ec",
+  "sizeBytes": 83857817,
+  "publishedAt": "2026-10-15T10:11:37.3902338Z",
+  "releaseNotes": "Command devices now go offline after five seconds without a successful poll, with faster background status updates."
 }

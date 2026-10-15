@@ -25,7 +25,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
     with WidgetsBindingObserver {
   late final _service = widget.service ?? CommandDeviceService();
   final _clock = Stopwatch()..start();
-  Timer? _timer;
+  Timer? _timer, _presenceTimer;
   Map<String, dynamic>? _state;
   String? _selected, _error, _commandError;
   bool _saving = false, _foreground = true, _checking = false;
@@ -42,7 +42,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
   void _start() {
     _refresh();
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 2), (_) {
       if (mounted) setState(() {});
       _refresh();
     });
@@ -57,6 +57,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
       _start();
     } else {
       _timer?.cancel();
+      _presenceTimer?.cancel();
     }
   }
 
@@ -69,6 +70,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
       _selected = null;
       _error = null;
       _checking = true;
+      _presenceTimer?.cancel();
       _revision++;
       _refresh();
     }
@@ -78,21 +80,40 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _timer?.cancel();
+    _presenceTimer?.cancel();
     _clock.stop();
     if (widget.service == null) _service.dispose();
     super.dispose();
   }
 
-  bool get _online {
+  int get _offlineAfterMs =>
+      (_state?['offline_after_ms'] as num?)?.toInt() ?? 5000;
+
+  int? get _heartbeatAgeMs {
     final server = DateTime.tryParse('${_state?['server_time']}');
     final seen = DateTime.tryParse('${_state?['seen_at']}');
-    if (_state?['online'] != true || server == null || seen == null) {
-      return false;
-    }
-    final age = server.difference(seen).inMilliseconds +
+    if (server == null || seen == null) return null;
+    return server.difference(seen).inMilliseconds +
         _clock.elapsedMilliseconds -
         _received;
-    return age >= 0 && age <= 15000;
+  }
+
+  bool get _online {
+    final age = _heartbeatAgeMs;
+    return _state?['online'] == true &&
+        age != null &&
+        age >= 0 &&
+        age <= _offlineAfterMs;
+  }
+
+  void _schedulePresenceExpiry() {
+    _presenceTimer?.cancel();
+    final age = _heartbeatAgeMs;
+    if (!_foreground || !_online || age == null) return;
+    _presenceTimer =
+        Timer(Duration(milliseconds: _offlineAfterMs - age + 1), () {
+      if (mounted && _foreground) setState(() {});
+    });
   }
 
   Future<void> _refresh() async {
@@ -110,6 +131,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
           _error = null;
           _checking = false;
         });
+        _schedulePresenceExpiry();
       }
     } catch (error) {
       if (mounted && revision == _revision) {
@@ -145,6 +167,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
           _state = result;
           _received = began;
         });
+        _schedulePresenceExpiry();
       }
     } catch (error) {
       if (mounted && revision == _revision) {
