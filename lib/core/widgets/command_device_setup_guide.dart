@@ -32,7 +32,7 @@ POST /command-devices/$serial/ack
 
 Use success: false with a clear message when execution fails. After an accepted acknowledgement, increment sequence. If the acknowledgement response is lost, retry the same result; do not execute again. A later poll with advance_sequence: true also means the slot is resolved.
 
-The board is offline after 5 seconds without a successful poll. Commands expire after 10 seconds. Old commands are discarded on board restart, expiry or configuration changes. The app shows Confirmed only after the board acknowledges success.
+The board is offline after 4 seconds without a successful poll. Commands expire after 10 seconds. Old commands are discarded on board restart, expiry or configuration changes. The app shows Confirmed only after the board acknowledges success.
 ''';
 
 Future<void> showCommandDeviceSetupGuide(BuildContext context, String serial) =>

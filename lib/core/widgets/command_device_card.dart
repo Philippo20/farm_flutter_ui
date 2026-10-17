@@ -87,7 +87,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
   }
 
   int get _offlineAfterMs =>
-      (_state?['offline_after_ms'] as num?)?.toInt() ?? 5000;
+      (_state?['offline_after_ms'] as num?)?.toInt() ?? 4000;
 
   int? get _heartbeatAgeMs {
     final server = DateTime.tryParse('${_state?['server_time']}');
