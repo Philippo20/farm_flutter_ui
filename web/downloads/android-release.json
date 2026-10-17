@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 27,
+  "buildNumber": 28,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "022df782a56355916215c20cb1685e69d4a75d5d70e8ee415b7b5d3733eb099a",
-  "sizeBytes": 83857817,
-  "publishedAt": "2026-10-17T17:02:07.8792491Z",
-  "releaseNotes": "Updated application dependencies and Android release. Command devices use a four-second offline timeout with two-second status refreshes."
+  "sha256": "78578ff36cde1706f28f79259d287e1b632d95fda249ddefca31e74875872d10",
+  "sizeBytes": 83857813,
+  "publishedAt": "2026-10-17T17:27:07.0821584Z",
+  "releaseNotes": "Stable command device presence with a 5.5-second heartbeat grace period, sequential polling, cancellation and lifecycle handling."
 }

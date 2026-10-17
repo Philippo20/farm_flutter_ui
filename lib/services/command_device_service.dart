@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:http/http.dart' as http;
-import 'api_connection.dart';
+import 'dart:async';
+import 'api_session_context.dart';
 import 'auth_service.dart';
 import 'superadmin_api_service.dart';
 
@@ -36,7 +37,7 @@ class CommandDeviceService {
       {http.Client? client,
       String? Function()? token,
       Future<void> Function()? refresh})
-      : _client = client ?? ConnectedApiClient(),
+      : _client = client ?? http.Client(),
         _token = token ?? (() => AuthService().jwt),
         _refresh = refresh ??
             (() async {
@@ -45,7 +46,22 @@ class CommandDeviceService {
   final http.Client _client;
   final String? Function() _token;
   final Future<void> Function() _refresh;
-  void dispose() => _client.close();
+  final _pollAborts = <Completer<void>>{};
+  bool _disposed = false;
+  int _pollGeneration = 0;
+  void cancelPolling() {
+    _pollGeneration++;
+    for (final abort in _pollAborts.toList()) {
+      if (!abort.isCompleted) abort.complete();
+    }
+  }
+
+  void dispose() {
+    _disposed = true;
+    cancelPolling();
+    _client.close();
+  }
+
   Future<Map<String, dynamic>> state(String serial) => _request(serial);
   Future<Map<String, dynamic>> send(
           String serial, String commandKey, String requestId,
@@ -56,7 +72,14 @@ class CommandDeviceService {
         if (revision != null) 'config_revision': revision
       });
   Future<Map<String, dynamic>> _request(String serial,
-      {Map<String, String>? data, bool retried = false}) async {
+      {Map<String, String>? data,
+      bool retried = false,
+      int? pollGeneration}) async {
+    if (_disposed) throw StateError('Device service has been disposed.');
+    if (data == null) pollGeneration ??= _pollGeneration;
+    if (pollGeneration != null && pollGeneration != _pollGeneration) {
+      throw http.RequestAbortedException();
+    }
     final jwt = _token();
     if (jwt == null) {
       throw const SuperAdminApiException(
@@ -67,17 +90,38 @@ class CommandDeviceService {
     final headers = {
       'Authorization': 'Bearer $jwt',
       'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache'
+      'Cache-Control': 'no-cache',
+      if (ApiSessionContext.role != null)
+        'X-Active-Role': ApiSessionContext.role!,
     };
-    final response = await (data == null
-            ? _client.get(uri, headers: headers)
-            : _client.post(uri, headers: headers, body: jsonEncode(data)))
-        .timeout(const Duration(seconds: 8),
-            onTimeout: () => throw const SuperAdminApiException(
-                'Unable to reach device controls. Refresh the device before retrying.'));
+    final abort = Completer<void>();
+    if (data == null) _pollAborts.add(abort);
+    var timedOut = false;
+    final timer = Timer(const Duration(seconds: 8), () {
+      timedOut = true;
+      if (!abort.isCompleted) abort.complete();
+    });
+    late http.Response response;
+    try {
+      final request = http.AbortableRequest(data == null ? 'GET' : 'POST', uri,
+          abortTrigger: abort.future)
+        ..headers.addAll(headers);
+      if (data != null) request.body = jsonEncode(data);
+      // Await the aborted transport too: a Future.timeout alone would leave
+      // the old HTTP request running when the next heartbeat request starts.
+      response = await http.Response.fromStream(await _client.send(request));
+    } on http.RequestAbortedException {
+      if (!timedOut) rethrow;
+      throw const SuperAdminApiException(
+          'Unable to reach device controls. Refresh the device before retrying.');
+    } finally {
+      timer.cancel();
+      _pollAborts.remove(abort);
+    }
     if (response.statusCode == 401 && !retried) {
       await _refresh();
-      return _request(serial, data: data, retried: true);
+      return _request(serial,
+          data: data, retried: true, pollGeneration: pollGeneration);
     }
     dynamic decoded;
     try {

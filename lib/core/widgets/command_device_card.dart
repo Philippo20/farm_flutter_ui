@@ -1,7 +1,7 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/command_device_service.dart';
+import '../../services/heartbeat_poller.dart';
 import '../theme/app_typography.dart';
 import 'command_device_setup_guide.dart';
 
@@ -24,28 +24,32 @@ class CommandDeviceCard extends StatefulWidget {
 class _CommandDeviceCardState extends State<CommandDeviceCard>
     with WidgetsBindingObserver {
   late final _service = widget.service ?? CommandDeviceService();
-  final _clock = Stopwatch()..start();
-  Timer? _timer, _presenceTimer;
-  Map<String, dynamic>? _state;
-  String? _selected, _error, _commandError;
-  bool _saving = false, _foreground = true, _checking = false;
-  int _revision = 0, _received = 0;
-  int? _fetchRevision;
+  late final HeartbeatPoller<Map<String, dynamic>> _heartbeat;
+  String? _selected, _commandError;
+  bool _saving = false, _foreground = true;
+  int _revision = 0;
   String get _serial => '${widget.device['serial_number'] ?? ''}';
+  Map<String, dynamic>? get _state => _heartbeat.data;
+  String? get _error => _heartbeat.lastError?.toString();
+  bool get _online => _heartbeat.isOnline;
+  bool get _checking => _foreground && !_heartbeat.hasCompleted;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _start();
+    _heartbeat = HeartbeatPoller<Map<String, dynamic>>(
+      fetch: () => _service.state(_serial),
+      cancelFetch: _service.cancelPolling,
+      // An API response is not itself proof that the ESP32 is still polling.
+      isHeartbeat: (data) => data['online'] == true,
+      sourceHeartbeat: (data) => DateTime.tryParse('${data['seen_at']}'),
+    )..addListener(_heartbeatChanged);
+    _heartbeat.startPolling();
   }
 
-  void _start() {
-    _refresh();
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (mounted) setState(() {});
-      _refresh();
-    });
+  void _heartbeatChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -53,11 +57,9 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
     _foreground = state == AppLifecycleState.resumed;
     _revision++;
     if (_foreground) {
-      setState(() => _checking = true);
-      _start();
+      _heartbeat.startPolling();
     } else {
-      _timer?.cancel();
-      _presenceTimer?.cancel();
+      _heartbeat.stopPolling();
     }
   }
 
@@ -66,84 +68,24 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.device['serial_number'] != _serial ||
         oldWidget.device['command_config'] != widget.device['command_config']) {
-      _state = null;
-      _selected = null;
-      _error = null;
-      _checking = true;
-      _presenceTimer?.cancel();
       _revision++;
-      _refresh();
+      _selected = null;
+      _commandError = null;
+      _heartbeat.reset();
+      if (_foreground) _heartbeat.startPolling();
     }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _timer?.cancel();
-    _presenceTimer?.cancel();
-    _clock.stop();
+    _heartbeat.removeListener(_heartbeatChanged);
+    _heartbeat.dispose();
     if (widget.service == null) _service.dispose();
     super.dispose();
   }
 
-  int get _offlineAfterMs =>
-      (_state?['offline_after_ms'] as num?)?.toInt() ?? 4000;
-
-  int? get _heartbeatAgeMs {
-    final server = DateTime.tryParse('${_state?['server_time']}');
-    final seen = DateTime.tryParse('${_state?['seen_at']}');
-    if (server == null || seen == null) return null;
-    return server.difference(seen).inMilliseconds +
-        _clock.elapsedMilliseconds -
-        _received;
-  }
-
-  bool get _online {
-    final age = _heartbeatAgeMs;
-    return _state?['online'] == true &&
-        age != null &&
-        age >= 0 &&
-        age <= _offlineAfterMs;
-  }
-
-  void _schedulePresenceExpiry() {
-    _presenceTimer?.cancel();
-    final age = _heartbeatAgeMs;
-    if (!_foreground || !_online || age == null) return;
-    _presenceTimer =
-        Timer(Duration(milliseconds: _offlineAfterMs - age + 1), () {
-      if (mounted && _foreground) setState(() {});
-    });
-  }
-
-  Future<void> _refresh() async {
-    if (!mounted || !_foreground || _saving || _fetchRevision == _revision) {
-      return;
-    }
-    final revision = _revision, began = _clock.elapsedMilliseconds;
-    _fetchRevision = revision;
-    try {
-      final result = await _service.state(_serial);
-      if (mounted && revision == _revision) {
-        setState(() {
-          _state = result;
-          _received = began;
-          _error = null;
-          _checking = false;
-        });
-        _schedulePresenceExpiry();
-      }
-    } catch (error) {
-      if (mounted && revision == _revision) {
-        setState(() {
-          _error = '$error';
-          _checking = false;
-        });
-      }
-    } finally {
-      if (_fetchRevision == revision) _fetchRevision = null;
-    }
-  }
+  Future<void> _refresh() => _heartbeat.refresh();
 
   Future<void> _send() async {
     if (!_online ||
@@ -154,7 +96,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
         _selected == null) {
       return;
     }
-    final revision = ++_revision, began = _clock.elapsedMilliseconds;
+    final revision = ++_revision;
     setState(() {
       _saving = true;
       _commandError = null;
@@ -163,11 +105,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
       final result = await _service.send(_serial, _selected!, newCommandId(),
           revision: _state?['config_revision']?.toString());
       if (mounted && revision == _revision) {
-        setState(() {
-          _state = result;
-          _received = began;
-        });
-        _schedulePresenceExpiry();
+        _heartbeat.acceptData(result);
       }
     } catch (error) {
       if (mounted && revision == _revision) {
@@ -212,15 +150,11 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
         _state?['ready'] == true &&
         selected != null &&
         _error == null;
-    final connection = _checking
-        ? 'Checking'
-        : _error != null
-            ? 'Unavailable'
-            : _state == null
-                ? 'Connecting'
-                : _online
-                    ? 'Online'
-                    : 'Offline';
+    final connection = _online
+        ? 'Online'
+        : _checking
+            ? 'Checking'
+            : 'Offline';
     final lastTime =
         DateTime.tryParse('${last?['confirmed_at'] ?? last?['created_at']}');
     return Material(

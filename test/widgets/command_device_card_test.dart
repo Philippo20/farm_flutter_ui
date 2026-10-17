@@ -34,9 +34,14 @@ class FakeCommands extends CommandDeviceService {
         };
   Map<String, dynamic> data;
   Completer<Map<String, dynamic>>? sending;
+  Object? readError;
   int sends = 0;
   @override
-  Future<Map<String, dynamic>> state(String serial) async => data;
+  Future<Map<String, dynamic>> state(String serial) async {
+    if (readError != null) throw readError!;
+    return data;
+  }
+
   @override
   Future<Map<String, dynamic>> send(String serial, String key, String request,
       {String? revision}) {
@@ -126,6 +131,7 @@ void main() {
     addTearDown(api.dispose);
     api.data = {
       ...api.data,
+      'online': false,
       'seen_at': DateTime.now()
           .subtract(const Duration(seconds: 16))
           .toUtc()
@@ -169,16 +175,16 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
   testWidgets(
-      'four-second polling timeout goes offline and recovers in background',
+      'a transient failure preserves online until grace expires and polling recovers',
       (tester) async {
     final api = FakeCommands();
     addTearDown(api.dispose);
     final now = DateTime.now().toUtc();
     api.data = {
       ...api.data,
-      'offline_after_ms': 4000,
+      'offline_after_ms': 5500,
       'server_time': now.toIso8601String(),
-      'seen_at': now.subtract(const Duration(seconds: 3)).toIso8601String()
+      'seen_at': now.toIso8601String()
     };
     await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -186,16 +192,19 @@ void main() {
                 child: CommandDeviceCard(device: device, service: api)))));
     await tester.pumpAndSettle();
     expect(find.text('Online'), findsOneWidget);
-    api.data = {
-      ...api.data,
-      'seen_at':
-          now.subtract(const Duration(milliseconds: 4001)).toIso8601String()
-    };
+    api.readError = Exception('Temporary connection failure');
     await tester.pump(const Duration(seconds: 2));
     await tester.pump();
+    expect(find.text('Online'), findsOneWidget);
+    expect(find.text('Unavailable'), findsNothing);
+    await tester.pump(const Duration(seconds: 4));
     expect(find.text('Offline'), findsOneWidget);
-    api.data = {...api.data, 'seen_at': now.toIso8601String()};
-    await tester.pump(const Duration(seconds: 2));
+    api.readError = null;
+    api.data = {
+      ...api.data,
+      'seen_at': now.add(const Duration(seconds: 6)).toIso8601String()
+    };
+    await tester.tap(find.byTooltip('Refresh commands'));
     await tester.pump();
     expect(find.text('Online'), findsOneWidget);
     expect(tester.takeException(), isNull);
