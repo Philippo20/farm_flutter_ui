@@ -63,6 +63,13 @@ class CommandDeviceService {
   }
 
   Future<Map<String, dynamic>> state(String serial) => _request(serial);
+  Future<Map<String, dynamic>> calibrations(String serial) =>
+      _request(serial, resource: 'calibrations');
+  Future<Map<String, dynamic>> calibrationHistory(String serial,
+          {String? before}) =>
+      _request(serial,
+          resource: 'calibrations/events',
+          query: {if (before != null) 'before': before});
   Future<Map<String, dynamic>> send(
           String serial, String commandKey, String requestId,
           {String? revision}) =>
@@ -74,7 +81,9 @@ class CommandDeviceService {
   Future<Map<String, dynamic>> _request(String serial,
       {Map<String, String>? data,
       bool retried = false,
-      int? pollGeneration}) async {
+      int? pollGeneration,
+      String? resource,
+      Map<String, String>? query}) async {
     if (_disposed) throw StateError('Device service has been disposed.');
     if (data == null) pollGeneration ??= _pollGeneration;
     if (pollGeneration != null && pollGeneration != _pollGeneration) {
@@ -86,7 +95,8 @@ class CommandDeviceService {
           'Please sign in to use device commands.');
     }
     final uri = Uri.parse(
-        '${SuperAdminApiService.baseUrl}/command-devices/${Uri.encodeComponent(serial)}/${data == null ? 'state' : 'commands'}');
+            '${SuperAdminApiService.baseUrl}/command-devices/${Uri.encodeComponent(serial)}/${resource ?? (data == null ? 'state' : 'commands')}')
+        .replace(queryParameters: query);
     final headers = {
       'Authorization': 'Bearer $jwt',
       'Content-Type': 'application/json',
@@ -121,7 +131,11 @@ class CommandDeviceService {
     if (response.statusCode == 401 && !retried) {
       await _refresh();
       return _request(serial,
-          data: data, retried: true, pollGeneration: pollGeneration);
+          data: data,
+          retried: true,
+          pollGeneration: pollGeneration,
+          resource: resource,
+          query: query);
     }
     dynamic decoded;
     try {

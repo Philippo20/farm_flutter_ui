@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 28,
+  "buildNumber": 29,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "78578ff36cde1706f28f79259d287e1b632d95fda249ddefca31e74875872d10",
-  "sizeBytes": 83857813,
-  "publishedAt": "2026-10-17T17:27:07.0821584Z",
-  "releaseNotes": "Stable command device presence with a 5.5-second heartbeat grace period, sequential polling, cancellation and lifecycle handling."
+  "sha256": "e499ec997e49c7e1de4e079aa26c3b607d30ed66cdfc72d4c2c47d62e8ef14bf",
+  "sizeBytes": 84038041,
+  "publishedAt": "2026-10-17T18:38:25.8230797Z",
+  "releaseNotes": "Controller calibration progress, reasons, saved measurements and event history, with safe command controls and deduplicated notifications."
 }

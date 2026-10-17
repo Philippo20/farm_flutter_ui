@@ -22,6 +22,26 @@ class AbortTestClient extends http.BaseClient {
 }
 
 void main() {
+  test('calibration history preserves resource and cursor after auth refresh',
+      () async {
+    var calls = 0;
+    final api = CommandDeviceService(
+        token: () => 'token',
+        refresh: () async {},
+        client: MockClient((request) async {
+          expect(
+              request.url.path, '/command-devices/F-005/calibrations/events');
+          expect(request.url.queryParameters['before'], 'cursor-id');
+          return ++calls == 1
+              ? http.Response('{}', 401)
+              : http.Response('{"events":[]}', 200);
+        }));
+    addTearDown(api.dispose);
+    expect(
+        (await api.calibrationHistory('F-005', before: 'cursor-id'))['events'],
+        isEmpty);
+    expect(calls, 2);
+  });
   testWidgets('timeout aborts the HTTP transport before the request completes',
       (tester) async {
     final transport = AbortTestClient();

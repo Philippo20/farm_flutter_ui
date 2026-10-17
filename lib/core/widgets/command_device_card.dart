@@ -4,6 +4,7 @@ import '../../services/command_device_service.dart';
 import '../../services/heartbeat_poller.dart';
 import '../theme/app_typography.dart';
 import 'command_device_setup_guide.dart';
+import 'device_calibration_modal.dart';
 
 class CommandDeviceCard extends StatefulWidget {
   const CommandDeviceCard(
@@ -317,6 +318,16 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
                             style: AppTypography.caption
                                 .copyWith(color: colors.error))),
                   const SizedBox(height: 8),
+                  Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                          onPressed: () => showDeviceCalibration(context,
+                              serial: _serial,
+                              deviceState: _heartbeat,
+                              allowSend: widget.allowSend),
+                          icon: const Icon(Icons.tune_rounded, size: 16),
+                          label: Text('Calibration & history',
+                              style: AppTypography.caption))),
                   Row(children: [
                     Expanded(
                         child: Align(
