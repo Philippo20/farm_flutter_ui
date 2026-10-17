@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 26,
+  "buildNumber": 27,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "06833923d023b992d9336e0b6437aa081c9569eb65b6a223220cd2d4584707e9",
+  "sha256": "022df782a56355916215c20cb1685e69d4a75d5d70e8ee415b7b5d3733eb099a",
   "sizeBytes": 83857817,
-  "publishedAt": "2026-10-17T16:54:13.1797950Z",
-  "releaseNotes": "Command devices now show offline after four seconds without a successful poll. Status refreshes every two seconds."
+  "publishedAt": "2026-10-17T17:02:07.8792491Z",
+  "releaseNotes": "Updated application dependencies and Android release. Command devices use a four-second offline timeout with two-second status refreshes."
 }
