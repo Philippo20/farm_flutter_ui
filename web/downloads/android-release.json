@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 29,
+  "buildNumber": 30,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "e499ec997e49c7e1de4e079aa26c3b607d30ed66cdfc72d4c2c47d62e8ef14bf",
-  "sizeBytes": 84038041,
-  "publishedAt": "2026-10-17T18:38:25.8230797Z",
-  "releaseNotes": "Controller calibration progress, reasons, saved measurements and event history, with safe command controls and deduplicated notifications."
+  "sha256": "648426b85edff8cb2cd0bd0c7cef07577134efb59cf23b16bb3c07897e81f0e8",
+  "sizeBytes": 84054621,
+  "publishedAt": "2026-10-20T17:21:31.2774184Z",
+  "releaseNotes": "Calibration controls use configured commands: confirmed selection shows Start and Cancel; accepted start shows Stop and Cancel; confirmed cancellation returns to selection."
 }

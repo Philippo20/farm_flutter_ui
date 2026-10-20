@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/command_device_service.dart';
 import '../../services/heartbeat_poller.dart';
+import '../../services/calibration_controls.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'app_dialog.dart';
@@ -93,6 +94,13 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
   late final HeartbeatPoller<Map<String, dynamic>> _poller;
   final _events = <String, Map<String, dynamic>>{};
   String? _cursor, _selected, _error;
+  String? _pendingAction,
+      _pendingRequestId,
+      _pendingCalibrationId,
+      _pendingBoot;
+  String? _handledTerminal;
+  CalibrationStage _stage = CalibrationStage.selection;
+  CalibrationStage _baseline = CalibrationStage.selection;
   bool _sending = false,
       _loadingHistory = false,
       _refreshing = false,
@@ -110,7 +118,18 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
   }
 
   void _deviceChanged() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    _syncWorkflow();
+    final last = widget.deviceState.data?['last_command'] as Map?;
+    if (_pendingRequestId != null &&
+        last?['id'] == _pendingRequestId &&
+        ['failed', 'expired'].contains(last?['status'])) {
+      _error =
+          '${last?['result'] ?? 'Command ${last?['status']}. Check the controller before retrying.'}';
+      _stage = _baseline;
+      _clearPending();
+    }
+    setState(() {});
   }
 
   void _changed() {
@@ -120,7 +139,70 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
       _events['${event['event_id']}'] = event;
     }
     if (!_historyStarted) _cursor = _poller.data?['next_cursor'] as String?;
+    _syncWorkflow();
     setState(() {});
+  }
+
+  void _clearPending() {
+    _pendingAction =
+        _pendingRequestId = _pendingCalibrationId = _pendingBoot = null;
+  }
+
+  void _syncWorkflow() {
+    final data = _poller.data;
+    final current = data?['current'] as Map?;
+    final attempt = data?['latest_attempt'] as Map?;
+    final boot = widget.deviceState.data?['controller_session_id'];
+    if (_pendingBoot != null && boot != null && _pendingBoot != boot) {
+      _clearPending();
+      _stage = CalibrationStage.selection;
+    }
+    Map? session = current;
+    if (_pendingCalibrationId != null) {
+      session = [current, attempt]
+          .whereType<Map>()
+          .where((s) => s['calibration_id'] == _pendingCalibrationId)
+          .firstOrNull;
+      if (session == null) {
+        return; // An older run cannot confirm a new selection.
+      }
+    }
+    if (session == null) return;
+    if (boot != null &&
+        session['session_id'] != null &&
+        session['session_id'] != boot) {
+      _stage = CalibrationStage.selection;
+      return;
+    }
+    final status = session['status'];
+    final event = session['event'] as Map?;
+    final latest = session['latest_event'] as Map? ?? event;
+    final terminal = ['completed', 'cancelled', 'not_saved'].contains(status);
+    if (terminal) {
+      _stage = CalibrationStage.selection;
+      if (_handledTerminal != event?['event_id']) {
+        _handledTerminal = event?['event_id'] as String?;
+        _selected = null;
+        _error = null;
+      }
+      _clearPending();
+      return;
+    }
+    if (_pendingRequestId != null &&
+        latest?['type'] == 'calibration.rejected' &&
+        (latest?['command_id'] == _pendingRequestId ||
+            (_pendingAction == 'select' &&
+                session['calibration_id'] == _pendingRequestId))) {
+      _error = calibrationMessage(latest!);
+      _clearPending();
+    }
+    _stage = calibrationStage(session);
+    if ((_pendingAction == 'select' &&
+            [CalibrationStage.ready, CalibrationStage.running]
+                .contains(_stage)) ||
+        (_pendingAction == 'start' && _stage == CalibrationStage.running)) {
+      _clearPending();
+    }
   }
 
   @override
@@ -174,27 +256,52 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
     }
   }
 
-  Future<void> _send() async {
+  Future<void> _send([String action = 'select']) async {
     final state = widget.deviceState.data;
+    final commands =
+        CalibrationCommands(deviceNamedCommands(state?['commands']));
+    final command =
+        action == 'select' ? _selected : commands.action(action)?['id'];
     if (_sending ||
         !widget.allowSend ||
         !widget.deviceState.isOnline ||
         state?['ready'] != true ||
-        _selected == null) {
+        command == null ||
+        (_pendingAction != null &&
+            (action != 'cancel' || _pendingAction == 'cancel'))) {
       return;
     }
+    final request = newCommandId();
+    final current = _poller.data?['current'] as Map?;
+    final calibrationId = action == 'select'
+        ? request
+        : _pendingCalibrationId ?? current?['calibration_id'] as String?;
     setState(() {
+      _baseline = _stage == CalibrationStage.selecting
+          ? CalibrationStage.selection
+          : _stage;
+      _pendingAction = action;
+      _pendingRequestId = request;
+      _pendingCalibrationId = calibrationId;
+      _pendingBoot = state?['controller_session_id'] as String?;
+      if (action == 'select') _stage = CalibrationStage.selecting;
       _sending = true;
       _error = null;
     });
     try {
-      final result = await _api.send(widget.serial, _selected!, newCommandId(),
+      final result = await _api.send(widget.serial, command, request,
           revision: state?['config_revision']?.toString());
       if (!mounted) return;
       widget.deviceState.acceptData(result);
       await _poller.refresh();
     } catch (error) {
-      if (mounted) setState(() => _error = '$error');
+      if (mounted && _pendingRequestId == request) {
+        setState(() {
+          _error = '$error';
+          _stage = _baseline;
+          _clearPending();
+        });
+      }
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -237,13 +344,14 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
         controllerSession != null &&
         current?['session_id'] != controllerSession;
     final unknown = active && (!online || restarted);
-    final commands = deviceNamedCommands(widget.deviceState.data?['commands']);
-    if (!commands.any((c) => c['id'] == _selected)) _selected = null;
+    final commands = CalibrationCommands(
+        deviceNamedCommands(widget.deviceState.data?['commands']));
+    if (!commands.selections.any((c) => c['id'] == _selected)) _selected = null;
     final canSend = widget.allowSend &&
         online &&
         !_sending &&
         widget.deviceState.data?['ready'] == true &&
-        _selected != null;
+        data != null;
     final saved = data?['saved_durations'] as List? ?? [];
     final events = _events.values.toList()
       ..sort((a, b) {
@@ -369,57 +477,7 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
                               ],
                             ])),
                         if (widget.allowSend) ...[
-                          Text('Configured controller command',
-                              style: _font(11, FontWeight.w600)),
-                          const SizedBox(height: 6),
-                          DropdownButtonFormField<String>(
-                              key: ValueKey(_selected),
-                              initialValue: _selected,
-                              isExpanded: true,
-                              style: _font().copyWith(color: colors.onSurface),
-                              decoration: InputDecoration(
-                                  prefixIcon: const Icon(Icons.terminal_rounded,
-                                      size: 16),
-                                  filled: true,
-                                  fillColor: colors.surfaceContainerLow,
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 10),
-                                  border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                  focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide(
-                                          color: colors.primary, width: 1.5))),
-                              hint: Text('Select a configured command',
-                                  style: _font()),
-                              items: commands
-                                  .map((c) => DropdownMenuItem(
-                                      value: c['id'],
-                                      child: Text(c['label']!,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis)))
-                                  .toList(),
-                              onChanged: _sending
-                                  ? null
-                                  : (value) =>
-                                      setState(() => _selected = value)),
-                          const SizedBox(height: 6),
-                          Text(
-                              'Use the controller’s configured selection, CAL_START or cancellation command. Progress is confirmed by controller events.',
-                              style: _font(11)),
-                          const SizedBox(height: 10),
-                          FilledButton.icon(
-                              onPressed: canSend ? _send : null,
-                              icon: _sending
-                                  ? const SizedBox(
-                                      width: 14,
-                                      height: 14,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2))
-                                  : const Icon(Icons.send_rounded, size: 16),
-                              label: Text(
-                                  _sending ? 'Sending…' : 'Send to controller',
-                                  style: _font(13))),
+                          _controls(commands, canSend),
                           const SizedBox(height: 14),
                         ],
                         Text('Saved measurements',
@@ -489,6 +547,143 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
                             style: _font(13)))),
               ])),
         ]));
+  }
+
+  Widget _controls(CalibrationCommands commands, bool enabled) {
+    final choosing = [CalibrationStage.selection, CalibrationStage.selecting]
+        .contains(_stage);
+    final action = choosing
+        ? 'select'
+        : _stage == CalibrationStage.ready
+            ? 'start'
+            : 'stop';
+    final configured = action == 'select'
+        ? _selected != null
+        : commands.action(action) != null;
+    final waiting = _pendingAction == action ||
+        (action == 'select' && _stage == CalibrationStage.selecting);
+    final label = switch (action) {
+      'start' => waiting ? 'Starting…' : 'Start',
+      'stop' => waiting ? 'Stopping…' : 'Stop',
+      _ => waiting ? 'Waiting for selection…' : 'Send command',
+    };
+    final primary = FilledButton.icon(
+      onPressed: enabled &&
+              configured &&
+              _pendingAction == null &&
+              (action != 'select' || _stage == CalibrationStage.selection)
+          ? () => _send(action)
+          : null,
+      icon: _sending && waiting
+          ? const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2))
+          : Icon(
+              waiting
+                  ? Icons.hourglass_top_rounded
+                  : switch (action) {
+                      'start' => Icons.play_arrow_rounded,
+                      'stop' => Icons.stop_rounded,
+                      _ => Icons.send_rounded,
+                    },
+              size: 16),
+      style: FilledButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+      label: Text(label, textAlign: TextAlign.center, style: _font(13)),
+    );
+    final showCancel = _stage != CalibrationStage.selection;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      if (choosing) ...[
+        Text('Calibration', style: _font(11, FontWeight.w600)),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+            key: ValueKey(_selected),
+            initialValue: _selected,
+            isExpanded: true,
+            style: _font()
+                .copyWith(color: Theme.of(context).colorScheme.onSurface),
+            decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.tune_rounded, size: 16),
+                filled: true,
+                fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 1.5))),
+            hint: Text('Select a calibration', style: _font()),
+            items: commands.selections
+                .map((c) => DropdownMenuItem(
+                    value: c['id'],
+                    child: Text(c['label']!,
+                        maxLines: 1, overflow: TextOverflow.ellipsis)))
+                .toList(),
+            onChanged: _sending ||
+                    _pendingAction != null ||
+                    _stage != CalibrationStage.selection
+                ? null
+                : (value) => setState(() => _selected = value)),
+        const SizedBox(height: 10),
+        if (commands.selections.isEmpty)
+          Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                  'No calibration selection commands are configured for this device.',
+                  style: _font())),
+      ],
+      if (showCancel)
+        Row(children: [
+          Expanded(
+              child: OutlinedButton.icon(
+                  onPressed: enabled &&
+                          commands.action('cancel') != null &&
+                          _pendingAction != 'cancel'
+                      ? () => _send('cancel')
+                      : null,
+                  icon: _sending && _pendingAction == 'cancel'
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.close_rounded, size: 16),
+                  style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10))),
+                  label: Text(
+                      _pendingAction == 'cancel' ? 'Cancelling…' : 'Cancel',
+                      textAlign: TextAlign.center,
+                      style: _font(13)))),
+          const SizedBox(width: 12),
+          Expanded(child: primary),
+        ])
+      else
+        primary,
+      const SizedBox(height: 8),
+      Text(
+          _pendingAction == 'cancel'
+              ? 'Waiting for the controller to confirm cancellation. Previous saved measurements are retained.'
+              : _pendingAction == 'stop'
+                  ? 'Waiting for the controller to stop and report whether the measurement was saved.'
+                  : choosing
+                      ? 'Selection must be confirmed by the controller before starting.'
+                      : 'Start, Stop and Cancel use this device’s saved commands. The controller confirms every result.',
+          style: _font(11)),
+      if (!choosing && commands.action(action) == null)
+        Text(
+            'Configure ${action == 'start' ? 'CAL_START' : 'CAL_STOP'} on this device to enable this action.',
+            style: _font(11)),
+      if (showCancel && commands.action('cancel') == null)
+        Text('Configure CAL_CANCEL on this device to enable cancellation.',
+            style: _font(11)),
+    ]);
   }
 
   Widget _eventTile(Map<String, dynamic> event) {
