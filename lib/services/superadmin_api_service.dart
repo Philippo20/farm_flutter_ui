@@ -2591,10 +2591,10 @@ extension _ApiFuture<T> on Future<T> {
       throw const SuperAdminApiException(
         connectionMessage,
       );
-    } on http.ClientException {
-      throw const SuperAdminApiException(
-        connectionMessage,
-      );
+    } on http.ClientException catch (error) {
+      throw SuperAdminApiException(error.message == requestTimeoutMessage
+          ? requestTimeoutMessage
+          : connectionMessage);
     }
   }
 }

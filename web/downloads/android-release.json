@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 31,
+  "buildNumber": 32,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "06ee8621836a6666ada1fa7ee0e56fb76b01d16d33652cb5801b53d185f3ad1a",
-  "sizeBytes": 84054621,
-  "publishedAt": "2026-10-20T17:46:48.3373565Z",
-  "releaseNotes": "Calibration controls now appear directly on command device cards: selection, Start/Cancel and Stop/Cancel with controller-confirmed results."
+  "sha256": "90e44cc501b9ba2406cd19eed613e1ed7c34450d723afb6aeacffb67d37481b3",
+  "sizeBytes": 84120157,
+  "publishedAt": "2026-10-20T18:24:51.9954697Z",
+  "releaseNotes": "Fewer false connection warnings: lightweight health checks, sustained-outage confirmation, resume protection, bounded retries and cancellation of timed-out requests."
 }
