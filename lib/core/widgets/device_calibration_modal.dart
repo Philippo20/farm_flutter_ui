@@ -79,11 +79,15 @@ class DeviceCalibrationModal extends StatefulWidget {
       required this.serial,
       required this.deviceState,
       required this.allowSend,
-      this.api});
+      this.api,
+      this.embedded = false});
   final String serial;
   final HeartbeatPoller<Map<String, dynamic>> deviceState;
   final bool allowSend;
   final CommandDeviceService? api;
+
+  /// Reuse the same controller-confirmed workflow directly on a device card.
+  final bool embedded;
   @override
   State<DeviceCalibrationModal> createState() => _DeviceCalibrationModalState();
 }
@@ -352,6 +356,53 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
         !_sending &&
         widget.deviceState.data?['ready'] == true &&
         data != null;
+    if (widget.embedded) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          Expanded(
+              child: Text(
+                  unknown
+                      ? 'Calibration status unknown'
+                      : calibrationLabels[status] ??
+                          (data == null
+                              ? 'Loading calibration…'
+                              : 'Calibration'),
+                  style: _font(12, FontWeight.w600))),
+          IconButton(
+              tooltip: 'Refresh calibration',
+              onPressed: _refreshing || _sending ? null : _refresh,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.refresh_rounded, size: 16)),
+        ]),
+        if (current != null)
+          Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(calibrationTarget(current), style: _font(11))),
+        if (unknown)
+          Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                  restarted
+                      ? 'Controller restarted. Select a new calibration before starting.'
+                      : 'Reconnect to confirm the controller state.',
+                  style: _font(11))),
+        if (event != null && '${event['message'] ?? ''}'.isNotEmpty)
+          Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text('${event['message']}', style: _font())),
+        if (latest?['type'] == 'calibration.rejected')
+          Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(calibrationMessage(latest!),
+                  style: _font().copyWith(color: colors.error))),
+        if (widget.allowSend) _controls(commands, canSend),
+        if (_error != null || _poller.lastError != null)
+          Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(_error ?? '${_poller.lastError}',
+                  style: _font().copyWith(color: colors.error))),
+      ]);
+    }
     final saved = data?['saved_durations'] as List? ?? [];
     final events = _events.values.toList()
       ..sort((a, b) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/command_device_service.dart';
 import '../../services/heartbeat_poller.dart';
+import '../../services/calibration_controls.dart';
 import '../theme/app_typography.dart';
 import 'command_device_setup_guide.dart';
 import 'device_calibration_modal.dart';
@@ -13,11 +14,13 @@ class CommandDeviceCard extends StatefulWidget {
       this.onSettings,
       this.onDelete,
       this.allowSend = true,
-      this.service});
+      this.service,
+      this.calibrationService});
   final Map<String, dynamic> device;
   final VoidCallback? onSettings, onDelete;
   final bool allowSend;
   final CommandDeviceService? service;
+  final CommandDeviceService? calibrationService;
   @override
   State<CommandDeviceCard> createState() => _CommandDeviceCardState();
 }
@@ -123,8 +126,19 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final definitions = deviceNamedCommands(
+    final allDefinitions = deviceNamedCommands(
         _state?['commands'] ?? widget.device['command_config']);
+    final hasCalibration =
+        CalibrationCommands(allDefinitions).selections.isNotEmpty;
+    final definitions = hasCalibration
+        ? allDefinitions
+            .where((command) =>
+                !CalibrationCommands.selectionValues
+                    .contains(command['value']) &&
+                !{'CAL_START', 'CAL_STOP', 'CAL_CANCEL'}
+                    .contains(command['value']))
+            .toList()
+        : allDefinitions;
     final selected =
         definitions.where((command) => command['id'] == _selected).firstOrNull;
     final last = _state?['last_command'] is Map
@@ -208,7 +222,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
                       const SizedBox(width: 6),
                       Text(connection, style: AppTypography.caption)
                     ]),
-                    Text('${definitions.length} configured commands',
+                    Text('${allDefinitions.length} configured commands',
                         style: AppTypography.caption
                             .copyWith(color: colors.onSurfaceVariant)),
                   ]),
@@ -221,57 +235,71 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
                       style: AppTypography.caption
                           .copyWith(color: colors.onSurfaceVariant)),
                   const SizedBox(height: 18),
-                  Text('Choose command', style: AppTypography.caption),
-                  const SizedBox(height: 6),
-                  DropdownButtonFormField<String>(
-                      key: ValueKey(selected?['id']),
-                      initialValue: selected?['id'],
-                      isExpanded: true,
-                      style: AppTypography.bodySmall
-                          .copyWith(color: colors.onSurface),
-                      decoration: InputDecoration(
-                          isDense: true,
-                          filled: true,
-                          fillColor: colors.surfaceContainerLow,
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 12),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide:
-                                  BorderSide(color: colors.outlineVariant))),
-                      hint: Text('Select a command',
-                          style: AppTypography.bodySmall),
-                      items: definitions
-                          .map((command) => DropdownMenuItem(
-                              value: command['id'],
-                              child: Text(command['label']!,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis)))
-                          .toList(),
-                      onChanged: _saving || _state?['pending'] == true
-                          ? null
-                          : (value) => setState(() => _selected = value)),
-                  if (selected != null)
-                    Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(selected['value']!,
-                            style: AppTypography.caption
-                                .copyWith(color: colors.onSurfaceVariant))),
-                  const SizedBox(height: 12),
-                  FilledButton.icon(
-                      onPressed: canSend ? _send : null,
-                      style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10))),
-                      icon: _saving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2))
-                          : const Icon(Icons.send_rounded, size: 16),
-                      label: Text(_saving ? 'Sending…' : 'Send command',
-                          style: AppTypography.button)),
+                  if (hasCalibration) ...[
+                    DeviceCalibrationModal(
+                        key: ValueKey('calibration-$_serial'),
+                        embedded: true,
+                        serial: _serial,
+                        deviceState: _heartbeat,
+                        allowSend: widget.allowSend,
+                        api: widget.calibrationService),
+                    const SizedBox(height: 12),
+                  ],
+                  if (definitions.isNotEmpty) ...[
+                    Text(hasCalibration ? 'Other commands' : 'Choose command',
+                        style: AppTypography.caption),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                        key: ValueKey(selected?['id']),
+                        initialValue: selected?['id'],
+                        isExpanded: true,
+                        style: AppTypography.bodySmall
+                            .copyWith(color: colors.onSurface),
+                        decoration: InputDecoration(
+                            isDense: true,
+                            filled: true,
+                            fillColor: colors.surfaceContainerLow,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 12),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide:
+                                    BorderSide(color: colors.outlineVariant))),
+                        hint: Text('Select a command',
+                            style: AppTypography.bodySmall),
+                        items: definitions
+                            .map((command) => DropdownMenuItem(
+                                value: command['id'],
+                                child: Text(command['label']!,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis)))
+                            .toList(),
+                        onChanged: _saving || _state?['pending'] == true
+                            ? null
+                            : (value) => setState(() => _selected = value)),
+                    if (selected != null)
+                      Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(selected['value']!,
+                              style: AppTypography.caption
+                                  .copyWith(color: colors.onSurfaceVariant))),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                        onPressed: canSend ? _send : null,
+                        style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10))),
+                        icon: _saving
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.send_rounded, size: 16),
+                        label: Text(_saving ? 'Sending…' : 'Send command',
+                            style: AppTypography.button)),
+                  ],
                   const SizedBox(height: 14),
                   Container(
                       padding: const EdgeInsets.all(12),

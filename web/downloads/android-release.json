@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 30,
+  "buildNumber": 31,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "648426b85edff8cb2cd0bd0c7cef07577134efb59cf23b16bb3c07897e81f0e8",
+  "sha256": "06ee8621836a6666ada1fa7ee0e56fb76b01d16d33652cb5801b53d185f3ad1a",
   "sizeBytes": 84054621,
-  "publishedAt": "2026-10-20T17:21:31.2774184Z",
-  "releaseNotes": "Calibration controls use configured commands: confirmed selection shows Start and Cancel; accepted start shows Stop and Cancel; confirmed cancellation returns to selection."
+  "publishedAt": "2026-10-20T17:46:48.3373565Z",
+  "releaseNotes": "Calibration controls now appear directly on command device cards: selection, Start/Cancel and Stop/Cancel with controller-confirmed results."
 }
