@@ -19,6 +19,14 @@ class CalibrationCommands {
 
 enum CalibrationStage { selection, selecting, ready, running }
 
+String? calibrationCommandAction(String? value) => switch (value) {
+      'EF_D_SELECT' || 'P_D_SELECT' || 'FERT_D_SELECT' => 'select',
+      'CAL_START' => 'start',
+      'CAL_STOP' => 'stop',
+      'CAL_CANCEL' => 'cancel',
+      _ => null,
+    };
+
 CalibrationStage calibrationStage(Map? session) {
   if (session == null) return CalibrationStage.selection;
   var status = session['status'];

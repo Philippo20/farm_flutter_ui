@@ -71,11 +71,16 @@ Map<String, dynamic> overview(String status) {
 
 class FakeCalibrationApi extends CommandDeviceService {
   Map<String, dynamic> data = overview('running');
+  Object? overviewError;
   Completer<Map<String, dynamic>>? sending;
   int sends = 0;
   final sentKeys = <String>[], requestIds = <String>[];
   @override
-  Future<Map<String, dynamic>> calibrations(String serial) async => data;
+  Future<Map<String, dynamic>> calibrations(String serial) async {
+    if (overviewError != null) throw overviewError!;
+    return data;
+  }
+
   @override
   Future<Map<String, dynamic>> calibrationHistory(String serial,
       {String? before}) async {
@@ -173,7 +178,185 @@ Future<void> unmount(WidgetTester tester, HeartbeatPoller heartbeat,
 void main() {
   setUp(() => GoogleFonts.config.allowRuntimeFetching = false);
   testWidgets(
-      'selection then start then cancel uses saved command IDs and waits for events',
+      'ACK unlocks controls before a delayed POST returns and late responses cannot regress them',
+      (tester) async {
+    final selectionPost = Completer<Map<String, dynamic>>();
+    final api = FakeCalibrationApi()..sending = selectionPost;
+    api.data = {
+      ...overview('completed'),
+      'current': null,
+      'latest_attempt': null,
+      'recent_events': []
+    };
+    final heartbeat = await mount(tester, api, allowSend: true);
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('E/F Drainage Calibration Mode').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Send command'));
+    await tester.tap(find.text('Send command'));
+    await tester.pump();
+    final selectionId = api.requestIds.last;
+    heartbeat.acceptData({
+      ...boardState,
+      'last_command': {
+        'id': selectionId,
+        'status': 'confirmed',
+        'value': 'EF_D_SELECT',
+        'session_id': boardState['controller_session_id'],
+      }
+    });
+    await tester.pumpAndSettle();
+    final startPost = Completer<Map<String, dynamic>>();
+    api.sending = startPost;
+    await tester.ensureVisible(find.text('Start'));
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    expect(api.sentKeys, ['select-ef', 'start']);
+    selectionPost.complete({
+      ...boardState,
+      'last_command': {'id': selectionId, 'status': 'pending'}
+    });
+    await tester.pump();
+    expect(find.text('Starting…'), findsOneWidget);
+    final start = find.ancestor(
+        of: find.text('Starting…'), matching: find.byType(FilledButton));
+    expect(tester.widget<FilledButton>(start).onPressed, isNull);
+    startPost.complete({
+      ...boardState,
+      'last_command': {'id': api.requestIds.last, 'status': 'confirmed'}
+    });
+    await tester.pumpAndSettle();
+    expect(find.text('Stop'), findsOneWidget);
+    expect(find.text('Waiting for selection…'), findsNothing);
+    await unmount(tester, heartbeat, api);
+  });
+  testWidgets(
+      'ACK-only firmware completes the control flow without fake measurements',
+      (tester) async {
+    final api = FakeCalibrationApi()..sending = Completer();
+    api.data = {
+      ...overview('completed'),
+      'current': null,
+      'latest_attempt': null,
+      'recent_events': []
+    };
+    final heartbeat = await mount(tester, api, width: 320, allowSend: true);
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('E/F Drainage Calibration Mode').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Send command'));
+    await tester.tap(find.text('Send command'));
+    await tester.pump();
+    // A different request cannot release the pending action.
+    heartbeat.acceptData({
+      ...boardState,
+      'last_command': {
+        'id': 'older-request',
+        'status': 'confirmed',
+        'value': 'EF_D_SELECT',
+        'session_id': boardState['controller_session_id'],
+      }
+    });
+    await tester.pump();
+    expect(find.text('Start'), findsNothing);
+    await acknowledge(tester, api);
+    expect(find.text('Selection confirmed'), findsOneWidget);
+    expect(find.text('Start'), findsOneWidget);
+    expect(find.text('Calibration status unknown'), findsNothing);
+    // An older completion arriving while this selection is active must not
+    // return its controls to the selector or show that old result as current.
+    api.data = {...overview('completed'), 'recent_events': []};
+    await refresh(tester);
+    expect(find.text('Start'), findsOneWidget);
+    expect(find.text('Completed'), findsNothing);
+    api.sending = Completer();
+    await tester.ensureVisible(find.text('Start'));
+    await tester.tap(find.text('Start'));
+    await tester.pump();
+    await acknowledge(tester, api);
+    expect(find.text('Stop'), findsOneWidget);
+    expect(find.text('Measuring'), findsNothing);
+    api.sending = Completer();
+    await tester.ensureVisible(find.text('Stop'));
+    await tester.tap(find.text('Stop'));
+    await tester.pump();
+    await acknowledge(tester, api);
+    expect(find.text('Send command'), findsOneWidget);
+    expect(find.text('Completed'), findsNothing);
+    expect(find.text('20 s'), findsOneWidget);
+    expect(api.sentKeys, ['select-ef', 'start', 'stop']);
+    await unmount(tester, heartbeat, api);
+  });
+
+  testWidgets(
+      'reopening restores a confirmed selection from the same boot only',
+      (tester) async {
+    final api = FakeCalibrationApi()
+      ..overviewError = Exception('History is temporarily unavailable');
+    api.data = {...overview('completed'), 'current': null, 'recent_events': []};
+    final heartbeat = await mount(tester, api, allowSend: true);
+    final receipt = {
+      'id': 'existing-selection',
+      'value': 'EF_D_SELECT',
+      'status': 'confirmed',
+      'session_id': boardState['controller_session_id'],
+      'created_at': '2026-10-21T10:21:23Z',
+    };
+    heartbeat.acceptData({...boardState, 'last_command': receipt});
+    await tester.pumpAndSettle();
+    expect(find.text('Start'), findsOneWidget);
+    final start = find.ancestor(
+        of: find.text('Start'), matching: find.byType(FilledButton));
+    expect(tester.widget<FilledButton>(start).onPressed, isNotNull);
+    // A late old receipt after the controller restarted cannot restore Start.
+    heartbeat.acceptData({
+      ...boardState,
+      'controller_session_id': 'new-boot',
+      'last_command': receipt
+    });
+    await tester.pumpAndSettle();
+    expect(find.text('Start'), findsNothing);
+    expect(find.text('Select a calibration'), findsOneWidget);
+    await unmount(tester, heartbeat, api);
+  });
+
+  testWidgets(
+      'failed acknowledgement returns to the form with the controller reason',
+      (tester) async {
+    final api = FakeCalibrationApi()..sending = Completer();
+    api.data = {
+      ...overview('completed'),
+      'current': null,
+      'latest_attempt': null,
+      'recent_events': []
+    };
+    final heartbeat = await mount(tester, api, allowSend: true);
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('E/F Drainage Calibration Mode').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Send command'));
+    await tester.tap(find.text('Send command'));
+    await tester.pump();
+    api.sending!.complete({
+      ...boardState,
+      'last_command': {
+        'id': api.requestIds.last,
+        'status': 'failed',
+        'result': 'Grid power is unavailable',
+      }
+    });
+    await tester.pumpAndSettle();
+    expect(find.text('Start'), findsNothing);
+    expect(find.text('Send command'), findsOneWidget);
+    expect(find.text('Grid power is unavailable'), findsOneWidget);
+    expect(find.text('E/F Drainage Calibration Mode'), findsOneWidget);
+    await unmount(tester, heartbeat, api);
+  });
+  testWidgets(
+      'confirmed commands advance controls and events preserve final results',
       (tester) async {
     final api = FakeCalibrationApi()..sending = Completer();
     api.data = {
@@ -194,7 +377,7 @@ void main() {
     expect(api.sentKeys, ['select-ef']);
     final selection = api.requestIds.last;
     await acknowledge(tester, api);
-    expect(find.text('Start'), findsNothing);
+    expect(find.text('Start'), findsOneWidget);
     report(api, 'waiting_for_start', selection, selection);
     await refresh(tester);
     expect(find.byType(DropdownButtonFormField<String>), findsNothing);
@@ -206,7 +389,7 @@ void main() {
     await tester.pump();
     final start = api.requestIds.last;
     await acknowledge(tester, api);
-    expect(find.text('Stop'), findsNothing);
+    expect(find.text('Stop'), findsOneWidget);
     report(api, 'starting', selection, start);
     await refresh(tester);
     expect(find.text('Stop'), findsOneWidget);
@@ -217,7 +400,7 @@ void main() {
     await tester.pump();
     final cancel = api.requestIds.last;
     await acknowledge(tester, api);
-    expect(find.byType(DropdownButtonFormField<String>), findsNothing);
+    expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
     report(api, 'cancelled', selection, cancel, reason: 'user_cancelled');
     await refresh(tester);
     expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
@@ -238,8 +421,9 @@ void main() {
     await tester.pump();
     expect(api.sentKeys, ['stop']);
     await acknowledge(tester, api);
-    expect(find.text('Stopping…'), findsOneWidget);
-    expect(find.byType(DropdownButtonFormField<String>), findsNothing);
+    expect(find.text('Stop confirmed. Waiting for the calibration result.'),
+        findsOneWidget);
+    expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
     report(api, 'not_saved', 'selection-command-uuid', api.requestIds.last,
         reason: 'duration_too_short');
     await refresh(tester);

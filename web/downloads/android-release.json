@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 32,
+  "buildNumber": 33,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "90e44cc501b9ba2406cd19eed613e1ed7c34450d723afb6aeacffb67d37481b3",
-  "sizeBytes": 84120157,
-  "publishedAt": "2026-10-20T18:24:51.9954697Z",
-  "releaseNotes": "Fewer false connection warnings: lightweight health checks, sustained-outage confirmation, resume protection, bounded retries and cancellation of timed-out requests."
+  "sha256": "f2881c4ce02aa2bb395345dab8f468ebe6edde99a3d8fde368be5db3dfe246af",
+  "sizeBytes": 84136541,
+  "publishedAt": "2026-10-21T10:43:28.5882288Z",
+  "releaseNotes": "Calibration confirmations immediately advance Start/Cancel and Stop/Cancel controls. Late responses no longer restore waiting states; measurements remain based on controller results."
 }

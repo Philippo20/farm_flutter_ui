@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/command_device_service.dart';
@@ -103,6 +104,10 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
       _pendingCalibrationId,
       _pendingBoot;
   String? _handledTerminal;
+  Map? _acknowledgement;
+  String? _ackAction, _ackCalibrationId, _activeCalibrationId;
+  String? _pendingPreviousCalibrationId;
+  String? _submissionId;
   CalibrationStage _stage = CalibrationStage.selection;
   CalibrationStage _baseline = CalibrationStage.selection;
   bool _sending = false,
@@ -131,6 +136,7 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
       _error =
           '${last?['result'] ?? 'Command ${last?['status']}. Check the controller before retrying.'}';
       _stage = _baseline;
+      _activeCalibrationId = _pendingPreviousCalibrationId;
       _clearPending();
     }
     setState(() {});
@@ -148,8 +154,71 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
   }
 
   void _clearPending() {
+    _sending = false;
+    _submissionId = null;
     _pendingAction =
         _pendingRequestId = _pendingCalibrationId = _pendingBoot = null;
+    _pendingPreviousCalibrationId = null;
+  }
+
+  String? get _confirmationMessage => _ackCalibrationId != _activeCalibrationId
+      ? null
+      : switch (_ackAction) {
+          'select' => 'Selection confirmed',
+          'start' => 'Start confirmed. Waiting for measurement status.',
+          'stop' => 'Stop confirmed. Waiting for the calibration result.',
+          'cancel' =>
+            'Cancellation confirmed. Previous saved measurements retained.',
+          _ => null,
+        };
+
+  void _observeAcknowledgement(Map? current, dynamic boot) {
+    final command = widget.deviceState.data?['last_command'] as Map?;
+    if (command == null || command['status'] != 'confirmed' || boot == null) {
+      return;
+    }
+    final matchesPending = command['id'] == _pendingRequestId;
+    if (_pendingRequestId != null && !matchesPending) return;
+    if (command['session_id'] != boot &&
+        !(matchesPending && _pendingBoot == boot)) {
+      return;
+    }
+    final action = calibrationCommandAction(command['value'] as String?) ??
+        (matchesPending ? _pendingAction : null);
+    if (action == null || command['id'] == _acknowledgement?['id']) return;
+    final created = DateTime.tryParse('${command['created_at']}');
+    final prior = DateTime.tryParse('${_acknowledgement?['created_at']}');
+    if (!matchesPending &&
+        _acknowledgement != null &&
+        (created == null || prior == null || !created.isAfter(prior))) {
+      return;
+    }
+    _ackCalibrationId = action == 'select'
+        ? command['id'] as String?
+        : _pendingCalibrationId ??
+            _activeCalibrationId ??
+            (current?['session_id'] == boot
+                ? (current?['calibration_id'] as String?)
+                : null);
+    _activeCalibrationId = _ackCalibrationId;
+    _acknowledgement = Map.of(command)..['session_id'] = boot;
+    _ackAction = action;
+    _error = null;
+    if (matchesPending) _clearPending();
+    if (action == 'stop' || action == 'cancel') _selected = null;
+    // Promptly reconcile telemetry too, without blocking the acknowledged UI.
+    unawaited(_poller.refresh());
+  }
+
+  void _applyAcknowledgementStage() {
+    if (_acknowledgement == null || _ackCalibrationId != _activeCalibrationId) {
+      return;
+    }
+    _stage = switch (_ackAction) {
+      'select' => CalibrationStage.ready,
+      'start' => CalibrationStage.running,
+      _ => CalibrationStage.selection,
+    };
   }
 
   void _syncWorkflow() {
@@ -159,13 +228,23 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
     final boot = widget.deviceState.data?['controller_session_id'];
     if (_pendingBoot != null && boot != null && _pendingBoot != boot) {
       _clearPending();
+      _activeCalibrationId = null;
       _stage = CalibrationStage.selection;
     }
+    if (_acknowledgement != null && _acknowledgement?['session_id'] != boot) {
+      _acknowledgement = null;
+      _ackAction = _ackCalibrationId = _activeCalibrationId = null;
+      _stage = CalibrationStage.selection;
+    }
+    _observeAcknowledgement(current, boot);
+    _applyAcknowledgementStage();
     Map? session = current;
-    if (_pendingCalibrationId != null) {
+    if (_activeCalibrationId != null || _pendingCalibrationId != null) {
       session = [current, attempt]
           .whereType<Map>()
-          .where((s) => s['calibration_id'] == _pendingCalibrationId)
+          .where((s) =>
+              s['calibration_id'] ==
+              (_activeCalibrationId ?? _pendingCalibrationId))
           .firstOrNull;
       if (session == null) {
         return; // An older run cannot confirm a new selection.
@@ -190,6 +269,7 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
         _error = null;
       }
       _clearPending();
+      _ackAction = null;
       return;
     }
     if (_pendingRequestId != null &&
@@ -201,6 +281,19 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
       _clearPending();
     }
     _stage = calibrationStage(session);
+    final rejectsAck = latest?['type'] == 'calibration.rejected' &&
+        latest?['command_id'] == _acknowledgement?['id'];
+    if (!rejectsAck && _ackCalibrationId == session['calibration_id']) {
+      // Progress can advance beyond a selection ACK; a delayed earlier event
+      // cannot undo a confirmed Start, Stop or Cancel command.
+      if ((_ackAction == 'start' && _stage != CalibrationStage.running) ||
+          _ackAction == 'stop' ||
+          _ackAction == 'cancel' ||
+          (_ackAction == 'select' && _stage == CalibrationStage.selecting)) {
+        _applyAcknowledgementStage();
+      }
+    }
+    if (rejectsAck) _ackAction = null;
     if ((_pendingAction == 'select' &&
             [CalibrationStage.ready, CalibrationStage.running]
                 .contains(_stage)) ||
@@ -279,35 +372,46 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
     final current = _poller.data?['current'] as Map?;
     final calibrationId = action == 'select'
         ? request
-        : _pendingCalibrationId ?? current?['calibration_id'] as String?;
+        : _activeCalibrationId ??
+            _pendingCalibrationId ??
+            current?['calibration_id'] as String?;
     setState(() {
       _baseline = _stage == CalibrationStage.selecting
           ? CalibrationStage.selection
           : _stage;
       _pendingAction = action;
+      _pendingPreviousCalibrationId = _activeCalibrationId;
+      _activeCalibrationId = calibrationId;
       _pendingRequestId = request;
       _pendingCalibrationId = calibrationId;
       _pendingBoot = state?['controller_session_id'] as String?;
       if (action == 'select') _stage = CalibrationStage.selecting;
       _sending = true;
+      _submissionId = request;
       _error = null;
     });
     try {
       final result = await _api.send(widget.serial, command, request,
           revision: state?['config_revision']?.toString());
-      if (!mounted) return;
+      if (!mounted || _submissionId != request) return;
       widget.deviceState.acceptData(result);
-      await _poller.refresh();
+      unawaited(_poller.refresh());
     } catch (error) {
       if (mounted && _pendingRequestId == request) {
         setState(() {
           _error = '$error';
           _stage = _baseline;
+          _activeCalibrationId = _pendingPreviousCalibrationId;
           _clearPending();
         });
       }
     } finally {
-      if (mounted) setState(() => _sending = false);
+      if (mounted && _submissionId == request) {
+        setState(() {
+          _sending = false;
+          _submissionId = null;
+        });
+      }
     }
   }
 
@@ -332,21 +436,40 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
     final mobile = MediaQuery.sizeOf(context).width < 600 ||
         Theme.of(context).platform == TargetPlatform.android;
     final data = _poller.data;
-    final current = data?['current'] as Map?;
+    final snapshot = data?['current'] as Map?;
+    final attempt = data?['latest_attempt'] as Map?;
+    final current = _activeCalibrationId == null ||
+            snapshot?['calibration_id'] == _activeCalibrationId
+        ? snapshot
+        : attempt?['calibration_id'] == _activeCalibrationId
+            ? attempt
+            : null;
     final event = current?['event'] as Map?;
     final status = current?['status'] as String?;
     final latest = (data?['latest_attempt'] as Map?)?['latest_event'] as Map?;
     final online = widget.deviceState.isOnline;
     final active = [
-      'request_received',
-      'waiting_for_start',
-      'starting',
-      'running'
-    ].contains(status);
+          'request_received',
+          'waiting_for_start',
+          'starting',
+          'running'
+        ].contains(status) ||
+        [
+          CalibrationStage.selecting,
+          CalibrationStage.ready,
+          CalibrationStage.running
+        ].contains(_stage);
+    final confirmation = _ackAction == 'start' &&
+            status == 'running' &&
+            current?['calibration_id'] == _activeCalibrationId
+        ? null
+        : _confirmationMessage;
     final controllerSession = widget.deviceState.data?['controller_session_id'];
     final restarted = active &&
+        current != null &&
         controllerSession != null &&
-        current?['session_id'] != controllerSession;
+        current['session_id'] != controllerSession &&
+        _acknowledgement?['session_id'] != controllerSession;
     final unknown = active && (!online || restarted);
     final commands = CalibrationCommands(
         deviceNamedCommands(widget.deviceState.data?['commands']));
@@ -354,8 +477,7 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
     final canSend = widget.allowSend &&
         online &&
         !_sending &&
-        widget.deviceState.data?['ready'] == true &&
-        data != null;
+        widget.deviceState.data?['ready'] == true;
     if (widget.embedded) {
       return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
@@ -363,7 +485,8 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
               child: Text(
                   unknown
                       ? 'Calibration status unknown'
-                      : calibrationLabels[status] ??
+                      : confirmation ??
+                          calibrationLabels[status] ??
                           (data == null
                               ? 'Loading calibration…'
                               : 'Calibration'),
@@ -477,7 +600,8 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
                               Text(
                                   unknown
                                       ? 'Calibration status unknown'
-                                      : calibrationLabels[status] ??
+                                      : confirmation ??
+                                          calibrationLabels[status] ??
                                           (data == null
                                               ? 'Loading calibration…'
                                               : 'No calibration events yet'),

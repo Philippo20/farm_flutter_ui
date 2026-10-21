@@ -166,8 +166,8 @@ void main() {
         await tester.tap(find.text('Send command'));
         await tester.pumpAndSettle();
         expect(api.keys, ['select-ef']);
-        expect(find.text('Start'),
-            findsNothing); // ACK is not selection confirmation.
+        expect(find.text('Start'), findsOneWidget);
+        expect(find.text('Selection confirmed'), findsOneWidget);
         final calibrationId = api.requests.first;
         Future<void> report(String status) async {
           api.report(status, calibrationId);
@@ -179,12 +179,13 @@ void main() {
         expect(find.text('Cancel'), findsOneWidget);
         await tester.tap(find.text('Start'));
         await tester.pumpAndSettle();
-        expect(find.text('Stop'), findsNothing);
+        expect(find.text('Stop'), findsOneWidget);
         await report('running');
         expect(find.text('Stop'), findsOneWidget);
         await tester.tap(find.text('Stop'));
         await tester.pumpAndSettle();
-        expect(find.text('Stopping…'), findsOneWidget);
+        expect(find.text('Stop confirmed. Waiting for the calibration result.'),
+            findsOneWidget);
         await report('completed');
         expect(find.text('Select a calibration'), findsOneWidget);
         await tester.tap(find.byType(DropdownButtonFormField<String>));
@@ -198,7 +199,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Cancel'));
         await tester.pumpAndSettle();
-        expect(find.text('Cancelling…'), findsOneWidget);
+        expect(find.text('Select a calibration'), findsOneWidget);
         api.report('cancelled', api.requests[3]);
         await tester.tap(find.byTooltip('Refresh calibration'));
         await tester.pumpAndSettle();
