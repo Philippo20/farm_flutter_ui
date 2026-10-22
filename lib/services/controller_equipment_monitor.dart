@@ -29,7 +29,7 @@ class ControllerEquipmentMonitor extends ChangeNotifier
   ControllerEquipmentMonitor(
       {CommandDeviceService? service,
       int Function()? elapsedMilliseconds,
-      this.presenceOnly = false})
+      this.statusOnly = false})
       : _service = service ?? CommandDeviceService(),
         _elapsedMilliseconds = elapsedMilliseconds {
     final lifecycle = WidgetsBinding.instance.lifecycleState;
@@ -39,7 +39,7 @@ class ControllerEquipmentMonitor extends ChangeNotifier
     WidgetsBinding.instance.addObserver(this);
   }
   final CommandDeviceService _service;
-  final bool presenceOnly;
+  final bool statusOnly;
   final int Function()? _elapsedMilliseconds;
   final _clock = Stopwatch()..start();
   int get _elapsed =>
@@ -129,7 +129,7 @@ class ControllerEquipmentMonitor extends ChangeNotifier
       final collected = <Map<String, dynamic>>[];
       for (var i = 0; i < _ids.length; i += 100) {
         final result = await _service.equipment(_ids.skip(i).take(100).toList(),
-            presenceOnly: presenceOnly);
+            statusOnly: statusOnly);
         collected.addAll(
             List<Map<String, dynamic>>.from(result['equipment'] as List));
       }

@@ -114,6 +114,7 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
         var online = false;
+        bool? reportedOn = true;
         final now = DateTime.now().toUtc().toIso8601String();
         final monitor = ControllerEquipmentMonitor(
             service: CommandDeviceService(
@@ -124,7 +125,7 @@ void main() {
                         {
                           'device_id': 'light',
                           'controller_id': 'board',
-                          'reported_on': true,
+                          'reported_on': reportedOn,
                           'online': online,
                           'seen_at': now,
                           'server_time': now,
@@ -150,7 +151,7 @@ void main() {
                                 monitor: monitor,
                                 compact: true)))))));
         await tester.pump();
-        expect(find.byIcon(Icons.lightbulb_outline), findsOneWidget);
+        expect(find.byIcon(Icons.lightbulb), findsOneWidget);
         expect(find.text('Rack F grow light'), findsOneWidget);
         expect(find.text('OFFLINE'), findsOneWidget);
         expect(find.byType(Text), findsNWidgets(2));
@@ -162,7 +163,20 @@ void main() {
         monitor.didChangeAppLifecycleState(AppLifecycleState.paused);
         monitor.didChangeAppLifecycleState(AppLifecycleState.resumed);
         await tester.pump();
-        expect(find.text('ONLINE'), findsOneWidget);
+        expect(find.text('ON'), findsOneWidget);
+        reportedOn = false;
+        await tester.pump(const Duration(seconds: 2));
+        expect(find.text('OFF'), findsOneWidget);
+        expect(find.text('ONLINE'), findsNothing);
+        reportedOn = null;
+        await tester.pump(const Duration(seconds: 2));
+        expect(find.text('AWAITING REPORT'), findsOneWidget);
+        expect(find.text('ON'), findsNothing);
+        online = false;
+        monitor.didChangeAppLifecycleState(AppLifecycleState.paused);
+        monitor.didChangeAppLifecycleState(AppLifecycleState.resumed);
+        await tester.pump();
+        expect(find.text('OFFLINE'), findsOneWidget);
         expect(find.byType(Text), findsNWidgets(2));
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());

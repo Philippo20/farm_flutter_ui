@@ -40,7 +40,7 @@ class _FirstRowState extends State<FirstRow> with WidgetsBindingObserver {
   final _revision = <String, int>{};
   final _clock = Stopwatch()..start();
   final _presence = <String, DevicePresence>{};
-  late final _equipment = ControllerEquipmentMonitor(presenceOnly: true);
+  late final _equipment = ControllerEquipmentMonitor(statusOnly: true);
   late final ForegroundRefresh _lightRefresh;
   Timer? _lightExpiry;
   bool _active = true;

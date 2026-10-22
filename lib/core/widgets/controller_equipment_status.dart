@@ -21,8 +21,8 @@ class ControllerEquipmentStatus extends StatefulWidget {
 }
 
 class _ControllerEquipmentStatusState extends State<ControllerEquipmentStatus> {
-  late final _monitor = widget.monitor ??
-      ControllerEquipmentMonitor(presenceOnly: widget.compact);
+  late final _monitor =
+      widget.monitor ?? ControllerEquipmentMonitor(statusOnly: widget.compact);
   @override
   void initState() {
     super.initState();
@@ -49,11 +49,21 @@ class _ControllerEquipmentStatusState extends State<ControllerEquipmentStatus> {
         final state = _monitor.states[id];
         final colors = Theme.of(context).colorScheme;
         if (widget.compact) {
-          final online = _monitor.online(id);
+          final label = switch (_monitor.label(id)) {
+            'Controller offline' => 'OFFLINE',
+            'Status unavailable' => 'UNAVAILABLE',
+            'Awaiting report' =>
+              state == null ? 'CONNECTING' : 'AWAITING REPORT',
+            final value => value,
+          };
+          final on = label == 'ON';
           final dark = Theme.of(context).brightness == Brightness.dark;
-          final statusColor = online
-              ? (dark ? Colors.greenAccent : Colors.green)
-              : Colors.redAccent;
+          final statusColor = switch (label) {
+            'ON' => dark ? Colors.greenAccent : Colors.green,
+            'OFFLINE' => Colors.redAccent,
+            'OFF' => colors.onSurfaceVariant,
+            _ => dark ? Colors.amberAccent : Colors.brown,
+          };
           return Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -66,8 +76,12 @@ class _ControllerEquipmentStatusState extends State<ControllerEquipmentStatus> {
                         offset: const Offset(0, 3)),
                   ]),
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Icon(equipmentIcon('${widget.device['sensortype']}'),
-                    color: online ? statusColor : Colors.grey, size: 30),
+                Icon(
+                    widget.device['sensortype'] == 'grow_light'
+                        ? Icons.lightbulb
+                        : equipmentIcon('${widget.device['sensortype']}'),
+                    color: on ? statusColor : Colors.grey,
+                    size: 30),
                 const SizedBox(height: 8),
                 Text(
                     '${widget.device['model_number'] ?? equipmentTypeLabel('${widget.device['sensortype']}')}',
@@ -79,7 +93,7 @@ class _ControllerEquipmentStatusState extends State<ControllerEquipmentStatus> {
                         fontWeight: AppTypography.headingWeight,
                         color: colors.onSurface)),
                 const SizedBox(height: 4),
-                Text(online ? 'ONLINE' : 'OFFLINE',
+                Text(label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,

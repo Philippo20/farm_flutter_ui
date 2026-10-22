@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 36,
+  "buildNumber": 37,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "3e41f8bafedbaf9f29f2d55d38603027aa7a90e1f41104aa625067667a02d312",
-  "sizeBytes": 84349845,
-  "publishedAt": "2026-10-22T12:02:11.6748916Z",
-  "releaseNotes": "Stable light connection status, lighter heartbeat polling, and safe IoT dashboard recovery after phone sleep."
+  "sha256": "237e444ab181948608b82933b28ef0087dad8bc4c98035aa41a41d186dfe1fc4",
+  "sizeBytes": 84349849,
+  "publishedAt": "2026-10-22T15:13:48.4341391Z",
+  "releaseNotes": "Corrected individual rack light ON/OFF states on IoT dashboards and matched the E-Rack light icons."
 }

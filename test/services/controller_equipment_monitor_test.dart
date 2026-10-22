@@ -31,6 +31,45 @@ Map<String, dynamic> state(String id, bool on) => {
     };
 
 void main() {
+  testWidgets('compact rack states are independent of shared board presence',
+      (tester) async {
+    var elapsed = 0;
+    Uri? requested;
+    final monitor = ControllerEquipmentMonitor(
+        statusOnly: true,
+        elapsedMilliseconds: () => elapsed,
+        service: CommandDeviceService(
+            token: () => 'jwt',
+            client: MockClient((request) async {
+              requested = request.url;
+              return http.Response(
+                  jsonEncode({
+                    'equipment': [
+                      {...state('light', true), 'controller_id': 'board'},
+                      {...state('rack-f', false), 'controller_id': 'board'},
+                    ]
+                  }),
+                  200);
+            })));
+    monitor.setDevices([
+      equipment.first,
+      {...equipment.first, r'$id': 'rack-f', 'controller_output': 'lights.F'},
+    ]);
+    await tester.pump();
+    expect(monitor.error, isNull);
+    expect(requested?.queryParameters['status_only'], 'true');
+    expect(requested?.queryParameters.containsKey('presence_only'), false);
+    expect(monitor.online('light'), true);
+    expect(monitor.online('rack-f'), true);
+    expect(monitor.label('light'), 'ON');
+    expect(monitor.label('rack-f'), 'OFF');
+    elapsed = 5500;
+    await tester.pump(const Duration(milliseconds: 5500));
+    expect(monitor.label('light'), 'Controller offline');
+    expect(monitor.label('rack-f'), 'Controller offline');
+    monitor.dispose();
+  });
+
   testWidgets(
       'equipment wakes without applying an interrupted request error or stacking requests',
       (tester) async {
@@ -78,7 +117,7 @@ void main() {
     var elapsed = 0, calls = 0;
     final monitor = ControllerEquipmentMonitor(
         elapsedMilliseconds: () => elapsed,
-        presenceOnly: true,
+        statusOnly: true,
         service: CommandDeviceService(
             token: () => 'jwt',
             client: MockClient((request) async {
