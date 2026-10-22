@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'command_device_service.dart';
+import 'device_presence.dart';
 
 const controllerOutputs = {
   'grow_light': {
@@ -26,20 +27,30 @@ String equipmentTypeLabel(String type) => switch (type) {
 class ControllerEquipmentMonitor extends ChangeNotifier
     with WidgetsBindingObserver {
   ControllerEquipmentMonitor(
-      {CommandDeviceService? service, int Function()? elapsedMilliseconds})
+      {CommandDeviceService? service,
+      int Function()? elapsedMilliseconds,
+      this.presenceOnly = false})
       : _service = service ?? CommandDeviceService(),
         _elapsedMilliseconds = elapsedMilliseconds {
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    _active = lifecycle == null ||
+        lifecycle == AppLifecycleState.resumed ||
+        lifecycle == AppLifecycleState.inactive;
     WidgetsBinding.instance.addObserver(this);
   }
   final CommandDeviceService _service;
+  final bool presenceOnly;
   final int Function()? _elapsedMilliseconds;
   final _clock = Stopwatch()..start();
   int get _elapsed =>
       _elapsedMilliseconds?.call() ?? _clock.elapsedMilliseconds;
   final states = <String, Map<String, dynamic>>{};
   final _received = <String, int>{};
+  final _presence = <String, DevicePresence>{};
+  final _bindings = <String, String>{};
   List<String> _ids = [];
   String _links = '';
+  final _deviceLinks = <String, String>{};
   Timer? _next, _expiry;
   bool _active = true, _disposed = false, _fetching = false;
   int _generation = 0;
@@ -61,7 +72,16 @@ class ControllerEquipmentMonitor extends ChangeNotifier
     if (links.join('|') == _links) return;
     _links = links.join('|');
     _ids = ids;
-    states.clear();
+    final nextLinks = {
+      for (final d in devices.where((d) => ids.contains('${d[r'$id']}')))
+        '${d[r'$id']}': '${d['controller_id']}:${d['controller_output']}'
+    };
+    states.removeWhere((id, _) => _deviceLinks[id] != nextLinks[id]);
+    _deviceLinks
+      ..clear()
+      ..addAll(nextLinks);
+    _bindings.removeWhere((id, _) => !states.containsKey(id));
+    _presence.removeWhere((key, _) => !_bindings.values.contains(key));
     _generation++;
     _next?.cancel();
     _service.cancelPolling();
@@ -70,14 +90,8 @@ class ControllerEquipmentMonitor extends ChangeNotifier
 
   bool online(String id) {
     final state = states[id];
-    if (!_active || state?['online'] != true) return false;
-    final server = DateTime.tryParse('${state!['server_time']}');
-    final seen = DateTime.tryParse('${state['seen_at']}');
-    if (server == null || seen == null) return false;
-    return server.difference(seen).inMilliseconds +
-            _elapsed -
-            (_received[id] ?? 0) <=
-        5500;
+    if (!_active || state == null) return false;
+    return _presence[_bindings[id]]?.online(_elapsed) == true;
   }
 
   bool fresh(String id) {
@@ -114,14 +128,18 @@ class ControllerEquipmentMonitor extends ChangeNotifier
       // Bound request size to the API limit without stacking requests.
       final collected = <Map<String, dynamic>>[];
       for (var i = 0; i < _ids.length; i += 100) {
-        final result =
-            await _service.equipment(_ids.skip(i).take(100).toList());
+        final result = await _service.equipment(_ids.skip(i).take(100).toList(),
+            presenceOnly: presenceOnly);
         collected.addAll(
             List<Map<String, dynamic>>.from(result['equipment'] as List));
       }
       if (_disposed || generation != _generation) return;
       for (final state in collected) {
         final id = '${state['device_id']}';
+        final key = '${state['controller_id'] ?? id}';
+        if (_bindings[id] != null && _bindings[id] != key) states.remove(id);
+        _bindings[id] = key;
+        (_presence[key] ??= DevicePresence()).accept(state, _elapsed);
         states[id] = state;
         _received[id] = _elapsed;
       }
@@ -134,25 +152,48 @@ class ControllerEquipmentMonitor extends ChangeNotifier
       _fetching = false;
       if (!_disposed && _active) {
         notifyListeners();
-        _expiry ??= Timer.periodic(
-            const Duration(seconds: 1), (_) => notifyListeners());
+        _scheduleExpiry();
         _next?.cancel();
-        _next = Timer(
-            generation == _generation
-                ? const Duration(seconds: 2)
-                : Duration.zero,
-            _poll);
+        if (generation != _generation) {
+          unawaited(_poll());
+        } else {
+          _next = Timer(const Duration(seconds: 2), _poll);
+        }
       }
     }
   }
 
+  void _scheduleExpiry() {
+    _expiry?.cancel();
+    if (_disposed || !_active) return;
+    final deadlines = _presence.values
+        .map((p) => p.expiresIn(_elapsed))
+        .whereType<int>()
+        .toList()
+      ..sort();
+    if (deadlines.isEmpty) return;
+    _expiry = Timer(Duration(milliseconds: deadlines.first), () {
+      if (_disposed || !_active) return;
+      notifyListeners();
+      _scheduleExpiry();
+    });
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    _active = state == AppLifecycleState.resumed;
+    if (state == AppLifecycleState.inactive) return;
+    final active = state == AppLifecycleState.resumed;
+    if (active == _active) return;
+    _active = active;
     _generation++;
     _next?.cancel();
     _expiry?.cancel();
     _expiry = null;
+    if (!_active) {
+      for (final presence in _presence.values) {
+        presence.reset();
+      }
+    }
     _service.cancelPolling();
     if (_active) _poll();
     notifyListeners();

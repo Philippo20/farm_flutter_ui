@@ -4,6 +4,7 @@ import '../../widgets/cards/farm/farm_iot_dashboard.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/app_dialog.dart';
 import 'dart:async';
+import '../../services/foreground_refresh.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -36,7 +37,8 @@ class _CaretakerDashboardRedesignedState
   int _selectedNavIndex = 0;
   WeatherInfo? _weatherInfo;
   List<Map<String, dynamic>> _growthRecords = [];
-  Timer? _refreshTimer;
+  late final ForegroundRefresh _refresh;
+  bool _hasLoaded = false;
   bool _isLoading = true;
   bool _isRefreshing = false;
   int _selectedDashboardTab = 0;
@@ -54,16 +56,13 @@ class _CaretakerDashboardRedesignedState
     super.initState();
     _showAllTasks = widget.showTasksOnOpen;
     _weatherInfo = const WeatherInfo(condition: 'Sunny', temperature: 28.5);
-    _loadDashboardData();
-    _refreshTimer = Timer.periodic(
-      const Duration(seconds: 5),
-      (_) => _loadDashboardData(silent: true),
-    );
+    _refresh = ForegroundRefresh(fetch: _fetchDashboardData);
+    unawaited(_refresh.refresh());
   }
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
+    _refresh.dispose();
     super.dispose();
   }
 
@@ -156,9 +155,11 @@ class _CaretakerDashboardRedesignedState
   List<Map<String, dynamic>> get _assignedSensorReadings =>
       _sensorReadings.where(_matchesAssignedFarm).toList();
 
-  Future<void> _loadDashboardData({bool silent = false}) async {
-    if (!mounted || (silent && (_isLoading || _isRefreshing))) return;
-    if (!silent) {
+  Future<void> _loadDashboardData({bool silent = false}) => _refresh.refresh();
+
+  Future<void> _fetchDashboardData(RefreshTicket ticket) async {
+    if (!mounted || !ticket.isCurrent) return;
+    if (!_hasLoaded) {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
@@ -177,7 +178,7 @@ class _CaretakerDashboardRedesignedState
         _api.getFarmTasks(),
         _api.getFarmRecords(),
       ]);
-      if (!mounted) return;
+      if (!mounted || !ticket.isCurrent) return;
       setState(() {
         _farms = results[0];
         _batches = results[1];
@@ -187,13 +188,14 @@ class _CaretakerDashboardRedesignedState
         _tasks = results[5];
         _growthRecords = results[6];
         _isLoading = false;
+        _hasLoaded = true;
         _isRefreshing = false;
         _errorMessage = null;
       });
     } catch (error) {
-      if (!mounted) return;
+      if (!mounted || !ticket.isCurrent) return;
       setState(() {
-        _errorMessage = error.toString();
+        if (!_hasLoaded) _errorMessage = error.toString();
         _isLoading = false;
         _isRefreshing = false;
       });
@@ -227,7 +229,9 @@ class _CaretakerDashboardRedesignedState
       body: isMobile
           ? _mobileShell(isDark, userName)
           : _desktopShell(isDark, userName, userEmail),
-      floatingActionButton: isMobile || _selectedDashboardTab == 1 || _showAllTasks
+      floatingActionButton: isMobile ||
+              _selectedDashboardTab == 1 ||
+              _showAllTasks
           ? null
           : FloatingActionButton.extended(
               onPressed: () => Navigator.pushNamed(context, '/record-entry'),
@@ -237,7 +241,8 @@ class _CaretakerDashboardRedesignedState
               icon: const Icon(Icons.add_rounded, size: 20),
               label: Text(isMobile ? 'Record' : 'New Record',
                   style: AppTypography.font(
-                      fontWeight: AppTypography.headingWeight, fontSize: AppTypography.actionSize)),
+                      fontWeight: AppTypography.headingWeight,
+                      fontSize: AppTypography.actionSize)),
             ),
       bottomNavigationBar: isMobile
           ? CaretakerMobileBottomNav(
@@ -474,7 +479,9 @@ class _CaretakerDashboardRedesignedState
                     textAlign: TextAlign.center,
                     style: AppTypography.font(
                       fontSize: AppTypography.captionSize,
-                      fontWeight: selected ? AppTypography.headingWeight : AppTypography.headingWeight,
+                      fontWeight: selected
+                          ? AppTypography.headingWeight
+                          : AppTypography.headingWeight,
                       color: selected ? AppColors.primary : inactiveColor,
                     ),
                   ),
@@ -539,7 +546,9 @@ class _CaretakerDashboardRedesignedState
                       ? 'No assigned farm found'
                       : '$farmCount assigned farm${farmCount == 1 ? '' : 's'}',
                   style: AppTypography.font(
-                    fontSize: narrow ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                    fontSize: narrow
+                        ? AppTypography.cardTitleSize
+                        : AppTypography.sectionTitleSize,
                     fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
@@ -708,7 +717,8 @@ class _CaretakerDashboardRedesignedState
     }
   }
 
-  bool _isSensorActive(Map<String, dynamic> sensor) => registeredSensorOnline(sensor, _sensorReadings);
+  bool _isSensorActive(Map<String, dynamic> sensor) =>
+      registeredSensorOnline(sensor, _sensorReadings);
 
   Map<String, int> _sensorTypeCounts({bool activeOnly = false}) {
     final counts = <String, int>{};
@@ -881,7 +891,9 @@ class _CaretakerDashboardRedesignedState
                   children: [
                     Text('My Assigned Tasks',
                         style: AppTypography.font(
-                          fontSize: narrow ? AppTypography.cardTitleSize : AppTypography.headingSize,
+                          fontSize: narrow
+                              ? AppTypography.cardTitleSize
+                              : AppTypography.headingSize,
                           fontWeight: AppTypography.headingWeight,
                           color: isDark ? Colors.white : AppColors.textPrimary,
                         )),
@@ -1290,7 +1302,9 @@ class _CaretakerDashboardRedesignedState
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AppTypography.font(
-              fontSize: AppTypography.microSize, fontWeight: AppTypography.headingWeight, color: color)),
+              fontSize: AppTypography.microSize,
+              fontWeight: AppTypography.headingWeight,
+              color: color)),
     );
   }
 
@@ -1775,17 +1789,23 @@ class _CaretakerDashboardRedesignedState
   }
 
   Widget _sensorNestedView(bool isDark, {required bool narrow}) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      _nestedViewHeader(isDark, narrow),
-      const SizedBox(height: 16),
-      FarmIotDashboard(isDark: isDark, batches: _assignedBatches, records: _growthRecords, sensors: _assignedSensors, readings: _sensorReadings, userName: ref.watch(authProvider).user?.name ?? '',
-        liveTemperature: _latestSensorValue('temperature'),
-        liveTemperatureHistory: _sensorHistoryValues('temperature'),
-        sensorCounts: _sensorTypeCounts(),
-        activeSensorCounts: _sensorTypeCounts(activeOnly: true)),
-    ],
-  );
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _nestedViewHeader(isDark, narrow),
+          const SizedBox(height: 16),
+          FarmIotDashboard(
+              isDark: isDark,
+              batches: _assignedBatches,
+              records: _growthRecords,
+              sensors: _assignedSensors,
+              readings: _sensorReadings,
+              userName: ref.watch(authProvider).user?.name ?? '',
+              liveTemperature: _latestSensorValue('temperature'),
+              liveTemperatureHistory: _sensorHistoryValues('temperature'),
+              sensorCounts: _sensorTypeCounts(),
+              activeSensorCounts: _sensorTypeCounts(activeOnly: true)),
+        ],
+      );
 
   Widget _nestedViewHeader(bool isDark, bool narrow) {
     return Container(
@@ -1848,7 +1868,9 @@ class _CaretakerDashboardRedesignedState
                 Text(
                   'All Sensor Readings',
                   style: AppTypography.font(
-                    fontSize: narrow ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                    fontSize: narrow
+                        ? AppTypography.cardTitleSize
+                        : AppTypography.sectionTitleSize,
                     fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
@@ -1963,7 +1985,9 @@ class _CaretakerDashboardRedesignedState
               children: [
                 Text(value,
                     style: AppTypography.font(
-                      fontSize: compact ? AppTypography.cardTitleSize : AppTypography.sectionTitleSize,
+                      fontSize: compact
+                          ? AppTypography.cardTitleSize
+                          : AppTypography.sectionTitleSize,
                       fontWeight: AppTypography.headingWeight,
                       color: isDark ? Colors.white : AppColors.textPrimary,
                       height: 1.1,
@@ -1973,7 +1997,9 @@ class _CaretakerDashboardRedesignedState
                 const SizedBox(height: 2),
                 Text(sub ?? title,
                     style: AppTypography.font(
-                      fontSize: compact ? AppTypography.microSize : AppTypography.fieldLabelSize,
+                      fontSize: compact
+                          ? AppTypography.microSize
+                          : AppTypography.fieldLabelSize,
                       color: isDark ? Colors.white38 : AppColors.textSecondary,
                     ),
                     maxLines: 1,
@@ -2090,7 +2116,11 @@ class _CaretakerDashboardRedesignedState
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.font(
-                    fontSize: denseDesktop ? AppTypography.captionSize : (compact ? AppTypography.captionSize : AppTypography.actionSize),
+                    fontSize: denseDesktop
+                        ? AppTypography.captionSize
+                        : (compact
+                            ? AppTypography.captionSize
+                            : AppTypography.actionSize),
                     fontWeight: AppTypography.headingWeight,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   )),
@@ -2100,7 +2130,11 @@ class _CaretakerDashboardRedesignedState
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.font(
-                    fontSize: denseDesktop ? AppTypography.microSize : (compact ? AppTypography.microSize : AppTypography.fieldLabelSize),
+                    fontSize: denseDesktop
+                        ? AppTypography.microSize
+                        : (compact
+                            ? AppTypography.microSize
+                            : AppTypography.fieldLabelSize),
                     color: isDark ? Colors.white38 : AppColors.textSecondary,
                   )),
             ],
@@ -2208,7 +2242,9 @@ class _CaretakerDashboardRedesignedState
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.font(
                             fontSize: AppTypography.microSize,
-                            fontWeight: sel ? AppTypography.headingWeight : AppTypography.labelWeight,
+                            fontWeight: sel
+                                ? AppTypography.headingWeight
+                                : AppTypography.labelWeight,
                             color: c,
                           )),
                       if (sel)

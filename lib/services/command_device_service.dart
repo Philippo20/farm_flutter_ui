@@ -70,8 +70,11 @@ class CommandDeviceService {
       _request(serial,
           resource: 'activity/events',
           query: {if (before != null) 'before': before});
-  Future<Map<String, dynamic>> equipment(List<String> ids) =>
-      _request('', path: '/controller-equipment', query: {'device_id': ids});
+  Future<Map<String, dynamic>> equipment(List<String> ids,
+          {bool presenceOnly = false}) =>
+      _request('',
+          path: '/controller-equipment',
+          query: {'device_id': ids, if (presenceOnly) 'presence_only': 'true'});
   Future<Map<String, dynamic>> calibrations(String serial) =>
       _request(serial, resource: 'calibrations');
   Future<Map<String, dynamic>> calibrationHistory(String serial,

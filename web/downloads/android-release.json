@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 35,
+  "buildNumber": 36,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "4d4d79f219aded745e68ae5d8ab1b100250af6f7af3b8b86732248e5f8315a3e",
-  "sizeBytes": 84333465,
-  "publishedAt": "2026-10-22T11:23:18.5212472Z",
-  "releaseNotes": "Simplified IoT equipment cards to show only the icon, name and online/offline status."
+  "sha256": "3e41f8bafedbaf9f29f2d55d38603027aa7a90e1f41104aa625067667a02d312",
+  "sizeBytes": 84349845,
+  "publishedAt": "2026-10-22T12:02:11.6748916Z",
+  "releaseNotes": "Stable light connection status, lighter heartbeat polling, and safe IoT dashboard recovery after phone sleep."
 }

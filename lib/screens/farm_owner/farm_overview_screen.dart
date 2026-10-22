@@ -5,6 +5,7 @@ import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/app_bottom_sheet.dart';
 import '../../core/widgets/responsive_metric_grid.dart';
 import 'dart:async';
+import '../../services/foreground_refresh.dart';
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -42,31 +43,29 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
   final List<Map<String, dynamic>> _sales = [];
   final List<Map<String, dynamic>> _sensorReadings = [];
   bool _isLoading = true;
-  bool _fetching = false;
+  bool _hasLoaded = false;
   String? _errorMessage;
   List<Map<String, dynamic>> _growthRecords = [];
-  Timer? _refreshTimer;
+  late final ForegroundRefresh _refresh;
 
   @override
   void initState() {
     super.initState();
-    _loadFarmData();
-    _refreshTimer = Timer.periodic(
-      const Duration(seconds: 5),
-      (_) => _loadFarmData(showLoading: false),
-    );
+    _refresh = ForegroundRefresh(fetch: _fetchFarmData);
+    unawaited(_refresh.refresh());
   }
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
+    _refresh.dispose();
     super.dispose();
   }
 
-  Future<void> _loadFarmData({bool showLoading = true}) async {
-    if (!mounted || _fetching) return;
-    _fetching = true;
-    if (showLoading) {
+  Future<void> _loadFarmData({bool showLoading = true}) => _refresh.refresh();
+
+  Future<void> _fetchFarmData(RefreshTicket ticket) async {
+    if (!mounted || !ticket.isCurrent) return;
+    if (!_hasLoaded) {
       setState(() {
         _isLoading = true;
         _errorMessage = null;
@@ -82,7 +81,7 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
         _api.getSensorReadingsAll(),
         _api.getFarmRecords(),
       ]);
-      if (!mounted) return;
+      if (!mounted || !ticket.isCurrent) return;
       setState(() {
         _farms
           ..clear()
@@ -104,17 +103,15 @@ class _FarmOverviewScreenState extends ConsumerState<FarmOverviewScreen> {
           ..addAll(results[5]);
         _growthRecords = results[6];
         _isLoading = false;
+        _hasLoaded = true;
         _errorMessage = null;
       });
     } catch (error) {
-      if (!mounted) return;
-      if (!showLoading) return;
+      if (!mounted || !ticket.isCurrent || _hasLoaded) return;
       setState(() {
         _errorMessage = error.toString();
         _isLoading = false;
       });
-    } finally {
-      _fetching = false;
     }
   }
 

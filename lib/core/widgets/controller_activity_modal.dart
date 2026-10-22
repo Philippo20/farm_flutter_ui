@@ -43,6 +43,7 @@ class _ControllerActivityModalState extends State<ControllerActivityModal>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive) return;
     if (state == AppLifecycleState.resumed) {
       _poller.startPolling();
     } else {

@@ -304,6 +304,7 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive) return;
     if (state == AppLifecycleState.resumed) {
       _poller.startPolling();
     } else {

@@ -59,6 +59,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive) return;
     _foreground = state == AppLifecycleState.resumed;
     _revision++;
     if (_foreground) {

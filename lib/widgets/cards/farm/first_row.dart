@@ -1,6 +1,8 @@
 import 'dart:async';
 import '../../../services/light_switch_service.dart';
 import '../../../services/controller_equipment_monitor.dart';
+import '../../../services/device_presence.dart';
+import '../../../services/foreground_refresh.dart';
 import '../../../core/widgets/controller_equipment_status.dart';
 import 'batch_growth_tracker.dart';
 import '../../../core/theme/app_typography.dart';
@@ -29,17 +31,19 @@ class FirstRow extends StatefulWidget {
   State<FirstRow> createState() => _FirstRowState();
 }
 
-class _FirstRowState extends State<FirstRow> {
+class _FirstRowState extends State<FirstRow> with WidgetsBindingObserver {
   late final _switchService = widget.lightSwitchService ?? LightSwitchService();
   final _lightStates = <String, Map<String, dynamic>>{};
   final _lightErrors = <String, String>{};
+  final _lightCommandErrors = <String, String>{};
   final _submitting = <String>{};
   final _revision = <String, int>{};
   final _clock = Stopwatch()..start();
-  final _receivedAt = <String, int>{};
-  late final _equipment = ControllerEquipmentMonitor();
-  Timer? _pollLights;
-  bool _polling = false;
+  final _presence = <String, DevicePresence>{};
+  late final _equipment = ControllerEquipmentMonitor(presenceOnly: true);
+  late final ForegroundRefresh _lightRefresh;
+  Timer? _lightExpiry;
+  bool _active = true;
   List<Map<String, dynamic>> get _lights => widget.devices
       .where((d) => '${d['sensortype'] ?? d['type']}' == 'light_switch')
       .toList()
@@ -48,10 +52,13 @@ class _FirstRowState extends State<FirstRow> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _equipment.setDevices(widget.devices);
-    _refreshLights();
-    _pollLights =
-        Timer.periodic(const Duration(seconds: 2), (_) => _refreshLights());
+    _lightRefresh = ForegroundRefresh(
+        fetch: _refreshLights,
+        cancelFetch: _switchService.cancelPolling,
+        interval: const Duration(seconds: 2));
+    unawaited(_lightRefresh.refresh());
   }
 
   @override
@@ -59,60 +66,85 @@ class _FirstRowState extends State<FirstRow> {
     super.didUpdateWidget(oldWidget);
     _equipment.setDevices(widget.devices);
     if (_lights.any((d) => !_lightStates.containsKey('${d['serial_number']}')))
-      _refreshLights();
+      unawaited(_lightRefresh.refresh());
   }
 
   @override
   void dispose() {
-    _pollLights?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _lightRefresh.dispose();
+    _lightExpiry?.cancel();
     _equipment.dispose();
-    _switchService.dispose();
+    if (widget.lightSwitchService == null) _switchService.dispose();
     _clock.stop();
     super.dispose();
   }
 
-  Future<void> _refreshLights() async {
-    if (_polling || !mounted) return;
-    _polling = true;
-    try {
-      await Future.wait(_lights.map((device) async {
-        final serial = '${device['serial_number']}';
-        if (_submitting.contains(serial)) return;
-        final revision = _revision[serial] ?? 0;
-        try {
-          final state = await _switchService.state(serial);
-          if (!mounted ||
-              _submitting.contains(serial) ||
-              revision != (_revision[serial] ?? 0)) return;
-          setState(() {
-            _lightStates[serial] = state;
-            _receivedAt[serial] = _clock.elapsedMilliseconds;
-            _lightErrors.remove(serial);
-          });
-        } catch (error) {
-          if (mounted &&
-              !_submitting.contains(serial) &&
-              revision == (_revision[serial] ?? 0))
-            setState(() => _lightErrors[serial] = '$error');
-        }
-      }));
-    } finally {
-      _polling = false;
-    }
+  Future<void> _refreshLights(RefreshTicket ticket) async {
+    if (!mounted || !ticket.isCurrent) return;
+    await Future.wait(_lights.map((device) async {
+      final serial = '${device['serial_number']}';
+      if (_submitting.contains(serial)) return;
+      final revision = _revision[serial] ?? 0;
+      try {
+        final state = await _switchService.state(serial);
+        if (!mounted ||
+            !ticket.isCurrent ||
+            _submitting.contains(serial) ||
+            revision != (_revision[serial] ?? 0)) return;
+        setState(() {
+          _lightStates[serial] = state;
+          (_presence[serial] ??=
+                  DevicePresence(grace: const Duration(seconds: 15)))
+              .accept(state, _clock.elapsedMilliseconds);
+          _lightErrors.remove(serial);
+        });
+      } catch (error) {
+        if (mounted &&
+            ticket.isCurrent &&
+            !_submitting.contains(serial) &&
+            revision == (_revision[serial] ?? 0))
+          setState(() => _lightErrors[serial] = '$error');
+      }
+    }));
+    if (mounted && ticket.isCurrent) _scheduleLightExpiry();
   }
 
   bool _lightOnline(String serial) {
-    final state = _lightStates[serial];
-    if (state == null ||
-        state['online'] != true ||
-        _lightErrors.containsKey(serial)) return false;
-    final server = DateTime.tryParse('${state['server_time']}');
-    final seen = DateTime.tryParse('${state['seen_at']}');
-    if (server == null || seen == null) return false;
-    return server.difference(seen).inMilliseconds +
-            _clock.elapsedMilliseconds -
-            (_receivedAt[serial] ?? 0) <=
-        15000;
+    return _active &&
+        _presence[serial]?.online(_clock.elapsedMilliseconds) == true;
+  }
+
+  void _scheduleLightExpiry() {
+    _lightExpiry?.cancel();
+    if (!mounted || !_active) return;
+    final deadlines = _presence.values
+        .map((p) => p.expiresIn(_clock.elapsedMilliseconds))
+        .whereType<int>()
+        .toList()
+      ..sort();
+    if (deadlines.isEmpty) return;
+    _lightExpiry = Timer(Duration(milliseconds: deadlines.first), () {
+      if (!mounted || !_active) return;
+      setState(() {});
+      _scheduleLightExpiry();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive) return;
+    final active = state == AppLifecycleState.resumed;
+    if (active == _active) return;
+    _active = active;
+    _lightExpiry?.cancel();
+    for (final serial in _presence.keys) {
+      _presence[serial]!.reset();
+      _revision[serial] = (_revision[serial] ?? 0) + 1;
+    }
+    _lightErrors.clear();
+    _lightCommandErrors.clear();
+    if (mounted) setState(() {});
   }
 
   Future<void> _toggleLight(String serial) async {
@@ -124,20 +156,26 @@ class _FirstRowState extends State<FirstRow> {
     final desired = !(state!['reported_on'] as bool);
     setState(() {
       _submitting.add(serial);
+      _lightCommandErrors.remove(serial);
       _revision[serial] = (_revision[serial] ?? 0) + 1;
       _lightStates[serial] = {...state, 'desired_on': desired};
     });
+    final revision = _revision[serial];
     try {
       final result = await _switchService.command(
           serial, desired, _switchService.requestId());
-      if (!mounted) return;
+      if (!mounted || !_active || revision != _revision[serial]) return;
       setState(() {
         _lightStates[serial] = result;
-        _receivedAt[serial] = _clock.elapsedMilliseconds;
+        (_presence[serial] ??=
+                DevicePresence(grace: const Duration(seconds: 15)))
+            .accept(result, _clock.elapsedMilliseconds);
         _lightErrors.remove(serial);
+        _lightCommandErrors.remove(serial);
       });
     } catch (error) {
-      if (mounted) setState(() => _lightErrors[serial] = '$error');
+      if (mounted && _active && revision == _revision[serial])
+        setState(() => _lightCommandErrors[serial] = '$error');
     } finally {
       if (mounted) setState(() => _submitting.remove(serial));
     }
@@ -564,11 +602,18 @@ class _FirstRowState extends State<FirstRow> {
                 monitor: _equipment,
                 compact: true),
         ]),
-        if (_lightErrors.isNotEmpty)
+        if (_active &&
+            (_lightCommandErrors.isNotEmpty ||
+                _lightErrors.entries.any((e) => !_lightOnline(e.key))))
           Padding(
               padding: const EdgeInsets.all(8),
               child: Text(
-                  _lightErrors.values.first.replaceFirst('Exception: ', ''),
+                  (_lightCommandErrors.isNotEmpty
+                          ? _lightCommandErrors.values.first
+                          : _lightErrors.entries
+                              .firstWhere((e) => !_lightOnline(e.key))
+                              .value)
+                      .replaceFirst('Exception: ', ''),
                   style: AppTypography.bodySmall
                       .copyWith(color: Colors.redAccent))),
       ],
@@ -688,7 +733,7 @@ class _FirstRowState extends State<FirstRow> {
     final pending = _submitting.contains(serial) || state?['pending'] == true;
     final label = pending
         ? (state?['desired_on'] == false ? 'TURNING OFF…' : 'TURNING ON…')
-        : _lightErrors.containsKey(serial)
+        : _lightErrors.containsKey(serial) && !online
             ? 'UNAVAILABLE'
             : state == null
                 ? 'CONNECTING…'

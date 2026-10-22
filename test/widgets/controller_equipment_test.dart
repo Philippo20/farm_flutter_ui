@@ -113,19 +113,29 @@ void main() {
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
+        var online = false;
+        final now = DateTime.now().toUtc().toIso8601String();
         final monitor = ControllerEquipmentMonitor(
             service: CommandDeviceService(
                 token: () => 'jwt',
-                client: MockClient(
-                    (_) async => http.Response('{"equipment":[]}', 200))));
-        final now = DateTime.now().toUtc().toIso8601String();
-        monitor.states['light'] = {
-          'reported_on': true,
-          'online': false,
-          'received_at': now,
-          'maintenance_status': 'Overdue',
-          'next_due': '2026-10-01'
-        };
+                client: MockClient((_) async => http.Response(
+                    jsonEncode({
+                      'equipment': [
+                        {
+                          'device_id': 'light',
+                          'controller_id': 'board',
+                          'reported_on': true,
+                          'online': online,
+                          'seen_at': now,
+                          'server_time': now,
+                          'received_at': now,
+                          'maintenance_status': 'Overdue',
+                          'next_due': '2026-10-01'
+                        }
+                      ]
+                    }),
+                    200))));
+        monitor.setDevices([device]);
         await tester.pumpWidget(MaterialApp(
             theme: ThemeData(
                 brightness: dark ? Brightness.dark : Brightness.light),
@@ -139,6 +149,7 @@ void main() {
                                 device: device,
                                 monitor: monitor,
                                 compact: true)))))));
+        await tester.pump();
         expect(find.byIcon(Icons.lightbulb_outline), findsOneWidget);
         expect(find.text('Rack F grow light'), findsOneWidget);
         expect(find.text('OFFLINE'), findsOneWidget);
@@ -147,12 +158,8 @@ void main() {
         expect(find.textContaining('Last reported:'), findsNothing);
         expect(find.textContaining('Received '), findsNothing);
         expect(find.text('Overdue'), findsNothing);
-        monitor.states['light']!.addAll({
-          'online': true,
-          'reported_on': false,
-          'server_time': now,
-          'seen_at': now,
-        });
+        online = true;
+        monitor.didChangeAppLifecycleState(AppLifecycleState.paused);
         monitor.didChangeAppLifecycleState(AppLifecycleState.resumed);
         await tester.pump();
         expect(find.text('ONLINE'), findsOneWidget);

@@ -21,7 +21,8 @@ class ControllerEquipmentStatus extends StatefulWidget {
 }
 
 class _ControllerEquipmentStatusState extends State<ControllerEquipmentStatus> {
-  late final _monitor = widget.monitor ?? ControllerEquipmentMonitor();
+  late final _monitor = widget.monitor ??
+      ControllerEquipmentMonitor(presenceOnly: widget.compact);
   @override
   void initState() {
     super.initState();

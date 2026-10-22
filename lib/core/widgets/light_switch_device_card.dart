@@ -2,6 +2,8 @@ import 'dart:async';
 import 'light_switch_setup_guide.dart';
 import 'package:flutter/material.dart';
 import '../../services/light_switch_service.dart';
+import '../../services/device_presence.dart';
+import '../../services/foreground_refresh.dart';
 import '../theme/app_typography.dart';
 
 /// A relay controller has a confirmed output state, not a numeric sensor reading.
@@ -15,99 +17,126 @@ class LightSwitchDeviceCard extends StatefulWidget {
       required this.isDark,
       required this.onSettings,
       this.onDelete,
+      this.elapsedMilliseconds,
       this.service});
   final String serial, name, farm, zone;
   final bool isDark;
   final VoidCallback onSettings;
   final VoidCallback? onDelete;
   final LightSwitchService? service;
+  final int Function()? elapsedMilliseconds;
   @override
   State<LightSwitchDeviceCard> createState() => _LightSwitchDeviceCardState();
 }
 
-class _LightSwitchDeviceCardState extends State<LightSwitchDeviceCard> {
+class _LightSwitchDeviceCardState extends State<LightSwitchDeviceCard>
+    with WidgetsBindingObserver {
   late final _service = widget.service ?? LightSwitchService();
   final _clock = Stopwatch()..start();
-  Timer? _timer;
+  late final ForegroundRefresh _refreshLoop;
+  final _presence = DevicePresence(grace: const Duration(seconds: 15));
+  Timer? _expiry;
+  bool _active = true;
+  int get _elapsed =>
+      widget.elapsedMilliseconds?.call() ?? _clock.elapsedMilliseconds;
   Map<String, dynamic>? _state;
-  int _received = 0, _revision = 0;
-  bool _fetching = false, _saving = false;
-  String? _error;
+  int _revision = 0;
+  bool _saving = false;
+  String? _error, _commandError;
   bool? _requested;
 
   @override
   void initState() {
     super.initState();
-    _refresh();
-    _timer = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (mounted) setState(() {});
-      _refresh();
-    });
+    WidgetsBinding.instance.addObserver(this);
+    _refreshLoop = ForegroundRefresh(
+        fetch: _fetch,
+        cancelFetch: _service.cancelPolling,
+        interval: const Duration(seconds: 2));
+    unawaited(_refresh());
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _refreshLoop.dispose();
+    _expiry?.cancel();
     _clock.stop();
     if (widget.service == null) _service.dispose();
     super.dispose();
   }
 
-  bool get _online {
-    final server = DateTime.tryParse('${_state?['server_time']}');
-    final seen = DateTime.tryParse('${_state?['seen_at']}');
-    if (_state?['online'] != true ||
-        server == null ||
-        seen == null ||
-        _error != null) return false;
-    final age = server.difference(seen).inMilliseconds +
-        _clock.elapsedMilliseconds -
-        _received;
-    return age >= 0 && age <= 15000;
-  }
+  bool get _online => _active && _presence.online(_elapsed);
 
   bool get _pending => _saving || _state?['pending'] == true;
-  Future<void> _refresh() async {
-    if (_fetching || _saving) return;
-    _fetching = true;
+  Future<void> _refresh() => _refreshLoop.refresh();
+  Future<void> _fetch(RefreshTicket ticket) async {
+    if (_saving || !mounted || !ticket.isCurrent) return;
     final revision = _revision;
-    final began = _clock.elapsedMilliseconds;
     try {
       final result = await _service.state(widget.serial);
-      if (!mounted || revision != _revision) return;
+      if (!mounted || !ticket.isCurrent || revision != _revision) return;
       setState(() {
         _state = result;
-        _received = began;
+        _presence.accept(result, _elapsed);
         _error = null;
       });
+      _scheduleExpiry();
     } catch (error) {
-      if (mounted && revision == _revision)
+      if (mounted && ticket.isCurrent && revision == _revision)
         setState(() => _error = '$error'.replaceFirst('Exception: ', ''));
-    } finally {
-      _fetching = false;
     }
+  }
+
+  void _scheduleExpiry() {
+    _expiry?.cancel();
+    final remaining = _presence.expiresIn(_elapsed);
+    if (remaining != null)
+      _expiry = Timer(Duration(milliseconds: remaining), () {
+        if (mounted && _active) {
+          setState(() {});
+          _scheduleExpiry();
+        }
+      });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.inactive) return;
+    final active = state == AppLifecycleState.resumed;
+    if (active == _active) return;
+    _active = active;
+    _revision++;
+    _presence.reset();
+    _expiry?.cancel();
+    _error = null;
+    _commandError = null;
+    if (mounted) setState(() {});
   }
 
   Future<void> _change(bool desired) async {
     if (!_online || _pending || _state?['reported_on'] is! bool) return;
     setState(() {
       _saving = true;
+      _commandError = null;
       _requested = desired;
       _revision++;
     });
-    final began = _clock.elapsedMilliseconds;
+    final revision = _revision;
     try {
       final result =
           await _service.command(widget.serial, desired, _service.requestId());
-      if (!mounted) return;
+      if (!mounted || !_active || revision != _revision) return;
       setState(() {
         _state = result;
-        _received = began;
+        _presence.accept(result, _elapsed);
         _error = null;
       });
+      _scheduleExpiry();
     } catch (error) {
-      if (mounted)
-        setState(() => _error = '$error'.replaceFirst('Exception: ', ''));
+      if (mounted && _active && revision == _revision)
+        setState(
+            () => _commandError = '$error'.replaceFirst('Exception: ', ''));
     } finally {
       if (mounted)
         setState(() {
@@ -123,7 +152,7 @@ class _LightSwitchDeviceCardState extends State<LightSwitchDeviceCard> {
     final on = _state?['reported_on'] == true;
     final known = _state?['reported_on'] is bool;
     final desired = _requested ?? _state?['desired_on'] == true;
-    final label = _error != null
+    final label = _error != null && !_online
         ? 'Unavailable'
         : _state == null
             ? 'Connecting'
@@ -227,11 +256,15 @@ class _LightSwitchDeviceCardState extends State<LightSwitchDeviceCard> {
                         style: AppTypography.bodySmall
                             .copyWith(color: scheme.onSurfaceVariant)))
               ]),
-              if (_error != null || issue == 'expired' || issue == 'failed')
+              if (_commandError != null ||
+                  (_error != null && !_online) ||
+                  issue == 'expired' ||
+                  issue == 'failed')
                 Padding(
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
-                        _error ??
+                        _commandError ??
+                            _error ??
                             (issue == 'expired'
                                 ? 'Last command expired without confirmation.'
                                 : 'Device did not confirm the requested output.'),
