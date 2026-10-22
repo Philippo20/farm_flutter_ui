@@ -623,7 +623,11 @@ class _SensorManagementScreenState
           'tds',
           'co2',
           'distance',
-          'command_device'
+          'command_device',
+          'grow_light',
+          'feeding_pump',
+          'drainage_pump',
+          'air_conditioner',
         ],
         (value) => setState(() => _selectedType = value ?? 'All'),
         isDark,
@@ -699,7 +703,8 @@ class _SensorManagementScreenState
     if (raw['sensortype'] == 'command_device') {
       return CommandDeviceCard(device: raw, allowSend: false);
     }
-    if (raw['sensortype'] == 'air_conditioner') {
+    if (['air_conditioner', 'grow_light', 'feeding_pump', 'drainage_pump']
+        .contains(raw['sensortype'])) {
       return EquipmentMaintenanceCard(
           device: raw, onConfigure: () => _editDevice(sensor));
     }
@@ -763,7 +768,15 @@ class _SensorManagementScreenState
                               item)
                           : item == 'command_device'
                               ? 'Command Device'
-                              : item,
+                              : item == 'grow_light'
+                                  ? 'Grow light'
+                                  : item == 'feeding_pump'
+                                      ? 'Feeding pump'
+                                      : item == 'drainage_pump'
+                                          ? 'Drainage pump'
+                                          : item == 'air_conditioner'
+                                              ? 'Air conditioner'
+                                              : item,
                       style: TextStyle(
                         color: isDark ? Colors.white : AppColors.textPrimary,
                         fontSize: isMobile

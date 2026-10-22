@@ -63,6 +63,15 @@ class CommandDeviceService {
   }
 
   Future<Map<String, dynamic>> state(String serial) => _request(serial);
+  Future<Map<String, dynamic>> activity(String serial) =>
+      _request(serial, resource: 'activity');
+  Future<Map<String, dynamic>> activityHistory(String serial,
+          {String? before}) =>
+      _request(serial,
+          resource: 'activity/events',
+          query: {if (before != null) 'before': before});
+  Future<Map<String, dynamic>> equipment(List<String> ids) =>
+      _request('', path: '/controller-equipment', query: {'device_id': ids});
   Future<Map<String, dynamic>> calibrations(String serial) =>
       _request(serial, resource: 'calibrations');
   Future<Map<String, dynamic>> calibrationHistory(String serial,
@@ -83,7 +92,8 @@ class CommandDeviceService {
       bool retried = false,
       int? pollGeneration,
       String? resource,
-      Map<String, String>? query}) async {
+      Map<String, dynamic>? query,
+      String? path}) async {
     if (_disposed) throw StateError('Device service has been disposed.');
     if (data == null) pollGeneration ??= _pollGeneration;
     if (pollGeneration != null && pollGeneration != _pollGeneration) {
@@ -95,7 +105,7 @@ class CommandDeviceService {
           'Please sign in to use device commands.');
     }
     final uri = Uri.parse(
-            '${SuperAdminApiService.baseUrl}/command-devices/${Uri.encodeComponent(serial)}/${resource ?? (data == null ? 'state' : 'commands')}')
+            '${SuperAdminApiService.baseUrl}${path ?? '/command-devices/${Uri.encodeComponent(serial)}/${resource ?? (data == null ? 'state' : 'commands')}'}')
         .replace(queryParameters: query);
     final headers = {
       'Authorization': 'Bearer $jwt',
@@ -135,6 +145,7 @@ class CommandDeviceService {
           retried: true,
           pollGeneration: pollGeneration,
           resource: resource,
+          path: path,
           query: query);
     }
     dynamic decoded;

@@ -253,6 +253,12 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
     switch (raw.toLowerCase()) {
       case 'air_conditioner':
         return 'Air conditioner';
+      case 'grow_light':
+        return 'Grow light';
+      case 'feeding_pump':
+        return 'Feeding pump';
+      case 'drainage_pump':
+        return 'Drainage pump';
       case 'vpd':
         return 'VPD';
       case 'temperature':
@@ -1281,9 +1287,18 @@ class _ModernSensorsScreenState extends ConsumerState<ModernSensorsScreen> {
                           onDelete: widget.isSuperAdmin
                               ? () => _showDeleteSensorDialog(sensor, isDark)
                               : null)
-                      : sensor.raw['sensortype'] == 'air_conditioner'
+                      : [
+                          'air_conditioner',
+                          'grow_light',
+                          'feeding_pump',
+                          'drainage_pump'
+                        ].contains(sensor.raw['sensortype'])
                           ? EquipmentMaintenanceCard(
                               device: sensor.raw,
+                              onDelete: widget.isSuperAdmin
+                                  ? () =>
+                                      _showDeleteSensorDialog(sensor, isDark)
+                                  : null,
                               onConfigure: widget.isFarmManager
                                   ? null
                                   : () => _showSensorSettings(sensor, isDark))

@@ -33,6 +33,14 @@ POST /command-devices/$serial/ack
 Use success: false with a clear message when execution fails. After an accepted acknowledgement, increment sequence. If the acknowledgement response is lost, retry the same result; do not execute again. A later poll with advance_sequence: true also means the slot is resolved.
 
 The API marks the board offline after 5.5 seconds without a successful poll. The card uses a 5.5-second grace period after receiving a new board heartbeat, so a single delayed request does not immediately switch it offline. Commands expire after 10 seconds. Old commands are discarded on board restart, expiry or configuration changes. The app shows Confirmed only after the board acknowledges success.
+
+V1.7 ACTIVITY AND EQUIPMENT
+
+Send full activity snapshots to POST /command-devices/$serial/events using the same x-sensor-key. Use event_id = session_id + '-' + numeric generation. Retry the identical payload/ID; a 2xx response means it was saved. Report controller.status every 30 seconds and report state transitions immediately. Prioritise polling and acknowledgements over uploads. Uploads never renew online status.
+
+Register each grow light, feeding pump or drainage pump separately, selecting this controller and its reported output. Each equipment item can have its own maintenance schedules or No scheduled maintenance. Shared E/F drainage is one pump. Farm dashboards show controller-reported states; these are not proof of electrical current or water flow.
+
+Use Add V1.7 rack commands in device settings for E_ON/E_OFF, F_ON/F_OFF, P_ON/P_OFF, ALL_ON/ALL_OFF and FERT_STATUS. These enable feeding settings, not manual light/pump starts. Controller activity & history shows received snapshots separately from calibration history.
 ''';
 
 Future<void> showCommandDeviceSetupGuide(BuildContext context, String serial) =>

@@ -136,6 +136,7 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(2), 'Stop pump');
     expect(form.currentState!.validate(), true);
     expect(values, hasLength(2));
+    await tester.ensureVisible(find.byTooltip('Remove command').last);
     await tester.tap(find.byTooltip('Remove command').last);
     await tester.pump();
     expect(values, hasLength(1));

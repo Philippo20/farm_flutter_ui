@@ -1,5 +1,7 @@
 import 'dart:async';
 import '../../../services/light_switch_service.dart';
+import '../../../services/controller_equipment_monitor.dart';
+import '../../../core/widgets/controller_equipment_status.dart';
 import 'batch_growth_tracker.dart';
 import '../../../core/theme/app_typography.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +37,7 @@ class _FirstRowState extends State<FirstRow> {
   final _revision = <String, int>{};
   final _clock = Stopwatch()..start();
   final _receivedAt = <String, int>{};
+  late final _equipment = ControllerEquipmentMonitor();
   Timer? _pollLights;
   bool _polling = false;
   List<Map<String, dynamic>> get _lights => widget.devices
@@ -45,6 +48,7 @@ class _FirstRowState extends State<FirstRow> {
   @override
   void initState() {
     super.initState();
+    _equipment.setDevices(widget.devices);
     _refreshLights();
     _pollLights =
         Timer.periodic(const Duration(seconds: 2), (_) => _refreshLights());
@@ -53,6 +57,7 @@ class _FirstRowState extends State<FirstRow> {
   @override
   void didUpdateWidget(covariant FirstRow oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _equipment.setDevices(widget.devices);
     if (_lights.any((d) => !_lightStates.containsKey('${d['serial_number']}')))
       _refreshLights();
   }
@@ -60,6 +65,7 @@ class _FirstRowState extends State<FirstRow> {
   @override
   void dispose() {
     _pollLights?.cancel();
+    _equipment.dispose();
     _switchService.dispose();
     _clock.stop();
     super.dispose();
@@ -542,13 +548,21 @@ class _FirstRowState extends State<FirstRow> {
             ),
           ),
         ),
-        if (_lights.isEmpty)
+        if (_lights.isEmpty &&
+            !widget.devices.any((d) => d['sensortype'] == 'grow_light'))
           Padding(
               padding: const EdgeInsets.all(8),
               child: Text('No light switches registered for your farms.',
                   style: AppTypography.bodySmall)),
         _equipmentCardRow([
-          for (final device in _lights) _registeredLightCard(device, isDark)
+          for (final device in _lights) _registeredLightCard(device, isDark),
+          for (final device
+              in widget.devices.where((d) => d['sensortype'] == 'grow_light'))
+            ControllerEquipmentStatus(
+                key: ValueKey(device[r'$id']),
+                device: device,
+                monitor: _equipment,
+                compact: true),
         ]),
         if (_lightErrors.isNotEmpty)
           Padding(
@@ -577,10 +591,20 @@ class _FirstRowState extends State<FirstRow> {
           ),
         ),
         _equipmentCardRow([
-          _pumpStatusCard("Water Pump", true, isDark),
-          _pumpStatusCard("Air Pump", false, isDark),
-          _pumpStatusCard("Nut Pump", true, isDark),
+          for (final device in widget.devices.where((d) =>
+              ['feeding_pump', 'drainage_pump'].contains(d['sensortype'])))
+            ControllerEquipmentStatus(
+                key: ValueKey(device[r'$id']),
+                device: device,
+                monitor: _equipment,
+                compact: true),
         ]),
+        if (!widget.devices.any(
+            (d) => ['feeding_pump', 'drainage_pump'].contains(d['sensortype'])))
+          Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text('No pumps registered for your farms.',
+                  style: AppTypography.bodySmall)),
       ],
     );
   }
@@ -601,10 +625,40 @@ class _FirstRowState extends State<FirstRow> {
           ),
         ),
         _equipmentCardRow([
-          _phAirStatusCard("pH Up", true, Icons.arrow_upward, isDark),
-          _phAirStatusCard("pH Down", false, Icons.arrow_downward, isDark),
-          _phAirStatusCard("Air Condition", true, Icons.air, isDark),
+          for (final device in widget.devices.where(
+              (d) => ['air_conditioner', 'pH Level'].contains(d['sensortype'])))
+            Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: Theme.of(context).colorScheme.outlineVariant)),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                          device['sensortype'] == 'air_conditioner'
+                              ? Icons.air
+                              : Icons.science_outlined,
+                          color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(height: 8),
+                      Text('${device['model_number']}',
+                          style: AppTypography.titleSmall),
+                      Text('Serial: ${device['serial_number']}',
+                          style: AppTypography.bodySmall),
+                      Text('Condition: ${device['status']}',
+                          style: AppTypography.bodySmall),
+                      Text('Live output not linked',
+                          style: AppTypography.bodySmall),
+                    ])),
         ]),
+        if (!widget.devices.any(
+            (d) => ['air_conditioner', 'pH Level'].contains(d['sensortype'])))
+          Padding(
+              padding: const EdgeInsets.all(8),
+              child: Text('No pH or air equipment registered for your farms.',
+                  style: AppTypography.bodySmall)),
       ],
     );
   }
@@ -699,117 +753,6 @@ class _FirstRowState extends State<FirstRow> {
           const SizedBox(height: 4),
           Text(
             statusLabel ?? (isActive ? "ACTIVE" : "NOT ACTIVE"),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTypography.font(
-              fontSize: AppTypography.captionSize,
-              fontWeight: AppTypography.labelWeight,
-              color: isActive
-                  ? (isDark ? Colors.greenAccent : Colors.green)
-                  : Colors.redAccent,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-//pump
-  Widget _pumpStatusCard(String name, bool isActive, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(5, 10, 5, 5),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.water, // You can customize per pump if needed
-            color: isActive
-                ? (isDark ? Colors.greenAccent : Colors.green)
-                : Colors.grey,
-            size: 30,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTypography.font(
-              fontSize: AppTypography.bodySize,
-              fontWeight: AppTypography.headingWeight,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            isActive ? "ACTIVE" : "NOT ACTIVE",
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTypography.font(
-              fontSize: AppTypography.captionSize,
-              fontWeight: AppTypography.labelWeight,
-              color: isActive
-                  ? (isDark ? Colors.greenAccent : Colors.green)
-                  : Colors.redAccent,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-//
-  Widget _phAirStatusCard(
-      String name, bool isActive, IconData icon, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(5, 10, 5, 5),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            color: isActive
-                ? (isDark ? Colors.greenAccent : Colors.green)
-                : Colors.grey,
-            size: 30,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTypography.font(
-              fontSize: AppTypography.bodySize,
-              fontWeight: AppTypography.headingWeight,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            isActive ? "ACTIVE" : "NOT ACTIVE",
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,

@@ -41,10 +41,12 @@ class MaintenanceFormShell extends StatelessWidget {
       required this.onSave,
       required this.child,
       this.action = 'Save',
+      this.dismissLabel = 'Cancel',
       this.icon = Icons.build_outlined,
       this.error});
   final IconData icon;
   final String title, subtitle, action;
+  final String dismissLabel;
   final bool saving;
   final VoidCallback? onSave;
   final Widget child;
@@ -138,7 +140,7 @@ class MaintenanceFormShell extends StatelessWidget {
                               style: _buttonStyle(),
                               onPressed:
                                   saving ? null : () => Navigator.pop(context),
-                              child: const Text('Cancel'))),
+                              child: Text(dismissLabel))),
                       const SizedBox(width: 12),
                       Expanded(
                           child: FilledButton(

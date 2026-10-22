@@ -6,6 +6,7 @@ import '../../services/calibration_controls.dart';
 import '../theme/app_typography.dart';
 import 'command_device_setup_guide.dart';
 import 'device_calibration_modal.dart';
+import 'controller_activity_modal.dart';
 
 class CommandDeviceCard extends StatefulWidget {
   const CommandDeviceCard(
@@ -346,6 +347,15 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
                             style: AppTypography.caption
                                 .copyWith(color: colors.error))),
                   const SizedBox(height: 8),
+                  Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                          onPressed: () =>
+                              showControllerActivity(context, _serial),
+                          icon: const Icon(Icons.monitor_heart_outlined,
+                              size: 16),
+                          label: Text('Controller activity & history',
+                              style: AppTypography.caption))),
                   Align(
                       alignment: Alignment.centerLeft,
                       child: TextButton.icon(

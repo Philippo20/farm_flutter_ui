@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'named_command_fields.dart';
 import '../../services/command_device_service.dart';
+import '../../services/controller_equipment_monitor.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/device_maintenance_api.dart';
@@ -18,7 +19,10 @@ const registeredDeviceTypes = {
   'water_temperature': 'Water temperature',
   'humidity': 'Humidity',
   'Carbon Dioxide': 'CO2',
-  'light': 'Light',
+  'light': 'Light intensity',
+  'grow_light': 'Grow light (controller output)',
+  'feeding_pump': 'Feeding pump (controller output)',
+  'drainage_pump': 'Drainage pump (controller output)',
   'light_switch': 'Light switch',
   'command_device': 'Command Device',
   'pH Level': 'pH sensor',
@@ -77,12 +81,28 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
   final _plans = <_PlanDraft>[];
   late final DeviceMaintenanceApi _api;
   List<Map<String, dynamic>> _farms = [];
+  List<Map<String, dynamic>> _devices = [];
+  String? _controllerId, _controllerOutput;
+  bool get _linked => controllerOutputs.containsKey(_type);
+  List<Map<String, dynamic>> get _controllers => _devices
+      .where((d) => d['sensortype'] == 'command_device' && d['farmID'] == _farm)
+      .toList();
+  Map<String, String> get _outputs => {
+        for (final output
+            in (controllerOutputs[_type] ?? <String, String>{}).entries)
+          if (!_devices.any((d) =>
+              d[r'$id'] != widget.device?[r'$id'] &&
+              d['controller_id'] == _controllerId &&
+              d['controller_output'] == output.key))
+            output.key: output.value,
+      };
   String? _farm;
   String _type = 'temperature', _status = 'Active';
   bool _alerts = true, _saving = false, _loading = true;
   String? _error;
   bool _maintenanceReviewed = true;
   bool get _equipment =>
+      _linked ||
       ['air_conditioner', 'light_switch', 'command_device'].contains(_type);
   bool _canConfigureCommands = false;
   List<Map<String, String>> _commands = [];
@@ -107,6 +127,8 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
     }
     _type = '${device['sensortype'] ?? 'temperature'}';
     _farm = device['farmID']?.toString();
+    _controllerId = device['controller_id']?.toString();
+    _controllerOutput = device['controller_output']?.toString();
     _status = '${device['status'] ?? 'Active'}';
     _alerts = device['alerts_enabled'] != false;
     if (widget.device == null) _fields['unit']!.text = _unit(_type);
@@ -138,6 +160,7 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
       if (!mounted) return;
       setState(() {
         _farms = List<Map<String, dynamic>>.from(result['farms']);
+        _devices = List<Map<String, dynamic>>.from(result['devices'] ?? []);
         _canConfigureCommands = result['can_configure_commands'] == true;
         _loading = false;
       });
@@ -172,7 +195,11 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
         'VPD' => 'psi',
         'light_switch' => 'state',
         'command_device' => 'command',
-        'air_conditioner' => 'equipment',
+        'air_conditioner' ||
+        'grow_light' ||
+        'feeding_pump' ||
+        'drainage_pump' =>
+          'equipment',
         _ => '',
       };
   void _suggestTasks() {
@@ -215,6 +242,8 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
         'value': _equipment ? 0 : double.tryParse(_fields['value']!.text) ?? 0,
         'alerts_enabled': _equipment ? false : _alerts,
         if (_type == 'command_device') 'command_config': jsonEncode(_commands),
+        'controller_id': _linked ? _controllerId : null,
+        'controller_output': _linked ? _controllerOutput : null,
         'plans': _plans
             .where((plan) => plan.enabled)
             .map((plan) => plan.toJson())
@@ -314,7 +343,11 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
                               .toList(),
                           onChanged: _saving || widget.device != null
                               ? null
-                              : (value) => setState(() => _farm = value),
+                              : (value) => setState(() {
+                                    _farm = value;
+                                    _controllerId = null;
+                                    _controllerOutput = null;
+                                  }),
                           validator: (value) =>
                               value == null ? 'Select an assigned farm' : null,
                         )),
@@ -347,6 +380,7 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
                               ? null
                               : (value) => setState(() {
                                     _type = value!;
+                                    _controllerOutput = null;
                                     if (_type == 'command_device') {
                                       _maintenanceReviewed = true;
                                       for (final plan in _plans) {
@@ -356,6 +390,70 @@ class _DeviceRegistrationFormState extends State<DeviceRegistrationForm> {
                                     _fields['unit']!.text = _unit(_type);
                                   }),
                         )),
+                    if (_linked) ...[
+                      maintenanceField(
+                          'ESP32 controller',
+                          DropdownButtonFormField<String>(
+                            key: ValueKey('controller-$_farm-$_type'),
+                            initialValue: _controllers
+                                    .any((d) => d[r'$id'] == _controllerId)
+                                ? _controllerId
+                                : null,
+                            isExpanded: true,
+                            style: AppTypography.font(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurface),
+                            decoration:
+                                maintenanceInput(context, icon: Icons.memory),
+                            items: _controllers
+                                .map((d) => DropdownMenuItem(
+                                    value: '${d[r'$id']}',
+                                    child: Text(
+                                        '${d['model_number']} · ${d['serial_number']}',
+                                        overflow: TextOverflow.ellipsis)))
+                                .toList(),
+                            onChanged: _saving
+                                ? null
+                                : (v) => setState(() {
+                                      _controllerId = v;
+                                      _controllerOutput = null;
+                                    }),
+                            validator: (v) => v == null
+                                ? 'Select a Command Device on this farm'
+                                : null,
+                          )),
+                      maintenanceField(
+                          'Reported output',
+                          DropdownButtonFormField<String>(
+                            key: ValueKey('output-$_controllerId-$_type'),
+                            initialValue:
+                                _outputs.containsKey(_controllerOutput)
+                                    ? _controllerOutput
+                                    : null,
+                            isExpanded: true,
+                            style: AppTypography.font(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurface),
+                            decoration:
+                                maintenanceInput(context, icon: Icons.cable),
+                            items: _outputs.entries
+                                .map((e) => DropdownMenuItem(
+                                    value: e.key,
+                                    child: Text(e.value,
+                                        overflow: TextOverflow.ellipsis)))
+                                .toList(),
+                            onChanged: _saving || _controllerId == null
+                                ? null
+                                : (v) => setState(() => _controllerOutput = v),
+                            validator: (v) =>
+                                v == null ? 'Select an available output' : null,
+                          )),
+                      Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: Text(
+                              'Shows the controller’s reported ON/OFF state. Configure maintenance below, or choose No scheduled maintenance.',
+                              style: AppTypography.bodySmall)),
+                    ],
                     maintenancePair(
                         context,
                         _input('model_number', 'Device name / model',

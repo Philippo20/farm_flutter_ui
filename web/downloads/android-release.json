@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 33,
+  "buildNumber": 34,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "f2881c4ce02aa2bb395345dab8f468ebe6edde99a3d8fde368be5db3dfe246af",
-  "sizeBytes": 84136541,
-  "publishedAt": "2026-10-21T10:43:28.5882288Z",
-  "releaseNotes": "Calibration confirmations immediately advance Start/Cancel and Stop/Cancel controls. Late responses no longer restore waiting states; measurements remain based on controller results."
+  "sha256": "1da7eb5b448008c381e8eae6d339bdedc49efce49abde36c87c16f5a7651a3f6",
+  "sizeBytes": 84333465,
+  "publishedAt": "2026-10-22T11:01:21.3699950Z",
+  "releaseNotes": "Register lights and pumps linked to ESP32 controller reports, independent maintenance, and controller activity history."
 }

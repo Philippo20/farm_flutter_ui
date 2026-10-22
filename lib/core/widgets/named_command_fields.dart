@@ -45,6 +45,40 @@ class _NamedCommandFieldsState extends State<NamedCommandFields> {
   }
 
   void _changed() => widget.onChanged(_rows.map((row) => row.json).toList());
+  void _addRackCommands() {
+    const presets = {
+      'E_ON': 'Enable rack E feeding',
+      'E_OFF': 'Disable rack E feeding',
+      'F_ON': 'Enable rack F feeding',
+      'F_OFF': 'Disable rack F feeding',
+      'P_ON': 'Enable rack P feeding',
+      'P_OFF': 'Disable rack P feeding',
+      'ALL_ON': 'Enable all racks',
+      'ALL_OFF': 'Disable all racks',
+      'FERT_STATUS': 'Request controller status'
+    };
+    setState(() {
+      final blank = _rows
+          .where(
+              (r) => r.label.text.trim().isEmpty && r.value.text.trim().isEmpty)
+          .toList();
+      for (final row in blank) {
+        _rows.remove(row);
+        _retired.add(row);
+      }
+      for (final entry in presets.entries) {
+        if (_rows.length >= 24) break;
+        if (_rows.any((r) =>
+            r.value.text.trim().toUpperCase().replaceAll('-', '_') ==
+                entry.key ||
+            r.label.text.trim().toLowerCase() == entry.value.toLowerCase()))
+          continue;
+        _rows.add(_CommandDraft({'label': entry.value, 'value': entry.key}));
+      }
+    });
+    _changed();
+  }
+
   Widget _input(_CommandDraft row, bool name) {
     final colors = Theme.of(context).colorScheme;
     return Padding(
@@ -114,7 +148,16 @@ class _NamedCommandFieldsState extends State<NamedCommandFields> {
           style: AppTypography.font(fontSize: 11, fontWeight: FontWeight.w600)),
       const SizedBox(height: 6),
       Text(
-          'Give each command a clear name and the exact value your board firmware recognises. Up to 12 commands per device.',
+          'Give each command a clear name and the exact value your board firmware recognises. Up to 24 commands per device.',
+          style: AppTypography.font(fontSize: 12)),
+      TextButton.icon(
+          onPressed:
+              widget.enabled && _rows.length < 24 ? _addRackCommands : null,
+          icon: const Icon(Icons.playlist_add, size: 16),
+          label: Text('Add V1.7 rack commands',
+              style: AppTypography.font(fontSize: 12))),
+      Text(
+          'Rack commands enable or disable scheduled feeding. They do not manually switch lights or pumps.',
           style: AppTypography.font(fontSize: 12)),
       const SizedBox(height: 14),
       for (final row in _rows) ...[
@@ -147,7 +190,7 @@ class _NamedCommandFieldsState extends State<NamedCommandFields> {
       Align(
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
-              onPressed: !widget.enabled || _rows.length >= 12
+              onPressed: !widget.enabled || _rows.length >= 24
                   ? null
                   : () {
                       setState(() => _rows.add(_CommandDraft({})));
