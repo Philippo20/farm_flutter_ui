@@ -351,7 +351,7 @@ void main() {
     await tester.pump();
     expect(find.text('Online'), findsOneWidget);
     expect(find.text('Unavailable'), findsNothing);
-    await tester.pump(const Duration(seconds: 4));
+    await tester.pump(const Duration(seconds: 11));
     expect(find.text('Reconnecting'), findsOneWidget);
     expect(find.text('Offline'), findsNothing);
     api.readError = null;

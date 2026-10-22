@@ -162,7 +162,10 @@ class HeartbeatPoller<T> extends ChangeNotifier {
       _lastSourceHeartbeat = source;
       _online = true;
       _graceTimer?.cancel();
-      _graceTimer = Timer(gracePeriod, () {
+      _graceTimer = Timer(
+          controllerStatus == null
+              ? gracePeriod
+              : ControllerPresence.observationWindow, () {
         if (!_disposed && _running && _online) {
           _online = false;
           notifyListeners();

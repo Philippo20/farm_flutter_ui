@@ -188,7 +188,7 @@ void main() {
       });
     }
   }
-  testWidgets('V1.7 presets preserve existing IDs and aliases', (tester) async {
+  testWidgets('V1.8 presets preserve existing IDs and aliases', (tester) async {
     List<Map<String, String>> commands = [];
     await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -196,14 +196,18 @@ void main() {
                 child: NamedCommandFields(initial: const [
       {'id': 'existing', 'label': 'Rack E enabled', 'value': 'E-ON'},
       {'id': 'calibration', 'label': 'Start calibration', 'value': 'CAL_START'},
+      {'id': 'cancel', 'label': 'Cancel recovery', 'value': 'CANCEL'},
     ], onChanged: (v) => commands = v)))));
-    await tester.tap(find.text('Add V1.7 rack commands'));
+    await tester.tap(find.text('Add V1.8 rack commands'));
     await tester.pump();
-    expect(commands.length, 10);
+    expect(commands.length, 12);
     expect(commands.first['id'], 'existing');
     expect(commands[1]['id'], 'calibration');
     expect(commands.where((c) => c['value'] == 'E_ON'), isEmpty);
     expect(commands.any((c) => c['value'] == 'FERT_STATUS'), true);
+    expect(commands.any((c) => c['value'] == 'FERT_R'), true);
+    expect(commands.where((c) => c['value'] == 'FERT_R_CANCEL'), isEmpty);
+    expect(commands[2]['id'], 'cancel');
     await tester.pumpWidget(const SizedBox());
   });
 }

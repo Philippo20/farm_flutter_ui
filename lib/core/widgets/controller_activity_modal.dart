@@ -131,6 +131,17 @@ class _ControllerActivityModalState extends State<ControllerActivityModal>
         _value('Pump D12', on(feeding['pump_on'])),
         _value('Selected rack', '${feeding['rack'] ?? 'None'}'),
         _value('Source', _words(feeding['source'])),
+        _value(
+            'Manual recovery',
+            feeding['active'] == true && feeding['source'] == 'manual'
+                ? 'Running'
+                : feeding['manual_requested'] == true
+                    ? 'Queued · Waiting for safe start'
+                    : snapshot['type'] == 'fertigation.recovery_completed'
+                        ? 'Completed'
+                        : snapshot['type'] == 'fertigation.recovery_cancelled'
+                            ? 'Cancelled'
+                            : 'Not queued'),
         _value('Configured feeding time',
             '${((feeding['configured_duration_ms'] as num) / 1000).toStringAsFixed(1)} s'),
       ]),

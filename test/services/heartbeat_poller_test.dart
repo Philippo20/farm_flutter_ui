@@ -23,7 +23,10 @@ void main() {
     await tester.pump();
     expect(poller.isOnline, true);
     await tester.pump(const Duration(seconds: 2));
-    await tester.pump(const Duration(milliseconds: 3500));
+    await tester.pump(const Duration(seconds: 7));
+    expect(poller.isOnline, true);
+    expect(poller.isSynchronizing, false);
+    await tester.pump(const Duration(seconds: 3));
     expect(poller.isOnline, false);
     expect(poller.isSynchronizing, true);
     expect(poller.isOfflineConfirmed, false);

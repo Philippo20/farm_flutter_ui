@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 38,
+  "buildNumber": 39,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "456db782a2bfd8f9837ef13e43b8ad26fd213e8eb71945011c25b2fc4f70d529",
+  "sha256": "44b08aeca31f08bb94ee52408f75e3e0cb1613f1008a628b6570d7368d4a8ded",
   "sizeBytes": 84349849,
-  "publishedAt": "2026-10-22T15:59:03.2744238Z",
-  "releaseNotes": "Fixed false controller-offline states during delayed API refreshes, synchronized IoT status across screens, and improved recovery after sleep."
+  "publishedAt": "2026-10-22T16:39:28.0001146Z",
+  "releaseNotes": "Smoother controller updates during slow connections, V1.8 recovery event support, and clear queued versus running recovery status."
 }

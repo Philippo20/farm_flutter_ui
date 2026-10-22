@@ -14,15 +14,28 @@ Map<String, dynamic> observation(int server, int? seen,
     };
 
 void main() {
+  test('slow healthy observations stay online, cached packets still expire',
+      () {
+    final presence = ControllerPresence();
+    presence.accept(observation(0, 0), 0);
+    expect(presence.online(9000), true);
+    presence.accept(observation(9, 9), 9000);
+    expect(presence.online(18000), true);
+    presence.accept(observation(9, 9), 18000);
+    expect(presence.online(20999), true);
+    expect(presence.online(21000), false);
+    expect(presence.confirmedOffline, false);
+  });
+
   test('UI silence expires live status without inventing controller offline',
       () {
     final presence = ControllerPresence();
     presence.accept(observation(0, 0), 0);
-    expect(presence.online(5499), true);
-    expect(presence.online(5500), false);
+    expect(presence.online(11999), true);
+    expect(presence.online(12000), false);
     expect(presence.confirmedOffline, false);
-    presence.accept(observation(6, 6), 6000);
-    expect(presence.online(6000), true);
+    presence.accept(observation(13, 13), 13000);
+    expect(presence.online(13000), true);
   });
 
   test('only server-confirmed board timeout can report offline', () {
@@ -55,10 +68,10 @@ void main() {
     final presence = ControllerPresence();
     presence.accept(observation(0, 0), 0);
     presence.accept(observation(0, 0), 4000);
-    expect(presence.online(5500), false);
+    expect(presence.online(12000), false);
     expect(presence.confirmedOffline, false);
     presence.reset();
-    expect(presence.online(5500), false);
+    expect(presence.online(12000), false);
     expect(presence.confirmedOffline, false);
     presence.accept(observation(10, null, online: false), 6000);
     expect(presence.confirmedOffline, true);

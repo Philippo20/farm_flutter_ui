@@ -55,7 +55,9 @@ class _NamedCommandFieldsState extends State<NamedCommandFields> {
       'P_OFF': 'Disable rack P feeding',
       'ALL_ON': 'Enable all racks',
       'ALL_OFF': 'Disable all racks',
-      'FERT_STATUS': 'Request controller status'
+      'FERT_STATUS': 'Request controller status',
+      'FERT_R': 'Queue manual recovery',
+      'FERT_R_CANCEL': 'Cancel queued recovery'
     };
     setState(() {
       final blank = _rows
@@ -71,8 +73,11 @@ class _NamedCommandFieldsState extends State<NamedCommandFields> {
         if (_rows.any((r) =>
             r.value.text.trim().toUpperCase().replaceAll('-', '_') ==
                 entry.key ||
-            r.label.text.trim().toLowerCase() == entry.value.toLowerCase()))
+            (entry.key == 'FERT_R_CANCEL' &&
+                r.value.text.trim().toUpperCase() == 'CANCEL') ||
+            r.label.text.trim().toLowerCase() == entry.value.toLowerCase())) {
           continue;
+        }
         _rows.add(_CommandDraft({'label': entry.value, 'value': entry.key}));
       }
     });
@@ -154,10 +159,10 @@ class _NamedCommandFieldsState extends State<NamedCommandFields> {
           onPressed:
               widget.enabled && _rows.length < 24 ? _addRackCommands : null,
           icon: const Icon(Icons.playlist_add, size: 16),
-          label: Text('Add V1.7 rack commands',
+          label: Text('Add V1.8 rack commands',
               style: AppTypography.font(fontSize: 12))),
       Text(
-          'Rack commands enable or disable scheduled feeding. They do not manually switch lights or pumps.',
+          'Rack commands enable or disable feeding. Manual recovery queues a run subject to controller safety checks; cancellation only removes a run that has not started.',
           style: AppTypography.font(fontSize: 12)),
       const SizedBox(height: 14),
       for (final row in _rows) ...[

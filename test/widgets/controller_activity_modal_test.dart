@@ -42,6 +42,39 @@ Map<String, dynamic> report(String id) => {
 
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
+  testWidgets('queued recovery is separate from actual pump output',
+      (tester) async {
+    final snapshot = report('boot-43');
+    snapshot['type'] = 'fertigation.recovery_queued';
+    snapshot['fertigation'] = <String, dynamic>{
+      ...Map<String, dynamic>.from(snapshot['fertigation'] as Map),
+      'source': 'manual',
+      'manual_requested': true,
+      'active': false,
+      'pump_on': false,
+      'state': 'idle',
+    };
+    final api = CommandDeviceService(
+        token: () => 'jwt',
+        client: MockClient((_) async => http.Response(
+            jsonEncode({
+              'online': true,
+              'seen_at': DateTime.now().toUtc().toIso8601String(),
+              'snapshot': snapshot
+            }),
+            200)));
+    addTearDown(api.dispose);
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: ControllerActivityModal(serial: 'CMD-001', service: api))));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Manual recovery'));
+    expect(find.text('Queued · Waiting for safe start'), findsOneWidget);
+    expect(find.text('Running'), findsNothing);
+    expect(find.text('OFF'), findsWidgets);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
   for (final width in [320.0, 1440.0]) {
     for (final dark in [false, true]) {
       testWidgets(

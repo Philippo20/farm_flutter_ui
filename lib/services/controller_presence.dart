@@ -3,7 +3,12 @@ import 'device_presence.dart';
 /// Separates the board's heartbeat from the app's ability to refresh its view.
 /// A missed UI refresh is unknown, not proof that the board disconnected.
 class ControllerPresence {
-  final _lease = DevicePresence();
+  // A proxy refresh can take eight seconds, followed by the two-second poll
+  // delay. Allow that round trip plus jitter without changing the board's
+  // server-enforced 5.5-second heartbeat deadline. Only advancing heartbeats
+  // renew this bounded observation window; cached replies never do.
+  static const observationWindow = Duration(seconds: 12);
+  final _lease = DevicePresence(grace: observationWindow);
   DateTime? _sample, _source;
   String? _session;
   bool confirmedOffline = false;

@@ -32,7 +32,7 @@ Map<String, dynamic> state(String id, bool on) => {
 
 void main() {
   testWidgets(
-      'slow dashboard refresh syncs, then confirms actual board timeout',
+      'slow dashboard refresh stays steady, then confirms actual board timeout',
       (tester) async {
     var calls = 0, elapsed = 0;
     final delayed = Completer<http.Response>();
@@ -56,7 +56,7 @@ void main() {
     elapsed = 6000;
     await tester.pump(const Duration(seconds: 4));
     expect(calls, 2);
-    expect(monitor.label('light'), 'Syncing controller');
+    expect(monitor.label('light'), 'ON');
     expect(monitor.states['light']!['reported_on'], true);
     delayed.complete(http.Response(
         jsonEncode({
@@ -106,8 +106,8 @@ void main() {
     expect(monitor.online('rack-f'), true);
     expect(monitor.label('light'), 'ON');
     expect(monitor.label('rack-f'), 'OFF');
-    elapsed = 5500;
-    await tester.pump(const Duration(milliseconds: 5500));
+    elapsed = 12000;
+    await tester.pump(const Duration(milliseconds: 12000));
     expect(monitor.label('light'), 'Syncing controller');
     expect(monitor.label('rack-f'), 'Syncing controller');
     monitor.dispose();
@@ -185,10 +185,10 @@ void main() {
     elapsed = 4000;
     await tester.pump(const Duration(seconds: 2));
     expect(monitor.online('light'), true);
-    elapsed = 5500;
-    await tester.pump(const Duration(milliseconds: 1500));
+    elapsed = 12000;
+    await tester.pump(const Duration(milliseconds: 8000));
     expect(monitor.online('light'), false);
-    expect(calls, 3);
+    expect(calls, 7);
     monitor.dispose();
   });
 
@@ -316,7 +316,7 @@ void main() {
     elapsed = 2000;
     await tester.pump(const Duration(seconds: 2));
     expect(monitor.label('light'), 'ON');
-    elapsed = 5501;
+    elapsed = 12001;
     await tester.pump(const Duration(seconds: 1));
     expect(monitor.label('light'), 'Status unavailable');
     expect(monitor.states['light']!['reported_on'], true);
