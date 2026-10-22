@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'command_device_service.dart';
-import 'device_presence.dart';
+import 'controller_presence.dart';
 
 const controllerOutputs = {
   'grow_light': {
@@ -46,7 +46,7 @@ class ControllerEquipmentMonitor extends ChangeNotifier
       _elapsedMilliseconds?.call() ?? _clock.elapsedMilliseconds;
   final states = <String, Map<String, dynamic>>{};
   final _received = <String, int>{};
-  final _presence = <String, DevicePresence>{};
+  final _presence = <String, ControllerPresence>{};
   final _bindings = <String, String>{};
   List<String> _ids = [];
   String _links = '';
@@ -112,7 +112,10 @@ class ControllerEquipmentMonitor extends ChangeNotifier
       return error == null ? 'Awaiting report' : 'Status unavailable';
     }
     if (!online(id)) {
-      return error == null ? 'Controller offline' : 'Status unavailable';
+      if (_active && _presence[_bindings[id]]?.confirmedOffline == true) {
+        return 'Controller offline';
+      }
+      return error == null ? 'Syncing controller' : 'Status unavailable';
     }
     if (!fresh(id) || states[id]?['reported_on'] is! bool) {
       return 'Awaiting report';
@@ -139,7 +142,10 @@ class ControllerEquipmentMonitor extends ChangeNotifier
         final key = '${state['controller_id'] ?? id}';
         if (_bindings[id] != null && _bindings[id] != key) states.remove(id);
         _bindings[id] = key;
-        (_presence[key] ??= DevicePresence()).accept(state, _elapsed);
+        if (!(_presence[key] ??= ControllerPresence())
+            .accept(state, _elapsed)) {
+          continue;
+        }
         states[id] = state;
         _received[id] = _elapsed;
       }

@@ -24,6 +24,7 @@ class _ControllerActivityModalState extends State<ControllerActivityModal>
   late final _poller = HeartbeatPoller<Map<String, dynamic>>(
       fetch: () => _service.activity(widget.serial),
       cancelFetch: _service.cancelPolling,
+      controllerStatus: (data) => data,
       isHeartbeat: (data) => data['online'] == true,
       sourceHeartbeat: (data) => DateTime.tryParse('${data['seen_at']}'));
   final _events = <Map<String, dynamic>>[];
@@ -190,11 +191,12 @@ class _ControllerActivityModalState extends State<ControllerActivityModal>
                     ? 'Controller online'
                     : !_poller.hasCompleted
                         ? 'Checking controller…'
-                        : 'Controller offline',
+                        : _poller.isOfflineConfirmed
+                            ? 'Controller offline'
+                            : 'Syncing with controller…',
                 style: AppTypography.bodyMedium),
             if (!_poller.isOnline && snapshot != null)
-              Text(
-                  'Last known report. Current output states are unavailable while the controller is offline.',
+              Text('Last known report. Waiting for a fresh controller status.',
                   style: AppTypography.bodySmall),
             if (snapshot != null)
               _snapshot(snapshot)

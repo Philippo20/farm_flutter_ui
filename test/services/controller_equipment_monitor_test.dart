@@ -31,6 +31,49 @@ Map<String, dynamic> state(String id, bool on) => {
     };
 
 void main() {
+  testWidgets(
+      'slow dashboard refresh syncs, then confirms actual board timeout',
+      (tester) async {
+    var calls = 0, elapsed = 0;
+    final delayed = Completer<http.Response>();
+    final monitor = ControllerEquipmentMonitor(
+        elapsedMilliseconds: () => elapsed,
+        service: CommandDeviceService(
+            token: () => 'jwt',
+            client: MockClient((_) async {
+              if (++calls == 1)
+                return http.Response(
+                    jsonEncode({
+                      'equipment': [state('light', true)]
+                    }),
+                    200);
+              return delayed.future;
+            })));
+    monitor.setDevices(equipment);
+    await tester.pump();
+    elapsed = 2000;
+    await tester.pump(const Duration(seconds: 2));
+    elapsed = 6000;
+    await tester.pump(const Duration(seconds: 4));
+    expect(calls, 2);
+    expect(monitor.label('light'), 'Syncing controller');
+    expect(monitor.states['light']!['reported_on'], true);
+    delayed.complete(http.Response(
+        jsonEncode({
+          'equipment': [
+            {
+              ...state('light', true),
+              'online': false,
+              'server_time': '2026-10-22T12:00:06Z'
+            }
+          ]
+        }),
+        200));
+    await tester.pump();
+    expect(monitor.label('light'), 'Controller offline');
+    monitor.dispose();
+  });
+
   testWidgets('compact rack states are independent of shared board presence',
       (tester) async {
     var elapsed = 0;
@@ -65,8 +108,8 @@ void main() {
     expect(monitor.label('rack-f'), 'OFF');
     elapsed = 5500;
     await tester.pump(const Duration(milliseconds: 5500));
-    expect(monitor.label('light'), 'Controller offline');
-    expect(monitor.label('rack-f'), 'Controller offline');
+    expect(monitor.label('light'), 'Syncing controller');
+    expect(monitor.label('rack-f'), 'Syncing controller');
     monitor.dispose();
   });
 

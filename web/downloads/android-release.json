@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 37,
+  "buildNumber": 38,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "237e444ab181948608b82933b28ef0087dad8bc4c98035aa41a41d186dfe1fc4",
+  "sha256": "456db782a2bfd8f9837ef13e43b8ad26fd213e8eb71945011c25b2fc4f70d529",
   "sizeBytes": 84349849,
-  "publishedAt": "2026-10-22T15:13:48.4341391Z",
-  "releaseNotes": "Corrected individual rack light ON/OFF states on IoT dashboards and matched the E-Rack light icons."
+  "publishedAt": "2026-10-22T15:59:03.2744238Z",
+  "releaseNotes": "Fixed false controller-offline states during delayed API refreshes, synchronized IoT status across screens, and improved recovery after sleep."
 }

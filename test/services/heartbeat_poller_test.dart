@@ -3,6 +3,43 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:farmestates_ai_dashbaord/services/heartbeat_poller.dart';
 
 void main() {
+  testWidgets(
+      'proxied controller silence is syncing until server confirms offline',
+      (tester) async {
+    final delayed = Completer<Map<String, dynamic>>();
+    var calls = 0;
+    final poller = HeartbeatPoller<Map<String, dynamic>>(
+        controllerStatus: (data) => data,
+        fetch: () async {
+          if (++calls > 1) return delayed.future;
+          return {
+            'online': true,
+            'controller_session_id': 'boot',
+            'seen_at': '2026-10-22T12:00:00Z',
+            'server_time': '2026-10-22T12:00:00Z'
+          };
+        });
+    poller.startPolling();
+    await tester.pump();
+    expect(poller.isOnline, true);
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 3500));
+    expect(poller.isOnline, false);
+    expect(poller.isSynchronizing, true);
+    expect(poller.isOfflineConfirmed, false);
+    expect(calls, 2);
+    delayed.complete({
+      'online': false,
+      'controller_session_id': 'boot',
+      'seen_at': '2026-10-22T12:00:00Z',
+      'server_time': '2026-10-22T12:00:06Z'
+    });
+    await tester.pump();
+    expect(poller.isOfflineConfirmed, true);
+    expect(poller.isSynchronizing, false);
+    poller.dispose();
+  });
+
   testWidgets('slow requests finish before the two-second delay starts',
       (tester) async {
     final first = Completer<int>();
@@ -98,9 +135,7 @@ void main() {
     expect(calls, 1);
     old.complete(1);
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 1999));
-    expect(calls, 1);
-    await tester.pump(const Duration(milliseconds: 1));
+    await tester.pump();
     expect(calls, 2);
     expect(poller.data, 2);
     poller.dispose();

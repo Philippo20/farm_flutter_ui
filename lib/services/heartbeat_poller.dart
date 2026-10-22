@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'controller_presence.dart';
 
 /// Serial HTTP polling with a receipt-based heartbeat grace period.
 ///
@@ -12,6 +13,7 @@ class HeartbeatPoller<T> extends ChangeNotifier {
     required this.fetch,
     this.isHeartbeat,
     this.sourceHeartbeat,
+    this.controllerStatus,
     this.cancelFetch,
     this.interval = const Duration(seconds: 2),
     this.gracePeriod = const Duration(milliseconds: 5500),
@@ -21,6 +23,12 @@ class HeartbeatPoller<T> extends ChangeNotifier {
   final Future<T> Function() fetch;
   final bool Function(T)? isHeartbeat;
   final DateTime? Function(T)? sourceHeartbeat;
+
+  /// Enable for an API proxying a controller. Local expiry means syncing;
+  /// only the server can confirm the actual board heartbeat expired.
+  final Map<String, dynamic> Function(T)? controllerStatus;
+  final _controllerPresence = ControllerPresence();
+  final _clock = Stopwatch()..start();
   final VoidCallback? cancelFetch;
   final Duration interval, gracePeriod;
   Timer? _nextPoll, _graceTimer;
@@ -38,10 +46,16 @@ class HeartbeatPoller<T> extends ChangeNotifier {
   bool get isPolling => _running;
   bool get isFetching => _inFlight != null;
   bool get hasCompleted => _hasCompleted;
+  bool get isOfflineConfirmed =>
+      !isOnline &&
+      (controllerStatus == null || _controllerPresence.confirmedOffline);
+  bool get isSynchronizing => _running && !isOnline && !isOfflineConfirmed;
 
   void startPolling() {
     if (_disposed || _running) return;
     _running = true;
+    _hasCompleted = false;
+    _lastError = null;
     _generation++;
     notifyListeners();
     unawaited(refresh());
@@ -56,6 +70,7 @@ class HeartbeatPoller<T> extends ChangeNotifier {
     _nextPoll?.cancel();
     _graceTimer?.cancel();
     _lastSourceHeartbeat = null;
+    _controllerPresence.reset();
     cancelFetch?.call();
     notifyListeners();
   }
@@ -98,7 +113,11 @@ class HeartbeatPoller<T> extends ChangeNotifier {
       completion.complete();
       if (!_disposed && _running) {
         // A stop/start waits for the old transport to finish before restarting.
-        _nextPoll = Timer(interval, () => unawaited(refresh()));
+        if (generation != _generation) {
+          unawaited(refresh());
+        } else {
+          _nextPoll = Timer(interval, () => unawaited(refresh()));
+        }
       }
     }
   }
@@ -120,7 +139,17 @@ class HeartbeatPoller<T> extends ChangeNotifier {
   void _accept(T value) {
     var heartbeat = isHeartbeat?.call(value) ?? true;
     final source = sourceHeartbeat?.call(value);
-    if (sourceHeartbeat != null) {
+    if (controllerStatus != null) {
+      if (!_controllerPresence.accept(
+          controllerStatus!(value), _clock.elapsedMilliseconds)) {
+        return;
+      }
+      heartbeat = _controllerPresence.advanced;
+      if (_controllerPresence.invalidated) {
+        _online = false;
+        _graceTimer?.cancel();
+      }
+    } else if (sourceHeartbeat != null) {
       heartbeat = heartbeat &&
           source != null &&
           (_lastSourceHeartbeat == null ||
@@ -145,6 +174,7 @@ class HeartbeatPoller<T> extends ChangeNotifier {
 
   @override
   void dispose() {
+    _clock.stop();
     _disposed = true;
     _running = false;
     _online = false;

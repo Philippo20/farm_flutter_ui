@@ -591,7 +591,9 @@ class _DeviceCalibrationModalState extends State<DeviceCalibrationModal>
                                 Text(
                                     online
                                         ? 'Controller online'
-                                        : 'Controller offline',
+                                        : widget.deviceState.isOfflineConfirmed
+                                            ? 'Controller offline'
+                                            : 'Syncing with controller…',
                                     style: _font(11, FontWeight.w600)),
                                 if (current != null)
                                   Text(calibrationTarget(current),

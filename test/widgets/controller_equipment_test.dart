@@ -127,7 +127,11 @@ void main() {
                           'controller_id': 'board',
                           'reported_on': reportedOn,
                           'online': online,
-                          'seen_at': now,
+                          'seen_at': online
+                              ? now
+                              : DateTime.parse(now)
+                                  .subtract(const Duration(seconds: 10))
+                                  .toIso8601String(),
                           'server_time': now,
                           'received_at': now,
                           'maintenance_status': 'Overdue',

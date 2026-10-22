@@ -37,7 +37,8 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
   Map<String, dynamic>? get _state => _heartbeat.data;
   String? get _error => _heartbeat.lastError?.toString();
   bool get _online => _heartbeat.isOnline;
-  bool get _checking => _foreground && !_heartbeat.hasCompleted;
+  bool get _checking =>
+      _foreground && (!_heartbeat.hasCompleted || _heartbeat.isSynchronizing);
 
   @override
   void initState() {
@@ -49,6 +50,7 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
       // An API response is not itself proof that the ESP32 is still polling.
       isHeartbeat: (data) => data['online'] == true,
       sourceHeartbeat: (data) => DateTime.tryParse('${data['seen_at']}'),
+      controllerStatus: (data) => data,
     )..addListener(_heartbeatChanged);
     _heartbeat.startPolling();
   }
@@ -170,7 +172,11 @@ class _CommandDeviceCardState extends State<CommandDeviceCard>
     final connection = _online
         ? 'Online'
         : _checking
-            ? 'Checking'
+            ? !_heartbeat.hasCompleted
+                ? 'Checking'
+                : _error == null
+                    ? 'Syncing'
+                    : 'Reconnecting'
             : 'Offline';
     final lastTime =
         DateTime.tryParse('${last?['confirmed_at'] ?? last?['created_at']}');

@@ -51,7 +51,8 @@ class _ControllerEquipmentStatusState extends State<ControllerEquipmentStatus> {
         if (widget.compact) {
           final label = switch (_monitor.label(id)) {
             'Controller offline' => 'OFFLINE',
-            'Status unavailable' => 'UNAVAILABLE',
+            'Status unavailable' => 'RECONNECTING',
+            'Syncing controller' => 'SYNCING',
             'Awaiting report' =>
               state == null ? 'CONNECTING' : 'AWAITING REPORT',
             final value => value,
