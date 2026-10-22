@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 34,
+  "buildNumber": 35,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "1da7eb5b448008c381e8eae6d339bdedc49efce49abde36c87c16f5a7651a3f6",
+  "sha256": "4d4d79f219aded745e68ae5d8ab1b100250af6f7af3b8b86732248e5f8315a3e",
   "sizeBytes": 84333465,
-  "publishedAt": "2026-10-22T11:01:21.3699950Z",
-  "releaseNotes": "Register lights and pumps linked to ESP32 controller reports, independent maintenance, and controller activity history."
+  "publishedAt": "2026-10-22T11:23:18.5212472Z",
+  "releaseNotes": "Simplified IoT equipment cards to show only the icon, name and online/offline status."
 }

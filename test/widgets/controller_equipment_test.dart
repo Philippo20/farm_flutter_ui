@@ -139,9 +139,24 @@ void main() {
                                 device: device,
                                 monitor: monitor,
                                 compact: true)))))));
-        expect(find.text('Controller offline'), findsOneWidget);
-        expect(find.text('Last reported: ON'), findsOneWidget);
-        expect(find.text('Overdue'), findsOneWidget);
+        expect(find.byIcon(Icons.lightbulb_outline), findsOneWidget);
+        expect(find.text('Rack F grow light'), findsOneWidget);
+        expect(find.text('OFFLINE'), findsOneWidget);
+        expect(find.byType(Text), findsNWidgets(2));
+        expect(find.textContaining('Serial:'), findsNothing);
+        expect(find.textContaining('Last reported:'), findsNothing);
+        expect(find.textContaining('Received '), findsNothing);
+        expect(find.text('Overdue'), findsNothing);
+        monitor.states['light']!.addAll({
+          'online': true,
+          'reported_on': false,
+          'server_time': now,
+          'seen_at': now,
+        });
+        monitor.didChangeAppLifecycleState(AppLifecycleState.resumed);
+        await tester.pump();
+        expect(find.text('ONLINE'), findsOneWidget);
+        expect(find.byType(Text), findsNWidgets(2));
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
         monitor.dispose();

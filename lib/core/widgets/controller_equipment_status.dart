@@ -46,9 +46,50 @@ class _ControllerEquipmentStatusState extends State<ControllerEquipmentStatus> {
       builder: (context, _) {
         final id = '${widget.device[r'$id']}';
         final state = _monitor.states[id];
+        final colors = Theme.of(context).colorScheme;
+        if (widget.compact) {
+          final online = _monitor.online(id);
+          final dark = Theme.of(context).brightness == Brightness.dark;
+          final statusColor = online
+              ? (dark ? Colors.greenAccent : Colors.green)
+              : Colors.redAccent;
+          return Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                  color: dark ? Colors.grey[850] : Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: .08),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3)),
+                  ]),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Icon(equipmentIcon('${widget.device['sensortype']}'),
+                    color: online ? statusColor : Colors.grey, size: 30),
+                const SizedBox(height: 8),
+                Text(
+                    '${widget.device['model_number'] ?? equipmentTypeLabel('${widget.device['sensortype']}')}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.bodySize,
+                        fontWeight: AppTypography.headingWeight,
+                        color: colors.onSurface)),
+                const SizedBox(height: 4),
+                Text(online ? 'ONLINE' : 'OFFLINE',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.font(
+                        fontSize: AppTypography.captionSize,
+                        fontWeight: AppTypography.labelWeight,
+                        color: statusColor)),
+              ]));
+        }
         final label = _monitor.label(id);
         final current = _monitor.fresh(id) && state?['reported_on'] is bool;
-        final colors = Theme.of(context).colorScheme;
         final color = !current
             ? colors.onSurfaceVariant
             : state!['reported_on'] == true
@@ -60,29 +101,10 @@ class _ControllerEquipmentStatusState extends State<ControllerEquipmentStatus> {
         final outputLabel = controllerOutputs['${widget.device['sensortype']}']
                 ?[output] ??
             output;
-        final maintenance =
-            '${state?['maintenance_status'] ?? 'Maintenance status pending'}';
-        final due = state?['next_due'];
-        final warning = ['Overdue', 'Due soon'].contains(maintenance);
-        final content = Column(
+        return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (widget.compact) ...[
-                Icon(equipmentIcon('${widget.device['sensortype']}'),
-                    color: color, size: 28),
-                const SizedBox(height: 8),
-                Text('${widget.device['model_number'] ?? outputLabel}',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.titleSmall),
-                const SizedBox(height: 4),
-                Text('Serial: ${widget.device['serial_number']}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodySmall),
-                const SizedBox(height: 8),
-              ],
               Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
                   spacing: 6,
@@ -105,28 +127,11 @@ class _ControllerEquipmentStatusState extends State<ControllerEquipmentStatus> {
                 Text(
                     'Received ${DateFormat('d MMM, h:mm:ss a').format(received)}',
                     style: AppTypography.bodySmall),
-              if (!widget.compact && state != null)
+              if (state != null)
                 Text('Controller: ${state['controller_serial']}',
                     style: AppTypography.bodySmall),
               if (_monitor.error != null)
                 Text('Refreshing status…', style: AppTypography.bodySmall),
-              if (widget.compact) ...[
-                const SizedBox(height: 8),
-                Text(maintenance,
-                    style: AppTypography.bodySmall.copyWith(
-                        color:
-                            warning ? colors.error : colors.onSurfaceVariant)),
-                if (due != null)
-                  Text('Due $due', style: AppTypography.bodySmall),
-              ],
             ]);
-        if (!widget.compact) return content;
-        return Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.outlineVariant)),
-            child: content);
       });
 }
