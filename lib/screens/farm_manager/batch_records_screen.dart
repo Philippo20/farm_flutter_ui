@@ -117,7 +117,9 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
     final date = DateTime.tryParse('${r['record_date']}');
     return date == null
         ? _value(r, 'record_date')
-        : DateFormat('dd MMM yyyy, h:mm a').format(date.toLocal());
+        : r['historical_import'] == true
+            ? DateFormat('dd MMM yyyy').format(date)
+            : DateFormat('dd MMM yyyy, h:mm a').format(date.toLocal());
   }
 
   bool _hasIssues(Map<String, dynamic> r) =>
@@ -463,6 +465,12 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
       'growth_stage': 'Growth stage',
       'plant_health': 'Plant health',
       'plant_count': 'Plant count',
+      'plant_height_cm': 'Plant height (cm)',
+      'leaf_count': 'Leaf count',
+      'nutrient_solution_ml': 'Nutrient solution (ml)',
+      'water_volume_litres': 'Water volume (litres)',
+      'water_source': 'Water source',
+      'water_purpose': 'Water purpose',
       'water_temperature': 'Water temperature (\u00b0C)',
       'water_bought_litres': 'Water bought (litres)',
       'water_bought_amount': 'Water purchase amount',
@@ -499,12 +507,16 @@ class _BatchRecordsScreenState extends State<BatchRecordsScreen> {
                   .copyWith(color: _colors.onSurfaceVariant)),
           const SizedBox(height: 20),
           if (r['record_scope'] == 'shared') ...[
-            Text('Shared readings · recorded once for the growing group', style: AppTypography.bodySmall.copyWith(color: _colors.primary)),
+            Text('Shared readings · recorded once for the growing group',
+                style:
+                    AppTypography.bodySmall.copyWith(color: _colors.primary)),
             const SizedBox(height: 10),
-            ...((r['linked_batches'] as List?) ?? []).whereType<Map>().map((entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 8), child: Text(
-                '${entry['batch_number']} · ${entry['growth_stage']} · ${entry['has_issues'] == true ? 'Issue: ${entry['issue_description']}' : 'No issues reported'}',
-                style: AppTypography.bodySmall))),
+            ...((r['linked_batches'] as List?) ?? []).whereType<Map>().map(
+                (entry) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                        '${entry['batch_number']} · ${entry['growth_stage']} · ${entry['has_issues'] == true ? 'Issue: ${entry['issue_description']}' : 'No issues reported'}',
+                        style: AppTypography.bodySmall))),
             const SizedBox(height: 12),
           ],
           LayoutBuilder(

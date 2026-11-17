@@ -519,13 +519,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
           'name': 'Assigned caretaker',
         },
       );
-      final batchNumber = BatchModel.generateBatchNumber(
-        farmName,
-        _startDate!,
-        _endDate!,
-      );
-      await _api.createBatch(data: {
-        'batch_no': batchNumber,
+      final created = await _api.createBatch(data: {
         'farmID': _selectedFarm!,
         'farm_name': farmName,
         'plant_type_ID': plantTypeId,
@@ -557,7 +551,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             children: [
               const Icon(Icons.check_circle, color: Colors.white, size: 20),
               const SizedBox(width: AppSpacing.sm),
-              Expanded(child: Text('Batch $batchNumber created successfully')),
+              Expanded(
+                  child: Text(
+                      'Batch ${created['batch_no']} created successfully')),
             ],
           ),
           backgroundColor: AppColors.success,
@@ -1535,10 +1531,11 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         batches.fold<int>(0, (sum, b) => sum + b.transplantedPlants);
     final totalHarvested =
         batches.fold<int>(0, (sum, b) => sum + b.harvestedHeads);
-    final avgSurvivalRate = batches.isEmpty
+    final measuredBatches = batches.where((b) => b.hasSurvivalRate).toList();
+    final avgSurvivalRate = measuredBatches.isEmpty
         ? 0.0
-        : batches.fold<double>(0, (sum, b) => sum + b.survivalRate) /
-            batches.length;
+        : measuredBatches.fold<double>(0, (sum, b) => sum + b.survivalRate) /
+            measuredBatches.length;
 
     final stats = [
       {
@@ -1567,7 +1564,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       },
       {
         'title': 'Avg Survival',
-        'value': '${avgSurvivalRate.toStringAsFixed(1)}%',
+        'value': measuredBatches.isEmpty
+            ? 'Not recorded'
+            : '${avgSurvivalRate.toStringAsFixed(1)}%',
         'icon': Icons.trending_up_outlined,
         'color': AppColors.success,
       },
@@ -1894,7 +1893,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  '${pct.toStringAsFixed(0)}%',
+                  batch.isHistorical
+                      ? 'Imported'
+                      : '${pct.toStringAsFixed(0)}%',
                   textAlign: TextAlign.center,
                   style: AppTypography.label.copyWith(color: pctColor),
                 ),
@@ -1967,19 +1968,20 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
     final stages = [
       {
         'label': 'Nursed',
-        'value': batch.nursedSeeds,
+        'value': batch.quantityText('total_seeds_nursed', batch.nursedSeeds),
         'color': AppColors.info,
         'icon': Icons.spa_rounded
       },
       {
         'label': 'Transplanted',
-        'value': batch.transplantedPlants,
+        'value':
+            batch.quantityText('total_transplanted', batch.transplantedPlants),
         'color': AppColors.success,
         'icon': Icons.eco_rounded
       },
       {
         'label': 'Harvested',
-        'value': batch.harvestedHeads,
+        'value': batch.quantityText('total_harvested', batch.harvestedHeads),
         'color': AppColors.warning,
         'icon': Icons.agriculture_rounded
       },
@@ -1989,9 +1991,9 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
       ...stages.asMap().entries.map((entry) {
         final i = entry.key;
         final s = entry.value;
-        final value = s['value'] as int;
+        final value = s['value'].toString();
         final color = s['color'] as Color;
-        final isActive = value > 0;
+        final isActive = (int.tryParse(value) ?? 0) > 0;
         final isLast = i == stages.length - 1;
 
         return Expanded(
@@ -2014,7 +2016,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       : (isDark ? Colors.white24 : AppColors.neutral400)),
               const SizedBox(width: 3),
               Text(
-                '$value',
+                value == 'Not recorded' ? '\u2014' : value,
                 style: AppTypography.font(
                     fontSize: AppTypography.microSize,
                     fontWeight: AppTypography.labelWeight,
@@ -2071,11 +2073,14 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
             Expanded(child: second)
           ],
         );
-    Widget stage(String label, int count, Color color) => Expanded(
+    Widget stage(String label, Object count, Color color) => Expanded(
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(NumberFormat.decimalPattern().format(count),
-                style: AppTypography.titleSmall.copyWith(color: color)),
+            Text(count.toString(),
+                style: (count == 'Not recorded'
+                        ? AppTypography.bodySmall
+                        : AppTypography.titleSmall)
+                    .copyWith(color: color)),
             const SizedBox(height: 4),
             Text(label,
                 style: AppTypography.font(
@@ -2137,25 +2142,39 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              stage('Nursed', batch.nursedSeeds, AppColors.info),
+              stage(
+                  'Nursed',
+                  batch.quantityText('total_seeds_nursed', batch.nursedSeeds),
+                  AppColors.info),
               const SizedBox(width: 8),
               stage(
-                  'Transplanted', batch.transplantedPlants, AppColors.primary),
+                  'Transplanted',
+                  batch.quantityText(
+                      'total_transplanted', batch.transplantedPlants),
+                  AppColors.primary),
               const SizedBox(width: 8),
-              stage('Harvested', batch.harvestedHeads, AppColors.success),
+              stage(
+                  'Harvested',
+                  batch.quantityText('total_harvested', batch.harvestedHeads),
+                  AppColors.success),
             ]),
             const SizedBox(height: 12),
-            Text('Batch progress · ${progress.toStringAsFixed(0)}%',
+            Text(
+                batch.isHistorical
+                    ? 'Historical workbook record'
+                    : 'Batch progress · ${progress.toStringAsFixed(0)}%',
                 style: AppTypography.font(
                     fontSize: AppTypography.fieldLabelSize, color: secondary)),
             const SizedBox(height: 6),
-            ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                    value: progress / 100,
-                    minHeight: 5,
-                    color: AppColors.primary,
-                    backgroundColor: AppColors.primary.withValues(alpha: .1))),
+            if (!batch.isHistorical)
+              ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                      value: progress / 100,
+                      minHeight: 5,
+                      color: AppColors.primary,
+                      backgroundColor:
+                          AppColors.primary.withValues(alpha: .1))),
           ]),
         ),
         const SizedBox(height: 14),
@@ -2170,7 +2189,7 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
         pair(
             detail('Caretaker', batch.caretakerName ?? 'Unassigned',
                 Icons.person_outline),
-            detail('Survival rate', '${batch.survivalRate.toStringAsFixed(0)}%',
+            detail('Survival rate', batch.survivalText,
                 Icons.trending_up_rounded)),
         const SizedBox(height: 12),
         TextButton.icon(
@@ -2321,7 +2340,10 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Overall Progress',
+                            Text(
+                                batch.isHistorical
+                                    ? 'Source'
+                                    : 'Overall Progress',
                                 style: AppTypography.labelSmall.copyWith(
                                     color: isDark
                                         ? Colors.white54
@@ -2332,36 +2354,47 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                               decoration: BoxDecoration(
                                   color: pctColor.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(10)),
-                              child: Text('${pct.toStringAsFixed(0)}%',
+                              child: Text(
+                                  batch.isHistorical
+                                      ? 'Imported'
+                                      : '${pct.toStringAsFixed(0)}%',
                                   style: AppTypography.label
                                       .copyWith(color: pctColor)),
                             ),
                           ]),
                       const SizedBox(height: 10),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                            value: pct / 100,
-                            backgroundColor: isDark
-                                ? Colors.white.withOpacity(0.06)
-                                : Colors.black.withOpacity(0.06),
-                            valueColor: AlwaysStoppedAnimation<Color>(pctColor),
-                            minHeight: 6),
-                      ),
+                      if (!batch.isHistorical)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                              value: pct / 100,
+                              backgroundColor: isDark
+                                  ? Colors.white.withOpacity(0.06)
+                                  : Colors.black.withOpacity(0.06),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(pctColor),
+                              minHeight: 6),
+                        ),
                       const SizedBox(height: 14),
                       Row(children: [
-                        _dialogMetric('Nursed', batch.nursedSeeds.toString(),
-                            AppColors.info, isDark),
+                        _dialogMetric(
+                            'Nursed',
+                            batch.quantityText(
+                                'total_seeds_nursed', batch.nursedSeeds),
+                            AppColors.info,
+                            isDark),
                         const SizedBox(width: 8),
                         _dialogMetric(
                             'Transplanted',
-                            batch.transplantedPlants.toString(),
+                            batch.quantityText(
+                                'total_transplanted', batch.transplantedPlants),
                             AppColors.success,
                             isDark),
                         const SizedBox(width: 8),
                         _dialogMetric(
                             'Harvested',
-                            batch.harvestedHeads.toString(),
+                            batch.quantityText(
+                                'total_harvested', batch.harvestedHeads),
                             AppColors.warning,
                             isDark),
                       ]),
@@ -2377,6 +2410,12 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                     const SizedBox(height: 16),
                   ],
                   // Detail rows
+                  if (batch.isHistorical)
+                    _buildDetailRow('Source', 'Historical workbook import',
+                        Icons.history, isDark),
+                  if (batch.originalBatchNumber != null)
+                    _buildDetailRow('Original batch number',
+                        batch.originalBatchNumber!, Icons.tag_outlined, isDark),
                   _buildDetailRow('Plant Type', batch.plantType,
                       Icons.eco_outlined, isDark),
                   _buildDetailRow(
@@ -2400,11 +2439,8 @@ class _BatchGenerationScreenState extends ConsumerState<BatchGenerationScreen> {
                       DateFormat('MMM dd, yyyy').format(batch.endDate),
                       Icons.event_available_outlined,
                       isDark),
-                  _buildDetailRow(
-                      'Survival Rate',
-                      '${batch.survivalRate.toStringAsFixed(1)}%',
-                      Icons.trending_up_rounded,
-                      isDark),
+                  _buildDetailRow('Survival Rate', batch.survivalText,
+                      Icons.trending_up_rounded, isDark),
                   if (batch.caretakerName != null)
                     _buildDetailRow('Caretaker', batch.caretakerName!,
                         Icons.person_outline_rounded, isDark),

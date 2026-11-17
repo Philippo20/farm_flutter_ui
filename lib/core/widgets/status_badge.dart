@@ -12,6 +12,8 @@ class StatusBadge extends StatelessWidget {
 
   Color _getColor() {
     switch (status) {
+      case BatchStatus.unknown:
+        return AppColors.neutral500;
       case BatchStatus.nursery:
         return AppColors.info;
       case BatchStatus.transplanted:

@@ -1,7 +1,7 @@
-import 'package:intl/intl.dart';
+import 'dart:convert';
 
 /// Batch Model - Core production tracking entity
-/// Format: FA-20251001-20251101 (FarmPrefix-StartDate-EndDate)
+/// Batch numbers are allocated by the API: variety code, seeding date, sequence.
 class BatchModel {
   final String id;
   final String batchNumber; // Unique batch identifier
@@ -69,30 +69,42 @@ class BatchModel {
     this.metadata,
   });
 
-  /// Generate unique batch number
-  /// Format: FA-20251001-20251101
-  static String generateBatchNumber(
-      String farmName, DateTime start, DateTime end) {
-    // Get first two letters of farm name
-    final prefix = farmName.length >= 2
-        ? farmName.substring(0, 2).toUpperCase()
-        : farmName.toUpperCase().padRight(2, 'X');
-
-    // Format dates as YYYYMMDD
-    final startStr = DateFormat('yyyyMMdd').format(start);
-    final endStr = DateFormat('yyyyMMdd').format(end);
-
-    return '$prefix-$startStr-$endStr';
-  }
-
   /// Calculate expected harvest date
   DateTime get expectedHarvestDate {
     return startDate.add(Duration(days: plantMaturityDays));
   }
 
+  bool get isHistorical => metadata?['historical_import'] == true;
+
+  String? get originalBatchNumber {
+    if (!isHistorical) return null;
+    try {
+      final source = jsonDecode(metadata?['source_data'] ?? '{}');
+      return (source['values'] as List?)?.firstOrNull?.toString();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool hasQuantity(String field) => !isHistorical || metadata?[field] != null;
+
+  String quantityText(String field, num value) =>
+      hasQuantity(field) ? value.toString() : 'Not recorded';
+
+  bool get hasSurvivalRate =>
+      hasQuantity('total_seeds_nursed') &&
+      hasQuantity('total_transplanted') &&
+      nursedSeeds > 0;
+
+  String get survivalText =>
+      hasSurvivalRate ? '${survivalRate.toStringAsFixed(1)}%' : 'Not recorded';
+
   /// Check if batch is overdue
   bool get isOverdue {
-    if (status == BatchStatus.completed || status == BatchStatus.delivered) {
+    if (isHistorical ||
+        status == BatchStatus.unknown ||
+        status == BatchStatus.completed ||
+        status == BatchStatus.delivered) {
       return false;
     }
     return DateTime.now().isAfter(expectedHarvestDate);
@@ -129,7 +141,9 @@ class BatchModel {
 
   /// Check if batch is active
   bool get isActive {
-    return status != BatchStatus.completed &&
+    return !isHistorical &&
+        status != BatchStatus.unknown &&
+        status != BatchStatus.completed &&
         status != BatchStatus.delivered &&
         status != BatchStatus.cancelled;
   }
@@ -292,6 +306,7 @@ class BatchModel {
 
 /// Batch Status Enum
 enum BatchStatus {
+  unknown('unknown', 'Unknown', 'Historical status not recorded'),
   nursery('nursery', 'Nursery', 'Seeds in nursery stage'),
   transplanted(
       'transplanted', 'Transplanted', 'Plants transplanted to grow beds'),
@@ -314,7 +329,7 @@ enum BatchStatus {
 
   static BatchStatus fromString(String value) {
     return BatchStatus.values.firstWhere(
-      (status) => status.value == value,
+      (status) => status.value == value.toLowerCase(),
       orElse: () => BatchStatus.nursery,
     );
   }
@@ -322,6 +337,8 @@ enum BatchStatus {
   /// Get status color
   String get colorHex {
     switch (this) {
+      case BatchStatus.unknown:
+        return '#78909C';
       case BatchStatus.nursery:
         return '#8BC34A'; // Light Green
       case BatchStatus.transplanted:

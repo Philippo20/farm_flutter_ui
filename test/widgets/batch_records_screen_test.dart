@@ -20,10 +20,15 @@ void main() {
                     {
                       'record_id': 'FR-001',
                       'record_date': '2026-10-01T10:00:00Z',
+                      'historical_import': true,
                       'created_by_name': 'Caretaker A',
                       'record_type': 'daily_monitoring',
                       'growth_stage': 'Vegetative',
                       'temperature': 0,
+                      'plant_height_cm': 3.5,
+                      'leaf_count': 4,
+                      'nutrient_solution_ml': 30,
+                      'water_volume_litres': 60,
                       'observations': 'Healthy plants',
                       'has_issues': false
                     },
@@ -50,6 +55,10 @@ void main() {
       expect(find.text('Record details'), findsOneWidget);
       expect(find.text('Healthy plants'), findsOneWidget);
       expect(find.text('0'), findsOneWidget);
+      expect(find.text('Plant height (cm)'), findsOneWidget);
+      expect(find.text('Leaf count'), findsOneWidget);
+      expect(find.text('Water volume (litres)'), findsOneWidget);
+      expect(find.textContaining('10:00 AM'), findsNothing);
       await tester.ensureVisible(find.byTooltip('Close details'));
       await tester.tap(find.byTooltip('Close details'));
       await tester.pumpAndSettle();

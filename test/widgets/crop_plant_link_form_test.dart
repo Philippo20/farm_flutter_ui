@@ -92,12 +92,17 @@ void main() {
       expect(find.text('Leafy crops'), findsNothing);
       await tester.tap(find.text('Lettuce').last);
       await tester.pumpAndSettle();
+      final batchCode = find.byWidgetPredicate((w) =>
+          w is TextField && w.decoration?.hintText == 'e.g. BL, LL, RO or EL');
+      await tester.ensureVisible(batchCode);
+      await tester.enterText(batchCode, 'bl');
       await tester.ensureVisible(find.text('Update Variety'));
       await tester.tap(find.text('Update Variety'));
       await tester.pumpAndSettle();
       expect(api.saved?[#plantTypeId], 'p');
       expect(api.saved?[#cropName], 'Lettuce');
       expect(api.saved?[#varietyName], 'Batavia');
+      expect(api.saved?[#batchCode], 'BL');
       expect(api.saved?[#imageBytes], isNull);
       expect(tester.takeException(), isNull);
     });

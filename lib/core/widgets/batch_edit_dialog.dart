@@ -91,6 +91,7 @@ class _BatchEditForm extends StatefulWidget {
 
 class _BatchEditFormState extends State<_BatchEditForm> {
   static const _statuses = [
+    'Unknown',
     'Planted',
     'Growing',
     'Harvested',
@@ -125,15 +126,23 @@ class _BatchEditFormState extends State<_BatchEditForm> {
       (metadata['production_status'] ?? '').toString(),
       widget.batch.status,
     );
-    _nursedController =
-        TextEditingController(text: widget.batch.nursedSeeds.toString());
+    _nursedController = TextEditingController(
+        text: widget.batch.hasQuantity('total_seeds_nursed')
+            ? widget.batch.nursedSeeds.toString()
+            : '');
     _transplantedController = TextEditingController(
-      text: widget.batch.transplantedPlants.toString(),
+      text: widget.batch.hasQuantity('total_transplanted')
+          ? widget.batch.transplantedPlants.toString()
+          : '',
     );
-    _harvestedController =
-        TextEditingController(text: widget.batch.harvestedHeads.toString());
+    _harvestedController = TextEditingController(
+        text: widget.batch.hasQuantity('total_harvested')
+            ? widget.batch.harvestedHeads.toString()
+            : '');
     _weightController = TextEditingController(
-      text: widget.batch.harvestedWeight.toStringAsFixed(1),
+      text: widget.batch.hasQuantity('total_weight_kg')
+          ? widget.batch.harvestedWeight.toStringAsFixed(1)
+          : '',
     );
     _notesController = TextEditingController(text: widget.batch.notes ?? '');
   }
@@ -153,6 +162,8 @@ class _BatchEditFormState extends State<_BatchEditForm> {
       if (status.toLowerCase() == raw.toLowerCase()) return status;
     }
     switch (fallback) {
+      case BatchStatus.unknown:
+        return 'Unknown';
       case BatchStatus.growing:
         return 'Growing';
       case BatchStatus.harvested:
@@ -270,10 +281,15 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                 '${widget.cropVarieties.where((c) => _key(c['variety_name'] ?? c['variety']) == _key(_variety)).firstOrNull?[r'$id'] ?? ''}',
           'start_date': DateFormat('yyyy-MM-dd').format(_startDate),
           'end_date': DateFormat('yyyy-MM-dd').format(_endDate),
-          'total_seeds_nursed': int.parse(_nursedController.text.trim()),
-          'total_transplanted': int.parse(_transplantedController.text.trim()),
-          'total_harvested': int.parse(_harvestedController.text.trim()),
-          'total_weight_kg': double.parse(_weightController.text.trim()),
+          if (_nursedController.text.trim().isNotEmpty)
+            'total_seeds_nursed': int.parse(_nursedController.text.trim()),
+          if (_transplantedController.text.trim().isNotEmpty)
+            'total_transplanted':
+                int.parse(_transplantedController.text.trim()),
+          if (_harvestedController.text.trim().isNotEmpty)
+            'total_harvested': int.parse(_harvestedController.text.trim()),
+          if (_weightController.text.trim().isNotEmpty)
+            'total_weight_kg': double.parse(_weightController.text.trim()),
           'production_status': _status,
           'technical_issues': _notesController.text.trim(),
           'growing_group_id': _groupId.isEmpty ? 'individual' : _groupId,
@@ -356,6 +372,8 @@ class _BatchEditFormState extends State<_BatchEditForm> {
   }
 
   String? _wholeNumber(String? value) {
+    if (widget.batch.isHistorical && (value?.trim().isEmpty ?? true))
+      return null;
     final number = int.tryParse(value?.trim() ?? '');
     return number == null || number < 0 ? 'Enter zero or a whole number' : null;
   }
@@ -583,6 +601,8 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                               decimal: true,
                             ),
                             validator: (value) {
+                              if (widget.batch.isHistorical &&
+                                  (value?.trim().isEmpty ?? true)) return null;
                               final number =
                                   double.tryParse(value?.trim() ?? '');
                               return number == null || number < 0

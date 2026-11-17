@@ -60,6 +60,12 @@ void main() {
                   endDate: DateTime(2026, 11, 12),
                   plantMaturityDays: 42,
                   createdAt: DateTime(2026, 10, 1),
+                  status: scenario.size.width == 320
+                      ? BatchStatus.unknown
+                      : BatchStatus.nursery,
+                  metadata: scenario.size.width == 320
+                      ? {'historical_import': true}
+                      : null,
                 ),
                 cropVarieties: const [],
                 updatedBy: 'admin-1',
@@ -102,6 +108,11 @@ void main() {
       expect(api.saved?['technical_issues'],
           'Check irrigation pressure\nInspect the pump');
       expect(refreshed, isTrue);
+      if (scenario.size.width == 320) {
+        expect(api.saved!.containsKey('total_seeds_nursed'), false);
+        expect(api.saved!.containsKey('total_harvested'), false);
+        expect(api.saved!['production_status'], 'Unknown');
+      }
       expect(find.byType(BottomSheet), findsNothing);
       expect(tester.takeException(), isNull);
     });

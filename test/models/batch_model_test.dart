@@ -21,5 +21,20 @@ void main() {
     expect(batch.plantVariety, 'Batavia');
     expect(batch.toJson()['plantVariety'], 'Batavia');
     expect(batch.copyWith(plantVariety: 'Romaine').plantVariety, 'Romaine');
+    final historical = batch.copyWith(status: BatchStatus.unknown, metadata: {
+      'historical_import': true,
+      'total_seeds_nursed': null,
+      'total_transplanted': 0,
+    });
+    expect(historical.quantityText('total_seeds_nursed', 0), 'Not recorded');
+    expect(historical.quantityText('total_transplanted', 0), '0');
+    expect(historical.survivalText, 'Not recorded');
+    expect(historical.isActive, false);
+    expect(historical.isOverdue, false);
+    expect(
+        BatchModel.fromJson(historical.toJson())
+            .hasQuantity('total_seeds_nursed'),
+        false);
+    expect(BatchStatus.fromString('Unknown'), BatchStatus.unknown);
   });
 }

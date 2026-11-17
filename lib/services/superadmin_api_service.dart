@@ -432,8 +432,14 @@ class SuperAdminApiService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getFarmRecords() =>
-      _getDocuments('/farm-records');
+  Future<List<Map<String, dynamic>>> getFarmRecords() async {
+    final records = <Map<String, dynamic>>[];
+    for (var offset = 0; ; offset += 100) {
+      final page = await _getDocuments('/farm-records?limit=100&offset=$offset');
+      records.addAll(page);
+      if (page.length < 100) return records;
+    }
+  }
   Future<List<Map<String, dynamic>>> getInputConfirmations({
     String? caretakerId,
     String? farmId,
@@ -1984,6 +1990,7 @@ class SuperAdminApiService {
     required String plantTypeId,
     required String cropName,
     required String varietyName,
+    String? batchCode,
     required String imageFileName,
     required Uint8List imageBytes,
     required int plantDurationValue,
@@ -2009,6 +2016,7 @@ class SuperAdminApiService {
         'plant_type_ID': plantTypeId,
         'crop_name': cropName,
         'variety_name': varietyName,
+        if (batchCode != null) 'batch_code': batchCode.trim().toUpperCase(),
         'plant_duration_value': plantDurationValue.toString(),
         'plant_duration_unit': plantDurationUnit,
         'harvesting_weight': harvestingWeight.toString(),
@@ -2057,6 +2065,7 @@ class SuperAdminApiService {
     required String id,
     required String cropName,
     required String varietyName,
+    String? batchCode,
     required int plantDurationValue,
     required String plantDurationUnit,
     required double harvestingWeight,
@@ -2081,6 +2090,7 @@ class SuperAdminApiService {
         'plant_type_ID': plantTypeId,
         'crop_name': cropName,
         'variety_name': varietyName,
+        if (batchCode != null) 'batch_code': batchCode.trim().toUpperCase(),
         'plant_duration_value': plantDurationValue.toString(),
         'plant_duration_unit': plantDurationUnit,
         'harvesting_weight': harvestingWeight.toString(),

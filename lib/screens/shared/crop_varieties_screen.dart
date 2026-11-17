@@ -96,6 +96,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       'duration': duration.label,
       'durationValue': duration.value,
       'durationUnit': duration.unit,
+      'batchCode': (doc['batch_code'] ?? '').toString(),
       'company': (doc['company'] ?? '-').toString(),
       'harvestWeightValue': _rawNumber(doc['harvesting_weight']),
       'sproutingRatioValue': _rawNumber(doc['sprouting_ratio']),
@@ -1159,6 +1160,8 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     var selectedPlantTypeId = _editText(crop, 'plantTypeId');
     final varietyController =
         TextEditingController(text: _editText(crop, 'variety'));
+    final batchCodeController =
+        TextEditingController(text: _editText(crop, 'batchCode'));
     final imageController =
         TextEditingController(text: _editText(crop, 'imageName'));
     final durationController = TextEditingController(
@@ -1324,6 +1327,13 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                       Icons.grass_outlined,
                                       isDark)),
                               const SizedBox(height: 14),
+                              _formField(
+                                  batchCodeController,
+                                  'Batch code',
+                                  'e.g. BL, LL, RO or EL',
+                                  Icons.tag_outlined,
+                                  isDark),
+                              const SizedBox(height: 14),
                               _imagePickerField(
                                   imageController,
                                   'Image File Name',
@@ -1482,6 +1492,10 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                               plantTypeId: selectedPlantTypeId,
                                               id: crop['id'].toString(),
                                               cropName: cropController.text,
+                                              batchCode: batchCodeController
+                                                  .text
+                                                  .trim()
+                                                  .toUpperCase(),
                                               varietyName:
                                                   varietyController.text,
                                               imageFileName:
@@ -1510,6 +1524,10 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                                           : await _createCropVariety(
                                               plantTypeId: selectedPlantTypeId,
                                               cropName: cropController.text,
+                                              batchCode: batchCodeController
+                                                  .text
+                                                  .trim()
+                                                  .toUpperCase(),
                                               varietyName:
                                                   varietyController.text,
                                               imageFileName:
@@ -1599,6 +1617,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
       for (final controller in [
         cropController,
         varietyController,
+        batchCodeController,
         imageController,
         durationController,
         companyController,
@@ -1924,6 +1943,10 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
           validator: (value) {
             final text = value?.trim() ?? '';
             if (text.isEmpty) return '$label is required';
+            if (label == 'Batch code' &&
+                !RegExp(r'^[A-Z][A-Z0-9]{0,7}$').hasMatch(text.toUpperCase())) {
+              return 'Use 1–8 letters/numbers, starting with a letter';
+            }
             if (numeric && double.tryParse(text) == null) {
               return 'Enter a valid number';
             }
@@ -2297,6 +2320,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     required String plantTypeId,
     required String cropName,
     required String varietyName,
+    required String batchCode,
     required String imageFileName,
     required Uint8List imageBytes,
     required String plantDurationValue,
@@ -2333,6 +2357,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         plantTypeId: plantTypeId,
         cropName: cropName.trim(),
         varietyName: varietyName.trim(),
+        batchCode: batchCode,
         imageFileName: imageFileName.trim(),
         imageBytes: imageBytes,
         plantDurationValue: int.parse(plantDurationValue.trim()),
@@ -2368,6 +2393,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
     required String id,
     required String cropName,
     required String varietyName,
+    required String batchCode,
     required String imageFileName,
     required Uint8List? imageBytes,
     required String plantDurationValue,
@@ -2405,6 +2431,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
         id: id,
         cropName: cropName.trim(),
         varietyName: varietyName.trim(),
+        batchCode: batchCode,
         imageFileName: imageBytes == null ? null : imageFileName.trim(),
         imageBytes: imageBytes,
         plantDurationValue: int.parse(plantDurationValue.trim()),

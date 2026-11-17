@@ -679,10 +679,7 @@ Future<bool?> showBatchCreationDialog({
                                         formError = null;
                                       });
                                       try {
-                                        final batchNumber =
-                                            '${farmName.replaceAll(RegExp(r'[^A-Za-z0-9]'), '').toUpperCase()}-${DateFormat('yyyyMMddHHmmss').format(DateTime.now())}';
                                         await api.createBatch(data: {
-                                          'batch_no': batchNumber,
                                           'farmID': farmId,
                                           'farm_name': farmName,
                                           'plant_type_ID': plantTypeId,
