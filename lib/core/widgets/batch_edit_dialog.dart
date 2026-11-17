@@ -110,6 +110,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
   late String _status;
   late String _variety;
   bool _saving = false;
+  bool _weightCalculated = false;
   String? _formError;
   late String _groupId = '${widget.batch.metadata?['growing_group_id'] ?? ''}';
   late String _groupName =
@@ -141,7 +142,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
             : '');
     _weightController = TextEditingController(
       text: widget.batch.hasQuantity('total_weight_kg')
-          ? widget.batch.harvestedWeight.toStringAsFixed(1)
+          ? widget.batch.harvestedWeight.toString()
           : '',
     );
     _notesController = TextEditingController(text: widget.batch.notes ?? '');
@@ -205,6 +206,43 @@ class _BatchEditFormState extends State<_BatchEditForm> {
       }
     }
     return options.toList()..sort();
+  }
+
+  Map<String, dynamic>? get _selectedCrop {
+    final id = '${widget.batch.metadata?['crop_variety_id'] ?? ''}';
+    if (_variety == widget.batch.plantVariety && id.isNotEmpty) {
+      return widget.cropVarieties
+          .where((c) => '${c[r'$id'] ?? c['id'] ?? ''}' == id)
+          .firstOrNull;
+    }
+    final matches = widget.cropVarieties
+        .where((c) =>
+            _key(_value(c, ['variety_name', 'variety', 'name'])) ==
+                _key(_variety) &&
+            cropMatchesPlant(c,
+                plantId: '${widget.batch.metadata?['plant_type_ID'] ?? ''}',
+                plantName: widget.batch.plantType))
+        .toList();
+    return matches.length == 1 ? matches.single : null;
+  }
+
+  double? get _harvestGrams {
+    final grams =
+        double.tryParse('${_selectedCrop?['harvesting_weight'] ?? ''}');
+    return grams != null && grams.isFinite && grams > 0 ? grams : null;
+  }
+
+  void _updateHarvestWeight() {
+    final count = int.tryParse(_harvestedController.text.trim());
+    final grams = _harvestGrams;
+    _weightCalculated = count != null && count >= 0 && grams != null;
+    if (!_weightCalculated) {
+      _weightController.clear();
+      return;
+    }
+    final kg = count! * grams! / 1000;
+    _weightController.text =
+        kg.toStringAsFixed(6).replaceFirst(RegExp(r'\.?0+$'), '');
   }
 
   ({int value, String unit})? _durationFor(String variety) {
@@ -278,7 +316,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
           'plant_variety': _variety,
           if (_variety != widget.batch.plantVariety)
             'crop_variety_id':
-                '${widget.cropVarieties.where((c) => _key(c['variety_name'] ?? c['variety']) == _key(_variety)).firstOrNull?[r'$id'] ?? ''}',
+                '${_selectedCrop?[r'$id'] ?? _selectedCrop?['id'] ?? ''}',
           'start_date': DateFormat('yyyy-MM-dd').format(_startDate),
           'end_date': DateFormat('yyyy-MM-dd').format(_endDate),
           if (_nursedController.text.trim().isNotEmpty)
@@ -290,6 +328,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
             'total_harvested': int.parse(_harvestedController.text.trim()),
           if (_weightController.text.trim().isNotEmpty)
             'total_weight_kg': double.parse(_weightController.text.trim()),
+          if (_weightCalculated) 'calculate_harvest_weight': true,
           'production_status': _status,
           'technical_issues': _notesController.text.trim(),
           'growing_group_id': _groupId.isEmpty ? 'individual' : _groupId,
@@ -353,6 +392,9 @@ class _BatchEditFormState extends State<_BatchEditForm> {
     TextInputType? keyboardType,
     int maxLines = 1,
     String? Function(String?)? validator,
+    ValueChanged<String>? onChanged,
+    bool readOnly = false,
+    String? helperText,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,10 +403,13 @@ class _BatchEditFormState extends State<_BatchEditForm> {
         TextFormField(
           controller: controller,
           enabled: !_saving,
+          readOnly: readOnly,
+          onChanged: onChanged,
           keyboardType: keyboardType,
           maxLines: maxLines,
           style: AppTypography.bodySmall,
-          decoration: _decoration(isDark, label, icon),
+          decoration: _decoration(isDark, label, icon)
+              .copyWith(helperText: helperText, helperMaxLines: 3),
           validator: validator,
         ),
       ],
@@ -532,6 +577,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                           ? null
                           : (value) => setState(() {
                                 _variety = value ?? '';
+                                _updateHarvestWeight();
                                 _endDate =
                                     _calculateEndDate(_startDate, _variety) ??
                                         _endDate;
@@ -587,6 +633,7 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                           _textField(
                             label: 'Harvested',
                             controller: _harvestedController,
+                            onChanged: (_) => setState(_updateHarvestWeight),
                             icon: Icons.agriculture_rounded,
                             isDark: isDark,
                             keyboardType: TextInputType.number,
@@ -595,6 +642,10 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                           _textField(
                             label: 'Weight (kg)',
                             controller: _weightController,
+                            readOnly: _harvestGrams != null,
+                            helperText: _harvestGrams == null
+                                ? 'No crop harvest weight configured. Enter the measured weight in kg.'
+                                : 'Harvested quantity × ${_harvestGrams!} g per head ÷ 1,000. Updates when quantity or variety changes.',
                             icon: Icons.scale_outlined,
                             isDark: isDark,
                             keyboardType: const TextInputType.numberWithOptions(
@@ -605,7 +656,9 @@ class _BatchEditFormState extends State<_BatchEditForm> {
                                   (value?.trim().isEmpty ?? true)) return null;
                               final number =
                                   double.tryParse(value?.trim() ?? '');
-                              return number == null || number < 0
+                              return number == null ||
+                                      !number.isFinite ||
+                                      number < 0
                                   ? 'Enter zero or a valid weight'
                                   : null;
                             },

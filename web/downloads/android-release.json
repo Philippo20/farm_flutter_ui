@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 40,
+  "buildNumber": 41,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "053d9488847539279c7d5d38035cb3bb41f0c4715eaef6f38e640ce76e13b22d",
-  "sizeBytes": 84349845,
-  "publishedAt": "2026-11-17T11:35:41.4235655Z",
-  "releaseNotes": "Historical cultivation batches and daily records, variety-based batch numbers, unknown quantity support, and complete farm record summaries."
+  "sha256": "1c892bcb1a282e9335721fbf9538f31f7826c11158227486a6844a8e8cfb5ec5",
+  "sizeBytes": 84349849,
+  "publishedAt": "2026-11-17T12:18:22.5578252Z",
+  "releaseNotes": "Batch edit forms now calculate harvest weight from the harvested quantity and crop weight in grams, across admins and farm managers."
 }

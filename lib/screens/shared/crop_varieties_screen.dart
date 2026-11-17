@@ -853,7 +853,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                 value('sproutingRatio') == 'Not provided'
                     ? 'Not provided'
                     : '${value('sproutingRatio')}%'),
-            metric(Icons.scale_outlined, 'Harvest weight',
+            metric(Icons.scale_outlined, 'Harvest weight (g/head)',
                 value('harvestWeight'))),
         const SizedBox(height: 16),
         SizedBox(
@@ -1025,7 +1025,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                     ? sprouting
                     : '$sprouting%',
                 Icons.spa_outlined),
-            metric('Harvest weight', value('harvestWeight'),
+            metric('Harvest weight (g/head)', value('harvestWeight'),
                 Icons.scale_outlined)),
         const SizedBox(height: 16),
         SizedBox(
@@ -1388,7 +1388,7 @@ class _CropVarietiesScreenState extends ConsumerState<CropVarietiesScreen> {
                               const SizedBox(height: 14),
                               _numberPair(
                                 harvestController,
-                                'Harvest weight',
+                                'Harvest weight (g/head)',
                                 sproutingController,
                                 'Sprouting ratio',
                                 isDark,
