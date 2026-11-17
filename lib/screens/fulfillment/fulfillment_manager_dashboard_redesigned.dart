@@ -209,10 +209,13 @@ class _FulfillmentManagerDashboardRedesignedState
       if (urgency != 0) return urgency;
       final aDate = a['_end_date'] as DateTime?;
       final bDate = b['_end_date'] as DateTime?;
-      if (aDate == null && bDate == null) return 0;
+      int stableOrder() => _value(a, [r'$id', 'batch_id', 'batch_no'])
+          .compareTo(_value(b, [r'$id', 'batch_id', 'batch_no']));
+      if (aDate == null && bDate == null) return stableOrder();
       if (aDate == null) return 1;
       if (bDate == null) return -1;
-      return aDate.compareTo(bDate);
+      final byDate = aDate.compareTo(bDate);
+      return byDate == 0 ? stableOrder() : byDate;
     });
     return pending;
   }
@@ -535,7 +538,9 @@ class _FulfillmentManagerDashboardRedesignedState
                       style: AppTypography.h4.copyWith(
                         color: Colors.white,
                         fontWeight: AppTypography.headingWeight,
-                        fontSize: isMobile ? AppTypography.pageTitleSize : AppTypography.metricSize,
+                        fontSize: isMobile
+                            ? AppTypography.pageTitleSize
+                            : AppTypography.metricSize,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -617,28 +622,7 @@ class _FulfillmentManagerDashboardRedesignedState
           'Live farm batches ordered by harvest urgency and current state.',
       icon: Icons.agriculture_outlined,
       color: AppColors.warning,
-      child: _pendingProductionBatches.isEmpty
-          ? const _ProductionEmptyState()
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                final columns = constraints.maxWidth >= 760 ? 2 : 1;
-                final cardWidth = columns == 2
-                    ? (constraints.maxWidth - AppSpacing.md) / 2
-                    : constraints.maxWidth;
-                return Wrap(
-                  spacing: AppSpacing.md,
-                  runSpacing: AppSpacing.md,
-                  children: _pendingProductionBatches
-                      .map(
-                        (batch) => SizedBox(
-                          width: cardWidth,
-                          child: _ProductionBatchCard(batch: batch),
-                        ),
-                      )
-                      .toList(),
-                );
-              },
-            ),
+      child: AwaitingHarvestBatches(batches: _pendingProductionBatches),
     );
   }
 
@@ -703,6 +687,123 @@ class _FulfillmentManagerDashboardRedesignedState
             .toList(),
       ),
     );
+  }
+}
+
+/// Keeps pagination local to this section during background dashboard refreshes.
+class AwaitingHarvestBatches extends StatefulWidget {
+  const AwaitingHarvestBatches({super.key, required this.batches});
+  final List<Map<String, dynamic>> batches;
+
+  @override
+  State<AwaitingHarvestBatches> createState() => _AwaitingHarvestBatchesState();
+}
+
+class _AwaitingHarvestBatchesState extends State<AwaitingHarvestBatches> {
+  final _topKey = GlobalKey();
+  int _page = 0;
+  int _pageSize = 4;
+
+  int get _pageCount =>
+      ((widget.batches.length + _pageSize - 1) ~/ _pageSize).clamp(1, 1 << 30);
+
+  @override
+  void didUpdateWidget(covariant AwaitingHarvestBatches oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _page = _page.clamp(0, _pageCount - 1);
+  }
+
+  void _changePage(int page) {
+    setState(() => _page = page.clamp(0, _pageCount - 1));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _topKey.currentContext == null) return;
+      Scrollable.ensureVisible(_topKey.currentContext!,
+          duration: const Duration(milliseconds: 200), alignment: 0);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.batches.isEmpty) return const _ProductionEmptyState();
+    final colors = Theme.of(context).colorScheme;
+    final start = _page * _pageSize;
+    final end = (start + _pageSize).clamp(0, widget.batches.length);
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Wrap(
+          key: _topKey,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 16,
+          runSpacing: 8,
+          children: [
+            Text('${start + 1}–$end of ${widget.batches.length} batches',
+                style: AppTypography.bodySmall
+                    .copyWith(color: colors.onSurfaceVariant)),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              Text('Per page', style: AppTypography.bodySmall),
+              const SizedBox(width: 8),
+              DropdownButton<int>(
+                value: _pageSize,
+                underline: const SizedBox.shrink(),
+                borderRadius: BorderRadius.circular(10),
+                style:
+                    AppTypography.bodySmall.copyWith(color: colors.onSurface),
+                items: [4, 8, 12]
+                    .map((size) =>
+                        DropdownMenuItem(value: size, child: Text('$size')))
+                    .toList(),
+                onChanged: (size) {
+                  if (size == null) return;
+                  setState(() {
+                    _pageSize = size;
+                    _page = 0;
+                  });
+                },
+              ),
+            ]),
+          ]),
+      const SizedBox(height: 12),
+      LayoutBuilder(builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 760 ? 2 : 1;
+        final width = columns == 2
+            ? (constraints.maxWidth - AppSpacing.md) / 2
+            : constraints.maxWidth;
+        return Wrap(
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.md,
+            children: widget.batches
+                .sublist(start, end)
+                .map((batch) => SizedBox(
+                    width: width, child: _ProductionBatchCard(batch: batch)))
+                .toList());
+      }),
+      const SizedBox(height: 16),
+      Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 12,
+          runSpacing: 8,
+          children: [
+            Semantics(
+                liveRegion: true,
+                child: Text('Page ${_page + 1} of $_pageCount',
+                    style: AppTypography.bodySmall
+                        .copyWith(color: colors.onSurfaceVariant))),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              IconButton.outlined(
+                  tooltip: 'Previous harvest page',
+                  onPressed: _page > 0 ? () => _changePage(_page - 1) : null,
+                  icon: const Icon(Icons.chevron_left)),
+              const SizedBox(width: 8),
+              IconButton.outlined(
+                  tooltip: 'Next harvest page',
+                  onPressed: _page + 1 < _pageCount
+                      ? () => _changePage(_page + 1)
+                      : null,
+                  icon: const Icon(Icons.chevron_right)),
+            ]),
+          ]),
+    ]);
   }
 }
 

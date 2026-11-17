@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "buildNumber": 41,
+  "buildNumber": 42,
   "packageName": "com.example.farmestates_ai_dashbaord",
   "apkUrl": "farm-estates.apk",
-  "sha256": "1c892bcb1a282e9335721fbf9538f31f7826c11158227486a6844a8e8cfb5ec5",
-  "sizeBytes": 84349849,
-  "publishedAt": "2026-11-17T12:18:22.5578252Z",
-  "releaseNotes": "Batch edit forms now calculate harvest weight from the harvested quantity and crop weight in grams, across admins and farm managers."
+  "sha256": "ad5a87695e6a0b9f7c343d13e79441beca1a0355209ae005499cbbc20520b0cd",
+  "sizeBytes": 84431769,
+  "publishedAt": "2026-11-17T12:28:36.6985365Z",
+  "releaseNotes": "Fulfillment dashboard: paginated awaiting-harvest cards, adjustable page size, and preserved pagination during background refresh."
 }
